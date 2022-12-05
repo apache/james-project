@@ -27,7 +27,6 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
 import org.apache.james.protocols.netty.BasicChannelInboundHandler;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
-import org.apache.james.protocols.netty.HAProxyMessageHandler;
 import org.apache.james.protocols.netty.ProtocolMDCContextFactory;
 import org.apache.james.protocols.pop3.POP3Protocol;
 
@@ -88,11 +87,6 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
     @Override
     protected ChannelInboundHandlerAdapter createCoreHandler() {
         return new BasicChannelInboundHandler(new ProtocolMDCContextFactory.Standard(), protocol, getEncryption(), false);
-    }
-
-    @Override
-    protected ChannelInboundHandlerAdapter createProxyHandler() {
-        return new HAProxyMessageHandler(protocol, new ProtocolMDCContextFactory.Standard());
     }
 
     @Override

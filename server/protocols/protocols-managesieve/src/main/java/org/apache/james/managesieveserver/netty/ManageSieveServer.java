@@ -28,7 +28,6 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -91,11 +90,6 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     }
 
     @Override
-    protected ChannelInboundHandlerAdapter createProxyHandler() {
-        throw new NotImplementedException();
-    }
-
-    @Override
     protected AbstractChannelPipelineFactory createPipelineFactory() {
 
         return new AbstractChannelPipelineFactory(createFrameHandlerFactory(), getExecutorGroup()) {
@@ -103,11 +97,6 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {
                 return createCoreHandler();
-            }
-
-            @Override
-            protected ChannelInboundHandlerAdapter createProxyHandler() {
-                throw new NotImplementedException();
             }
 
             @Override
