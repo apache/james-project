@@ -23,6 +23,7 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -233,7 +234,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
                     if (unchangedSince != -1) {
                         // Enable CONDSTORE as this is a CONDSTORE enabling command
-                        return mailbox.getMetaDataReactive(IGNORE, mailboxSession, MailboxMetaData.FetchGroup.NO_COUNT)
+                        return mailbox.getMetaDataReactive(IGNORE, mailboxSession, EnumSet.of(MailboxMetaData.Item.HighestModSeq))
                             .doOnNext(metaData -> condstoreEnablingCommand(session, responder,  metaData, true));
                     }
                     return Mono.empty();
