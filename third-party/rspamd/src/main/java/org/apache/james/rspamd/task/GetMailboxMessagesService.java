@@ -73,11 +73,11 @@ public class GetMailboxMessagesService {
     }
 
     public Flux<Pair<Username, MessageResult>> getHamMessagesOfAllUser(Optional<Date> afterDate, RunningOptions runningOptions,
-                                                       FeedHamToRspamdTask.Context context) {
+                                                                       FeedHamToRspamdTask.Context context) {
         return Flux.from(userRepository.listReactive())
             .flatMap(Throwing.function(username ->
                 Flux.from(mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxManager.createSystemSession(username)).build(),
-                    mailboxManager.createSystemSession(username)))
+                        mailboxManager.createSystemSession(username)))
                     .filter(mbxMetadata -> hamMailboxesPredicate(mbxMetadata.getPath()))
                     .flatMap(mbxMetadata -> getMailboxMessagesOfAUser(username, mbxMetadata, afterDate, runningOptions, context), 2)
                     .map(result -> Pair.of(username, result))
@@ -95,7 +95,10 @@ public class GetMailboxMessagesService {
             })
             .map(Throwing.function(MessageManager::getMailboxEntity))
             .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
-            .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
+            .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getSaveDate()
+                    .orElse(mailboxMessageMetaData.getInternalDate())
+                    .after(date))
+                .orElse(true))
             .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
             .filter(message -> randomBooleanWithProbability(runningOptions))
             .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)
@@ -109,7 +112,10 @@ public class GetMailboxMessagesService {
         return Mono.from(mailboxManager.getMailboxReactive(mailboxMetaData.getId(), mailboxSession))
             .map(Throwing.function(MessageManager::getMailboxEntity))
             .flatMapMany(Throwing.function(mailbox -> mapperFactory.getMessageMapper(mailboxSession).findInMailboxReactive(mailbox, MessageRange.all(), MessageMapper.FetchType.METADATA, UNLIMITED)))
-            .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getInternalDate().after(date)).orElse(true))
+            .filter(mailboxMessageMetaData -> afterDate.map(date -> mailboxMessageMetaData.getSaveDate()
+                    .orElse(mailboxMessageMetaData.getInternalDate())
+                    .after(date))
+                .orElse(true))
             .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
             .filter(message -> randomBooleanWithProbability(runningOptions))
             .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)

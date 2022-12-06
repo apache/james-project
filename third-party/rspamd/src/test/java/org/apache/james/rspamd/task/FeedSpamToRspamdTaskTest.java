@@ -122,11 +122,13 @@ public class FeedSpamToRspamdTaskTest {
     private RspamdHttpClient client;
     private RspamdClientConfiguration rspamdConfiguration;
     private FeedSpamToRspamdTask task;
+    private UpdatableTickingClock saveDateClock;
 
     @BeforeEach
     void setup() throws Exception {
         InMemoryIntegrationResources inMemoryIntegrationResources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = inMemoryIntegrationResources.getMailboxManager();
+        saveDateClock = (UpdatableTickingClock) mailboxManager.getClock();
         DomainList domainList = mock(DomainList.class);
         Mockito.when(domainList.containsDomain(any())).thenReturn(true);
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
@@ -216,6 +218,7 @@ public class FeedSpamToRspamdTaskTest {
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, rspamdConfiguration);
 
+        saveDateClock.setInstant(NOW.minusSeconds(THREE_DAYS_IN_SECOND));
         appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
 
         Task.Result result = task.run();
@@ -243,14 +246,16 @@ public class FeedSpamToRspamdTaskTest {
     }
 
     @Test
-    void taskShouldCountAndReportOnlySpamMessagesInPeriod() throws MailboxException {
+    void taskShouldCountAndReportOnlySpamMessagesInPeriodBasedOnSaveDate() throws MailboxException {
+        Date nowInternalDate = Date.from(NOW);
+        saveDateClock.setInstant(NOW.minusSeconds(THREE_DAYS_IN_SECOND));
+        appendSpamMessage(BOB_SPAM_MAILBOX, nowInternalDate);
+        saveDateClock.setInstant(NOW.minusSeconds(ONE_DAY_IN_SECOND));
+        appendSpamMessage(BOB_SPAM_MAILBOX, nowInternalDate);
+
         RunningOptions runningOptions = new RunningOptions(Optional.of(TWO_DAYS_IN_SECOND),
             DEFAULT_MESSAGES_PER_SECOND, DEFAULT_SAMPLING_PROBABILITY, ALL_MESSAGES);
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, rspamdConfiguration);
-
-        appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(THREE_DAYS_IN_SECOND)));
-        appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)));
-
         Task.Result result = task.run();
 
         assertThat(result).isEqualTo(Task.Result.COMPLETED);
