@@ -17,10 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jwt.introspection;
+package org.apache.james.jwt;
 
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.jwt.introspection.IntrospectionEndpoint;
+import org.apache.james.jwt.introspection.TokenIntrospectionException;
+import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
+import org.apache.james.jwt.userinfo.UserInfoCheckException;
+import org.apache.james.jwt.userinfo.UserinfoResponse;
 import org.reactivestreams.Publisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,13 +39,13 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.client.HttpClientResponse;
 import reactor.netty.resources.ConnectionProvider;
 
-public class DefaultIntrospectionClient implements IntrospectionClient {
+public class DefaultCheckTokenClient implements CheckTokenClient {
 
     public static final String TOKEN_ATTRIBUTE = "token";
     private final HttpClient httpClient;
     private final ObjectMapper deserializer;
 
-    public DefaultIntrospectionClient() {
+    public DefaultCheckTokenClient() {
         this.httpClient = HttpClient.create(ConnectionProvider.builder(this.getClass().getName())
                 .build())
             .disableRetry(true)
@@ -59,10 +65,19 @@ public class DefaultIntrospectionClient implements IntrospectionClient {
             .uri(introspectionEndpoint.getUrl().toString())
             .sendForm((req, form) -> form.multipart(false)
                 .attr(TOKEN_ATTRIBUTE, token))
-            .responseSingle(this::afterHTTPResponseHandler);
+            .responseSingle(this::afterHTTPResponseIntrospectHandler);
     }
 
-    private Mono<TokenIntrospectionResponse> afterHTTPResponseHandler(HttpClientResponse httpClientResponse, ByteBufMono dataBuf) {
+    @Override
+    public Publisher<UserinfoResponse> userInfo(URL userinfoEndpoint, String bearerToken) {
+        return httpClient
+            .headers(builder -> builder.add("Authorization", "Bearer " + bearerToken))
+            .get()
+            .uri(userinfoEndpoint.toString())
+            .responseSingle(this::afterHTTPResponseUserinfoHandler);
+    }
+
+    private Mono<TokenIntrospectionResponse> afterHTTPResponseIntrospectHandler(HttpClientResponse httpClientResponse, ByteBufMono dataBuf) {
         return Mono.just(httpClientResponse.status())
             .filter(httpStatus -> httpStatus.equals(HttpResponseStatus.OK))
             .flatMap(httpStatus -> dataBuf.asByteArray())
@@ -74,5 +89,20 @@ public class DefaultIntrospectionClient implements IntrospectionClient {
                 .flatMap(errorResponse -> Mono.error(new TokenIntrospectionException(
                     String.format("Error when introspecting token. \nResponse Status = %s,\n Response Body = %s",
                         httpClientResponse.status().code(), errorResponse)))));
+    }
+
+    private Mono<UserinfoResponse> afterHTTPResponseUserinfoHandler(HttpClientResponse httpClientResponse, ByteBufMono dataBuf) {
+        return Mono.just(httpClientResponse.status())
+            .filter(HttpResponseStatus.OK::equals)
+            .flatMap(httpStatus -> dataBuf.asByteArray())
+            .map(Throwing.function(deserializer::readTree))
+            .map(UserinfoResponse::new)
+            .onErrorResume(error -> Mono.error(new UserInfoCheckException("Error when check token by userInfo.", error)))
+            .switchIfEmpty(dataBuf.asString(StandardCharsets.UTF_8)
+                .switchIfEmpty(Mono.just(""))
+                .flatMap(errorResponse -> Mono.error(new UserInfoCheckException(
+                    String.format("Error when check token by userInfo. \nResponse Status = %s,\n Response Body = %s",
+                        httpClientResponse.status().code(), errorResponse)))));
+
     }
 }

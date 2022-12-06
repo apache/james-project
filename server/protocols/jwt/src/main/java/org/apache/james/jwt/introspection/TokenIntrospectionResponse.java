@@ -128,4 +128,9 @@ public class TokenIntrospectionResponse {
     public Optional<String> jti() {
         return jti;
     }
+
+    public Optional<String> claimByPropertyName(String propertyName) {
+        return Optional.ofNullable(json.get(propertyName))
+            .map(JsonNode::asText);
+    }
 }

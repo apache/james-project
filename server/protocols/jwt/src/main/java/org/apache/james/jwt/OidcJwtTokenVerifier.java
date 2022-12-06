@@ -22,8 +22,6 @@ package org.apache.james.jwt;
 import java.net.URL;
 import java.util.Optional;
 
-import org.apache.james.jwt.introspection.DefaultIntrospectionClient;
-import org.apache.james.jwt.introspection.IntrospectionClient;
 import org.apache.james.jwt.introspection.IntrospectionEndpoint;
 import org.apache.james.jwt.introspection.TokenIntrospectionResponse;
 import org.reactivestreams.Publisher;
@@ -37,7 +35,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
-    public static final IntrospectionClient INTROSPECTION_CLIENT = new DefaultIntrospectionClient();
+    public static final CheckTokenClient CHECK_TOKEN_CLIENT = new DefaultCheckTokenClient();
 
     public static Optional<String> verifySignatureAndExtractClaim(String jwtToken, URL jwksURL, String claimName) {
         Optional<String> unverifiedClaim = getClaimWithoutSignatureVerification(jwtToken, "kid");
@@ -65,17 +63,24 @@ public class OidcJwtTokenVerifier {
         }
     }
 
-    public static Publisher<String> verifyWithMaybeIntrospection(String jwtToken, URL jwksURL, String claimName, Optional<IntrospectionEndpoint> introspectionEndpoint) {
+    public static Publisher<String> verifyWithIntrospection(String jwtToken, URL jwksURL, String claimName, IntrospectionEndpoint introspectionEndpoint) {
         return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
             .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
-            .flatMap(claimResult -> {
-                if (introspectionEndpoint.isEmpty()) {
-                    return Mono.just(claimResult);
-                }
-                return Mono.justOrEmpty(introspectionEndpoint)
-                    .flatMap(endpoint -> Mono.from(INTROSPECTION_CLIENT.introspect(endpoint, jwtToken)))
-                    .filter(TokenIntrospectionResponse::active)
-                    .map(activeToken -> claimResult);
-            });
+            .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.introspect(introspectionEndpoint, jwtToken))
+                .filter(TokenIntrospectionResponse::active)
+                .filter(tokenIntrospectionResponse -> tokenIntrospectionResponse.claimByPropertyName(claimName)
+                    .map(claim -> claim.equals(claimResult))
+                    .orElse(false))
+                .map(activeResponse -> claimResult));
+    }
+
+    public static Publisher<String> verifyWithUserinfo(String jwtToken, URL jwksURL, String claimName, URL userinfoEndpoint) {
+        return Mono.fromCallable(() -> verifySignatureAndExtractClaim(jwtToken, jwksURL, claimName))
+            .flatMap(optional -> optional.map(Mono::just).orElseGet(Mono::empty))
+            .flatMap(claimResult -> Mono.from(CHECK_TOKEN_CLIENT.userInfo(userinfoEndpoint, jwtToken))
+                .filter(userinfoResponse -> userinfoResponse.claimByPropertyName(claimName)
+                    .map(claim -> claim.equals(claimResult))
+                    .orElse(false))
+                .map(userinfoResponse -> claimResult));
     }
 }

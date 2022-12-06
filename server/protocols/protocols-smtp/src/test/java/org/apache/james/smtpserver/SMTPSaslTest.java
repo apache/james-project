@@ -19,6 +19,8 @@
 package org.apache.james.smtpserver;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.james.jwt.OidcTokenFixture.INTROSPECTION_RESPONSE;
+import static org.apache.james.jwt.OidcTokenFixture.USERINFO_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -95,6 +97,7 @@ class SMTPSaslTest {
     public static final String PASSWORD = "userpassword";
     public static final String JWKS_URI_PATH = "/jwks";
     public static final String INTROSPECT_TOKEN_URI_PATH = "/introspect";
+    public static final String USERINFO_URI_PATH = "/userinfo";
     public static final String OIDC_URL = "https://example.com/jwks";
     public static final String SCOPE = "scope";
     public static final String FAIL_RESPONSE_TOKEN = Base64.getEncoder().encodeToString(
@@ -417,13 +420,13 @@ class SMTPSaslTest {
     }
 
     @Test
-    void oauthShouldFailWhenIntrospectTokenReturnActiveIsTrue() throws Exception {
+    void oauthShouldSuccessWhenIntrospectTokenReturnActiveIsTrue() throws Exception {
         smtpServer.destroy();
         authServer
             .when(HttpRequest.request().withPath(INTROSPECT_TOKEN_URI_PATH))
             .respond(HttpResponse.response().withStatusCode(200)
                 .withHeader("Content-Type", "application/json")
-                .withBody("{\"active\": true}", StandardCharsets.UTF_8));
+                .withBody(INTROSPECTION_RESPONSE, StandardCharsets.UTF_8));
 
         HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
         config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
@@ -456,6 +459,55 @@ class SMTPSaslTest {
         config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_URL);
         config.addProperty("auth.oidc.scope", SCOPE);
         config.addProperty("auth.oidc.introspection.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), invalidURI));
+        smtpServer.configure(config);
+        smtpServer.init();
+
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH OAUTHBEARER " + VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("451 Unable to process request");
+    }
+
+    @Test
+    void oauthShouldSuccessWhenCheckTokenByUserInfoIsPassed() throws Exception {
+        smtpServer.destroy();
+        authServer
+            .when(HttpRequest.request().withPath(USERINFO_URI_PATH))
+            .respond(HttpResponse.response().withStatusCode(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody(USERINFO_RESPONSE, StandardCharsets.UTF_8));
+
+        HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
+        config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+        config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+        config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_URL);
+        config.addProperty("auth.oidc.scope", SCOPE);
+        config.addProperty("auth.oidc.userinfo.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), USERINFO_URI_PATH));
+        smtpServer.configure(config);
+        smtpServer.init();
+
+        SMTPSClient client = initSMTPSClient();
+
+        client.sendCommand("AUTH OAUTHBEARER " + VALID_TOKEN);
+
+        assertThat(client.getReplyString()).contains("235 Authentication successful.");
+    }
+
+    @Test
+    void oauthShouldFailWhenCheckTokenByUserInfoIsFailed() throws Exception {
+        smtpServer.destroy();
+        authServer
+            .when(HttpRequest.request().withPath(USERINFO_URI_PATH))
+            .respond(HttpResponse.response().withStatusCode(401)
+                .withHeader("Content-Type", "application/json"));
+
+        HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("smtpserver-advancedSecurity.xml"));
+        config.addProperty("auth.oidc.jwksURL", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), JWKS_URI_PATH));
+        config.addProperty("auth.oidc.claim", OidcTokenFixture.CLAIM);
+        config.addProperty("auth.oidc.oidcConfigurationURL", OIDC_URL);
+        config.addProperty("auth.oidc.scope", SCOPE);
+        config.addProperty("auth.oidc.userinfo.url", String.format("http://127.0.0.1:%s%s", authServer.getLocalPort(), USERINFO_URI_PATH));
         smtpServer.configure(config);
         smtpServer.init();
 

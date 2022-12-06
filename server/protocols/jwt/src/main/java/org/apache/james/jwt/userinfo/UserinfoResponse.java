@@ -17,13 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jwt.introspection;
+package org.apache.james.jwt.userinfo;
 
-import org.reactivestreams.Publisher;
+import java.util.Optional;
 
-public interface IntrospectionClient {
+import com.fasterxml.jackson.databind.JsonNode;
 
-    Publisher<TokenIntrospectionResponse> introspect(IntrospectionEndpoint introspectionEndpoint, String token);
+public class UserinfoResponse {
+    private final String sub;
+    private final Optional<String> preferredUsername;
+    private final Optional<String> email;
 
+    private final JsonNode json;
+
+    public UserinfoResponse(JsonNode json) {
+        this.json = json;
+        this.preferredUsername = Optional.ofNullable(json.get("preferred_username"))
+            .map(JsonNode::asText);
+
+        this.sub = Optional.ofNullable(json.get("sub"))
+            .map(JsonNode::asText).orElse(null);
+
+        this.email = Optional.ofNullable(json.get("email"))
+            .map(JsonNode::asText);
+    }
+
+    public String getSub() {
+        return sub;
+    }
+
+    public Optional<String> getPreferredUsername() {
+        return preferredUsername;
+    }
+
+    public Optional<String> getEmail() {
+        return email;
+    }
+
+    public Optional<String> claimByPropertyName(String propertyName) {
+        return Optional.ofNullable(json.get(propertyName))
+            .map(JsonNode::asText);
+    }
 }
-

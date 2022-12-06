@@ -29,6 +29,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import org.apache.james.jwt.DefaultCheckTokenClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ import org.mockserver.verify.VerificationTimes;
 
 import reactor.core.publisher.Mono;
 
-public class DefaultIntrospectionClientTest {
+public class DefaultCheckTokenClientTest {
     private static final String INTROSPECTION_TOKEN_URI_PATH = "/token/introspect";
 
     private ClientAndServer mockServer;
@@ -63,8 +64,8 @@ public class DefaultIntrospectionClientTest {
         }
     }
 
-    private DefaultIntrospectionClient testee() {
-        return new DefaultIntrospectionClient();
+    private DefaultCheckTokenClient testee() {
+        return new DefaultCheckTokenClient();
     }
 
     private void updateMockerServerSpecifications(String response, int statusResponse) {
@@ -192,7 +193,7 @@ public class DefaultIntrospectionClientTest {
             "}";
 
         updateMockerServerSpecifications(activeResponse, 200);
-        DefaultIntrospectionClient testee = testee();
+        DefaultCheckTokenClient testee = testee();
         String token = "token1bc";
 
         assertThat(Mono.from(testee.introspect(getIntrospectionTokenEndpoint(), token))

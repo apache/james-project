@@ -43,9 +43,11 @@ public class OidcSASLConfiguration {
         Preconditions.checkNotNull(scope, "`scope` property need to be specified inside the oidc tag");
 
         String introspectionUrl = configuration.getString("introspection.url", null);
+        String userInfoUrl = configuration.getString("userinfo.url", null);
 
         return new OidcSASLConfiguration(new URL(jwksURL), claim, new URL(oidcConfigurationURL), scope, Optional.ofNullable(introspectionUrl)
-            .map(Throwing.function(URL::new)), Optional.ofNullable(configuration.getString("introspection.auth", null)));
+            .map(Throwing.function(URL::new)), Optional.ofNullable(configuration.getString("introspection.auth", null)),
+            Optional.ofNullable(userInfoUrl).map(Throwing.function(URL::new)));
     }
 
     private final URL jwksURL;
@@ -54,19 +56,22 @@ public class OidcSASLConfiguration {
     private final String scope;
     private final Optional<URL> introspectionEndpoint;
     private final Optional<String> introspectionEndpointAuthorization;
+    private final Optional<URL> userInfoEndpoint;
 
     public OidcSASLConfiguration(URL jwksURL,
                                  String claim,
                                  URL oidcConfigurationURL,
                                  String scope,
                                  Optional<URL> introspectionEndpoint,
-                                 Optional<String> introspectionEndpointAuthorization) {
+                                 Optional<String> introspectionEndpointAuthorization,
+                                 Optional<URL> userInfoEndpoint) {
         this.jwksURL = jwksURL;
         this.claim = claim;
         this.oidcConfigurationURL = oidcConfigurationURL;
         this.scope = scope;
         this.introspectionEndpoint = introspectionEndpoint;
         this.introspectionEndpointAuthorization = introspectionEndpointAuthorization;
+        this.userInfoEndpoint = userInfoEndpoint;
     }
 
     public URL getJwksURL() {
@@ -89,11 +94,20 @@ public class OidcSASLConfiguration {
         return introspectionEndpoint;
     }
 
-    public boolean introspectionEndpointEnable() {
+    public Optional<String> getIntrospectionEndpointAuthorization() {
+        return introspectionEndpointAuthorization;
+    }
+
+    public Optional<URL> getUserInfoEndpoint() {
+        return userInfoEndpoint;
+    }
+
+    public boolean isCheckTokenByIntrospectionEndpoint() {
         return getIntrospectionEndpoint().isPresent();
     }
 
-    public Optional<String> getIntrospectionEndpointAuthorization() {
-        return introspectionEndpointAuthorization;
+
+    public boolean isCheckTokenByUserinfoEndpoint() {
+        return getUserInfoEndpoint().isPresent();
     }
 }
