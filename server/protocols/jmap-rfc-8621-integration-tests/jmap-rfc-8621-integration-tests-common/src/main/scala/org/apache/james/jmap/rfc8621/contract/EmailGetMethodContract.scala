@@ -4459,7 +4459,8 @@ trait EmailGetMethodContract {
          |                                "size": 102,
          |                                "partId": "3",
          |                                "blobId": "${messageId.serialize}_3",
-         |                                "type": "application/json"
+         |                                "type": "application/json",
+         |                                "name":"yyy.txt"
          |                            },
          |                            {
          |                                "charset": "us-ascii",
@@ -4467,7 +4468,8 @@ trait EmailGetMethodContract {
          |                                "size": 102,
          |                                "partId": "4",
          |                                "blobId": "${messageId.serialize}_4",
-         |                                "type": "application/json"
+         |                                "type": "application/json",
+         |                                "name":"xxx.txt"
          |                            }
          |                        ],
          |                        "bodyValues": {
