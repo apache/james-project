@@ -52,7 +52,7 @@ public class SpamAssassinWaitStrategy implements WaitStrategy {
                     return spamAssassinContainer
                         .execInContainer("spamassassin", "-V")
                         .getStdout()
-                        .contains("SpamAssassin version 3.4.2");
+                        .contains("SpamAssassin version 3.4.6");
                 } catch (IOException | InterruptedException e) {
                     return false;
                 }
