@@ -276,6 +276,36 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final String INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION = "internaldateMillisecondResolution";
 
     /**
+     * {@link Field} which contain the saveDate of the message with YEAR-Resolution
+     */
+    private static final String SAVE_DATE_FIELD_YEAR_RESOLUTION = "saveDateYearResolution";
+
+    /**
+     * {@link Field} which contain the saveDate of the message with MONTH-Resolution
+     */
+    private static final String SAVE_DATE_FIELD_MONTH_RESOLUTION = "saveDateMonthResolution";
+
+    /**
+     * {@link Field} which contain the saveDate of the message with DAY-Resolution
+     */
+    private static final String SAVE_DATE_FIELD_DAY_RESOLUTION = "saveDateDayResolution";
+
+    /**
+     * {@link Field} which contain the saveDate of the message with HOUR-Resolution
+     */
+    private static final String SAVE_DATE_FIELD_HOUR_RESOLUTION = "saveDateHourResolution";
+
+    /**
+     * {@link Field} which contain the saveDate of the message with MINUTE-Resolution
+     */
+    private static final String SAVE_DATE_FIELD_MINUTE_RESOLUTION = "saveDateMinuteResolution";
+
+    /**
+     * {@link Field} which contain the saveDate of the message with SECOND-Resolution
+     */
+    private static final String SAVE_DATE_FIELD_SECOND_RESOLUTION = "saveDateSecondResolution";
+
+    /**
      * {@link Field} which will contain the id of the {@link Mailbox}
      */
     private static final String MAILBOX_ID_FIELD = "mailboxid";
@@ -565,6 +595,15 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         doc.add(new Field(INTERNAL_DATE_FIELD_SECOND_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.SECOND), Store.NO, Index.NOT_ANALYZED));
         doc.add(new Field(INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION, DateTools.dateToString(membership.getInternalDate(), DateTools.Resolution.MILLISECOND), Store.NO, Index.NOT_ANALYZED));
 
+        membership.getSaveDate().ifPresent(saveDate -> {
+            doc.add(new Field(SAVE_DATE_FIELD_YEAR_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.YEAR), Store.NO, Index.NOT_ANALYZED));
+            doc.add(new Field(SAVE_DATE_FIELD_MONTH_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.MONTH), Store.NO, Index.NOT_ANALYZED));
+            doc.add(new Field(SAVE_DATE_FIELD_DAY_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.DAY), Store.NO, Index.NOT_ANALYZED));
+            doc.add(new Field(SAVE_DATE_FIELD_HOUR_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.HOUR), Store.NO, Index.NOT_ANALYZED));
+            doc.add(new Field(SAVE_DATE_FIELD_MINUTE_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.MINUTE), Store.NO, Index.NOT_ANALYZED));
+            doc.add(new Field(SAVE_DATE_FIELD_SECOND_RESOLUTION, DateTools.dateToString(saveDate, DateTools.Resolution.SECOND), Store.NO, Index.NOT_ANALYZED));
+        });
+
         doc.add(new NumericField(SIZE_FIELD,Store.YES, true).setLongValue(membership.getFullContentOctets()));
 
         // content handler which will index the headers and the body of the message
@@ -786,6 +825,25 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 return INTERNAL_DATE_FIELD_MILLISECOND_RESOLUTION;
         }
     }
+
+    private String toSaveDateField(DateResolution res) {
+        switch (res) {
+            case Year:
+                return SAVE_DATE_FIELD_YEAR_RESOLUTION;
+            case Month:
+                return SAVE_DATE_FIELD_MONTH_RESOLUTION;
+            case Day:
+                return SAVE_DATE_FIELD_DAY_RESOLUTION;
+            case Hour:
+                return SAVE_DATE_FIELD_HOUR_RESOLUTION;
+            case Minute:
+                return SAVE_DATE_FIELD_MINUTE_RESOLUTION;
+            case Second:
+                return SAVE_DATE_FIELD_SECOND_RESOLUTION;
+            default:
+                throw new RuntimeException(String.format("Not support search for the %s date resolution", res));
+        }
+    }
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.InternalDateCriterion}
@@ -794,6 +852,16 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         DateOperator dop = crit.getOperator();
         DateResolution res = dop.getDateResultion();
         String field = toInteralDateField(res);
+        return createQuery(field, dop);
+    }
+
+    /**
+     * Return a {@link Query} which is build based on the given {@link SearchQuery.SaveDateCriterion}
+     */
+    private Query createSaveDateQuery(SearchQuery.SaveDateCriterion crit) throws UnsupportedSearchException {
+        DateOperator dop = crit.getOperator();
+        DateResolution res = dop.getDateResultion();
+        String field = toSaveDateField(res);
         return createQuery(field, dop);
     }
     
@@ -1140,6 +1208,9 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         if (criterion instanceof SearchQuery.InternalDateCriterion) {
             SearchQuery.InternalDateCriterion crit = (SearchQuery.InternalDateCriterion) criterion;
             return createInternalDateQuery(crit);
+        } else if (criterion instanceof SearchQuery.SaveDateCriterion) {
+            SearchQuery.SaveDateCriterion crit = (SearchQuery.SaveDateCriterion) criterion;
+            return createSaveDateQuery(crit);
         } else if (criterion instanceof SearchQuery.SizeCriterion) {
             SearchQuery.SizeCriterion crit = (SearchQuery.SizeCriterion) criterion;
             return createSizeQuery(crit);

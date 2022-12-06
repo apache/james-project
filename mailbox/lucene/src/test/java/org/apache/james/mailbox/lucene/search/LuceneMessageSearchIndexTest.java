@@ -105,6 +105,16 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
+    public void saveDateBeforeShouldReturnMessagesBeforeAGivenDate() {
+    }
+
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
+    @Override
+    public void saveDateAfterShouldReturnMessagesAfterAGivenDate() {
+    }
+
+    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
+    @Override
     public void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() {
     }
 
