@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -102,7 +103,7 @@ public class SieveFileRepository implements SieveRepository {
         File tmpFile = null;
 
         try {
-            tmpFile = File.createTempFile(file.getName(), ".tmp", file.getParentFile());
+            tmpFile = Files.createTempFile(file.getParentFile().toPath(), "", ".tmp").toFile();
             try (Writer out = new OutputStreamWriter(new BufferedOutputStream(
                     new FileOutputStream(tmpFile), bufferSize), UTF_8)) {
                 out.write(content);
