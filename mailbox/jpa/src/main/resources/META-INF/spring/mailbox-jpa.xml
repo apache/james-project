@@ -42,9 +42,11 @@
         <constructor-arg index="7" ref="quotaComponents" />
         <constructor-arg index="8" ref="indexer" />
         <constructor-arg index="9" ref="threadIdGuessingAlgorithm" />
+        <constructor-arg index="10" ref="clock" />
     </bean>
 
     <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm" />
+    <bean id="clock" class="java.time.Clock" factory-method="systemUTC" />
 
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>

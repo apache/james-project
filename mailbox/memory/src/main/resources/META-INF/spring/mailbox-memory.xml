@@ -44,6 +44,7 @@
         <constructor-arg index="9" ref="indexer" />
         <constructor-arg index="10" ref="preDeletionHooks" />
         <constructor-arg index="11" ref="threadIdGuessingAlgorithm" />
+        <constructor-arg index="12" ref="clock" />
     </bean>
 
     <bean id ="memory-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
@@ -52,8 +53,12 @@
         <constructor-arg index="2" ref="event-bus"/>
     </bean>
 
-    <bean id="memory-sessionMapperFactory" class="org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory" />
+    <bean id="memory-sessionMapperFactory" class="org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory" >
+        <constructor-arg index="0" ref="clock"/>
+    </bean>
+
     <bean id="threadIdGuessingAlgorithm" class="org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm"/>
+    <bean id="clock" class="java.time.Clock" factory-method="systemUTC" />
 
     <alias name="jvm-locker" alias="memory-locker"/>
 

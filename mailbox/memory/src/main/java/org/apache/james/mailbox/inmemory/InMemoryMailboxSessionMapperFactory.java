@@ -20,6 +20,8 @@ package org.apache.james.mailbox.inmemory;
 
 import java.time.Clock;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.mail.InMemoryAnnotationMapper;
@@ -51,6 +53,7 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final InMemoryUidProvider uidProvider;
     private final InMemoryModSeqProvider modSeqProvider;
 
+    @Inject
     public InMemoryMailboxSessionMapperFactory(Clock clock) {
         mailboxMapper = new InMemoryMailboxMapper();
         uidProvider = new InMemoryUidProvider();
