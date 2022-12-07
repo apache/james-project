@@ -25,6 +25,7 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_I18NLEVEL_1;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_LITERAL_PLUS;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_OBJECTID;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
+import static org.apache.james.imap.api.ImapConstants.SUPPORTS_SAVEDATE;
 import static org.apache.james.mailbox.MailboxManager.MessageCapabilities.UniqueID;
 
 import java.util.ArrayList;
@@ -56,7 +57,8 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         SUPPORTS_RFC3348,
         SUPPORTS_I18NLEVEL_1,
         SUPPORTS_CONDSTORE,
-        SUPPORTS_OBJECTID);
+        SUPPORTS_OBJECTID,
+        SUPPORTS_SAVEDATE);
 
     private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
     private final Set<Capability> disabledCaps = new HashSet<>();
