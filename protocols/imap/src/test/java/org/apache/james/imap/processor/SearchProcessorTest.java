@@ -239,6 +239,12 @@ public class SearchProcessorTest {
     }
 
     @Test
+    void testSAVEDBEFORE() throws Exception {
+        expectsGetSelectedMailbox();
+        check(SearchKey.buildSavedBefore(DAY_MONTH_YEAR), SearchQuery.saveDateBefore(getDate(DAY, MONTH, YEAR), DateResolution.Day));
+    }
+
+    @Test
     void testBODY() throws Exception {
         expectsGetSelectedMailbox();
         check(SearchKey.buildBody(SUBJECT), SearchQuery.bodyContains(SUBJECT));
@@ -327,6 +333,12 @@ public class SearchProcessorTest {
     }
 
     @Test
+    void testSAVEDON() throws Exception {
+        expectsGetSelectedMailbox();
+        check(SearchKey.buildSavedOn(DAY_MONTH_YEAR), SearchQuery.saveDateOn(getDate(DAY, MONTH, YEAR), DateResolution.Day));
+    }
+
+    @Test
     void testAND() throws Exception {
         expectsGetSelectedMailbox();
         List<SearchKey> keys = new ArrayList<>();
@@ -388,6 +400,19 @@ public class SearchProcessorTest {
         check(SearchKey.buildSince(DAY_MONTH_YEAR), SearchQuery.or(SearchQuery
                 .internalDateOn(getDate(DAY, MONTH, YEAR), DateResolution.Day), SearchQuery
                 .internalDateAfter(getDate(DAY, MONTH, YEAR), DateResolution.Day)));
+    }
+
+    @Test
+    void testSAVEDSINCE() throws Exception {
+        expectsGetSelectedMailbox();
+        check(SearchKey.buildSavedSince(DAY_MONTH_YEAR), SearchQuery.or(SearchQuery.saveDateOn(getDate(DAY, MONTH, YEAR), DateResolution.Day),
+            SearchQuery.saveDateAfter(getDate(DAY, MONTH, YEAR), DateResolution.Day)));
+    }
+
+    @Test
+    void testSAVEDATESUPPORTED() throws Exception {
+        expectsGetSelectedMailbox();
+        check(SearchKey.buildSaveDateSupported(), SearchQuery.saveDateSupported());
     }
 
     @Test

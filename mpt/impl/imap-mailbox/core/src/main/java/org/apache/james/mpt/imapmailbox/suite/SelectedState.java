@@ -255,4 +255,10 @@ public abstract class SelectedState implements ImapTestConstants {
             .withLocale(Locale.KOREA)
             .run("Namespace");
     }
+
+    @Test
+    public void testSearchSaveDate() throws Exception {
+        simpleScriptedTestProtocol
+            .run("SearchSaveDate");
+    }
 }

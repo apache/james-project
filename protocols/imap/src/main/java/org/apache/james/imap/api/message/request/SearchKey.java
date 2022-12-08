@@ -42,6 +42,10 @@ import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_OLDE
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_ON;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_OR;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_RECENT;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SAVEDATESUPPORTED;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SAVEDBEFORE;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SAVEDON;
+import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SAVEDSINCE;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SEEN;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SENTBEFORE;
 import static org.apache.james.imap.api.message.request.SearchKey.Type.TYPE_SENTON;
@@ -121,7 +125,11 @@ public final class SearchKey {
         TYPE_OLDER,
         TYPE_MODSEQ,
         TYPE_THREADID,
-        TYPE_EMAILID
+        TYPE_EMAILID,
+        TYPE_SAVEDBEFORE,
+        TYPE_SAVEDON,
+        TYPE_SAVEDSINCE,
+        TYPE_SAVEDATESUPPORTED
     }
 
     private static final SearchKey UNSEEN = new SearchKey(TYPE_UNSEEN, null, null, 0, null, null, null, null, -1, -1, null, null);
@@ -282,8 +290,16 @@ public final class SearchKey {
         return new SearchKey(TYPE_ON, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
+    public static SearchKey buildSavedOn(DayMonthYear date) {
+        return new SearchKey(TYPE_SAVEDON, date, null, 0, null, null, null, null, -1, -1, null, null);
+    }
+
     public static SearchKey buildSentBefore(DayMonthYear date) {
         return new SearchKey(TYPE_SENTBEFORE, date, null, 0, null, null, null, null, -1, -1, null, null);
+    }
+
+    public static SearchKey buildSavedBefore(DayMonthYear date) {
+        return new SearchKey(TYPE_SAVEDBEFORE, date, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     public static SearchKey buildSentOn(DayMonthYear date) {
@@ -296,6 +312,14 @@ public final class SearchKey {
 
     public static SearchKey buildSince(DayMonthYear date) {
         return new SearchKey(TYPE_SINCE, date, null, 0, null, null, null, null, -1, -1, null, null);
+    }
+
+    public static SearchKey buildSavedSince(DayMonthYear date) {
+        return new SearchKey(TYPE_SAVEDSINCE, date, null, 0, null, null, null, null, -1, -1, null, null);
+    }
+
+    public static SearchKey buildSaveDateSupported() {
+        return new SearchKey(TYPE_SAVEDATESUPPORTED, null, null, 0, null, null, null, null, -1, -1, null, null);
     }
 
     // FIELD VALUE
@@ -393,7 +417,7 @@ public final class SearchKey {
      * Gets a date value to be search upon.
      * 
      * @return the date when: TYPE_BEFORE, TYPE_ON,
-     *         TYPE_SENTBEFORE, TYPE_SENTON, TYPE_SENTSINCE, TYPE_SINCE, otherwise null
+     *         TYPE_SENTBEFORE, TYPE_SENTON, TYPE_SENTSINCE, TYPE_SINCE, TYPE_SAVEBEFORE, TYPE_SAVEON, TYPE_SAVESINCE otherwise null
      */
     public DayMonthYear getDate() {
         return date;

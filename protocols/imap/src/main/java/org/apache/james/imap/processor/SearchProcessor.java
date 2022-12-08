@@ -380,6 +380,14 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             return SearchQuery.threadId(ThreadId.fromBaseMessageId(getMailboxManager().getMessageIdFactory().fromString(key.getThreadId())));
         case TYPE_EMAILID:
             return SearchQuery.hasMessageId(getMailboxManager().getMessageIdFactory().fromString(key.getMessageId()));
+        case TYPE_SAVEDBEFORE:
+            return SearchQuery.saveDateBefore(date.toDate(), DateResolution.Day);
+        case TYPE_SAVEDON:
+            return SearchQuery.saveDateOn(date.toDate(), DateResolution.Day);
+        case TYPE_SAVEDSINCE:
+            return SearchQuery.or(SearchQuery.saveDateOn(date.toDate(), DateResolution.Day), SearchQuery.saveDateAfter(date.toDate(), DateResolution.Day));
+        case TYPE_SAVEDATESUPPORTED:
+            return SearchQuery.saveDateSupported();
         default:
             LOGGER.warn("Ignoring unknown search key {}", type);
             return SearchQuery.all();
