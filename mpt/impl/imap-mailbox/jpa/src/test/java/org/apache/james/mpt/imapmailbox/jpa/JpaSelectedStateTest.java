@@ -22,6 +22,7 @@ package org.apache.james.mpt.imapmailbox.jpa;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.SelectedState;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JpaSelectedStateTest extends SelectedState {
@@ -55,5 +56,10 @@ public class JpaSelectedStateTest extends SelectedState {
 
     @Override
     public void testUidUS() {
+    }
+
+    @Override
+    @Disabled("SEARCH save date just return empty result for JPA")
+    public void testSearchSaveDate() {
     }
 }
