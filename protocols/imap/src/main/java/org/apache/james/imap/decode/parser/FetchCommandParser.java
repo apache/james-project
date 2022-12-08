@@ -25,6 +25,7 @@ import static org.apache.james.imap.api.message.FetchData.Item.ENVELOPE;
 import static org.apache.james.imap.api.message.FetchData.Item.FLAGS;
 import static org.apache.james.imap.api.message.FetchData.Item.INTERNAL_DATE;
 import static org.apache.james.imap.api.message.FetchData.Item.MODSEQ;
+import static org.apache.james.imap.api.message.FetchData.Item.SAVEDATE;
 import static org.apache.james.imap.api.message.FetchData.Item.SIZE;
 import static org.apache.james.imap.api.message.FetchData.Item.THREADID;
 import static org.apache.james.imap.api.message.FetchData.Item.UID;
@@ -194,6 +195,8 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                 return fetch.fetch(EMAILID);
             case "THREADID":
                 return fetch.fetch(THREADID);
+            case "SAVEDATE":
+                return fetch.fetch(SAVEDATE);
             default:
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attribute: " + name);
         }

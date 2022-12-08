@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -38,6 +39,7 @@ public final class FetchResponse implements ImapResponseMessage {
     private final Flags flags;
     private final MessageUid uid;
     private final Date internalDate;
+    private final Optional<Date> saveDate;
     private final Long size;
     private final List<BodyElement> elements;
     private final Envelope envelope;
@@ -47,11 +49,12 @@ public final class FetchResponse implements ImapResponseMessage {
     private final MessageId emailId;
     private final ThreadId threadId;
 
-    public FetchResponse(MessageSequenceNumber messageNumber, Flags flags, MessageUid uid, ModSeq modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements, MessageId emailId, ThreadId threadId) {
+    public FetchResponse(MessageSequenceNumber messageNumber, Flags flags, MessageUid uid, Optional<Date> saveDate, ModSeq modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements, MessageId emailId, ThreadId threadId) {
         this.messageNumber = messageNumber;
         this.flags = flags;
         this.uid = uid;
         this.internalDate = internalDate;
+        this.saveDate = saveDate;
         this.size = size;
         this.envelope = envelope;
         this.elements = elements;
@@ -167,6 +170,10 @@ public final class FetchResponse implements ImapResponseMessage {
 
     public ThreadId getThreadId() {
         return threadId;
+    }
+
+    public Optional<Date> getSaveDate() {
+        return saveDate;
     }
 
     /**

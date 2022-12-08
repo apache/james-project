@@ -65,6 +65,7 @@ public final class FetchResponseBuilder {
     private MessageUid uid;
     private Flags flags;
     private Date internalDate;
+    private Optional<Date> saveDate;
     private Long size;
     private ModSeq modSeq;
     private List<FetchResponse.BodyElement> elements;
@@ -83,6 +84,7 @@ public final class FetchResponseBuilder {
         uid = null;
         flags = null;
         internalDate = null;
+        saveDate = null;
         size = null;
         body = null;
         bodystructure = null;
@@ -106,13 +108,16 @@ public final class FetchResponseBuilder {
         this.modSeq = modSeq;
     }
 
+    private void setSaveDate(Optional<Date> saveDate) {
+        this.saveDate = saveDate;
+    }
     
     public void setFlags(Flags flags) {
         this.flags = flags;
     }
 
     public FetchResponse build() {
-        return new FetchResponse(msn, flags, uid, modSeq, internalDate, size, envelope, body, bodystructure, elements, messageId, threadId);
+        return new FetchResponse(msn, flags, uid, saveDate, modSeq, internalDate, size, envelope, body, bodystructure, elements, messageId, threadId);
     }
 
     public Mono<FetchResponse> build(FetchData fetch, MessageResult result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
@@ -168,6 +173,7 @@ public final class FetchResponseBuilder {
 
             addThreadId(fetch, result.getThreadId());
             addMessageId(fetch, result.getMessageId());
+            addSaveDate(fetch, result.getSaveDate());
 
             addModSeq(fetch, result.getModSeq());
 
@@ -198,6 +204,13 @@ public final class FetchResponseBuilder {
         // THREADID response
         if (fetch.contains(Item.THREADID)) {
             setThreadId(threadId);
+        }
+    }
+
+    private void addSaveDate(FetchData fetch, Optional<Date> saveDate) {
+        // SAVEDATE response
+        if (fetch.contains(Item.SAVEDATE)) {
+            setSaveDate(saveDate);
         }
     }
 

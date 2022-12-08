@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.encode;
 
+import static org.apache.james.imap.api.ImapConstants.SAVEDATE;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -26,6 +28,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -42,6 +45,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
 
 public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchResponseEncoder.class);
@@ -91,6 +96,7 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
         encodeBodyElements(composer, fetchResponse.getElements());
         encodeEmailId(composer, fetchResponse);
         encodeThreadId(composer, fetchResponse);
+        encodeSaveDate(composer, fetchResponse);
         composer.closeParen().end();
     }
 
@@ -294,6 +300,19 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
             composer.message(INTERNALDATE);
             composer.quote(EncoderUtils.encodeDateTime(internalDate));
         }
+    }
+
+    private void encodeSaveDate(ImapResponseComposer composer, FetchResponse fetchResponse) throws IOException {
+        final Optional<Date> saveDate = fetchResponse.getSaveDate();
+        if (isSaveDateFetched(saveDate)) {
+            composer.message(SAVEDATE);
+            saveDate.ifPresentOrElse(Throwing.consumer(date -> composer.quote(EncoderUtils.encodeDateTime(date))),
+                Throwing.runnable(composer::nil));
+        }
+    }
+
+    private boolean isSaveDateFetched(Optional<Date> saveDate) {
+        return saveDate != null;
     }
 
     private void encodeUid(ImapResponseComposer composer, FetchResponse fetchResponse) throws IOException {
