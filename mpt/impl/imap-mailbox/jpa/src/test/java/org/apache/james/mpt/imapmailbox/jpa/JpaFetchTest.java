@@ -22,6 +22,7 @@ package org.apache.james.mpt.imapmailbox.jpa;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.Fetch;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class JpaFetchTest extends Fetch {
@@ -31,5 +32,12 @@ public class JpaFetchTest extends Fetch {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return hostSystemExtension.getHostSystem();
+    }
+
+    @Override
+    @Test
+    public void testFetchSaveDate() throws Exception {
+        simpleScriptedTestProtocol
+            .run("FetchNILSaveDate");
     }
 }

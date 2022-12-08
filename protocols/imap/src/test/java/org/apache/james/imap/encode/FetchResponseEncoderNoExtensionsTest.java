@@ -57,7 +57,7 @@ class FetchResponseEncoderNoExtensionsTest {
 
     @Test
     void testShouldEncodeFlagsResponse() throws Exception {
-        FetchResponse message = new FetchResponse(MSN, flags, null, null, null, null,
+        FetchResponse message = new FetchResponse(MSN, flags, null, null, null, null, null,
                 null, null, null, null, null, null);
         encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
@@ -65,7 +65,7 @@ class FetchResponseEncoderNoExtensionsTest {
 
     @Test
     void testShouldEncodeUidResponse() throws Exception {
-        FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null,
+        FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null, null,
                 null, null, null, null, null, null, null, null);
         encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
@@ -74,7 +74,7 @@ class FetchResponseEncoderNoExtensionsTest {
 
     @Test
     void testShouldEncodeAllResponse() throws Exception {
-        FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null,
+        FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null, null,
                 null, null, null, null, null, null, null, null);
         encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
@@ -83,7 +83,7 @@ class FetchResponseEncoderNoExtensionsTest {
 
     @Test
     void testShouldNotAddExtensionsWithEncodingBodyStructure() throws Exception {
-        FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null,
+        FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null, null,
                 null, null, null, null, stubStructure, null, null, null);
         final Map<String, String> parameters = new HashMap<>();
         parameters.put("CHARSET", "US-ASCII");

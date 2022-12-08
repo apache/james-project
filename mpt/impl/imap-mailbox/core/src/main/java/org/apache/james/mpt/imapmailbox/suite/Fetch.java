@@ -33,7 +33,7 @@ public abstract class Fetch implements ImapTestConstants {
     protected abstract ImapHostSystem createImapHostSystem();
     
     private ImapHostSystem system;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+    protected SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -212,5 +212,11 @@ public abstract class Fetch implements ImapTestConstants {
         simpleScriptedTestProtocol
             .withLocale(Locale.ITALY)
             .run("FetchRFC822Mixed");
+    }
+
+    @Test
+    public void testFetchSaveDate() throws Exception {
+        simpleScriptedTestProtocol
+            .run("FetchSaveDate");
     }
 }
