@@ -66,12 +66,13 @@ The following IMAP specifications are implemented:
  - link:https://datatracker.ietf.org/doc/html/rfc3348.html[RFC-3348] IMAP Child Mailbox Extension
  - link:https://www.rfc-editor.org/rfc/rfc7889.html[RFC-7889] IMAP Extension for APPENDLIMIT
  - link:https://www.rfc-editor.org/rfc/rfc8474.html[RFC-8474] IMAP Extension for Object Identifiers
-- link:https://datatracker.ietf.org/doc/html/rfc2971.html[RFC-2971] IMAP ID Extension
+ - link:https://datatracker.ietf.org/doc/html/rfc2971.html[RFC-2971] IMAP ID Extension
  - link:https://datatracker.ietf.org/doc/html/rfc8438.html[RFC-8438] IMAP Extension for STATUS=SIZE
  - link:https://www.rfc-editor.org/rfc/rfc5258.html[RFC-5258] IMAP LIST Command Extensions
  - link:https://www.rfc-editor.org/rfc/rfc5819.html[RFC-5819] IMAP4 Extension for Returning STATUS Information in Extended LIST
  - link:https://www.rfc-editor.org/rfc/rfc8440.html[RFC-8440] IMAP4 Extension for Returning MYRIGHTS Information in Extended LIST
  - link:https://www.rfc-editor.org/rfc/rfc8440.html[RFC-6154] IMAP LIST Extension for Special-Use Mailboxes
+ - link:https://www.rfc-editor.org/rfc/rfc8514.html[RFC-8514] IMAP SAVEDATE Extension
 
 Partially implemented specifications:
 
