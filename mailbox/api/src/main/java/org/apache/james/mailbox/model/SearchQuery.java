@@ -1323,8 +1323,8 @@ public class SearchQuery {
 
         @Override
         public final boolean equals(Object obj) {
-            if (obj instanceof InternalDateCriterion) {
-                InternalDateCriterion that = (InternalDateCriterion) obj;
+            if (obj instanceof SaveDateCriterion) {
+                SaveDateCriterion that = (SaveDateCriterion) obj;
 
                 return Objects.equal(this.operator, that.operator);
             }
