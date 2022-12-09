@@ -57,6 +57,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
             // UNSUBSCRIBE, LIST, LSUB, STATUS, and APPEND
             new SelectCommandParser(statusResponseFactory),
             new ExamineCommandParser(statusResponseFactory),
+            new ReplaceCommandParser(statusResponseFactory, Clock.systemDefaultZone()),
             new CreateCommandParser(statusResponseFactory),
             new DeleteCommandParser(statusResponseFactory),
             new RenameCommandParser(statusResponseFactory),

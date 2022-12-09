@@ -47,6 +47,13 @@ public abstract class SelectedState implements ImapTestConstants {
     }
     
     @Test
+    public void testReplace() throws Exception {
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("Replace");
+    }
+
+    @Test
     public void testCheckUS() throws Exception {
         simpleScriptedTestProtocol
             .withLocale(Locale.US)

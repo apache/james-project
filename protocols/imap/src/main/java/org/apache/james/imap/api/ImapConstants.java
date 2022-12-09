@@ -220,6 +220,7 @@ public interface ImapConstants {
     ImapCommand SEARCH_COMMAND = ImapCommand.selectedStateCommand("SEARCH");
     ImapCommand STORE_COMMAND = ImapCommand.selectedStateCommand("STORE");
     ImapCommand UID_COMMAND = ImapCommand.selectedStateCommand("UID");
+    ImapCommand REPLACE_COMMAND = ImapCommand.selectedStateCommand("REPLACE");
 
     String ACL_RESPONSE_NAME = "ACL";
 
