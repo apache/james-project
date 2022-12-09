@@ -19,8 +19,8 @@
 
 package org.apache.james.backends.opensearch;
 
-import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.ES_HTTP_PORT;
-import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.ES_MEMORY;
+import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.OS_HTTP_PORT;
+import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.OS_MEMORY;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -125,8 +125,8 @@ public interface DockerOpenSearch {
     }
 
     interface Fixture {
-        int ES_HTTP_PORT = 9200;
-        int ES_MEMORY = 620;
+        int OS_HTTP_PORT = 9200;
+        int OS_MEMORY = 1024;
     }
 
     class NoAuth implements DockerOpenSearch {
@@ -134,11 +134,11 @@ public interface DockerOpenSearch {
         static DockerContainer defaultContainer(String imageName) {
             return DockerContainer.fromName(imageName)
                 .withTmpFs(ImmutableMap.of("/usr/share/opensearch/data/nodes/0", "rw,size=200m"))
-                .withExposedPorts(ES_HTTP_PORT)
+                .withExposedPorts(OS_HTTP_PORT)
                 .withEnv("discovery.type", "single-node")
                 .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true")
                 .withEnv("DISABLE_SECURITY_PLUGIN", "true")
-                .withEnv("ES_JAVA_OPTS", "-Xms" + ES_MEMORY + "m -Xmx" + ES_MEMORY + "m")
+                .withEnv("ES_JAVA_OPTS", "-Xms" + OS_MEMORY + "m -Xmx" + OS_MEMORY + "m")
                 .withAffinityToContainer()
                 .withName("james-testing-opensearch-" + UUID.randomUUID())
                 .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
@@ -169,7 +169,7 @@ public interface DockerOpenSearch {
         }
 
         public int getHttpPort() {
-            return eSContainer.getMappedPort(ES_HTTP_PORT);
+            return eSContainer.getMappedPort(OS_HTTP_PORT);
         }
 
         public String getIp() {
@@ -227,7 +227,7 @@ public interface DockerOpenSearch {
                         .withFileFromClasspath("conf/default.crt", "auth-es/default.crt")
                         .withFileFromClasspath("conf/default.key", "auth-es/default.key")
                         .withFileFromClasspath("Dockerfile", "auth-es/NginxDockerfile")))
-                .withExposedPorts(ES_HTTP_PORT)
+                .withExposedPorts(OS_HTTP_PORT)
                 .withTmpFs(ImmutableMap.of("/usr/share/opensearch/data/nodes/0", "rw,size=200m"))
                 .withLogConsumer(frame -> LOGGER.debug("[NGINX] " + frame.getUtf8String()))
                 .withNetwork(network)
@@ -246,7 +246,7 @@ public interface DockerOpenSearch {
         }
 
         public int getHttpPort() {
-            return nginx.getMappedPort(ES_HTTP_PORT);
+            return nginx.getMappedPort(OS_HTTP_PORT);
         }
 
         public String getIp() {
