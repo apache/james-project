@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -66,10 +67,10 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
     }
 
     private ImmutableList<Capability> computeCapabilities() {
-        if (getMailboxManager().getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.Annotation)) {
-            return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
-        }
-        return ImmutableList.of();
+        return Optional.ofNullable(getMailboxManager().getSupportedMailboxCapabilities())
+            .map(capabilities -> capabilities.contains(MailboxManager.MailboxCapabilities.Annotation))
+            .map(annotationCap -> ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION))
+            .orElseGet(ImmutableList::of);
     }
 
     @Override

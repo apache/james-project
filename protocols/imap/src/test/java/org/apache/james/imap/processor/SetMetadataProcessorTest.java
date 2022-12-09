@@ -29,6 +29,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.core.Username;
@@ -79,6 +80,7 @@ class SetMetadataProcessorTest {
     private void initAndMockData() {
         okResponse = mock(StatusResponse.class);
         mockMailboxManager = mock(MailboxManager.class);
+        when(mockMailboxManager.getSupportedMailboxCapabilities()).thenReturn(EnumSet.of(MailboxManager.MailboxCapabilities.Annotation));
         when(mockMailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
             Object[] args = invocation.getArguments();
             return (Mono) args[0];

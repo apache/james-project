@@ -75,10 +75,10 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
     }
 
     private ImmutableList<Capability> computeCapabilities() {
-        if (getMailboxManager().getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.Annotation)) {
-            return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
-        }
-        return ImmutableList.of();
+        return Optional.ofNullable(getMailboxManager().getSupportedMailboxCapabilities())
+            .map(capabilities -> capabilities.contains(MailboxManager.MailboxCapabilities.Annotation))
+            .map(annotationCap -> ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION))
+            .orElseGet(ImmutableList::of);
     }
 
     @Override
