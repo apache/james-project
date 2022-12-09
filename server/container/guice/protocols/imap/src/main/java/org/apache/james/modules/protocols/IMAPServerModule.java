@@ -27,7 +27,9 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.display.Localizer;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.apache.james.imap.api.process.DefaultMailboxTyper;
 import org.apache.james.imap.api.process.ImapProcessor;
+import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -85,6 +87,7 @@ public class IMAPServerModule extends AbstractModule {
         bind(AuthenticateProcessor.class).in(Scopes.SINGLETON);
         bind(SelectProcessor.class).in(Scopes.SINGLETON);
         bind(EnableProcessor.class).in(Scopes.SINGLETON);
+        bind(MailboxTyper.class).to(DefaultMailboxTyper.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(ImapGuiceProbe.class);
     }
