@@ -58,6 +58,7 @@ class TestingSessionTest {
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         dao = new CassandraSchemaVersionDAO(cassandra.getConf());
+        dao.truncateVersion().block();
     }
 
     @Test

@@ -23,6 +23,7 @@ import javax.inject.Inject;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
+import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;
 
 public class CassandraTruncateTableTask implements CleanupTasksPerformer.CleanupTask {
     private final CassandraTableManager tableManager;
@@ -34,7 +35,8 @@ public class CassandraTruncateTableTask implements CleanupTasksPerformer.Cleanup
 
     @Override
     public Result run() {
-        tableManager.clearAllTables();
+        tableManager
+            .clearTables(table -> !table.getName().equals(CassandraSchemaVersionTable.TABLE_NAME));
         return Result.COMPLETED;
     }
 }
