@@ -50,7 +50,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -71,7 +70,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
@@ -97,7 +95,6 @@ public class CassandraMessageDAO {
     private final PreparedStatement select;
     private final PreparedStatement selectAll;
     private final Cid.CidParser cidParser;
-    private final DriverExecutionProfile lwtProfile;
 
     @Inject
     public CassandraMessageDAO(CqlSession session,
@@ -105,7 +102,6 @@ public class CassandraMessageDAO {
                                BlobStore blobStore,
                                BlobId.Factory blobIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
-        this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
         this.typesProvider = typesProvider;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
@@ -250,8 +246,7 @@ public class CassandraMessageDAO {
     private Mono<Row> retrieveRow(CassandraMessageId messageId) {
         return cassandraAsyncExecutor.executeSingleRow(select
             .bind()
-            .setUuid(MESSAGE_ID, messageId.get())
-            .setExecutionProfile(lwtProfile));
+            .setUuid(MESSAGE_ID, messageId.get()));
     }
 
     private Mono<MessageRepresentation> message(Row row, CassandraMessageId cassandraMessageId, FetchType fetchType) {
