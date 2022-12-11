@@ -27,6 +27,7 @@ import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
+import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;
 import org.apache.james.util.Host;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -95,6 +96,7 @@ public final class CassandraCluster implements AutoCloseable {
     }
 
     void clearTables() {
-        new CassandraTableManager(module, nonPrivilegedSession).clearAllTables();
+        new CassandraTableManager(module, nonPrivilegedSession)
+            .clearTables(table -> !table.getName().equals(CassandraSchemaVersionTable.TABLE_NAME));
     }
 }

@@ -22,6 +22,8 @@ package org.apache.james.backends.cassandra.init;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
+import java.util.function.Predicate;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -58,9 +60,10 @@ public class CassandraTableManager {
             .block();
     }
 
-    public void clearAllTables() {
+    public void clearTables(Predicate<CassandraTable> condition) {
         CassandraAsyncExecutor executor = new CassandraAsyncExecutor(session);
         Flux.fromIterable(module.moduleTables())
+                .filter(condition)
                 .publishOn(Schedulers.boundedElastic())
                 .map(CassandraTable::getName)
                 .flatMap(name -> truncate(executor, name), DEFAULT_CONCURRENCY)
