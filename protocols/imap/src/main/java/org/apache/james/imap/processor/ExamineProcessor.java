@@ -22,6 +22,8 @@ package org.apache.james.imap.processor;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.events.EventBus;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -33,6 +35,7 @@ import org.apache.james.util.MDCBuilder;
 
 public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest> {
 
+    @Inject
     public ExamineProcessor(MailboxManager mailboxManager, EventBus eventBus, StatusResponseFactory statusResponseFactory,
                             MetricFactory metricFactory) {
         super(ExamineRequest.class, mailboxManager, statusResponseFactory, true, metricFactory, eventBus);

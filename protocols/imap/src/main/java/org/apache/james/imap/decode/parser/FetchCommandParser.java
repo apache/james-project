@@ -32,6 +32,8 @@ import static org.apache.james.imap.api.message.FetchData.Item.UID;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -59,6 +61,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     private static final CharMatcher CLOSING_BRACKET = CharMatcher.is(']');
     private static final CharMatcher NEXT_ELEMENT_END = CharMatcher.anyOf(" [)\r\n");
 
+    @Inject
     public FetchCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.FETCH_COMMAND, statusResponseFactory);
     }

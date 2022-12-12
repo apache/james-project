@@ -21,6 +21,8 @@ package org.apache.james.imap.decode.parser;
 import java.util.EnumSet;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
@@ -54,6 +56,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
         }
     }
 
+    @Inject
     public ListCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.LIST_COMMAND, statusResponseFactory);
     }

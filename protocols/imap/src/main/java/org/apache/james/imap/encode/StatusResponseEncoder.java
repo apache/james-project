@@ -22,6 +22,8 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 import java.util.Collection;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -35,6 +37,7 @@ import org.apache.james.imap.message.response.ImmutableStatusResponse;
 public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatusResponse> {
     private final Localizer localizer;
 
+    @Inject
     public StatusResponseEncoder(Localizer localizer) {
         this.localizer = localizer;
     }

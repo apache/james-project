@@ -25,6 +25,8 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -58,6 +60,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
 
     private static final List<Capability> UIDPLUS = ImmutableList.of(SUPPORTS_UIDPLUS);
 
+    @Inject
     public ExpungeProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(ExpungeRequest.class, mailboxManager, factory, metricFactory);
     }

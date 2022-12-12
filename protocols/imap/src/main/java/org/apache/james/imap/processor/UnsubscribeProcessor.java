@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.util.ReactorUtils.logOnError;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -41,8 +43,9 @@ import reactor.core.publisher.Mono;
 public class UnsubscribeProcessor extends AbstractSubscriptionProcessor<UnsubscribeRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnsubscribeProcessor.class);
 
+    @Inject
     public UnsubscribeProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                                MetricFactory metricFactory) {
         super(UnsubscribeRequest.class, mailboxManager, subscriptionManager, factory, metricFactory);
     }
 

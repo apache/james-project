@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,6 +35,8 @@ import org.apache.james.imap.message.request.SetACLRequest;
  * SETACL Parser
  */
 public class SetACLCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public SetACLCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.SETACL_COMMAND, statusResponseFactory);
     }

@@ -20,6 +20,8 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -38,6 +40,8 @@ import com.google.common.collect.ImmutableMap;
  * CF https://www.rfc-editor.org/rfc/rfc2971.html
  */
 public class IDCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public IDCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.ID_COMMAND, statusResponseFactory);
     }

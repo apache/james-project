@@ -21,6 +21,8 @@ package org.apache.james.imap.api.process;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -34,6 +36,10 @@ public class DefaultMailboxTyper implements MailboxTyper {
         Role.SPAM, MailboxType.SPAM,
         Role.DRAFTS, MailboxType.DRAFTS,
         Role.TRASH, MailboxType.TRASH);
+
+    @Inject
+    public DefaultMailboxTyper() {
+    }
 
     @Override
     public MailboxType getMailboxType(ImapSession session, MailboxPath path) {

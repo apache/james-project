@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -96,6 +97,7 @@ class GetAnnotationProcessorTest {
     private void initAndMockData() {
         statusResponse = mock(StatusResponse.class);
         mockMailboxManager = mock(MailboxManager.class);
+        when(mockMailboxManager.getSupportedMailboxCapabilities()).thenReturn(EnumSet.of(MailboxManager.MailboxCapabilities.Annotation));
         when(mockMailboxManager.manageProcessing(any(), any())).thenAnswer((Answer<Mono>) invocation -> {
             Object[] args = invocation.getArguments();
             return (Mono) args[0];

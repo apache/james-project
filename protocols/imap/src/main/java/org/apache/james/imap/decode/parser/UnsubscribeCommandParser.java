@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -32,6 +34,8 @@ import org.apache.james.imap.message.request.UnsubscribeRequest;
  * Parse UNSUBSCRIBE commands
  */
 public class UnsubscribeCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public UnsubscribeCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.UNSUBSCRIBE_COMMAND, statusResponseFactory);
     }

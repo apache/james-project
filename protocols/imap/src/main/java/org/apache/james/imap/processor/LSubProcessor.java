@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -51,8 +53,9 @@ public class LSubProcessor extends AbstractMailboxProcessor<LsubRequest> {
 
     private final SubscriptionManager subscriptionManager;
 
+    @Inject
     public LSubProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                         MetricFactory metricFactory) {
         super(LsubRequest.class, mailboxManager, factory, metricFactory);
         this.subscriptionManager = subscriptionManager;
     }

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -41,9 +43,10 @@ import reactor.core.publisher.Mono;
 public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloseProcessor.class);
 
+    @Inject
     public CloseProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
-        super(CloseRequest.class,mailboxManager, factory, metricFactory);
+                          MetricFactory metricFactory) {
+        super(CloseRequest.class, mailboxManager, factory, metricFactory);
     }
 
     @Override

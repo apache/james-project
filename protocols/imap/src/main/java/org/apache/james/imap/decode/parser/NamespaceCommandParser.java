@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -32,6 +34,8 @@ import org.apache.james.imap.message.request.NamespaceRequest;
  * Parse NAMESPACE commands
  */
 public class NamespaceCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public NamespaceCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.NAMESPACE_COMMAND, statusResponseFactory);
     }

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -28,6 +30,8 @@ import org.apache.james.imap.message.request.XListRequest;
  * Parse XLIST commands
  */
 public class XListCommandParser extends ListCommandParser {
+
+    @Inject
     public XListCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.XLIST_COMMAND, statusResponseFactory);
     }

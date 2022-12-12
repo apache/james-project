@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -64,6 +66,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchCommandParser.class);
 
+    @Inject
     public SearchCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.SEARCH_COMMAND, statusResponseFactory);
     }

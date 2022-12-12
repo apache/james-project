@@ -25,6 +25,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -58,15 +60,25 @@ import com.google.common.collect.ImmutableSortedSet;
  */
 public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMetadataProcessor.class);
+    private final ImmutableList<Capability> capabilities;
 
+    @Inject
     public GetMetadataProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                                 MetricFactory metricFactory) {
         super(GetMetadataRequest.class, mailboxManager, factory, metricFactory);
+        this.capabilities = computeCapabilities();
     }
 
     @Override
     public List<Capability> getImplementedCapabilities(ImapSession session) {
-        return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
+        return capabilities;
+    }
+
+    private ImmutableList<Capability> computeCapabilities() {
+        return Optional.ofNullable(getMailboxManager().getSupportedMailboxCapabilities())
+            .map(capabilities -> capabilities.contains(MailboxManager.MailboxCapabilities.Annotation))
+            .map(annotationCap -> ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION))
+            .orElseGet(ImmutableList::of);
     }
 
     @Override

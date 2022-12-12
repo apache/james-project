@@ -21,6 +21,8 @@ package org.apache.james.imap.processor;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -55,8 +57,9 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
 
+    @Inject
     public GetQuotaProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
-            MetricFactory metricFactory) {
+                             MetricFactory metricFactory) {
         super(GetQuotaRequest.class, mailboxManager, factory, metricFactory);
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;

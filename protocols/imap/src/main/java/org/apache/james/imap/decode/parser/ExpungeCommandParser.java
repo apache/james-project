@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,6 +35,7 @@ import org.apache.james.imap.message.request.ExpungeRequest;
  */
 public class ExpungeCommandParser extends AbstractUidCommandParser {
 
+    @Inject
     public ExpungeCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.EXPUNGE_COMMAND, statusResponseFactory);
     }

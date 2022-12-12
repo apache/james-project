@@ -22,6 +22,8 @@ package org.apache.james.imap.processor;
 import java.util.Collections;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -55,6 +57,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
 
     private static final List<Capability> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_ACL);
 
+    @Inject
     public MyRightsProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(MyRightsRequest.class, mailboxManager, factory, metricFactory);
     }

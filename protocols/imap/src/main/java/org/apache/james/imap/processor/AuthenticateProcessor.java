@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -63,9 +65,15 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private static final List<Capability> OAUTH_CAPABILITIES = ImmutableList.of(Capability.of("AUTH=" + AUTH_TYPE_OAUTHBEARER), Capability.of("AUTH=" + AUTH_TYPE_XOAUTH2));
     public static final Capability SASL_CAPABILITY = Capability.of("SASL-IR");
 
+    @Inject
     public AuthenticateProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                                  MetricFactory metricFactory) {
         super(AuthenticateRequest.class, mailboxManager, factory, metricFactory);
+    }
+
+    @Override
+    public List<Class<? extends AuthenticateRequest>> acceptableClasses() {
+        return ImmutableList.of(AuthenticateRequest.class, IRAuthenticateRequest.class);
     }
 
     @Override

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -40,8 +42,9 @@ import reactor.core.publisher.Mono;
 public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SubscribeProcessor.class);
 
+    @Inject
     public SubscribeProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                              MetricFactory metricFactory) {
         super(SubscribeRequest.class, mailboxManager, subscriptionManager, factory, metricFactory);
     }
 

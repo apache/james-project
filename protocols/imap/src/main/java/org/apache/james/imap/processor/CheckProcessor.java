@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.CheckRequest;
@@ -30,8 +32,9 @@ import reactor.core.publisher.Mono;
 
 public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
 
+    @Inject
     public CheckProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                          MetricFactory metricFactory) {
         super(CheckRequest.class, mailboxManager, factory, metricFactory);
     }
 

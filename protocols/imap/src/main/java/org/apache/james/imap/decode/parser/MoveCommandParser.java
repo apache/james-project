@@ -1,5 +1,7 @@
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
@@ -10,6 +12,8 @@ import org.apache.james.imap.message.request.MoveRequest;
  * Parse MOVE commands
  */
 public class MoveCommandParser extends AbstractMessageRangeCommandParser {
+
+    @Inject
     public MoveCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.MOVE_COMMAND, statusResponseFactory);
     }

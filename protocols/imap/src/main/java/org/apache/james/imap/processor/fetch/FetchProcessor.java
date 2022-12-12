@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -64,6 +66,7 @@ import reactor.core.publisher.Mono;
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchProcessor.class);
 
+    @Inject
     public FetchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                           MetricFactory metricFactory) {
         super(FetchRequest.class, mailboxManager, factory, metricFactory);

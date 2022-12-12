@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -32,6 +34,8 @@ import org.apache.james.imap.message.request.StartTLSRequest;
  * Parse STARTTLS commands
  */
 public class StartTLSCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public StartTLSCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.STARTTLS_COMMAND, statusResponseFactory);
     }

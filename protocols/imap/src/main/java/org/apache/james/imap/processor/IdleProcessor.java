@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.imap.api.ImapConfiguration;
@@ -61,6 +63,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     private Duration heartbeatInterval;
     private boolean enableIdle;
 
+    @Inject
     public IdleProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
                          MetricFactory metricFactory) {
         super(IdleRequest.class, mailboxManager, factory, metricFactory);

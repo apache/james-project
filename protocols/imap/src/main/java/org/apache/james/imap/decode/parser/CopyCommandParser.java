@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
@@ -28,6 +30,8 @@ import org.apache.james.imap.message.request.CopyRequest;
  * Parse COPY commands
  */
 public class CopyCommandParser extends AbstractMessageRangeCommandParser {
+
+    @Inject
     public CopyCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.COPY_COMMAND, statusResponseFactory);
     }

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -32,6 +34,8 @@ import org.apache.james.imap.message.request.CapabilityRequest;
  * Parses CAPABILITY commands
  */
 public class CapabilityCommandParser extends AbstractImapCommandParser {
+
+    @Inject
     public CapabilityCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.CAPABILITY_COMMAND, statusResponseFactory);
     }

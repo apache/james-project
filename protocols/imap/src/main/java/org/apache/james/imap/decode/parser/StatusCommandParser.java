@@ -20,6 +20,8 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.EnumSet;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -37,6 +39,7 @@ import org.apache.james.imap.message.request.StatusRequest;
  */
 public class StatusCommandParser extends AbstractImapCommandParser {
 
+    @Inject
     public StatusCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.STATUS_COMMAND, statusResponseFactory);
     }

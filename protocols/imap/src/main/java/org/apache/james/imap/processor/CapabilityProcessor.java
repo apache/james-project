@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -59,6 +61,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
     private final Set<Capability> disabledCaps = new HashSet<>();
 
+    @Inject
     public CapabilityProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
         super(CapabilityRequest.class, mailboxManager, factory, metricFactory);
         capabilities.add(this);

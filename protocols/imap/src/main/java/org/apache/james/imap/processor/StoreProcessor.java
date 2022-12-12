@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -69,9 +70,10 @@ import reactor.core.publisher.Mono;
 
 public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreProcessor.class);
-    
+
+    @Inject
     public StoreProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+                          MetricFactory metricFactory) {
         super(StoreRequest.class, mailboxManager, factory, metricFactory);
     }
 

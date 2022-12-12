@@ -24,6 +24,7 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConfiguration;
@@ -62,6 +63,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
 
     private ImmutableList<Capability> capabilities = ImmutableList.of();
 
+    @Inject
     public AppendProcessor(MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, MetricFactory metricFactory) {
         super(AppendRequest.class, mailboxManager, statusResponseFactory, metricFactory);
     }

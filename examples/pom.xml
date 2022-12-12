@@ -35,6 +35,7 @@
   <properties>
     <james.groupId>org.apache.james</james.groupId>
     <james.baseVersion>${project.version}</james.baseVersion>
+    <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
     <maven.compiler.target>1.11</maven.compiler.target>
     <maven.compiler.source>1.11</maven.compiler.source>
   </properties>
@@ -48,5 +49,6 @@
     <module>custom-webadmin-route</module>
     <module>metrics-graphite</module>
     <module>custom-healthcheck</module>
+    <module>custom-imap</module>
   </modules>
 </project>

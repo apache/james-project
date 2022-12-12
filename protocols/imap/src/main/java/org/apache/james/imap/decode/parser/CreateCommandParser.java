@@ -20,6 +20,8 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.function.Predicate;
 
+import javax.inject.Inject;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -40,6 +42,7 @@ import com.google.common.base.Strings;
  */
 public class CreateCommandParser extends AbstractImapCommandParser {
 
+    @Inject
     public CreateCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.CREATE_COMMAND, statusResponseFactory);
     }
