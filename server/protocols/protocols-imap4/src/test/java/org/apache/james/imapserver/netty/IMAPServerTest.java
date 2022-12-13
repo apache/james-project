@@ -71,7 +71,6 @@ import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
-import org.apache.james.imap.processor.AppendProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.jwt.OidcTokenFixture;
@@ -140,6 +139,7 @@ class IMAPServerTest {
     private static final String USER_PASS = "pass";
     public static final String SMALL_MESSAGE = "header: value\r\n\r\nBODY";
     private InMemoryIntegrationResources memoryIntegrationResources;
+    private FakeAuthenticator authenticator;
 
     @RegisterExtension
     public TestIMAPClient testIMAPClient = new TestIMAPClient();
@@ -179,7 +179,7 @@ class IMAPServerTest {
     }
 
     private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
-        FakeAuthenticator authenticator = new FakeAuthenticator();
+        authenticator = new FakeAuthenticator();
         authenticator.addUser(USER, USER_PASS);
         authenticator.addUser(USER2, USER_PASS);
         authenticator.addUser(USER3, USER_PASS);
@@ -992,6 +992,17 @@ class IMAPServerTest {
             assertThat(testIMAPClient.capability())
                 .doesNotContain("LOGINDISABLED")
                 .contains("AUTH=PLAIN");
+        }
+
+        @Test
+        void authenticatePlainShouldSucceedWhenPasswordHasMoreThan255Characters() {
+            Username user1 = Username.of("user1@domain.org");
+            String user1Password = "1".repeat(300);
+            authenticator.addUser(user1, user1Password);
+            assertThatCode(() ->
+                testIMAPClient.connect("127.0.0.1", port)
+                    .authenticatePlain(user1.asString(), user1Password))
+                .doesNotThrowAnyException();
         }
     }
 

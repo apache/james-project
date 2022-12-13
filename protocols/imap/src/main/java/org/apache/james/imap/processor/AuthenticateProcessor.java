@@ -21,10 +21,11 @@ package org.apache.james.imap.processor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
-import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -48,6 +49,7 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
@@ -132,15 +134,13 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     private AuthenticationAttempt parseDelegationAttempt(String initialClientResponse) {
-        String token2;
         try {
             String userpass = new String(Base64.getDecoder().decode(initialClientResponse));
-            StringTokenizer authTokenizer = new StringTokenizer(userpass, "\0");
-            String token1 = authTokenizer.nextToken();  // Authorization Identity
-            token2 = authTokenizer.nextToken();                 // Authentication Identity
-            try {
-                return delegation(Username.of(token1), Username.of(token2), authTokenizer.nextToken());
-            } catch (java.util.NoSuchElementException ignored) {
+            List<String> tokens = Arrays.stream(userpass.split("\0"))
+                .filter(token -> !token.isBlank())
+                .collect(Collectors.toList());
+            Preconditions.checkArgument(tokens.size() == 2 || tokens.size() == 3);
+            if (tokens.size() == 2) {
                 // If we got here, this is what happened.  RFC 2595
                 // says that "the client may leave the authorization
                 // identity empty to indicate that it is the same as
@@ -156,9 +156,9 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 // elements, leading to the exception we just
                 // caught.  So we need to move the user to the
                 // password, and the authorize_id to the user.
-                return noDelegation(Username.of(token1), token2);
-            } finally {
-                authTokenizer = null;
+                return noDelegation(Username.of(tokens.get(0)), tokens.get(1));
+            } else {
+                return delegation(Username.of(tokens.get(0)), Username.of(tokens.get(1)), tokens.get(2));
             }
         } catch (Exception e) {
             // Ignored - this exception in parsing will be dealt
