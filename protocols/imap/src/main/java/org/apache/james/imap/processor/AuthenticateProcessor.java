@@ -191,7 +191,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             .addToContext("authType", request.getAuthType());
     }
 
-    private void doOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {
+    protected void doOAuth(String initialResponse, ImapSession session, ImapRequest request, Responder responder) {
         if (!session.supportsOAuth()) {
             no(request, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
         } else {
