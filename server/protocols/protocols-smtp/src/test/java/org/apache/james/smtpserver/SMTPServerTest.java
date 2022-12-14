@@ -1381,6 +1381,49 @@ public class SMTPServerTest {
     }
 
     @Test
+    public void testAuthShouldSucceedWhenPasswordHasMoreThan255Characters() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        String userName = USER_LOCALHOST;
+        String userPassword = "1".repeat(300);
+        usersRepository.addUser(Username.of(userName), userPassword);
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0" + userPassword + "\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+    }
+
+    @Test
+    public void testAuthShouldFailedWhenUserPassIsNotBase64Decoded() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        String userName = USER_LOCALHOST;
+        String userPassword = "1".repeat(300);
+        usersRepository.addUser(Username.of(userName), userPassword);
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand("canNotDecode");
+        assertThat(smtpProtocol.getReplyString())
+            .contains("501 Could not decode parameters for AUTH PLAIN");
+    }
+
+    @Test
     public void testAuthSendMailFromAlias() throws Exception {
         smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
         smtpConfiguration.setAuthorizingAnnounce();
