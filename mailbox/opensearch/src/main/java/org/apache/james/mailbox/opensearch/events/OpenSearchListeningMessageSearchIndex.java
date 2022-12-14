@@ -62,7 +62,6 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.opensearch.client.json.JsonData;
-import org.opensearch.client.json.JsonpDeserializer;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
@@ -273,8 +272,11 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     private void extractMessageIdFromHit(Hit<ObjectNode> hit, SynchronousSink<MessageId> sink) {
         JsonData messageId = hit.fields().get(MESSAGE_ID);
         if (messageId != null) {
-            List<String> extractMessageId = messageId.deserialize(JsonpDeserializer.arrayDeserializer(JsonpDeserializer.stringDeserializer()));
-            sink.next(messageIdFactory.fromString(extractMessageId.get(0)));
+            String messageIdAsString = messageId.toJson()
+                .asJsonArray()
+                .getString(0);
+
+            sink.next(messageIdFactory.fromString(messageIdAsString));
         } else {
             LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.id());
         }
@@ -283,8 +285,11 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     private void extractUidFromHit(Hit<ObjectNode> hit, SynchronousSink<MessageUid> sink) {
         JsonData uid = hit.fields().get(UID);
         if (uid != null) {
-            List<Number> uidAsNumber = uid.deserialize(JsonpDeserializer.arrayDeserializer(JsonpDeserializer.numberDeserializer()));
-            sink.next(MessageUid.of(uidAsNumber.get(0).longValue()));
+            int uidAsInt = uid.toJson()
+                .asJsonArray()
+                .getInt(0);
+
+            sink.next(MessageUid.of(uidAsInt));
         } else {
             LOGGER.warn("Can not extract UID, MessageID and/or MailboxId for search result {}", hit.id());
         }
