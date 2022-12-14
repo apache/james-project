@@ -60,7 +60,12 @@ public class SslConfig {
             String truststoreType = config.getString("tls.clientAuth.truststoreType", "JKS");
             char[] truststoreSecret = config.getString("tls.clientAuth.truststoreSecret", "").toCharArray();
             boolean enableOCSPCRLChecks = config.getBoolean("tls.enableOCSPCRLChecks", false);
-            LOGGER.info("TLS enabled with auth {} using truststore {}", clientAuth, truststore);
+
+            if (useSSL) {
+                LOGGER.info("SSL enabled with keystore({}) at {}, certificates {}", keystoreType, keystore, certificates);
+            } else {
+                LOGGER.info("TLS enabled with auth {} using truststore {}", clientAuth, truststore);
+            }
 
             return new SslConfig(useStartTLS, useSSL, clientAuth, keystore, keystoreType, privateKey, certificates, secret, truststore, truststoreType, enabledCipherSuites, enabledProtocols, truststoreSecret, enableOCSPCRLChecks);
         } else {
