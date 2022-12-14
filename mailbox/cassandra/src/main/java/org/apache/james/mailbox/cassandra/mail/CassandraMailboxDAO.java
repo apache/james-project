@@ -37,7 +37,6 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -48,7 +47,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.UdtValue;
@@ -69,7 +67,6 @@ public class CassandraMailboxDAO {
     private final PreparedStatement updateStatement;
     private final PreparedStatement updateUidValidityStatement;
     private final CqlSession session;
-    private final DriverExecutionProfile lwtProfile;
     private final TypeCodec<UdtValue> mailboxBaseTypeCodec;
 
     @Inject
@@ -83,7 +80,6 @@ public class CassandraMailboxDAO {
         this.deleteStatement = prepareDelete();
         this.listStatement = prepareList();
         this.readStatement = prepareRead();
-        this.lwtProfile = JamesExecutionProfiles.getLWTProfile(session);
 
         this.mailboxBaseTypeCodec = CodecRegistry.DEFAULT.codecFor(typesProvider.getDefinedUserType(MAILBOX_BASE.asCql(true)));
     }
@@ -154,8 +150,7 @@ public class CassandraMailboxDAO {
 
     public Mono<Mailbox> retrieveMailbox(CassandraId mailboxId) {
         return executor.executeSingleRow(readStatement.bind()
-                .set(ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID)
-                .setExecutionProfile(lwtProfile))
+                .set(ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID))
             .flatMap(row -> mailboxFromRow(row, mailboxId));
     }
 
