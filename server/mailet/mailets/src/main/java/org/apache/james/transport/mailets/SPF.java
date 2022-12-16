@@ -39,6 +39,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 
 /**
@@ -69,12 +70,15 @@ public class SPF extends GenericMailet {
     private boolean debug = false;
     private boolean addHeader = false;
     private org.apache.james.jspf.impl.SPF spf;
-    private static final AttributeName EXPLANATION_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.explanation");
-    private static final AttributeName RESULT_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.result");
+    public static final AttributeName EXPLANATION_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.explanation");
+    public static final AttributeName RESULT_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.result");
     private static final String privateNetworks = "127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/16, 172.17.0.0/16, 172.18.0.0/16, 172.19.0.0/16, 172.20.0.0/16, 172.21.0.0/16, 172.22.0.0/16, 172.23.0.0/16, 172.24.0.0/16, 172.25.0.0/16, 172.26.0.0/16, 172.27.0.0/16, 172.28.0.0/16, 172.29.0.0/16, 172.30.0.0/16, 172.31.0.0/16";
 
     private final DNSService dnsService;
     private NetMatcher netMatcher;
+
+    // should be removed in future (see JAMES-2158)
+    private org.apache.james.jspf.core.DNSService spfDnsService;
 
     @Inject
     public SPF(DNSService dnsService) {
@@ -85,7 +89,12 @@ public class SPF extends GenericMailet {
     public void init() {
         debug = Boolean.parseBoolean(getInitParameter("debug", "false"));
         addHeader = Boolean.parseBoolean(getInitParameter("addHeader", "false"));
-        spf = new DefaultSPF(new SPFLoggerAdapter(debug));
+
+        if (spfDnsService == null) {
+            spf = new DefaultSPF(new SPFLoggerAdapter(debug));
+        } else {
+            spf = new org.apache.james.jspf.impl.SPF(spfDnsService, new SPFLoggerAdapter(debug));
+        }
 
         Collection<String> ignoredNetworks = Splitter.on(',')
             .trimResults()
@@ -220,5 +229,11 @@ public class SPF extends GenericMailet {
         }
 
     }
+
+    @VisibleForTesting
+    void setSPFDnsService(org.apache.james.jspf.core.DNSService dnsService) {
+        spfDnsService = dnsService;
+    }
+
 
 }
