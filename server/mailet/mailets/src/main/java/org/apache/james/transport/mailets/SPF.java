@@ -103,7 +103,7 @@ public class SPF extends GenericMailet {
         if (netMatcher.matchInetNetwork(remoteAddr)) {
             LOGGER.debug("ignore SPF check for ip:{}", remoteAddr);
         } else {
-            String helo = mail.getRemoteHost();
+            String helo = AttributeUtils.getValueAndCastFromMail(mail, Mail.SMTP_HELO, String.class).orElse(mail.getRemoteHost());
             String sender = mail.getMaybeSender().asString("");
             SPFResult result = spf.checkSPF(remoteAddr, sender, helo);
             mail.setAttribute(new Attribute(EXPLANATION_ATTRIBUTE, AttributeValue.of(result.getExplanation())));
