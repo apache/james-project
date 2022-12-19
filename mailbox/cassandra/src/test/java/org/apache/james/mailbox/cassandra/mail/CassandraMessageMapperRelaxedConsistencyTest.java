@@ -34,15 +34,16 @@ class CassandraMessageMapperRelaxedConsistencyTest {
 
     @Nested
     class WeakReadConsistency extends MessageMapperTest {
-        private final CassandraMapperProvider cassandraMapperProvider = new CassandraMapperProvider(
-            cassandraCluster.getCassandraCluster(),
-            CassandraConfiguration.builder()
-                .messageReadStrongConsistency(false)
-                .messageWriteStrongConsistency(true)
-                .build());
+        private CassandraMapperProvider cassandraMapperProvider;
 
         @Override
         protected MapperProvider createMapperProvider() {
+            cassandraMapperProvider = new CassandraMapperProvider(
+                cassandraCluster.getCassandraCluster(),
+                CassandraConfiguration.builder()
+                    .messageReadStrongConsistency(false)
+                    .messageWriteStrongConsistency(true)
+                    .build());
             return cassandraMapperProvider;
         }
 
@@ -54,15 +55,16 @@ class CassandraMessageMapperRelaxedConsistencyTest {
 
     @Nested
     class WeakWriteConsistency extends MessageMapperTest {
-        private final CassandraMapperProvider cassandraMapperProvider = new CassandraMapperProvider(
-            cassandraCluster.getCassandraCluster(),
-            CassandraConfiguration.builder()
-                .messageReadStrongConsistency(false)
-                .messageWriteStrongConsistency(false)
-                .build());
+        private CassandraMapperProvider cassandraMapperProvider;
 
         @Override
         protected MapperProvider createMapperProvider() {
+            cassandraMapperProvider = new CassandraMapperProvider(
+                cassandraCluster.getCassandraCluster(),
+                CassandraConfiguration.builder()
+                    .messageReadStrongConsistency(false)
+                    .messageWriteStrongConsistency(false)
+                    .build());
             return cassandraMapperProvider;
         }
 

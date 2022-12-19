@@ -63,12 +63,13 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
 
-    private final CassandraMapperProvider mapperProvider = new CassandraMapperProvider(
-        cassandraCluster.getCassandraCluster(),
-        CassandraConfiguration.DEFAULT_CONFIGURATION);
+    private CassandraMapperProvider mapperProvider;
 
     @Override
     protected CassandraMapperProvider provideMapper() {
+        mapperProvider = new CassandraMapperProvider(
+            cassandraCluster.getCassandraCluster(),
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         return mapperProvider;
     }
 
