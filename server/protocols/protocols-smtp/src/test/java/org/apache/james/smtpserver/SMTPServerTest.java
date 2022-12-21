@@ -1420,7 +1420,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand("canNotDecode");
         assertThat(smtpProtocol.getReplyString())
-            .contains("501 Could not decode parameters for AUTH PLAIN");
+            .contains("535 Authentication Failed");
     }
 
     @Test

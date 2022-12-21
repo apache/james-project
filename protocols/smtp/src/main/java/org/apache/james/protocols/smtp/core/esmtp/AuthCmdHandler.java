@@ -170,13 +170,13 @@ public class AuthCmdHandler
                     session.pushLineHandler(new AbstractSMTPLineHandler() {
                         @Override
                         protected Response onCommand(SMTPSession session, String l) {
-                            return doPlainAuthPass(session, l);
+                            return doPlainAuth(session, l);
                         }
                     });
                     return AUTH_READY_PLAIN;
                 } else {
                     userpass = initialResponse.trim();
-                    return doPlainAuthPass(session, userpass);
+                    return doPlainAuth(session, userpass);
                 }
             } else if (authType.equals(AUTH_TYPE_LOGIN) && session.getConfiguration().isPlainAuthEnabled()) {
 
@@ -242,16 +242,19 @@ public class AuthCmdHandler
      * @param session SMTP session object
      * @param line the initial response line passed in with the AUTH command
      */
-    private Response doPlainAuthPass(SMTPSession session, String line) {
+    private Response doPlainAuth(SMTPSession session, String line) {
         try {
             List<String> tokens = Optional.ofNullable(decodeBase64(line))
                 .map(userpass1 -> Arrays.stream(userpass1.split("\0"))
                     .filter(token -> !token.isBlank())
                     .collect(Collectors.toList()))
                 .orElse(List.of());
-            Preconditions.checkArgument(tokens.size() == 2 || tokens.size() == 3);
+            Preconditions.checkArgument(tokens.size() == 1 || tokens.size() == 2 || tokens.size() == 3);
             Response response = null;
-            if (tokens.size() == 2) {
+
+            if (tokens.size() == 1) {
+                response = doDelegation(session, Username.of(tokens.get(0)));
+            } else if (tokens.size() == 2) {
                 // If we got here, this is what happened.  RFC 2595
                 // says that "the client may leave the authorization
                 // identity empty to indicate that it is the same as
@@ -337,6 +340,31 @@ public class AuthCmdHandler
 
         // Authenticate user
         return doAuthTest(session, username, pass, "LOGIN");
+    }
+
+    protected Response doDelegation(SMTPSession session, Username username) {
+        Response res = null;
+
+        List<AuthHook> hooks = Optional.ofNullable(getHooks())
+            .orElse(List.of());
+
+        for (AuthHook rawHook : hooks) {
+            rawHook.doDelegation(session, username);
+            res = executeHook(session, rawHook, hook -> rawHook.doDelegation(session, username));
+
+            if (res != null) {
+                if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
+                    LOGGER.warn("{} was not authorized to connect as {}", session.getUsername(), username);
+                } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
+                    LOGGER.info("{} was authorized to connect as {}", session.getUsername(), username);
+                }
+                return res;
+            }
+        }
+
+        res = AUTH_FAILED;
+        LOGGER.error("DELEGATE failed from {}@{}", username, session.getRemoteAddress().getAddress().getHostAddress());
+        return res;
     }
 
     protected Response doAuthTest(SMTPSession session, Username username, String pass, String authType) {
