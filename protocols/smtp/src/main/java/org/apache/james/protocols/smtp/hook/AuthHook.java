@@ -38,4 +38,8 @@ public interface AuthHook extends Hook {
     HookResult doAuth(SMTPSession session, Username username, String password);
 
     HookResult doSasl(SMTPSession session, OidcSASLConfiguration saslConfiguration, String initialResponse);
+
+    default HookResult doDelegation(SMTPSession session, Username target) {
+        return HookResult.DECLINED;
+    }
 }
