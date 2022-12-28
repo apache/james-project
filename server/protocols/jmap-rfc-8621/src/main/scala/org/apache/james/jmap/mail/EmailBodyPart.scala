@@ -28,11 +28,12 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import org.apache.commons.io.IOUtils
+import org.apache.james.jmap.api.model.Size
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
-import org.apache.james.mailbox.model.{Cid, MessageId, MessageResult}
+import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageId, MessageResult}
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
@@ -41,6 +42,7 @@ import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.{Failure, Success, Try}
 
 object PartId {
@@ -78,6 +80,32 @@ object EmailBodyPart {
 
     val mime4JMessage = Try(defaultMessageBuilder.parseMessage(message.getFullContent.getInputStream))
     mime4JMessage.flatMap(of(messageId, _))
+  }
+
+  def fromAttachment(attachment: MessageAttachmentMetadata, entity: Message): EmailBodyPart = {
+    def parseDisposition(attachment: MessageAttachmentMetadata): Option[Disposition] =
+      if (attachment.isInline) {
+        Option(Disposition.INLINE)
+      } else {
+        Option(Disposition.ATTACHMENT)
+      }
+
+    def parsePartIdFromBlobId(blobId: String): PartId =
+      PartId(blobId.substring(blobId.lastIndexOf("_") + 1).asInstanceOf[PartIdValue])
+
+    EmailBodyPart(partId = parsePartIdFromBlobId(attachment.getAttachmentId.getId),
+      blobId = BlobId.of(attachment.getAttachmentId.getId).toOption,
+      headers = entity.getHeader.getFields.asScala.toList.map(EmailHeader(_)),
+      size = Size.sanitizeSize(attachment.getAttachment.getSize),
+      name = attachment.getName.map(Name(_)).toScala,
+      `type` = Type(attachment.getAttachment.getType.mimeType().asString()),
+      charset = attachment.getAttachment.getType.charset().map(charset => Charset(charset.name())).toScala,
+      disposition = parseDisposition(attachment),
+      cid = attachment.getCid.toScala,
+      language = Option.empty,
+      location = Option.empty,
+      subParts = Option.empty,
+      entity = entity)
   }
 
   def of(messageId: MessageId, message: Message): Try[EmailBodyPart] =

@@ -35,9 +35,10 @@ import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.EmailHeaderName.{ADDRESSES_NAMES, DATE, MESSAGE_ID_NAMES}
+import org.apache.james.jmap.mail.FastViewWithAttachmentsMetadataReadLevel.supportedByFastViewWithAttachments
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.method.ZoneIdProvider
-import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, MINIMAL}
+import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, HEADERS_WITH_ATTACHMENTS_METADATA, MINIMAL}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult, ThreadId => JavaThreadId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.DecodeMonitor
@@ -104,14 +105,16 @@ object ReadLevel {
   private val metadataProperty: Seq[NonEmptyString] = Seq("id", "size", "mailboxIds",
     "mailboxIds", "blobId", "threadId", "receivedAt")
   private val fastViewProperty: Seq[NonEmptyString] = Seq("preview", "hasAttachment")
-  private val fullProperty: Seq[NonEmptyString] = Seq("bodyStructure", "textBody", "htmlBody",
-    "attachments", "bodyValues")
+  private val attachmentsMetadataViewProperty: Seq[NonEmptyString] = Seq("attachments")
+  private val fullProperty: Seq[NonEmptyString] = Seq("bodyStructure", "textBody", "htmlBody", "bodyValues")
 
   def of(property: NonEmptyString): ReadLevel = if (metadataProperty.contains(property)) {
     MetadataReadLevel
   } else if (fastViewProperty.contains(property)) {
     FastViewReadLevel
-  }  else if (fullProperty.contains(property)) {
+  } else if (attachmentsMetadataViewProperty.contains(property)) {
+    FastViewWithAttachmentsMetadataReadLevel
+  } else if (fullProperty.contains(property)) {
     FullReadLevel
   } else {
     HeaderReadLevel
@@ -122,11 +125,13 @@ object ReadLevel {
     case FullReadLevel => FullReadLevel
     case HeaderReadLevel => readLevel2 match {
       case FullReadLevel => FullReadLevel
+      case FastViewWithAttachmentsMetadataReadLevel => FastViewWithAttachmentsMetadataReadLevel
       case FastViewReadLevel => FastViewReadLevel
       case _ => HeaderReadLevel
     }
     case FastViewReadLevel => readLevel2 match {
       case FullReadLevel => FullReadLevel
+      case FastViewWithAttachmentsMetadataReadLevel => FastViewWithAttachmentsMetadataReadLevel
       case _ => FastViewReadLevel
     }
   }
@@ -136,6 +141,17 @@ sealed trait ReadLevel
 case object MetadataReadLevel extends ReadLevel
 case object HeaderReadLevel extends ReadLevel
 case object FastViewReadLevel extends ReadLevel
+case object FastViewWithAttachmentsMetadataReadLevel extends ReadLevel {
+  private val availableFetchingBodyPropertiesForFastViewWithAttachments = Seq("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "headers")
+
+  def supportedByFastViewWithAttachments(bodyProperties: Option[Properties]): Boolean =
+    bodyProperties.exists(supportedByFastViewWithAttachments)
+
+  private def supportedByFastViewWithAttachments(properties: Properties): Boolean =
+    properties.value
+      .map(availableFetchingBodyPropertiesForFastViewWithAttachments.contains)
+      .reduce(_&&_)
+}
 case object FullReadLevel extends ReadLevel
 
 object HeaderMessageId {
@@ -356,10 +372,18 @@ case class EmailFastView(metadata: EmailMetadata,
                          bodyMetadata: EmailBodyMetadata,
                          specificHeaders: Map[String, Option[EmailHeaderValue]]) extends EmailView
 
+case class EmailFastViewWithAttachments(metadata: EmailMetadata,
+                                        header: EmailHeaders,
+                                        attachments: AttachmentsMetadata,
+                                        bodyMetadata: EmailBodyMetadata,
+                                        specificHeaders: Map[String, Option[EmailHeaderValue]]) extends EmailView
+
+case class AttachmentsMetadata(attachments: List[EmailBodyPart])
 
 class EmailViewReaderFactory @Inject() (metadataReader: EmailMetadataViewReader,
                                         headerReader: EmailHeaderViewReader,
                                         fastViewReader: EmailFastViewReader,
+                                        fastViewWithAttachmentsMetadataReader: EmailFastViewWithAttachmentsMetadataReader,
                                         fullReader: EmailFullViewReader) {
   def selectReader(request: EmailGetRequest): EmailViewReader[EmailView] = {
     val readLevel: ReadLevel = request.properties
@@ -373,6 +397,12 @@ class EmailViewReaderFactory @Inject() (metadataReader: EmailMetadataViewReader,
       case MetadataReadLevel => metadataReader
       case HeaderReadLevel => headerReader
       case FastViewReadLevel => fastViewReader
+      case FastViewWithAttachmentsMetadataReadLevel =>
+        if (supportedByFastViewWithAttachments(request.bodyProperties)) {
+          fastViewWithAttachmentsMetadataReader
+        } else {
+          fullReader
+        }
       case FullReadLevel => fullReader
     }
   }
@@ -664,6 +694,98 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
           preview = fastView.getPreview),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
         specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
+    }
+  }
+}
+
+private class EmailFastViewWithAttachmentsMetadataReader @Inject()(messageIdManager: MessageIdManager,
+                                                                   messageFastViewProjection: MessageFastViewProjection,
+                                                                   htmlTextExtractor: HtmlTextExtractor,
+                                                                   zoneIdProvider: ZoneIdProvider,
+                                                                   fullViewFactory: EmailFullViewFactory) extends EmailViewReader[EmailView] {
+  private val fullReader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, htmlTextExtractor, fullViewFactory)
+
+  override def read[T >: EmailView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
+    SMono.fromPublisher(messageFastViewProjection.retrieve(ids.asJava))
+      .map(_.asScala.toMap)
+      .map(fastViews => ids.map(id => fastViews.get(id)
+        .map(FastViewAvailable(id, _))
+        .getOrElse(FastViewUnavailable(id))))
+      .flatMapMany(results => toEmailViews(results, request, mailboxSession))
+
+  private def toEmailViews[T >: EmailView](results: Seq[FastViewResult], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
+    val availables: Seq[FastViewAvailable] = results.flatMap {
+      case available: FastViewAvailable => Some(available)
+      case _ => None
+    }
+    val unavailables: Seq[FastViewUnavailable] = results.flatMap {
+      case unavailable: FastViewUnavailable => Some(unavailable)
+      case _ => None
+    }
+
+    SFlux.merge(Seq(
+      toFastViews(availables, request, mailboxSession),
+      fullReader.read(unavailables.map(_.id), request, mailboxSession)
+        .doOnNext(storeOnCacheMisses)))
+  }
+
+  private def storeOnCacheMisses(fullView: EmailFullView) = {
+    SMono.fromPublisher(messageFastViewProjection.store(
+      fullView.metadata.id,
+      MessageFastViewPrecomputedProperties.builder()
+        .preview(fullView.bodyMetadata.preview)
+        .hasAttachment(fullView.bodyMetadata.hasAttachment.value)
+        .build()))
+      .doOnError(e => EmailFastViewReader.logger.error(s"Cannot store the projection to MessageFastViewProjection for ${fullView.metadata.id}", e))
+      .subscribeOn(Schedulers.parallel())
+      .subscribe()
+  }
+
+  private def toFastViews(fastViews: Seq[FastViewAvailable], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[EmailView] ={
+    val fastViewsAsMap: Map[MessageId, MessageFastViewPrecomputedProperties] = fastViews.map(e => (e.id, e.fastView)).toMap
+    val ids: Seq[MessageId] = fastViews.map(_.id)
+
+    SFlux.fromPublisher(messageIdManager.getMessagesReactive(ids.asJava, HEADERS_WITH_ATTACHMENTS_METADATA, mailboxSession))
+      .collectSeq()
+      .flatMapIterable(messages => messages.groupBy(_.getMessageId).toSet)
+      .map(x => toEmail(request)(x, fastViewsAsMap(x._1)))
+      .handle[EmailView]((aTry, sink) => aTry match {
+        case Success(value) => sink.next(value)
+        case Failure(e) => sink.error(e)
+      })
+  }
+
+  private def toEmail(request: EmailGetRequest)(message: (MessageId, Seq[MessageResult]), fastView: MessageFastViewPrecomputedProperties): Try[EmailView] = {
+    val messageId: MessageId = message._1
+    val mailboxIds: MailboxIds = MailboxIds(message._2
+      .map(_.getMailboxId)
+      .toList)
+    val threadId: ThreadId = ThreadId(message._2.head.getThreadId.serialize())
+
+    for {
+      firstMessage <- message._2
+        .headOption
+        .map(Success(_))
+        .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
+      mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
+      blobId <- BlobId.of(messageId)
+      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+    } yield {
+      EmailFastViewWithAttachments(
+        metadata = EmailMetadata(
+          id = messageId,
+          blobId = blobId,
+          threadId = threadId,
+          mailboxIds = mailboxIds,
+          receivedAt = UTCDate.from(firstMessage.getInternalDate, zoneIdProvider.get()),
+          size = sanitizeSize(firstMessage.getSize),
+          keywords = keywords),
+        bodyMetadata = EmailBodyMetadata(
+          hasAttachment = HasAttachment(fastView.hasAttachment),
+          preview = fastView.getPreview),
+        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage),
+        attachments = AttachmentsMetadata(firstMessage.getLoadedAttachments.asScala.toList.map(EmailBodyPart.fromAttachment(_, mime4JMessage))))
     }
   }
 }
