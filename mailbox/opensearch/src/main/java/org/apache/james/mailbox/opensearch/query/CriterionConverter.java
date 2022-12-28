@@ -304,11 +304,11 @@ public class CriterionConverter {
     private QueryBuilder convertDateOperator(String field, SearchQuery.DateComparator dateComparator, String lowDateString, String upDateString) {
         switch (dateComparator) {
         case BEFORE:
-            return rangeQuery(field).lte(upDateString);
+            return rangeQuery(field).lt(lowDateString); // less than start of the current day
         case AFTER:
-            return rangeQuery(field).gt(lowDateString);
+            return rangeQuery(field).gte(upDateString); // start of next day + greater than that
         case ON:
-            return rangeQuery(field).lte(upDateString).gte(lowDateString);
+            return rangeQuery(field).lt(upDateString).gte(lowDateString);
         }
         throw new RuntimeException("Unknown date operator");
     }

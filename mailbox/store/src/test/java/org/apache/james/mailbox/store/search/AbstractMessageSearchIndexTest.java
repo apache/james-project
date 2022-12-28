@@ -856,7 +856,7 @@ public abstract class AbstractMessageSearchIndexTest {
         // Date : 2014/07/02 00:00:00.000 ( Paris time zone )
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsOnly(m7.getUid(), m8.getUid(), m9.getUid());
+            .containsOnly(m8.getUid(), m9.getUid());
     }
 
     @Test
@@ -867,7 +867,7 @@ public abstract class AbstractMessageSearchIndexTest {
         // Date : 2014/02/02 00:00:00.000 ( Paris time zone )
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsOnly(m1.getUid(), m2.getUid());
+            .containsOnly(m1.getUid());
     }
 
     @Test
@@ -889,7 +889,7 @@ public abstract class AbstractMessageSearchIndexTest {
         // Date : 2014/07/02 00:00:00.000 ( Paris time zone )
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsOnly(m7.getUid(), m8.getUid(), m9.getUid());
+            .containsOnly(m8.getUid(), m9.getUid());
     }
 
     @Test
@@ -900,7 +900,7 @@ public abstract class AbstractMessageSearchIndexTest {
         // Date : 2014/02/02 00:00:00.000 ( Paris time zone )
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsOnly(m1.getUid(), m2.getUid());
+            .containsOnly(m1.getUid());
     }
 
     @Test
