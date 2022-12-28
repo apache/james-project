@@ -397,6 +397,7 @@ public class CassandraMessageDAOV3 {
         switch (fetchType) {
             case FULL:
                 return getFullContent(headerId, bodyId);
+            case ATTACHMENTS_METADATA:
             case HEADERS:
                 return getContent(headerId, SIZE_BASED)
                     .map(ByteContent::new);

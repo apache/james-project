@@ -36,6 +36,7 @@ public class FetchGroup extends Profiles<FetchGroup> {
     public enum Profile {
         MIME_DESCRIPTOR,
         HEADERS,
+        HEADERS_WITH_ATTACHMENTS_METADATA,
         FULL_CONTENT,
         BODY_CONTENT,
         MIME_HEADERS,
@@ -48,6 +49,7 @@ public class FetchGroup extends Profiles<FetchGroup> {
      */
     public static final FetchGroup MINIMAL = new FetchGroup(EnumSet.noneOf(Profile.class));
     public static final FetchGroup HEADERS = new FetchGroup(EnumSet.of(Profile.HEADERS));
+    public static final FetchGroup HEADERS_WITH_ATTACHMENTS_METADATA = new FetchGroup(EnumSet.of(Profile.HEADERS_WITH_ATTACHMENTS_METADATA));
     public static final FetchGroup FULL_CONTENT = new FetchGroup(EnumSet.of(Profile.FULL_CONTENT));
     public static final FetchGroup BODY_CONTENT = new FetchGroup(EnumSet.of(Profile.BODY_CONTENT));
 

@@ -307,7 +307,14 @@ public interface MessageMapper extends Mapper {
          * </p>
          */
         HEADERS,
-        
+        /**
+         * Fetch the {@link #HEADERS}, {@link Property}'s and the {@link #ATTACHMENTS_METADATA}'s for the {@link MailboxMessage}. This includes:
+         *
+         * <p>
+         * {@link MailboxMessage#getAttachments()}
+         * </p>
+         */
+        ATTACHMENTS_METADATA,
         /**
          * Fetch the complete {@link MailboxMessage}
          * 

@@ -39,6 +39,7 @@ class FetchGroupConverterTest {
         return Stream.of(
             Arguments.arguments(FetchGroup.MINIMAL, FetchType.METADATA),
             Arguments.arguments(FetchGroup.HEADERS, FetchType.HEADERS),
+            Arguments.arguments(FetchGroup.HEADERS_WITH_ATTACHMENTS_METADATA, FetchType.ATTACHMENTS_METADATA),
             Arguments.arguments(FetchGroup.BODY_CONTENT, FetchType.FULL),
             Arguments.arguments(FetchGroup.FULL_CONTENT, FetchType.FULL),
             Arguments.arguments(FetchGroup.BODY_CONTENT.with(Profile.HEADERS), FetchType.FULL),

@@ -51,6 +51,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class ResultUtils {
     private static final EnumSet<FetchGroup.Profile> SUPPORTED_GROUPS = EnumSet.of(
         FetchGroup.Profile.HEADERS,
+        FetchGroup.Profile.HEADERS_WITH_ATTACHMENTS_METADATA,
         FetchGroup.Profile.BODY_CONTENT,
         FetchGroup.Profile.FULL_CONTENT,
         FetchGroup.Profile.MIME_DESCRIPTOR);
@@ -205,7 +206,7 @@ public class ResultUtils {
         if (profiles.contains(FetchGroup.Profile.MIME_CONTENT)) {
             addMimeBodyContent(message, messageResult, mimePath);
         }
-        if (profiles.contains(FetchGroup.Profile.HEADERS)) {
+        if (profiles.contains(FetchGroup.Profile.HEADERS) || profiles.contains(FetchGroup.Profile.HEADERS_WITH_ATTACHMENTS_METADATA)) {
             addHeaders(message, messageResult, mimePath);
         }
         if (profiles.contains(FetchGroup.Profile.MIME_HEADERS)) {
