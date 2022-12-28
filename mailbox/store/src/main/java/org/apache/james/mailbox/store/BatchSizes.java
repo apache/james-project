@@ -134,12 +134,13 @@ public class BatchSizes {
         switch (fetchType) {
             case METADATA:
                 return fetchMetadata;
+            case ATTACHMENTS_METADATA:
             case HEADERS:
                 return fetchHeaders;
             case FULL:
                 return fetchFull;
         }
-        throw new RuntimeException("Unknown fetchTpe: " + fetchType);
+        throw new RuntimeException("Unknown fetchType: " + fetchType);
     }
 
     public Optional<Integer> getCopyBatchSize() {

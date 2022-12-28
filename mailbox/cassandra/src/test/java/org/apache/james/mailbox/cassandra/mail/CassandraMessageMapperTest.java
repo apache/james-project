@@ -23,8 +23,12 @@ import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.ONE_SECOND;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -39,12 +43,22 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ByteContent;
+import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.mailbox.store.mail.model.MessageAssert;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.assertj.core.api.SoftAssertions;
@@ -55,6 +69,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 class CassandraMessageMapperTest extends MessageMapperTest {
     @RegisterExtension
@@ -417,5 +432,37 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
             assertThat(messageMapper.getMailboxCounters(benwaInboxMailbox).getUnseen()).isEqualTo(4);
         }
+    }
+
+    @Test
+    void messagesRetrievedUsingFetchTypeAttachmentsMetadataShouldNotHaveBodyDataLoaded() throws MailboxException, IOException {
+        saveMessages();
+        MessageMapper.FetchType fetchType = FetchType.ATTACHMENTS_METADATA;
+        MailboxMessage retrievedMessage = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, 1).next();
+        MessageAssert.assertThat(retrievedMessage).isEqualToWithoutUid(message1, fetchType);
+        assertThat(retrievedMessage.getBodyContent().readAllBytes()).isEmpty();
+    }
+
+    @Test
+    void messagesRetrievedUsingFetchTypeAttachmentsMetadataShouldHaveAttachmentsMetadataLoaded() throws MailboxException {
+        MessageId messageId = mapperProvider.generateMessageId();
+        String content = "Subject: Test1 \n\nBody1\n.\n";
+        ParsedAttachment attachment1 = ParsedAttachment.builder()
+            .contentType("content")
+            .content(ByteSource.wrap("attachment".getBytes(StandardCharsets.UTF_8)))
+            .noName()
+            .cid(Cid.from("cid"))
+            .inline();
+        List<MessageAttachmentMetadata> messageAttachments = attachmentMapper.storeAttachments(ImmutableList.of(attachment1), messageId);
+        MailboxMessage message = new SimpleMailboxMessage(messageId, ThreadId.fromBaseMessageId(messageId), new Date(), content.length(), 16,
+            new ByteContent(content.getBytes()), new Flags(), new PropertyBuilder().build(), benwaInboxMailbox.getMailboxId(),
+            messageAttachments, Optional.empty());
+        messageMapper.add(benwaInboxMailbox, message);
+        message.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
+
+        MessageMapper.FetchType fetchType = FetchType.ATTACHMENTS_METADATA;
+        MailboxMessage retrievedMessage = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message.getUid()), fetchType, 1).next();
+
+        assertThat(retrievedMessage.getAttachments()).isEqualTo(message.getAttachments());
     }
 }

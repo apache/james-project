@@ -239,7 +239,7 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     
     @Test
     public void canCompareFetchTypes() {
-        assertThat(FetchType.values()).containsExactly(FetchType.METADATA, FetchType.HEADERS, FetchType.FULL);
+        assertThat(FetchType.values()).containsExactly(FetchType.METADATA, FetchType.HEADERS, FetchType.ATTACHMENTS_METADATA, FetchType.FULL);
         
         assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.METADATA, FetchType.METADATA)).isEqualTo(FetchType.METADATA);
         assertThat(SimpleMessageSearchIndex.maxFetchType(FetchType.METADATA, FetchType.HEADERS)).isEqualTo(FetchType.HEADERS);
