@@ -59,7 +59,7 @@ import com.google.common.base.Splitter;
  * &lt;mailet match="All" class="SPF"&gt;
  *   &lt;addHeader&gt;true&lt;/addHeader&gt;
  *   &lt;debug&gt;false&lt;/debug&gt;
- *   &lt;ignoreNetworks&gt;127.0.0.0/8&lt;/ignoreNetworks&gt;
+ *   &lt;ignoredNetworks&gt;127.0.0.0/8&lt;/ignoredNetworks&gt;
  * &lt;/mailet&gt;
  * </pre>
  */
@@ -99,10 +99,10 @@ public class SPF extends GenericMailet {
         Collection<String> ignoredNetworks = Splitter.on(',')
             .trimResults()
             .omitEmptyStrings()
-            .splitToList(getInitParameter("ignoreNetworks", privateNetworks));
+            .splitToList(getInitParameter("ignoredNetworks", privateNetworks));
         netMatcher = new NetMatcher(ignoredNetworks, dnsService);
 
-        LOGGER.info("SPF addHeader={} debug={} ignoreNetworks={}", addHeader, debug, ignoredNetworks);
+        LOGGER.info("SPF addHeader={} debug={} ignoredNetworks={}", addHeader, debug, ignoredNetworks);
     }
 
     @Override
