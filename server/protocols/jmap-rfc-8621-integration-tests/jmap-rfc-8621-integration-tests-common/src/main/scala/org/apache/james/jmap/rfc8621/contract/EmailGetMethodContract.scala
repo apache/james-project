@@ -19,9 +19,16 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+import java.time.{Duration, ZonedDateTime}
+import java.util.Date
+import java.util.concurrent.TimeUnit
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
+import javax.mail.Flags
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import net.javacrumbs.jsonunit.core.Option
 import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
@@ -48,12 +55,6 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
-
-import java.nio.charset.StandardCharsets
-import java.time.{Duration, ZonedDateTime}
-import java.util.Date
-import java.util.concurrent.TimeUnit
-import javax.mail.Flags
 
 object EmailGetMethodContract {
   private def createTestMessage: Message = Message.Builder
@@ -4486,6 +4487,346 @@ trait EmailGetMethodContract {
          |        ]
          |    ]
          |}""".stripMargin)
+  }
+
+  @Test
+  def shouldUseFullViewReaderWhenFetchAllBodyProperties(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["${messageId.serialize}"],
+         |				"properties": [
+         |					"id",
+         |					"subject",
+         |					"from",
+         |					"to",
+         |					"cc",
+         |					"bcc",
+         |					"keywords",
+         |					"size",
+         |					"receivedAt",
+         |					"sentAt",
+         |					"preview",
+         |					"hasAttachment",
+         |					"attachments",
+         |					"replyTo",
+         |					"mailboxIds"
+         |				],
+         |				"fetchTextBodyValues": true
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
+      s"""{
+         |	"sessionState": "${SESSION_STATE.value}",
+         |	"methodResponses": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"notFound": [],
+         |				"list": [{
+         |					"preview": "Main test message...",
+         |					"to": [{
+         |						"name": "Alice",
+         |						"email": "alice@domain.tld"
+         |					}],
+         |					"id": "${messageId.serialize}",
+         |					"mailboxIds": {
+         |						"${mailboxId.serialize}": true
+         |					},
+         |					"from": [{
+         |						"name": "Bob",
+         |						"email": "bob@domain.tld"
+         |					}],
+         |					"keywords": {
+         |
+         |					},
+         |					"receivedAt": "$${json-unit.ignore}",
+         |					"sentAt": "$${json-unit.ignore}",
+         |					"hasAttachment": true,
+         |					"attachments": [{
+         |							"charset": "us-ascii",
+         |							"disposition": "attachment",
+         |							"size": 102,
+         |							"partId": "3",
+         |							"blobId": "${messageId.serialize}_3",
+         |							"name": "yyy.txt",
+         |							"type": "application/json"
+         |						},
+         |						{
+         |							"charset": "us-ascii",
+         |							"disposition": "attachment",
+         |							"size": 102,
+         |							"partId": "4",
+         |							"blobId": "${messageId.serialize}_4",
+         |							"name": "xxx.txt",
+         |							"type": "application/json"
+         |						}
+         |					],
+         |					"subject": "My subject",
+         |					"size": 970
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def shouldUseFastViewWithAttachmentMetadataWhenSupportedBodyProperties(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-mixed.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["${messageId.serialize}"],
+         |				"properties": [
+         |					"id",
+         |					"subject",
+         |					"from",
+         |					"to",
+         |					"cc",
+         |					"bcc",
+         |					"keywords",
+         |					"size",
+         |					"receivedAt",
+         |					"sentAt",
+         |					"preview",
+         |					"hasAttachment",
+         |					"attachments",
+         |					"replyTo",
+         |					"mailboxIds"
+         |				],
+         |				"fetchTextBodyValues": true,
+         |				"bodyProperties": ["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "headers"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .isEqualTo(
+      s"""{
+         |	"sessionState": "${SESSION_STATE.value}",
+         |	"methodResponses": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"notFound": [],
+         |				"list": [{
+         |					"preview": "Main test message...",
+         |					"to": [{
+         |						"name": "Alice",
+         |						"email": "alice@domain.tld"
+         |					}],
+         |					"id": "${messageId.serialize}",
+         |					"mailboxIds": {
+         |						"${mailboxId.serialize}": true
+         |					},
+         |					"from": [{
+         |						"name": "Bob",
+         |						"email": "bob@domain.tld"
+         |					}],
+         |					"keywords": {
+         |
+         |					},
+         |					"receivedAt": "$${json-unit.ignore}",
+         |					"sentAt": "$${json-unit.ignore}",
+         |					"hasAttachment": true,
+         |					"attachments": [{
+         |							"charset": "us-ascii",
+         |							"headers": [{
+         |									"name": "Content-Type",
+         |									"value": " application/json; charset=us-ascii"
+         |								},
+         |								{
+         |									"name": "Content-Disposition",
+         |									"value": "$${json-unit.ignore}"
+         |								},
+         |								{
+         |									"name": "Content-Transfer-Encoding",
+         |									"value": " quoted-printable"
+         |								}
+         |							],
+         |							"disposition": "attachment",
+         |							"size": 102,
+         |							"partId": "3",
+         |							"blobId": "${messageId.serialize}_3",
+         |							"name": "yyy.txt",
+         |							"type": "application/json"
+         |						},
+         |						{
+         |							"charset": "us-ascii",
+         |							"headers": [{
+         |									"name": "Content-Type",
+         |									"value": " application/json; charset=us-ascii"
+         |								},
+         |								{
+         |									"name": "Content-Disposition",
+         |									"value": "$${json-unit.ignore}"
+         |								},
+         |								{
+         |									"name": "Content-Transfer-Encoding",
+         |									"value": " quoted-printable"
+         |								}
+         |							],
+         |							"disposition": "attachment",
+         |							"size": 102,
+         |							"partId": "4",
+         |							"blobId": "${messageId.serialize}_4",
+         |							"name": "xxx.txt",
+         |							"type": "application/json"
+         |						}
+         |					],
+         |					"subject": "My subject",
+         |					"size": 970
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin)
+  }
+
+  @Test
+  def shouldBeAbleToDownloadAttachmentBaseOnFastViewWithAttachmentsMetadataResult(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/inlined-single-attachment.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/get",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"ids": ["${messageId.serialize}"],
+         |				"properties": [
+         |					"id",
+         |					"subject",
+         |					"from",
+         |					"to",
+         |					"cc",
+         |					"bcc",
+         |					"keywords",
+         |					"size",
+         |					"receivedAt",
+         |					"sentAt",
+         |					"preview",
+         |					"hasAttachment",
+         |					"attachments",
+         |					"replyTo",
+         |					"mailboxIds"
+         |				],
+         |				"fetchTextBodyValues": true,
+         |				"bodyProperties": ["blobId", "size", "name", "type", "charset", "disposition", "cid"]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val blobId = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .jsonPath()
+      .getString("methodResponses[0][1].list[0].attachments[0].blobId")
+
+    val blob = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6/$blobId")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("application/json")
+      .extract
+      .body
+      .asString
+
+    val expectedBlob: String =
+      """[
+        |    {
+        |        "Id": "2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        |    }
+        |]""".stripMargin
+
+    assertThat(new ByteArrayInputStream(blob.getBytes(StandardCharsets.UTF_8)))
+      .hasContent(expectedBlob)
   }
 
   @Test

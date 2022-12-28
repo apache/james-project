@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, Preview}
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Properties, UuidState}
-import org.apache.james.jmap.mail.{AddressesHeaderValue, BlobId, Charset, DateHeaderValue, Disposition, EmailAddressGroup, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailBodyValue, EmailChangesRequest, EmailChangesResponse, EmailFastView, EmailFullView, EmailGetRequest, EmailGetResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailHeaderView, EmailHeaders, EmailIds, EmailMetadata, EmailMetadataView, EmailNotFound, EmailView, FetchAllBodyValues, FetchHTMLBodyValues, FetchTextBodyValues, GroupName, GroupedAddressesHeaderValue, HasAttachment, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, PartId, RawHeaderValue, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedEmailId}
+import org.apache.james.jmap.mail._
 import org.apache.james.mailbox.model.{Cid, MailboxId, MessageId}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
@@ -152,12 +152,18 @@ object EmailGetSerializer {
 
   private implicit val emailMetadataWrites: OWrites[EmailMetadata] = Json.writes[EmailMetadata]
   private implicit val emailHeadersWrites: Writes[EmailHeaders] = Json.writes[EmailHeaders]
+  private implicit val attachmentsMetadataWrites: Writes[AttachmentsMetadata] = Json.writes[AttachmentsMetadata]
   private implicit val emailBodyMetadataWrites: Writes[EmailBodyMetadata] = Json.writes[EmailBodyMetadata]
 
   private val emailFastViewWrites: OWrites[EmailFastView] = (JsPath.write[EmailMetadata] and
     JsPath.write[EmailHeaders] and
     JsPath.write[EmailBodyMetadata] and
     JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFastView.unapply))
+  private val emailFastViewWithAttachmentsWrites: OWrites[EmailFastViewWithAttachments] = (JsPath.write[EmailMetadata] and
+    JsPath.write[EmailHeaders] and
+    JsPath.write[AttachmentsMetadata] and
+    JsPath.write[EmailBodyMetadata] and
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailFastViewWithAttachments.unapply))
   private val emailHeaderViewWrites: OWrites[EmailHeaderView] = (JsPath.write[EmailMetadata] and
     JsPath.write[EmailHeaders] and
     JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailHeaderView.unapply))
@@ -172,6 +178,7 @@ object EmailGetSerializer {
     case view: EmailMetadataView => emailMetadataViewWrites.writes(view)
     case view: EmailHeaderView => emailHeaderViewWrites.writes(view)
     case view: EmailFastView => emailFastViewWrites.writes(view)
+    case view: EmailFastViewWithAttachments => emailFastViewWithAttachmentsWrites.writes(view)
     case view: EmailFullView => emailFullViewWrites.writes(view)
   }
 
