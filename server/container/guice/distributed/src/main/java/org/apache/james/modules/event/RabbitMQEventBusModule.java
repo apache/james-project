@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.event;
 
+import static org.apache.james.events.NamingStrategy.MAILBOX_EVENT_NAMING_STRATEGY;
+
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.event.json.MailboxEventSerializer;
@@ -48,7 +50,7 @@ public class RabbitMQEventBusModule extends AbstractModule {
         bind(MailboxEventSerializer.class).in(Scopes.SINGLETON);
         bind(EventSerializer.class).to(MailboxEventSerializer.class);
 
-        bind(NamingStrategy.class).toInstance(new NamingStrategy("mailboxEvent"));
+        bind(NamingStrategy.class).toInstance(MAILBOX_EVENT_NAMING_STRATEGY);
         bind(RabbitMQEventBus.class).in(Scopes.SINGLETON);
         bind(EventBus.class).to(RabbitMQEventBus.class);
 

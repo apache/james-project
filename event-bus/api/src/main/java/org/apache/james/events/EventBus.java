@@ -64,6 +64,8 @@ public interface EventBus {
 
     Mono<Void> reDeliver(Group group, Event event);
 
+    EventBusName eventBusName();
+
     default Mono<Void> dispatch(Event event, RegistrationKey key) {
         return dispatch(event, ImmutableSet.of(key));
     }

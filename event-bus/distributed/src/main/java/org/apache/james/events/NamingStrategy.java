@@ -22,35 +22,42 @@ package org.apache.james.events;
 import reactor.rabbitmq.QueueSpecification;
 
 public class NamingStrategy {
-    public static final NamingStrategy JMAP_NAMING_STRATEGY = new NamingStrategy("jmapEvent");
+    public static final EventBusName JMAP_EVENT_BUS_NAME = new EventBusName("jmapEvent");
+    public static final EventBusName MAILBOX_EVENT_BUS_NAME = new EventBusName("mailboxEvent");
+    public static final NamingStrategy JMAP_NAMING_STRATEGY = new NamingStrategy(JMAP_EVENT_BUS_NAME);
+    public static final NamingStrategy MAILBOX_EVENT_NAMING_STRATEGY = new NamingStrategy(MAILBOX_EVENT_BUS_NAME);
 
-    private final String prefix;
+    private final EventBusName eventBusName;
 
-    public NamingStrategy(String prefix) {
-        this.prefix = prefix;
+    public NamingStrategy(EventBusName eventBusName) {
+        this.eventBusName = eventBusName;
     }
 
     public RegistrationQueueName queueName(EventBusId eventBusId) {
-        return new RegistrationQueueName(prefix + "-eventbus-" + eventBusId.asString());
+        return new RegistrationQueueName(eventBusName.value() + "-eventbus-" + eventBusId.asString());
     }
 
     public QueueSpecification deadLetterQueue() {
-        return QueueSpecification.queue(prefix + "-dead-letter-queue");
+        return QueueSpecification.queue(eventBusName.value() + "-dead-letter-queue");
     }
 
     public String exchange() {
-        return prefix + "-exchange";
+        return eventBusName.value() + "-exchange";
     }
 
     public String deadLetterExchange() {
-        return prefix + "-dead-letter-exchange";
+        return eventBusName.value() + "-dead-letter-exchange";
     }
 
     public GroupConsumerRetry.RetryExchangeName retryExchange(Group group) {
-        return new GroupConsumerRetry.RetryExchangeName(prefix, group);
+        return new GroupConsumerRetry.RetryExchangeName(eventBusName.value(), group);
     }
 
     public GroupRegistration.WorkQueueName workQueue(Group group) {
-        return new GroupRegistration.WorkQueueName(prefix, group);
+        return new GroupRegistration.WorkQueueName(eventBusName.value(), group);
+    }
+
+    public EventBusName getEventBusName() {
+        return eventBusName;
     }
 }

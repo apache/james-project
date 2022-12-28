@@ -56,10 +56,6 @@ import reactor.util.function.Tuples;
 import reactor.util.retry.Retry;
 
 public class EventDispatcher {
-    public static class DispatchingFailureGroup extends Group {
-        public static final DispatchingFailureGroup INSTANCE = new DispatchingFailureGroup();
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(EventDispatcher.class);
 
     private final NamingStrategy namingStrategy;
@@ -70,6 +66,8 @@ public class EventDispatcher {
     private final ListenerExecutor listenerExecutor;
     private final EventDeadLetters deadLetters;
     private final RabbitMQConfiguration configuration;
+
+    private final MailboxDispatchingFailureGroup dispatchingFailureGroup;
 
     EventDispatcher(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
                     LocalListenerRegistry localListenerRegistry,
@@ -88,6 +86,7 @@ public class EventDispatcher {
         this.listenerExecutor = listenerExecutor;
         this.deadLetters = deadLetters;
         this.configuration = configuration;
+        this.dispatchingFailureGroup = new MailboxDispatchingFailureGroup(namingStrategy.getEventBusName());
     }
 
     void start() {
@@ -165,7 +164,7 @@ public class EventDispatcher {
                 event.getUsername().asString(),
                 event.getEventId().getId(),
                 ex))
-            .onErrorResume(ex -> deadLetters.store(DispatchingFailureGroup.INSTANCE, event)
+            .onErrorResume(ex -> deadLetters.store(dispatchingFailureGroup, event)
                 .then(Mono.error(ex)));
     }
 

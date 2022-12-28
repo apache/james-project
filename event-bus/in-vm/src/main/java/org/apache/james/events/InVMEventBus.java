@@ -38,6 +38,8 @@ import reactor.core.publisher.Mono;
 
 public class InVMEventBus implements EventBus {
 
+    public static EventBusName IN_VN_EVENTBUS_NAME = new EventBusName("InVMEventBus");
+
     private final Multimap<RegistrationKey, EventListener.ReactiveEventListener> registrations;
     private final ConcurrentHashMap<Group, EventListener.ReactiveEventListener> groups;
     private final EventDelivery eventDelivery;
@@ -84,6 +86,11 @@ public class InVMEventBus implements EventBus {
             return groupDelivery(event, retrieveListenerFromGroup(group), group);
         }
         return Mono.empty();
+    }
+
+    @Override
+    public EventBusName eventBusName() {
+        return IN_VN_EVENTBUS_NAME;
     }
 
     @Override

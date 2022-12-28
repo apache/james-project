@@ -20,7 +20,7 @@
 package org.apache.james.jmap.change
 
 import org.apache.james.events.delivery.InVmEventDelivery
-import org.apache.james.events.{Event, EventBus, EventListener, Group, InVMEventBus, MemoryEventDeadLetters, Registration, RegistrationKey, RetryBackoffConfiguration}
+import org.apache.james.events.{Event, EventBus, EventBusName, EventListener, Group, InVMEventBus, MemoryEventDeadLetters, Registration, RegistrationKey, RetryBackoffConfiguration}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, Limit, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListenerTest.{ACCOUNT_ID, DEFAULT_NUMBER_OF_CHANGES}
@@ -84,6 +84,8 @@ class MailboxChangeListenerTest {
       override def dispatch(event: Event, key: util.Set[RegistrationKey]): Mono[Void] = Mono.empty()
 
       override def reDeliver(group: Group, event: Event): Mono[Void] = Mono.empty()
+
+      override def eventBusName(): EventBusName = new EventBusName("test")
     }
 
     subscriptionManager = new StoreSubscriptionManager(resources.getMailboxManager.getMapperFactory,
