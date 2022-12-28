@@ -97,7 +97,6 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             if (sm != null) {
                 sm.unregisterIdle();
             }
-            session1.popLineHandler();
             if (!DONE.equals(line.toUpperCase(Locale.US))) {
                 String message = String.format("Continuation for IMAP IDLE was not understood. Expected 'DONE', got '%s'.", line);
                 StatusResponse response = getStatusResponseFactory()
@@ -109,6 +108,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             } else {
                 okComplete(request, responder);
             }
+            session1.popLineHandler();
             idleActive.set(false);
         });
 
@@ -167,7 +167,8 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         @Override
         public Publisher<Void> reactiveEvent(Event event) {
-            return unsolicitedResponses(session, responder, false);
+            return unsolicitedResponses(session, responder, false)
+                .then(Mono.fromRunnable(session::flush));
         }
 
         @Override

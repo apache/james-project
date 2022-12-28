@@ -181,10 +181,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             LOGGER.info("Connection established from {}", address.getAddress().getHostAddress());
             imapConnectionsMetric.increment();
 
-            ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
-
+            ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
+            ImapResponseComposer response = new ImapResponseComposerImpl(writer);
             // write hello to client
             response.untagged().message("OK").message(hello).end();
+            writer.flush();
             super.channelActive(ctx);
         }
 
@@ -249,8 +250,10 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 // command length."
                 //
                 // See also JAMES-1190
-                ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
+                ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
+                ImapResponseComposer response = new ImapResponseComposerImpl(writer);
                 response.untaggedResponse(ImapConstants.BAD + " failed. Maximum command line length exceeded");
+                writer.flush();
 
             } else if (cause instanceof ReactiveThrottler.RejectedException) {
                 manageRejectedException(ctx, (ReactiveThrottler.RejectedException) cause);
@@ -263,10 +266,12 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private void manageRejectedException(ChannelHandlerContext ctx, ReactiveThrottler.RejectedException cause) {
         if (cause.getImapMessage() instanceof AbstractImapRequest) {
             AbstractImapRequest req = (AbstractImapRequest) cause.getImapMessage();
-            ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
-
+            ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
+            ImapResponseComposer response = new ImapResponseComposerImpl(writer);
             new ResponseEncoder(encoder, response)
-            .respond(new ImmutableStatusResponse(StatusResponse.Type.NO, req.getTag(), req.getCommand(), new HumanReadableText(cause.getClass().getName(), cause.getMessage()), null));
+                .respond(new ImmutableStatusResponse(StatusResponse.Type.NO, req.getTag(), req.getCommand(),
+                    new HumanReadableText(cause.getClass().getName(), cause.getMessage()), null));
+            writer.flush();
         } else {
             manageUnknownError(ctx);
         }
@@ -306,7 +311,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         imapCommandsMetric.increment();
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
         Attribute<Disposable> disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY);
-        ImapResponseComposer response = new ImapResponseComposerImpl(new ChannelImapResponseWriter(ctx.channel()));
+        ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
+        ImapResponseComposer response = new ImapResponseComposerImpl(writer);
         ImapMessage message = (ImapMessage) msg;
 
         beforeIDLEUponProcessing(ctx);
@@ -344,6 +350,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                         ctx.fireExceptionCaught(signal.getThrowable());
                     }
                     disposableAttribute.set(null);
+                    writer.flush();
                     ctx.fireChannelReadComplete();
                 }))
                 .contextWrite(ReactorUtils.context("imap", mdc(ctx))), message)
