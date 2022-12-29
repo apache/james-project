@@ -29,12 +29,12 @@ public class DispatchingFailureGroupTest {
     @Test
     void asStringShouldReturnEventBusName() {
         assertThat(new DispatchingFailureGroup(new EventBusName("abc")).asString())
-            .isEqualTo("org.apache.james.events.MailboxDispatchingFailureGroup-abc");
+            .isEqualTo("org.apache.james.events.DispatchingFailureGroup-abc");
     }
 
     @Test
     void groupDeserializeShouldReturnGroupWhenValidInput() throws Group.GroupDeserializationException {
-        assertThat(Group.deserialize("org.apache.james.events.MailboxDispatchingFailureGroup-abc"))
+        assertThat(Group.deserialize("org.apache.james.events.DispatchingFailureGroup-abc"))
             .isEqualTo(new DispatchingFailureGroup(new EventBusName("abc")));
     }
 
