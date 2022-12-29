@@ -254,14 +254,12 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     public void pushLineHandler(ImapLineHandler lineHandler) {
         LineHandlerAware handler = (LineHandlerAware) channel.pipeline().get(REQUEST_DECODER);
         handler.pushLineHandler(new ImapLineHandlerAdapter(this, lineHandler));
-        channel.flush();
     }
 
     @Override
     public void popLineHandler() {
         LineHandlerAware handler = (LineHandlerAware) channel.pipeline().get(REQUEST_DECODER);
         handler.popLineHandler();
-        channel.flush();
     }
 
     @Override
