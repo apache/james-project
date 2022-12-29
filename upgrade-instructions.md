@@ -24,6 +24,7 @@ Change list:
 - [TLS host name verification is now enabled by default](#tls-host-name-verification-is-now-enabled-by-default)
 - [Blob Store AES upgraded to PBKDF2WithHmacSHA512](#blob-store-aes-upgraded-to-pbkdf2withhmacsha512)
 - [Adding saveDate column to messageIdTable and imapUidTable](#adding-savedate-column-to-messageidtable-and-imapuidtable)
+- [Adding the saveDate to the OpenSearch index](#adding-the-savedate-to-the-opensearch-index)
 
 ### Adding the saveDate to the OpenSearch index
 
@@ -40,14 +41,14 @@ We already have this field as part of newly created mappings, but we need to exp
 curl -X PUT \
   http://ip:port/mailbox_v1/_mapping \
   -H 'Content-Type: application/json' \
-  -d '{
-	"properties": {
-		"saveDate": {
-			"type": "date",
-			"format": "uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX"
+  -d "{
+	\"properties\": {
+		\"saveDate\": {
+			\"type\": \"date\",
+			\"format\": \"uuuu-MM-dd'T'HH:mm:ssX||uuuu-MM-dd'T'HH:mm:ssXXX||uuuu-MM-dd'T'HH:mm:ssXXXXX\"
 		}
 	}
-}'
+}"
 ```
 
 ### Adding saveDate column to messageIdTable and imapUidTable
