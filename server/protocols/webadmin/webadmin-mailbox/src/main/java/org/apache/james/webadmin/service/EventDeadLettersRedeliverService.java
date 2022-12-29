@@ -24,11 +24,11 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.DispatchingFailureGroup;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.Group;
-import org.apache.james.events.MailboxDispatchingFailureGroup;
 import org.apache.james.task.Task;
 import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
@@ -100,9 +100,9 @@ public class EventDeadLettersRedeliverService {
     }
 
     private Optional<EventBus> findEventBus(Group group) {
-        if (group instanceof MailboxDispatchingFailureGroup) {
-            MailboxDispatchingFailureGroup mailboxDispatchingFailureGroup = (MailboxDispatchingFailureGroup) group;
-            return eventBuses.stream().filter(eventBus -> eventBus.eventBusName().equals(mailboxDispatchingFailureGroup.getEventBusName()))
+        if (group instanceof DispatchingFailureGroup) {
+            DispatchingFailureGroup dispatchingFailureGroup = (DispatchingFailureGroup) group;
+            return eventBuses.stream().filter(eventBus -> eventBus.eventBusName().equals(dispatchingFailureGroup.getEventBusName()))
                 .findFirst();
         }
         return eventBuses.stream()

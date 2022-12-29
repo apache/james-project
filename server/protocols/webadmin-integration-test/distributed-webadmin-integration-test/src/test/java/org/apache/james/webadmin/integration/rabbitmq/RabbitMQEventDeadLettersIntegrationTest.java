@@ -51,7 +51,7 @@ import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
-import org.apache.james.events.MailboxDispatchingFailureGroup;
+import org.apache.james.events.DispatchingFailureGroup;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.junit.categories.Unstable;
@@ -232,7 +232,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
     private static final String BOB_PASSWORD = "bobPassword";
     private static final String EVENTS_ACTION = "reDeliver";
     private static final String GROUP_ID = new RetryEventsListenerGroup().asString();
-    private static final String DISPATCHING_FAILURE_GROUP_ID = new MailboxDispatchingFailureGroup(MAILBOX_EVENT_BUS_NAME).asString();
+    private static final String DISPATCHING_FAILURE_GROUP_ID = new DispatchingFailureGroup(MAILBOX_EVENT_BUS_NAME).asString();
     private static final MailboxPath BOB_INBOX_PATH = MailboxPath.inbox(Username.of(BOB));
 
     private Duration slowPacedPollInterval = Duration.ofMillis(100);

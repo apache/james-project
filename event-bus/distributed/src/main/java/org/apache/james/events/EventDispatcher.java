@@ -67,7 +67,7 @@ public class EventDispatcher {
     private final EventDeadLetters deadLetters;
     private final RabbitMQConfiguration configuration;
 
-    private final MailboxDispatchingFailureGroup dispatchingFailureGroup;
+    private final DispatchingFailureGroup dispatchingFailureGroup;
 
     EventDispatcher(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
                     LocalListenerRegistry localListenerRegistry,
@@ -86,7 +86,7 @@ public class EventDispatcher {
         this.listenerExecutor = listenerExecutor;
         this.deadLetters = deadLetters;
         this.configuration = configuration;
-        this.dispatchingFailureGroup = new MailboxDispatchingFailureGroup(namingStrategy.getEventBusName());
+        this.dispatchingFailureGroup = new DispatchingFailureGroup(namingStrategy.getEventBusName());
     }
 
     void start() {

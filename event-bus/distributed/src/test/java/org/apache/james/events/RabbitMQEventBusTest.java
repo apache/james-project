@@ -98,7 +98,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     
     static EventBusName TEST_EVENT_BUS = new EventBusName("test");
     static NamingStrategy TEST_NAMING_STRATEGY = new NamingStrategy(TEST_EVENT_BUS);
-    static MailboxDispatchingFailureGroup dispatchingFailureGroup = new MailboxDispatchingFailureGroup(TEST_EVENT_BUS);
+    static DispatchingFailureGroup dispatchingFailureGroup = new DispatchingFailureGroup(TEST_EVENT_BUS);
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
@@ -1005,7 +1005,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
             getSpeedProfile().shortWaitCondition()
                 .untilAsserted(() -> assertThat(deadLetter().groupsWithFailedEvents().toStream())
-                    .hasOnlyElementsOfType(MailboxDispatchingFailureGroup.class));
+                    .hasOnlyElementsOfType(DispatchingFailureGroup.class));
         }
 
         private Stream<Event> dispatchingFailureEvents() {

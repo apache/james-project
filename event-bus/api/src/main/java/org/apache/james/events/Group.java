@@ -41,8 +41,8 @@ public class Group {
 
             if (serializedGroup.startsWith(GenericGroup.class.getName() + GenericGroup.DELIMITER)) {
                 return new GenericGroup(serializedGroup.substring(GenericGroup.class.getName().length() + 1));
-            } else if (serializedGroup.startsWith(MailboxDispatchingFailureGroup.class.getName() + MailboxDispatchingFailureGroup.DELIMITER)) {
-                return MailboxDispatchingFailureGroup.from(serializedGroup);
+            } else if (serializedGroup.startsWith(DispatchingFailureGroup.class.getName() + DispatchingFailureGroup.DELIMITER)) {
+                return DispatchingFailureGroup.from(serializedGroup);
             }
 
             Class<?> groupClass = Class.forName(serializedGroup);

@@ -23,17 +23,17 @@ import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
-public class MailboxDispatchingFailureGroup extends Group {
+public class DispatchingFailureGroup extends Group {
     public static final String DELIMITER = "-";
 
-    public static MailboxDispatchingFailureGroup from(String value) {
-        Preconditions.checkArgument(value.startsWith(MailboxDispatchingFailureGroup.class.getName() + DELIMITER));
-        return new MailboxDispatchingFailureGroup(new EventBusName(value.substring(value.indexOf(DELIMITER) + 1)));
+    public static DispatchingFailureGroup from(String value) {
+        Preconditions.checkArgument(value.startsWith(DispatchingFailureGroup.class.getName() + DELIMITER));
+        return new DispatchingFailureGroup(new EventBusName(value.substring(value.indexOf(DELIMITER) + 1)));
     }
 
     private final EventBusName eventBusName;
 
-    public MailboxDispatchingFailureGroup(EventBusName eventBusName) {
+    public DispatchingFailureGroup(EventBusName eventBusName) {
         this.eventBusName = eventBusName;
     }
 
@@ -48,8 +48,8 @@ public class MailboxDispatchingFailureGroup extends Group {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof MailboxDispatchingFailureGroup) {
-            MailboxDispatchingFailureGroup that = (MailboxDispatchingFailureGroup) o;
+        if (o instanceof DispatchingFailureGroup) {
+            DispatchingFailureGroup that = (DispatchingFailureGroup) o;
             return Objects.equals(this.eventBusName, that.eventBusName);
         }
         return false;

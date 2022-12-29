@@ -168,7 +168,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
             That's why it is special, and we need to check event type before processing further.
             */
-            if (group instanceof MailboxDispatchingFailureGroup) {
+            if (group instanceof DispatchingFailureGroup) {
                 return eventDispatcher.dispatch(event, NO_KEY);
             }
             return groupRegistrationHandler.retrieveGroupRegistration(group).reDeliver(event);

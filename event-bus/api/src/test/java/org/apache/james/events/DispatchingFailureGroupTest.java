@@ -24,23 +24,23 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-public class MailboxDispatchingFailureGroupTest {
+public class DispatchingFailureGroupTest {
 
     @Test
     void asStringShouldReturnEventBusName() {
-        assertThat(new MailboxDispatchingFailureGroup(new EventBusName("abc")).asString())
+        assertThat(new DispatchingFailureGroup(new EventBusName("abc")).asString())
             .isEqualTo("org.apache.james.events.MailboxDispatchingFailureGroup-abc");
     }
 
     @Test
     void groupDeserializeShouldReturnGroupWhenValidInput() throws Group.GroupDeserializationException {
         assertThat(Group.deserialize("org.apache.james.events.MailboxDispatchingFailureGroup-abc"))
-            .isEqualTo(new MailboxDispatchingFailureGroup(new EventBusName("abc")));
+            .isEqualTo(new DispatchingFailureGroup(new EventBusName("abc")));
     }
 
     @Test
     void deserializeShouldThrowWhenMissingDelimiter() {
-        assertThatThrownBy(() -> Group.deserialize(MailboxDispatchingFailureGroup.class.getName()))
+        assertThatThrownBy(() -> Group.deserialize(DispatchingFailureGroup.class.getName()))
             .isInstanceOf(Group.GroupDeserializationException.class);
     }
 }
