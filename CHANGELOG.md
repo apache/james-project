@@ -9,18 +9,24 @@ This release brings the following significant changes:
 
  - Upgrade TCP protocols to Netty 4
  - Migrate IMAP protocol as reactive
+ - Multiple additional IMAP extensions are implemented
  - Upgrade to Cassandra driver 4
  - Migrate to OpenSearch
  - Review our threading model to cap threads performing blocking tasks
  - Implement official JMAP quotas specification
 
+### Removal
+
+ - Remove server/blob/blob-gc (unused draft work, redundant with GC current bloom-filter based implementation)
+
 ### Deprecations
 
-- Deprecating custom JMAP quotas specification
+ - Deprecating custom JMAP quotas specification
+ - [DEPRECATION] Deprecate JDBCMailRepository (#1237)
 
 ### Added
 
- - JAMES-3775 Rspamd extension
+ - JAMES-3775 Rspamd extension, including per-user database management
  - JAMES-3810 Health check for the RabbitMQ MailQueue view
  - JAMES-3788 IMAP/SMTP compatibility with the proxy protocol (HAProxy)
  - JAMES-3802 Webadmin route to clean events of a dead letter group
@@ -38,6 +44,32 @@ This release brings the following significant changes:
  - JAMES-3724 Leak detection to prevent temporary file leaks
  - JAMES-3723 Allow to not consume emails upon reprocessing
  - JAMES-3830 Implement official JMAP quotas specification
+ - JAMES-3841 Metrics for embedded ActiveMQ
+ - JAMES-3867 Make IMAP modular (#1343) allows writing IMAP extensions
+ - JAMES-3755 OIDC check token by user info (#1340)
+ - JAMES-3850 [JMAP] Configure `urn:ietf:params:jmap:mail` `maxSizeAttac… (#1303)
+ - Support for multiple IMAP RFCs:
+   - Support for RFC-8514 Extension for savedate
+   - Support for RFC-5258 LIST extensions
+   - Support for RFC-5819 LIST STATUS
+   - Support for RFC-8440 LIST MY RIGHTS
+   - Support for RFC-9209 Quota spec update
+   - Support for RFC-6154 Special use
+   - Support for RFC-2971 IMAP ID spec
+   - Support for RFC-7889 APPENDLIMIT
+   - Support for RFC-7889 Special use
+   - Support for RFC-8437 UNAUTHENTICATE
+   - Support for XLIST
+   - Support for RFC-8474 OBJECTID
+   - Fix RFC-5464 Capability typo (METADATA)
+ - JAMES-3850 Implement urn:ietf:params:jmap:quota draft
+ - JAMES-3842 Access SSLSession from Hooks and Handlers
+ - JAMES-3292 More powerful task listing (#1263)
+ - [REFACTORING] More flexible fetch groups for Mailbox metadata (#1347)
+ - JAMES-3831 Implement urn:apache:james:params:jmap:mail:identity:sortorder extension
+ - JAMES-3826 Introduce loading additional healthcheck mechanism
+ - JAMES-3825 Task to clean up tasks (#1208)
+ - JAMES-2656 - Add initial JPAMailRepository implementation (#1176)
 
 ### Changes
 
@@ -66,6 +98,14 @@ This release brings the following significant changes:
  - Naming threads: Spooler threads should be named
  - Naming threads: RabbitMQ driver threads should be named
  - Naming threads: ElasticSearch driver threads should be named
+ - JAMES-3775 Leverage saveDate for better period filtering for Rspamd report
+ - JAMES-3756 Allow the use of OIDC without virtualHosting
+ - [CLEAN_CODE] Remove commons-beanutils (un-used) in protocols-imap4
+ - [UPGRADE] com.fasterxml.jackson.core:jackson-databind 2.13.3 -> 2.13.4.2
+ - [UPGRADE] JSieve 0.7 -> 0.8 (#1294)
+ - [UPGRADE] JDKIM 0.2 -> 0.3 (#1258)
+ - JAMES-3836 Rework MailRepository loading
+ - JAMES-3813 Module chooser for DeletedMessagesVault on Cassandra based… (#1195)
  
 ### Fixed
 
@@ -100,15 +140,35 @@ This release brings the following significant changes:
  - [FIX] UidValidity generate fails for Long.MIN_VALUE
  - JAMES-3715 Fix a data race upon IDLE
  - JMAP Email/set create should use tooLarge when attempt to create an oversize mail (#918)
+ - JAMES-3754 Date searching should align IMAP4rev2 specifications (#1360)
+ - [FIX] EmailBodyPart filename should fallback to Content-Disposition field (#1348) (JMAP)
+ - JAMES-3461 - Fix Mailbox/changes do not take isSubscribe changes into account (#1320)
+ - JAMES-3861 EmailDelivery push selection for JMAP should be used only upon delivery, not for mail store interactions
+ - JAMES-3852 Support subscriptions management on delegated mailboxes
+ - [JMAP] Email/set create should add missing mimeMessageId and sentAt (#1286)
+ - [FIX] Prevent stack overflow in FETCH command (#1289)
+ - JAMES-3825 Cancel tasks upon graceful shutdown - waiting to the cancelled listener is completed (#1272)
+ - JAMES-3827 Support From fields without domain parts in the email address (#1271)
+ - [BUG] Handle CALENDAR objects without VEVENT gracefully (#1270)
+ - JAMES-3811 Ability to cancel IMAP request execution upon closed connections (#1267)
+ - JAMES-3840 Sanitize UTF-8 string after splitting (#1266)
+ - JAMES-3835 EmailSubmission/set response is wrong (#1254)
+ - JAMES-3828 Fix AttributeValue serialization for calendar related mailet
+ - [FIX] S3: apply timeouts configuration (#1202)
  
 ### Documentation
 
  - JAMES-3734 Document database benchmark methodologies and base performances (#937)
+ - [DOCUMENTATION] Correct Event Dead Letter webadmin routes documentation (#1184)
 
 ### Security
 
  - [UPGRADE] Spark 2.9.3 -> 2.9.4 (#1129)
  - JAMES-3789 Upgrade apache commons-configuration to 2.8.0
+ - JAMES-3834 Configurable value for AES blobStore private key algorithm
+ - JAMES-3834 Enhance UsersRepository with stronger hashing options
+ - [UPGRADE] scala-library 2.13.7 -> 2.13.9 (#1210)
+ - [UPGRADE] Bump jsoup from 1.15.1 to 1.15.3 (#1178)
  
 ### Performance
 
@@ -158,7 +218,37 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - JAMES-3715 Schedule IMAP IDLE heartbits on the Netty Event loop (#948)
  - [PERF] Allow disabling host information in protocol MDC (#928)
  - JAMES-3433 MimeMessageStore StoragePolicy should be the same on read and writes
+ - [FIX] Avoid using LWT on non critical tables (#1356) (messagev3, mailbox)
+ - [PERF] Allow disabling SERIAL read for non critical UID/ModSeq read operations
+ - [PERF] Improve Cassandra rows interpretation in mailbox/cassandra
+ - [PERF] Adopt CqlIdentifier accross the project
+ - [PERF] More flexible fetch groups for Mailbox metadata (#1347)
+ - JAMES-3863 JMAP OPTIONS should support caching
+ - [PERF] Reduce memory allocation upon S3BlobStoreDAO::save(InputStream) (#1334)
+ - JAMES-3828 Smarter duplication for AttributeValue
+ - JAMES-3793 Add a setting to prevent S3BlobStoreDAO load too big objects in memory
+ - [PERF] Improve Mailbox/get algorithm (#1164)
+ - JAMES-3793 Prevent needless defensive copies within S3BlobStoreDAO (#1147)
+ - JAMES-3793 Prevent Bytes concat upon reading FULL messages (#1152)
 
+## [3.7.3] - 2022-12-30
+
+### Security
+
+Upcoming security announcements.
+
+ - [UPGRADE] commons-text 1.9 -> 1.10 (#1291)
+ - JAMES-3832 RemoteDelivery will do TLS host name verification when contacting remote mail servers
+ - JAMES-3860 Rely on Files.createTempFile (#1325)
+
+### Fixes
+
+ - [FIX] Unregister gauge upon shutdown (#1251)
+ - JAMES-3862 Switch to SLF4J 2.0.x compatible Log4j Adapter. Copy log4j-core dependency jar to appassembler lib dir. (#1333) (#1335)
+ - JAMES-3859 start sequence ordering should take provisions into account
+ - [FIX] ToSenderFolder needs to call .block on mono (#1317)
+ - [BUILD] Fix SpamAssassin container on 3.7.x (#1330)
+ 
 ## [3.7.2] - 2022-10-06
 
 ### Security 
