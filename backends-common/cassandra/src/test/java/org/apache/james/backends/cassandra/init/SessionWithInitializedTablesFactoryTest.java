@@ -98,7 +98,7 @@ class SessionWithInitializedTablesFactoryTest {
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MAX_VERSION);
 
-        new CassandraTableManager(MODULE, session).clearAllTables();
+        new CassandraTableManager(MODULE, session).clearTables(t -> true);
         versionManagerDAO(session).updateVersion(MIN_VERSION);
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
@@ -113,7 +113,7 @@ class SessionWithInitializedTablesFactoryTest {
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MAX_VERSION);
 
-        new CassandraTableManager(MODULE, session).clearAllTables();
+        new CassandraTableManager(MODULE, session).clearTables(t -> true);
         versionManagerDAO(session).updateVersion(MIN_VERSION);
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
