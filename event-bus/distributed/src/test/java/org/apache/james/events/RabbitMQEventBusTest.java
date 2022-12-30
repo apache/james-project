@@ -67,7 +67,6 @@ import org.apache.james.events.EventBusTestFixture.EventListenerCountingSuccessf
 import org.apache.james.events.EventBusTestFixture.GroupA;
 import org.apache.james.events.EventBusTestFixture.TestEventSerializer;
 import org.apache.james.events.EventBusTestFixture.TestRegistrationKeyFactory;
-import org.apache.james.events.EventDispatcher.DispatchingFailureGroup;
 import org.apache.james.events.RoutingKeyConverter.RoutingKey;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -96,7 +95,10 @@ import reactor.rabbitmq.Sender;
 class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
     ErrorHandlingContract {
-    static NamingStrategy TEST_NAMING_STRATEGY = new NamingStrategy("test");
+    
+    static EventBusName TEST_EVENT_BUS = new EventBusName("test");
+    static NamingStrategy TEST_NAMING_STRATEGY = new NamingStrategy(TEST_EVENT_BUS);
+    static DispatchingFailureGroup dispatchingFailureGroup = new DispatchingFailureGroup(TEST_EVENT_BUS);
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
@@ -826,7 +828,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         @BeforeEach
         void beforeEach() throws Exception {
-            otherEventBus = newEventBus(new NamingStrategy("other"), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider());
+            otherEventBus = newEventBus(new NamingStrategy(new EventBusName("other")), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider());
             otherEventBus.start();
         }
 
@@ -962,7 +964,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             doQuietly(() -> eventBus().dispatch(EVENT, NO_KEYS).block());
             rabbitMQExtension.getRabbitMQ().unpause();
             dispatchingFailureEvents()
-                .forEach(event -> eventBus().reDeliver(DispatchingFailureGroup.INSTANCE, event).block());
+                .forEach(event -> eventBus().reDeliver(dispatchingFailureGroup, event).block());
 
             getSpeedProfile().shortWaitCondition()
                 .untilAsserted(() -> assertThat(eventCollector.getEvents())
@@ -980,7 +982,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             getSpeedProfile().longWaitCondition()
                 .until(() -> deadLetter().containEvents().block());
 
-            doQuietly(() -> eventBus().reDeliver(DispatchingFailureGroup.INSTANCE, EVENT).block());
+            doQuietly(() -> eventBus().reDeliver(dispatchingFailureGroup, EVENT).block());
             rabbitMQExtension.getRabbitMQ().unpause();
 
             getSpeedProfile().shortWaitCondition()
@@ -998,7 +1000,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             getSpeedProfile().longWaitCondition()
                 .until(() -> deadLetter().containEvents().block());
 
-            doQuietly(() -> eventBus().reDeliver(DispatchingFailureGroup.INSTANCE, EVENT).block());
+            doQuietly(() -> eventBus().reDeliver(dispatchingFailureGroup, EVENT).block());
             rabbitMQExtension.getRabbitMQ().unpause();
 
             getSpeedProfile().shortWaitCondition()
@@ -1007,8 +1009,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         }
 
         private Stream<Event> dispatchingFailureEvents() {
-            return deadLetter().failedIds(DispatchingFailureGroup.INSTANCE)
-                .flatMap(insertionId -> deadLetter().failedEvent(DispatchingFailureGroup.INSTANCE, insertionId))
+            return deadLetter().failedIds(dispatchingFailureGroup)
+                .flatMap(insertionId -> deadLetter().failedEvent(dispatchingFailureGroup, insertionId))
                 .toStream();
         }
 

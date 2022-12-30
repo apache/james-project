@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.events.DispatchingFailureGroup;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventDeadLetters;
@@ -82,9 +83,7 @@ public class EventDeadLettersRedeliverService {
     }
 
     private Mono<Task.Result> redeliverGroupEvents(Group group, Event event, EventDeadLetters.InsertionId insertionId) {
-        return eventBuses.stream()
-            .filter(eventBus -> eventBus.listRegisteredGroups().contains(group))
-            .findFirst()
+        return findEventBus(group)
             .map(eventBus -> eventBus.reDeliver(group, event)
                 .then(deadLetters.remove(group, insertionId))
                 .thenReturn(Task.Result.COMPLETED)
@@ -98,5 +97,16 @@ public class EventDeadLettersRedeliverService {
                     event.getEventId().toString(), group.asString());
                 return Mono.just(Task.Result.PARTIAL);
             });
+    }
+
+    private Optional<EventBus> findEventBus(Group group) {
+        if (group instanceof DispatchingFailureGroup) {
+            DispatchingFailureGroup dispatchingFailureGroup = (DispatchingFailureGroup) group;
+            return eventBuses.stream().filter(eventBus -> eventBus.eventBusName().equals(dispatchingFailureGroup.getEventBusName()))
+                .findFirst();
+        }
+        return eventBuses.stream()
+            .filter(eventBus -> eventBus.listRegisteredGroups().contains(group))
+            .findFirst();
     }
 }
