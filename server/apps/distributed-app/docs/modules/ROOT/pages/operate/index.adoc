@@ -32,19 +32,19 @@ This section sums up and links upgrade instructions for people willing to upgrad
 
 .Upgrade path
 |===
-| Upgrade from | Recommended upgrade path to 3.7.2
+| Upgrade from | Recommended upgrade path to 3.7.3
 
-| 3.7.0
-| Rolling upgrade to 3.7.2. No specific upgrade instructions to perform.
+| 3.7.0 - 3.7.2
+| Rolling upgrade to 3.7.3. No specific upgrade instructions to perform.
 
 | 3.6.2
-| Rolling upgrade to 3.7.2. No specific upgrade instructions to perform.
+| Rolling upgrade to 3.7.3. No specific upgrade instructions to perform.
 
 | 3.6.1
-| Rolling upgrade to 3.7.2. No specific upgrade instructions to perform.
+| Rolling upgrade to 3.7.3. No specific upgrade instructions to perform.
 
 | 3.6.0
-| Rolling upgrade to 3.7.2. No specific upgrade instructions to perform.
+| Rolling upgrade to 3.7.3. No specific upgrade instructions to perform.
 
 | 3.5.0
 | 1. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#360-version[3.6.0 upgrade instructions]
