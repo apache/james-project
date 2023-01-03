@@ -47,6 +47,7 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
 
     public static class DeleteAllIndexDocumentsCleanupStrategy implements CleanupStrategy {
         private final WriteAliasName aliasName;
+        private ReactorOpenSearchClient client;
 
         public DeleteAllIndexDocumentsCleanupStrategy(WriteAliasName aliasName) {
             this.aliasName = aliasName;
@@ -58,7 +59,7 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
                 .ignoreExceptions()
                 .until(() -> {
                     openSearch.flushIndices();
-                    ReactorOpenSearchClient client = openSearch.clientProvider().get();
+                    ReactorOpenSearchClient client = client(openSearch);
                     new DeleteByQueryPerformer(client, aliasName)
                         .perform(new MatchAllQuery.Builder().build()._toQuery())
                         .block();
@@ -66,17 +67,17 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
                         .query(new MatchAllQuery.Builder().build()._toQuery())
                         .build();
                     openSearch.flushIndices();
-                    boolean result = client.search(searchRequest)
+                    return client.search(searchRequest)
                         .map(searchResponse -> searchResponse.hits().hits().size())
                         .block() == 0;
-
-                    try {
-                        client.close();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                    return result;
                 });
+        }
+
+        private ReactorOpenSearchClient client(DockerOpenSearch openSearch) {
+            if (client == null) {
+                client = openSearch.clientProvider().get();
+            }
+            return client;
         }
     }
 
