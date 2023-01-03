@@ -470,13 +470,13 @@ public class CriterionConverter {
         case BEFORE:
             return new RangeQuery.Builder()
                 .field(field)
-                .lt(JsonData.of(upDateString))
+                .lt(JsonData.of(lowDateString))
                 .build()
                 ._toQuery();
         case AFTER:
             return new RangeQuery.Builder()
                 .field(field)
-                .gte(JsonData.of(lowDateString))
+                .gte(JsonData.of(upDateString))
                 .build()
                 ._toQuery();
         case ON:
