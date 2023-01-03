@@ -64,6 +64,7 @@ The following IMAP specifications are implemented:
  - link:https://datatracker.ietf.org/doc/html/rfc5032.html[RFC-5032] IMAP WITHIN (for relative date search semantic)
  - link:https://datatracker.ietf.org/doc/html/rfc4731.html[RFC-4731] IMAP ESEARCH: extentions for IMAP search: new options like min, max, count.
  - link:https://datatracker.ietf.org/doc/html/rfc3348.html[RFC-3348] IMAP Child Mailbox Extension
+ - link:https://www.rfc-editor.org/rfc/rfc8508.html[RFC-8508] IMAP Replace Extension
  - link:https://www.rfc-editor.org/rfc/rfc7889.html[RFC-7889] IMAP Extension for APPENDLIMIT
  - link:https://www.rfc-editor.org/rfc/rfc8474.html[RFC-8474] IMAP Extension for Object Identifiers
  - link:https://datatracker.ietf.org/doc/html/rfc2971.html[RFC-2971] IMAP ID Extension
