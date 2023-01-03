@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -445,6 +446,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
 
     @Test
     void messagesRetrievedUsingFetchTypeAttachmentsMetadataShouldHaveAttachmentsMetadataLoaded() throws MailboxException {
+        AttachmentMapper attachmentMapper = mapperProvider.createAttachmentMapper();
         MessageId messageId = mapperProvider.generateMessageId();
         String content = "Subject: Test1 \n\nBody1\n.\n";
         ParsedAttachment attachment1 = ParsedAttachment.builder()

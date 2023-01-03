@@ -53,7 +53,6 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -85,7 +84,6 @@ public abstract class MessageMapperTest {
     protected MapperProvider mapperProvider;
     protected MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;
-    protected AttachmentMapper attachmentMapper;
 
     protected Mailbox benwaInboxMailbox;
     protected Mailbox benwaWorkMailbox;
@@ -109,7 +107,6 @@ public abstract class MessageMapperTest {
 
         this.messageMapper = mapperProvider.createMessageMapper();
         this.mailboxMapper = mapperProvider.createMailboxMapper();
-        this.attachmentMapper = mapperProvider.createAttachmentMapper();
 
         initData();
     }
