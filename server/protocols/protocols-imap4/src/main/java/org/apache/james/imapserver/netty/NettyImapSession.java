@@ -183,6 +183,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         }
         executeSafely(() -> {
             runnable.run();
+            channel.flush();
             channel.pipeline().addFirst(SSL_HANDLER, secure.sslHandler());
             stopDetectingCommandInjection();
         });
@@ -229,6 +230,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
 
         executeSafely(() -> {
             runnable.run();
+            channel.flush();
             ZlibDecoder decoder = new JZlibDecoder(ZlibWrapper.NONE);
             ZlibEncoder encoder = new JZlibEncoder(ZlibWrapper.NONE, 5);
 
@@ -306,5 +308,10 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public void schedule(Runnable runnable, Duration waitDelay) {
         channel.eventLoop().schedule(runnable, waitDelay.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void flush() {
+        channel.flush();
     }
 }

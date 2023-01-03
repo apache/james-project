@@ -49,6 +49,7 @@ public class ImapLineHandlerAdapter extends ChannelInboundHandlerAdapter {
         byte[] data = new byte[buf.readableBytes()];
         buf.readBytes(data);
         lineHandler.onLine(session, data);
+        ctx.channel().flush();
     }
 
 }
