@@ -27,6 +27,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.ALGORITHM;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.AUTHORIZED_USERS;
+import static org.apache.james.user.cassandra.tables.CassandraUserTable.DELEGATED_USERS;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.NAME;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.PASSWORD;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.REALNAME;
@@ -71,6 +72,10 @@ public class CassandraUsersDAO implements UsersDAO {
     private final PreparedStatement getAuthorizedUsersStatement;
     private final PreparedStatement addAuthorizedUsersStatement;
     private final PreparedStatement removeAuthorizedUsersStatement;
+
+    private final PreparedStatement getDelegatedToUsersStatement;
+    private final PreparedStatement addDelegatedToUsersStatement;
+    private final PreparedStatement removeDelegatedToUsersStatement;
 
     private final Algorithm preferredAlgorithm;
     private final HashingMode fallbackHashingMode;
@@ -134,6 +139,21 @@ public class CassandraUsersDAO implements UsersDAO {
             .remove(AUTHORIZED_USERS, bindMarker(AUTHORIZED_USERS))
             .whereColumn(NAME).isEqualTo(bindMarker(NAME))
             .build());
+
+        this.getDelegatedToUsersStatement = session.prepare(selectFrom(TABLE_NAME)
+            .columns(DELEGATED_USERS)
+            .whereColumn(NAME).isEqualTo(bindMarker(NAME))
+            .build());
+
+        this.addDelegatedToUsersStatement = session.prepare(update(TABLE_NAME)
+            .append(DELEGATED_USERS, bindMarker(DELEGATED_USERS))
+            .whereColumn(NAME).isEqualTo(bindMarker(NAME))
+            .build());
+
+        this.removeDelegatedToUsersStatement = session.prepare(update(TABLE_NAME)
+            .remove(DELEGATED_USERS, bindMarker(DELEGATED_USERS))
+            .whereColumn(NAME).isEqualTo(bindMarker(NAME))
+            .build());
     }
 
     @VisibleForTesting
@@ -153,6 +173,11 @@ public class CassandraUsersDAO implements UsersDAO {
                     .setString(NAME, name.asString()))
             .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD),
                 Algorithm.of(row.getString(ALGORITHM), fallbackHashingMode), preferredAlgorithm));
+    }
+
+    public Mono<Boolean> exist(Username name) {
+        return executor.executeReturnExists(getUserStatement.bind()
+                .setString(NAME, name.asString()));
     }
 
     @Override
@@ -199,6 +224,28 @@ public class CassandraUsersDAO implements UsersDAO {
             .map(Username::of);
     }
 
+    public Mono<Void> addDelegatedToUsers(Username baseUser, Username delegatedToUser) {
+        return executor.executeVoid(addDelegatedToUsersStatement.bind()
+            .setString(NAME, baseUser.asString())
+            .setSet(DELEGATED_USERS, ImmutableSet.of(delegatedToUser.asString()), String.class));
+    }
+
+    public Mono<Void> removeDelegatedToUser(Username baseUser, Username delegatedToUser) {
+        return executor.executeVoid(removeDelegatedToUsersStatement.bind()
+            .setString(NAME, baseUser.asString())
+            .setSet(DELEGATED_USERS, ImmutableSet.of(delegatedToUser.asString()), String.class));
+    }
+
+    public Flux<Username> getDelegatedToUsers(Username name) {
+        return executor.executeSingleRow(
+                getDelegatedToUsersStatement.bind()
+                    .setString(NAME, name.asString()))
+            .mapNotNull(row -> row.getSet(DELEGATED_USERS, String.class))
+            .flatMapIterable(set -> set)
+            .map(Username::of);
+    }
+
+    // TODO, should we remove delegated user here?
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
         boolean executed = executor.executeReturnApplied(
