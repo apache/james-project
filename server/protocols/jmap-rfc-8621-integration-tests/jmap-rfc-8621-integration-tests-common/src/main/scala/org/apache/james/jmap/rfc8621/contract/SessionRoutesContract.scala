@@ -71,6 +71,7 @@ object SessionRoutesContract {
                          |    "urn:apache:james:params:jmap:mail:quota": {},
                          |    "urn:ietf:params:jmap:quota": {},
                          |    "urn:apache:james:params:jmap:mail:identity:sortorder": {},
+                         |    "urn:apache:james:params:jmap:delegation": {},
                          |    "urn:apache:james:params:jmap:mail:shares": {},
                          |    "urn:ietf:params:jmap:vacationresponse":{},
                          |    "urn:ietf:params:jmap:mdn":{}
@@ -110,6 +111,7 @@ object SessionRoutesContract {
                          |        "urn:apache:james:params:jmap:mail:quota": {},
                          |        "urn:ietf:params:jmap:quota": {},
                          |        "urn:apache:james:params:jmap:mail:identity:sortorder": {},
+                         |        "urn:apache:james:params:jmap:delegation": {},
                          |        "urn:apache:james:params:jmap:mail:shares": {},
                          |        "urn:ietf:params:jmap:vacationresponse":{},
                          |        "urn:ietf:params:jmap:mdn":{}
@@ -124,6 +126,7 @@ object SessionRoutesContract {
                          |    "urn:apache:james:params:jmap:mail:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:quota": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:apache:james:params:jmap:mail:identity:sortorder": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                         |    "urn:apache:james:params:jmap:delegation": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:apache:james:params:jmap:mail:shares": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:vacationresponse": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
                          |    "urn:ietf:params:jmap:mdn": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"

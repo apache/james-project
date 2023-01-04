@@ -29,6 +29,7 @@ object DefaultCapabilities {
     QuotaCapabilityFactory,
     JmapQuotaCapabilityFactory,
     IdentitySortOrderCapabilityFactory,
+    DelegationCapabilityFactory,
     SharesCapabilityFactory,
     VacationResponseCapabilityFactory,
     SharesCapabilityFactory,
