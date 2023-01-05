@@ -663,7 +663,7 @@ class IMAPServerTest {
             responses = new ConcurrentLinkedDeque<>();
             connection.inbound().receive().asString()
                 .doOnNext(responses::addLast)
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.newSingle("imap-test"))
                 .subscribe();
         }
 
@@ -1871,7 +1871,7 @@ class IMAPServerTest {
         private void readBytes(Connection connection) {
             connection.inbound().receive().asString()
                 .doOnNext(responses::addLast)
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.newSingle("test"))
                 .subscribe();
         }
     }

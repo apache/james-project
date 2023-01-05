@@ -26,6 +26,8 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
 import javax.mail.Flags;
@@ -75,6 +77,7 @@ public interface MailsShouldBeWellReceived {
     ConditionFactory CALMLY_AWAIT_FIVE_MINUTE = CALMLY_AWAIT.timeout(FIVE_MINUTES);
     String SENDER = "bob@apache.org";
     String UNICODE_BODY = "Unicode €uro symbol.";
+    ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     static Message[] searchForAll(Folder inbox) throws MessagingException {
         return inbox.search(new FlagTerm(new Flags(), false));
@@ -248,7 +251,7 @@ public interface MailsShouldBeWellReceived {
                     sendUniqueMessage(sender, message);
             }))
                 .repeat(messageCount - 1)
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .blockLast();
         }
 

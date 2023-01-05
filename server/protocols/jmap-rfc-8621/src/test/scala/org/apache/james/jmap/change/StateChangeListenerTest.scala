@@ -42,7 +42,7 @@ class StateChangeListenerTest {
       map = Map(MailboxTypeName -> mailboxState, EmailTypeName -> emailState))
     val listener = StateChangeListener(Set(MailboxTypeName, EmailTypeName), sink)
 
-    SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
+    listener.event(event)
     sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
     val globalState = PushState.from(mailboxState, emailState)
@@ -60,7 +60,7 @@ class StateChangeListenerTest {
       map = Map(MailboxTypeName -> mailboxState, EmailTypeName -> emailState))
     val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
-    SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
+    listener.event(event)
     sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
     val globalState = PushState.from(mailboxState, emailState)
@@ -77,7 +77,7 @@ class StateChangeListenerTest {
       map = Map(EmailTypeName -> emailState))
     val listener = StateChangeListener(Set(MailboxTypeName), sink)
 
-    SMono(listener.reactiveEvent(event)).subscribeOn(Schedulers.elastic()).block()
+    listener.event(event)
     sink.emitComplete(EmitFailureHandler.FAIL_FAST)
 
     assertThat(sink.asFlux().collectList().block())

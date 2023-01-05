@@ -31,6 +31,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.Scenario.InjectedFailureException;
@@ -50,6 +52,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import reactor.core.scheduler.Schedulers;
 
 class TestingSessionTest {
+    public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSchemaVersionModule.MODULE);
 
@@ -270,7 +273,7 @@ class TestingSessionTest {
                 .times(1)
                 .whenQueryStartsWith("INSERT INTO schemaversion"));
 
-        dao.updateVersion(new SchemaVersion(36)).subscribeOn(Schedulers.elastic()).subscribe();
+        dao.updateVersion(new SchemaVersion(36)).subscribeOn(Schedulers.fromExecutor(EXECUTOR)).subscribe();
 
         Thread.sleep(100);
 
@@ -292,7 +295,7 @@ class TestingSessionTest {
                 .whenQueryStartsWith("INSERT INTO schemaversion"));
 
         CompletableFuture<Void> operation = dao.updateVersion(newVersion)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
             .toFuture();
 
         barrier.releaseCaller();
@@ -317,7 +320,7 @@ class TestingSessionTest {
                 .whenQueryStartsWith("INSERT INTO schemaversion"));
 
         CompletableFuture<Void> operation = dao.updateVersion(newVersion)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
             .toFuture();
 
         barrier.awaitCaller();
@@ -343,7 +346,7 @@ class TestingSessionTest {
                 .whenQueryStartsWith("INSERT INTO schemaversion"));
 
         CompletableFuture<Void> operation = dao.updateVersion(newVersion)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
             .toFuture();
 
         barrier.awaitCaller();

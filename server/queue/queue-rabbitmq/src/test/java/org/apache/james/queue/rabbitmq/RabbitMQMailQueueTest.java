@@ -43,6 +43,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -111,6 +113,7 @@ class RabbitMQMailQueueTest {
     private static final Instant IN_SLICE_3 = IN_SLICE_1.plus(2, HOURS);
     private static final Instant IN_SLICE_5 = IN_SLICE_1.plus(4, HOURS);
     private static final Instant IN_SLICE_7 = IN_SLICE_1.plus(6, HOURS);
+    public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
@@ -204,7 +207,7 @@ class RabbitMQMailQueueTest {
                 .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
                     mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                     return mailQueueItem;
-                }).subscribeOn(Schedulers.elastic())).blockLast(Duration.ofSeconds(10));
+                }).subscribeOn(Schedulers.fromExecutor(EXECUTOR))).blockLast(Duration.ofSeconds(10));
 
             assertThat(cassandra.getConf().execute(selectFrom(BlobTables.DefaultBucketBlobTable.TABLE_NAME)
                 .all().build()))
@@ -625,13 +628,13 @@ class RabbitMQMailQueueTest {
                         .build());
                     return true;
 
-                }).subscribeOn(Schedulers.elastic()),
+                }).subscribeOn(Schedulers.fromExecutor(EXECUTOR)),
                 Mono.fromRunnable(() ->
                     assertThat(getMailQueue()
                         .republishNotProcessedMails(Instant.now().minus(Duration.ofHours(1)))
                         .collectList()
                         .block())
-                        .containsOnly(name1)).subscribeOn(Schedulers.elastic()))
+                        .containsOnly(name1)).subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
             .then()
             .block(Duration.ofSeconds(10));
 
@@ -662,7 +665,7 @@ class RabbitMQMailQueueTest {
                         mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
                         return null;
                     }
-                }).subscribeOn(Schedulers.elastic()))
+                }).subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
                 .subscribe();
 
             try {
@@ -731,8 +734,8 @@ class RabbitMQMailQueueTest {
                 .take(3)
                 .doOnNext(item -> dequeuedNames.add(item.getMail().getName()))
                 .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
-                    .subscribeOn(Schedulers.elastic()))
-                .subscribeOn(Schedulers.elastic())
+                    .subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
+                .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .subscribe();
 
             // One second should be enough to attempt dequeues while we fail to load blobs
@@ -780,7 +783,7 @@ class RabbitMQMailQueueTest {
             Flux.from(getMailQueue().deQueue())
                 .doOnNext(item -> dequeuedMailNames.add(item.getMail().getName()))
                 .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
-                    .subscribeOn(Schedulers.elastic()))
+                    .subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
                 .subscribe();
 
             Awaitility.await().atMost(TEN_SECONDS)
@@ -820,7 +823,7 @@ class RabbitMQMailQueueTest {
             Flux.from(getMailQueue().deQueue())
                 .doOnNext(item -> dequeuedMailNames.add(item.getMail().getName()))
                 .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
-                    .subscribeOn(Schedulers.elastic()))
+                    .subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
                 .subscribe();
 
             Awaitility.await().atMost(TEN_SECONDS)
@@ -842,12 +845,12 @@ class RabbitMQMailQueueTest {
                 .createReceiver()
                 .consumeAutoAck("JamesMailQueue-dead-letter-queue-spool")
                 .doOnNext(next -> deadLetteredCount.incrementAndGet())
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .subscribe();
 
             Flux.from(getMailQueue().deQueue())
                 .doOnNext(Throwing.consumer(item -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .subscribe();
 
 
@@ -874,7 +877,7 @@ class RabbitMQMailQueueTest {
                 .createReceiver()
                 .consumeAutoAck("JamesMailQueue-dead-letter-queue-spool")
                 .doOnNext(next -> deadLetteredCount.incrementAndGet())
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .subscribe();
 
             Awaitility.await().atMost(TEN_SECONDS)
@@ -962,7 +965,7 @@ class RabbitMQMailQueueTest {
                     Mono.fromCallable(() -> {
                         mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                         return mailQueueItem;
-                    }).subscribeOn(Schedulers.elastic())
+                    }).subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                         .thenReturn(mailQueueItem)
                         .onErrorResume(e -> Mono.just(mailQueueItem)))
                 .collectList()

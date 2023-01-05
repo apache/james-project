@@ -45,6 +45,8 @@ import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,6 +87,7 @@ import reactor.rabbitmq.Sender;
 class RabbitMQTest {
 
     public static final ImmutableMap<String, Object> NO_QUEUE_DECLARE_ARGUMENTS = ImmutableMap.of();
+    public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
         .isolationPolicy(RabbitMQExtension.IsolationPolicy.STRONG);
@@ -662,7 +665,7 @@ class RabbitMQTest {
                     acknowledgableDelivery.ack(true);
                     countDownLatch.countDown();
                     return acknowledgableDelivery;
-                }).subscribeOn(Schedulers.elastic()))
+                }).subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
                 .subscribe();
 
             assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
@@ -686,7 +689,7 @@ class RabbitMQTest {
                     countDownLatch.countDown();
                     System.out.println(Thread.currentThread().getName() + ": " + countDownLatch.getCount());
                     return acknowledgableDelivery;
-                }).subscribeOn(Schedulers.elastic()))
+                }).subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
                 .subscribe();
 
             assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();
@@ -711,7 +714,7 @@ class RabbitMQTest {
                     countDownLatch.countDown();
                     System.out.println(Thread.currentThread().getName() + ": " + countDownLatch.getCount());
                     return acknowledgableDelivery;
-                }).subscribeOn(Schedulers.elastic()))
+                }).subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
                 .subscribe();
 
             assertThat(countDownLatch.await(10, TimeUnit.SECONDS)).isTrue();

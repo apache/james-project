@@ -91,8 +91,8 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         enQueue(defaultMail().name("name").build());
 
         Flux.from(getManageableMailQueue().deQueue())
-            .concatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS))).subscribeOn(Schedulers.elastic()))
-            .subscribeOn(Schedulers.elastic())
+            .concatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS))).subscribeOn(SCHEDULER))
+            .subscribeOn(SCHEDULER)
             .subscribe();
 
         Awaitility.await().untilAsserted(() -> assertThat(getManageableMailQueue().getSize()).isEqualTo(0L));
@@ -152,7 +152,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         Flux.from(getManageableMailQueue().deQueue())
             .flatMap(item -> Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS)))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(SCHEDULER)
                 .thenReturn(item))
                 .blockFirst();
 

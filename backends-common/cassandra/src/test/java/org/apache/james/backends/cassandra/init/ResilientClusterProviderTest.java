@@ -72,7 +72,7 @@ class ResilientClusterProviderTest {
         try {
             Mono.delay(Duration.ofMillis(200))
                 .then(Mono.fromRunnable(cassandraExtension::unpause))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.newSingle("test"))
                 .subscribe();
 
             assertThatCode(() -> new ResilientClusterProvider(cassandraExtension.clusterConfiguration().build(),

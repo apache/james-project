@@ -104,7 +104,7 @@ public interface KeyContract extends EventBusContract {
                     countDownLatch.await();
                 }, KEY_1)).block();
 
-                eventBus().dispatch(EVENT, KEY_1).subscribeOn(Schedulers.elastic()).subscribe();
+                eventBus().dispatch(EVENT, KEY_1).subscribeOn(Schedulers.newSingle("test")).subscribe();
 
 
                 getSpeedProfile().shortWaitCondition().atMost(TEN_SECONDS)

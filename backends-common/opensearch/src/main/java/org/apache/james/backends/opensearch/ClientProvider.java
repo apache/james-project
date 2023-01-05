@@ -210,8 +210,8 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
         return Mono.fromCallable(this::connectToCluster)
             .doOnError(e -> LOGGER.warn("Error establishing OpenSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), suppressLeadingZeroElements, suppressTrailingZeroElements), e))
-            .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.elastic()))
-            .publishOn(Schedulers.elastic())
+            .retryWhen(Retry.backoff(configuration.getMaxRetries(), waitDelay).scheduler(Schedulers.boundedElastic()))
+            .publishOn(Schedulers.boundedElastic())
             .block();
     }
 

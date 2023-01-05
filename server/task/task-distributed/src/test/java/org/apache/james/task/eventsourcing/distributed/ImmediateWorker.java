@@ -43,7 +43,7 @@ class ImmediateWorker implements TaskManagerWorker {
         return Mono.fromRunnable(() -> tasks.add(taskWithId))
             .then(Mono.fromCallable(() -> taskWithId.getTask().run()))
             .doOnNext(result -> results.add(result))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(Schedulers.newSingle("ImmediateWorker"));
     }
 
     @Override

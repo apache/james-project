@@ -87,8 +87,8 @@ class CacheDomainListTest {
 
         Flux.range(0, 6)
             .delayElements(Duration.ofMillis(500))
-            .flatMap(Throwing.function(i -> Mono.fromCallable(() ->domainList.containsDomain(DOMAIN_1)).subscribeOn(Schedulers.elastic())))
-            .subscribeOn(Schedulers.elastic())
+            .flatMap(Throwing.function(i -> Mono.fromCallable(() ->domainList.containsDomain(DOMAIN_1)).subscribeOn(Schedulers.boundedElastic())))
+            .subscribeOn(Schedulers.newSingle("test"))
             .blockLast();
 
         assertThat(statementRecorder.listExecutedStatements(

@@ -36,6 +36,8 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -61,9 +63,12 @@ import com.google.common.base.Strings;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 public interface MailQueueContract {
+    ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    Scheduler SCHEDULER = Schedulers.fromExecutor(EXECUTOR);
 
     MailQueue getMailQueue();
 
@@ -359,7 +364,7 @@ public interface MailQueueContract {
             .name(secondExpectedName)
             .build());
 
-        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
@@ -378,7 +383,7 @@ public interface MailQueueContract {
             .build());
 
         Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue())
-            .subscribeOn(Schedulers.elastic()).toIterable().iterator();
+            .subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
         mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
@@ -397,7 +402,7 @@ public interface MailQueueContract {
             .name("name2")
             .build());
 
-        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
         mailQueueItem2.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
@@ -413,7 +418,7 @@ public interface MailQueueContract {
             .name("name1")
             .build());
 
-        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
@@ -437,7 +442,7 @@ public interface MailQueueContract {
             .name("name3")
             .build());
 
-        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
         mailQueueItem2.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
@@ -458,7 +463,7 @@ public interface MailQueueContract {
             .build());
 
         LinkedBlockingQueue<MailQueue.MailQueueItem> queue = new LinkedBlockingQueue<>(1);
-        Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).subscribe(Throwing.consumer(queue::put));
+        Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).subscribe(Throwing.consumer(queue::put));
         queue.take();
 
         assertThat(queue.poll(2, TimeUnit.SECONDS)).isNull();
@@ -466,7 +471,7 @@ public interface MailQueueContract {
 
     @Test
     default void deQueueShouldBlockWhenNoMail() {
-        Mono<MailQueue.MailQueueItem> item = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        Mono<MailQueue.MailQueueItem> item = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).next();
 
         assertThatThrownBy(() -> item.block(Duration.ofSeconds(2)))
             .isInstanceOf(RuntimeException.class);
@@ -497,7 +502,7 @@ public interface MailQueueContract {
         LinkedBlockingQueue<MailQueue.MailQueueItem> itemQueue = new LinkedBlockingQueue<>(1);
         Flux.from(testee
             .deQueue())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(SCHEDULER)
             .flatMap(e -> {
                 try {
                     itemQueue.put(e);
@@ -539,7 +544,7 @@ public interface MailQueueContract {
         int operationCount = 15;
         int totalDequeuedMessages = 50;
         LinkedBlockingDeque<MailQueue.MailQueueItem> deque = new LinkedBlockingDeque<>();
-        Flux.from(testee.deQueue()).subscribeOn(Schedulers.elastic()).doOnNext(deque::addFirst).subscribe();
+        Flux.from(testee.deQueue()).subscribeOn(SCHEDULER).doOnNext(deque::addFirst).subscribe();
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step % 3 == 0) {
@@ -584,7 +589,7 @@ public interface MailQueueContract {
             .flatMap(item -> Mono.fromRunnable(() -> dequeuedMails.add(item.getMail()))
                 .delayElement(Duration.ofMillis(100))
                 .then(Mono.fromRunnable(Throwing.runnable(() -> item.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS))))
-                .subscribeOn(Schedulers.elastic()), 1000)
+                .subscribeOn(SCHEDULER), 1000)
             .subscribeOn(Schedulers.newSingle("foo"))
             .subscribe();
 

@@ -117,10 +117,10 @@ class CassandraModSeqProviderTest {
                     .whenQueryStartsWith("SELECT nextmodseq FROM modseq WHERE mailboxid=:mailboxid"));
 
         CompletableFuture<ModSeq> operation1 = modSeqProvider.nextModSeqReactive(CASSANDRA_ID)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .toFuture();
         CompletableFuture<ModSeq> operation2 = modSeqProvider.nextModSeqReactive(CASSANDRA_ID)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .toFuture();
 
         insertBarrier.awaitCaller();

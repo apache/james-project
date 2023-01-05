@@ -98,7 +98,7 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
         ArrayList<String> names = new ArrayList<>();
         Flux.from(getManageableMailQueue().deQueue())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(SCHEDULER)
             .subscribe(item -> names.add(item.getMail().getName()));
 
        Awaitility.await()
@@ -154,7 +154,7 @@ public interface DelayedManageableMailQueueContract extends DelayedMailQueueCont
 
         ArrayList<String> names = new ArrayList<>();
         Flux.from(getManageableMailQueue().deQueue())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(SCHEDULER)
             .subscribe(item -> names.add(item.getMail().getName()));
 
        Awaitility.await()

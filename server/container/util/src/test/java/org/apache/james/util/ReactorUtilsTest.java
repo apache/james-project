@@ -31,6 +31,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,7 +57,8 @@ import reactor.core.scheduler.Schedulers;
 
 class ReactorUtilsTest {
     static final int BUFFER_SIZE = 5;
-    
+    public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+
     @Nested
     class Throttling {
         @Test
@@ -327,7 +330,7 @@ class ReactorUtilsTest {
                         results.add(i);
                         return Mono.just(i);
                     }))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .subscribe();
 
             Awaitility.await().atMost(ONE_SECOND)
@@ -577,7 +580,7 @@ class ReactorUtilsTest {
         void givenAFluxOnOneByteShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
             Flux<ByteBuffer> source = Flux.range(0, 10)
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.fromExecutor(Executors.newCachedThreadPool()))
                 .limitRate(2)
                 .doOnRequest(request -> generateElements.getAndAdd((int) request))
                 .map(index -> new byte[] {(byte) (int) index})
@@ -599,7 +602,7 @@ class ReactorUtilsTest {
                 new byte[] {0, 1, 2},
                 new byte[] {3, 4, 5},
                 new byte[] {6, 7, 8})
-                    .subscribeOn(Schedulers.elastic())
+                    .subscribeOn(Schedulers.fromExecutor(Executors.newCachedThreadPool()))
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
@@ -622,7 +625,7 @@ class ReactorUtilsTest {
                 new byte[] {3, 4, 5},
                 new byte[] {6, 7, 8},
                 new byte[] {9, 10, 11})
-                    .subscribeOn(Schedulers.elastic())
+                    .subscribeOn(Schedulers.fromExecutor(Executors.newCachedThreadPool()))
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
@@ -638,7 +641,7 @@ class ReactorUtilsTest {
         void givenAnEmptyFluxShouldConsumeOnlyThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
             Flux<ByteBuffer> source = Flux.<byte[]>empty()
-                    .subscribeOn(Schedulers.elastic())
+                    .subscribeOn(Schedulers.fromExecutor(Executors.newCachedThreadPool()))
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));

@@ -55,6 +55,7 @@ import sttp.ws.WebSocketFrame.Text
 import sttp.ws.{WebSocket, WebSocketFrame}
 
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 trait WebSocketContract {
   private lazy val awaitAtMostTenSeconds: ConditionFactory = Awaitility.`with`
@@ -1113,14 +1114,14 @@ trait WebSocketContract {
                 t.payload
               }
 
-            val maybeNotification: String = SMono.fromCallable(() =>
+            val maybeNotification: String = Try(SMono.fromCallable(() =>
             ws.receive()
               .map { case t: Text =>
                 t.payload
               })
-              .timeout(scala.concurrent.duration.Duration.fromNanos(100000000), Some(SMono.just("No notification received")))
-              .subscribeOn(Schedulers.boundedElastic())
-              .block()
+              .subscribeOn(Schedulers.newSingle("test"))
+              .block(scala.concurrent.duration.Duration.fromNanos(100000000)))
+              .fold(e => "No notification received", s => s)
 
           List(response, maybeNotification)
         })
