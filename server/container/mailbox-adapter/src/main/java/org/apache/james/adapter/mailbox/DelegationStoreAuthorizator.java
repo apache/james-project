@@ -19,6 +19,8 @@
 
 package org.apache.james.adapter.mailbox;
 
+import java.util.Set;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -27,6 +29,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 
@@ -57,5 +61,13 @@ public class DelegationStoreAuthorizator implements Authorizator {
         } catch (UsersRepositoryException e) {
             throw new MailboxException("Unable to access usersRepository", e);
         }
+    }
+
+    @Override
+    public Set<Username> delegatedUsers(Username userId) {
+        return Flux.from(delegationStore.delegatedUsers(userId))
+            .collectList()
+            .map(ImmutableSet::copyOf)
+            .blockOptional().orElse(ImmutableSet.of());
     }
 }

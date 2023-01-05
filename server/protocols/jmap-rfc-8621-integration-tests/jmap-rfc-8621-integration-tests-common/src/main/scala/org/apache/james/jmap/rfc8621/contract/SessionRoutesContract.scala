@@ -18,8 +18,6 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
-import java.nio.charset.StandardCharsets
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.builder.RequestSpecBuilder
@@ -35,10 +33,12 @@ import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.{EXPECTED_BASE_PATH, expected_session_object}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
-import org.apache.james.utils.DataProbeImpl
+import org.apache.james.utils.{DataProbeImpl, WebAdminGuiceProbe}
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+import reactor.netty.http.client.HttpClient
 
+import java.nio.charset.StandardCharsets
 object SessionRoutesContract {
   private val expected_session_object: String = """{
                          |  "capabilities" : {
@@ -132,6 +132,7 @@ object SessionRoutesContract {
                          |    "urn:ietf:params:jmap:mdn": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
                          |  },
                          |  "username" : "bob@domain.tld",
+                         |  "delegatedUsers": [],
                          |  "apiUrl" : "http://domain.com/jmap",
                          |  "downloadUrl" : "http://domain.com/download/{accountId}/{blobId}?type={type}&name={name}",
                          |  "uploadUrl" : "http://domain.com/upload/{accountId}",
@@ -214,6 +215,26 @@ trait SessionRoutesContract {
       .asString()
 
     assertThatJson(sessionJson).isEqualTo(expected_session_object)
+  }
+
+  @Test
+  def getResponseShouldReturnDelegatedUsersWhenDelegated(server: GuiceJamesServer): Unit = {
+     val webadminPort = server.getProbe(classOf[WebAdminGuiceProbe]).getWebAdminPort.getValue
+
+    HttpClient.create
+      .baseUrl(s"http://127.0.0.1:$webadminPort/${ALICE.asString}/authorizedUsers/${BOB.asString()}")
+      .put()
+      .response()
+      .block()
+
+    `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when()
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("delegatedUsers", Matchers.is("[\"alice@domain.tld\"]"))
   }
 
 }

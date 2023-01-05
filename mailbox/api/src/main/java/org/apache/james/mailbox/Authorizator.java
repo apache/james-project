@@ -19,8 +19,12 @@
 
 package org.apache.james.mailbox;
 
+import java.util.Set;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Authenticates user credentials.
@@ -38,6 +42,10 @@ public interface Authorizator {
     }
 
     AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException;
+
+    default Set<Username> delegatedUsers(Username userId) {
+        return ImmutableSet.of();
+    }
 
     default FluentAuthorizator user(Username userId) {
         return otherUserId -> canLoginAsOtherUser(userId, otherUserId);

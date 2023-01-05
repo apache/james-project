@@ -40,6 +40,7 @@ import play.api.libs.json.Json
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.HttpServerResponse
+import scala.jdk.CollectionConverters._
 
 object SessionRoutes {
   private val JMAP_SESSION: String = "/jmap/session"
@@ -53,9 +54,9 @@ class SessionRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticator:
 
   private val generateSession: JMAPRoute.Action =
     (request, response) => SMono.fromPublisher(authenticator.authenticate(request))
-      .map(_.getUser)
       .handle[Session] {
-        case (username, sink) => sessionSupplier.generate(username, UrlPrefixes.from(jmapRfc8621Configuration, request))
+        case (mailboxSession, sink) => sessionSupplier.generate(mailboxSession.getUser,
+          mailboxSession.getDelegatedUsers.asScala.toSet, UrlPrefixes.from(jmapRfc8621Configuration, request))
           .fold(sink.error, session => sink.next(session))
       }
       .flatMap(session => sendRespond(session, response))

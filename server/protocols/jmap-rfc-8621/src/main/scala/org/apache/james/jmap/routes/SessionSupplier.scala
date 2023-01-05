@@ -39,7 +39,7 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
     .toOption
     .getOrElse(false)
 
-  def generate(username: Username, urlPrefixes: UrlPrefixes): Either[IllegalArgumentException, Session] = {
+  def generate(username: Username, delegatedUsers: Set[Username], urlPrefixes: UrlPrefixes): Either[IllegalArgumentException, Session] = {
     val urlEndpointResolver: JmapUrlEndpointResolver = new JmapUrlEndpointResolver(urlPrefixes)
     val capabilities: Set[Capability] = capabilityFactories
       .map(cf => cf.create(urlPrefixes))
@@ -49,6 +49,7 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
         List(account),
         primaryAccounts(account.accountId, capabilities),
         username,
+        delegatedUsers = delegatedUsers,
         apiUrl = urlEndpointResolver.apiUrl,
         downloadUrl = urlEndpointResolver.downloadUrl,
         uploadUrl = urlEndpointResolver.uploadUrl,

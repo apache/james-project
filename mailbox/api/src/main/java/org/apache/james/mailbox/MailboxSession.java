@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -100,6 +101,7 @@ public class MailboxSession {
     private final SessionId sessionId;
     private final Username userName;
     private final Optional<Username> loggedInUser;
+    private final Set<Username> delegatedUsers;
     private boolean open = true;
     private final List<Locale> localePreferences;
     private final Map<Object, Object> attributes;
@@ -107,12 +109,14 @@ public class MailboxSession {
     private final SessionType type;
 
     public MailboxSession(SessionId sessionId, Username userName, Optional<Username> loggedInUser,
-                                List<Locale> localePreferences, char pathSeparator, SessionType type) {
-        this(sessionId, userName, loggedInUser, localePreferences, new ArrayList<>(), null, pathSeparator, type);
+                          Set<Username> delegatedUsers, List<Locale> localePreferences,
+                          char pathSeparator, SessionType type) {
+        this(sessionId, userName, loggedInUser, delegatedUsers, localePreferences, new ArrayList<>(), null, pathSeparator, type);
     }
 
     public MailboxSession(SessionId sessionId, Username userName, Optional<Username> loggedInUser,
-                          List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
+                          Set<Username> delegatedUsers, List<Locale> localePreferences,
+                          List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
         this.userName = userName;
         this.otherUsersSpace = otherUsersSpace;
@@ -128,6 +132,7 @@ public class MailboxSession {
         this.attributes = new HashMap<>();
         this.pathSeparator = pathSeparator;
         this.loggedInUser = loggedInUser;
+        this.delegatedUsers = delegatedUsers;
     }
 
     /**
@@ -171,6 +176,10 @@ public class MailboxSession {
 
     public Optional<Username> getLoggedInUser() {
         return loggedInUser;
+    }
+
+    public Set<Username> getDelegatedUsers() {
+        return delegatedUsers;
     }
 
     /**

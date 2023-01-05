@@ -19,9 +19,12 @@
 package org.apache.james.mailbox.store;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.Authorizator;
+
+import com.google.common.collect.ImmutableSet;
 
 public class FakeAuthorizator implements Authorizator {
 
@@ -53,6 +56,14 @@ public class FakeAuthorizator implements Authorizator {
             return AuthorizationState.UNKNOWN_USER;
         }
         return AuthorizationState.ALLOWED;
+    }
+
+    @Override
+    public Set<Username> delegatedUsers(Username userId) {
+        if (givenUserId.equals(Optional.of(userId))) {
+            return delegatedUserId.map(ImmutableSet::of).orElse(ImmutableSet.of());
+        }
+        return ImmutableSet.of();
     }
 }
 
