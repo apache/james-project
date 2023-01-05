@@ -63,6 +63,11 @@ public class MemoryDelegationStore implements DelegationStore {
     }
 
     @Override
+    public Publisher<Void> removeDelegatedUser(Username baseUser, Username delegatedToUser) {
+        return Mono.fromRunnable(() -> delegations.remove(delegatedToUser, baseUser));
+    }
+
+    @Override
     public Publisher<Void> clear(Username baseUser) {
         return Mono.fromRunnable(() -> delegations.removeAll(baseUser));
     }

@@ -47,4 +47,7 @@ public interface DelegationStore {
     }
 
     Publisher<Username> delegatedUsers(Username baseUser);
+
+    Publisher<Void> removeDelegatedUser(Username baseUser, Username delegatedToUser);
+
 }

@@ -200,4 +200,42 @@ public interface DelegationStoreContract {
             .doesNotThrowAnyException();
     }
 
+
+    @Test
+    default void delegatedUserShouldNotReturnDeletedUsers() {
+        addUser(BOB);
+        Mono.from(testee().addAuthorizedUser(ALICE, BOB)).block();
+        Mono.from(testee().addAuthorizedUser(CEDRIC, BOB)).block();
+
+        Mono.from(testee().removeDelegatedUser(BOB, CEDRIC)).block();
+
+        assertThat(Flux.from(testee().delegatedUsers(BOB)).collectList().block())
+            .containsOnly(ALICE);
+    }
+
+    @Test
+    default void removeDelegatedUserShouldBeIdempotent() {
+        addUser(BOB);
+        Mono.from(testee().addAuthorizedUser(ALICE, BOB)).block();
+        Mono.from(testee().addAuthorizedUser(CEDRIC, BOB)).block();
+
+        Mono.from(testee().removeDelegatedUser(BOB, CEDRIC)).block();
+        Mono.from(testee().removeDelegatedUser(BOB, CEDRIC)).block();
+
+        assertThat(Flux.from(testee().delegatedUsers(BOB)).collectList().block())
+            .containsOnly(ALICE);
+    }
+
+    @Test
+    default void removeDelegatedUserShouldUpdateAuthorizedUserRelated() {
+        addUser(BOB);
+        Mono.from(testee().addAuthorizedUser(ALICE, BOB)).block();
+        Mono.from(testee().addAuthorizedUser(ALICE, CEDRIC)).block();
+
+        Mono.from(testee().removeDelegatedUser(BOB, ALICE)).block();
+
+        assertThat(Flux.from(testee().authorizedUsers(ALICE)).collectList().block())
+            .containsOnly(CEDRIC);
+    }
+
 }

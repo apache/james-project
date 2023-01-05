@@ -23,15 +23,9 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
-import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import reactor.core.publisher.Mono;
 
 public class CassandraDelegationStore implements DelegationStore {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraDelegationStore.class);
     private final CassandraUsersDAO cassandraUsersDAO;
 
     @Inject
@@ -46,31 +40,26 @@ public class CassandraDelegationStore implements DelegationStore {
 
     @Override
     public Publisher<Void> clear(Username baseUser) {
-        return cassandraUsersDAO.getAuthorizedUsers(baseUser)
-            .flatMap(authorizedUser -> cassandraUsersDAO.removeDelegatedToUser(authorizedUser, baseUser))
-            .then(cassandraUsersDAO.removeAllAuthorizedUsers(baseUser));
+        return cassandraUsersDAO.removeAllAuthorizedUsers(baseUser);
     }
 
     @Override
     public Publisher<Void> addAuthorizedUser(Username baseUser, Username userWithAccess) {
-        return cassandraUsersDAO.addAuthorizedUsers(baseUser, userWithAccess)
-            .then(Mono.from(cassandraUsersDAO.containsReactive(userWithAccess))
-                .filter(FunctionalUtils.identityPredicate())
-                .flatMap(authorizedUser -> cassandraUsersDAO.addDelegatedToUsers(userWithAccess, baseUser))
-                .onErrorResume(error -> {
-                    LOGGER.warn("Can not add delegated user: {} to user: {}", userWithAccess, baseUser);
-                    return Mono.empty();
-                }));
+        return cassandraUsersDAO.addAuthorizedUsers(baseUser, userWithAccess);
     }
 
     @Override
     public Publisher<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
-        return cassandraUsersDAO.removeAuthorizedUser(baseUser, userWithAccess)
-            .then(cassandraUsersDAO.removeDelegatedToUser(userWithAccess, baseUser));
+        return cassandraUsersDAO.removeAuthorizedUser(baseUser, userWithAccess);
     }
 
     @Override
     public Publisher<Username> delegatedUsers(Username baseUser) {
         return cassandraUsersDAO.getDelegatedToUsers(baseUser);
+    }
+
+    @Override
+    public Publisher<Void> removeDelegatedUser(Username baseUser, Username delegatedToUser) {
+        return cassandraUsersDAO.removeDelegatedToUser(baseUser, delegatedToUser);
     }
 }
