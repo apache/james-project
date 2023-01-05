@@ -26,7 +26,7 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.string.Uri
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_IDENTITY_SORTORDER, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_MDN, JMAP_QUOTA, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_DELEGATION, JAMES_IDENTITY_SORTORDER, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_MDN, JMAP_QUOTA, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
@@ -51,6 +51,7 @@ object CapabilityIdentifier {
   val JMAP_QUOTA: CapabilityIdentifier = "urn:ietf:params:jmap:quota"
   val JAMES_SHARES: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:shares"
   val JAMES_IDENTITY_SORTORDER: CapabilityIdentifier = "urn:apache:james:params:jmap:mail:identity:sortorder"
+  val JAMES_DELEGATION: CapabilityIdentifier = "urn:apache:james:params:jmap:delegation"
   val JMAP_MDN: CapabilityIdentifier = "urn:ietf:params:jmap:mdn"
 }
 
@@ -238,6 +239,19 @@ case object IdentitySortOrderCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JAMES_IDENTITY_SORTORDER
 
   override def create(urlPrefixes: UrlPrefixes): Capability = IdentitySortOrderCapability()
+}
+
+final case class DelegationCapabilityProperties() extends CapabilityProperties {
+  override def jsonify(): JsObject = Json.obj()
+}
+
+final case class DelegationCapability(properties: DelegationCapabilityProperties = DelegationCapabilityProperties(),
+                                      identifier: CapabilityIdentifier = JAMES_DELEGATION) extends Capability
+
+case object DelegationCapabilityFactory extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = JAMES_DELEGATION
+
+  override def create(urlPrefixes: UrlPrefixes): Capability = DelegationCapability()
 }
 
 final case class SharesCapabilityProperties() extends CapabilityProperties {
