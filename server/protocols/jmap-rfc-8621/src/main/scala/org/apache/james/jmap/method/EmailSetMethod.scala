@@ -23,7 +23,7 @@ import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{EmailSetRequest, EmailSetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -31,7 +31,6 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
-
 import javax.inject.Inject
 
 case class MessageNotFoundException(messageId: MessageId) extends Exception
@@ -39,6 +38,7 @@ case class MessageNotFoundException(messageId: MessageId) extends Exception
 class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
                                val metricFactory: MetricFactory,
                                val sessionSupplier: SessionSupplier,
+                               val sessionTranslator: SessionTranslator,
                                createPerformer: EmailSetCreatePerformer,
                                deletePerformer: EmailSetDeletePerformer,
                                updatePerformer: EmailSetUpdatePerformer,

@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
 import org.apache.james.jmap.delegation.{DelegateSetRequest, DelegateSetResponse}
 import org.apache.james.jmap.json.{DelegationSerializer, ResponseSerializer}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -34,7 +34,8 @@ import reactor.core.scala.publisher.SMono
 
 class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
                                   val metricFactory: MetricFactory,
-                                  val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[DelegateSetRequest] {
+                                  val sessionSupplier: SessionSupplier,
+                                  val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[DelegateSetRequest] {
   override val methodName: Invocation.MethodName = MethodName("Delegate/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JAMES_DELEGATION)
 

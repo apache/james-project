@@ -28,7 +28,7 @@ import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent,
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Invocation, UuidState}
+import org.apache.james.jmap.core.{Invocation, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.routes.SessionSupplier
@@ -38,7 +38,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.vacation.api.{VacationPatch, VacationService, AccountId => VacationAccountId}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
 import javax.inject.{Inject, Named}
 
 object VacationResponseUpdateResults {
@@ -78,7 +77,8 @@ object VacationResponseSetMethod {
 class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: EventBus,
                                           vacationService: VacationService,
                                           val metricFactory: MetricFactory,
-                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseSetRequest] {
+                                          val sessionSupplier: SessionSupplier,
+                                          val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[VacationResponseSetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_VACATION_RESPONSE)
 

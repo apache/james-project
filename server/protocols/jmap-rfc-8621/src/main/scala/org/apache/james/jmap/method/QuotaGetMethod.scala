@@ -24,7 +24,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_QUOTA}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, MissingCapabilityException, Properties}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, MissingCapabilityException, Properties, SessionTranslator}
 import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaNotFound, QuotaResponseGetResult, UnparsedQuotaId}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -37,11 +37,11 @@ import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
 import javax.inject.Inject
 
 class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
                                val sessionSupplier: SessionSupplier,
+                               val sessionTranslator: SessionTranslator,
                                val quotaManager: QuotaManager,
                                val quotaRootResolver: UserQuotaRootResolver) extends MethodRequiringAccountId[QuotaGetRequest] with Startable {
 

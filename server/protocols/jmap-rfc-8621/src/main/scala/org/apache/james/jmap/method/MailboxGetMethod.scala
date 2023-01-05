@@ -24,7 +24,7 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, UuidState}
+import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, SessionTranslator, UuidState}
 import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Ids, Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions, UnparsedMailboxId}
@@ -37,8 +37,8 @@ import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionMan
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
 import javax.inject.Inject
+
 import scala.util.Try
 
 object MailboxGetResults {
@@ -68,7 +68,8 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   provisioner: MailboxesProvisioner,
                                   mailboxChangeRepository: MailboxChangeRepository,
                                   val metricFactory: MetricFactory,
-                                  val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxGetRequest] {
+                                  val sessionSupplier: SessionSupplier,
+                                  val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxGetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 

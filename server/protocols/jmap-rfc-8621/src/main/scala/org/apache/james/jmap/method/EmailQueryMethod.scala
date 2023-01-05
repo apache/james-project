@@ -26,7 +26,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JM
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.Limit.Limit
 import org.apache.james.jmap.core.Position.Position
-import org.apache.james.jmap.core.{CanCalculateChanges, Invocation, Limit, Position, QueryState}
+import org.apache.james.jmap.core.{CanCalculateChanges, Invocation, Limit, Position, QueryState, SessionTranslator}
 import org.apache.james.jmap.json.{EmailQuerySerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, UnsupportedRequestParameterException}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -38,16 +38,18 @@ import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
 import reactor.core.scala.publisher.{SFlux, SMono}
-
 import java.time.ZonedDateTime
+
 import javax.inject.Inject
 import javax.mail.Flags.Flag.DELETED
+
 import scala.jdk.CollectionConverters._
 
 class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
                                   mailboxManager: MailboxManager,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
+                                  val sessionTranslator: SessionTranslator,
                                   val configuration: JMAPConfiguration,
                                   val emailQueryView: EmailQueryView) extends MethodRequiringAccountId[EmailQueryRequest] {
   override val methodName: MethodName = MethodName("Email/query")

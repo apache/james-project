@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
-import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties}
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, MissingCapabilityException, Properties, SessionTranslator}
 import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.VacationResponse.UNPARSED_SINGLETON
@@ -33,7 +33,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.vacation.api.{VacationService, AccountId => JavaAccountId}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
 import javax.inject.Inject
 
 object VacationResponseGetResult {
@@ -58,7 +57,8 @@ case class VacationResponseGetResult(vacationResponses: Set[VacationResponse], n
 
 class VacationResponseGetMethod @Inject()(vacationService: VacationService,
                                           val metricFactory: MetricFactory,
-                                          val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[VacationResponseGetRequest] {
+                                          val sessionSupplier: SessionSupplier,
+                                          val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[VacationResponseGetRequest] {
   override val methodName: MethodName = MethodName("VacationResponse/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_VACATION_RESPONSE)
 
