@@ -623,8 +623,8 @@
         <cucumber.version>2.4.0</cucumber.version>
 
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
-        <jackson.version>2.13.3</jackson.version>
-        <jackson.databind.version>2.13.4.2</jackson.databind.version>
+        <jackson.version>2.14.1</jackson.version>
+        <jackson.databind.version>2.14.1</jackson.databind.version>
         <feign.version>11.10</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.11.5</jjwt.version>
