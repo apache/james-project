@@ -123,7 +123,7 @@ class GuiceLifecycleHeathCheckTest {
                 configureRequestSpecification(server);
 
                 Mono.fromRunnable(server::stop)
-                    .publishOn(Schedulers.elastic())
+                    .publishOn(Schedulers.newSingle("test"))
                     .subscribe(r -> {}, e -> {}, () -> sink.emitEmpty(FAIL_FAST));
 
                 when()

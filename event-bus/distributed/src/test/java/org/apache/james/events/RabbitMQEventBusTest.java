@@ -243,7 +243,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             .createReceiver()
             .consumeAutoAck(TEST_NAMING_STRATEGY.deadLetterQueue().getName())
             .doOnNext(next -> deadLetteredCount.incrementAndGet())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.newSingle("test"))
             .subscribe();
 
         Awaitility.await().atMost(TEN_SECONDS)

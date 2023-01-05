@@ -175,7 +175,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
         eventBus.register(eventCollector);
         Mono.from(messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.newSingle("test"))
             .block();
 
         AbstractListAssert<?, List<? extends Expunged>, Expunged, ObjectAssert<Expunged>> events =

@@ -538,7 +538,7 @@ public abstract class AbstractCombinationManagerTest {
             .getId().getMessageId();
 
         Mono.from(messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.newSingle("test"))
             .block();
 
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());

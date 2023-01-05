@@ -152,7 +152,7 @@ public class Scenario {
             Mono.fromRunnable(() -> {
                 barrier.call();
                 delegate.subscribe(s);
-            }).subscribeOn(Schedulers.elastic())
+            }).subscribeOn(Schedulers.newSingle("await"))
                 .subscribe();
         }
     }

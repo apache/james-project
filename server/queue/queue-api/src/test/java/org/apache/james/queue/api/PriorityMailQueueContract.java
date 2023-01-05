@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.api;
 
+import static org.apache.james.queue.api.MailQueueContract.SCHEDULER;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -117,7 +118,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(1))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
@@ -137,7 +138,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(8))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
@@ -161,7 +162,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(6))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
@@ -187,7 +188,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(6))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();

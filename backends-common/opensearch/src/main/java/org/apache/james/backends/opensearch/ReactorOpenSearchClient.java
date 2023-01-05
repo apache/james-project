@@ -134,7 +134,7 @@ public class ReactorOpenSearchClient implements AutoCloseable {
 
     private static <T> Mono<T> toReactor(CompletableFuture<T> async) {
         return Mono.<T>create(sink -> async.whenComplete(getFuture(sink)))
-            .publishOn(Schedulers.elastic());
+            .publishOn(Schedulers.boundedElastic());
     }
 
     private static <T> BiConsumer<? super T, ? super Throwable> getFuture(MonoSink<T> sink) {

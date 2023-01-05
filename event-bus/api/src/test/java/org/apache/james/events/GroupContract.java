@@ -141,7 +141,7 @@ public interface GroupContract {
                     }
                 }, EventBusTestFixture.GROUP_C);
 
-                eventBus().dispatch(EVENT, NO_KEYS).subscribeOn(Schedulers.elastic()).subscribe();
+                eventBus().dispatch(EVENT, NO_KEYS).subscribeOn(Schedulers.newSingle("test")).subscribe();
 
 
                 getSpeedProfile().shortWaitCondition().atMost(TEN_SECONDS)
@@ -158,7 +158,7 @@ public interface GroupContract {
             EventListener listener = event -> {
                 if (event.getEventId().equals(EVENT_ID)) {
                     eventBus().dispatch(EVENT_2, NO_KEYS)
-                        .subscribeOn(Schedulers.elastic())
+                        .subscribeOn(Schedulers.newSingle("test"))
                         .block();
                     successfulRetry.set(true);
                 }

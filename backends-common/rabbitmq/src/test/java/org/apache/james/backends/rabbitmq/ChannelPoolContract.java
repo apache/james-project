@@ -69,7 +69,7 @@ interface ChannelPoolContract {
         Channel channel2 = borrowChannel(channelPool);
 
         Mono.delay(Duration.ofSeconds(1))
-            .then(Mono.fromRunnable(() -> returnToThePool(channelPool, channel1)).subscribeOn(Schedulers.elastic()))
+            .then(Mono.fromRunnable(() -> returnToThePool(channelPool, channel1)).subscribeOn(Schedulers.newSingle("test")))
             .subscribe();
 
         Channel channelAfterReturned = borrowChannel(channelPool);

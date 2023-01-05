@@ -2403,7 +2403,7 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-bom</artifactId>
-                <version>2020.0.24</version>
+                <version>2022.0.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -2411,6 +2411,11 @@
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-scala-extensions_${scala.base}</artifactId>
                 <version>0.8.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor.rabbitmq</groupId>
+                <artifactId>reactor-rabbitmq</artifactId>
+                <version>1.5.5</version>
             </dependency>
             <dependency>
                 <groupId>io.rest-assured</groupId>

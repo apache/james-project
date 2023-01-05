@@ -145,10 +145,8 @@ class CassandraMailboxDAOTest {
             .whenQueryStartsWith("UPDATE mailbox SET"));
 
         CompletableFuture<Mailbox> readMailbox1 = testee.retrieveMailbox(CASSANDRA_ID_1)
-            .subscribeOn(Schedulers.elastic())
             .toFuture();
         CompletableFuture<Mailbox> readMailbox2 = testee.retrieveMailbox(CASSANDRA_ID_1)
-            .subscribeOn(Schedulers.elastic())
             .toFuture();
 
         barrier.awaitCaller();

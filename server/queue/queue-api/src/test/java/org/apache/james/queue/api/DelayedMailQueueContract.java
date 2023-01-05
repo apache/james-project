@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.api;
 
+import static org.apache.james.queue.api.MailQueueContract.SCHEDULER;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -48,7 +49,7 @@ public interface DelayedMailQueueContract {
             5L,
             TimeUnit.SECONDS);
 
-        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
             .isInstanceOf(RuntimeException.class);
     }
@@ -73,7 +74,7 @@ public interface DelayedMailQueueContract {
             365 * 10,
             TimeUnit.DAYS);
 
-        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
             .isInstanceOf(RuntimeException.class);
     }
@@ -86,7 +87,7 @@ public interface DelayedMailQueueContract {
            ChronoUnit.YEARS.getDuration().multipliedBy(291)
            );
 
-        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(SCHEDULER).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
             .isInstanceOf(RuntimeException.class);
     }

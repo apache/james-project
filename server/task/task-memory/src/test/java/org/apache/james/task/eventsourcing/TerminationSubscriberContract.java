@@ -26,6 +26,8 @@ import static org.awaitility.Durations.ONE_MINUTE;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
@@ -49,6 +51,7 @@ public interface TerminationSubscriberContract {
     Cancelled CANCELLED_EVENT = new Cancelled(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Option.empty());
     Duration DELAY_BETWEEN_EVENTS = Duration.ofMillis(50);
     Duration DELAY_BEFORE_PUBLISHING = Duration.ofMillis(50);
+    ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     TerminationSubscriber subscriber();
 
@@ -126,7 +129,7 @@ public interface TerminationSubscriberContract {
 
         List<Event> listenedEvents = Mono.delay(DELAY_BEFORE_PUBLISHING.plus(DELAY_BETWEEN_EVENTS.multipliedBy(3).dividedBy(2)))
             .then(Mono.defer(() -> collectEvents(subscriber.listenEvents())))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
             .block();
         assertThat(listenedEvents).containsExactly(FAILED_EVENT, CANCELLED_EVENT);
     }
@@ -138,7 +141,7 @@ public interface TerminationSubscriberContract {
 
     default Mono<List<Event>> collectEvents(Publisher<Event> listener) {
         return Flux.from(listener)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
             .take(DELAY_BEFORE_PUBLISHING.plus(DELAY_BETWEEN_EVENTS.multipliedBy(7)))
             .collectList();
     }
@@ -146,7 +149,7 @@ public interface TerminationSubscriberContract {
     default void sendEvents(TerminationSubscriber subscriber, Event... events) {
         Mono.delay(DELAY_BEFORE_PUBLISHING)
             .flatMapMany(ignored -> Flux.fromArray(events)
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .delayElements(DELAY_BETWEEN_EVENTS)
                 .doOnNext(subscriber::handle))
             .subscribe();

@@ -78,7 +78,7 @@ class OpenSearchClusterExtension implements AfterAllCallback, BeforeAllCallback,
             Flux.fromStream(Stream.of(runnables)
                     .map(Mono::fromRunnable))
                 .parallel(runnables.length)
-                .runOn(Schedulers.elastic())
+                .runOn(Schedulers.boundedElastic())
                 .flatMap(Function.identity())
                 .then()
                 .block();

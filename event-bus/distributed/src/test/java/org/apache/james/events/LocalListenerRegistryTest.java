@@ -243,7 +243,7 @@ class LocalListenerRegistryTest {
             LocalListenerRegistry.LocalRegistration registration5 = testee.addListener(KEY_1, listener5);
 
             Mono<List<EventListener.ReactiveEventListener>> listeners = Flux.fromIterable(testee.getLocalListeners(KEY_1))
-                .publishOn(Schedulers.elastic())
+                .publishOn(Schedulers.newSingle("test"))
                 .delayElements(Duration.ofMillis(100))
                 .collectList();
 

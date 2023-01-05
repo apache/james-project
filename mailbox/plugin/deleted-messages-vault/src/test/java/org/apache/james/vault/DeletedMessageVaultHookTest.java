@@ -176,7 +176,7 @@ class DeletedMessageVaultHookTest {
             .mapToObj(Throwing.intFunction(i -> appendMessage(messageManager).getMessageId()))
             .collect(ImmutableList.toImmutableList());
 
-        assertThatCode(() -> Mono.from(messageIdManager.delete(ids, aliceSession)).subscribeOn(Schedulers.elastic()).block())
+        assertThatCode(() -> Mono.from(messageIdManager.delete(ids, aliceSession)).subscribeOn(Schedulers.newSingle("test")).block())
             .doesNotThrowAnyException();
     }
 
