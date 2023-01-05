@@ -57,6 +57,9 @@ public class XUserAuthenticationStrategyTest {
         when(mockedMailboxManager.createSystemSession(any()))
             .thenReturn(fakeMailboxSession);
 
+        when(mockedMailboxManager.login(any()))
+            .thenReturn(fakeMailboxSession);
+
         when(mockedRequest.requestHeaders())
             .thenReturn(mockedHeaders);
 
