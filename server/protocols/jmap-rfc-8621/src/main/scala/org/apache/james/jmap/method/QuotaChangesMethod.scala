@@ -26,7 +26,7 @@ import org.apache.james.jmap.api.change.CanNotCalculateChangesException
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_QUOTA}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, UuidState}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{JmapQuota, QuotaChangesRequest, QuotaChangesResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -35,11 +35,11 @@ import org.apache.james.mailbox.quota.{QuotaManager, UserQuotaRootResolver}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
-
 import javax.inject.Inject
 
 class QuotaChangesMethod @Inject()(val metricFactory: MetricFactory,
                                    val sessionSupplier: SessionSupplier,
+                                   val sessionTranslator: SessionTranslator,
                                    val quotaManager: QuotaManager,
                                    val quotaRootResolver: UserQuotaRootResolver) extends MethodRequiringAccountId[QuotaChangesRequest] {
 

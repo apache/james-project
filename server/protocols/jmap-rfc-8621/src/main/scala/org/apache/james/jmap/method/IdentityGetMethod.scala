@@ -38,7 +38,8 @@ import javax.inject.Inject
 
 class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
                                    val metricFactory: MetricFactory,
-                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[IdentityGetRequest] {
+                                   val sessionSupplier: SessionSupplier,
+                                   val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[IdentityGetRequest] {
   override val methodName: MethodName = MethodName("Identity/get")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
 

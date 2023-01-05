@@ -24,7 +24,7 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, SetError, UuidState}
+import org.apache.james.jmap.core.{Invocation, SessionTranslator, SetError, UuidState}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{MailboxSetRequest, MailboxSetResponse}
 import org.apache.james.jmap.method.MailboxSetCreatePerformer.MailboxCreationResults
@@ -36,7 +36,6 @@ import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.SMono
-
 import javax.inject.Inject
 
 case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
@@ -51,7 +50,8 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  updatePerformer: MailboxSetUpdatePerformer,
                                  mailboxChangeRepository: MailboxChangeRepository,
                                  val metricFactory: MetricFactory,
-                                 val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[MailboxSetRequest] {
+                                 val sessionSupplier: SessionSupplier,
+                                 val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxSetRequest] {
   override val methodName: MethodName = MethodName("Mailbox/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 

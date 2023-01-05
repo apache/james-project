@@ -22,7 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_QUOTA}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{CanCalculateChanges, ErrorCode, Invocation, Limit, Position, QueryState}
+import org.apache.james.jmap.core.{CanCalculateChanges, ErrorCode, Invocation, Limit, Position, QueryState, SessionTranslator}
 import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{JmapQuota, QuotaQueryFilter, QuotaQueryRequest, QuotaQueryResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -32,11 +32,11 @@ import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import play.api.libs.json.JsError
 import reactor.core.scala.publisher.SMono
-
 import javax.inject.Inject
 
 class QuotaQueryMethod @Inject()(val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier,
+                                 val sessionTranslator: SessionTranslator,
                                  val quotaManager: QuotaManager,
                                  val quotaRootResolver: UserQuotaRootResolver) extends MethodRequiringAccountId[QuotaQueryRequest] {
 

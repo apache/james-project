@@ -24,7 +24,7 @@ import org.apache.james.jmap.api.change.{CanNotCalculateChangesException, Mailbo
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{CapabilityIdentifier, ErrorCode, Invocation, Properties, UuidState}
+import org.apache.james.jmap.core.{CapabilityIdentifier, ErrorCode, Invocation, Properties, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{HasMoreChanges, MailboxChangesRequest, MailboxChangesResponse}
 import org.apache.james.jmap.method.MailboxChangesMethod.updatedProperties
@@ -32,8 +32,8 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
-
 import javax.inject.Inject
+
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
@@ -44,6 +44,7 @@ object MailboxChangesMethod {
 class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
                                      val metricFactory: MetricFactory,
                                      val sessionSupplier: SessionSupplier,
+                                     val sessionTranslator: SessionTranslator,
                                      val mailboxChangeRepository: MailboxChangeRepository) extends MethodRequiringAccountId[MailboxChangesRequest] {
   override val methodName: MethodName = MethodName("Mailbox/changes")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)

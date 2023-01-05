@@ -28,6 +28,7 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract;
+import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -42,7 +43,7 @@ public class MemoryEmailGetMethodTest implements EmailGetMethodContract {
             .usersRepository(DEFAULT)
             .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
+            .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule()))
         .build();
 
     @Override

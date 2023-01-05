@@ -44,6 +44,7 @@ import org.apache.james.jmap.draft.{JmapGuiceProbe, MessageIdProbe}
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.mailbox.FlagsBuilder
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
@@ -7143,6 +7144,114 @@ trait EmailSetMethodContract {
            |		}, "c1"]
            |	]
            |}""".stripMargin)
+  }
+
+  @Test
+  def bobShouldBeAbleToUpdateEmailInAndreMailboxWhenDelegated(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+    val path = MailboxPath.inbox(ANDRE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(ANDRE.asString(), path, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(ANDRE, BOB)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "update": {
+         |        "${messageId.serialize}":{
+         |          "keywords": {
+         |             "music": true
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ANDRE_ACCOUNT_ID",
+         |       "ids": ["${messageId.serialize}"],
+         |       "properties": ["keywords"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list[0]")
+      .isEqualTo(String.format(
+        """{
+          |   "id":"%s",
+          |   "keywords": {
+          |     "music": true
+          |   }
+          |}
+      """.stripMargin, messageId.serialize))
+  }
+
+  @Test
+  def bobShouldNotBeAbleToUpdateEmailInAndreMailboxWhenNotDelegated(server: GuiceJamesServer): Unit = {
+    val message: Message = Fixture.createTestMessage
+    val flags: Flags = new Flags(Flags.Flag.ANSWERED)
+    val path = MailboxPath.inbox(ANDRE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(ANDRE.asString(), path, AppendCommand.builder()
+      .withFlags(flags)
+      .build(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |	"methodCalls": [
+         |		["Email/set", {
+         |			"accountId": "$ANDRE_ACCOUNT_ID",
+         |			"update": {
+         |				"${messageId.serialize}": {
+         |					"keywords": {
+         |						"music": true
+         |					}
+         |				}
+         |			}
+         |		}, "c1"]
+         |	]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        """{
+          |	"type": "accountNotFound"
+          |}""".stripMargin)
   }
 
   private def buildTestMessage = {
