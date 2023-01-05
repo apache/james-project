@@ -24,21 +24,22 @@ import org.apache.james.jmap.api.change.{CanNotCalculateChangesException, EmailC
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, UuidState}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{EmailChangesRequest, EmailChangesResponse, HasMoreChanges}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
-
 import javax.inject.Inject
+
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 class EmailChangesMethod @Inject()(val metricFactory: MetricFactory,
                                    val emailChangeRepository: EmailChangeRepository,
-                                   val sessionSupplier: SessionSupplier) extends MethodRequiringAccountId[EmailChangesRequest] {
+                                   val sessionSupplier: SessionSupplier,
+                                   val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[EmailChangesRequest] {
   override val methodName: MethodName = MethodName("Email/changes")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_MAIL)
 

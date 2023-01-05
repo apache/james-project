@@ -26,7 +26,7 @@ import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SetError, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, SetError, UuidState}
 import org.apache.james.jmap.json.{EmailSetSerializer, ResponseSerializer}
 import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ThreadId, ValidatedEmailImport}
 import org.apache.james.jmap.method.EmailImportMethod.{ImportFailure, ImportResult, ImportResults, ImportSuccess, ImportWithBlob}
@@ -42,9 +42,10 @@ import org.apache.james.mime4j.stream.MimeConfig
 import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
-
 import java.util.Date
+
 import javax.inject.Inject
+
 import scala.util.{Try, Using}
 
 object EmailImportMethod {
@@ -81,6 +82,7 @@ object EmailImportMethod {
 
 class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
                                    val sessionSupplier: SessionSupplier,
+                                   val sessionTranslator: SessionTranslator,
                                    val blobResolvers: BlobResolvers,
                                    val serializer: EmailSetSerializer,
                                    val mailboxManager: MailboxManager,
