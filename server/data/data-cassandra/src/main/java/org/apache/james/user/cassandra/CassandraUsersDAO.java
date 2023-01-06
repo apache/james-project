@@ -275,7 +275,6 @@ public class CassandraUsersDAO implements UsersDAO {
             .map(Username::of);
     }
 
-    // TODO, should we remove delegated user here?
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
         boolean executed = executor.executeReturnApplied(
