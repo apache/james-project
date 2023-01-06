@@ -80,6 +80,7 @@ object SessionRoutesContract {
                          |  "accounts" : {
                          |    "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6" : {
                          |      "name" : "bob@domain.tld",
+                         |      "delegatedAccounts": [],
                          |      "isPersonal" : true,
                          |      "isReadOnly" : false,
                          |      "accountCapabilities" : {
@@ -133,7 +134,6 @@ object SessionRoutesContract {
                          |    "urn:ietf:params:jmap:mdn": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6"
                          |  },
                          |  "username" : "bob@domain.tld",
-                         |  "delegatedUsers": [],
                          |  "apiUrl" : "http://domain.com/jmap",
                          |  "downloadUrl" : "http://domain.com/download/{accountId}/{blobId}?type={type}&name={name}",
                          |  "uploadUrl" : "http://domain.com/upload/{accountId}",
@@ -229,7 +229,8 @@ trait SessionRoutesContract {
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
-      .body("delegatedUsers", IsIterableContainingInAnyOrder.containsInAnyOrder("andre@domain.tld"))
+      .body(s"accounts.$ACCOUNT_ID.delegatedAccounts",
+        IsIterableContainingInAnyOrder.containsInAnyOrder("andre@domain.tld"))
   }
 
   @Test
@@ -243,7 +244,7 @@ trait SessionRoutesContract {
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
-      .body("delegatedUsers", Matchers.is(empty()))
+      .body(s"accounts.$ACCOUNT_ID.delegatedAccounts", Matchers.is(empty()))
   }
 
 }

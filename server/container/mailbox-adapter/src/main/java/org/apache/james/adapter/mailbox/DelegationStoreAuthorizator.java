@@ -58,5 +58,4 @@ public class DelegationStoreAuthorizator implements Authorizator {
             throw new MailboxException("Unable to access usersRepository", e);
         }
     }
-
 }

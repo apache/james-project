@@ -57,23 +57,26 @@ final case class AccountId(id: Id)
 
 object Account {
   private[jmap] val NAME = "name";
+  private[jmap] val DELEGATED_ACCOUNTS = "delegatedAccounts";
   private[jmap] val IS_PERSONAL = "isPersonal"
   private[jmap] val IS_READ_ONLY = "isReadOnly"
   private[jmap] val ACCOUNT_CAPABILITIES = "accountCapabilities"
 
   def from(name: Username,
+           delegatedAccounts: Set[Username] = Set(),
            isPersonal: IsPersonal,
            isReadOnly: IsReadOnly,
            accountCapabilities: Set[_ <: Capability]): Either[IllegalArgumentException, Account] =
     AccountId.from(name)
-      .map(Account(_, name, isPersonal, isReadOnly, accountCapabilities))
+      .map(Account(_, name, delegatedAccounts, isPersonal, isReadOnly, accountCapabilities))
 
-  def unapplyIgnoreAccountId(account: Account): Some[(Username, IsPersonal, IsReadOnly, Set[_ <: Capability])] =
-    Some(account.name, account.isPersonal, account.isReadOnly, account.accountCapabilities)
+  def unapplyIgnoreAccountId(account: Account): Some[(Username, Set[Username], IsPersonal, IsReadOnly, Set[_ <: Capability])] =
+    Some(account.name, account.delegatedAccounts,  account.isPersonal, account.isReadOnly, account.accountCapabilities)
 }
 
 final case class Account private(accountId: AccountId,
                                  name: Username,
+                                 delegatedAccounts: Set[Username] = Set(),
                                  isPersonal: IsPersonal,
                                  isReadOnly: IsReadOnly,
                                  accountCapabilities: Set[_ <: Capability])
@@ -113,7 +116,6 @@ final case class Session(capabilities: Capabilities,
                          accounts: List[Account],
                          primaryAccounts: Map[CapabilityIdentifier, AccountId],
                          username: Username,
-                         delegatedUsers: Set[Username] = Set(),
                          apiUrl: URL,
                          downloadUrl: URL,
                          uploadUrl: URL,

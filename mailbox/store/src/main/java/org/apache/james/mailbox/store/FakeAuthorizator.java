@@ -54,6 +54,5 @@ public class FakeAuthorizator implements Authorizator {
         }
         return AuthorizationState.ALLOWED;
     }
-
 }
 

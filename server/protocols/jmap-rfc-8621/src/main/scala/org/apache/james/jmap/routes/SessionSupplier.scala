@@ -43,21 +43,20 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
     val urlEndpointResolver: JmapUrlEndpointResolver = new JmapUrlEndpointResolver(urlPrefixes)
     val capabilities: Set[Capability] = capabilityFactories
       .map(cf => cf.create(urlPrefixes))
-    accounts(username, capabilities)
+    accounts(username, delegatedUsers, capabilities)
       .map(account => Session(
         Capabilities(capabilities),
         List(account),
         primaryAccounts(account.accountId, capabilities),
         username,
-        delegatedUsers = delegatedUsers,
         apiUrl = urlEndpointResolver.apiUrl,
         downloadUrl = urlEndpointResolver.downloadUrl,
         uploadUrl = urlEndpointResolver.uploadUrl,
         eventSourceUrl = urlEndpointResolver.eventSourceUrl))
   }
 
-  private def accounts(username: Username, capabilities: Set[Capability]): Either[IllegalArgumentException, Account] =
-    Account.from(username, IsPersonal(true), IsReadOnly(false), capabilities)
+  private def accounts(username: Username, delegatedUsers: Set[Username], capabilities: Set[Capability]): Either[IllegalArgumentException, Account] =
+    Account.from(username, delegatedUsers, IsPersonal(true), IsReadOnly(false), capabilities)
 
   private def primaryAccounts(accountId: AccountId, capabilities: Set[Capability]): Map[CapabilityIdentifier, AccountId] =
     capabilities
