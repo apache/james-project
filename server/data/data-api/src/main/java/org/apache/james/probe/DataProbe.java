@@ -22,6 +22,7 @@ package org.apache.james.probe;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.Username;
 import org.apache.james.rrt.lib.Mappings;
 
 public interface DataProbe {
@@ -80,4 +81,6 @@ public interface DataProbe {
     void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception;
 
     void addGroupAliasMapping(String fromGroup, String toAddress) throws Exception;
+
+    void addAuthorizedUser(Username baseUser, Username userWithAccess);
 }

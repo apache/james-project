@@ -33,10 +33,11 @@ import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.{EXPECTED_BASE_PATH, expected_session_object}
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
-import org.apache.james.utils.{DataProbeImpl, WebAdminGuiceProbe}
+import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.empty
+import org.hamcrest.collection.IsIterableContainingInAnyOrder
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
-import reactor.netty.http.client.HttpClient
 
 import java.nio.charset.StandardCharsets
 object SessionRoutesContract {
@@ -219,13 +220,7 @@ trait SessionRoutesContract {
 
   @Test
   def getResponseShouldReturnDelegatedUsersWhenDelegated(server: GuiceJamesServer): Unit = {
-     val webadminPort = server.getProbe(classOf[WebAdminGuiceProbe]).getWebAdminPort.getValue
-
-    HttpClient.create
-      .baseUrl(s"http://127.0.0.1:$webadminPort/${ALICE.asString}/authorizedUsers/${BOB.asString()}")
-      .put()
-      .response()
-      .block()
+     server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(ANDRE, BOB)
 
     `given`()
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
@@ -234,7 +229,21 @@ trait SessionRoutesContract {
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
-      .body("delegatedUsers", Matchers.is("[\"alice@domain.tld\"]"))
+      .body("delegatedUsers", IsIterableContainingInAnyOrder.containsInAnyOrder("andre@domain.tld"))
+  }
+
+  @Test
+  def getResponseShouldNotReturnDelegatedUsersWhenNotDelegated(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(BOB, ANDRE)
+
+    `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when()
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .body("delegatedUsers", Matchers.is(empty()))
   }
 
 }

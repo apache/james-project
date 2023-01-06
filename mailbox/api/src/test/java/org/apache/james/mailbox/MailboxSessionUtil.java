@@ -22,7 +22,6 @@ package org.apache.james.mailbox;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.core.Username;
@@ -43,7 +42,6 @@ public class MailboxSessionUtil {
             sessionId,
             username,
             Optional.of(username),
-            Set.of(),
             locales,
             MailboxConstants.DEFAULT_DELIMITER,
             MailboxSession.SessionType.User);

@@ -32,25 +32,31 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.streams.Iterators;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Mono;
+
 public class DataProbeImpl implements GuiceProbe, DataProbe {
     private final DomainList domainList;
     private final UsersRepository usersRepository;
     private final RecipientRewriteTable recipientRewriteTable;
+    private final DelegationStore delegationStore;
 
     @Inject
     private DataProbeImpl(
-            DomainList domainList,
-            UsersRepository usersRepository, 
-            RecipientRewriteTable recipientRewriteTable) {
+        DomainList domainList,
+        UsersRepository usersRepository,
+        RecipientRewriteTable recipientRewriteTable,
+        DelegationStore delegationStore) {
         this.domainList = domainList;
         this.usersRepository = usersRepository;
         this.recipientRewriteTable = recipientRewriteTable;
+        this.delegationStore = delegationStore;
     }
 
     @Override
@@ -132,5 +138,11 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     @Override
     public void addGroupAliasMapping(String fromGroup, String toAddress) throws Exception {
         recipientRewriteTable.addGroupMapping(MappingSource.fromMailAddress(new MailAddress(fromGroup)), toAddress);
+    }
+
+    @Override
+    public void addAuthorizedUser(Username baseUser, Username userWithAccess) {
+        Mono.from(delegationStore.addAuthorizedUser(baseUser, userWithAccess))
+            .block();
     }
 }

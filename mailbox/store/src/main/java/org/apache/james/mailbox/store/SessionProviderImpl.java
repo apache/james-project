@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -104,11 +103,7 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     private MailboxSession createSession(Username userName, Optional<Username> loggedInUser, MailboxSession.SessionType type) {
-        Set<Username> delegatedUsers = loggedInUser
-            .map(authorizator::delegatedUsers)
-            .orElseGet(() -> authorizator.delegatedUsers(userName));
-        return new MailboxSession(newSessionId(), userName, loggedInUser, delegatedUsers,
-            new ArrayList<>(), getDelimiter(), type);
+        return new MailboxSession(newSessionId(), userName, loggedInUser, new ArrayList<>(), getDelimiter(), type);
     }
 
     private MailboxSession.SessionId newSessionId() {
