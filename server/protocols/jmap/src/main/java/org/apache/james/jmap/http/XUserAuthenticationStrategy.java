@@ -68,7 +68,7 @@ public class XUserAuthenticationStrategy implements AuthenticationStrategy {
             } catch (UsersRepositoryException e) {
                 throw new UnauthorizedException("Invalid username", e);
             }
-            return mailboxManager.createSystemSession(username);
+            return mailboxManager.login(username);
         }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
 

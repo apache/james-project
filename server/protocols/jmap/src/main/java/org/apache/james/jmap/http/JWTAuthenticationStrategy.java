@@ -71,7 +71,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
 
                 return username;
             }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
-            .map(mailboxManager::createSystemSession);
+            .map(mailboxManager::login);
     }
 
     @Override

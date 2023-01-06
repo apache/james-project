@@ -57,7 +57,7 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
             .map(Username::of)
-            .map(mailboxManager::createSystemSession);
+            .map(mailboxManager::login);
     }
 
     @Override

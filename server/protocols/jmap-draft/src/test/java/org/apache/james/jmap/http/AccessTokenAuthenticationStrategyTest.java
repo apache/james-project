@@ -115,7 +115,7 @@ public class AccessTokenAuthenticationStrategyTest {
         Username username = Username.of("123456789");
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(mockedMailboxManager.createSystemSession(eq(username)))
+        when(mockedMailboxManager.login(eq(username)))
             .thenReturn(fakeMailboxSession);
 
         UUID authHeader = UUID.randomUUID();

@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -54,13 +55,18 @@ public class SessionProviderImpl implements SessionProvider {
 
     @Override
     public MailboxSession createSystemSession(Username userName) {
-        return createSession(userName, MailboxSession.SessionType.System);
+        return createSession(userName, Optional.empty(), MailboxSession.SessionType.System);
+    }
+
+    @Override
+    public MailboxSession login(Username userName) {
+        return createSession(userName, Optional.of(userName), MailboxSession.SessionType.System);
     }
 
     @Override
     public MailboxSession login(Username userid, String passwd) throws MailboxException {
         if (isValidLogin(userid, passwd)) {
-            return createSession(userid, MailboxSession.SessionType.User);
+            return createSession(userid, Optional.ofNullable(userid), MailboxSession.SessionType.User);
         } else {
             throw new BadCredentialsException();
         }
@@ -79,7 +85,7 @@ public class SessionProviderImpl implements SessionProvider {
         Authorizator.AuthorizationState authorizationState = authorizator.user(givenUserid).canLoginAs(otherUserId);
         switch (authorizationState) {
             case ALLOWED:
-                return createSystemSession(otherUserId);
+                return createSession(otherUserId, Optional.of(givenUserid), MailboxSession.SessionType.System);
             case FORBIDDEN:
                 throw new ForbiddenDelegationException(givenUserid, otherUserId);
             case UNKNOWN_USER:
@@ -96,8 +102,8 @@ public class SessionProviderImpl implements SessionProvider {
         }
     }
 
-    private MailboxSession createSession(Username userName, MailboxSession.SessionType type) {
-        return new MailboxSession(newSessionId(), userName, new ArrayList<>(), getDelimiter(), type);
+    private MailboxSession createSession(Username userName, Optional<Username> loggedInUser, MailboxSession.SessionType type) {
+        return new MailboxSession(newSessionId(), userName, loggedInUser, new ArrayList<>(), getDelimiter(), type);
     }
 
     private MailboxSession.SessionId newSessionId() {

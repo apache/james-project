@@ -254,6 +254,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public MailboxSession login(Username userid) {
+        return sessionProvider.login(userid);
+    }
+
+    @Override
     public MailboxSession loginAsOtherUser(Username adminUserid, String passwd, Username otherUserId) throws MailboxException {
         return sessionProvider.loginAsOtherUser(adminUserid, passwd, otherUserId);
     }

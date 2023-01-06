@@ -122,7 +122,7 @@ public class JWTAuthenticationStrategyTest {
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
         when(stubTokenVerifier.verifyAndExtractLogin(validAuthHeader)).thenReturn(Optional.of(username));
-        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+        when(mockedMailboxManager.login(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))
             .thenReturn(fakeAuthHeaderWithPrefix);

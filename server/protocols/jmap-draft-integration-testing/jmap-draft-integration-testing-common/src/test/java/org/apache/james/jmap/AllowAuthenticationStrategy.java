@@ -44,7 +44,7 @@ public class AllowAuthenticationStrategy implements AuthenticationStrategy {
 
     @Override
     public Mono<MailboxSession> createMailboxSession(HttpServerRequest httpRequest) {
-        return Mono.fromCallable(() -> mailboxManager.createSystemSession(BOB));
+        return Mono.fromCallable(() -> mailboxManager.login(BOB));
     }
 
     @Override
