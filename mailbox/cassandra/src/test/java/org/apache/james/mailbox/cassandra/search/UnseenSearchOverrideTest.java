@@ -159,4 +159,22 @@ class UnseenSearchOverrideTest {
                 .build()).collectList().block())
             .containsOnly(messageUid, messageUid2, messageUid3);
     }
+
+    @Test
+    void searchShouldSupportRanges() {
+        MessageUid messageUid = MessageUid.of(1);
+        MessageUid messageUid2 = MessageUid.of(2);
+        MessageUid messageUid3 = MessageUid.of(3);
+
+        dao.addUnread((CassandraId) MAILBOX.getMailboxId(), messageUid).block();
+        dao.addUnread((CassandraId) MAILBOX.getMailboxId(), messageUid2).block();
+        dao.addUnread((CassandraId) MAILBOX.getMailboxId(), messageUid3).block();
+
+        assertThat(testee.search(MAILBOX_SESSION, MAILBOX,
+            SearchQuery.builder()
+                .andCriteria(SearchQuery.flagIsUnSet(SEEN))
+                .andCriterion(SearchQuery.uid(new SearchQuery.UidRange(MessageUid.of(2), MessageUid.of(3))))
+                .build()).collectList().block())
+            .containsOnly(messageUid2, messageUid3);
+    }
 }
