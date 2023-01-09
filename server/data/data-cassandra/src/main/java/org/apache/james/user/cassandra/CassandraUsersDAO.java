@@ -27,6 +27,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.ALGORITHM;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.AUTHORIZED_USERS;
+import static org.apache.james.user.cassandra.tables.CassandraUserTable.DELEGATED_USERS;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.NAME;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.PASSWORD;
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.REALNAME;
@@ -46,10 +47,15 @@ import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.Algorithm.HashingMode;
 import org.apache.james.user.lib.model.DefaultUser;
+import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.BatchType;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.Statement;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -71,6 +77,10 @@ public class CassandraUsersDAO implements UsersDAO {
     private final PreparedStatement getAuthorizedUsersStatement;
     private final PreparedStatement addAuthorizedUsersStatement;
     private final PreparedStatement removeAuthorizedUsersStatement;
+
+    private final PreparedStatement getDelegatedToUsersStatement;
+    private final PreparedStatement addDelegatedToUsersStatement;
+    private final PreparedStatement removeDelegatedToUsersStatement;
 
     private final Algorithm preferredAlgorithm;
     private final HashingMode fallbackHashingMode;
@@ -134,6 +144,21 @@ public class CassandraUsersDAO implements UsersDAO {
             .remove(AUTHORIZED_USERS, bindMarker(AUTHORIZED_USERS))
             .whereColumn(NAME).isEqualTo(bindMarker(NAME))
             .build());
+
+        this.getDelegatedToUsersStatement = session.prepare(selectFrom(TABLE_NAME)
+            .columns(DELEGATED_USERS)
+            .whereColumn(NAME).isEqualTo(bindMarker(NAME))
+            .build());
+
+        this.addDelegatedToUsersStatement = session.prepare(update(TABLE_NAME)
+            .append(DELEGATED_USERS, bindMarker(DELEGATED_USERS))
+            .whereColumn(NAME).isEqualTo(bindMarker(NAME))
+            .build());
+
+        this.removeDelegatedToUsersStatement = session.prepare(update(TABLE_NAME)
+            .remove(DELEGATED_USERS, bindMarker(DELEGATED_USERS))
+            .whereColumn(NAME).isEqualTo(bindMarker(NAME))
+            .build());
     }
 
     @VisibleForTesting
@@ -155,6 +180,11 @@ public class CassandraUsersDAO implements UsersDAO {
                 Algorithm.of(row.getString(ALGORITHM), fallbackHashingMode), preferredAlgorithm));
     }
 
+    public Mono<Boolean> exist(Username name) {
+        return executor.executeReturnExists(getUserStatement.bind()
+            .setString(NAME, name.asString()));
+    }
+
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
         Preconditions.checkArgument(user instanceof DefaultUser);
@@ -173,21 +203,47 @@ public class CassandraUsersDAO implements UsersDAO {
     }
 
     public Mono<Void> addAuthorizedUsers(Username baseUser, Username userWithAccess) {
-        return executor.executeVoid(addAuthorizedUsersStatement.bind()
+        BatchStatementBuilder batchBuilder = new BatchStatementBuilder(BatchType.LOGGED);
+        BoundStatement addAuthorizedStatement = addAuthorizedUsersStatement.bind()
             .setString(NAME, baseUser.asString())
-            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class));
+            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class);
+        batchBuilder.addStatement(addAuthorizedStatement);
+        batchBuilder.addStatement(addDelegatedToUsersStatement.bind()
+            .setString(NAME, userWithAccess.asString())
+            .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class));
+
+        return getUserByNameReactive(userWithAccess).hasElement()
+            .filter(FunctionalUtils.identityPredicate())
+            .map(existAuthorizedUser -> (Statement) batchBuilder.build())
+            .switchIfEmpty(Mono.just(addAuthorizedStatement))
+            .flatMap(executor::executeVoid);
     }
 
     public Mono<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
-        return executor.executeVoid(removeAuthorizedUsersStatement.bind()
-            .setString(NAME, baseUser.asString())
-            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class));
+        return executor.executeVoid(new BatchStatementBuilder(BatchType.LOGGED)
+            .addStatement(removeAuthorizedUsersStatement.bind()
+                .setString(NAME, baseUser.asString())
+                .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class))
+            .addStatement(removeDelegatedToUsersStatement.bind()
+                .setString(NAME, userWithAccess.asString())
+                .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class))
+            .build());
     }
 
     public Mono<Void> removeAllAuthorizedUsers(Username baseUser) {
-        return executor.executeVoid(
-            removeAllAuthorizedUsersStatement.bind()
-                .setString(NAME, baseUser.asString()));
+        return getAuthorizedUsers(baseUser)
+            .collectList()
+            .map(authorizedList -> {
+                BatchStatementBuilder batch = new BatchStatementBuilder(BatchType.LOGGED);
+                authorizedList.forEach(username -> batch.addStatement(
+                    removeDelegatedToUsersStatement.bind()
+                        .setString(NAME, username.asString())
+                        .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class)));
+                batch.addStatement(removeAllAuthorizedUsersStatement.bind()
+                    .setString(NAME, baseUser.asString()));
+                return batch.build();
+            })
+            .flatMap(executor::executeVoid);
     }
 
     public Flux<Username> getAuthorizedUsers(Username name) {
@@ -195,6 +251,26 @@ public class CassandraUsersDAO implements UsersDAO {
                 getAuthorizedUsersStatement.bind()
                     .setString(NAME, name.asString()))
             .mapNotNull(row -> row.getSet(AUTHORIZED_USERS, String.class))
+            .flatMapIterable(set -> set)
+            .map(Username::of);
+    }
+
+    public Mono<Void> removeDelegatedToUser(Username baseUser, Username delegatedToUser) {
+        return executor.executeVoid(new BatchStatementBuilder(BatchType.LOGGED)
+            .addStatement(removeAuthorizedUsersStatement.bind()
+                .setString(NAME, delegatedToUser.asString())
+                .setSet(AUTHORIZED_USERS, ImmutableSet.of(baseUser.asString()), String.class))
+            .addStatement(removeDelegatedToUsersStatement.bind()
+                .setString(NAME, baseUser.asString())
+                .setSet(DELEGATED_USERS, ImmutableSet.of(delegatedToUser.asString()), String.class))
+            .build());
+    }
+
+    public Flux<Username> getDelegatedToUsers(Username name) {
+        return executor.executeSingleRow(
+                getDelegatedToUsersStatement.bind()
+                    .setString(NAME, name.asString()))
+            .mapNotNull(row -> row.getSet(DELEGATED_USERS, String.class))
             .flatMapIterable(set -> set)
             .map(Username::of);
     }

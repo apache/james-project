@@ -45,4 +45,9 @@ public interface DelegationStore {
     default Fluent removeAuthorizedUser(Username userWithAccess) {
         return baseUser -> removeAuthorizedUser(baseUser, userWithAccess);
     }
+
+    Publisher<Username> delegatedUsers(Username baseUser);
+
+    Publisher<Void> removeDelegatedUser(Username baseUser, Username delegatedToUser);
+
 }

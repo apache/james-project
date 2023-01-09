@@ -20,8 +20,10 @@
 package org.apache.james.user.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.DelegationStoreContract;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -30,10 +32,12 @@ public class CassandraDelegationStoreTest implements DelegationStoreContract {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraUsersRepositoryModule.MODULE);
 
     private CassandraDelegationStore testee;
+    private CassandraUsersDAO cassandraUsersDAO;
 
     @BeforeEach
     void setUp() {
-        testee = new CassandraDelegationStore(new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf()));
+        cassandraUsersDAO = new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf());
+        testee = new CassandraDelegationStore(cassandraUsersDAO);
     }
 
     @Override
@@ -41,4 +45,12 @@ public class CassandraDelegationStoreTest implements DelegationStoreContract {
         return testee;
     }
 
+    @Override
+    public void addUser(Username username) {
+        try {
+            cassandraUsersDAO.addUser(username, "password");
+        } catch (UsersRepositoryException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

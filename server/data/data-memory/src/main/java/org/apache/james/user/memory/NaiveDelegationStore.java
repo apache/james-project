@@ -44,4 +44,14 @@ public class NaiveDelegationStore implements DelegationStore {
     public Publisher<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
         throw new NotImplementedException();
     }
+
+    @Override
+    public Publisher<Username> delegatedUsers(Username baseUser) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public Publisher<Void> removeDelegatedUser(Username baseUser, Username delegatedToUser) {
+        throw new NotImplementedException();
+    }
 }

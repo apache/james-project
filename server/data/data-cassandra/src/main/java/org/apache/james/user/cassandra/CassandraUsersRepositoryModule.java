@@ -32,6 +32,7 @@ public interface CassandraUsersRepositoryModule {
             .withColumn(CassandraUserTable.REALNAME, DataTypes.TEXT)
             .withColumn(CassandraUserTable.PASSWORD, DataTypes.TEXT)
             .withColumn(CassandraUserTable.ALGORITHM, DataTypes.TEXT)
-            .withColumn(CassandraUserTable.AUTHORIZED_USERS, DataTypes.setOf(DataTypes.TEXT)))
+            .withColumn(CassandraUserTable.AUTHORIZED_USERS, DataTypes.setOf(DataTypes.TEXT))
+            .withColumn(CassandraUserTable.DELEGATED_USERS, DataTypes.setOf(DataTypes.TEXT)))
         .build();
 }

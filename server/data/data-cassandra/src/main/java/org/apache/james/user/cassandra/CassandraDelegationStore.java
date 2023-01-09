@@ -52,4 +52,14 @@ public class CassandraDelegationStore implements DelegationStore {
     public Publisher<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
         return cassandraUsersDAO.removeAuthorizedUser(baseUser, userWithAccess);
     }
+
+    @Override
+    public Publisher<Username> delegatedUsers(Username baseUser) {
+        return cassandraUsersDAO.getDelegatedToUsers(baseUser);
+    }
+
+    @Override
+    public Publisher<Void> removeDelegatedUser(Username baseUser, Username delegatedToUser) {
+        return cassandraUsersDAO.removeDelegatedToUser(baseUser, delegatedToUser);
+    }
 }

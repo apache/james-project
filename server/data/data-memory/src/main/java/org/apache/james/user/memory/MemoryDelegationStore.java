@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.user.memory;
 
+import java.util.Map;
+
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
 import org.reactivestreams.Publisher;
@@ -50,6 +52,19 @@ public class MemoryDelegationStore implements DelegationStore {
     @Override
     public Publisher<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
         return Mono.fromRunnable(() -> delegations.remove(baseUser, userWithAccess));
+    }
+
+    @Override
+    public Publisher<Username> delegatedUsers(Username baseUser) {
+        return Flux.fromIterable(delegations.entries())
+            .filter(entry -> entry.getValue().equals(baseUser))
+            .map(Map.Entry::getKey)
+            .distinct();
+    }
+
+    @Override
+    public Publisher<Void> removeDelegatedUser(Username baseUser, Username delegatedToUser) {
+        return Mono.fromRunnable(() -> delegations.remove(delegatedToUser, baseUser));
     }
 
     @Override

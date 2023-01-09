@@ -29,4 +29,5 @@ public interface CassandraUserTable {
     CqlIdentifier PASSWORD = CqlIdentifier.fromCql("passwd");
     CqlIdentifier REALNAME = CqlIdentifier.fromCql("realname");
     CqlIdentifier AUTHORIZED_USERS = CqlIdentifier.fromCql("authorized_users");
+    CqlIdentifier DELEGATED_USERS = CqlIdentifier.fromCql("delegated_users");
 }
