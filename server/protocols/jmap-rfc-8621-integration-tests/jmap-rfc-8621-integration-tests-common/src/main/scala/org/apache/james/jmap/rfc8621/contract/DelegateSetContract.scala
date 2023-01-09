@@ -492,4 +492,86 @@ trait DelegateSetContract {
       assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(BOB).asJavaCollection)
         .containsExactly(ANDRE))
   }
+
+  @Test
+  def shouldReturnNotFoundWhenNotDelegated(): Unit = {
+    val request =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |	"methodCalls": [
+         |		[
+         |			"Delegate/set", {
+         |				"accountId": "$ANDRE_ACCOUNT_ID",
+         |				"create": {
+         |					"4f29": {
+         |						"username": "cedric@domain.tld"
+         |					}
+         |				}
+         |			}, "0"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1]")
+      .isEqualTo(
+        s"""{
+           |	"type": "accountNotFound"
+           |}""".stripMargin)
+  }
+
+  @Test
+  def bobCanOnlyManageHisPrimaryAccountSetting(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(ANDRE, BOB)
+    val request =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |	"methodCalls": [
+         |		[
+         |			"Delegate/set", {
+         |				"accountId": "$ANDRE_ACCOUNT_ID",
+         |				"create": {
+         |					"4f29": {
+         |						"username": "cedric@domain.tld"
+         |					}
+         |				}
+         |			}, "0"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    val response =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        s"""{
+           |	"4f29": {
+           |		"type": "forbidden",
+           |		"description": "${BOB.asString()} can not manage ${ANDRE.asString()}'s account settings"
+           |	}
+           |}""".stripMargin)
+  }
 }
