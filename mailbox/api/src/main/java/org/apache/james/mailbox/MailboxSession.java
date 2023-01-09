@@ -82,6 +82,12 @@ public class MailboxSession {
      */
     public static long SYSTEM_SESSION_ID = 0L;
 
+    public static boolean isPrimaryAccount(MailboxSession mailboxSession) {
+        return mailboxSession.loggedInUser
+            .map(loggedInUser -> loggedInUser.equals(mailboxSession.getUser()))
+            .orElse(false);
+    }
+
     public enum SessionType {
         /**
          * Session was created via the System

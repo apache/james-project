@@ -44,6 +44,7 @@ case class DelegateSetResponse(accountId: AccountId,
                                notCreated: Option[Map[DelegateCreationId, SetError]])
 
 case class DelegateSetParseException(setError: SetError) extends IllegalArgumentException
+case class ForbiddenAccountManagement(accessUser: Username, targetUser: Username) extends RuntimeException(s"${accessUser.asString()} can not manage ${targetUser.asString()}'s account settings")
 
 object DelegateSetParseException {
   def from(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): DelegateSetParseException = {
