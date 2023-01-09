@@ -23,8 +23,8 @@ import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 
 import javax.inject.Singleton;
 
+import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
-import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.events.EventListener;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.Limit;
@@ -107,7 +107,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MailboxSessionMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(MailboxPathLocker.class).to(JVMMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
-        bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
+        bind(Authorizator.class).to(DelegationStoreAuthorizator.class);
         bind(MailboxManager.class).to(InMemoryMailboxManager.class);
         bind(StoreMailboxManager.class).to(InMemoryMailboxManager.class);
         bind(MailboxChangeRepository.class).to(MemoryMailboxChangeRepository.class);
@@ -129,7 +129,7 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(StoreSubscriptionManager.class).in(Scopes.SINGLETON);
         bind(JVMMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
-        bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
+        bind(DelegationStoreAuthorizator.class).in(Scopes.SINGLETON);
         bind(InMemoryMailboxManager.class).in(Scopes.SINGLETON);
         bind(MemoryMailboxChangeRepository.class).in(Scopes.SINGLETON);
         bind(MemoryEmailChangeRepository.class).in(Scopes.SINGLETON);
