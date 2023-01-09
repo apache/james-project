@@ -46,6 +46,7 @@ import org.apache.james.mime4j.codec.EncoderUtil.Usage;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
@@ -56,6 +57,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -741,16 +743,16 @@ class MIMEMessageConverterTest {
                 .hasSize(1)
                 .extracting(entity -> (Multipart) entity.getBody())
                 .flatExtracting(Multipart::getBodyParts)
-                .satisfies(part -> {
+                .satisfies(Throwing.consumer(part -> {
                     assertThat(part.getBody()).isInstanceOf(Multipart.class);
                     assertThat(part.isMultipart()).isTrue();
                     assertThat(part.getMimeType()).isEqualTo("multipart/alternative");
                     assertThat(((Multipart)part.getBody()).getBodyParts()).hasSize(2);
-                    Entity textPart = ((Multipart)part.getBody()).getBodyParts().get(0);
-                    Entity htmlPart = ((Multipart)part.getBody()).getBodyParts().get(1);
-                    assertThat(textPart.getBody()).isEqualToComparingOnlyGivenFields(expectedTextBody, "content");
-                    assertThat(htmlPart.getBody()).isEqualToComparingOnlyGivenFields(expectedHtmlBody, "content");
-                }, Index.atIndex(0))
+                    SingleBody textPart = (SingleBody) ((Multipart)part.getBody()).getBodyParts().get(0).getBody();
+                    SingleBody htmlPart = (SingleBody) ((Multipart)part.getBody()).getBodyParts().get(1).getBody();
+                    assertThat(textPart.getInputStream()).hasBinaryContent("Hello all!".getBytes());
+                    assertThat(htmlPart.getInputStream()).hasBinaryContent("Hello <b>all<b>!".getBytes());
+                }), Index.atIndex(0))
                 .satisfies(part -> {
                     assertThat(part.getBody()).isEqualToComparingOnlyGivenFields(expectedAttachmentBody, "content");
                     assertThat(part.getDispositionType()).isEqualTo("inline");
