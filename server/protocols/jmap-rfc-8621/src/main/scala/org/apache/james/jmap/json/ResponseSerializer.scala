@@ -110,7 +110,6 @@ object ResponseSerializer {
   private implicit val isReadOnlyFormat: Format[IsReadOnly] = Json.valueFormat[IsReadOnly]
   private implicit val accountWrites: Writes[Account] = (
       (JsPath \ Account.NAME).write[Username] and
-      (JsPath \ Account.DELEGATED_ACCOUNTS).write[Set[Username]] and
       (JsPath \ Account.IS_PERSONAL).write[IsPersonal] and
       (JsPath \ Account.IS_READ_ONLY).write[IsReadOnly] and
       (JsPath \ Account.ACCOUNT_CAPABILITIES).write[Set[_ <: Capability]]

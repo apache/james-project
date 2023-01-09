@@ -19,13 +19,15 @@
 
 package org.apache.james.jmap.routes
 
-import java.net.URL
-
-import javax.inject.Inject
+import cats.data.Validated
+import cats.implicits.toTraverseOps
+import cats.instances.list._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, CapabilityFactory, IsPersonal, IsReadOnly, Session, UrlPrefixes}
 
+import java.net.URL
+import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
 class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
@@ -43,20 +45,32 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
     val urlEndpointResolver: JmapUrlEndpointResolver = new JmapUrlEndpointResolver(urlPrefixes)
     val capabilities: Set[Capability] = capabilityFactories
       .map(cf => cf.create(urlPrefixes))
-    accounts(username, delegatedUsers, capabilities)
-      .map(account => Session(
+
+    for {
+      account <- accounts(username, capabilities)
+      delegatedAccounts <- delegatedAccounts(delegatedUsers, capabilities)
+    } yield {
+      Session(
         Capabilities(capabilities),
-        List(account),
+        List(account) ++ delegatedAccounts,
         primaryAccounts(account.accountId, capabilities),
         username,
         apiUrl = urlEndpointResolver.apiUrl,
         downloadUrl = urlEndpointResolver.downloadUrl,
         uploadUrl = urlEndpointResolver.uploadUrl,
-        eventSourceUrl = urlEndpointResolver.eventSourceUrl))
+        eventSourceUrl = urlEndpointResolver.eventSourceUrl)
+    }
   }
 
-  private def accounts(username: Username, delegatedUsers: Set[Username], capabilities: Set[Capability]): Either[IllegalArgumentException, Account] =
-    Account.from(username, delegatedUsers, IsPersonal(true), IsReadOnly(false), capabilities)
+  private def accounts(username: Username, capabilities: Set[Capability]): Either[IllegalArgumentException, Account] =
+    Account.from(username, IsPersonal(true), IsReadOnly(false), capabilities)
+
+  private def delegatedAccounts(delegatedUsers: Set[Username], capabilities: Set[Capability]): Either[IllegalArgumentException, List[Account]] =
+    delegatedUsers.map(user => AccountId.from(user)
+      .map(Account(_, user, IsPersonal(false), IsReadOnly(false), capabilities)))
+      .toList.traverse(x => Validated.fromEither(x.left.map(List(_))))
+      .toEither
+      .left.map(_.head)
 
   private def primaryAccounts(accountId: AccountId, capabilities: Set[Capability]): Map[CapabilityIdentifier, AccountId] =
     capabilities
