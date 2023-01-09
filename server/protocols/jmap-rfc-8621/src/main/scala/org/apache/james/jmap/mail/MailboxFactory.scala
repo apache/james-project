@@ -118,11 +118,8 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
   def create(mailboxMetaData: MailboxMetaData,
              mailboxSession: MailboxSession,
              subscriptions: Subscriptions,
-             allMailboxesMetadata: Seq[MailboxMetaData],
+             allMailboxesMetadata: Map[MailboxPath, MailboxMetaData],
              quotaLoader: QuotaLoader): SMono[Mailbox] = {
-    val allMetadataMap: Map[MailboxPath, MailboxMetaData] = allMailboxesMetadata
-      .map(m => (m.getPath, m))
-      .toMap
 
     val sanitizedCounters: MailboxCounters.Sanitized = mailboxMetaData.getCounters.sanitize()
 
@@ -137,7 +134,7 @@ class MailboxFactory @Inject() (mailboxManager: MailboxManager,
             val rights: Rights = getRights(mailboxMetaData.getResolvedAcls)
             val namespace: MailboxNamespace = getNamespace(mailboxMetaData.getPath, mailboxSession)
             val parentPath: Option[MailboxPath] = getParentPath(mailboxMetaData.getPath, mailboxSession)
-            val parentId: Option[MailboxId] = parentPath.flatMap(path => allMetadataMap.get(path)).map(_.getId)
+            val parentId: Option[MailboxId] = parentPath.flatMap(path => allMailboxesMetadata.get(path)).map(_.getId)
             val myRights: MailboxRights = getMyRights(mailboxMetaData.getPath, mailboxMetaData.getResolvedAcls, mailboxSession)
             val isSubscribed: IsSubscribed = subscriptions.isSubscribed(mailboxMetaData)
 

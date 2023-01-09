@@ -32,13 +32,13 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.quotas.{QuotaLoaderWithPreloadedDefault, QuotaLoaderWithPreloadedDefaultFactory}
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.search.MailboxQuery
-import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData}
+import org.apache.james.mailbox.model.{MailboxId, MailboxMetaData, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
 import javax.inject.Inject
+
 import scala.util.Try
 
 object MailboxGetResults {
@@ -154,28 +154,27 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     }
   }
 
-  private def getAllMailboxes(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SFlux[Mailbox] = {
-    SMono.zip(array => (array(0).asInstanceOf[Seq[MailboxMetaData]],
+  private def getAllMailboxes(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SFlux[Mailbox] =
+    SMono.zip(array => (array(0).asInstanceOf[Map[MailboxPath, MailboxMetaData]],
           array(1).asInstanceOf[QuotaLoaderWithPreloadedDefault],
           array(2).asInstanceOf[Subscriptions]),
         getAllMailboxesMetaData(capabilities, mailboxSession),
         quotaFactory.loadFor(mailboxSession),
         retrieveSubscriptions(mailboxSession))
       .flatMapMany {
-        case (mailboxes, quotaLoader, subscriptions) => SFlux.fromIterable(mailboxes)
+        case (mailboxes, quotaLoader, subscriptions) => SFlux.fromIterable(mailboxes.values)
           .flatMap(mailbox => mailboxFactory.create(mailboxMetaData = mailbox,
             mailboxSession = mailboxSession,
             subscriptions = subscriptions,
             allMailboxesMetadata = mailboxes,
             quotaLoader = quotaLoader))
       }
-  }
 
-  private def getAllMailboxesMetaData(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[Seq[MailboxMetaData]] =
+  private def getAllMailboxesMetaData(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[Map[MailboxPath, MailboxMetaData]] =
       SFlux.fromPublisher(mailboxManager.search(
           mailboxQuery(capabilities, mailboxSession),
           mailboxSession))
-        .collectSeq()
+        .collectMap(_.getPath)
 
   private def mailboxQuery(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession) =
     if (capabilities.contains(CapabilityIdentifier.JAMES_SHARES)) {
