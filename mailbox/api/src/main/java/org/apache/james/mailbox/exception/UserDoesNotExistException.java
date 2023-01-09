@@ -26,7 +26,7 @@ public class UserDoesNotExistException extends MailboxException {
     private final Username name;
 
     public UserDoesNotExistException(Username name) {
-        super("User " + name.asString() + "does not exist");
+        super("User " + name.asString() + " does not exist");
         this.name = name;
     }
 
