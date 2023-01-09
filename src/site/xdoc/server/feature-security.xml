@@ -53,6 +53,13 @@
             We follow the standard procedures within the ASF regarding
             <a href="https://apache.org/security/committers.html#vulnerability-handling">vulnerability handling</a>.
         </subsection>
+        <subsection name="CVE-2022-45935: Temporary File Information Disclosure in Apache JAMES">
+            <p>Apache James distribution prior to release 3.7.3 is vulnerable to a temporary File Information Disclosure.</p>
+
+            <p><b>Severity</b>: Moderate</p>
+
+            <p><b>Mitigation</b>: We recommend to upgrade to Apache James 3.7.3 or higher, which fixes this vulnerability.</p>
+        </subsection>
         <subsection name="CVE-2021-44228: STARTTLS command injection in Apache JAMES">
             <p>Apache James distribution prior to release 3.7.3 is vulnerable to a buffering attack relying on the use of the STARTTLS command.</p>
 

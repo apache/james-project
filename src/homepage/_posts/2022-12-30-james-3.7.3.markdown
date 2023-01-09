@@ -13,6 +13,8 @@ The Apache James PMC would like to thanks all contributors who made this release
 
 ## Announcement
 
+This release fixes CVE-2022-45935: Temporary File Information Disclosure in Apache JAMES.
+
 This release proposes stability related bug fixes and updates some dependencies for security reasons.
 
 ## Release changelog

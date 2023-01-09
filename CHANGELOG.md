@@ -235,8 +235,7 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
 
 ### Security
 
-Upcoming security announcements.
-
+ - CVE-2022-45935: Temporary File Information Disclosure in Apache JAMES
  - [UPGRADE] commons-text 1.9 -> 1.10 (#1291)
  - JAMES-3832 RemoteDelivery will do TLS host name verification when contacting remote mail servers
  - JAMES-3860 Rely on Files.createTempFile (#1325)
