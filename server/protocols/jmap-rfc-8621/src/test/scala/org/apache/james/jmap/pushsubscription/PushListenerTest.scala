@@ -38,11 +38,13 @@ import org.apache.james.jmap.change.{EmailDeliveryTypeName, EmailTypeName, Mailb
 import org.apache.james.jmap.core.{AccountId, PushState, StateChange, UuidState}
 import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionRepository
+import org.apache.james.user.api.DelegationStore
+import org.apache.james.user.memory.MemoryDelegationStore
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{mock, verify, verifyNoInteractions, when}
+import org.mockito.Mockito.{mock, times, verify, verifyNoInteractions, when}
 import org.mockito.{ArgumentCaptor, ArgumentMatchers}
 import reactor.core.scala.publisher.SMono
 
@@ -52,11 +54,13 @@ class PushListenerTest {
   val bob: Username = Username.of("bob@localhost")
   val alice: Username = Username.of("alice@localhost")
   val bobAccountId: String = "405010d6c16c16dec36f3d7a7596c2d757ba7b57904adc4801a63e40914fd5c9"
+  val aliceAccountId: String = "93c56f4408cff66f0a929aea8e3940e753c3275e5622582ae3010e7277b7696c"
   val url: PushSubscriptionServerURL = PushSubscriptionServerURL.from("http://localhost:9999/push").get
 
   var testee: PushListener = _
   var pushSubscriptionRepository: PushSubscriptionRepository = _
   var webPushClient: WebPushClient = _
+  var delegationStore: DelegationStore = _
 
   @BeforeEach
   def setUp(): Unit = {
@@ -64,7 +68,8 @@ class PushListenerTest {
 
     pushSubscriptionRepository = new MemoryPushSubscriptionRepository(Clock.systemUTC())
     webPushClient = mock(classOf[WebPushClient])
-    testee = new PushListener(pushSubscriptionRepository, webPushClient, pushSerializer)
+    delegationStore = new MemoryDelegationStore()
+    testee = new PushListener(pushSubscriptionRepository, webPushClient, pushSerializer, delegationStore)
 
     when(webPushClient.push(any(), any())).thenReturn(SMono.empty[Unit])
   }
@@ -123,6 +128,73 @@ class PushListenerTest {
       softly.assertThat(argumentCaptor.getValue.ttl).isEqualTo(PushTTL.MAX)
       softly.assertThat(new String(argumentCaptor.getValue.payload, StandardCharsets.UTF_8))
         .isEqualTo(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${state1.value.toString}"}}}""")
+    })
+  }
+
+  @Test
+  def shouldNotPushAliceChangesToBobWhenBobIsNotDelegatedByAlice(): Unit = {
+    val bobSubscriptionId = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit1"),
+      url = url,
+      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(bob, bobSubscriptionId)).block()
+
+    val state1 = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), alice, Map(EmailTypeName -> state1)))).block()
+
+    verify(webPushClient, times(0)).push(ArgumentMatchers.eq(url), any())
+  }
+
+  @Test
+  def shouldPushAliceChangesToAliceAndBobWhenBobIsDelegatedByAlice(): Unit = {
+    SMono.fromPublisher(delegationStore.addAuthorizedUser(alice, bob)).block()
+
+    val bobSubscriptionId = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit1"),
+      url = url,
+      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(bob, bobSubscriptionId)).block()
+    val aliceSubscriptionId = SMono(pushSubscriptionRepository.save(alice, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit2"),
+      url = url,
+      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(alice, aliceSubscriptionId)).block()
+
+    val state1 = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), alice, Map(EmailTypeName -> state1)))).block()
+
+    val argumentCaptor: ArgumentCaptor[PushRequest] = ArgumentCaptor.forClass(classOf[PushRequest])
+    verify(webPushClient, times(2)).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(new String(argumentCaptor.getAllValues.get(0).payload, StandardCharsets.UTF_8))
+        .isEqualTo(s"""{"@type":"StateChange","changed":{"$aliceAccountId":{"Email":"${state1.value.toString}"}}}""")
+      softly.assertThat(new String(argumentCaptor.getAllValues.get(1).payload, StandardCharsets.UTF_8))
+        .isEqualTo(s"""{"@type":"StateChange","changed":{"$aliceAccountId":{"Email":"${state1.value.toString}"}}}""")
+    })
+  }
+
+  @Test
+  def bobShouldReceiveHisChangesAndAliceChangesWhenBobIsDelegatedByAlice(): Unit = {
+    SMono.fromPublisher(delegationStore.addAuthorizedUser(alice, bob)).block()
+
+    val bobSubscriptionId = SMono(pushSubscriptionRepository.save(bob, PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("junit1"),
+      url = url,
+      types = Seq(EmailTypeName, MailboxTypeName)))).block().id
+    SMono(pushSubscriptionRepository.validateVerificationCode(bob, bobSubscriptionId)).block()
+
+    val stateChangeBob = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), bob, Map(EmailTypeName -> stateChangeBob)))).block()
+    val stateChangeAlice = UuidState(UUID.randomUUID())
+    SMono(testee.reactiveEvent(StateChangeEvent(EventId.random(), alice, Map(EmailTypeName -> stateChangeAlice)))).block()
+
+    val argumentCaptor: ArgumentCaptor[PushRequest] = ArgumentCaptor.forClass(classOf[PushRequest])
+    verify(webPushClient, times(2)).push(ArgumentMatchers.eq(url), argumentCaptor.capture())
+    SoftAssertions.assertSoftly(softly => {
+      softly.assertThat(new String(argumentCaptor.getAllValues.get(0).payload, StandardCharsets.UTF_8))
+        .isEqualTo(s"""{"@type":"StateChange","changed":{"$bobAccountId":{"Email":"${stateChangeBob.value.toString}"}}}""")
+      softly.assertThat(new String(argumentCaptor.getAllValues.get(1).payload, StandardCharsets.UTF_8))
+        .isEqualTo(s"""{"@type":"StateChange","changed":{"$aliceAccountId":{"Email":"${stateChangeAlice.value.toString}"}}}""")
     })
   }
 
