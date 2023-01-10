@@ -28,19 +28,20 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import javax.inject.{Inject, Named}
 import org.apache.james.core.Username
-import org.apache.james.events.{EventBus, Registration}
+import org.apache.james.events.{EventBus, Registration, RegistrationKey}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.JMAP_WS
 import org.apache.james.jmap.api.change.{EmailChangeRepository, MailboxChangeRepository, TypeStateFactory}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
-import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeListener, _}
-import org.apache.james.jmap.core.{OutboundMessage, ProblemDetails, RequestId, WebSocketError, WebSocketPushDisable, WebSocketPushEnable, WebSocketRequest, WebSocketResponse, _}
+import org.apache.james.jmap.change._
+import org.apache.james.jmap.core._
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.http.{Authenticator, UserProvisioning}
 import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => JMAPInjectionKeys}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.user.api.DelegationStore
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.Json
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
@@ -49,6 +50,8 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 import reactor.netty.http.websocket.{WebsocketInbound, WebsocketOutbound}
+
+import scala.jdk.CollectionConverters._
 
 object WebSocketRoutes {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[WebSocketRoutes])
@@ -75,7 +78,8 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
                                  mailboxChangeRepository: MailboxChangeRepository,
                                  emailChangeRepository: EmailChangeRepository,
                                  pushSerializer: PushSerializer,
-                                 typeStateFactory: TypeStateFactory) extends JMAPRoutes {
+                                 typeStateFactory: TypeStateFactory,
+                                 delegationStore: DelegationStore) extends JMAPRoutes {
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
@@ -130,9 +134,13 @@ class WebSocketRoutes @Inject() (@Named(InjectionKeys.RFC_8621) val authenticato
               .map[OutboundMessage](WebSocketResponse(request.id, _))
               .onErrorResume(e => SMono.just(asError(request.id)(e)))
           case pushEnable: WebSocketPushEnable =>
-            SMono(eventBus.register(
+            SMono.just(clientContext.session.getUser)
+              .concatWith(SFlux.fromPublisher(delegationStore.delegatedUsers(clientContext.session.getUser)))
+              .map(username => AccountIdRegistrationKey.of(username).asInstanceOf[RegistrationKey])
+              .collectSeq()
+              .flatMap(keys => SMono(eventBus.register(
                 StateChangeListener(pushEnable.dataTypes.getOrElse(typeStateFactory.all.toSet), clientContext.outbound),
-                AccountIdRegistrationKey.of(clientContext.session.getUser)))
+                keys.asJavaCollection)))
               .doOnNext(newRegistration => clientContext.withRegistration(newRegistration))
               .`then`(sendPushStateIfRequested(pushEnable, clientContext))
           case WebSocketPushDisable => SMono.fromCallable(() => clientContext.clean())

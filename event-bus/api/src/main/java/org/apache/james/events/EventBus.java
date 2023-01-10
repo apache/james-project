@@ -27,6 +27,7 @@ import org.reactivestreams.Publisher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface EventBus {
@@ -53,6 +54,13 @@ public interface EventBus {
     }
 
     Publisher<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key);
+
+    default Publisher<Registration> register(EventListener.ReactiveEventListener listener, Collection<RegistrationKey> keys) {
+        return Flux.fromIterable(keys)
+            .concatMap(key -> register(listener, key))
+            .reduce((reg1, reg2) -> () -> Mono.from(reg1.unregister())
+                .then(Mono.from(reg2.unregister())));
+    }
 
     Registration register(EventListener.ReactiveEventListener listener, Group group) throws GroupAlreadyRegistered;
 
