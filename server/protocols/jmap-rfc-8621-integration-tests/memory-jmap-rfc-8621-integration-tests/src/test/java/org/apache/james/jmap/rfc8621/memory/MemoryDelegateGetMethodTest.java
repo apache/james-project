@@ -17,33 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.rfc8621.contract.probe
+package org.apache.james.jmap.rfc8621.memory;
 
-import com.google.inject.AbstractModule
-import com.google.inject.multibindings.Multibinder
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-import javax.inject.Inject
-import org.apache.james.core.Username
-import org.apache.james.jmap.core.AccountId
-import org.apache.james.user.api.DelegationStore
-import org.apache.james.utils.GuiceProbe
-import reactor.core.scala.publisher.{SFlux, SMono}
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesConfiguration;
+import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.jmap.rfc8621.contract.DelegateGetMethodContract;
+import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-class DelegationProbeModule extends AbstractModule {
-  override def configure(): Unit =
-    Multibinder.newSetBinder(binder(), classOf[GuiceProbe])
-      .addBinding()
-      .to(classOf[DelegationProbe])
-}
-
-class DelegationProbe @Inject()(delegationStore: DelegationStore) extends GuiceProbe {
-  def getAuthorizedUsers(baseUser: Username): Seq[Username] =
-    SFlux.fromPublisher(delegationStore.authorizedUsers(baseUser))
-      .collectSeq()
-      .block()
-
-  def addAuthorizedUser(baseUser: Username, userWithAccess: Username): AccountId =
-    SMono.fromPublisher(delegationStore.addAuthorizedUser(baseUser, userWithAccess))
-      .`then`(SMono.just(AccountId.from(userWithAccess).toOption.get))
-      .block()
+public class MemoryDelegateGetMethodTest implements DelegateGetMethodContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
+        MemoryJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
+        .server(configuration -> MemoryJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule(), new DelegationProbeModule()))
+        .build();
 }
