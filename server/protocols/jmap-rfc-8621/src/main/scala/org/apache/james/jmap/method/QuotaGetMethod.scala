@@ -22,11 +22,10 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_QUOTA}
-import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, MissingCapabilityException, Properties, SessionTranslator}
+import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, Properties, SessionTranslator}
 import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaNotFound, QuotaResponseGetResult, UnparsedQuotaId}
+import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaResponseGetResult}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
@@ -37,6 +36,7 @@ import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
+
 import javax.inject.Inject
 
 class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
@@ -65,9 +65,6 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
         methodCallId = invocation.invocation.methodCallId))
     })
       .map(InvocationWithContext(_, invocation.processingContext))
-      .onErrorResume { case e: Exception => handleRequestValidationErrors(e, invocation.invocation.methodCallId)
-        .map(errorInvocation => InvocationWithContext(errorInvocation, invocation.processingContext))
-      }
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, QuotaGetRequest] =
@@ -78,11 +75,6 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
     jmapQuotaManagerWrapper.list(username, capabilities)
       .collectSeq()
       .map(quotas => QuotaResponseGetResult.from(quotas, request.ids.map(_.value.map(_.id).toSet)))
-
-  private def handleRequestValidationErrors(exception: Exception, methodCallId: MethodCallId): SMono[Invocation] = exception match {
-    case _: MissingCapabilityException => SMono.just(Invocation.error(ErrorCode.UnknownMethod, methodCallId))
-    case e: IllegalArgumentException => SMono.just(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, methodCallId))
-  }
 }
 
 case class JmapQuotaManagerWrapper(private val quotaManager: QuotaManager,
