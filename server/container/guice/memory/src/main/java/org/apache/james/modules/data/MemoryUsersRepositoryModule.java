@@ -24,21 +24,23 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.memory.MemoryDelegationStore;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.james.user.memory.NaiveDelegationStore;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class MemoryUsersRepositoryModule extends AbstractModule {
     @Override
     public void configure() {
+        bind(MemoryDelegationStore.class).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(MemoryUsersRepository.class);
-        bind(DelegationStore.class).to(NaiveDelegationStore.class);
+        bind(DelegationStore.class).to(MemoryDelegationStore.class);
     }
 
     @Provides

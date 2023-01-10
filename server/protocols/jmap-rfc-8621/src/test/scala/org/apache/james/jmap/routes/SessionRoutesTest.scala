@@ -20,7 +20,6 @@
 package org.apache.james.jmap.routes
 
 import java.nio.charset.StandardCharsets
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
@@ -37,6 +36,7 @@ import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.routes.SessionRoutesTest.{BOB, TEST_CONFIGURATION}
 import org.apache.james.jmap.{JMAPConfiguration, JMAPRoutesHandler, JMAPServer, Version, VersionParser}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.user.api.DelegationStore
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito._
 import org.scalatest.BeforeAndAfter
@@ -65,8 +65,13 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     when(mockedAuthFilter.authenticate(any()))
       .thenReturn(Mono.just(mockedSession))
 
+    val mockDelegationStore = mock(classOf[DelegationStore])
+    when(mockDelegationStore.delegatedUsers(any()))
+      .thenReturn(Mono.empty())
+
     val sessionRoutes = new SessionRoutes(
       sessionSupplier = new SessionSupplier(DefaultCapabilities.supported(JmapRfc8621Configuration.LOCALHOST_CONFIGURATION)),
+      delegationStore = mockDelegationStore,
       authenticator = mockedAuthFilter,
       jmapRfc8621Configuration = JmapRfc8621Configuration.LOCALHOST_CONFIGURATION)
     jmapServer = new JMAPServer(

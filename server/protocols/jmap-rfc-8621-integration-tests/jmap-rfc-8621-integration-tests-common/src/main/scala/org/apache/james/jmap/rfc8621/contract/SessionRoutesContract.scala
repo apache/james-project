@@ -18,8 +18,6 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
-import java.nio.charset.StandardCharsets
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.builder.RequestSpecBuilder
@@ -37,8 +35,11 @@ import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.{EXPECTED_BA
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.empty
+import org.hamcrest.collection.IsIterableContainingInAnyOrder
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
 
+import java.nio.charset.StandardCharsets
 object SessionRoutesContract {
   private val expected_session_object: String = """{
                          |  "capabilities" : {
@@ -210,6 +211,142 @@ trait SessionRoutesContract {
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract()
+      .body()
+      .asString()
+
+    assertThatJson(sessionJson).isEqualTo(expected_session_object)
+  }
+
+  @Test
+  def getResponseShouldReturnDelegatedUsersWhenDelegated(server: GuiceJamesServer): Unit = {
+     server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(ANDRE, BOB)
+
+    val sessionJson: String = `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when()
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+    .extract()
+      .body()
+      .asString()
+
+    assertThatJson(sessionJson)
+      .inPath("accounts")
+      .isEqualTo("""{
+                   |    "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6": {
+                   |        "name": "bob@domain.tld",
+                   |        "isPersonal": true,
+                   |        "isReadOnly": false,
+                   |        "accountCapabilities": {
+                   |            "urn:apache:james:params:jmap:delegation": {},
+                   |            "urn:ietf:params:jmap:submission": {
+                   |                "maxDelayedSend": 0,
+                   |                "submissionExtensions": []
+                   |            },
+                   |            "urn:ietf:params:jmap:websocket": {
+                   |                "supportsPush": true,
+                   |                "url": "ws://domain.com/jmap/ws"
+                   |            },
+                   |            "urn:ietf:params:jmap:core": {
+                   |                "maxSizeUpload": 20971520,
+                   |                "maxConcurrentUpload": 4,
+                   |                "maxSizeRequest": 10000000,
+                   |                "maxConcurrentRequests": 4,
+                   |                "maxCallsInRequest": 16,
+                   |                "maxObjectsInGet": 500,
+                   |                "maxObjectsInSet": 500,
+                   |                "collationAlgorithms": [
+                   |                    "i;unicode-casemap"
+                   |                ]
+                   |            },
+                   |            "urn:apache:james:params:jmap:mail:shares": {},
+                   |            "urn:ietf:params:jmap:vacationresponse": {},
+                   |            "urn:ietf:params:jmap:mail": {
+                   |                "maxMailboxesPerEmail": 10000000,
+                   |                "maxMailboxDepth": null,
+                   |                "maxSizeMailboxName": 200,
+                   |                "maxSizeAttachmentsPerEmail": 20000000,
+                   |                "emailQuerySortOptions": [
+                   |                    "receivedAt",
+                   |                    "sentAt",
+                   |                    "size",
+                   |                    "from",
+                   |                    "to",
+                   |                    "subject"
+                   |                ],
+                   |                "mayCreateTopLevelMailbox": true
+                   |            },
+                   |            "urn:ietf:params:jmap:mdn": {},
+                   |            "urn:apache:james:params:jmap:mail:quota": {},
+                   |            "urn:ietf:params:jmap:quota": {},
+                   |            "urn:apache:james:params:jmap:mail:identity:sortorder": {}
+                   |        }
+                   |    },
+                   |    "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c": {
+                   |        "name": "andre@domain.tld",
+                   |        "isPersonal": false,
+                   |        "isReadOnly": false,
+                   |        "accountCapabilities": {
+                   |            "urn:apache:james:params:jmap:delegation": {},
+                   |            "urn:ietf:params:jmap:submission": {
+                   |                "maxDelayedSend": 0,
+                   |                "submissionExtensions": []
+                   |            },
+                   |            "urn:ietf:params:jmap:websocket": {
+                   |                "supportsPush": true,
+                   |                "url": "ws://domain.com/jmap/ws"
+                   |            },
+                   |            "urn:ietf:params:jmap:core": {
+                   |                "maxSizeUpload": 20971520,
+                   |                "maxConcurrentUpload": 4,
+                   |                "maxSizeRequest": 10000000,
+                   |                "maxConcurrentRequests": 4,
+                   |                "maxCallsInRequest": 16,
+                   |                "maxObjectsInGet": 500,
+                   |                "maxObjectsInSet": 500,
+                   |                "collationAlgorithms": [
+                   |                    "i;unicode-casemap"
+                   |                ]
+                   |            },
+                   |            "urn:apache:james:params:jmap:mail:shares": {},
+                   |            "urn:ietf:params:jmap:vacationresponse": {},
+                   |            "urn:ietf:params:jmap:mail": {
+                   |                "maxMailboxesPerEmail": 10000000,
+                   |                "maxMailboxDepth": null,
+                   |                "maxSizeMailboxName": 200,
+                   |                "maxSizeAttachmentsPerEmail": 20000000,
+                   |                "emailQuerySortOptions": [
+                   |                    "receivedAt",
+                   |                    "sentAt",
+                   |                    "size",
+                   |                    "from",
+                   |                    "to",
+                   |                    "subject"
+                   |                ],
+                   |                "mayCreateTopLevelMailbox": true
+                   |            },
+                   |            "urn:ietf:params:jmap:mdn": {},
+                   |            "urn:apache:james:params:jmap:mail:quota": {},
+                   |            "urn:ietf:params:jmap:quota": {},
+                   |            "urn:apache:james:params:jmap:mail:identity:sortorder": {}
+                   |        }
+                   |    }
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def getResponseShouldNotReturnDelegatedUsersWhenNotDelegated(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(BOB, ANDRE)
+
+    val sessionJson: String = `given`()
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when()
+      .get("/session")
+    .`then`
+      .statusCode(SC_OK)
+    .extract()
       .body()
       .asString()
 
