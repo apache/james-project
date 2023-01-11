@@ -30,11 +30,15 @@ import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
+import org.apache.james.jmap.rfc8621.contract.DelegateGetMethodContract.BOB_ACCOUNT_ID
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.utils.DataProbeImpl
 import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
 
+object DelegateGetMethodContract {
+  val BOB_ACCOUNT_ID: String = Fixture.ACCOUNT_ID
+}
 trait DelegateGetMethodContract {
 
   @BeforeEach
@@ -63,7 +67,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -83,7 +87,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -104,7 +108,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -127,12 +131,12 @@ trait DelegateGetMethodContract {
            |        [
            |            "Delegate/get",
            |            {
-           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "accountId": "$BOB_ACCOUNT_ID",
            |                "notFound": [],
            |                "list": [
            |                    {
-           |                        "id": "1e8584548eca20f26faf6becc1704a0f352839f12c208a47fbd486d60f491f7c",
-           |                        "username": "andre@domain.tld"
+           |                        "id": "${Fixture.ANDRE_ACCOUNT_ID}",
+           |                        "username": "${ANDRE.asString()}"
            |                    }
            |                ]
            |            },
@@ -156,7 +160,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": []
            |    },
            |    "c1"]]
@@ -176,7 +180,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -198,7 +202,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": ["notFound1"]
            |    },
            |    "c1"]]
@@ -218,7 +222,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [],
          |      "notFound": [ "notFound1" ]
          |    },
@@ -244,7 +248,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": [ "notFound1", "$delegatedId", "$delegatedId2" ]
            |    },
            |    "c1"]]
@@ -264,15 +268,15 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [
          |        {
          |          "id": "$delegatedId",
-         |          "username": "andre@domain.tld"
+         |          "username": "${ANDRE.asString()}"
          |        },
          |        {
          |          "id": "$delegatedId2",
-         |          "username": "cedric@domain.tld"
+         |          "username": "${CEDRIC.asString()}"
          |        }
          |      ],
          |      "notFound": [ "notFound1" ]
@@ -295,7 +299,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": null
            |    },
            |    "c1"]]
@@ -315,7 +319,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [],
          |      "notFound": []
          |    },
@@ -338,7 +342,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": ["$delegateId"]
            |    },
            |    "c1"]]
@@ -358,7 +362,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [],
          |      "notFound": [ "$delegateId" ]
          |    },
@@ -431,7 +435,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": null,
            |      "properties": []
            |    },
@@ -452,7 +456,7 @@ trait DelegateGetMethodContract {
          |  "methodResponses": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [
          |        { "id" : "$delegateId" }
          |      ],
@@ -476,7 +480,7 @@ trait DelegateGetMethodContract {
            |  "methodCalls": [[
            |    "Delegate/get",
            |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |      "accountId": "$BOB_ACCOUNT_ID",
            |      "ids": null,
            |      "properties": ["invalid"]
            |    },
@@ -555,7 +559,7 @@ trait DelegateGetMethodContract {
          |  "methodCalls": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "ids": null
          |    },
          |    "c1"]]
@@ -594,7 +598,7 @@ trait DelegateGetMethodContract {
          |  "methodCalls": [[
          |    "Delegate/get",
          |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "accountId": "$BOB_ACCOUNT_ID",
          |      "ids": null
          |    },
          |    "c1"]]
