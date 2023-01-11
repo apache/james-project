@@ -82,6 +82,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
                 .map(OriginalMessageId::getOriginalMessageId)
                 .flatMap(messageId -> findMessageIdForRFC822MessageId(messageId, recipient))
                 .ifPresent(messageId -> setJmapMessageIdAsHeader(mimeMessage, messageId));
+            message.dispose();
         } catch (Exception e) {
             throw new MessagingException("MDN can't be parse", e);
         }

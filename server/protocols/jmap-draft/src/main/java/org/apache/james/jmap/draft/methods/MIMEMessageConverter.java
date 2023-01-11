@@ -111,7 +111,10 @@ public class MIMEMessageConverter {
     }
 
     public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<Attachment.WithBlob> messageAttachments) {
-        return asBytes(convertToMime(creationMessageEntry, messageAttachments));
+        Message message = convertToMime(creationMessageEntry, messageAttachments);
+        byte[] result = asBytes(message);
+        message.dispose();
+        return result;
     }
 
     public byte[] asBytes(Message message) {

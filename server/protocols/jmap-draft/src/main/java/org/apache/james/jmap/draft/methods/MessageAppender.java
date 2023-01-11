@@ -124,6 +124,7 @@ public class MessageAppender {
                         }
                         return Mono.just(appendResult);
                     })
+                    .doFinally(any -> newMessage.message.dispose())
                     .map(appendResult -> MetaDataWithContent.builder()
                         .uid(appendResult.getId().getUid())
                         .keywords(createdEntry.getValue().getKeywords())
