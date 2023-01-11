@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.search;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.mail.Flags;
 
@@ -27,8 +29,11 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 
@@ -65,9 +70,7 @@ public class UnseenSearchOverride implements ListeningMessageSearchIndex.SearchO
         }
         if (searchQuery.getCriteria().size() == 2) {
             return searchQuery.getCriteria().stream()
-                .filter(criterion -> criterion instanceof SearchQuery.UidCriterion)
-                .map(SearchQuery.UidCriterion.class::cast)
-                .anyMatch(uidCriterion -> uidCriterion.getOperator().isAll()) ||
+                .anyMatch(criterion -> criterion instanceof SearchQuery.UidCriterion) ||
                 searchQuery.getCriteria().stream()
                     .anyMatch(criterion -> criterion instanceof SearchQuery.AllCriterion);
         }
@@ -76,6 +79,15 @@ public class UnseenSearchOverride implements ListeningMessageSearchIndex.SearchO
 
     @Override
     public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
-        return dao.listUnseen((CassandraId) mailbox.getMailboxId());
+        final Optional<SearchQuery.UidCriterion> maybeUidCriterion = searchQuery.getCriteria().stream()
+            .filter(criterion -> criterion instanceof SearchQuery.UidCriterion)
+            .map(SearchQuery.UidCriterion.class::cast)
+            .findFirst();
+
+        return maybeUidCriterion
+            .map(uidCriterion -> Flux.fromIterable(ImmutableList.copyOf(uidCriterion.getOperator().getRange()))
+                .concatMap(range -> dao.listUnseen((CassandraId) mailbox.getMailboxId(),
+                    MessageRange.range(range.getLowValue(), range.getHighValue()))))
+            .orElseGet(() -> dao.listUnseen((CassandraId) mailbox.getMailboxId()));
     }
 }

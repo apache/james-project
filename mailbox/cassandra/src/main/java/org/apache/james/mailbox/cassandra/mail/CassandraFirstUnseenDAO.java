@@ -36,6 +36,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.model.MessageRange;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.ProtocolVersion;
@@ -52,6 +53,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraFirstUnseenDAO {
+    private static final String UID_TO = "uid_to";
+    private static final String UID_FROM = "uid_from";
+
     private static final int BATCH_STATEMENT_WINDOW = 1024;
     private static final int LOW_CONCURRENCY = 2;
 
@@ -61,6 +65,9 @@ public class CassandraFirstUnseenDAO {
     private final PreparedStatement deleteAllStatement;
     private final PreparedStatement readStatement;
     private final PreparedStatement listStatement;
+    private final PreparedStatement selectOneUidStatement;
+    private final PreparedStatement selectBetweenUidStatement;
+    private final PreparedStatement selectFromUidStatement;
     private final ProtocolVersion protocolVersion;
 
     @Inject
@@ -72,6 +79,34 @@ public class CassandraFirstUnseenDAO {
         this.readStatement = prepareReadStatement(session);
         this.listStatement = prepareListStatement(session);
         this.protocolVersion = session.getContext().getProtocolVersion();
+        this.selectOneUidStatement = prepareOneUidStatement(session);
+        this.selectBetweenUidStatement = prepareBetweenUidStatement(session);
+        this.selectFromUidStatement = prepareFromUidStatement(session);
+    }
+
+    private PreparedStatement prepareOneUidStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(UID).isEqualTo(bindMarker(UID)))
+            .build());
+    }
+
+    private PreparedStatement prepareBetweenUidStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(UID).isGreaterThanOrEqualTo(bindMarker(UID_FROM)),
+                column(UID).isLessThanOrEqualTo(bindMarker(UID_TO)))
+            .build());
+    }
+
+    private PreparedStatement prepareFromUidStatement(CqlSession session) {
+        return session.prepare(selectFrom(TABLE_NAME)
+            .column(UID)
+            .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
+                column(UID).isGreaterThanOrEqualTo(bindMarker(UID_FROM)))
+            .build());
     }
 
     private PreparedStatement prepareReadStatement(CqlSession session) {
@@ -184,6 +219,33 @@ public class CassandraFirstUnseenDAO {
                 listStatement.bind()
                     .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
             .map(this::asMessageUid);
+    }
+
+    public Flux<MessageUid> listUnseen(CassandraId cassandraId, MessageRange range) {
+        switch (range.getType()) {
+            case ALL:
+                return listUnseen(cassandraId);
+            case FROM:
+                return cassandraAsyncExecutor.executeRows(
+                    listStatement.bind()
+                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                    .map(this::asMessageUid);
+            case RANGE:
+                return cassandraAsyncExecutor.executeRows(
+                    selectBetweenUidStatement.bind()
+                        .setLong(UID_FROM, range.getUidFrom().asLong())
+                        .setLong(UID_TO, range.getUidTo().asLong())
+                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                    .map(this::asMessageUid);
+            case ONE:
+                return cassandraAsyncExecutor.executeRows(
+                    selectFromUidStatement.bind()
+                        .setLong(UID_FROM, range.getUidFrom().asLong())
+                        .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
+                    .map(this::asMessageUid);
+            default:
+                throw new RuntimeException("Unsupported range type " + range.getType());
+        }
     }
 
     private MessageUid asMessageUid(Row row) {
