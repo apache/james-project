@@ -103,8 +103,12 @@ public class MailDto {
         try {
             MessageContentExtractor extractor = new MessageContentExtractor();
             return Optional.ofNullable(mail.getMessage())
-                    .map(Throwing.function(MailDto::convertMessage).sneakyThrow())
-                    .map(Throwing.function(extractor::extract).sneakyThrow());
+                .map(Throwing.<MimeMessage, MessageContent>function(message -> {
+                    Message mimeMessage = MailDto.convertMessage(message);
+                    MessageContent result = extractor.extract(mimeMessage);
+                    mimeMessage.dispose();
+                    return result;
+                }).sneakyThrow());
         } catch (MessagingException e) {
             if (additionalFields.contains(AdditionalField.TEXT_BODY)) {
                 throw new InaccessibleFieldException(AdditionalField.TEXT_BODY, e);

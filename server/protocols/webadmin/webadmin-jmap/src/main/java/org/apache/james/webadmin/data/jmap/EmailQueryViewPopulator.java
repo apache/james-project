@@ -155,6 +155,7 @@ public class EmailQueryViewPopulator {
             Message mime4JMessage = parseMessage(messageResult);
             Date sentAtDate = Optional.ofNullable(mime4JMessage.getDate()).orElse(messageResult.getInternalDate());
             ZonedDateTime sentAt = ZonedDateTime.ofInstant(sentAtDate.toInstant(), ZoneOffset.UTC);
+            mime4JMessage.dispose();
 
             return new EmailQueryView.Entry(mailboxId, messageId, sentAt, receivedAt);
         })
