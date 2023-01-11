@@ -33,8 +33,9 @@ import org.apache.james.user.api.DelegationStore
 import org.reactivestreams.Publisher
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
+import scala.jdk.OptionConverters._
 import javax.inject.Inject
+
 
 class DelegateGetMethod @Inject()(val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
@@ -50,7 +51,7 @@ class DelegateGetMethod @Inject()(val metricFactory: MetricFactory,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegateGetRequest): Publisher[InvocationWithContext] = {
     val requestedProperties: Properties = request.properties.getOrElse(DelegateGet.allProperties)
     (requestedProperties -- DelegateGet.allProperties match {
-      case invalidProperties if invalidProperties.isEmpty() => getDelegateGetResponse(request, mailboxSession.getUser)
+      case invalidProperties if invalidProperties.isEmpty() => getDelegateGetResponse(request, mailboxSession)
       .map(result => result.asResponse(request.accountId))
         .map(response => Invocation(
           methodName = methodName,
@@ -63,9 +64,21 @@ class DelegateGetMethod @Inject()(val metricFactory: MetricFactory,
     }).map(InvocationWithContext(_, invocation.processingContext))
   }
 
-  private def getDelegateGetResponse(request: DelegateGetRequest, baseUser: Username) : SMono[DelegateGetResult] =
+  private def getDelegateGetResponse(request: DelegateGetRequest, mailboxSession: MailboxSession): SMono[DelegateGetResult] =
+    SMono.just(isDelegatedRequest(mailboxSession))
+      .filter(isDelegated => isDelegated)
+      .flatMap(_ => SMono.error(ForbiddenException()))
+      .switchIfEmpty(getAuthorizedUser(mailboxSession.getUser, request))
+
+  private def getAuthorizedUser(baseUser: Username, request: DelegateGetRequest): SMono[DelegateGetResult] =
     SFlux(delegationStore.authorizedUsers(baseUser))
       .map(Delegate.from)
       .collectSeq()
       .map(delegates => DelegateGetResult.from(delegates, request.ids.map(_.value.map(_.id).toSet)))
+
+  private def isDelegatedRequest(mailboxSession: MailboxSession): Boolean =
+    mailboxSession.getLoggedInUser.toScala match {
+      case None => false
+      case Some(value) => !value.equals(mailboxSession.getUser)
+    }
 }

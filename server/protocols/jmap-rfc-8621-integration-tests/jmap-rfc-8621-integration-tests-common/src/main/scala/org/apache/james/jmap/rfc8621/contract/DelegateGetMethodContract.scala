@@ -367,8 +367,7 @@ trait DelegateGetMethodContract {
   }
 
   @Test
-  @Disabled("TODO after https://github.com/apache/james-project/pull/1380")
-  def bobCanGetDelegateListOfAliceWhenDelegated(server: GuiceJamesServer): Unit = {
+  def bobShouldNotGetDelegateListOfAliceEvenDelegated(server: GuiceJamesServer): Unit = {
     val delegateId1 = server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(ANDRE, BOB)
       .id.value
@@ -404,23 +403,16 @@ trait DelegateGetMethodContract {
       .isEqualTo(
       s"""{
          |  "sessionState": "${SESSION_STATE.value}",
-         |  "methodResponses": [[
-         |    "Delegate/get",
-         |    {
-         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |      "list": [
-         |        {
-         |          "id": "$delegateId1",
-         |          "username": "bob@domain.tld"
-         |        },
-         |        {
-         |          "id": "$delegateId2",
-         |          "username": "cedric@domain.tld"
-         |        }
-         |      ],
-         |      "notFound": []
-         |    },
-         |    "c1"]]
+         |  "methodResponses": [
+         |        [
+         |            "error",
+         |            {
+         |                "type": "forbidden",
+         |                "description": "Access to other accounts is forbidden"
+         |            },
+         |            "c1"
+         |        ]
+         |    ]
          |}""".stripMargin)
   }
 
