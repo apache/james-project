@@ -54,8 +54,6 @@ import org.apache.james.mailbox.store.ResultUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mime4j.MimeException;
-import org.apache.james.mime4j.MimeIOException;
-import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Group;
@@ -67,9 +65,7 @@ import org.apache.james.mime4j.field.address.AddressFormatter;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
 import org.apache.james.mime4j.field.datetime.parser.ParseException;
-import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.HeaderImpl;
-import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 import org.slf4j.Logger;
@@ -270,20 +266,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             LOGGER.error("Error while parsing attachment content", e);
             return Stream.of();
         }
-    }
-
-    private HeaderImpl buildTextHeaders(MailboxMessage message) throws IOException, MimeIOException {
-        DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
-        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
-        Message headersMessage = defaultMessageBuilder
-            .parseMessage(message.getHeaderContent());
-        HeaderImpl headerImpl = new HeaderImpl();
-        addFrom(headerImpl, headersMessage.getFrom());
-        addAddressList(headerImpl, headersMessage.getTo());
-        addAddressList(headerImpl, headersMessage.getCc());
-        addAddressList(headerImpl, headersMessage.getBcc());
-        headerImpl.addField(Fields.subject(headersMessage.getSubject()));
-        return headerImpl;
     }
 
     private void addFrom(HeaderImpl headerImpl, MailboxList from) {
