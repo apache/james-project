@@ -269,6 +269,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public MailboxSession loginAsOtherUserWithoutCheckingDelegation(Username givenUserid, Username otherUserId) {
+        return sessionProvider.loginAsOtherUserWithoutCheckingDelegation(givenUserid, otherUserId);
+    }
+
+    @Override
     public void logout(MailboxSession session) {
         sessionProvider.logout(session);
     }

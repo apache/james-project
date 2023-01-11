@@ -96,6 +96,11 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     @Override
+    public MailboxSession loginAsOtherUserWithoutCheckingDelegation(Username givenUserid, Username otherUserId) {
+        return createSession(otherUserId, Optional.of(givenUserid), MailboxSession.SessionType.User);
+    }
+
+    @Override
     public void logout(MailboxSession session) {
         if (session != null) {
             session.close();

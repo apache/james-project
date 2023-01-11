@@ -24,7 +24,6 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.method.AccountNotFoundException
 import org.apache.james.mailbox.{MailboxSession, SessionProvider}
 import org.apache.james.user.api.DelegationStore
-import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 class SessionTranslator  @Inject()(delegationStore: DelegationStore, sessionProvider: SessionProvider) {
@@ -44,8 +43,7 @@ class SessionTranslator  @Inject()(delegationStore: DelegationStore, sessionProv
   private def delegate(session: MailboxSession, targetAccountId: AccountId): SMono[MailboxSession] =
     SFlux(delegationStore.delegatedUsers(session.getUser))
       .filter(hasAccountId(targetAccountId))
-      .flatMap(targetUser => SMono.fromCallable(() => sessionProvider.authenticate(session.getUser).as(targetUser))
-        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+      .flatMap(targetUser => SMono.fromCallable(() => sessionProvider.loginAsOtherUserWithoutCheckingDelegation(session.getUser, targetUser)))
       .next()
       .switchIfEmpty(SMono.error(AccountNotFoundException()))
 }

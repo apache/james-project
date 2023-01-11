@@ -110,6 +110,8 @@ public interface SessionProvider {
         return otherUserId -> loginAsOtherUser(givenUserid, otherUserId);
     }
 
+    MailboxSession loginAsOtherUserWithoutCheckingDelegation(Username givenUserid, Username otherUserId);
+
     /**
      * <p>
      * Logs the session out, freeing any resources. Clients who open session
