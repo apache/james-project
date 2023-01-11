@@ -25,7 +25,7 @@ import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.user.api.DelegationStore
 import org.apache.james.utils.GuiceProbe
-import reactor.core.scala.publisher.SFlux
+import reactor.core.scala.publisher.{SFlux, SMono}
 
 class DelegationProbeModule extends AbstractModule {
   override def configure(): Unit =
@@ -38,5 +38,9 @@ class DelegationProbe @Inject()(delegationStore: DelegationStore) extends GuiceP
   def getAuthorizedUsers(baseUser: Username): Seq[Username] =
     SFlux.fromPublisher(delegationStore.authorizedUsers(baseUser))
       .collectSeq()
+      .block()
+
+  def addAuthorizedUser(baseUser: Username, delegatedUser: Username) =
+    SMono.fromPublisher(delegationStore.addAuthorizedUser(delegatedUser).forUser(baseUser))
       .block()
 }
