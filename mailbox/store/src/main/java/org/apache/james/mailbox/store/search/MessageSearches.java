@@ -60,12 +60,10 @@ import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.dom.datetime.DateTime;
-import org.apache.james.mime4j.field.Fields;
 import org.apache.james.mime4j.field.address.AddressFormatter;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
 import org.apache.james.mime4j.field.datetime.parser.ParseException;
-import org.apache.james.mime4j.message.HeaderImpl;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.mime4j.utils.search.MessageMatcher;
 import org.slf4j.Logger;
@@ -268,18 +266,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         } catch (Exception e) {
             LOGGER.error("Error while parsing attachment content", e);
             return Stream.of();
-        }
-    }
-
-    private void addFrom(HeaderImpl headerImpl, MailboxList from) {
-        if (from != null) {
-            headerImpl.addField(Fields.from(Lists.newArrayList(from.iterator())));
-        }
-    }
-
-    private void addAddressList(HeaderImpl headerImpl, AddressList addressList) {
-        if (addressList != null) {
-            headerImpl.addField(Fields.to(Lists.newArrayList(addressList.iterator())));
         }
     }
     
