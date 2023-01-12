@@ -24,10 +24,10 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
-
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, CREATED, FORBIDDEN, INTERNAL_SERVER_ERROR, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
+
 import javax.inject.{Inject, Named}
 import org.apache.commons.fileupload.util.LimitedInputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
@@ -35,12 +35,13 @@ import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.api.model.{UploadId, UploadMetaData}
 import org.apache.james.jmap.api.upload.UploadRepository
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, ProblemDetails}
+import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, ProblemDetails, SessionTranslator}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.{ResponseSerializer, UploadSerializer}
 import org.apache.james.jmap.mail.BlobId
+import org.apache.james.jmap.method.AccountNotFoundException
 import org.apache.james.jmap.routes.UploadRoutes.LOGGER
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.MailboxSession
@@ -66,10 +67,8 @@ case class UploadResponse(accountId: AccountId,
 class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                              val configuration: JmapRfc8621Configuration,
                              val uploadRepository: UploadRepository,
-                             val serializer: UploadSerializer) extends JMAPRoutes {
-
-  class CancelledUploadException extends RuntimeException
-  class MaxFileSizeUploadException extends RuntimeException
+                             val serializer: UploadSerializer,
+                             val sessionTranslator: SessionTranslator) extends JMAPRoutes {
 
   private val accountIdParam: String = "accountId"
   private val uploadURI = s"/upload/{$accountIdParam}"
@@ -99,7 +98,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
             respondDetails(response,
               ProblemDetails(status = BAD_REQUEST, detail = "Attempt to upload exceed max size"),
               BAD_REQUEST)
-          case _: ForbiddenException =>
+          case _: ForbiddenException | _: AccountNotFoundException =>
             respondDetails(response,
               ProblemDetails(status = FORBIDDEN, detail = "Upload to other accounts is forbidden"),
               FORBIDDEN)
@@ -116,26 +115,23 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
     }
   }
 
-  def post(request: HttpServerRequest, response: HttpServerResponse, contentType: ContentType, session: MailboxSession): SMono[Void] = {
+  def post(request: HttpServerRequest, response: HttpServerResponse, contentType: ContentType, mailboxSession: MailboxSession): SMono[Void] = {
     Id.validate(request.param(accountIdParam)) match {
       case Right(id: Id) =>
         val targetAccountId: AccountId = AccountId(id)
-        AccountId.from(session.getUser).map(accountId => accountId.equals(targetAccountId))
-          .fold[SMono[Void]](
-            e => SMono.error(e),
-            value => if (value) {
-              SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive
-                // Unwrapping to byte array needed to solve data races and buffer reordering when using .asByteBuffer()
-                .asByteArray()
-                .map(array => ByteBuffer.wrap(array))))
-              .flatMap(content => handle(targetAccountId, contentType, content, session, response))
-            } else {
-              SMono.error(ForbiddenException())
-            })
+        sessionTranslator.delegateIfNeeded(mailboxSession, targetAccountId)
+          .flatMap(session => handle(request, response, contentType, session, targetAccountId))
 
       case Left(throwable: Throwable) => SMono.error(throwable)
     }
   }
+
+  private def handle(request: HttpServerRequest, response: HttpServerResponse, contentType: ContentType, session: MailboxSession, targetAccountId: AccountId): SMono[Void] =
+    SMono.fromCallable(() => ReactorUtils.toInputStream(request.receive
+      // Unwrapping to byte array needed to solve data races and buffer reordering when using .asByteBuffer()
+      .asByteArray()
+      .map(array => ByteBuffer.wrap(array))))
+      .flatMap(content => handle(targetAccountId, contentType, content, session, response))
 
   def handle(accountId: AccountId, contentType: ContentType, content: InputStream, mailboxSession: MailboxSession, response: HttpServerResponse): SMono[Void] = {
     val maxSize: Long = configuration.maxUploadSize.value.value

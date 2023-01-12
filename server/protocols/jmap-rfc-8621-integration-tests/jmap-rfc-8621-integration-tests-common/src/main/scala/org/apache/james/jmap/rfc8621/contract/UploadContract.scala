@@ -20,17 +20,18 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType
 import org.apache.http.HttpStatus.{SC_BAD_REQUEST, SC_CREATED, SC_FORBIDDEN, SC_OK, SC_UNAUTHORIZED}
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ALICE, ALICE_ACCOUNT_ID, ALICE_PASSWORD, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, _2_DOT_DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.UploadContract.{BIG_INPUT, VALID_INPUT}
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Test}
 import play.api.libs.json.{JsString, Json}
@@ -49,6 +50,7 @@ trait UploadContract {
       .addUser(BOB.asString, BOB_PASSWORD)
       .addDomain(_2_DOT_DOMAIN.asString())
       .addUser(ALICE.asString(), ALICE_PASSWORD)
+      .addUser(ANDRE.asString(), ANDRE_PASSWORD)
 
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
@@ -166,4 +168,44 @@ trait UploadContract {
       .body("type", equalTo("about:blank"))
       .body("detail", equalTo("No valid authentication methods provided"))
   }
+
+  @Test
+  def bobShouldBeAllowedToUploadInAliceAccountWhenDelegated(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(ALICE, BOB)
+
+    val aliceAccountId: String = AccountId.from(ALICE).toOption.get.id.value
+
+    `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(VALID_INPUT)
+    .when
+      .post(s"/upload/$aliceAccountId")
+    .`then`
+      .statusCode(SC_CREATED)
+      .body("size", equalTo(11534336))
+      .body("type", equalTo("application/json; charset=UTF-8"))
+      .body("blobId", Matchers.notNullValue())
+      .body("accountId", equalTo(aliceAccountId))
+  }
+
+  @Test
+  def bobShouldBeNotAllowedToUploadInAliceAccountWhenNotDelegated(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DataProbeImpl]).addAuthorizedUser(ALICE, ANDRE)
+
+    val aliceAccountId: String = AccountId.from(ALICE).toOption.get.id.value
+
+    `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(VALID_INPUT)
+    .when
+      .post(s"/upload/$aliceAccountId")
+    .`then`
+      .statusCode(SC_FORBIDDEN)
+      .body("status", equalTo(403))
+      .body("type", equalTo("about:blank"))
+      .body("detail", equalTo("Upload to other accounts is forbidden"))
+  }
+
 }
