@@ -118,7 +118,7 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
       .handle(publishNext)
       .filterWhen(isValid)
       .map(_.username)
-      .map(mailboxManager.login)
+      .map(mailboxManager.authenticate(_).withoutDelegation())
       .asJava()
 
 

@@ -28,6 +28,7 @@ import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
@@ -51,7 +52,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
             .filter(tokenString -> !tokenString.startsWith("Bearer"))
             .map(AccessToken::fromString)
             .flatMap(item -> Mono.from(accessTokenManager.getUsernameFromToken(item)))
-            .map(mailboxManager::login)
+            .map(Throwing.function(user -> mailboxManager.authenticate(user).withoutDelegation()))
             .onErrorResume(InvalidAccessToken.class, error -> Mono.error(new UnauthorizedException("Invalid access token", error)))
             .onErrorResume(NotAnAccessTokenException.class, error -> Mono.error(new UnauthorizedException("Not an access token", error)));
     }

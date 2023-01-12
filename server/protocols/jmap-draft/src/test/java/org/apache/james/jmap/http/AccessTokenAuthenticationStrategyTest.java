@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
@@ -33,6 +34,8 @@ import org.apache.james.jmap.draft.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -115,8 +118,18 @@ public class AccessTokenAuthenticationStrategyTest {
         Username username = Username.of("123456789");
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
-        when(mockedMailboxManager.login(eq(username)))
-            .thenReturn(fakeMailboxSession);
+        when(mockedMailboxManager.authenticate(eq(username)))
+            .thenReturn(new SessionProvider.AuthorizationStep() {
+                @Override
+                public MailboxSession as(Username other) {
+                    throw new NotImplementedException();
+                }
+
+                @Override
+                public MailboxSession withoutDelegation() {
+                    return fakeMailboxSession;
+                }
+            });
 
         UUID authHeader = UUID.randomUUID();
         AccessToken accessToken = AccessToken.fromString(authHeader.toString());

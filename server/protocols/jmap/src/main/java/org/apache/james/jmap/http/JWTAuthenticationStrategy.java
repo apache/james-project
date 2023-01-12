@@ -30,6 +30,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.ReactorUtils;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
@@ -71,7 +72,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
 
                 return username;
             }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
-            .map(mailboxManager::login);
+            .map(Throwing.function(user -> mailboxManager.authenticate(user).withoutDelegation()));
     }
 
     @Override

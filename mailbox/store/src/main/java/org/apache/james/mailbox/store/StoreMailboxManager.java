@@ -249,23 +249,13 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public MailboxSession login(Username userid, String passwd) throws MailboxException {
-        return sessionProvider.login(userid, passwd);
+    public AuthorizationStep authenticate(Username givenUserid, String passwd) {
+        return sessionProvider.authenticate(givenUserid, passwd);
     }
 
     @Override
-    public MailboxSession login(Username userid) {
-        return sessionProvider.login(userid);
-    }
-
-    @Override
-    public MailboxSession loginAsOtherUser(Username adminUserid, String passwd, Username otherUserId) throws MailboxException {
-        return sessionProvider.loginAsOtherUser(adminUserid, passwd, otherUserId);
-    }
-
-    @Override
-    public MailboxSession loginAsOtherUser(Username thisUserId, Username otherUserId) throws MailboxException {
-        return sessionProvider.loginAsOtherUser(thisUserId, otherUserId);
+    public AuthorizationStep authenticate(Username givenUserid) {
+        return sessionProvider.authenticate(givenUserid);
     }
 
     @Override
