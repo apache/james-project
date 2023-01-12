@@ -37,7 +37,7 @@ import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageId, MessageResult}
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
-import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
+import org.apache.james.mime4j.dom.{Entity, Message, Multipart, SingleBody, TextBody => Mime4JTextBody}
 import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
@@ -175,14 +175,19 @@ object EmailBodyPart {
     .headOption
     .map(_.getBody)
 
-  private def size(entity: Entity): Try[Size] = {
-    val countingOutputStream: CountingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())
-    val writer = new DefaultMessageWriter
-    writer.writeBody(entity.getBody, countingOutputStream)
-    refineV[NonNegative](countingOutputStream.getCount) match {
-      case scala.Right(size) => Success(size)
-      case Left(e) => Failure(new IllegalArgumentException(e))
+  private def size(entity: Entity): Try[Size] =
+    entity.getBody match {
+      case body: SingleBody => refineSize(body.size())
+      case body =>
+        val countingOutputStream: CountingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())
+        val writer = new DefaultMessageWriter
+        writer.writeBody(body, countingOutputStream)
+        refineSize(countingOutputStream.getCount)
     }
+
+  private def refineSize(l: Long): Try[Size] = refineV[NonNegative](l) match {
+    case scala.Right(size) => Success(size)
+    case Left(e) => Failure(new IllegalArgumentException(e))
   }
 
   private def zip[A, B](a: Try[A], b: Try[B]): Try[(A, B)] = for {
