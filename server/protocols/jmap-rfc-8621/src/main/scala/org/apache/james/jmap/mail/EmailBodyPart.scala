@@ -35,6 +35,7 @@ import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageId, MessageResult}
+import org.apache.james.mime4j.Charsets.DEFAULT_CHARSET
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, SingleBody, TextBody => Mime4JTextBody}
@@ -275,7 +276,7 @@ case class EmailBodyPart(partId: PartId,
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>
       for {
-        value <- Try(IOUtils.toString(textBody.getInputStream, charset(Option(textBody.getMimeCharset))))
+        value <- Try(IOUtils.toString(textBody.getInputStream, Option(textBody.getCharset).getOrElse(DEFAULT_CHARSET)))
       } yield {
         Some(EmailBodyValue(value = value,
           isEncodingProblem = IsEncodingProblem(false),
@@ -291,10 +292,6 @@ case class EmailBodyPart(partId: PartId,
         content.isTruncated)))
     case _ => bodyContent
   }
-
-  private def charset(charset: Option[String]): java.nio.charset.Charset = charset
-    .map(java.nio.charset.Charset.forName)
-    .getOrElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET)
 
   def textBody: List[EmailBodyPart] = selfBody ++ textBodyOfMultipart
 
