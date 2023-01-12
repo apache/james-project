@@ -244,11 +244,6 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public char getDelimiter() {
-        return sessionProvider.getDelimiter();
-    }
-
-    @Override
     public AuthorizationStep authenticate(Username givenUserid, String passwd) {
         return sessionProvider.authenticate(givenUserid, passwd);
     }
@@ -383,7 +378,7 @@ public class StoreMailboxManager implements MailboxManager {
         // Create parents first
         // If any creation fails then the mailbox will not be created
         // TODO: transaction
-        List<MailboxPath> intermediatePaths = sanitizedMailboxPath.getHierarchyLevels(getDelimiter());
+        List<MailboxPath> intermediatePaths = sanitizedMailboxPath.getHierarchyLevels(mailboxSession.getPathDelimiter());
         boolean isRootPath = intermediatePaths.size() == 1;
 
         return Flux.fromIterable(intermediatePaths)
@@ -638,7 +633,7 @@ public class StoreMailboxManager implements MailboxManager {
         // Find submailboxes
         MailboxQuery.UserBound query = MailboxQuery.builder()
             .userAndNamespaceFrom(from)
-            .expression(new PrefixedWildcard(from.getName() + getDelimiter()))
+            .expression(new PrefixedWildcard(from.getName() + session.getPathDelimiter()))
             .build()
             .asUserBound();
 
@@ -844,7 +839,7 @@ public class StoreMailboxManager implements MailboxManager {
     private MailboxMetaData toMailboxMetadata(MailboxSession session, Map<MailboxPath, Boolean> parentMap, Mailbox mailbox, MailboxCounters counters) throws UnsupportedRightException {
         return new MailboxMetaData(
             mailbox,
-            getDelimiter(),
+            session.getPathDelimiter(),
             computeChildren(parentMap, mailbox),
             Selectability.NONE,
             storeRightManager.getResolvedMailboxACL(mailbox, session),
