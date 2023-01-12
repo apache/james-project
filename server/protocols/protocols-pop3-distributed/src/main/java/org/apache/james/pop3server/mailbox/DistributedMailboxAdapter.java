@@ -151,10 +151,6 @@ public class DistributedMailboxAdapter implements Mailbox {
 
     @Override
     public void close() {
-        try {
-            mailboxManager.logout(session);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
+        mailboxManager.endProcessingRequest(session);
     }
 }

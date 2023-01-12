@@ -210,7 +210,6 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
     private void closeSession(MailboxSession session) {
         if (session != null) {
             mailboxManager.endProcessingRequest(session);
-            mailboxManager.logout(session);
         }
     }
 

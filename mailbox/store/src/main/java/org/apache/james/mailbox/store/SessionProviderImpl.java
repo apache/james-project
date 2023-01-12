@@ -100,13 +100,6 @@ public class SessionProviderImpl implements SessionProvider {
         };
     }
 
-    @Override
-    public void logout(MailboxSession session) {
-        if (session != null) {
-            session.close();
-        }
-    }
-
     private MailboxSession createSession(Username userName, Optional<Username> loggedInUser, MailboxSession.SessionType type) {
         return new MailboxSession(newSessionId(), userName, loggedInUser, new ArrayList<>(), MailboxConstants.DEFAULT_DELIMITER, type);
     }

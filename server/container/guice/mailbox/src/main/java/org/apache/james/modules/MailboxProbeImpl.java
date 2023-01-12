@@ -102,7 +102,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private void closeSession(MailboxSession session) {
         if (session != null) {
             mailboxManager.endProcessingRequest(session);
-            mailboxManager.logout(session);
         }
     }
 

@@ -94,7 +94,6 @@ public class DataProvisioner {
             .forEach(name ->  createSubSubMailboxes(mailboxManager, mailboxSession, name));
 
         mailboxManager.endProcessingRequest(mailboxSession);
-        mailboxManager.logout(mailboxSession);
     }
 
     private static void createSubSubMailboxes(MailboxManager mailboxManager,MailboxSession mailboxSession, String subFolderName) {

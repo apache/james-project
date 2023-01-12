@@ -128,10 +128,6 @@ public class MailboxAdapter implements Mailbox {
 
     @Override
     public void close() throws IOException {
-        try {
-            mailboxManager.logout(session);
-        } finally {
-            mailboxManager.endProcessingRequest(session);
-        }
+        mailboxManager.endProcessingRequest(session);
     }
 }

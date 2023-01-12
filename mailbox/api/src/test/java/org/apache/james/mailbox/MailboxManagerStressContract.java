@@ -74,7 +74,6 @@ public interface MailboxManagerStressContract<T extends MailboxManager> {
             }, new MailboxIdRegistrationKey(mailboxId)))
             .block();
         getManager().endProcessingRequest(session);
-        getManager().logout(session);
 
         final AtomicBoolean fail = new AtomicBoolean(false);
         final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<>();
@@ -102,7 +101,6 @@ public interface MailboxManagerStressContract<T extends MailboxManager> {
                         fail.set(true);
                     }
                     getManager().endProcessingRequest(mailboxSession);
-                    getManager().logout(mailboxSession);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fail.set(true);
