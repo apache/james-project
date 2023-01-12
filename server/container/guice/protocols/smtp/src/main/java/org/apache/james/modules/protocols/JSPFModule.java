@@ -20,17 +20,12 @@
 package org.apache.james.modules.protocols;
 
 import org.apache.james.jspf.impl.DNSServiceXBillImpl;
-import org.apache.james.smtpserver.fastfail.SPFHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
 public class JSPFModule extends AbstractModule {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JSPFModule.class);
 
     @Override
     protected void configure() {
@@ -40,6 +35,6 @@ public class JSPFModule extends AbstractModule {
     @Singleton
     @Provides
     public DNSServiceXBillImpl provideJSPFDNSService() {
-        return new DNSServiceXBillImpl(new SPFHandler.SPFLogger(LOGGER));
+        return new DNSServiceXBillImpl();
     }
 }
