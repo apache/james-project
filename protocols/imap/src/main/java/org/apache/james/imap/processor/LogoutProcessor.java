@@ -41,7 +41,6 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
     @Override
     protected Mono<Void> processRequestReactive(LogoutRequest request, ImapSession session, Responder responder) {
         MailboxSession mailboxSession = session.getMailboxSession();
-        getMailboxManager().logout(mailboxSession);
         return session.logout()
             .then(Mono.fromRunnable(() -> {
                 bye(responder);

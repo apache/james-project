@@ -104,7 +104,6 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
         mailboxManager.startProcessingRequest(mailboxSession);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
-        mailboxManager.logout(mailboxSession);
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 
@@ -119,7 +118,6 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
                 .rights(rights)
                 .asAddition()),
             mailboxSession);
-        mailboxManager.logout(mailboxSession);
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 

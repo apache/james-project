@@ -253,11 +253,6 @@ public class StoreMailboxManager implements MailboxManager {
         return sessionProvider.authenticate(givenUserid);
     }
 
-    @Override
-    public void logout(MailboxSession session) {
-        sessionProvider.logout(session);
-    }
-
     /**
      * Create a {@link MailboxManager} for the given Mailbox. By default this will return a {@link StoreMessageManager}. If
      * your implementation needs something different, just override this method

@@ -106,7 +106,6 @@ public class MailboxSession {
     private final SessionId sessionId;
     private final Username userName;
     private final Optional<Username> loggedInUser;
-    private boolean open = true;
     private final List<Locale> localePreferences;
     private final Map<Object, Object> attributes;
     private final char pathSeparator;
@@ -148,22 +147,6 @@ public class MailboxSession {
      */
     public SessionId getSessionId() {
         return sessionId;
-    }
-
-    /**
-     * Is this session open?
-     * 
-     * @return true if the session is open, false otherwise
-     */
-    public boolean isOpen() {
-        return open;
-    }
-
-    /**
-     * Closes this session.
-     */
-    public void close() {
-        open = false;
     }
 
     /**
@@ -250,6 +233,6 @@ public class MailboxSession {
         String tab = " ";
 
         return "MailboxSession ( " + "sessionId = "
-            + this.sessionId + tab + "open = " + this.open + tab + " )";
+            + this.sessionId + " )";
     }
 }

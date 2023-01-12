@@ -71,25 +71,4 @@ public interface SessionProvider {
      *             when the creation fails for other reasons
      */
     AuthorizationStep authenticate(Username givenUserid);
-
-    /**
-     * <p>
-     * Logs the session out, freeing any resources. Clients who open session
-     * should make best efforts to call this when the session is closed.
-     * </p>
-     * <p>
-     * Note that clients may not always be able to call logout (whether forced
-     * or not). Mailboxes that create sessions which are expensive to maintain
-     * <code>MUST</code> retain a reference and periodically check
-     * {@link MailboxSession#isOpen()}.
-     * </p>
-     * <p>
-     * Note that implementations much be aware that it is possible that this
-     * method may be called more than once with the same session.
-     * </p>
-     *
-     * @param session
-     *            not null
-     */
-    void logout(MailboxSession session);
 }

@@ -69,9 +69,6 @@ public class SystemMessageProcessor extends AbstractProcessor<SystemMessage> {
         final MailboxSession session = imapSession.getMailboxSession();
         if (session == null) {
             LOGGER.trace("No mailbox session so no force logout needed");
-        } else {
-            session.close();
-            mailboxManager.logout(session);
         }
     }
 
