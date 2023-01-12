@@ -168,63 +168,63 @@ class StoreMailboxManagerTest {
 
     @Test
     void loginShouldCreateSessionWhenGoodPassword() throws Exception {
-        MailboxSession expected = storeMailboxManager.login(CURRENT_USER, CURRENT_USER_PASSWORD);
+        MailboxSession expected = storeMailboxManager.authenticate(CURRENT_USER, CURRENT_USER_PASSWORD).withoutDelegation();
 
         assertThat(expected.getUser()).isEqualTo(CURRENT_USER);
     }
 
     @Test
     void loginShouldThrowWhenBadPassword() {
-        assertThatThrownBy(() -> storeMailboxManager.login(CURRENT_USER, BAD_PASSWORD))
+        assertThatThrownBy(() -> storeMailboxManager.authenticate(CURRENT_USER, BAD_PASSWORD).withoutDelegation())
             .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
     void loginAsOtherUserShouldNotCreateUserSessionWhenAdminWithBadPassword() {
-        assertThatThrownBy(() -> storeMailboxManager.loginAsOtherUser(ADMIN, BAD_PASSWORD, CURRENT_USER))
+        assertThatThrownBy(() -> storeMailboxManager.authenticate(ADMIN, BAD_PASSWORD).as(CURRENT_USER))
             .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
     void loginAsOtherUserShouldNotCreateUserSessionWhenNotAdmin() {
-        assertThatThrownBy(() -> storeMailboxManager.loginAsOtherUser(CURRENT_USER, CURRENT_USER_PASSWORD, UNKNOWN_USER))
+        assertThatThrownBy(() -> storeMailboxManager.authenticate(CURRENT_USER, CURRENT_USER_PASSWORD).as(UNKNOWN_USER))
             .isInstanceOf(ForbiddenDelegationException.class);
     }
 
     @Test
     void loginAsOtherUserShouldThrowBadCredentialWhenBadPasswordAndNotAdminUser() {
-        assertThatThrownBy(() -> storeMailboxManager.loginAsOtherUser(CURRENT_USER, BAD_PASSWORD, CURRENT_USER))
+        assertThatThrownBy(() -> storeMailboxManager.authenticate(CURRENT_USER, BAD_PASSWORD).as(CURRENT_USER))
             .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
     void loginAsOtherUserShouldThrowBadCredentialWhenBadPasswordNotAdminUserAndUnknownUser() {
-        assertThatThrownBy(() -> storeMailboxManager.loginAsOtherUser(CURRENT_USER, BAD_PASSWORD, UNKNOWN_USER))
+        assertThatThrownBy(() -> storeMailboxManager.authenticate(CURRENT_USER, BAD_PASSWORD).as(UNKNOWN_USER))
             .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
     void loginAsOtherUserShouldThrowBadCredentialsWhenBadPasswordAndUserDoesNotExists() {
-        assertThatThrownBy(() -> storeMailboxManager.loginAsOtherUser(ADMIN, BAD_PASSWORD, UNKNOWN_USER))
+        assertThatThrownBy(() -> storeMailboxManager.authenticate(ADMIN, BAD_PASSWORD).as(UNKNOWN_USER))
             .isInstanceOf(BadCredentialsException.class);
     }
 
     @Test
     void loginAsOtherUserShouldNotCreateUserSessionWhenDelegatedUserDoesNotExist() {
-        assertThatThrownBy(() -> storeMailboxManager.loginAsOtherUser(ADMIN, ADMIN_PASSWORD, UNKNOWN_USER))
+        assertThatThrownBy(() -> storeMailboxManager.authenticate(ADMIN, ADMIN_PASSWORD).as(UNKNOWN_USER))
             .isInstanceOf(UserDoesNotExistException.class);
     }
 
     @Test
     void loginAsOtherUserShouldCreateUserSessionWhenAdminWithGoodPassword() throws Exception {
-        MailboxSession expected = storeMailboxManager.loginAsOtherUser(ADMIN, ADMIN_PASSWORD, CURRENT_USER);
+        MailboxSession expected = storeMailboxManager.authenticate(ADMIN, ADMIN_PASSWORD).as(CURRENT_USER);
 
         assertThat(expected.getUser()).isEqualTo(CURRENT_USER);
     }
 
     @Test
     void loginAsOtherUserWithoutPasswordShouldCreateUserSession() throws MailboxException {
-        MailboxSession expected = storeMailboxManager.loginAsOtherUser(ADMIN, CURRENT_USER);
+        MailboxSession expected = storeMailboxManager.authenticate(ADMIN).as(CURRENT_USER);
 
         assertThat(expected.getUser()).isEqualTo(CURRENT_USER);
     }

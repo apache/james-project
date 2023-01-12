@@ -71,8 +71,9 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             if (!authFailure) {
                 final MailboxManager mailboxManager = getMailboxManager();
                 try {
-                    final MailboxSession mailboxSession = mailboxManager.login(authenticationAttempt.getAuthenticationId(),
-                        authenticationAttempt.getPassword());
+                    final MailboxSession mailboxSession = mailboxManager.authenticate(authenticationAttempt.getAuthenticationId(),
+                        authenticationAttempt.getPassword())
+                        .withoutDelegation();
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);

@@ -24,12 +24,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,8 +61,18 @@ public class XUserAuthenticationStrategyTest {
         when(mockedMailboxManager.createSystemSession(any()))
             .thenReturn(fakeMailboxSession);
 
-        when(mockedMailboxManager.login(any()))
-            .thenReturn(fakeMailboxSession);
+        when(mockedMailboxManager.authenticate(any()))
+            .thenReturn(new SessionProvider.AuthorizationStep() {
+                @Override
+                public MailboxSession as(Username other) {
+                    throw new NotImplementedException();
+                }
+
+                @Override
+                public MailboxSession withoutDelegation() {
+                    return fakeMailboxSession;
+                }
+            });
 
         when(mockedRequest.requestHeaders())
             .thenReturn(mockedHeaders);

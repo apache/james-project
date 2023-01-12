@@ -58,7 +58,7 @@ public class ManagerTestProvisionner {
     public ManagerTestProvisionner(IntegrationResources<?> integrationResources) throws Exception {
         this.integrationResources = integrationResources;
 
-        session = integrationResources.getMailboxManager().login(USER, USER_PASS);
+        session = integrationResources.getMailboxManager().authenticate(USER, USER_PASS).withoutDelegation();
         subFolder = new MailboxPath(INBOX, "INBOX.SUB");
 
         MaxQuotaManager maxQuotaManager = integrationResources.getMaxQuotaManager();

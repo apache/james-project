@@ -59,40 +59,50 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     @Override
-    public MailboxSession login(Username userName) {
-        return createSession(userName, Optional.of(userName), MailboxSession.SessionType.System);
+    public AuthorizationStep authenticate(Username thisUserId, String passwd) {
+        return new AuthorizationStep() {
+            @Override
+            public MailboxSession as(Username otherUserId) throws MailboxException {
+                if (!isValidLogin(thisUserId, passwd)) {
+                    throw new BadCredentialsException();
+                }
+                return authenticate(thisUserId).as(otherUserId);
+            }
+
+            @Override
+            public MailboxSession withoutDelegation() throws MailboxException {
+                if (isValidLogin(thisUserId, passwd)) {
+                    return createSession(thisUserId, Optional.ofNullable(thisUserId), MailboxSession.SessionType.User);
+                } else {
+                    throw new BadCredentialsException();
+                }
+            }
+        };
     }
 
     @Override
-    public MailboxSession login(Username userid, String passwd) throws MailboxException {
-        if (isValidLogin(userid, passwd)) {
-            return createSession(userid, Optional.ofNullable(userid), MailboxSession.SessionType.User);
-        } else {
-            throw new BadCredentialsException();
-        }
-    }
+    public AuthorizationStep authenticate(Username givenUserid) {
+        return new AuthorizationStep() {
+            @Override
+            public MailboxSession as(Username otherUserId) throws MailboxException {
+                Authorizator.AuthorizationState authorizationState = authorizator.user(givenUserid).canLoginAs(otherUserId);
+                switch (authorizationState) {
+                    case ALLOWED:
+                        return createSession(otherUserId, Optional.of(givenUserid), MailboxSession.SessionType.System);
+                    case FORBIDDEN:
+                        throw new ForbiddenDelegationException(givenUserid, otherUserId);
+                    case UNKNOWN_USER:
+                        throw new UserDoesNotExistException(otherUserId);
+                    default:
+                        throw new RuntimeException("Unknown AuthorizationState " + authorizationState);
+                }
+            }
 
-    @Override
-    public MailboxSession loginAsOtherUser(Username thisUserId, String passwd, Username otherUserId) throws MailboxException {
-        if (!isValidLogin(thisUserId, passwd)) {
-            throw new BadCredentialsException();
-        }
-        return loginAsOtherUser(thisUserId, otherUserId);
-    }
-
-    @Override
-    public MailboxSession loginAsOtherUser(Username givenUserid, Username otherUserId) throws MailboxException {
-        Authorizator.AuthorizationState authorizationState = authorizator.user(givenUserid).canLoginAs(otherUserId);
-        switch (authorizationState) {
-            case ALLOWED:
-                return createSession(otherUserId, Optional.of(givenUserid), MailboxSession.SessionType.System);
-            case FORBIDDEN:
-                throw new ForbiddenDelegationException(givenUserid, otherUserId);
-            case UNKNOWN_USER:
-                throw new UserDoesNotExistException(otherUserId);
-            default:
-                throw new RuntimeException("Unknown AuthorizationState " + authorizationState);
-        }
+            @Override
+            public MailboxSession withoutDelegation() {
+                return createSession(givenUserid, Optional.of(givenUserid), MailboxSession.SessionType.System);
+            }
+        };
     }
 
     @Override

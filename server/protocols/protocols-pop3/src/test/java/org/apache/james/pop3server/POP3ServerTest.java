@@ -272,7 +272,7 @@ public class POP3ServerTest {
 
         pop3Client.disconnect();
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar");
+        MailboxSession session = mailboxManager.authenticate(username, "bar").withoutDelegation();
         if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
         }
@@ -352,7 +352,7 @@ public class POP3ServerTest {
         Username username = Username.of("foo2");
         usersRepository.addUser(username, "bar2");
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar2");
+        MailboxSession session = mailboxManager.authenticate(username, "bar2").withoutDelegation();
         mailboxManager.createMailbox(mailboxPath, session);
         byte[] content = ("Return-path: return@test.com\r\n"
             + "Content-Transfer-Encoding: plain\r\n"
@@ -389,7 +389,7 @@ public class POP3ServerTest {
         Username username = Username.of("foo2");
         usersRepository.addUser(username, "bar2");
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar2");
+        MailboxSession session = mailboxManager.authenticate(username, "bar2").withoutDelegation();
         mailboxManager.createMailbox(mailboxPath, session);
         byte[] content = ("Return-path: return@test.com\r\n"
             + "Content-Transfer-Encoding: plain\r\n"
@@ -426,7 +426,7 @@ public class POP3ServerTest {
         Username username = Username.of("foo2");
         usersRepository.addUser(username, "bar2");
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar2");
+        MailboxSession session = mailboxManager.authenticate(username, "bar2").withoutDelegation();
         mailboxManager.createMailbox(mailboxPath, session);
         byte[] content = ("Return-path: return@test.com\r\n"
             + "Content-Transfer-Encoding: plain\r\n"
@@ -469,7 +469,7 @@ public class POP3ServerTest {
         usersRepository.addUser(username, "bar2");
 
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar2");
+        MailboxSession session = mailboxManager.authenticate(username, "bar2").withoutDelegation();
 
         if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -556,7 +556,7 @@ public class POP3ServerTest {
         usersRepository.addUser(username, "bar2");
 
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar2");
+        MailboxSession session = mailboxManager.authenticate(username, "bar2").withoutDelegation();
 
         if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -602,7 +602,7 @@ public class POP3ServerTest {
         usersRepository.addUser(username, "bar2");
 
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar2");
+        MailboxSession session = mailboxManager.authenticate(username, "bar2").withoutDelegation();
 
         if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -652,7 +652,7 @@ public class POP3ServerTest {
         usersRepository.addUser(username, "bar2");
 
         MailboxPath mailboxPath = MailboxPath.inbox(username);
-        MailboxSession session = mailboxManager.login(username, "bar2");
+        MailboxSession session = mailboxManager.authenticate(username, "bar2").withoutDelegation();
 
         if (!mailboxManager.mailboxExists(mailboxPath, session).block()) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -861,7 +861,7 @@ public class POP3ServerTest {
 
         Username username = Username.of("foo6");
         usersRepository.addUser(username, "bar6");
-        MailboxSession session = mailboxManager.login(username, "bar6");
+        MailboxSession session = mailboxManager.authenticate(username, "bar6").withoutDelegation();
 
         MailboxPath mailboxPath = MailboxPath.inbox(username);
 

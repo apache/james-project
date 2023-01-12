@@ -31,6 +31,7 @@ import org.apache.james.jmap.draft.model.AttachmentAccessToken;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
@@ -57,7 +58,7 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
             .map(Username::of)
-            .map(mailboxManager::login);
+            .map(Throwing.function(user -> mailboxManager.authenticate(user).withoutDelegation()));
     }
 
     @Override

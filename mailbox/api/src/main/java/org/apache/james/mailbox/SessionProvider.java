@@ -23,8 +23,10 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 
 public interface SessionProvider {
-    interface DelegationLogin {
+    interface AuthorizationStep {
         MailboxSession as(Username other) throws MailboxException;
+
+        MailboxSession withoutDelegation() throws MailboxException;
     }
 
     /**
@@ -38,7 +40,7 @@ public interface SessionProvider {
      * Creates a new system session.<br>
      * A system session is intended to be used for programmatic access.<br>
      *
-     * Use {@link #login(Username, String)} when accessing this API from a
+     * Use {@link #authenticate(Username)} when accessing this API from a
      * protocol.
      *
      * @param userName
@@ -46,28 +48,6 @@ public interface SessionProvider {
      * @return <code>MailboxSession</code>, not null
      */
     MailboxSession createSystemSession(Username userName);
-
-    /**
-     * Creates a session for the given user.
-     *
-     * Use {@link #createSystemSession(Username)} for interactions not done by the user himself.
-     */
-    MailboxSession login(Username userName);
-
-    /**
-     * Autenticates the given user against the given password.<br>
-     * When authenticated and authorized, a session will be supplied
-     *
-     * @param userid
-     *            user name
-     * @param passwd
-     *            password supplied
-     * @return a <code>MailboxSession</code> when the user is authenticated and
-     *            authorized to access
-     * @throws MailboxException
-     *            when the creation fails for other reasons
-     */
-    MailboxSession login(Username userid, String passwd) throws MailboxException;
 
     /**
      * Authenticates the given user against the given password,
@@ -78,37 +58,26 @@ public interface SessionProvider {
      *            username of the given user, matching the credentials
      * @param passwd
      *            password supplied for the given user
-     * @param otherUserId
-     *            username of the real user
      * @return a <code>MailboxSession</code> for the real user
      *            when the given user is authenticated and authorized to access
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
-    MailboxSession loginAsOtherUser(Username givenUserid, String passwd, Username otherUserId) throws MailboxException;
 
-    default DelegationLogin authenticate(Username givenUserid, String passwd) {
-        return otherUserId -> loginAsOtherUser(givenUserid, passwd, otherUserId);
-    }
+    AuthorizationStep authenticate(Username givenUserid, String passwd);
 
     /**
      * Checking given user can log in as another user
      * When delegated and authorized, a session for the other user will be supplied
      *
      * @param givenUserid
-     *            username of the given user, matching the credentials
-     * @param otherUserId
-     *            username of the real user
+     *            username of the given user
      * @return a <code>MailboxSession</code> for the real user
      *            when the given user is authenticated and authorized to access
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
-    MailboxSession loginAsOtherUser(Username givenUserid, Username otherUserId) throws MailboxException;
-
-    default DelegationLogin authenticate(Username givenUserid) {
-        return otherUserId -> loginAsOtherUser(givenUserid, otherUserId);
-    }
+    AuthorizationStep authenticate(Username givenUserid);
 
     /**
      * <p>

@@ -72,8 +72,8 @@ public class MailboxFactoryTest {
 
         user = ManagerTestProvisionner.USER;
         otherUser = OTHER_USER;
-        mailboxSession = mailboxManager.login(user, ManagerTestProvisionner.USER_PASS);
-        otherMailboxSession = mailboxManager.login(otherUser, ManagerTestProvisionner.OTHER_USER_PASS);
+        mailboxSession = mailboxManager.authenticate(user, ManagerTestProvisionner.USER_PASS).withoutDelegation();
+        otherMailboxSession = mailboxManager.authenticate(otherUser, ManagerTestProvisionner.OTHER_USER_PASS).withoutDelegation();
         sut = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
     }
 
