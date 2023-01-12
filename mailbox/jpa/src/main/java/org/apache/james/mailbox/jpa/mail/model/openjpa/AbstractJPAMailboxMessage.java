@@ -529,12 +529,16 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     public List<MessageAttachmentMetadata> getAttachments() {
         try {
             AtomicInteger counter = new AtomicInteger(0);
-            return new MessageParser().retrieveAttachments(getFullContent())
+            MessageParser.ParsingResult parsingResult = new MessageParser().retrieveAttachments(getFullContent());
+            ImmutableList<MessageAttachmentMetadata> result = parsingResult
+                .getAttachments()
                 .stream()
                 .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
                     attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet()), getMessageId()))
                     .sneakyThrow())
                 .collect(ImmutableList.toImmutableList());
+            parsingResult.dispose();
+            return result;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
