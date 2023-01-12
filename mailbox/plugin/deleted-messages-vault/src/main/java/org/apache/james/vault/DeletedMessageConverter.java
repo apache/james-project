@@ -52,7 +52,7 @@ class DeletedMessageConverter {
 
         Optional<Message> mimeMessage = parseMessage(message);
 
-        return DeletedMessage.builder()
+        DeletedMessage deletedMessage = DeletedMessage.builder()
             .messageId(deletedMessageMailboxContext.getMessageId())
             .originMailboxes(deletedMessageMailboxContext.getOwnerMailboxes())
             .user(retrieveOwner(deletedMessageMailboxContext))
@@ -64,6 +64,8 @@ class DeletedMessageConverter {
             .size(message.getFullContentOctets())
             .subject(mimeMessage.map(Message::getSubject))
             .build();
+        mimeMessage.ifPresent(Message::dispose);
+        return deletedMessage;
     }
 
     private Optional<Message> parseMessage(org.apache.james.mailbox.store.mail.model.Message message) throws IOException {

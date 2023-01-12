@@ -35,7 +35,6 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
-import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
