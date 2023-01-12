@@ -124,7 +124,6 @@ class MailboxEventAnalyserTest {
     private static final Username USER = Username.of("user");
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
     private static final MailboxSession OTHER_MAILBOX_SESSION = MailboxSessionUtil.create(USER);
-    private static final char PATH_DELIMITER = '.';
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", USER, "name");
     private static final TestId MAILBOX_ID = TestId.of(36);
     private static final UidValidity UID_VALIDITY = UidValidity.of(1024);
@@ -148,7 +147,6 @@ class MailboxEventAnalyserTest {
 
         MailboxManager mailboxManager = mock(MailboxManager.class);
         MessageManager messageManager = mock(MessageManager.class);
-        when(mailboxManager.getDelimiter()).thenReturn(PATH_DELIMITER);
         when(mailboxManager.getMailbox(any(MailboxId.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))

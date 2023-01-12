@@ -30,13 +30,6 @@ public interface SessionProvider {
     }
 
     /**
-     * Return the delimiter to use for folders
-     *
-     * @return delimiter
-     */
-    char getDelimiter();
-
-    /**
      * Creates a new system session.<br>
      * A system session is intended to be used for programmatic access.<br>
      *

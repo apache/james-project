@@ -49,11 +49,6 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     @Override
-    public char getDelimiter() {
-        return MailboxConstants.DEFAULT_DELIMITER;
-    }
-
-    @Override
     public MailboxSession createSystemSession(Username userName) {
         return createSession(userName, Optional.empty(), MailboxSession.SessionType.System);
     }
@@ -113,7 +108,7 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     private MailboxSession createSession(Username userName, Optional<Username> loggedInUser, MailboxSession.SessionType type) {
-        return new MailboxSession(newSessionId(), userName, loggedInUser, new ArrayList<>(), getDelimiter(), type);
+        return new MailboxSession(newSessionId(), userName, loggedInUser, new ArrayList<>(), MailboxConstants.DEFAULT_DELIMITER, type);
     }
 
     private MailboxSession.SessionId newSessionId() {
