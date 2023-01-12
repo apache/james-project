@@ -70,6 +70,10 @@ object ErrorCode {
     override def code: String = "accountNotFound"
   }
 
+  case object Forbidden extends ErrorCode {
+    override def code: String = "forbidden"
+  }
+
   case object InvalidResultReference extends ErrorCode {
     override def code: String = "invalidResultReference"
   }

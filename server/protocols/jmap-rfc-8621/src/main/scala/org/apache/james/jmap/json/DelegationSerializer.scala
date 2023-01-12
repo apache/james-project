@@ -19,12 +19,13 @@
 
 package org.apache.james.jmap.json
 
+import eu.timepit.refined
 import eu.timepit.refined.refineV
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.IdConstraint
-import org.apache.james.jmap.core.{SetError, UuidState}
-import org.apache.james.jmap.delegation.{DelegateCreationId, DelegateCreationRequest, DelegateCreationResponse, DelegateSetRequest, DelegateSetResponse, DelegationId}
-import play.api.libs.json.{Format, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
+import org.apache.james.jmap.core.{Properties, SetError, UuidState}
+import org.apache.james.jmap.delegation.{Delegate, DelegateCreationId, DelegateCreationRequest, DelegateCreationResponse, DelegateGet, DelegateGetRequest, DelegateGetResponse, DelegateIds, DelegateNotFound, DelegateSetRequest, DelegateSetResponse, DelegationId, UnparsedDelegateId}
+import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
 
 object DelegationSerializer {
   private implicit val delegationIdFormat: Format[DelegationId] = Json.valueFormat[DelegationId]
@@ -48,8 +49,32 @@ object DelegationSerializer {
     }
   private implicit val delegateSetRequestReads: Reads[DelegateSetRequest] = Json.reads[DelegateSetRequest]
   private implicit val delegateCreationRequest: Reads[DelegateCreationRequest] = Json.reads[DelegateCreationRequest]
-
+  private implicit val unparsedDelegateIdReads: Reads[UnparsedDelegateId] = {
+    case JsString(string) => refined.refineV[IdConstraint](string)
+      .fold(e => JsError(s"delegate id does not match Id constraints: $e"),
+        id => JsSuccess(UnparsedDelegateId(id)))
+    case _ => JsError("delegate id needs to be represented by a JsString")
+  }
+  private implicit val delegateIdsReads: Reads[DelegateIds] = Json.valueReads[DelegateIds]
+  private implicit val delegateGetRequestReads: Reads[DelegateGetRequest] = Json.reads[DelegateGetRequest]
+  private implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
+  private implicit val delegateWrites: Writes[Delegate] = Json.writes[Delegate]
+  private implicit val delegateNotFoundWrites: Writes[DelegateNotFound] =
+    notFound => JsArray(notFound.value.toList.map(id => JsString(id.id.value)))
+  private implicit val delegateGetResponseWrites: Writes[DelegateGetResponse] = Json.writes[DelegateGetResponse]
   def serializeDelegateSetResponse(response: DelegateSetResponse): JsObject = Json.toJsObject(response)
   def deserializeDelegateSetRequest(input: JsValue): JsResult[DelegateSetRequest] = Json.fromJson[DelegateSetRequest](input)
   def deserializeDelegateCreationRequest(input: JsValue): JsResult[DelegateCreationRequest] = Json.fromJson[DelegateCreationRequest](input)
+  def deserializeDelegateGetRequest(input: JsValue): JsResult[DelegateGetRequest] = Json.fromJson[DelegateGetRequest](input)
+
+  def serialize(delegateGetResponse: DelegateGetResponse, properties: Properties): JsValue =
+    Json.toJson(delegateGetResponse)
+      .transform((__ \ "list").json.update {
+        case JsArray(underlying) => JsSuccess(JsArray(underlying.map {
+          case jsonObject: JsObject =>
+            DelegateGet.propertiesFiltered(properties)
+              .filter(jsonObject)
+          case jsValue => jsValue
+        }))
+      }).get
 }

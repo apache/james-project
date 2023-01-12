@@ -31,6 +31,7 @@ import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SFlux
 
 case class AccountNotFoundException() extends IllegalArgumentException
+case class ForbiddenException() extends RuntimeException
 
 case class InvocationWithContext(invocation: Invocation, processingContext: ProcessingContext) {
   def recordInvocation: InvocationWithContext = InvocationWithContext(invocation, processingContext.recordInvocation(invocation))
@@ -65,7 +66,10 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
 
     val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.error[InvocationWithContext](e), r => r))
       .onErrorResume[InvocationWithContext] {
-        case e: AccountNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.AccountNotFound, invocation.invocation.methodCallId), invocation.processingContext))
+        case _: AccountNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.AccountNotFound, invocation.invocation.methodCallId), invocation.processingContext))
+        case _: ForbiddenException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.Forbidden,
+          "Access to other accounts is forbidden",
+          invocation.invocation.methodCallId), invocation.processingContext))
         case e: UnsupportedRequestParameterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
           ErrorCode.InvalidArguments,
           s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
