@@ -119,25 +119,28 @@ public interface MessageStorer {
         }
 
         private Mono<List<MessageAttachmentMetadata>> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) {
-            List<ParsedAttachment> attachments = extractAttachments(messageContent, maybeMessage);
+            MessageParser.ParsingResult attachments = extractAttachments(messageContent, maybeMessage);
             return attachmentMapperFactory.getAttachmentMapper(session)
-                .storeAttachmentsReactive(attachments, messageId);
+                .storeAttachmentsReactive(attachments.getAttachments(), messageId)
+                .doFinally(any -> attachments.dispose());
         }
 
-        private List<ParsedAttachment> extractAttachments(Content contentIn, Optional<Message> maybeMessage) {
+        private MessageParser.ParsingResult extractAttachments(Content contentIn, Optional<Message> maybeMessage) {
             return maybeMessage.map(message -> {
                 try {
-                    return messageParser.retrieveAttachments(message);
+                    return new MessageParser.ParsingResult(messageParser.retrieveAttachments(message), () -> {
+
+                    });
                 } catch (Exception e) {
                     LOGGER.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
-                    return ImmutableList.<ParsedAttachment>of();
+                    return MessageParser.ParsingResult.EMPTY;
                 }
             }).orElseGet(() -> {
                 try (InputStream inputStream = contentIn.getInputStream()) {
                     return messageParser.retrieveAttachments(inputStream);
                 } catch (Exception e) {
                     LOGGER.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
-                    return ImmutableList.of();
+                    return MessageParser.ParsingResult.EMPTY;
                 }
             });
         }
