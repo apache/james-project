@@ -27,14 +27,13 @@ import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DelegateGetMethodContract.BOB_ACCOUNT_ID
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.utils.DataProbeImpl
-import org.junit.jupiter.api.{BeforeEach, Disabled, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 
 object DelegateGetMethodContract {
   val BOB_ACCOUNT_ID: String = Fixture.ACCOUNT_ID
@@ -412,7 +411,7 @@ trait DelegateGetMethodContract {
          |            "error",
          |            {
          |                "type": "forbidden",
-         |                "description": "Access to other accounts is forbidden"
+         |                "description": "Access to other accounts settings is forbidden"
          |            },
          |            "c1"
          |        ]

@@ -413,7 +413,7 @@ trait DelegatedAccountGetMethodContract {
          |            "error",
          |            {
          |                "type": "forbidden",
-         |                "description": "Access to other accounts is forbidden"
+         |                "description": "Access to other accounts settings is forbidden"
          |            },
          |            "c1"
          |        ]

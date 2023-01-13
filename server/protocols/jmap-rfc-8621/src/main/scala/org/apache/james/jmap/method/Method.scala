@@ -22,6 +22,7 @@ import org.apache.james.jmap.api.exception.ChangeNotFoundException
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, SessionTranslator}
+import org.apache.james.jmap.delegation.ForbiddenAccountManagementException
 import org.apache.james.jmap.mail.{IdentityIdNotFoundException, RequestTooLargeException, UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.mailbox.MailboxSession
@@ -67,8 +68,8 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
     val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.error[InvocationWithContext](e), r => r))
       .onErrorResume[InvocationWithContext] {
         case _: AccountNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.AccountNotFound, invocation.invocation.methodCallId), invocation.processingContext))
-        case _: ForbiddenException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.Forbidden,
-          "Access to other accounts is forbidden",
+        case _: ForbiddenAccountManagementException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.Forbidden,
+          "Access to other accounts settings is forbidden",
           invocation.invocation.methodCallId), invocation.processingContext))
         case e: UnsupportedRequestParameterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
           ErrorCode.InvalidArguments,
