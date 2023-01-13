@@ -58,8 +58,9 @@ public interface EventBus {
     default Publisher<Registration> register(EventListener.ReactiveEventListener listener, Collection<RegistrationKey> keys) {
         return Flux.fromIterable(keys)
             .concatMap(key -> register(listener, key))
-            .reduce((reg1, reg2) -> () -> Mono.from(reg1.unregister())
-                .then(Mono.from(reg2.unregister())));
+            .reduce((reg1, reg2) -> () -> Flux.merge(reg1.unregister(), reg2.unregister()))
+            .map(unRegistrationWithMergedFlux -> () -> Mono.from(Flux.from(unRegistrationWithMergedFlux.unregister())
+                .then()));
     }
 
     Registration register(EventListener.ReactiveEventListener listener, Group group) throws GroupAlreadyRegistered;
