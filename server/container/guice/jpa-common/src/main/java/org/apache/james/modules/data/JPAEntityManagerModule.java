@@ -40,7 +40,7 @@ public class JPAEntityManagerModule extends AbstractModule {
     @Singleton
     public EntityManagerFactory provideEntityManagerFactory(JPAConfiguration jpaConfiguration) {
         HashMap<String, String> properties = new HashMap<>();
-        
+
         properties.put("openjpa.ConnectionDriverName", jpaConfiguration.getDriverName());
         properties.put("openjpa.ConnectionURL", jpaConfiguration.getDriverURL());
         jpaConfiguration.getCredential()
@@ -55,6 +55,9 @@ public class JPAEntityManagerModule extends AbstractModule {
             .ifPresent(timeoutSecond -> connectionFactoryProperties.add("ValidationTimeout=" + timeoutSecond * 1000));
         jpaConfiguration.getValidationQuery()
             .ifPresent(validationQuery -> connectionFactoryProperties.add("ValidationSQL='" + validationQuery + "'"));
+        jpaConfiguration.getMaxConnections().ifPresent(maxConnections ->
+                connectionFactoryProperties.add("MaxTotal=" + maxConnections)
+        );
 
         properties.put("openjpa.ConnectionFactoryProperties", Joiner.on(", ").join(connectionFactoryProperties));
 
@@ -71,6 +74,7 @@ public class JPAEntityManagerModule extends AbstractModule {
                 .testOnBorrow(dataSource.getBoolean("datasource.testOnBorrow", false))
                 .validationQueryTimeoutSec(dataSource.getInteger("datasource.validationQueryTimeoutSec", null))
                 .validationQuery(dataSource.getString("datasource.validationQuery", null))
+                .maxConnections(dataSource.getInteger("datasource.maxTotal",null))
                 .username(dataSource.getString("database.username"))
                 .password(dataSource.getString("database.password"))
                 .build();

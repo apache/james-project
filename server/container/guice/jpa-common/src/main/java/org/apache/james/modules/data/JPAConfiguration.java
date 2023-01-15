@@ -19,6 +19,7 @@
 package org.apache.james.modules.data;
 
 import static org.apache.james.modules.data.JPAConfiguration.Credential.NO_CREDENTIAL;
+import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_MAX_CONNECTIONS;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_TEST_ON_BORROW;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_VALIDATION_QUERY;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_VALIDATION_QUERY_TIMEOUT_SEC;
@@ -33,7 +34,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class JPAConfiguration {
-
     public static class Credential {
         private static final Logger LOGGER = LoggerFactory.getLogger(Credential.class);
         static final Optional<Credential> NO_CREDENTIAL = Optional.empty();
@@ -80,6 +80,7 @@ public class JPAConfiguration {
         static final Optional<Boolean> NO_TEST_ON_BORROW = Optional.empty();
         static final Optional<Integer> NO_VALIDATION_QUERY_TIMEOUT_SEC = Optional.empty();
         static final Optional<String> NO_VALIDATION_QUERY = Optional.empty();
+        static final Optional<Integer> NO_MAX_CONNECTIONS = Optional.empty();
 
         private final String driverName;
         private final String driverURL;
@@ -88,26 +89,29 @@ public class JPAConfiguration {
         private Optional<Boolean> testOnBorrow;
         private Optional<Integer> validationQueryTimeoutSec;
         private Optional<String> validationQuery;
+        private Optional<Integer> maxConnections;
 
 
         private ReadyToBuild(String driverName, String driverURL, Optional<Credential> credential,
                             Optional<Boolean> testOnBorrow, Optional<Integer> validationQueryTimeoutSec,
-                            Optional<String> validationQuery) {
+                            Optional<String> validationQuery,Optional<Integer> maxConnections
+        ) {
             this.driverName = driverName;
             this.driverURL = driverURL;
             this.credential = credential;
             this.testOnBorrow = testOnBorrow;
             this.validationQueryTimeoutSec = validationQueryTimeoutSec;
             this.validationQuery = validationQuery;
+            this.maxConnections = maxConnections;
         }
 
         public JPAConfiguration build() {
-            return new JPAConfiguration(driverName, driverURL, credential, testOnBorrow, validationQueryTimeoutSec, validationQuery);
+            return new JPAConfiguration(driverName, driverURL, credential, testOnBorrow, validationQueryTimeoutSec, validationQuery, maxConnections);
         }
 
         public RequirePassword username(String username) {
             return password -> new ReadyToBuild(driverName, driverURL, Credential.of(username, password),
-                testOnBorrow, validationQueryTimeoutSec, validationQuery);
+                testOnBorrow, validationQueryTimeoutSec, validationQuery, maxConnections);
         }
 
         public ReadyToBuild testOnBorrow(Boolean testOnBorrow) {
@@ -124,6 +128,11 @@ public class JPAConfiguration {
             this.validationQuery = Optional.ofNullable(validationQuery);
             return this;
         }
+
+        public ReadyToBuild maxConnections(Integer maxConnections) {
+            this.maxConnections = Optional.ofNullable(maxConnections);
+            return this;
+        }
     }
 
     @FunctionalInterface
@@ -133,7 +142,7 @@ public class JPAConfiguration {
 
     public static RequireDriverName builder() {
         return driverName -> driverURL -> new ReadyToBuild(driverName, driverURL, NO_CREDENTIAL, NO_TEST_ON_BORROW,
-            NO_VALIDATION_QUERY_TIMEOUT_SEC, NO_VALIDATION_QUERY);
+            NO_VALIDATION_QUERY_TIMEOUT_SEC, NO_VALIDATION_QUERY, NO_MAX_CONNECTIONS);
     }
 
     private final String driverName;
@@ -142,14 +151,17 @@ public class JPAConfiguration {
     private final Optional<Integer> validationQueryTimeoutSec;
     private final Optional<Credential> credential;
     private final Optional<String> validationQuery;
+    private final Optional<Integer> maxConnections;
 
     @VisibleForTesting
     JPAConfiguration(String driverName, String driverURL, Optional<Credential> credential, Optional<Boolean> testOnBorrow,
-                     Optional<Integer> validationQueryTimeoutSec, Optional<String> validationQuery) {
+                     Optional<Integer> validationQueryTimeoutSec, Optional<String> validationQuery, Optional<Integer> maxConnections) {
         Preconditions.checkNotNull(driverName, "driverName cannot be null");
         Preconditions.checkNotNull(driverURL, "driverURL cannot be null");
         validationQueryTimeoutSec.ifPresent(timeoutInSec ->
             Preconditions.checkArgument(timeoutInSec > 0, "validationQueryTimeoutSec is required to be greater than 0"));
+        maxConnections.ifPresent(maxCon ->
+            Preconditions.checkArgument(maxCon == -1 || maxCon > 0, "maxConnections is required to be -1 (no limit) or  greater than 0"));
 
         this.driverName = driverName;
         this.driverURL = driverURL;
@@ -157,6 +169,7 @@ public class JPAConfiguration {
         this.testOnBorrow = testOnBorrow;
         this.validationQueryTimeoutSec = validationQueryTimeoutSec;
         this.validationQuery = validationQuery;
+        this.maxConnections = maxConnections;
     }
 
     public String getDriverName() {
@@ -181,5 +194,10 @@ public class JPAConfiguration {
 
     public Optional<Credential> getCredential() {
         return credential;
+    }
+
+
+    public Optional<Integer> getMaxConnections() {
+        return maxConnections;
     }
 }

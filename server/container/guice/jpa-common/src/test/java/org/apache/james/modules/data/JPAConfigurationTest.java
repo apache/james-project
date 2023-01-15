@@ -32,6 +32,7 @@ class JPAConfigurationTest {
     private static final boolean TEST_ON_BORROW = true;
     private static final String VALIDATION_QUERY = "validationQuery";
     private static final int VALIDATION_TIMEOUT_SEC = 1;
+    private static final int MAX_CONNECTIONS = 5;
     private static final String USER_NAME = "username";
     private static final String PASSWORD = "password";
     private static final String EMPTY_STRING = "";
@@ -46,6 +47,7 @@ class JPAConfigurationTest {
             .validationQueryTimeoutSec(VALIDATION_TIMEOUT_SEC)
             .username(USER_NAME)
             .password(PASSWORD)
+            .maxConnections(MAX_CONNECTIONS)
             .build();
 
         SoftAssertions.assertSoftly(softly -> {
@@ -55,9 +57,10 @@ class JPAConfigurationTest {
             softly.assertThat(configuration.getValidationQuery()).contains(VALIDATION_QUERY);
             softly.assertThat(configuration.getValidationQueryTimeoutSec()).contains(VALIDATION_TIMEOUT_SEC);
             softly.assertThat(configuration.getCredential()).hasValueSatisfying(credential -> {
-                    softly.assertThat(credential.getPassword()).isEqualTo(PASSWORD);
-                    softly.assertThat(credential.getUsername()).isEqualTo(USER_NAME);
-                });
+                softly.assertThat(credential.getPassword()).isEqualTo(PASSWORD);
+                softly.assertThat(credential.getUsername()).isEqualTo(USER_NAME);
+            });
+            softly.assertThat(configuration.getMaxConnections()).contains(MAX_CONNECTIONS);
         });
     }
 
@@ -76,6 +79,7 @@ class JPAConfigurationTest {
             softly.assertThat(configuration.getValidationQuery()).isEmpty();
             softly.assertThat(configuration.getValidationQueryTimeoutSec()).isEmpty();
             softly.assertThat(configuration.getCredential()).isEmpty();
+            softly.assertThat(configuration.getMaxConnections()).isEmpty();
         });
     }
 
@@ -88,6 +92,47 @@ class JPAConfigurationTest {
                 .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("validationQueryTimeoutSec is required to be greater than 0");
+    }
+
+    @Test
+    void buildShouldThrowWhenMaxConnectionIsZero() {
+        assertThatThrownBy(() -> JPAConfiguration.builder()
+                .driverName(DRIVER_NAME)
+                .driverURL(DRIVER_URL)
+                .maxConnections(0)
+                .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("maxConnections is required to be -1 (no limit) or  greater than 0");
+    }
+    @Test
+    void buildShouldThrowWhenMaxConnectionIsLesThanMinusOne() {
+        assertThatThrownBy(() -> JPAConfiguration.builder()
+                .driverName(DRIVER_NAME)
+                .driverURL(DRIVER_URL)
+                .maxConnections(-10)
+                .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("maxConnections is required to be -1 (no limit) or  greater than 0");
+    }
+
+    @Test
+    void buildShouldBuildWhenMaxConnectionIsMinusOne() {
+        JPAConfiguration configuration = JPAConfiguration.builder()
+                .driverName(DRIVER_NAME)
+                .driverURL(DRIVER_URL)
+                .maxConnections(-1)
+                .build();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(configuration.getDriverName()).isEqualTo(DRIVER_NAME);
+            softly.assertThat(configuration.getDriverURL()).isEqualTo(DRIVER_URL);
+
+            softly.assertThat(configuration.isTestOnBorrow()).isEmpty();
+            softly.assertThat(configuration.getValidationQuery()).isEmpty();
+            softly.assertThat(configuration.getValidationQueryTimeoutSec()).isEmpty();
+            softly.assertThat(configuration.getCredential()).isEmpty();
+            softly.assertThat(configuration.getMaxConnections()).contains(-1);
+        });
     }
 
     @Test
