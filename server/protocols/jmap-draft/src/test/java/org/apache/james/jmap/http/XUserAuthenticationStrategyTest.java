@@ -24,6 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.function.Predicate;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
@@ -71,6 +73,11 @@ public class XUserAuthenticationStrategyTest {
                 @Override
                 public MailboxSession withoutDelegation() {
                     return fakeMailboxSession;
+                }
+
+                @Override
+                public MailboxSession forMatchingUser(Predicate<Username> other) throws MailboxException {
+                    throw new NotImplementedException();
                 }
             });
 

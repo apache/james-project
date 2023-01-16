@@ -78,7 +78,7 @@ public class SessionProviderImpl implements SessionProvider {
 
             @Override
             public MailboxSession forMatchingUser(Predicate<Username> otherPredicate) throws MailboxException {
-                return authorizator.authorizedUsers(thisUserId)
+                return authorizator.delegatedUsers(thisUserId)
                     .stream()
                     .filter(otherPredicate)
                     .findFirst()
@@ -118,7 +118,7 @@ public class SessionProviderImpl implements SessionProvider {
 
             @Override
             public MailboxSession forMatchingUser(Predicate<Username> otherPredicate) throws MailboxException {
-                return authorizator.authorizedUsers(givenUserid)
+                return authorizator.delegatedUsers(givenUserid)
                     .stream()
                     .filter(otherPredicate)
                     .findFirst()

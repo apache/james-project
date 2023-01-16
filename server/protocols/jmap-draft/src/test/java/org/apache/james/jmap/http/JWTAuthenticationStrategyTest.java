@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
@@ -135,6 +136,11 @@ public class JWTAuthenticationStrategyTest {
                 @Override
                 public MailboxSession withoutDelegation() throws MailboxException {
                     return fakeMailboxSession;
+                }
+
+                @Override
+                public MailboxSession forMatchingUser(Predicate<Username> other) throws MailboxException {
+                    throw new NotImplementedException();
                 }
             });
         when(mockedHeaders.get(AUTHORIZATION_HEADERS))

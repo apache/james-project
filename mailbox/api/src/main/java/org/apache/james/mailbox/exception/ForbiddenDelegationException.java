@@ -19,30 +19,32 @@
 
 package org.apache.james.mailbox.exception;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 
 public class ForbiddenDelegationException extends MailboxException {
 
     private final Username givenUser;
-    private final Username delegateUser;
+    private final Optional<Username> delegateUser;
 
     public ForbiddenDelegationException(Username givenUser) {
         super("User " + givenUser.asString() + " delegation request cannot be satisfied");
         this.givenUser = givenUser;
-        this.delegateUser = null;
+        this.delegateUser = Optional.empty();
     }
 
     public ForbiddenDelegationException(Username givenUser, Username delegateUser) {
         super("User " + givenUser.asString() + " is not delegated by " + delegateUser.asString());
         this.givenUser = givenUser;
-        this.delegateUser = delegateUser;
+        this.delegateUser = Optional.of(delegateUser);
     }
 
     public Username givenUser() {
         return givenUser;
     }
 
-    public Username delegateUser() {
+    public Optional<Username> delegateUser() {
         return delegateUser;
     }
 }

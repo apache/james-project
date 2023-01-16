@@ -47,7 +47,7 @@ public interface Authorizator {
         return otherUserId -> canLoginAsOtherUser(userId, otherUserId);
     }
 
-    default Collection<Username> authorizedUsers(Username username) {
+    default Collection<Username> delegatedUsers(Username username) {
         return ImmutableList.of();
     }
 }

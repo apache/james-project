@@ -62,8 +62,8 @@ public class DelegationStoreAuthorizator implements Authorizator {
     }
 
     @Override
-    public Collection<Username> authorizedUsers(Username username) {
-        return Flux.from(delegationStore.authorizedUsers(username)).collectList()
+    public Collection<Username> delegatedUsers(Username username) {
+        return Flux.from(delegationStore.delegatedUsers(username)).collectList()
             .block();
     }
 }
