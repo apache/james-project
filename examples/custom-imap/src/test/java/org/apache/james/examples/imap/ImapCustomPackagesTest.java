@@ -49,7 +49,6 @@ class ImapCustomPackagesTest {
             .usersRepository(DEFAULT)
             .build())
         .server(MemoryJamesServerMain::createServer)
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
     @BeforeEach

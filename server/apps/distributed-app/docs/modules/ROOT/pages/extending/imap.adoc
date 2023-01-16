@@ -1,0 +1,25 @@
+= Distributed James Server &mdash; Custom IMAP processing
+:navtitle: Custom IMAP processing
+
+James allows defining your own handler packages.
+
+An Imap package is a simple class that bundles IMAP processing components:
+
+....
+public interface ImapPackage {
+    Collection<ClassName> processors();
+
+    Collection<ClassName> decoders();
+
+    Collection<ClassName> encoders();
+}
+....
+
+Processors needs to be of class `AbstractProcessor`, decoders of class `AbstractImapCommandParser`
+and encoders of class `ImapResponseEncoder`. Extensions-jar mechanism can be used to load custom classes.
+
+Custom configuration can be obtained through `ImapConfiguration` class via the `getCustomProperties` method.
+
+A full working example is available link:https://github.com/apache/james-project/tree/master/examples/custom-imap[here].
+
+See this page for xref:configure/imap.adoc#_extending_imap[more details on configuring IMAP extensions].
