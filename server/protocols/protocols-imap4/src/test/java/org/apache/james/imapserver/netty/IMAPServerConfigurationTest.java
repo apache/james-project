@@ -21,6 +21,7 @@ package org.apache.james.imapserver.netty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
@@ -57,8 +58,13 @@ class IMAPServerConfigurationTest {
         configurationBuilder.addProperty("concurrentRequests", "42");
         configurationBuilder.addProperty("idleTimeIntervalUnit", "MINUTES");
         configurationBuilder.addProperty("disabledCaps", "ACL | MOVE");
+        configurationBuilder.addProperty("customProperties", "abc=def");
+        configurationBuilder.addProperty("customProperties", "ghi=jkl");
         ImapConfiguration imapConfiguration = IMAPServer.getImapConfiguration(configurationBuilder);
 
+        Properties customProperties = new Properties();
+        customProperties.put("abc", "def");
+        customProperties.put("ghi", "jkl");
         ImapConfiguration expectImapConfiguration = ImapConfiguration.builder()
                 .enableIdle(false)
                 .idleTimeInterval(1)
@@ -66,6 +72,7 @@ class IMAPServerConfigurationTest {
                 .disabledCaps(ImmutableSet.of("ACL", "MOVE"))
                 .maxQueueSize(12)
                 .concurrentRequests(42)
+                .withCustomProperties(customProperties)
                 .build();
 
         assertThat(imapConfiguration).isEqualTo(expectImapConfiguration);

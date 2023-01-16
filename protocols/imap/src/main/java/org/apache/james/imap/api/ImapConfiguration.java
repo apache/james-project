@@ -21,6 +21,7 @@ package org.apache.james.imap.api;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +59,7 @@ public class ImapConfiguration {
         private Optional<Boolean> enableIdle;
         private ImmutableSet<String> disabledCaps;
         private Optional<Boolean> isCondstoreEnable;
+        private Optional<Properties> customProperties;
 
         private Builder() {
             this.appendLimit = Optional.empty();
@@ -68,6 +70,7 @@ public class ImapConfiguration {
             this.enableIdle = Optional.empty();
             this.disabledCaps = ImmutableSet.of();
             this.isCondstoreEnable = Optional.empty();
+            this.customProperties = Optional.empty();
         }
 
         public Builder idleTimeInterval(long idleTimeInterval) {
@@ -127,6 +130,11 @@ public class ImapConfiguration {
             return this;
         }
 
+        public Builder withCustomProperties(Properties customProperties) {
+            this.customProperties = Optional.of(customProperties);
+            return this;
+        }
+
         public ImapConfiguration build() {
             ImmutableSet<Capability> normalizeDisableCaps = disabledCaps.stream()
                     .filter(Builder::noBlankString)
@@ -141,7 +149,8 @@ public class ImapConfiguration {
                     maxQueueSize.orElse(DEFAULT_QUEUE_SIZE),
                     idleTimeIntervalUnit.orElse(DEFAULT_HEARTBEAT_INTERVAL_UNIT),
                     normalizeDisableCaps,
-                    isCondstoreEnable.orElse(DEFAULT_CONDSTORE_DISABLE));
+                    isCondstoreEnable.orElse(DEFAULT_CONDSTORE_DISABLE),
+                    customProperties.orElseGet(Properties::new));
         }
     }
 
@@ -153,8 +162,9 @@ public class ImapConfiguration {
     private final ImmutableSet<Capability> disabledCaps;
     private final boolean enableIdle;
     private final boolean isCondstoreEnable;
+    private final Properties customProperties;
 
-    private ImapConfiguration(Optional<Long> appendLimit, boolean enableIdle, long idleTimeInterval, int concurrentRequests, int maxQueueSize, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable) {
+    private ImapConfiguration(Optional<Long> appendLimit, boolean enableIdle, long idleTimeInterval, int concurrentRequests, int maxQueueSize, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable, Properties customProperties) {
         this.appendLimit = appendLimit;
         this.enableIdle = enableIdle;
         this.idleTimeInterval = idleTimeInterval;
@@ -163,6 +173,7 @@ public class ImapConfiguration {
         this.idleTimeIntervalUnit = idleTimeIntervalUnit;
         this.disabledCaps = disabledCaps;
         this.isCondstoreEnable = isCondstoreEnable;
+        this.customProperties = customProperties;
     }
 
     public Optional<Long> getAppendLimit() {
@@ -201,6 +212,10 @@ public class ImapConfiguration {
         return Duration.of(getIdleTimeInterval(), getIdleTimeIntervalUnit().toChronoUnit());
     }
 
+    public Properties getCustomProperties() {
+        return customProperties;
+    }
+
     @Override
     public final boolean equals(Object obj) {
         if (obj instanceof ImapConfiguration) {
@@ -212,6 +227,7 @@ public class ImapConfiguration {
                 && Objects.equal(that.getConcurrentRequests(), concurrentRequests)
                 && Objects.equal(that.getMaxQueueSize(), maxQueueSize)
                 && Objects.equal(that.getDisabledCaps(), disabledCaps)
+                && Objects.equal(that.getCustomProperties(), customProperties)
                 && Objects.equal(that.isCondstoreEnable(), isCondstoreEnable);
         }
         return false;
@@ -220,7 +236,7 @@ public class ImapConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hashCode(enableIdle, idleTimeInterval, idleTimeIntervalUnit, disabledCaps, isCondstoreEnable,
-            concurrentRequests, maxQueueSize, appendLimit);
+            concurrentRequests, maxQueueSize, appendLimit, customProperties);
     }
 
     @Override
@@ -234,6 +250,7 @@ public class ImapConfiguration {
                 .add("isCondstoreEnable", isCondstoreEnable)
                 .add("concurrentRequests", concurrentRequests)
                 .add("maxQueueSize", maxQueueSize)
+                .add("customProperties", customProperties)
                 .toString();
     }
 }
