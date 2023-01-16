@@ -23,7 +23,7 @@ import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
 import javax.inject.Inject
 import org.apache.james.core.Username
-import org.apache.james.jmap.core.AccountId
+import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.user.api.DelegationStore
 import org.apache.james.utils.GuiceProbe
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -46,8 +46,8 @@ class DelegationProbe @Inject()(delegationStore: DelegationStore) extends GuiceP
       .collectSeq()
       .block()
 
-  def addAuthorizedUser(baseUser: Username, userWithAccess: Username): AccountId =
+  def addAuthorizedUser(baseUser: Username, userWithAccess: Username): DelegationId =
     SMono.fromPublisher(delegationStore.addAuthorizedUser(baseUser, userWithAccess))
-      .`then`(SMono.just(AccountId.from(userWithAccess).toOption.get))
+      .`then`(SMono.just(DelegationId.from(baseUser, userWithAccess)))
       .block()
 }

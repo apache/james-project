@@ -27,9 +27,8 @@ import net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER
 import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
-import org.apache.james.core.Username
-import org.apache.james.jmap.core.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DelegatedAccountGetMethodContract.BOB_ACCOUNT_ID
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
@@ -136,7 +135,7 @@ trait DelegatedAccountGetMethodContract {
            |                "notFound": [],
            |                "list": [
            |                    {
-           |                        "id": "${getAccountId(ANDRE)}",
+           |                        "id": "${DelegationId.from(ANDRE, BOB).serialize}",
            |                        "username": "${ANDRE.asString()}"
            |                    }
            |                ]
@@ -235,10 +234,10 @@ trait DelegatedAccountGetMethodContract {
   def delegatedAccountGetShouldReturnNotFoundAndListWhenMixCases(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(ANDRE, BOB)
-      .id.value
+      .serialize
     server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(CEDRIC, BOB)
-      .id.value
+      .serialize
 
     val response = `given`
       .body(
@@ -250,7 +249,7 @@ trait DelegatedAccountGetMethodContract {
            |    "DelegatedAccount/get",
            |    {
            |      "accountId": "$BOB_ACCOUNT_ID",
-           |      "ids": [ "notFound1", "${getAccountId(ANDRE)}", "${getAccountId(CEDRIC)}" ]
+           |      "ids": [ "notFound1", "${DelegationId.from(ANDRE, BOB).serialize}", "${DelegationId.from(CEDRIC, BOB).serialize}" ]
            |    },
            |    "c1"]]
            |}""".stripMargin)
@@ -272,11 +271,11 @@ trait DelegatedAccountGetMethodContract {
          |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [
          |        {
-         |          "id": "${getAccountId(ANDRE)}",
+         |          "id": "${DelegationId.from(ANDRE, BOB).serialize}",
          |          "username": "${ANDRE.asString()}"
          |        },
          |        {
-         |          "id": "${getAccountId(CEDRIC)}",
+         |          "id": "${DelegationId.from(CEDRIC, BOB).serialize}",
          |          "username": "${CEDRIC.asString()}"
          |        }
          |      ],
@@ -331,8 +330,8 @@ trait DelegatedAccountGetMethodContract {
   @Test
   def delegatedAccountGetShouldNotReturnDelegateOfOtherUserWhenProvideIds(server: GuiceJamesServer): Unit = {
     val delegateId = server.getProbe(classOf[DelegationProbe])
-      .addAuthorizedUser(ANDRE, BOB)
-      .id.value
+      .addAuthorizedUser(ANDRE, CEDRIC)
+      .serialize
 
     val response = `given`
       .body(
@@ -375,10 +374,8 @@ trait DelegatedAccountGetMethodContract {
   def bobShouldNotGetDelegatedAccountListOfAliceEvenAuthorized(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(ANDRE, BOB)
-      .id.value
     server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(CEDRIC, ANDRE)
-      .id.value
 
     val response = `given`
       .body(
@@ -425,7 +422,6 @@ trait DelegatedAccountGetMethodContract {
   def delegatedAccountGetReturnIdWhenNoPropertiesRequested(server: GuiceJamesServer): Unit = {
     server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(ANDRE, BOB)
-      .id.value
 
     val response = `given`
       .body(
@@ -459,7 +455,7 @@ trait DelegatedAccountGetMethodContract {
          |    {
          |      "accountId": "$BOB_ACCOUNT_ID",
          |      "list": [
-         |        { "id" : "${getAccountId(ANDRE)}" }
+         |        { "id" : "${DelegationId.from(ANDRE, BOB).serialize}" }
          |      ],
          |      "notFound": []
          |    },
@@ -630,6 +626,4 @@ trait DelegatedAccountGetMethodContract {
          |}""".stripMargin)
   }
 
-  private def getAccountId(username: Username): String =
-    AccountId.from(username).toOption.get.id.value
 }
