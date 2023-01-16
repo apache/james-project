@@ -39,7 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ImapCustomPackagesTest {
+class ImapCustomPackagesTest {
 
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
@@ -67,4 +67,11 @@ public class ImapCustomPackagesTest {
             .contains("PONG");
     }
 
+    @Test
+    void imapServerShouldSupportCustomConfigurationValues(GuiceJamesServer server) throws IOException {
+        assertThat(new TestIMAPClient().connect("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .sendCommand("PING"))
+            .contains("customImapParameter");
+    }
 }

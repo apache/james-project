@@ -19,8 +19,11 @@
 
 package org.apache.james.examples.imap;
 
+import java.util.Properties;
+
 import javax.inject.Inject;
 
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -30,8 +33,8 @@ import org.apache.james.util.MDCBuilder;
 import reactor.core.publisher.Mono;
 
 public class PingProcessor extends AbstractProcessor<PingImapPackages.PingRequest> {
-
     private final StatusResponseFactory factory;
+    private String pongResponse;
 
     @Inject
     public PingProcessor(StatusResponseFactory factory) {
@@ -40,9 +43,18 @@ public class PingProcessor extends AbstractProcessor<PingImapPackages.PingReques
     }
 
     @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        Properties customProperties = imapConfiguration.getCustomProperties();
+
+        pongResponse = (String) customProperties
+            .getOrDefault("pong.response", "completed.");
+    }
+
+    @Override
     protected Mono<Void> doProcess(PingImapPackages.PingRequest request, Responder responder, ImapSession session) {
         return Mono.fromRunnable(() -> responder.respond(new PingImapPackages.PingResponse()))
-            .then(Mono.fromRunnable(() -> responder.respond(factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.COMPLETED))));
+            .then(Mono.fromRunnable(() -> responder.respond(
+                factory.taggedOk(request.getTag(), request.getCommand(), new HumanReadableText("org.apache.james.imap.COMPLETED", pongResponse)))));
     }
 
     @Override

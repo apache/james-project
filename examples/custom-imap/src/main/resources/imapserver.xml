@@ -33,19 +33,8 @@ under the License.
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <plainAuthDisallowed>false</plainAuthDisallowed>
         <gracefulShutdown>false</gracefulShutdown>
-    </imapserver>
-    <imapserver enabled="true">
-        <jmxName>imapserver-ssl</jmxName>
-        <bind>0.0.0.0:0</bind>
-        <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="true">
-            <keystore>classpath://keystore</keystore>
-            <secret>james72laBalle</secret>
-            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-        </tls>
-        <connectionLimit>0</connectionLimit>
-        <connectionLimitPerIP>0</connectionLimitPerIP>
-        <gracefulShutdown>false</gracefulShutdown>
+        <customProperties>pong.response=customImapParameter</customProperties>
+        <customProperties>prop.b=anotherValue</customProperties>
     </imapserver>
     <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
     <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
