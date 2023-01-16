@@ -64,6 +64,7 @@
 *** xref:extending/mailbox-listeners.adoc[]
 *** xref:extending/smtp-hooks.adoc[]
 *** xref:extending/webadmin-routes.adoc[]
+*** xref:extending/imap.adoc[]
 ** xref:benchmark/index.adoc[Performance benchmark]
 *** xref:benchmark/db-benchmark.adoc[]
 *** xref:benchmark/james-benchmark.adoc[]

@@ -132,6 +132,25 @@
             <a href="https://www.keycloak.org/">Keycloack</a> OIDC provider, but usage of similar technologies is definitely doable.</p>
     </subsection>
 
+    <subsection name="Extending IMAP">
+        <p><b>WARNING: </b>IMAP extension applies only for Guice based distributions</p>
+
+        <p>IMAP decoders, processors and encoder can be customized.</p>
+
+        <p>Check this <a href="https://github.com/apache/james-project/tree/master/examples/custom-imap">example</a>.</p>
+
+        <p>The following configuration properties are available for extentions:</p>
+        <dl>
+        <dt><strong>imapPackages</strong></dt>
+        <dd>Configure (union) of IMAP packages. IMAP packages bundles decoders (parsing IMAP commands) processors and encoders,
+            thus enable implementing new IMAP commands or replace existing IMAP processors. List of FQDNs, which can be located in
+            James extensions.</dd>
+        <dt><strong>customProperties</strong></dt>
+        <dd>Properties for custom extension. Each tag is a property entry, and holds a string under the form key=value.</dd>
+        </dl>
+
+    </subsection>
+
     <subsection name="Mail user agents auto-configuration">
         <p>Check this example on <a href="https://github.com/apache/james-project/tree/master/examples/imap-autoconf">Mail user agents auto-configuration</a>.</p>
     </subsection>

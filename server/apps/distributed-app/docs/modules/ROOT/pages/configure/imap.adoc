@@ -142,6 +142,27 @@ Please configure `auth.oidc` part to use this.
 We do supply an link:https://github.com/apache/james-project/tree/master/examples/oidc[example] of such a setup.
 It uses the Keycloak OIDC provider, but usage of similar technologies is definitely doable.
 
+== Extending IMAP
+
+IMAP decoders, processors and encoder can be customized. xref:extending/imap.adoc[Read more].
+
+Check this link:https://github.com/apache/james-project/tree/master/examples/custom-imap[example].
+
+The following configuration properties are available for extentions:
+
+.imapserver.xml content
+|===
+| Property name | explanation
+
+| imapPackages
+| Configure (union) of IMAP packages. IMAP packages bundles decoders (parsing IMAP commands) processors and encoders,
+thus enable implementing new IMAP commands or replace existing IMAP processors. List of FQDNs, which can be located in
+James extensions.
+
+| customProperties
+| Properties for custom extension. Each tag is a property entry, and holds a string under the form key=value.
+|===
+
 == Mail user agents auto-configuration
 
 Check this example on link:https://github.com/apache/james-project/tree/master/examples/imap-autoconf[Mail user agents auto-configuration].
