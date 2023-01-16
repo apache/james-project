@@ -29,6 +29,9 @@ import org.apache.james.jmap.method.WithAccountId
 
 import scala.util.Try
 
+import java.util.UUID
+import scala.util.Try
+
 object DelegateGet {
   val allProperties: Properties = Properties("id", "username")
   val idProperty: Properties = Properties("id")

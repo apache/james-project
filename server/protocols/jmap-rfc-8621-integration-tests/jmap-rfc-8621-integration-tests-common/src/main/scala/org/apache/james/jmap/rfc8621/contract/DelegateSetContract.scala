@@ -19,16 +19,16 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
-import java.util.concurrent.TimeUnit
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.jmap.http.UserCredential
+import org.apache.james.jmap.rfc8621.contract.DelegateSetContract.BOB_ACCOUNT_ID
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.utils.DataProbeImpl
@@ -37,8 +37,13 @@ import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
 
+import java.util.UUID
+import java.util.concurrent.TimeUnit
 import scala.jdk.CollectionConverters._
 
+object DelegateSetContract {
+  val BOB_ACCOUNT_ID: String = Fixture.ACCOUNT_ID
+}
 trait DelegateSetContract {
   private lazy val slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS
   private lazy val calmlyAwait = Awaitility.`with`
@@ -58,6 +63,7 @@ trait DelegateSetContract {
 
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
+      .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .build
   }
 
@@ -575,5 +581,267 @@ trait DelegateSetContract {
            |	},
            |	"0"
            |]""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldSucceed(server: GuiceJamesServer) : Unit = {
+    server.getProbe(classOf[DelegationProbe])
+      .addAuthorizedUser(BOB, ANDRE)
+
+    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+
+    val request: String =
+      s"""{
+         |	  "using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |    "methodCalls": [
+         |      [
+         |        "Delegate/set",
+         |        {
+         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "destroy": ["${delegationId}"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Delegate/set",
+           |            {
+           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "destroyed": ["${delegationId}"]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(BOB)
+      .asJava).isEmpty()
+  }
+
+  @Test
+  def destroyShouldFailWhenInvalidId(): Unit = {
+    val request: String =
+      s"""{
+         |	  "using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |    "methodCalls": [
+         |      [
+         |        "Delegate/set",
+         |        {
+         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "destroy": ["invalid"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Delegate/set",
+           |            {
+           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "notDestroyed": {
+           |                    "invalid": {
+           |                        "type": "invalidArguments",
+           |                        "description": "invalid is not a DelegationId: Invalid UUID string: invalid"
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldNotFailWhenUnknownId(): Unit = {
+    val id = UUID.randomUUID().toString
+
+    val request: String =
+      s"""{
+         |	  "using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |    "methodCalls": [
+         |      [
+         |        "Delegate/set",
+         |        {
+         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "destroy": ["$id"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Delegate/set",
+           |            {
+           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "destroyed": ["$id"]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldHandleMixedCases(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DelegationProbe])
+      .addAuthorizedUser(BOB, ANDRE)
+    server.getProbe(classOf[DelegationProbe])
+      .addAuthorizedUser(BOB, CEDRIC)
+
+    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+
+    val request: String =
+      s"""{
+         |	  "using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |    "methodCalls": [
+         |      [
+         |        "Delegate/set",
+         |        {
+         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "destroy": ["$delegationId"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Delegate/set",
+           |            {
+           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "destroyed": ["$delegationId"]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def destroyShouldNotRemoveUnAssignId(server: GuiceJamesServer): Unit = {
+    server.getProbe(classOf[DelegationProbe])
+      .addAuthorizedUser(BOB, ANDRE)
+    server.getProbe(classOf[DelegationProbe])
+      .addAuthorizedUser(BOB, CEDRIC)
+
+    val delegationId = DelegationId.from(BOB, ANDRE).serialize
+
+    val request: String =
+      s"""{
+         |	  "using": ["urn:ietf:params:jmap:core", "urn:apache:james:params:jmap:delegation"],
+         |    "methodCalls": [
+         |      [
+         |        "Delegate/set",
+         |        {
+         |            "accountId": "$BOB_ACCOUNT_ID",
+         |            "destroy": ["$delegationId"]
+         |        },
+         |        "c1"
+         |      ]
+         |    ]
+         |  }""".stripMargin
+
+    val response: String = `given`
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Delegate/set",
+           |            {
+           |                "accountId": "$BOB_ACCOUNT_ID",
+           |                "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+           |                "destroyed": ["$delegationId"]
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+
+    assertThat(server.getProbe(classOf[DelegationProbe]).getAuthorizedUsers(BOB)
+      .asJava).containsExactlyInAnyOrder(CEDRIC)
   }
 }

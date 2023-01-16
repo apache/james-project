@@ -20,7 +20,6 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
@@ -33,7 +32,10 @@ import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
 
+import javax.inject.Inject
+
 class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
+                                  deletePerformer: DelegateSetDeletePerformer,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
                                   val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[DelegateSetRequest] {
@@ -50,6 +52,7 @@ class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
     if (isPrimaryAccount(mailboxSession)) {
       for {
         creationResults <- createPerformer.create(request, mailboxSession)
+        destroyed <- deletePerformer.delete(request, mailboxSession)
       } yield InvocationWithContext(
         invocation = Invocation(
           methodName = methodName,
@@ -58,7 +61,9 @@ class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
             oldState = None,
             newState = UuidState.INSTANCE,
             created = creationResults.created.filter(_.nonEmpty),
-            notCreated = creationResults.notCreated.filter(_.nonEmpty)))),
+            notCreated = creationResults.notCreated.filter(_.nonEmpty),
+            destroyed =  Some(destroyed.destroyed).filter(_.nonEmpty),
+            notDestroyed = Some(destroyed.retrieveErrors).filter(_.nonEmpty)))),
           methodCallId = invocation.invocation.methodCallId),
         processingContext = creationResults.created.getOrElse(Map())
           .foldLeft(invocation.processingContext)({
