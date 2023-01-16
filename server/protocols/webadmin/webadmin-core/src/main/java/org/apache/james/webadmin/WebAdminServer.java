@@ -117,7 +117,7 @@ public class WebAdminServer implements Startable {
             });
             publicRoutes.forEach(routes -> routes.define(service));
             service.awaitInitialization();
-            LOGGER.info("Web admin server started");
+            LOGGER.info("Web admin server started on port {}", service.port());
         }
         return this;
     }
