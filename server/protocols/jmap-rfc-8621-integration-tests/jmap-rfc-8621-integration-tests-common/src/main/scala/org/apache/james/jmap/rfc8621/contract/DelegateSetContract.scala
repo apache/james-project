@@ -565,13 +565,15 @@ trait DelegateSetContract {
       .asString
 
     assertThatJson(response)
-      .inPath("methodResponses[0][1].notCreated")
+      .inPath("methodResponses[0]")
       .isEqualTo(
-        s"""{
-           |	"4f29": {
+        s"""[
+           |	"error",
+           |	{
            |		"type": "forbidden",
-           |		"description": "${BOB.asString()} can not manage ${ANDRE.asString()}'s account settings"
-           |	}
-           |}""".stripMargin)
+           |		"description": "Access to other accounts settings is forbidden"
+           |	},
+           |	"0"
+           |]""".stripMargin)
   }
 }

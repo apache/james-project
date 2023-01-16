@@ -24,10 +24,11 @@ import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
-import org.apache.james.jmap.delegation.{DelegateSetRequest, DelegateSetResponse}
+import org.apache.james.jmap.delegation.{DelegateSetRequest, DelegateSetResponse, ForbiddenAccountManagementException}
 import org.apache.james.jmap.json.{DelegationSerializer, ResponseSerializer}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.mailbox.MailboxSession.isPrimaryAccount
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
@@ -46,24 +47,28 @@ class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
     }
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegateSetRequest): SMono[InvocationWithContext] =
-    for {
-      creationResults <- createPerformer.create(request, mailboxSession)
-    } yield InvocationWithContext(
-      invocation = Invocation(
-        methodName = methodName,
-        arguments = Arguments(DelegationSerializer.serializeDelegateSetResponse(DelegateSetResponse(
-          accountId = request.accountId,
-          oldState = None,
-          newState = UuidState.INSTANCE,
-          created = creationResults.created.filter(_.nonEmpty),
-          notCreated = creationResults.notCreated.filter(_.nonEmpty)))),
-        methodCallId = invocation.invocation.methodCallId),
-      processingContext = creationResults.created.getOrElse(Map())
-        .foldLeft(invocation.processingContext)({
-          case (processingContext, (clientId, response)) =>
-            Id.validate(response.id.serialize)
-              .fold(_ => processingContext,
-                serverId => processingContext.recordCreatedId(ClientId(clientId.id), ServerId(serverId)))
-        }))
+    if (isPrimaryAccount(mailboxSession)) {
+      for {
+        creationResults <- createPerformer.create(request, mailboxSession)
+      } yield InvocationWithContext(
+        invocation = Invocation(
+          methodName = methodName,
+          arguments = Arguments(DelegationSerializer.serializeDelegateSetResponse(DelegateSetResponse(
+            accountId = request.accountId,
+            oldState = None,
+            newState = UuidState.INSTANCE,
+            created = creationResults.created.filter(_.nonEmpty),
+            notCreated = creationResults.notCreated.filter(_.nonEmpty)))),
+          methodCallId = invocation.invocation.methodCallId),
+        processingContext = creationResults.created.getOrElse(Map())
+          .foldLeft(invocation.processingContext)({
+            case (processingContext, (clientId, response)) =>
+              Id.validate(response.id.serialize)
+                .fold(_ => processingContext,
+                  serverId => processingContext.recordCreatedId(ClientId(clientId.id), ServerId(serverId)))
+          }))
+    } else {
+      SMono.error(ForbiddenAccountManagementException())
+    }
 }
 

@@ -23,11 +23,10 @@ import javax.inject.Inject
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.delegation.DelegationCreation.{knownProperties, serverSetProperty}
-import org.apache.james.jmap.delegation.{DelegateCreationId, DelegateCreationRequest, DelegateCreationResponse, DelegateSetParseException, DelegateSetRequest, DelegationCreation, DelegationId, ForbiddenAccountManagement}
+import org.apache.james.jmap.delegation.{DelegateCreationId, DelegateCreationRequest, DelegateCreationResponse, DelegateSetParseException, DelegateSetRequest, DelegationCreation, DelegationId}
 import org.apache.james.jmap.json.DelegationSerializer
 import org.apache.james.jmap.method.DelegateSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.mailbox.MailboxSession
-import org.apache.james.mailbox.MailboxSession.isPrimaryAccount
 import org.apache.james.mailbox.exception.UserDoesNotExistException
 import org.apache.james.user.api.{DelegationStore, UsersRepository}
 import play.api.libs.json.JsObject
@@ -59,7 +58,6 @@ object DelegateSetCreatePerformer {
       case e: DelegateSetParseException => e.setError
       case e: UserDoesNotExistException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case e: ForbiddenAccountManagement => SetError.forbidden(SetErrorDescription(e.getMessage))
       case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
@@ -85,16 +83,12 @@ class DelegateSetCreatePerformer @Inject()(delegationStore: DelegationStore,
   }
 
   private def create(delegateCreationId: DelegateCreationId, request: DelegateCreationRequest, mailboxSession: MailboxSession): SMono[CreationResult] =
-    if (isPrimaryAccount(mailboxSession)) {
-      SMono.fromPublisher(usersRepository.containsReactive(request.username))
-        .filter(bool => bool)
-        .flatMap(_ => SMono.fromPublisher(delegationStore.addAuthorizedUser(mailboxSession.getUser, request.username))
-          .`then`(SMono.just[CreationResult](CreationSuccess(delegateCreationId, evaluateCreationResponse(request, mailboxSession))))
-          .onErrorResume(e => SMono.just[CreationResult](CreationFailure(delegateCreationId, e))))
-        .switchIfEmpty(SMono.just[CreationResult](CreationFailure(delegateCreationId, new UserDoesNotExistException(request.username))))
-    } else {
-      SMono.just(CreationFailure(delegateCreationId, ForbiddenAccountManagement(mailboxSession.getLoggedInUser.get(), mailboxSession.getUser)))
-    }
+    SMono.fromPublisher(usersRepository.containsReactive(request.username))
+      .filter(bool => bool)
+      .flatMap(_ => SMono.fromPublisher(delegationStore.addAuthorizedUser(mailboxSession.getUser, request.username))
+        .`then`(SMono.just[CreationResult](CreationSuccess(delegateCreationId, evaluateCreationResponse(request, mailboxSession))))
+        .onErrorResume(e => SMono.just[CreationResult](CreationFailure(delegateCreationId, e))))
+      .switchIfEmpty(SMono.just[CreationResult](CreationFailure(delegateCreationId, new UserDoesNotExistException(request.username))))
 
   private def evaluateCreationResponse(request: DelegateCreationRequest, mailboxSession: MailboxSession): DelegateCreationResponse =
     DelegateCreationResponse(id = DelegationId.from(mailboxSession.getUser, request.username))

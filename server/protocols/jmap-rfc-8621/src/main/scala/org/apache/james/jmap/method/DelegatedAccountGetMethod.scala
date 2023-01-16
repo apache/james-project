@@ -20,11 +20,12 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, Properties, SessionTranslator}
-import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult}
+import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult, ForbiddenAccountManagementException}
 import org.apache.james.jmap.json.{DelegationSerializer, ResponseSerializer}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
@@ -34,7 +35,6 @@ import org.reactivestreams.Publisher
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import javax.inject.Inject
 import scala.jdk.OptionConverters._
 
 class DelegatedAccountGetMethod @Inject()(val metricFactory: MetricFactory,
@@ -68,7 +68,7 @@ class DelegatedAccountGetMethod @Inject()(val metricFactory: MetricFactory,
   private def getDelegatedAccountGetResponse(request: DelegatedAccountGetRequest, mailboxSession: MailboxSession): SMono[DelegatedAccountGetResult] =
     SMono.just(isDelegatedRequest(mailboxSession))
       .filter(isDelegated => isDelegated)
-      .flatMap(_ => SMono.error(ForbiddenException()))
+      .flatMap(_ => SMono.error(ForbiddenAccountManagementException()))
       .switchIfEmpty(getDelegatedUser(mailboxSession.getUser, request))
 
   private def getDelegatedUser(baseUser: Username, request: DelegatedAccountGetRequest): SMono[DelegatedAccountGetResult] =
