@@ -31,7 +31,7 @@
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-graphite</artifactId>
-            <version>${metrics.versio}</version>
+            <version>${metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
