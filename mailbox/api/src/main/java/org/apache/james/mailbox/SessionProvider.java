@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox;
 
+import java.util.function.Predicate;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 
@@ -27,6 +29,8 @@ public interface SessionProvider {
         MailboxSession as(Username other) throws MailboxException;
 
         MailboxSession withoutDelegation() throws MailboxException;
+
+        MailboxSession forMatchingUser(Predicate<Username> other) throws MailboxException;
     }
 
     /**

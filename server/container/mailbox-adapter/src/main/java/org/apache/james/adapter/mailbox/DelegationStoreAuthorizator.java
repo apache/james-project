@@ -19,6 +19,8 @@
 
 package org.apache.james.adapter.mailbox;
 
+import java.util.Collection;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -57,5 +59,11 @@ public class DelegationStoreAuthorizator implements Authorizator {
         } catch (UsersRepositoryException e) {
             throw new MailboxException("Unable to access usersRepository", e);
         }
+    }
+
+    @Override
+    public Collection<Username> delegatedUsers(Username username) {
+        return Flux.from(delegationStore.delegatedUsers(username)).collectList()
+            .block();
     }
 }

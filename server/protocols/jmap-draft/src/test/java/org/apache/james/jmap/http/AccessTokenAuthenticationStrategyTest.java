@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
@@ -128,6 +129,11 @@ public class AccessTokenAuthenticationStrategyTest {
                 @Override
                 public MailboxSession withoutDelegation() {
                     return fakeMailboxSession;
+                }
+
+                @Override
+                public MailboxSession forMatchingUser(Predicate<Username> other) throws MailboxException {
+                    throw new NotImplementedException();
                 }
             });
 
