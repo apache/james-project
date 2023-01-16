@@ -33,10 +33,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -46,6 +48,7 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

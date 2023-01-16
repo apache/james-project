@@ -51,10 +51,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -74,10 +76,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -105,6 +109,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-protocols-smtp</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -114,6 +119,7 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -135,26 +141,32 @@
         <dependency>
             <groupId>com.github.fge</groupId>
             <artifactId>throwing-lambdas</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -164,6 +176,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>

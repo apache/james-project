@@ -35,6 +35,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-protocols-smtp</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
