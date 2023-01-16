@@ -75,7 +75,7 @@ public class SendMailHandler implements JamesMessageHook {
             queue.enQueue(mail);
             LOGGER.info("Successfully spooled mail {} with messageId {} from {} on {} for {}", mail.getName(),
                 mail.getMessage().getMessageID(),
-                mail.getMaybeSender(),
+                mail.getMaybeSender().asString(),
                 session.getRemoteAddress().getAddress(),
                 mail.getRecipients());
         } catch (Exception me) {
