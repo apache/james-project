@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -35,6 +36,8 @@ import org.apache.james.mailbox.exception.ForbiddenDelegationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
+
+import com.github.fge.lambdas.Throwing;
 
 public class SessionProviderImpl implements SessionProvider {
     private final MailboxSessionIdGenerator idGenerator;
@@ -72,6 +75,21 @@ public class SessionProviderImpl implements SessionProvider {
                     throw new BadCredentialsException();
                 }
             }
+
+            @Override
+            public MailboxSession forMatchingUser(Predicate<Username> otherPredicate) throws MailboxException {
+                return authorizator.authorizedUsers(thisUserId)
+                    .stream()
+                    .filter(otherPredicate)
+                    .findFirst()
+                    .map(Throwing.<Username, MailboxSession>function(otherUserId -> {
+                        if (!isValidLogin(thisUserId, passwd)) {
+                            throw new BadCredentialsException();
+                        }
+                        return createSession(otherUserId, Optional.of(thisUserId), MailboxSession.SessionType.System);
+                    }).sneakyThrow())
+                    .orElseThrow(() -> new ForbiddenDelegationException(thisUserId));
+            }
         };
     }
 
@@ -96,6 +114,16 @@ public class SessionProviderImpl implements SessionProvider {
             @Override
             public MailboxSession withoutDelegation() {
                 return createSession(givenUserid, Optional.of(givenUserid), MailboxSession.SessionType.System);
+            }
+
+            @Override
+            public MailboxSession forMatchingUser(Predicate<Username> otherPredicate) throws MailboxException {
+                return authorizator.authorizedUsers(givenUserid)
+                    .stream()
+                    .filter(otherPredicate)
+                    .findFirst()
+                    .map(otherUserId -> createSession(otherUserId, Optional.of(givenUserid), MailboxSession.SessionType.System))
+                    .orElseThrow(() -> new ForbiddenDelegationException(givenUserid));
             }
         };
     }

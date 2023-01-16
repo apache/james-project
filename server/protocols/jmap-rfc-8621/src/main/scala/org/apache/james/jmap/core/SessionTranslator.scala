@@ -22,12 +22,12 @@ package org.apache.james.jmap.core
 import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.method.AccountNotFoundException
+import org.apache.james.mailbox.exception.ForbiddenDelegationException
 import org.apache.james.mailbox.{MailboxSession, SessionProvider}
-import org.apache.james.user.api.DelegationStore
 import org.apache.james.util.ReactorUtils
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 
-class SessionTranslator  @Inject()(delegationStore: DelegationStore, sessionProvider: SessionProvider) {
+class SessionTranslator  @Inject()(sessionProvider: SessionProvider) {
   def delegateIfNeeded(session: MailboxSession, targetAccountId: AccountId): SMono[MailboxSession] =
     if (needDelegation(session, targetAccountId)) {
       delegate(session, targetAccountId)
@@ -42,10 +42,11 @@ class SessionTranslator  @Inject()(delegationStore: DelegationStore, sessionProv
     AccountId.from(username).toOption.contains(targetAccountId)
 
   private def delegate(session: MailboxSession, targetAccountId: AccountId): SMono[MailboxSession] =
-    SFlux(delegationStore.delegatedUsers(session.getUser))
-      .filter(hasAccountId(targetAccountId))
-      .flatMap(targetUser => SMono.fromCallable(() => sessionProvider.authenticate(session.getUser).as(targetUser))
-        .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
-      .next()
-      .switchIfEmpty(SMono.error(AccountNotFoundException()))
+    SMono.fromCallable(() => sessionProvider.authenticate(session.getUser)
+      .forMatchingUser(user => hasAccountId(targetAccountId)(user)))
+      .onErrorResume({
+        case _: ForbiddenDelegationException => SMono.error(AccountNotFoundException())
+        case e => SMono.error(e)
+      })
+      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }

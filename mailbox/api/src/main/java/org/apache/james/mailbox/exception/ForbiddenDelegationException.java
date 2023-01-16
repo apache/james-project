@@ -26,6 +26,12 @@ public class ForbiddenDelegationException extends MailboxException {
     private final Username givenUser;
     private final Username delegateUser;
 
+    public ForbiddenDelegationException(Username givenUser) {
+        super("User " + givenUser.asString() + " delegation request cannot be satisfied");
+        this.givenUser = givenUser;
+        this.delegateUser = null;
+    }
+
     public ForbiddenDelegationException(Username givenUser, Username delegateUser) {
         super("User " + givenUser.asString() + " is not delegated by " + delegateUser.asString());
         this.givenUser = givenUser;
