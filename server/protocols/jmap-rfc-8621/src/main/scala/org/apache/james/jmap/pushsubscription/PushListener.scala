@@ -34,10 +34,11 @@ import org.apache.james.jmap.core.StateChange
 import org.apache.james.jmap.json.PushSerializer
 import org.apache.james.jmap.pushsubscription.PushListener.extractTopic
 import org.apache.james.jmap.pushsubscription.PushTopic.PushTopic
+import org.apache.james.user.api.DelegationStore
 import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import play.api.libs.json.Json
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.scala.publisher.SMono
 
 case class PushListenerGroup() extends Group {}
 
@@ -58,15 +59,18 @@ object PushListener {
 }
 
 class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
-                   webPushClient: WebPushClient,
-                   pushSerializer: PushSerializer) extends ReactiveGroupEventListener {
+                             webPushClient: WebPushClient,
+                             pushSerializer: PushSerializer,
+                             delegationStore: DelegationStore) extends ReactiveGroupEventListener {
 
   override def getDefaultGroup: Group = PushListenerGroup()
 
   override def reactiveEvent(event: Event): Publisher[Void] =
     event match {
       case event: StateChangeEvent =>
-        SFlux(pushRepository.list(event.username))
+        SMono.just(event.username)
+          .concatWith(delegationStore.authorizedUsers(event.username))
+          .flatMap(pushRepository.list)
           .filter(_.validated)
           .flatMap(sendNotification(_, event), ReactorUtils.DEFAULT_CONCURRENCY)
           .`then`()

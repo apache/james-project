@@ -30,7 +30,7 @@ import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import io.netty.handler.codec.http.{HttpMethod, QueryStringDecoder}
 import javax.inject.{Inject, Named}
-import org.apache.james.events.{EventBus, Registration}
+import org.apache.james.events.{EventBus, Registration, RegistrationKey}
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.JMAPUrls.EVENT_SOURCE
 import org.apache.james.jmap.api.change.TypeStateFactory
@@ -44,6 +44,7 @@ import org.apache.james.jmap.json.{PushSerializer, ResponseSerializer}
 import org.apache.james.jmap.routes.PingPolicy.Interval
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes, InjectionKeys => JMAPInjectionKeys}
 import org.apache.james.mailbox.MailboxSession
+import org.apache.james.user.api.DelegationStore
 import play.api.libs.json.Json
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.publisher.{Mono, Sinks}
@@ -157,7 +158,8 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
                                   userProvisioner: UserProvisioning,
                                   @Named(JMAPInjectionKeys.JMAP) eventBus: EventBus,
                                   pushSerializer: PushSerializer,
-                                  typeStateFactory: TypeStateFactory) extends JMAPRoutes {
+                                  typeStateFactory: TypeStateFactory,
+                                  delegationStore: DelegationStore) extends JMAPRoutes {
 
   override def routes(): stream.Stream[JMAPRoute] = stream.Stream.of(
     JMAPRoute.builder
@@ -188,10 +190,11 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
       .asFlux()
       .subscribe(ping => context.outbound.emitNext(ping, FAIL_FAST))
 
-    SMono(
-      eventBus.register(
-        StateChangeListener(options.types, context.outbound),
-        AccountIdRegistrationKey.of(session.getUser)))
+    SMono.just(session.getUser)
+      .concatWith(SFlux.fromPublisher(delegationStore.delegatedUsers(session.getUser)))
+      .map(username => AccountIdRegistrationKey.of(username).asInstanceOf[RegistrationKey])
+      .collectSeq()
+      .flatMap(keys => SMono(eventBus.register(StateChangeListener(options.types, context.outbound), keys.asJavaCollection)))
       .doOnNext(newRegistration => context.withRegistration(newRegistration))
       .subscribeOn(Schedulers.boundedElastic())
       .subscribe()

@@ -27,9 +27,11 @@ import io.netty.handler.codec.http.HttpResponseStatus
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
+import org.apache.james.core.Username
 import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DAVID, DAVID_ACCOUNT_ID, DOMAIN, authScheme, baseRequestSpecBuilder}
+import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.mailbox.DefaultMailboxes
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxPath, MessageId}
@@ -38,6 +40,7 @@ import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.modules.protocols.SmtpGuiceProbe
 import org.apache.james.utils.{DataProbeImpl, SMTPMessageSender, SpoolerProbe}
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.SoftAssertions
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.awaitility.core.ConditionFactory
@@ -62,6 +65,7 @@ trait EventSourceContract {
       .addDomain(DOMAIN.asString())
       .addUser(ANDRE.asString(), ANDRE_PASSWORD)
       .addUser(BOB.asString(), BOB_PASSWORD)
+      .addUser(DAVID.asString(), "secret")
 
     requestSpecification = baseRequestSpecBuilder(server)
       .setAuth(authScheme(UserCredential(BOB, BOB_PASSWORD)))
@@ -307,7 +311,7 @@ trait EventSourceContract {
 
     // Bob receives a mail
     Thread.sleep(500)
-    sendEmailToBob(server)
+    sendEmailTo(server, BOB)
 
     awaitAtMostTenSeconds.untilAsserted(() => {
       assertThat(seq.asJava)
@@ -558,11 +562,145 @@ trait EventSourceContract {
       .hasSize(2)
   }
 
-  private def sendEmailToBob(server: GuiceJamesServer): Unit = {
+  @Test
+  def shouldPushChangesToDelegatedUser(server: GuiceJamesServer): Unit = {
+    val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
+    val davidPath = MailboxPath.inbox(DAVID)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(davidPath)
+
+    // DAVID delegates BOB to access his account
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(DAVID, BOB)
+
+    val seq = new ListBuffer[String]()
+    HttpClient.create
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=EmailDelivery&ping=0&closeAfter=no")
+      .headers(builder => {
+        builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+        builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+      })
+      .get()
+      .responseContent()
+      .map(bb => {
+        val bytes = new Array[Byte](bb.readableBytes)
+        bb.readBytes(bytes)
+        new String(bytes, StandardCharsets.UTF_8)
+      })
+      .doOnNext(seq.addOne)
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+
+    Thread.sleep(500)
+    // DAVID has a new mail therefore EmailDelivery change
+    sendEmailTo(server, DAVID)
+
+    // Bob should receive DAVID's EmailDelivery state change
+    awaitAtMostTenSeconds.untilAsserted(() => {
+      SoftAssertions.assertSoftly(softly => {
+        softly.assertThat(seq.asJava)
+          .hasSize(1)
+        softly.assertThat(seq.head)
+          .contains("EmailDelivery", DAVID_ACCOUNT_ID)
+      })
+    })
+  }
+
+  @Test
+  def ownerUserShouldStillReceiveHisChangesWhenHeDelegatesHisAccountToOtherUsers(server: GuiceJamesServer): Unit = {
+    val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    // BOB delegates DAVID to access his account
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(BOB, DAVID)
+
+    val seq = new ListBuffer[String]()
+    HttpClient.create
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=EmailDelivery&ping=0&closeAfter=no")
+      .headers(builder => {
+        builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+        builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+      })
+      .get()
+      .responseContent()
+      .map(bb => {
+        val bytes = new Array[Byte](bb.readableBytes)
+        bb.readBytes(bytes)
+        new String(bytes, StandardCharsets.UTF_8)
+      })
+      .doOnNext(seq.addOne)
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+
+    Thread.sleep(500)
+    // BOB has a new mail therefore EmailDelivery change
+    sendEmailTo(server, BOB)
+
+    // Bob should receive his EmailDelivery state change
+    awaitAtMostTenSeconds.untilAsserted(() => {
+      SoftAssertions.assertSoftly(softly => {
+        softly.assertThat(seq.asJava)
+          .hasSize(1)
+        softly.assertThat(seq.head)
+          .contains("EmailDelivery", ACCOUNT_ID)
+      })
+    })
+  }
+
+  @Test
+  def bobShouldReceiveHisChangesAndHisDelegatedAccountChanges(server: GuiceJamesServer): Unit = {
+    val port = server.getProbe(classOf[JmapGuiceProbe]).getJmapPort.getValue
+    val davidPath = MailboxPath.inbox(DAVID)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(davidPath)
+
+    // DAVID delegates BOB to access his account
+    server.getProbe(classOf[DelegationProbe]).addAuthorizedUser(DAVID, BOB)
+
+    val seq = new ListBuffer[String]()
+    HttpClient.create
+      .baseUrl(s"http://127.0.0.1:$port/eventSource?types=EmailDelivery&ping=0&closeAfter=no")
+      .headers(builder => {
+        builder.add("Authorization", "Basic Ym9iQGRvbWFpbi50bGQ6Ym9icGFzc3dvcmQ=")
+        builder.add("Accept", ACCEPT_RFC8621_VERSION_HEADER)
+      })
+      .get()
+      .responseContent()
+      .map(bb => {
+        val bytes = new Array[Byte](bb.readableBytes)
+        bb.readBytes(bytes)
+        new String(bytes, StandardCharsets.UTF_8)
+      })
+      .doOnNext(seq.addOne)
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+
+    Thread.sleep(500)
+    sendEmailTo(server, DAVID)
+    sendEmailTo(server, BOB)
+    sendEmailTo(server, DAVID)
+    sendEmailTo(server, BOB)
+
+    // Bob should receive David's change and his changes
+    awaitAtMostTenSeconds.untilAsserted(() => {
+      SoftAssertions.assertSoftly(softly => {
+        softly.assertThat(seq.asJava)
+          .hasSize(4)
+        softly.assertThat(seq.apply(0))
+          .contains("EmailDelivery", DAVID_ACCOUNT_ID)
+        softly.assertThat(seq.apply(1))
+          .contains("EmailDelivery", ACCOUNT_ID)
+        softly.assertThat(seq.apply(2))
+          .contains("EmailDelivery", DAVID_ACCOUNT_ID)
+        softly.assertThat(seq.apply(3))
+          .contains("EmailDelivery", ACCOUNT_ID)
+      })
+    })
+  }
+
+  private def sendEmailTo(server: GuiceJamesServer, recipient: Username): Unit = {
     val smtpMessageSender: SMTPMessageSender = new SMTPMessageSender(DOMAIN.asString())
     smtpMessageSender.connect("127.0.0.1", server.getProbe(classOf[SmtpGuiceProbe]).getSmtpPort)
       .authenticate(ANDRE.asString, ANDRE_PASSWORD)
-      .sendMessage(ANDRE.asString, BOB.asString())
+      .sendMessage(ANDRE.asString, recipient.asString())
     smtpMessageSender.close()
 
     awaitAtMostTenSeconds.until(() => server.getProbe(classOf[SpoolerProbe]).processingFinished())
