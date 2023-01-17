@@ -19,11 +19,15 @@
 
 package org.apache.james.jmap.delegation
 
-import org.apache.james.jmap.core.{AccountId, Properties}
-import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.method.WithAccountId
+import java.util.UUID
+
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.{AccountId, Properties}
+import org.apache.james.jmap.method.WithAccountId
+
+import scala.util.Try
 
 object DelegateGet {
   val allProperties: Properties = Properties("id", "username")
@@ -31,7 +35,16 @@ object DelegateGet {
   def propertiesFiltered(requestedProperties: Properties): Properties = idProperty ++ requestedProperties
 }
 
-case class UnparsedDelegateId(id: Id)
+case class UnparsedDelegateId(id: Id) {
+  def parse: Either[IllegalArgumentException, DelegationId] =
+    Try(UUID.fromString(id.value))
+      .map(DelegationId(_))
+      .toEither
+      .left.map({
+      case e: IllegalArgumentException => e
+      case e => new IllegalArgumentException(e)
+    })
+}
 
 case class DelegateIds(value: List[UnparsedDelegateId])
 
