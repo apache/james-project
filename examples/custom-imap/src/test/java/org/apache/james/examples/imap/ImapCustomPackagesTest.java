@@ -67,6 +67,14 @@ class ImapCustomPackagesTest {
     }
 
     @Test
+    void imapServerShouldSupportModularCapability(GuiceJamesServer server) throws IOException {
+        assertThat(new TestIMAPClient().connect("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB, BOB_PASSWORD)
+            .sendCommand("CAPABILITY"))
+            .contains("PING");
+    }
+
+    @Test
     void imapServerShouldSupportCustomConfigurationValues(GuiceJamesServer server) throws IOException {
         assertThat(new TestIMAPClient().connect("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(BOB, BOB_PASSWORD)
