@@ -19,20 +19,25 @@
 
 package org.apache.james.examples.imap;
 
+import java.util.List;
 import java.util.Properties;
 
 import javax.inject.Inject;
 
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.processor.CapabilityImplementingProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.util.MDCBuilder;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Mono;
 
-public class PingProcessor extends AbstractProcessor<PingImapPackages.PingRequest> {
+public class PingProcessor extends AbstractProcessor<PingImapPackages.PingRequest> implements CapabilityImplementingProcessor {
     private final StatusResponseFactory factory;
     private String pongResponse;
 
@@ -40,6 +45,11 @@ public class PingProcessor extends AbstractProcessor<PingImapPackages.PingReques
     public PingProcessor(StatusResponseFactory factory) {
         super(PingImapPackages.PingRequest.class);
         this.factory = factory;
+    }
+
+    @Override
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
+        return ImmutableList.of(Capability.of("PING"));
     }
 
     @Override

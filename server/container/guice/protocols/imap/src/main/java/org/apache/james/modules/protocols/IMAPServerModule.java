@@ -93,8 +93,13 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     @Provides
-    ImapProcessor provideImapProcessor(ImapPackage imapPackage, GuiceGenericLoader loader, StatusResponseFactory statusResponseFactory) {
-        ImmutableMap<Class, ImapProcessor> processorMap = imapPackage.processors()
+    ImapProcessor provideImapProcessor(ImmutableMap<Class, ImapProcessor> processorMap, StatusResponseFactory statusResponseFactory) {
+        return new DefaultProcessor(processorMap, new UnknownRequestProcessor(statusResponseFactory));
+    }
+
+    @Provides
+    ImmutableMap<Class, ImapProcessor> provideClassImapProcessors(ImapPackage imapPackage, GuiceGenericLoader loader) {
+        return imapPackage.processors()
             .stream()
             .map(Throwing.function(loader::instantiate))
             .map(AbstractProcessor.class::cast)
@@ -102,8 +107,6 @@ public class IMAPServerModule extends AbstractModule {
             .collect(ImmutableMap.toImmutableMap(
                 Pair::getLeft,
                 Pair::getRight));
-
-        return new DefaultProcessor(processorMap, new UnknownRequestProcessor(statusResponseFactory));
     }
 
     @Provides
@@ -158,22 +161,22 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    InitializationOperation configureEnable(EnableProcessor enableProcessor, ImapPackage imapPackage) {
+    InitializationOperation configureEnable(EnableProcessor enableProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
         return InitilizationOperationBuilder
             .forClass(IMAPServerFactory.class)
             .init(() ->
-                imapPackage.processors().stream()
+                processorMap.values().stream()
                     .filter(PermitEnableCapabilityProcessor.class::isInstance)
                     .map(PermitEnableCapabilityProcessor.class::cast)
                     .forEach(enableProcessor::addProcessor));
     }
 
     @ProvidesIntoSet
-    InitializationOperation configureCapability(CapabilityProcessor capabilityProcessor, ImapPackage imapPackage) {
+    InitializationOperation configureCapability(CapabilityProcessor capabilityProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
         return InitilizationOperationBuilder
             .forClass(IMAPServerFactory.class)
             .init(() ->
-                imapPackage.processors().stream()
+                processorMap.values().stream()
                     .filter(CapabilityImplementingProcessor.class::isInstance)
                     .map(CapabilityImplementingProcessor.class::cast)
                     .forEach(capabilityProcessor::addProcessor));
