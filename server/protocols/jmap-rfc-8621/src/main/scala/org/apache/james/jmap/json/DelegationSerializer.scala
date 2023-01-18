@@ -24,7 +24,7 @@ import eu.timepit.refined.refineV
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Properties, SetError, UuidState}
-import org.apache.james.jmap.delegation.{Delegate, DelegateCreationId, DelegateCreationRequest, DelegateCreationResponse, DelegateGet, DelegateGetRequest, DelegateGetResponse, DelegateIds, DelegateNotFound, DelegateSetRequest, DelegateSetResponse, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResponse, DelegatedAccountNotFound, DelegationId, UnparsedDelegateId}
+import org.apache.james.jmap.delegation.{Delegate, DelegateCreationId, DelegateCreationRequest, DelegateCreationResponse, DelegateGet, DelegateGetRequest, DelegateGetResponse, DelegateIds, DelegateNotFound, DelegateSetRequest, DelegateSetResponse, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResponse, DelegatedAccountNotFound, DelegatedAccountSetRequest, DelegatedAccountSetResponse, DelegationId, UnparsedDelegateId}
 import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
 
 object DelegationSerializer {
@@ -40,7 +40,10 @@ object DelegationSerializer {
     mapWrites[DelegateCreationId, DelegateCreationResponse](_.serialize, delegateCreationResponseWrites)
   private implicit val delegateSetMapSetErrorForCreationWrites: Writes[Map[DelegateCreationId, SetError]] =
     mapWrites[DelegateCreationId, SetError](_.serialize, setErrorWrites)
+  private implicit val delegationMapSetErrorForDeletionWrites: Writes[Map[UnparsedDelegateId, SetError]] =
+    mapWrites[UnparsedDelegateId, SetError](_.id.value, setErrorWrites)
   private implicit val delegateSetResponseWrites: OWrites[DelegateSetResponse] = Json.writes[DelegateSetResponse]
+  private implicit val delegatedAccountSetResponseWrites: OWrites[DelegatedAccountSetResponse] = Json.writes[DelegatedAccountSetResponse]
 
   private implicit val mapCreationRequestByDelegateCreationId: Reads[Map[DelegateCreationId, JsObject]] =
     Reads.mapReads[DelegateCreationId, JsObject] {string => refineV[IdConstraint](string)
@@ -58,6 +61,7 @@ object DelegationSerializer {
   private implicit val delegateIdsReads: Reads[DelegateIds] = Json.valueReads[DelegateIds]
   private implicit val delegateGetRequestReads: Reads[DelegateGetRequest] = Json.reads[DelegateGetRequest]
   private implicit val delegatedAccountGetRequestReads: Reads[DelegatedAccountGetRequest] = Json.reads[DelegatedAccountGetRequest]
+  private implicit val delegatedAccountSetRequestReads: Reads[DelegatedAccountSetRequest] = Json.reads[DelegatedAccountSetRequest]
   private implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
   private implicit val delegateWrites: Writes[Delegate] = Json.writes[Delegate]
   private implicit val delegateNotFoundWrites: Writes[DelegateNotFound] =
@@ -66,11 +70,14 @@ object DelegationSerializer {
     notFound => JsArray(notFound.value.toList.map(id => JsString(id.id.value)))
   private implicit val delegateGetResponseWrites: Writes[DelegateGetResponse] = Json.writes[DelegateGetResponse]
   private implicit val delegatedAccountGetResponseWrites: Writes[DelegatedAccountGetResponse] = Json.writes[DelegatedAccountGetResponse]
+
   def serializeDelegateSetResponse(response: DelegateSetResponse): JsObject = Json.toJsObject(response)
+  def serializeDelegatedAccountSetResponse(response: DelegatedAccountSetResponse): JsObject = Json.toJsObject(response)
   def deserializeDelegateSetRequest(input: JsValue): JsResult[DelegateSetRequest] = Json.fromJson[DelegateSetRequest](input)
   def deserializeDelegateCreationRequest(input: JsValue): JsResult[DelegateCreationRequest] = Json.fromJson[DelegateCreationRequest](input)
   def deserializeDelegateGetRequest(input: JsValue): JsResult[DelegateGetRequest] = Json.fromJson[DelegateGetRequest](input)
   def deserializeDelegatedAccountGetRequest(input: JsValue): JsResult[DelegatedAccountGetRequest] = Json.fromJson[DelegatedAccountGetRequest](input)
+  def deserializeDelegatedAccountSetRequest(input: JsValue): JsResult[DelegatedAccountSetRequest] = Json.fromJson[DelegatedAccountSetRequest](input)
 
   def serialize(delegateGetResponse: DelegateGetResponse, properties: Properties): JsValue =
     Json.toJson(delegateGetResponse)

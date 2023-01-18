@@ -21,7 +21,6 @@ package org.apache.james.jmap.rfc8621.contract.probe
 
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
-
 import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.AccountId
@@ -39,6 +38,11 @@ class DelegationProbeModule extends AbstractModule {
 class DelegationProbe @Inject()(delegationStore: DelegationStore) extends GuiceProbe {
   def getAuthorizedUsers(baseUser: Username): Seq[Username] =
     SFlux.fromPublisher(delegationStore.authorizedUsers(baseUser))
+      .collectSeq()
+      .block()
+
+  def getDelegatedUsers(baseUser: Username): Seq[Username] =
+    SFlux.fromPublisher(delegationStore.delegatedUsers(baseUser))
       .collectSeq()
       .block()
 

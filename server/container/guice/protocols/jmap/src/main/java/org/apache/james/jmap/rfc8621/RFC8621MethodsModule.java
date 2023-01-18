@@ -50,6 +50,7 @@ import org.apache.james.jmap.method.CoreEchoMethod;
 import org.apache.james.jmap.method.DelegateGetMethod;
 import org.apache.james.jmap.method.DelegateSetMethod;
 import org.apache.james.jmap.method.DelegatedAccountGetMethod;
+import org.apache.james.jmap.method.DelegatedAccountSetMethod;
 import org.apache.james.jmap.method.EmailChangesMethod;
 import org.apache.james.jmap.method.EmailGetMethod;
 import org.apache.james.jmap.method.EmailImportMethod;
@@ -158,6 +159,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(DelegatedAccountGetMethod.class);
         methods.addBinding().to(DelegateGetMethod.class);
         methods.addBinding().to(DelegateSetMethod.class);
+        methods.addBinding().to(DelegatedAccountSetMethod.class);
 
         Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
         routes.addBinding().to(SessionRoutes.class);
