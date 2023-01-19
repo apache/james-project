@@ -22,7 +22,7 @@ package org.apache.james.jmap.delegation
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, SetError, UuidState}
+import org.apache.james.jmap.core.{AccountId, Id, SetError, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
 
@@ -31,17 +31,22 @@ case class DelegateCreationId(id: Id) {
 }
 
 case class DelegateSetRequest(accountId: AccountId,
-                              create: Option[Map[DelegateCreationId, JsObject]]) extends WithAccountId
+                              create: Option[Map[DelegateCreationId, JsObject]],
+                              destroy: Option[Seq[UnparsedDelegateId]]) extends WithAccountId
 
 case class DelegateCreationRequest(username: Username)
 
-case class DelegateCreationResponse(id: DelegationId)
+case class DelegateCreationResponse(id: DelegationId) {
+  def asUnparsedDelegateId: UnparsedDelegateId = UnparsedDelegateId(Id.validate(id.serialize).toOption.get)
+}
 
 case class DelegateSetResponse(accountId: AccountId,
                                oldState: Option[UuidState],
                                newState: UuidState,
                                created: Option[Map[DelegateCreationId, DelegateCreationResponse]],
-                               notCreated: Option[Map[DelegateCreationId, SetError]])
+                               notCreated: Option[Map[DelegateCreationId, SetError]],
+                               destroyed: Option[Seq[DelegationId]],
+                               notDestroyed: Option[Map[UnparsedDelegateId, SetError]])
 
 case class DelegateSetParseException(setError: SetError) extends IllegalArgumentException
 case class ForbiddenAccountManagementException() extends RuntimeException()

@@ -40,7 +40,7 @@ object DelegationSerializer {
     mapWrites[DelegateCreationId, DelegateCreationResponse](_.serialize, delegateCreationResponseWrites)
   private implicit val delegateSetMapSetErrorForCreationWrites: Writes[Map[DelegateCreationId, SetError]] =
     mapWrites[DelegateCreationId, SetError](_.serialize, setErrorWrites)
-  private implicit val delegationMapSetErrorForDeletionWrites: Writes[Map[UnparsedDelegateId, SetError]] =
+  private implicit val delegationMapSetErrorWrites: Writes[Map[UnparsedDelegateId, SetError]] =
     mapWrites[UnparsedDelegateId, SetError](_.id.value, setErrorWrites)
   private implicit val delegateSetResponseWrites: OWrites[DelegateSetResponse] = Json.writes[DelegateSetResponse]
   private implicit val delegatedAccountSetResponseWrites: OWrites[DelegatedAccountSetResponse] = Json.writes[DelegatedAccountSetResponse]
@@ -50,7 +50,6 @@ object DelegationSerializer {
       .fold(e => JsError(s"delegate creationId needs to match id constraints: $e"),
         id => JsSuccess(DelegateCreationId(id)))
     }
-  private implicit val delegateSetRequestReads: Reads[DelegateSetRequest] = Json.reads[DelegateSetRequest]
   private implicit val delegateCreationRequest: Reads[DelegateCreationRequest] = Json.reads[DelegateCreationRequest]
   private implicit val unparsedDelegateIdReads: Reads[UnparsedDelegateId] = {
     case JsString(string) => refined.refineV[IdConstraint](string)
@@ -58,6 +57,7 @@ object DelegationSerializer {
         id => JsSuccess(UnparsedDelegateId(id)))
     case _ => JsError("delegate id needs to be represented by a JsString")
   }
+  private implicit val delegateSetRequestReads: Reads[DelegateSetRequest] = Json.reads[DelegateSetRequest]
   private implicit val delegateIdsReads: Reads[DelegateIds] = Json.valueReads[DelegateIds]
   private implicit val delegateGetRequestReads: Reads[DelegateGetRequest] = Json.reads[DelegateGetRequest]
   private implicit val delegatedAccountGetRequestReads: Reads[DelegatedAccountGetRequest] = Json.reads[DelegatedAccountGetRequest]
