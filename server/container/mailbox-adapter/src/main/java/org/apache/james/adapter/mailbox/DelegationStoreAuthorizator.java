@@ -49,7 +49,7 @@ public class DelegationStoreAuthorizator implements Authorizator {
     public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException {
         boolean isAuthorized = Flux.from(delegationStore.authorizedUsers(otherUserId)).hasElement(userId).block();
         try {
-            if (isAuthorized || usersRepository.isAdministrator(userId)) {
+            if (isAuthorized || isAdministrator(userId)) {
                 return AuthorizationState.ALLOWED;
             }
             if (!usersRepository.contains(otherUserId)) {
@@ -59,6 +59,13 @@ public class DelegationStoreAuthorizator implements Authorizator {
         } catch (UsersRepositoryException e) {
             throw new MailboxException("Unable to access usersRepository", e);
         }
+    }
+
+    private boolean isAdministrator(Username userId) throws UsersRepositoryException {
+        if (userId.hasDomainPart() ^ usersRepository.supportVirtualHosting()) {
+            return false;
+        }
+        return usersRepository.isAdministrator(userId);
     }
 
     @Override
