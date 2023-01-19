@@ -79,7 +79,11 @@ public class MessageResultUtils {
     private static boolean contains(Collection<String> names, Header header) {
         final String headerName = header.getName();
         if (headerName != null) {
-            return names.stream().anyMatch(name -> name.equalsIgnoreCase(headerName));
+            for (String name: names) {
+                if (name.equalsIgnoreCase(headerName)) {
+                    return true;
+                }
+            }
         }
         return false;
     }
