@@ -232,22 +232,24 @@ public class UidMsnConverter {
                 addUidUnSynchronized(uid);
                 return;
             }
-            if (uidsAsInts.contains((int) uid.asLong())) {
-                return;
-            }
             if (isLastUid(uid)) {
                 uidsAsInts.add((int) uid.asLong());
+                return;
+            }
+            if (uidsAsInts.contains((int) uid.asLong())) {
+                return;
             } else {
                 uidsAsInts.add((int) uid.asLong());
                 uidsAsInts.sort(IntComparators.NATURAL_COMPARATOR);
                 Collections.sort(uids);
             }
         } else {
-            if (uids.contains(uid.asLong())) {
-                return;
-            }
             if (isLastUid(uid)) {
                 uids.add(uid.asLong());
+                return;
+            }
+            if (uids.contains(uid.asLong())) {
+                return;
             } else {
                 uids.add(uid.asLong());
                 uids.sort(LongComparators.NATURAL_COMPARATOR);
