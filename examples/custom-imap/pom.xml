@@ -37,6 +37,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-imap</artifactId>
             <version>${james.baseVersion}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -49,6 +50,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-memory-app</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -66,11 +68,13 @@
             <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-imap</artifactId>
             <version>${james.baseVersion}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>5.1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

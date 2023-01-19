@@ -57,14 +57,17 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-store</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -86,10 +89,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -101,6 +106,7 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-configuration</artifactId>
             <version>${james.baseVersion}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -111,6 +117,7 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-task-json</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -120,6 +127,7 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-webadmin-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -138,16 +146,24 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.netty</groupId>
             <artifactId>reactor-netty</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>

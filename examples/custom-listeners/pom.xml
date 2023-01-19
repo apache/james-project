@@ -31,6 +31,7 @@
       <groupId>${james.groupId}</groupId>
       <artifactId>apache-james-mailbox-api</artifactId>
       <version>${james.baseVersion}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>${james.groupId}</groupId>
