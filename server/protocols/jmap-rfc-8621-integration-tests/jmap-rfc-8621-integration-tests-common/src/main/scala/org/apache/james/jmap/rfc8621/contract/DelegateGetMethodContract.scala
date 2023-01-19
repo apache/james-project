@@ -28,6 +28,7 @@ import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
+import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.DelegateGetMethodContract.BOB_ACCOUNT_ID
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DOMAIN, authScheme, baseRequestSpecBuilder}
@@ -134,7 +135,7 @@ trait DelegateGetMethodContract {
            |                "notFound": [],
            |                "list": [
            |                    {
-           |                        "id": "${Fixture.ANDRE_ACCOUNT_ID}",
+           |                        "id": "${DelegationId.from(BOB, ANDRE).serialize}",
            |                        "username": "${ANDRE.asString()}"
            |                    }
            |                ]
@@ -233,10 +234,10 @@ trait DelegateGetMethodContract {
   def delegateGetShouldReturnNotFoundAndListWhenMixCases(server: GuiceJamesServer): Unit = {
     val delegatedId = server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(BOB, ANDRE)
-      .id.value
+      .serialize
     val delegatedId2 = server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(BOB, CEDRIC)
-      .id.value
+      .serialize
 
     val response = `given`
       .body(
@@ -330,7 +331,7 @@ trait DelegateGetMethodContract {
   def delegateGetShouldNotReturnDelegateOfOtherUserWhenProvideIds(server: GuiceJamesServer): Unit = {
     val delegateId = server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(ANDRE, BOB)
-      .id.value
+      .serialize
 
     val response = `given`
       .body(
@@ -373,10 +374,10 @@ trait DelegateGetMethodContract {
   def bobShouldNotGetDelegateListOfAliceEvenDelegated(server: GuiceJamesServer): Unit = {
     val delegateId1 = server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(ANDRE, BOB)
-      .id.value
+      .serialize
     val delegateId2 =  server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(ANDRE, CEDRIC)
-      .id.value
+      .serialize
 
     val response = `given`
       .body(
@@ -423,7 +424,7 @@ trait DelegateGetMethodContract {
   def delegateGetReturnIdWhenNoPropertiesRequested(server: GuiceJamesServer): Unit = {
     val delegateId = server.getProbe(classOf[DelegationProbe])
       .addAuthorizedUser(BOB, ANDRE)
-      .id.value
+      .serialize
 
     val response = `given`
       .body(

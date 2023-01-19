@@ -42,8 +42,8 @@ object DelegatedAccountGetResult {
     requestIds match {
       case None => DelegatedAccountGetResult(delegates)
       case Some(value) => DelegatedAccountGetResult(
-        list = delegates.filter(delegate => value.contains(delegate.id.id)),
-        notFound = DelegatedAccountNotFound(value.diff(delegates.map(_.id.id).toSet).map(UnparsedDelegateId)))
+        list = delegates.filter(delegate => value.contains(delegate.delegationIdAsId())),
+        notFound = DelegatedAccountNotFound(value.diff(delegates.map(_.delegationIdAsId()).toSet).map(UnparsedDelegateId)))
     }
 }
 case class DelegatedAccountGetResult(list: Seq[Delegate],

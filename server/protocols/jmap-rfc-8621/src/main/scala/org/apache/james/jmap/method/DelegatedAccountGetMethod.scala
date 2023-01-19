@@ -26,6 +26,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JA
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, Properties, SessionTranslator}
 import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult, ForbiddenAccountManagementException}
+import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult, DelegationId}
 import org.apache.james.jmap.json.{DelegationSerializer, ResponseSerializer}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
@@ -73,7 +74,7 @@ class DelegatedAccountGetMethod @Inject()(val metricFactory: MetricFactory,
 
   private def getDelegatedUser(baseUser: Username, request: DelegatedAccountGetRequest): SMono[DelegatedAccountGetResult] =
     SFlux(delegationStore.delegatedUsers(baseUser))
-      .map(Delegate.from)
+      .map(delegatedUser => Delegate(DelegationId.from(delegatedUser, baseUser), delegatedUser))
       .collectSeq()
       .map(delegates => DelegatedAccountGetResult.from(delegates, request.ids.map(_.value.map(_.id).toSet)))
 

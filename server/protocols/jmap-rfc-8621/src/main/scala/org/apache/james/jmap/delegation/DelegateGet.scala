@@ -20,11 +20,10 @@
 package org.apache.james.jmap.delegation
 
 import java.util.UUID
-
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.{AccountId, Properties}
+import org.apache.james.jmap.core.{AccountId, Id, Properties}
 import org.apache.james.jmap.method.WithAccountId
 
 import scala.util.Try
@@ -54,19 +53,13 @@ case class DelegateIds(value: List[UnparsedDelegateId])
 case class DelegateGetRequest(accountId: AccountId,
                               ids: Option[DelegateIds],
                               properties: Option[Properties]) extends WithAccountId
-
-object Delegate {
-  def from(username: Username): Delegate =
-    AccountId.from(username)
-      .map(accountId => Delegate(accountId, username)) match {
-      case Right(value) => value
-      case Left(error) => throw error
-    }
-
+case class Delegate(id: DelegationId,
+                    username: Username) {
+  def delegationIdAsId(): Id = Id.validate(id.serialize) match {
+    case Right(value) => value
+    case Left(error) => throw error
+  }
 }
-
-case class Delegate(id: AccountId,
-                    username: Username)
 
 case class DelegateNotFound(value: Set[UnparsedDelegateId])
 
@@ -75,8 +68,8 @@ object DelegateGetResult {
     requestIds match {
       case None => DelegateGetResult(delegates)
       case Some(value) => DelegateGetResult(
-        list = delegates.filter(delegate => value.contains(delegate.id.id)),
-        notFound = DelegateNotFound(value.diff(delegates.map(_.id.id).toSet).map(UnparsedDelegateId)))
+        list = delegates.filter(delegate => value.contains(delegate.delegationIdAsId())),
+        notFound = DelegateNotFound(value.diff(delegates.map(_.delegationIdAsId()).toSet).map(UnparsedDelegateId)))
     }
 }
 
