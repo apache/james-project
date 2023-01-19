@@ -62,6 +62,7 @@ port is not explicitly defined in the *<gateway/>* parameter. Default is the def
 AUTH command. Default is not to issue the AUTH command.
 * *gatewayPassword* (required if *gatewayUsername*) is set - a String representing the password to be used
 to authenticate the user using the AUTH command.
+* *loadBalancing* (optional) - a Boolean (true/false) indicating whether load should be balanced randomly over all defined gateway server. Default is true, false leads to failover only.
 * *heloName* (optional) - a String containing the name used in the SMTP HELO and EHLO commands. Default is the default domain,
 which is typically *localhost*.
 * *mail.** (optional) - Any property beginning with *mail.* described in the Javadoc for package

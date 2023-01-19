@@ -19,7 +19,10 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
@@ -41,6 +44,10 @@ public class DnsHelper {
     public Iterator<HostAddress> retrieveHostAddressIterator(String host, boolean smtps) throws TemporaryResolutionException {
         if (configuration.getGatewayServer().isEmpty()) {
             return new MXHostAddressIterator(dnsServer.findMXRecords(host).iterator(), dnsServer, USE_SEVERAL_IP, smtps);
+        } else if (configuration.isLoadBalancing()) {
+            List<String> gatewayList = new ArrayList<>(configuration.getGatewayServer());
+            Collections.shuffle(gatewayList);
+            return new MXHostAddressIterator(gatewayList.iterator(), dnsServer, USE_SEVERAL_IP, smtps);
         } else {
             return new MXHostAddressIterator(configuration.getGatewayServer().iterator(), dnsServer, USE_SEVERAL_IP, smtps);
         }
