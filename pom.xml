@@ -2192,11 +2192,6 @@
                 <version>${guice.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.ibm.icu</groupId>
-                <artifactId>icu4j</artifactId>
-                <version>72.1</version>
-            </dependency>
-            <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
                 <version>2.7.0</version>
@@ -2483,10 +2478,6 @@
                         <artifactId>spring-osgi-core</artifactId>
                     </exclusion>
                     <!-- exclude this, it's only used in the authentication plugin which we don't use -->
-                    <exclusion>
-                        <groupId>com.ibm.icu</groupId>
-                        <artifactId>icu4j</artifactId>
-                    </exclusion>
                     <!-- exclude this, we don't use osgi yet -->
                     <exclusion>
                         <groupId>org.osgi</groupId>

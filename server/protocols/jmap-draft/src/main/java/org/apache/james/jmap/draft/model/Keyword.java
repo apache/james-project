@@ -29,17 +29,12 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.ibm.icu.text.UnicodeSet;
+import com.google.re2j.Pattern;
 
 public class Keyword {
     private static final int FLAG_NAME_MIN_LENGTH = 1;
     private static final int FLAG_NAME_MAX_LENGTH = 255;
-    private static final UnicodeSet FLAG_NAME_PATTERN =
-        new UnicodeSet("[[a-z][A-Z][0-9]]")
-            .add('$')
-            .add('_')
-            .add('-')
-            .freeze();
+    private static final Pattern FLAG_NAME_PATTERN = Pattern.compile("^([\\w\\d/$_-]*)$");
 
     public static final Keyword DRAFT = Keyword.of("$Draft");
     public static final Keyword SEEN = Keyword.of("$Seen");
@@ -86,7 +81,7 @@ public class Keyword {
         if (flagName.length() < FLAG_NAME_MIN_LENGTH || flagName.length() > FLAG_NAME_MAX_LENGTH) {
             return false;
         }
-        if (!FLAG_NAME_PATTERN.containsAll(flagName)) {
+        if (!FLAG_NAME_PATTERN.matcher(flagName).matches()) {
             return false;
         }
         return true;

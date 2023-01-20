@@ -18,9 +18,11 @@
  * **************************************************************/
 package org.apache.james.jmap.mail
 
-import java.util.Locale
+import com.google.re2j.Pattern
 
+import java.util.Locale
 import com.ibm.icu.text.UnicodeSet
+
 import javax.mail.Flags
 import org.apache.commons.lang3.StringUtils
 
@@ -33,6 +35,7 @@ object Keyword {
       "must not contain characters with hex from '\\u0000' to '\\u00019'" +
       " or {'(' ')' '{' ']' '%' '*' '\"' '\\'} "
 
+  private val FLAG_NAME_PATTERN2 = Pattern.compile("^([\\w\\d/$_-]*)$")
   private val FLAG_NAME_PATTERN = new UnicodeSet("[[a-z][A-Z][0-9]$_-]").freeze
   val DRAFT = Keyword.of("$draft").get
   val SEEN = Keyword.of("$seen").get
@@ -64,7 +67,8 @@ object Keyword {
   def isValid(flagName: String): Boolean = flagName match {
       case _ if StringUtils.isBlank(flagName) => false
       case _ if flagName.length < FLAG_NAME_MIN_LENGTH || flagName.length > FLAG_NAME_MAX_LENGTH => false
-      case _ => FLAG_NAME_PATTERN.containsAll(flagName)
+//      case _ => FLAG_NAME_PATTERN.containsAll(flagName)
+      case _ => FLAG_NAME_PATTERN2.matcher(flagName).matches()
     }
 }
 
