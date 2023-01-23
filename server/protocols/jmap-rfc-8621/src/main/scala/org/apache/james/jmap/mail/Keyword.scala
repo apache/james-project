@@ -18,13 +18,12 @@
  * **************************************************************/
 package org.apache.james.jmap.mail
 
-import com.google.re2j.Pattern
 
 import java.util.Locale
-import com.ibm.icu.text.UnicodeSet
 
 import javax.mail.Flags
 import org.apache.commons.lang3.StringUtils
+import com.google.common.base.CharMatcher
 
 import scala.util.{Failure, Success, Try}
 
@@ -35,7 +34,13 @@ object Keyword {
       "must not contain characters with hex from '\\u0000' to '\\u00019'" +
       " or {'(' ')' '{' ']' '%' '*' '\"' '\\'} "
 
-  private val FLAG_NAME_PATTERN = Pattern.compile("^([\\w\\d/$_-]*)$")
+  private val FLAG_NAME_PATTERN = CharMatcher.inRange('a', 'z')
+      .or(CharMatcher.inRange('A', 'Z'))
+      .or(CharMatcher.inRange('0', '9'))
+      .or(CharMatcher.is('/'))
+      .or(CharMatcher.is('$'))
+      .or(CharMatcher.is('_'))
+      .or(CharMatcher.is('-'));
   val DRAFT = Keyword.of("$draft").get
   val SEEN = Keyword.of("$seen").get
   val FLAGGED = Keyword.of("$flagged").get
@@ -66,7 +71,7 @@ object Keyword {
   def isValid(flagName: String): Boolean = flagName match {
       case _ if StringUtils.isBlank(flagName) => false
       case _ if flagName.length < FLAG_NAME_MIN_LENGTH || flagName.length > FLAG_NAME_MAX_LENGTH => false
-      case _ => FLAG_NAME_PATTERN.matcher(flagName).matches()
+      case _ => FLAG_NAME_PATTERN.matchesAllOf(flagName)
     }
 }
 

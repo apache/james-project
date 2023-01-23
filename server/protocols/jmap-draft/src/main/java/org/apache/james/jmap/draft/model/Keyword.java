@@ -25,16 +25,22 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
-import com.google.re2j.Pattern;
 
 public class Keyword {
     private static final int FLAG_NAME_MIN_LENGTH = 1;
     private static final int FLAG_NAME_MAX_LENGTH = 255;
-    private static final Pattern FLAG_NAME_PATTERN = Pattern.compile("^([\\w\\d/$_-]*)$");
+    private static final CharMatcher FLAG_NAME_PATTERN = CharMatcher.inRange('a', 'z')
+            .or(CharMatcher.inRange('A', 'Z'))
+            .or(CharMatcher.inRange('0', '9'))
+            .or(CharMatcher.is('/'))
+            .or(CharMatcher.is('$'))
+            .or(CharMatcher.is('_'))
+            .or(CharMatcher.is('-'));
 
     public static final Keyword DRAFT = Keyword.of("$Draft");
     public static final Keyword SEEN = Keyword.of("$Seen");
@@ -81,7 +87,7 @@ public class Keyword {
         if (flagName.length() < FLAG_NAME_MIN_LENGTH || flagName.length() > FLAG_NAME_MAX_LENGTH) {
             return false;
         }
-        if (!FLAG_NAME_PATTERN.matcher(flagName).matches()) {
+        if (!FLAG_NAME_PATTERN.matchesAllOf(flagName)) {
             return false;
         }
         return true;
