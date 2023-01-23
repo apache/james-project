@@ -37,7 +37,6 @@ object Keyword {
   private val FLAG_NAME_PATTERN = CharMatcher.inRange('a', 'z')
       .or(CharMatcher.inRange('A', 'Z'))
       .or(CharMatcher.inRange('0', '9'))
-      .or(CharMatcher.is('/'))
       .or(CharMatcher.is('$'))
       .or(CharMatcher.is('_'))
       .or(CharMatcher.is('-'));
