@@ -60,11 +60,27 @@ class DelegationStoreAuthorizatorTest {
     }
 
     @Test
+    void canLoginAsOtherUserShouldReturnForbiddenWhenWrongVirtualHosting() throws Exception {
+        usersRepository.addUser(OTHER_USER, "secret");
+        assertThat(testee.canLoginAsOtherUser(Username.of("other_user@domain.tld"), OTHER_USER))
+            .isEqualTo(Authorizator.AuthorizationState.FORBIDDEN);
+    }
+
+    @Test
     void canLoginAsOtherUserShouldReturnAllowedWhenGivenUserIsDelegatedByOtherUser() throws Exception {
         usersRepository.addUser(OTHER_USER, "secret");
         Mono.from(delegationStore.addAuthorizedUser(OTHER_USER, GIVEN_USER)).block();
 
         assertThat(testee.canLoginAsOtherUser(GIVEN_USER, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.ALLOWED);
+    }
+
+    @Test
+    void canLoginAsOtherUserShouldReturnAllowedWhenGivenUserIsAdminWithWrongVirtualHosting() throws Exception {
+        Username accessor = Username.of("other_user@domain.tld");
+        usersRepository.addUser(OTHER_USER, "secret");
+        Mono.from(delegationStore.addAuthorizedUser(OTHER_USER, accessor)).block();
+
+        assertThat(testee.canLoginAsOtherUser(accessor, OTHER_USER)).isEqualTo(Authorizator.AuthorizationState.ALLOWED);
     }
 
     @Test
