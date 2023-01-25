@@ -354,6 +354,11 @@ Regards, Postmaster XXX.YYY
           <gateway>otherserver.mydomain.com</gateway>
           <gatewayPort>25</gatewayPort>
             -->
+          <!-- in case of multiple gateway load balancing can be activated -->
+          <!-- with the loadBalancing flag, default is true -->
+          <!--
+          <loadBalancing>true</loadBalancing>
+            -->
           <!-- If the gateway requires smtp authentication the following directives -->
           <!-- (gatewayUsername/gatewayPassword) can be used. -->
           <!--

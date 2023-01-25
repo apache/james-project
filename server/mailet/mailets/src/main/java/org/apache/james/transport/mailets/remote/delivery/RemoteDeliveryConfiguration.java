@@ -65,6 +65,7 @@ public class RemoteDeliveryConfiguration {
     public static final String DELAY_TIME = "delayTime";
     public static final String DEBUG = "debug";
     public static final String ON_SUCCESS = "onSuccess";
+    public static final String LOAD_BALANCING = "loadBalancing";
     public static final int DEFAULT_SMTP_TIMEOUT = 180000;
     public static final MailQueueName DEFAULT_OUTGOING_QUEUE_NAME = MailQueueName.of("outgoing");
     public static final int DEFAULT_CONNECTION_TIMEOUT = 60000;
@@ -79,6 +80,7 @@ public class RemoteDeliveryConfiguration {
     private final boolean verifyServerIdentity;
     private final boolean isBindUsed;
     private final boolean sendPartial;
+    private final boolean loadBalancing;
     private final int maxRetries;
     private final long smtpTimeout;
     private final int dnsProblemRetry;
@@ -101,6 +103,7 @@ public class RemoteDeliveryConfiguration {
         verifyServerIdentity = MailetUtil.getInitParameter(mailetConfig, VERIFY_SERVER_IDENTITY).orElse(true);
         usePriority = MailetUtil.getInitParameter(mailetConfig, USE_PRIORITY).orElse(false);
         sendPartial = MailetUtil.getInitParameter(mailetConfig, SENDPARTIAL).orElse(false);
+        loadBalancing = MailetUtil.getInitParameter(mailetConfig, LOAD_BALANCING).orElse(true);
         outGoingQueueName = Optional.ofNullable(mailetConfig.getInitParameter(OUTGOING))
             .map(MailQueueName::of)
             .orElse(DEFAULT_OUTGOING_QUEUE_NAME);
@@ -340,4 +343,9 @@ public class RemoteDeliveryConfiguration {
     public Optional<ProcessingState> getOnSuccess() {
         return onSuccess;
     }
+
+    public boolean isLoadBalancing() {
+        return loadBalancing;
+    }
+
 }
