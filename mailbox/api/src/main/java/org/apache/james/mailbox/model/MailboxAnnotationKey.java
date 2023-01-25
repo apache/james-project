@@ -23,23 +23,23 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.ibm.icu.text.UnicodeSet;
 
 public class MailboxAnnotationKey {
 
     public static final String SLASH_CHARACTER = "/";
     public static final String TWO_SLASH_CHARACTER = "//";
 
-    private static final UnicodeSet NAME_ANNOTATION_PATTERN = new UnicodeSet("[[a-z][A-Z][0-9]]")
-            .add(SLASH_CHARACTER)
-            .freeze();
+    private static final CharMatcher NAME_ANNOTATION_PATTERN = CharMatcher.inRange('a', 'z')
+            .or(CharMatcher.inRange('A', 'Z'))
+            .or(CharMatcher.inRange('0', '9'))
+            .or(CharMatcher.is('/'));
     public static final int MINIMUM_COMPONENTS = 2;
     public static final int MINIMUM_COMPONENTS_OF_VENDOR = 4;
     public static final int SECOND_COMPONENT_INDEX = 1;
     public static final String VENDOR_COMPONENT = "vendor";
-
     private final String key;
 
     public MailboxAnnotationKey(String key) {
@@ -64,7 +64,7 @@ public class MailboxAnnotationKey {
         if (key.endsWith(SLASH_CHARACTER)) {
             return false;
         }
-        if (!NAME_ANNOTATION_PATTERN.containsAll(key)) {
+        if (!NAME_ANNOTATION_PATTERN.matchesAllOf(key)) {
             return false;
         }
         int componentsNo = countComponents();
