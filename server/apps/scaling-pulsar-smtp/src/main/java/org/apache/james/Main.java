@@ -118,7 +118,12 @@ public class Main implements JamesServerMain {
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration);
 
-        JamesServerMain.main(server);
+        try {
+            JamesServerMain.main(server);
+        } catch (Exception e) {
+            LOGGER.error("Failed to start", e);
+            throw e;
+        }
     }
 
     public static GuiceJamesServer createServer(SMTPRelayConfiguration configuration) {
