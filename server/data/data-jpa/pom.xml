@@ -180,6 +180,7 @@
                                 org.apache.james.mailrepository.jpa.model.JPAMail)</value>
                         </property>
                     </toolProperties>
+                    <persistenceXmlFile>${basedir}/src/test/resources/persistence.xml</persistenceXmlFile>
                 </configuration>
                 <executions>
                     <execution>
