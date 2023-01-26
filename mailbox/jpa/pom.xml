@@ -142,6 +142,7 @@
                     <excludes>org/apache/james/mailbox/jpa/mail/model/openjpa/EncryptDecryptHelper.class</excludes>
                     <addDefaultConstructor>true</addDefaultConstructor>
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
+                    <persistenceXmlFile>${basedir}/src/test/resources/persistence.xml</persistenceXmlFile>
                 </configuration>
                 <executions>
                     <execution>
