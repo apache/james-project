@@ -29,6 +29,9 @@
 
     <artifactId>apache-james-backends-pulsar</artifactId>
     <name>Apache James :: Backends Common :: Pulsar</name>
+    <properties>
+        <pulsar-client.version>2.11.0</pulsar-client.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -88,12 +91,12 @@
         <dependency>
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client</artifactId>
-            <version>2.9.3</version>
+            <version>${pulsar-client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client-admin</artifactId>
-            <version>2.9.3</version>
+            <version>${pulsar-client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>
