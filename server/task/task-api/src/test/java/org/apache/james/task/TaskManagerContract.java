@@ -47,10 +47,10 @@ public interface TaskManagerContract {
     ConditionFactory awaitAtMostTwoSeconds = calmlyAwait.atMost(Duration.ofSeconds(2));
     java.time.Duration TIMEOUT = java.time.Duration.ofMinutes(15);
 
-    TaskManager taskManager();
+    TaskManager taskManager() throws Exception;
 
     @Test
-    default void submitShouldReturnATaskId() {
+    default void submitShouldReturnATaskId() throws Exception {
         TaskId taskId = taskManager().submit(new CompletedTask());
         assertThat(taskId).isNotNull();
     }
@@ -63,7 +63,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void getStatusShouldReturnWaitingWhenNotYetProcessed(CountDownLatch waitingForResultLatch) {
+    default void getStatusShouldReturnWaitingWhenNotYetProcessed(CountDownLatch waitingForResultLatch) throws Exception {
         TaskManager taskManager = taskManager();
         taskManager.submit(new MemoryReferenceTask(() -> {
             waitingForResultLatch.await();
@@ -77,7 +77,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void taskCodeAfterCancelIsNotRun(CountDownLatch waitingForResultLatch) throws InterruptedException {
+    default void taskCodeAfterCancelIsNotRun(CountDownLatch waitingForResultLatch) throws Exception {
         TaskManager taskManager = taskManager();
         CountDownLatch waitForTaskToBeLaunched = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger(0);
@@ -98,7 +98,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void completedTaskShouldNotBeCancelled() {
+    default void completedTaskShouldNotBeCancelled() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(new CompletedTask());
 
@@ -114,7 +114,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void failedTaskShouldNotBeCancelled() {
+    default void failedTaskShouldNotBeCancelled() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(new FailedTask());
 
@@ -130,7 +130,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void getStatusShouldBeCancelledWhenCancelled(CountDownLatch countDownLatch) {
+    default void getStatusShouldBeCancelledWhenCancelled(CountDownLatch countDownLatch) throws Exception {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             countDownLatch.await();
@@ -152,7 +152,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void aWaitingTaskShouldBeCancelled(CountDownLatch countDownLatch) {
+    default void aWaitingTaskShouldBeCancelled(CountDownLatch countDownLatch) throws Exception {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             countDownLatch.await();
@@ -176,7 +176,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void cancelShouldBeIdempotent(CountDownLatch waitingForResultLatch) {
+    default void cancelShouldBeIdempotent(CountDownLatch waitingForResultLatch) throws Exception {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             waitingForResultLatch.await();
@@ -189,7 +189,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void getStatusShouldReturnInProgressWhenProcessingIsInProgress(CountDownLatch waitingForResultLatch) {
+    default void getStatusShouldReturnInProgressWhenProcessingIsInProgress(CountDownLatch waitingForResultLatch) throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> {
             waitingForResultLatch.await();
@@ -201,7 +201,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void getStatusShouldReturnCompletedWhenRunSuccessfully() {
+    default void getStatusShouldReturnCompletedWhenRunSuccessfully() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(
             new CompletedTask());
@@ -212,7 +212,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void additionalInformationShouldBeUpdatedWhenRunSuccessfully() {
+    default void additionalInformationShouldBeUpdatedWhenRunSuccessfully() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(new MemoryReferenceWithCounterTask(counter -> {
             counter.incrementAndGet();
@@ -230,7 +230,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void additionalInformationShouldBeUpdatedWhenFailed() {
+    default void additionalInformationShouldBeUpdatedWhenFailed() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(new MemoryReferenceWithCounterTask(counter -> {
             counter.incrementAndGet();
@@ -248,7 +248,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void additionalInformationShouldBeUpdatedWhenCancelled(CountDownLatch countDownLatch) {
+    default void additionalInformationShouldBeUpdatedWhenCancelled(CountDownLatch countDownLatch) throws Exception {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(new MemoryReferenceWithCounterTask((counter) -> {
             counter.incrementAndGet();
@@ -273,7 +273,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void additionalInformationShouldBeUpdatedDuringExecution(CountDownLatch countDownLatch) {
+    default void additionalInformationShouldBeUpdatedDuringExecution(CountDownLatch countDownLatch) throws Exception {
         TaskManager taskManager = taskManager();
         TaskId id = taskManager.submit(new MemoryReferenceWithCounterTask((counter) -> {
             counter.incrementAndGet();
@@ -288,7 +288,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void additionalInformationShouldBeAvailableOnAnyTaskManagerDuringExecution(CountDownLatch countDownLatch) {
+    default void additionalInformationShouldBeAvailableOnAnyTaskManagerDuringExecution(CountDownLatch countDownLatch) throws Exception {
         TaskManager taskManager = taskManager();
         TaskManager otherTaskManager = taskManager();
         TaskId id = taskManager.submit(new MemoryReferenceWithCounterTask((counter) -> {
@@ -312,7 +312,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void getStatusShouldReturnFailedWhenRunPartially() {
+    default void getStatusShouldReturnFailedWhenRunPartially() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(
             new FailedTask());
@@ -493,22 +493,22 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void listShouldBeEmptyWhenNoTasks() {
+    default void listShouldBeEmptyWhenNoTasks() throws Exception {
         assertThat(taskManager().list()).isEmpty();
     }
 
     @Test
-    default void listCancelledShouldBeEmptyWhenNoTasks() {
+    default void listCancelledShouldBeEmptyWhenNoTasks() throws Exception {
         assertThat(taskManager().list(TaskManager.Status.CANCELLED)).isEmpty();
     }
 
     @Test
-    default void listCancelRequestedShouldBeEmptyWhenNoTasks() {
+    default void listCancelRequestedShouldBeEmptyWhenNoTasks() throws Exception {
         assertThat(taskManager().list(TaskManager.Status.CANCEL_REQUESTED)).isEmpty();
     }
 
     @Test
-    default void awaitShouldNotThrowWhenCompletedTask() throws TaskManager.ReachedTimeoutException {
+    default void awaitShouldNotThrowWhenCompletedTask() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(new CompletedTask());
         taskManager.await(taskId, TIMEOUT);
@@ -516,7 +516,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void awaitShouldAwaitWaitingTask() throws TaskManager.ReachedTimeoutException, InterruptedException {
+    default void awaitShouldAwaitWaitingTask() throws Exception {
         TaskManager taskManager = taskManager();
         CountDownLatch latch = new CountDownLatch(1);
         taskManager.submit(new MemoryReferenceTask(
@@ -537,7 +537,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void awaitWithATooShortTimeoutShouldReturnATimeoutAwaitedTaskExecutionDetailsAndThrow() {
+    default void awaitWithATooShortTimeoutShouldReturnATimeoutAwaitedTaskExecutionDetailsAndThrow() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(new MemoryReferenceTask(
             () -> {
@@ -550,7 +550,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void submittedTaskShouldExecuteSequentially() {
+    default void submittedTaskShouldExecuteSequentially() throws Exception {
         TaskManager taskManager = taskManager();
         ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>();
 
@@ -580,7 +580,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void awaitShouldReturnFailedWhenExceptionThrown() {
+    default void awaitShouldReturnFailedWhenExceptionThrown() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(new ThrowingTask());
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED, taskManager);
@@ -589,7 +589,7 @@ public interface TaskManagerContract {
     }
 
     @Test
-    default void getStatusShouldReturnFailedWhenExceptionThrown() {
+    default void getStatusShouldReturnFailedWhenExceptionThrown() throws Exception {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(new ThrowingTask());
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED, taskManager);

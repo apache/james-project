@@ -32,6 +32,8 @@ import java.util.Optional;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.james.backends.rabbitmq.QueueArguments;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
@@ -66,22 +68,26 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     private final JsonEventSerializer serializer;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
+    private final RabbitMQConfiguration rabbitMQConfiguration;
     private Sinks.Many<OutboundMessage> sendQueue;
     private Sinks.Many<Event> listener;
     private Disposable sendQueueHandle;
     private Disposable listenQueueHandle;
 
     @Inject
-    RabbitMQTerminationSubscriber(TerminationQueueName queueName, Sender sender, ReceiverProvider receiverProvider, JsonEventSerializer serializer) {
+    RabbitMQTerminationSubscriber(TerminationQueueName queueName, Sender sender, ReceiverProvider receiverProvider, JsonEventSerializer serializer, RabbitMQConfiguration rabbitMQConfiguration) {
         this.queueName = queueName;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
         this.serializer = serializer;
+        this.rabbitMQConfiguration = rabbitMQConfiguration;
     }
 
     public void start() {
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
-        sender.declare(QueueSpecification.queue(queueName.asString()).durable(!DURABLE).autoDelete(AUTO_DELETE)).block();
+        QueueArguments.Builder builder = QueueArguments.builder();
+        rabbitMQConfiguration.getQueueTTL().ifPresent(builder::queueTTL);
+        sender.declare(QueueSpecification.queue(queueName.asString()).durable(!DURABLE).autoDelete(!AUTO_DELETE).arguments(builder.build())).block();
         sender.bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, queueName.asString())).block();
         sendQueue = Sinks.many().unicast().onBackpressureBuffer();
         sendQueueHandle = sender

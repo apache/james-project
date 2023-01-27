@@ -65,15 +65,15 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
         .isolationPolicy(WEAK);
 
     @Override
-    public TerminationSubscriber subscriber() {
+    public TerminationSubscriber subscriber() throws Exception {
         RabbitMQTerminationSubscriber subscriber = new RabbitMQTerminationSubscriber(TerminationQueueName.generate(), rabbitMQExtension.getSender(),
-            rabbitMQExtension.getReceiverProvider(), SERIALIZER);
+            rabbitMQExtension.getReceiverProvider(), SERIALIZER, rabbitMQExtension.getRabbitMQ().getConfiguration());
         subscriber.start();
         return subscriber;
     }
 
     @Test
-    void givenTwoTerminationSubscribersWhenAnEventIsSentItShouldBeReceivedByBoth() {
+    void givenTwoTerminationSubscribersWhenAnEventIsSentItShouldBeReceivedByBoth() throws Exception {
         TerminationSubscriber subscriber1 = subscriber();
         TerminationSubscriber subscriber2 = subscriber();
 
@@ -94,7 +94,7 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
     }
 
     @Test
-    void eventProcessingShouldNotCrashOnInvalidMessage() {
+    void eventProcessingShouldNotCrashOnInvalidMessage() throws Exception {
         TerminationSubscriber subscriber1 = subscriber();
         Flux<Event> firstListener = Flux.from(subscriber1.listenEvents());
 
@@ -113,7 +113,7 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
     }
 
     @Test
-    void eventProcessingShouldNotCrashOnInvalidMessages() {
+    void eventProcessingShouldNotCrashOnInvalidMessages() throws Exception {
         TerminationSubscriber subscriber1 = subscriber();
         Flux<Event> firstListener = Flux.from(subscriber1.listenEvents());
 

@@ -26,12 +26,13 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.rabbitmq.QueueArguments;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
@@ -42,11 +43,13 @@ public class TerminationReconnectionHandler implements SimpleConnectionPool.Reco
 
     private final TerminationQueueName queueName;
     private final RabbitMQTerminationSubscriber terminationSubscriber;
+    private final RabbitMQConfiguration configuration;
 
     @Inject
-    public TerminationReconnectionHandler(TerminationQueueName queueName, RabbitMQTerminationSubscriber terminationSubscriber) {
+    public TerminationReconnectionHandler(TerminationQueueName queueName, RabbitMQTerminationSubscriber terminationSubscriber, RabbitMQConfiguration configuration) {
         this.queueName = queueName;
         this.terminationSubscriber = terminationSubscriber;
+        this.configuration = configuration;
     }
 
     @Override
@@ -57,7 +60,9 @@ public class TerminationReconnectionHandler implements SimpleConnectionPool.Reco
 
     private void createTerminationQueue(Connection connection) {
         try (Channel channel = connection.createChannel()) {
-            channel.queueDeclare(queueName.asString(), !DURABLE, !EXCLUSIVE, AUTO_DELETE, ImmutableMap.of());
+            QueueArguments.Builder builder = QueueArguments.builder();
+            configuration.getQueueTTL().ifPresent(builder::queueTTL);
+            channel.queueDeclare(queueName.asString(), !DURABLE, !EXCLUSIVE, !AUTO_DELETE, builder.build());
         } catch (Exception e) {
             LOGGER.error("Error recovering connection", e);
         }

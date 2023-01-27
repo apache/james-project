@@ -50,10 +50,10 @@ class RabbitMQWorkQueuePersistenceTest {
     private JsonTaskSerializer serializer;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         worker = spy(new ImmediateWorker());
         serializer = JsonTaskSerializer.of(TestTaskDTOModules.COMPLETED_TASK_MODULE, TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore()));
-        testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate());
+        testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate(), rabbitMQExtension.getRabbitMQ().getConfiguration());
         //declare the queue but do not start consuming from it
         testee.declareQueue();
     }
@@ -90,9 +90,9 @@ class RabbitMQWorkQueuePersistenceTest {
         assertThat(worker.results).containsExactly(Task.Result.COMPLETED);
     }
 
-    private void startNewConsumingWorkqueue() {
+    private void startNewConsumingWorkqueue() throws Exception {
         worker = spy(new ImmediateWorker());
-        testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate());
+        testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate(), rabbitMQExtension.getRabbitMQ().getConfiguration());
         testee.start();
     }
 }
