@@ -38,7 +38,6 @@ import org.apache.james.modules.server.MailRepositoryTaskSerializationModule;
 import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.TaskManagerModule;
-import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -67,14 +66,14 @@ public class CustomJamesServerMain implements JamesServerMain {
         PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
-	    MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
+        MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
         JamesServerMain.main(GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CUSTOM_SERVER_AGGREGATE_MODULE)
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
-								             .chooseModules(configuration.getUsersRepositoryImplementation()))
+                                             .chooseModules(configuration.getUsersRepositoryImplementation()))
         );
     }
 }
