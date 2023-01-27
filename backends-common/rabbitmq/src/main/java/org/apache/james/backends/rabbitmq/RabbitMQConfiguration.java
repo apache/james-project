@@ -767,7 +767,6 @@ public class RabbitMQConfiguration {
         if (allowQuorum && useQuorumQueues) {
             builder.quorumQueue().replicationFactor(quorumQueueReplicationFactor);
         }
-        queueTTL.ifPresent(builder::queueTTL);
         return builder;
     }
 
