@@ -229,7 +229,7 @@ public class UidMsnConverter {
                 uidsAsInts.add((int) uid.asLong());
                 return;
             }
-            if (uidsAsInts.contains((int) uid.asLong())) {
+            if (contains(uid)) {
                 return;
             } else {
                 uidsAsInts.add((int) uid.asLong());
@@ -240,13 +240,17 @@ public class UidMsnConverter {
                 uids.add(uid.asLong());
                 return;
             }
-            if (uids.contains(uid.asLong())) {
+            if (contains(uid)) {
                 return;
             } else {
                 uids.add(uid.asLong());
                 uids.sort(LongComparators.NATURAL_COMPARATOR);
             }
         }
+    }
+
+    private boolean contains(MessageUid uid) {
+        return getMsnUnsynchronized(uid).foldSilent(() -> false, any -> true);
     }
 
     private boolean isLastUid(MessageUid uid) {
