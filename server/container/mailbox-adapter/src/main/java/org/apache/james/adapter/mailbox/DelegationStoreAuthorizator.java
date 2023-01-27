@@ -30,6 +30,8 @@ import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Flux;
 
 /**
@@ -61,11 +63,16 @@ public class DelegationStoreAuthorizator implements Authorizator {
         }
     }
 
-    private boolean isAdministrator(Username userId) throws UsersRepositoryException {
+    @VisibleForTesting
+    boolean isAdministrator(Username userId) throws UsersRepositoryException {
         if (userId.hasDomainPart() ^ usersRepository.supportVirtualHosting()) {
             return false;
         }
-        return usersRepository.isAdministrator(userId);
+        try {
+            return usersRepository.isAdministrator(userId);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
