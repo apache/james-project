@@ -392,6 +392,38 @@ class UidMsnConverterTest {
     }
 
     @Test
+    void addUidShouldSupportIntOverflow() {
+        testee.addUid(MessageUid.of(36));
+        testee.addUid(MessageUid.of(17));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 1L));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 2L));
+        testee.addUid(MessageUid.of(13));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(13),
+                2, MessageUid.of(17),
+                3, MessageUid.of(36),
+                4, MessageUid.of(Integer.MAX_VALUE + 1L),
+                5, MessageUid.of(Integer.MAX_VALUE + 2L)));
+    }
+
+    @Test
+    void addAllShouldSupportIntOverflow() {
+        testee.addAll(ImmutableList.of(MessageUid.of(36),
+            MessageUid.of(17),
+            MessageUid.of(Integer.MAX_VALUE + 1L),
+            MessageUid.of(Integer.MAX_VALUE + 2L),
+            MessageUid.of(13)));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(13),
+                2, MessageUid.of(17),
+                3, MessageUid.of(36),
+                4, MessageUid.of(Integer.MAX_VALUE + 1L),
+                5, MessageUid.of(Integer.MAX_VALUE + 2L)));
+    }
+
+    @Test
     void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
         int initialCount = 1000;
         for (int i = 1; i <= initialCount; i++) {
