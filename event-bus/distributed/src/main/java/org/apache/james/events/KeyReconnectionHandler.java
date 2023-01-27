@@ -26,6 +26,7 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.rabbitmq.QueueArguments;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.reactivestreams.Publisher;
@@ -55,8 +56,9 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
     public Publisher<Void> handleReconnection(Connection connection) {
         return Mono.fromRunnable(() -> {
             try (Channel channel = connection.createChannel()) {
-                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE,
-                    configuration.workQueueArgumentsBuilder(!ALLOW_QUORUM).build());
+                QueueArguments.Builder builder = configuration.workQueueArgumentsBuilder(!ALLOW_QUORUM);
+                configuration.getQueueTTL().ifPresent(builder::queueTTL);
+                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE, builder.build());
             } catch (Exception e) {
                 LOGGER.error("Error recovering connection", e);
             }

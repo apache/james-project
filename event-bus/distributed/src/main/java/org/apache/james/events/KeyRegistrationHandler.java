@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.apache.james.backends.rabbitmq.QueueArguments;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.metrics.api.MetricFactory;
@@ -122,12 +123,14 @@ class KeyRegistrationHandler {
     }
 
     private void declareQueue(Sender sender) {
+        QueueArguments.Builder builder = configuration.workQueueArgumentsBuilder(!ALLOW_QUORUM);
+        configuration.getQueueTTL().ifPresent(builder::queueTTL);
         sender.declareQueue(
             QueueSpecification.queue(registrationQueue.asString())
                 .durable(configuration.isEventBusNotificationDurabilityEnabled())
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(AUTO_DELETE)
-                .arguments(configuration.workQueueArgumentsBuilder(!ALLOW_QUORUM).build()))
+                .arguments(builder.build()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)
             .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()))
