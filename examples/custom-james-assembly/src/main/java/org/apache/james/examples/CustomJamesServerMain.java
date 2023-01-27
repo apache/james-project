@@ -22,9 +22,12 @@ package org.apache.james.examples;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerMain;
+import org.apache.james.MemoryJamesConfiguration;
+import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.MemoryDataModule;
+import org.apache.james.modules.data.MemoryUsersRepositoryModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -64,11 +67,14 @@ public class CustomJamesServerMain implements JamesServerMain {
         PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
+	    MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
             .useWorkingDirectoryEnvProperty()
             .build();
 
         JamesServerMain.main(GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CUSTOM_SERVER_AGGREGATE_MODULE));
+            .combineWith(CUSTOM_SERVER_AGGREGATE_MODULE)
+            .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
+								             .chooseModules(configuration.getUsersRepositoryImplementation()))
+        );
     }
 }
