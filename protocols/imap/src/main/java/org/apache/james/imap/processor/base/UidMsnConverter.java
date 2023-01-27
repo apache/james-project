@@ -192,7 +192,7 @@ public class UidMsnConverter {
                 uidsAsInts.removeInt(index);
             }
         } else {
-            int index = Arrays.binarySearch(uids.elements(), 0, uids.size(), (int) uid.asLong());
+            int index = Arrays.binarySearch(uids.elements(), 0, uids.size(), uid.asLong());
             if (index >= 0) {
                 uids.removeLong(index);
             }
