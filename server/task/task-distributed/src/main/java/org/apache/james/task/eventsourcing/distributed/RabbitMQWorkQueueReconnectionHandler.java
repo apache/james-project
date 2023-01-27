@@ -26,13 +26,14 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.rabbitmq.QueueArguments;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
@@ -42,11 +43,13 @@ public class RabbitMQWorkQueueReconnectionHandler implements SimpleConnectionPoo
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQWorkQueueReconnectionHandler.class);
     private final CancelRequestQueueName cancelRequestQueueName;
     private final EventSourcingTaskManager taskManager;
+    private final RabbitMQConfiguration configuration;
 
     @Inject
-    public RabbitMQWorkQueueReconnectionHandler(CancelRequestQueueName cancelRequestQueueName, EventSourcingTaskManager taskManager) {
+    public RabbitMQWorkQueueReconnectionHandler(CancelRequestQueueName cancelRequestQueueName, EventSourcingTaskManager taskManager, RabbitMQConfiguration configuration) {
         this.cancelRequestQueueName = cancelRequestQueueName;
         this.taskManager = taskManager;
+        this.configuration = configuration;
     }
 
     @Override
@@ -57,7 +60,9 @@ public class RabbitMQWorkQueueReconnectionHandler implements SimpleConnectionPoo
 
     private void createCancelQueue(Connection connection) {
         try (Channel channel = connection.createChannel()) {
-            channel.queueDeclare(cancelRequestQueueName.asString(), !DURABLE, !EXCLUSIVE, AUTO_DELETE, ImmutableMap.of());
+            QueueArguments.Builder builder = QueueArguments.builder();
+            configuration.getQueueTTL().ifPresent(builder::queueTTL);
+            channel.queueDeclare(cancelRequestQueueName.asString(), !DURABLE, !EXCLUSIVE, !AUTO_DELETE, builder.build());
         } catch (Exception e) {
             LOGGER.error("Error recovering connection", e);
         }

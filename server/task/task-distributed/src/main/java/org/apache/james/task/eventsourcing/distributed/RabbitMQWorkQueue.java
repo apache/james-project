@@ -32,6 +32,8 @@ import java.time.Duration;
 import java.util.Optional;
 
 import org.apache.james.backends.rabbitmq.Constants;
+import org.apache.james.backends.rabbitmq.QueueArguments;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
@@ -81,6 +83,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private final TaskManagerWorker worker;
     private final JsonTaskSerializer taskSerializer;
     private final RabbitMQWorkQueueConfiguration configuration;
+    private final RabbitMQConfiguration rabbitMQConfiguration;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
     private final CancelRequestQueueName cancelRequestQueueName;
@@ -91,13 +94,15 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     public RabbitMQWorkQueue(TaskManagerWorker worker, Sender sender,
                              ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer,
-                             RabbitMQWorkQueueConfiguration configuration, CancelRequestQueueName cancelRequestQueueName) {
+                             RabbitMQWorkQueueConfiguration configuration, CancelRequestQueueName cancelRequestQueueName,
+                             RabbitMQConfiguration rabbitMQConfiguration) {
         this.cancelRequestQueueName = cancelRequestQueueName;
         this.worker = worker;
         this.receiverProvider = receiverProvider;
         this.sender = sender;
         this.taskSerializer = taskSerializer;
         this.configuration = configuration;
+        this.rabbitMQConfiguration = rabbitMQConfiguration;
     }
 
     @Override
@@ -193,11 +198,17 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     private void listenToCancelRequests() {
         sender.declareExchange(ExchangeSpecification.exchange(CANCEL_REQUESTS_EXCHANGE_NAME)).block();
-        sender.declare(QueueSpecification.queue(cancelRequestQueueName.asString()).durable(!DURABLE).autoDelete(AUTO_DELETE)).block();
+        QueueArguments.Builder builder = QueueArguments.builder();
+        rabbitMQConfiguration.getQueueTTL().ifPresent(builder::queueTTL);
+        QueueSpecification specification = QueueSpecification.queue(cancelRequestQueueName.asString())
+            .durable(!DURABLE)
+            .autoDelete(AUTO_DELETE)
+            .arguments(builder.build());
+        sender.declare(specification).block();
         sender.bind(BindingSpecification.binding(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, cancelRequestQueueName.asString())).block();
         registerCancelRequestsListener(cancelRequestQueueName.asString());
 
-        sendCancelRequestsQueue = Sinks.many().unicast().onBackpressureBuffer();
+        sendCancelRequestsQueue = Sinks.many().multicast().onBackpressureBuffer();
         sendCancelRequestsQueueHandle = sender
             .send(sendCancelRequestsQueue.asFlux().map(this::makeCancelRequestMessage))
             .subscribeOn(Schedulers.boundedElastic())

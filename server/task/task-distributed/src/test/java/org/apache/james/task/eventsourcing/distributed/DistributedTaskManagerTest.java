@@ -31,6 +31,7 @@ import static org.awaitility.Awaitility.await;
 import static org.awaitility.Durations.FIVE_SECONDS;
 import static org.awaitility.Durations.ONE_SECOND;
 
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -118,9 +119,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         private final List<RabbitMQWorkQueue> workQueues;
         private final RabbitMQWorkQueueSupplier supplier;
 
-        TrackedRabbitMQWorkQueueSupplier(Sender sender, ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer) {
+        TrackedRabbitMQWorkQueueSupplier(Sender sender, ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer) throws Exception {
             workQueues = new ArrayList<>();
-            supplier = new RabbitMQWorkQueueSupplier(sender, receiverProvider, taskSerializer, CancelRequestQueueName.generate(), RabbitMQWorkQueueConfiguration$.MODULE$.enabled());
+            supplier = new RabbitMQWorkQueueSupplier(sender, receiverProvider, taskSerializer, CancelRequestQueueName.generate(), RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), rabbitMQExtension.getRabbitMQ().getConfiguration());
         }
 
         @Override
@@ -198,7 +199,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     JsonEventSerializer eventSerializer;
 
     @BeforeEach
-    void setUp(EventStore eventStore) {
+    void setUp(EventStore eventStore) throws Exception {
         memoryReferenceTaskStore = new MemoryReferenceTaskStore();
         memoryReferenceWithCounterTaskStore = new MemoryReferenceWithCounterTaskStore();
         CassandraCluster cassandra = CASSANDRA_CLUSTER.getCassandraCluster();
@@ -223,21 +224,21 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             .forEach(queue -> managementAPI.deleteQueue("/", queue.getName()));
     }
 
-    public EventSourcingTaskManager taskManager() {
+    public EventSourcingTaskManager taskManager() throws Exception {
         return taskManager(HOSTNAME);
     }
 
-    EventSourcingTaskManager taskManager(Hostname hostname) {
+    EventSourcingTaskManager taskManager(Hostname hostname) throws Exception {
         RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(TerminationQueueName.generate(), rabbitMQExtension.getSender(),
             rabbitMQExtension.getReceiverProvider(),
-            eventSerializer);
+            eventSerializer, rabbitMQExtension.getRabbitMQ().getConfiguration());
         terminationSubscribers.add(terminationSubscriber);
         terminationSubscriber.start();
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);
     }
 
     @Test
-    void badPayloadShouldNotAffectTaskManagerOnCancelTask() throws TaskManager.ReachedTimeoutException {
+    void badPayloadShouldNotAffectTaskManagerOnCancelTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             Thread.sleep(250);
@@ -255,7 +256,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void badPayloadsShouldNotAffectTaskManagerOnCancelTask() throws TaskManager.ReachedTimeoutException {
+    void badPayloadsShouldNotAffectTaskManagerOnCancelTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             Thread.sleep(250);
@@ -274,7 +275,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void badPayloadShouldNotAffectTaskManagerOnCompleteTask() throws TaskManager.ReachedTimeoutException {
+    void badPayloadShouldNotAffectTaskManagerOnCompleteTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             Thread.sleep(250);
@@ -291,7 +292,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void badPayloadsShouldNotAffectTaskManagerOnCompleteTask() throws TaskManager.ReachedTimeoutException {
+    void badPayloadsShouldNotAffectTaskManagerOnCompleteTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             Thread.sleep(250);
@@ -309,7 +310,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenOneEventStoreTwoEventTaskManagersShareTheSameEvents() {
+    void givenOneEventStoreTwoEventTaskManagersShareTheSameEvents() throws Exception {
         try (EventSourcingTaskManager taskManager1 = taskManager();
              EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
             TaskId taskId = taskManager1.submit(new CompletedTask());
@@ -325,7 +326,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagersAndTwoTaskOnlyOneTaskShouldRunAtTheSameTime() {
+    void givenTwoTaskManagersAndTwoTaskOnlyOneTaskShouldRunAtTheSameTime() throws Exception {
         CountDownLatch waitingForFirstTaskLatch = new CountDownLatch(1);
 
         try (EventSourcingTaskManager taskManager1 = taskManager();
@@ -348,7 +349,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagerATaskSubmittedOnOneCouldBeRunOnTheOther() throws InterruptedException {
+    void givenTwoTaskManagerATaskSubmittedOnOneCouldBeRunOnTheOther() throws Exception {
         try (EventSourcingTaskManager taskManager1 = taskManager()) {
             Thread.sleep(100);
             try (EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
@@ -368,7 +369,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagerATaskRunningOnOneShouldBeCancellableFromTheOtherOne(CountDownLatch countDownLatch) {
+    void givenTwoTaskManagerATaskRunningOnOneShouldBeCancellableFromTheOtherOne(CountDownLatch countDownLatch) throws Exception {
         TaskManager taskManager1 = taskManager(HOSTNAME);
         TaskManager taskManager2 = taskManager(HOSTNAME_2);
         TaskId id = taskManager1.submit(new MemoryReferenceTask(() -> {
@@ -397,7 +398,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagersATaskRunningOnOneShouldBeWaitableFromTheOtherOne() throws TaskManager.ReachedTimeoutException {
+    void givenTwoTaskManagersATaskRunningOnOneShouldBeWaitableFromTheOtherOne() throws Exception {
         TaskManager taskManager1 = taskManager(HOSTNAME);
         TaskManager taskManager2 = taskManager(HOSTNAME_2);
         TaskId id = taskManager1.submit(new MemoryReferenceTask(() -> {
@@ -424,7 +425,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagerAndATaskRanPerTaskManagerListingThemOnEachShouldShowBothTasks() {
+    void givenTwoTaskManagerAndATaskRanPerTaskManagerListingThemOnEachShouldShowBothTasks() throws Exception {
         try (EventSourcingTaskManager taskManager1 = taskManager();
              EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
 
@@ -449,7 +450,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagerIfTheFirstOneIsDownTheSecondOneShouldBeAbleToRunTheRemainingTasks(CountDownLatch countDownLatch) {
+    void givenTwoTaskManagerIfTheFirstOneIsDownTheSecondOneShouldBeAbleToRunTheRemainingTasks(CountDownLatch countDownLatch) throws Exception {
         try (EventSourcingTaskManager taskManager1 = taskManager();
              EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
             ImmutableBiMap<EventSourcingTaskManager, Hostname> hostNameByTaskManager = ImmutableBiMap.of(taskManager1, HOSTNAME, taskManager2, HOSTNAME_2);
@@ -477,7 +478,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void shouldNotCrashWhenBadMessage() {
+    void shouldNotCrashWhenBadMessage() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
 
         taskManager.submit(new FailsDeserializationTask());
@@ -488,7 +489,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void shouldNotCrashWhenBadMessages() {
+    void shouldNotCrashWhenBadMessages() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
 
         IntStream.range(0, 100).forEach(i -> taskManager.submit(new FailsDeserializationTask()));
@@ -586,7 +587,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void cassandraTasksShouldBeCancealable(CassandraCluster cassandra) {
+    void cassandraTasksShouldBeCancealable(CassandraCluster cassandra) throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
 
         TaskId taskId = taskManager.submit(new CassandraExecutingTask(cassandra.getConf(), true));
@@ -599,7 +600,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void inProgressTaskShouldBeCanceledWhenCloseTaskManager() {
+    void inProgressTaskShouldBeCanceledWhenCloseTaskManager() throws Exception {
         try (EventSourcingTaskManager taskManager = taskManager()) {
             TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> {
                 TimeUnit.SECONDS.sleep(5);

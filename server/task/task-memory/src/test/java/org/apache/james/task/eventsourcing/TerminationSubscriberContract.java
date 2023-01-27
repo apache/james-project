@@ -53,10 +53,10 @@ public interface TerminationSubscriberContract {
     Duration DELAY_BEFORE_PUBLISHING = Duration.ofMillis(50);
     ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
-    TerminationSubscriber subscriber();
+    TerminationSubscriber subscriber() throws Exception;
 
     @Test
-    default void handlingCompletedShouldBeListed() {
+    default void handlingCompletedShouldBeListed() throws Exception {
         TerminationSubscriber subscriber = subscriber();
 
         sendEvents(subscriber, COMPLETED_EVENT);
@@ -65,7 +65,7 @@ public interface TerminationSubscriberContract {
     }
 
     @Test
-    default void handlingFailedShouldBeListed() {
+    default void handlingFailedShouldBeListed() throws Exception {
         TerminationSubscriber subscriber = subscriber();
 
         sendEvents(subscriber, FAILED_EVENT);
@@ -74,7 +74,7 @@ public interface TerminationSubscriberContract {
     }
 
     @Test
-    default void handlingCancelledShouldBeListed() {
+    default void handlingCancelledShouldBeListed() throws Exception {
         TerminationSubscriber subscriber = subscriber();
 
         sendEvents(subscriber, CANCELLED_EVENT);
@@ -83,7 +83,7 @@ public interface TerminationSubscriberContract {
     }
 
     @Test
-    default void handlingNonTerminalEventShouldNotBeListed() {
+    default void handlingNonTerminalEventShouldNotBeListed() throws Exception {
         TerminationSubscriber subscriber = subscriber();
         TaskEvent event = new Started(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), new Hostname("foo"));
 
@@ -93,7 +93,7 @@ public interface TerminationSubscriberContract {
     }
 
     @Test
-    default void handlingMultipleEventsShouldBeListed() {
+    default void handlingMultipleEventsShouldBeListed() throws Exception {
         TerminationSubscriber subscriber = subscriber();
 
         sendEvents(subscriber, COMPLETED_EVENT, FAILED_EVENT, CANCELLED_EVENT);
@@ -102,7 +102,7 @@ public interface TerminationSubscriberContract {
     }
 
     @Test
-    default void multipleListeningEventsShouldShareEvents() {
+    default void multipleListeningEventsShouldShareEvents() throws Exception {
         TerminationSubscriber subscriber = subscriber();
 
         Flux<Event> firstListener = Flux.from(subscriber.listenEvents());
@@ -122,7 +122,7 @@ public interface TerminationSubscriberContract {
     }
 
     @Test
-    default void dynamicListeningEventsShouldGetOnlyNewEvents() {
+    default void dynamicListeningEventsShouldGetOnlyNewEvents() throws Exception {
         TerminationSubscriber subscriber = subscriber();
 
         sendEvents(subscriber, COMPLETED_EVENT, FAILED_EVENT, CANCELLED_EVENT);
