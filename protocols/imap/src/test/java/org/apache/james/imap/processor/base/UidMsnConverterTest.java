@@ -424,6 +424,121 @@ class UidMsnConverterTest {
     }
 
     @Test
+    void addAllShouldSupportIntOverflowWhenNonEmpty() {
+        testee.addUid(MessageUid.of(17));
+        testee.addAll(ImmutableList.of(MessageUid.of(36),
+            MessageUid.of(Integer.MAX_VALUE + 1L),
+            MessageUid.of(Integer.MAX_VALUE + 2L),
+            MessageUid.of(13)));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(13),
+                2, MessageUid.of(17),
+                3, MessageUid.of(36),
+                4, MessageUid.of(Integer.MAX_VALUE + 1L),
+                5, MessageUid.of(Integer.MAX_VALUE + 2L)));
+    }
+
+    @Test
+    void addUidShouldNotCreateDuplicatesInLongMode() {
+        testee.addUid(MessageUid.of(17));
+        testee.addAll(ImmutableList.of(MessageUid.of(36),
+            MessageUid.of(Integer.MAX_VALUE + 1L),
+            MessageUid.of(Integer.MAX_VALUE + 2L),
+            MessageUid.of(13)));
+        testee.addUid(MessageUid.of(13));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(13),
+                2, MessageUid.of(17),
+                3, MessageUid.of(36),
+                4, MessageUid.of(Integer.MAX_VALUE + 1L),
+                5, MessageUid.of(Integer.MAX_VALUE + 2L)));
+    }
+
+    @Test
+    void removeLongShouldNotAlterIntStructure() {
+        testee.addUid(MessageUid.of(17));
+
+        testee.remove(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(17)));
+    }
+
+    @Test
+    void getMsnShouldReturnNoneWhenUsedForALongAgainstAnIntStructure() {
+        testee.addUid(MessageUid.of(17));
+
+        assertThat(testee.getMsn(MessageUid.of(Integer.MAX_VALUE + 1L)))
+            .isEqualTo(NullableMessageSequenceNumber.noMessage());
+    }
+
+    @Test
+    void getMsnShouldWorkForLongStructure() {
+        testee.addUid(MessageUid.of(17));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        assertThat(testee.getMsn(MessageUid.of(Integer.MAX_VALUE + 1L)))
+            .isEqualTo(NullableMessageSequenceNumber.of(2));
+    }
+
+    @Test
+    void getMsnShouldHandleNotFoundForLongStructure() {
+        testee.addUid(MessageUid.of(17));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        assertThat(testee.getMsn(MessageUid.of(Integer.MAX_VALUE + 2L)))
+            .isEqualTo(NullableMessageSequenceNumber.noMessage());
+    }
+
+    @Test
+    void removeShouldWorkForLong() {
+        testee.addUid(MessageUid.of(17));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        testee.remove(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(17)));
+    }
+
+    @Test
+    void removeShouldHandleNotFoundForLong() {
+        testee.addUid(MessageUid.of(17));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        testee.remove(MessageUid.of(Integer.MAX_VALUE + 2L));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(17),
+                2, MessageUid.of(Integer.MAX_VALUE + 1L)));
+    }
+
+    @Test
+    void getAndRemoveShouldWorkForLong() {
+        testee.addUid(MessageUid.of(17));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        testee.getAndRemove(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(17)));
+    }
+
+    @Test
+    void getAndRemoveShouldHandleNotFoundForLong() {
+        testee.addUid(MessageUid.of(17));
+        testee.addUid(MessageUid.of(Integer.MAX_VALUE + 1L));
+
+        testee.getAndRemove(MessageUid.of(Integer.MAX_VALUE + 2L));
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, MessageUid.of(17),
+                2, MessageUid.of(Integer.MAX_VALUE + 1L)));
+    }
+
+    @Test
     void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
         int initialCount = 1000;
         for (int i = 1; i <= initialCount; i++) {
