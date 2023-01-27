@@ -209,7 +209,7 @@ public class AuthCmdHandler
                 .filter(response -> !SMTPRetCode.AUTH_FAILED.equals(response.getRetCode()))
                 .findFirst()
                 .orElseGet(() -> failSasl(oidcSASLConfiguration, session)))
-            .orElse(doUnknownAuth(AUTH_TYPE_OAUTHBEARER));
+            .orElseGet(() -> doUnknownAuth(AUTH_TYPE_OAUTHBEARER));
     }
 
     private Response failSasl(OidcSASLConfiguration saslConfiguration, SMTPSession session) {
