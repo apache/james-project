@@ -121,6 +121,8 @@ public class UidMsnConverter {
         for (int i = 0; i < uidsAsInts.size(); i++) {
             uids.add(uidsAsInts.getInt(i));
         }
+        uidsAsInts.clear();
+        uidsAsInts.trim();
     }
 
     public synchronized NullableMessageSequenceNumber getMsn(MessageUid uid) {
