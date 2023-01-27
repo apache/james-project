@@ -83,13 +83,7 @@ public class UidMsnConverter {
     private void addAllToEmptyLongStructure(List<MessageUid> addedUids) {
         uids.ensureCapacity(addedUids.size());
         for (MessageUid uid : addedUids) {
-            if (uid.asLong() > INTEGER_MAX_VALUE) {
-                uids.clear();
-                switchToLongs();
-                addAllUnSynchronized(addedUids);
-                return;
-            }
-            uids.add((int) uid.asLong());
+            uids.add(uid.asLong());
         }
         uids.sort(LongComparators.NATURAL_COMPARATOR);
     }
