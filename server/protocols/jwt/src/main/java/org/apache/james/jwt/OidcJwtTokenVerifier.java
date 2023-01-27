@@ -31,7 +31,6 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
 import reactor.core.publisher.Mono;
 
 public class OidcJwtTokenVerifier {
@@ -55,7 +54,7 @@ public class OidcJwtTokenVerifier {
             Jwt<Header, Claims> headerClaims = Jwts.parserBuilder().build().parseClaimsJwt(nonSignedToken);
             T claim = (T) headerClaims.getHeader().get(claimName);
             if (claim == null) {
-                throw new MalformedJwtException("'" + claimName + "' field in token is mandatory");
+                return Optional.empty();
             }
             return Optional.of(claim);
         } catch (JwtException e) {
