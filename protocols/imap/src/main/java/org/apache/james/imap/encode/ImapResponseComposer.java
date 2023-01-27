@@ -200,6 +200,8 @@ public interface ImapResponseComposer {
      */
     ImapResponseComposer continuationResponse(String message) throws IOException;
 
+    ImapResponseComposer continuationResponse() throws IOException;
+
     /**
      * Write a '}'
      * 

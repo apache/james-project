@@ -89,6 +89,13 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     }
 
     @Override
+    public ImapResponseComposer continuationResponse() throws IOException {
+        buffer.write(CONTINUATION);
+        end();
+        return this;
+    }
+
+    @Override
     public ImapResponseComposer untaggedResponse(String message) throws IOException {
         untagged();
         message(message);
