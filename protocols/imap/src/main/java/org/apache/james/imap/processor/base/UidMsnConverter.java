@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor.base;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -235,7 +234,6 @@ public class UidMsnConverter {
             } else {
                 uidsAsInts.add((int) uid.asLong());
                 uidsAsInts.sort(IntComparators.NATURAL_COMPARATOR);
-                Collections.sort(uids);
             }
         } else {
             if (isLastUid(uid)) {
