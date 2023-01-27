@@ -3048,6 +3048,10 @@ Additional query parameters are supported:
  - `consume` (boolean defaulting to `true`) whether the reprocessing should consume the mail in its originating mail repository. Passing
  this value to `false` allows non destructive reprocessing as you keep a copy of the email in the mail repository and can be valuable
  when debugging.
+ - `limit` (integer value. Optional, default is empty). It enables to limit the count of elements reprocessed.
+ If unspecified the count of the processed elements is unbounded.
+ - `maxRetries` Optional integer, defaults to no max retries limit. Only processed emails that had been retried less 
+ than this value. Ignored by default.
 
 
 For instance:

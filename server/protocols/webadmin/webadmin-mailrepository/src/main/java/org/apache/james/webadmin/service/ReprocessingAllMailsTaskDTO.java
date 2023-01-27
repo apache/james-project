@@ -50,7 +50,8 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 domainObject.getConfiguration().getMailQueueName().asString(),
                 Optional.of(domainObject.getConfiguration().isConsume()),
                 domainObject.getConfiguration().getTargetProcessor(),
-                domainObject.getConfiguration().getLimit().getLimit());
+                domainObject.getConfiguration().getLimit().getLimit(),
+                domainObject.getConfiguration().getMaxRetries());
         } catch (Exception e) {
             throw new ReprocessingAllMailsTask.UrlEncodingFailureSerializationException(domainObject.getRepositoryPath());
         }
@@ -62,8 +63,8 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
     private final String targetQueue;
     private final boolean consume;
     private final Optional<String> targetProcessor;
-
     private final Optional<Integer> limit;
+    private final Optional<Integer> maxRetries;
 
     public ReprocessingAllMailsTaskDTO(@JsonProperty("type") String type,
                                        @JsonProperty("repositorySize") long repositorySize,
@@ -71,7 +72,8 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                                        @JsonProperty("targetQueue") String targetQueue,
                                        @JsonProperty("consume") Optional<Boolean> consume,
                                        @JsonProperty("targetProcessor") Optional<String> targetProcessor,
-                                       @JsonProperty("limit") Optional<Integer> limit) {
+                                       @JsonProperty("limit") Optional<Integer> limit,
+                                       @JsonProperty("maxRetries") Optional<Integer> maxRetries) {
         this.type = type;
         this.repositorySize = repositorySize;
         this.repositoryPath = repositoryPath;
@@ -79,6 +81,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
         this.consume = consume.orElse(true);
         this.targetProcessor = targetProcessor;
         this.limit = limit;
+        this.maxRetries = maxRetries;
     }
 
     private ReprocessingAllMailsTask fromDTO(ReprocessingService reprocessingService) {
@@ -90,6 +93,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 new ReprocessingService.Configuration(
                     MailQueueName.of(targetQueue),
                     targetProcessor,
+                    maxRetries,
                     consume,
                     Limit.from(limit)));
         } catch (Exception e) {
@@ -100,6 +104,10 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
     @Override
     public String getType() {
         return type;
+    }
+
+    public Optional<Integer> getMaxRetries() {
+        return maxRetries;
     }
 
     public long getRepositorySize() {
