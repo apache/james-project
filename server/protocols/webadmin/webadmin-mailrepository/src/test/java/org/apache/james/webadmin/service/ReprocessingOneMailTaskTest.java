@@ -53,11 +53,13 @@ class ReprocessingOneMailTaskTest {
     private static final MailKey MAIL_KEY = new MailKey("myMail");
     private static final Optional<String> TARGET_PROCESSOR = Optional.of("targetProcessor");
     public static final boolean CONSUME = true;
+    private static final Optional<Integer> NO_MAX_RETRIES = Optional.empty();
+    private static final Optional<String> NO_PROCESSOR = Optional.empty();
 
     @Test
     void taskShouldBeSerializable() throws Exception {
-        ReprocessingOneMailTask taskWithTargetProcessor = new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK);
-        ReprocessingOneMailTask taskWithoutTargetProcessor = new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, Optional.empty(), Optional.empty(), !CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK);
+        ReprocessingOneMailTask taskWithTargetProcessor = new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK);
+        ReprocessingOneMailTask taskWithoutTargetProcessor = new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, NO_PROCESSOR, NO_MAX_RETRIES, !CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK);
 
         JsonSerializationVerifier.dtoModule(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE))
             .testCase(taskWithTargetProcessor, SERIALIZED_TASK_1)
@@ -72,7 +74,7 @@ class ReprocessingOneMailTaskTest {
 
         assertThat(serializer.deserialize("{\"type\":\"reprocessing-one\",\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"mailKey\": \"myMail\", \"consume\":false}"))
             .usingRecursiveComparison()
-            .isEqualTo(new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, Optional.empty(), Optional.empty(), !CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK));
+            .isEqualTo(new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, NO_PROCESSOR, NO_MAX_RETRIES, !CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK));
     }
 
     @ParameterizedTest
@@ -99,7 +101,7 @@ class ReprocessingOneMailTaskTest {
 
     @Test
     void shouldDeserializePreviousTaskFormat() throws Exception {
-        ReprocessingOneMailTask taskWithTargetProcessor = new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK);
+        ReprocessingOneMailTask taskWithTargetProcessor = new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK);
         JsonTaskSerializer testee = JsonTaskSerializer.of(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
 
         assertThat(testee.deserialize(SERIALIZED_TASK_OLD))

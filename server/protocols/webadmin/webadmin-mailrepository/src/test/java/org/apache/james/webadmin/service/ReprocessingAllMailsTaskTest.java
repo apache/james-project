@@ -43,6 +43,8 @@ class ReprocessingAllMailsTaskTest {
     private static final MailRepositoryPath REPOSITORY_PATH = MailRepositoryPath.from("a");
     private static final MailQueueName TARGET_QUEUE = MailQueueName.of("queue");
     private static final Optional<String> SOME_TARGET_PROCESSOR = Optional.of("targetProcessor");
+    private static final Optional<Integer> NO_MAX_RETRIES = Optional.empty();
+    private static final Optional<String> NO_PROCESSOR = Optional.empty();
     private static final long REMAINING_COUNT = 3L;
     private static final boolean CONSUME = true;
 
@@ -56,10 +58,10 @@ class ReprocessingAllMailsTaskTest {
 
     @Test
     void taskShouldBeSerializable() throws Exception {
-        ReprocessingAllMailsTask taskWithTargetProcessor = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()));
-        ReprocessingAllMailsTask taskWithoutTargetProcessor = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, Optional.empty(), Optional.empty(), !CONSUME, Limit.unlimited()));
+        ReprocessingAllMailsTask taskWithTargetProcessor = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()));
+        ReprocessingAllMailsTask taskWithoutTargetProcessor = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, NO_PROCESSOR, NO_MAX_RETRIES, !CONSUME, Limit.unlimited()));
 
-        ReprocessingAllMailsTask taskWithLimit = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.limit(10)));
+        ReprocessingAllMailsTask taskWithLimit = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.limit(10)));
 
         JsonSerializationVerifier.dtoModule(ReprocessingAllMailsTaskDTO.module(REPROCESSING_SERVICE))
             .testCase(taskWithTargetProcessor, SERIALIZED_TASK_WITH_TARGET_PROCESSOR)
@@ -82,14 +84,14 @@ class ReprocessingAllMailsTaskTest {
     @Test
     void additionalInformationShouldBeSerializable() throws Exception {
         ReprocessingAllMailsTask.AdditionalInformation details = new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH,
-            new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()),
+            new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()),
             REPOSITORY_SIZE, REMAINING_COUNT, TIMESTAMP);
         ReprocessingAllMailsTask.AdditionalInformation detailsWithoutProcessor = new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH,
-            new ReprocessingService.Configuration(TARGET_QUEUE, Optional.empty(), Optional.empty(), !CONSUME, Limit.unlimited()),
+            new ReprocessingService.Configuration(TARGET_QUEUE, NO_PROCESSOR, NO_MAX_RETRIES, !CONSUME, Limit.unlimited()),
             REPOSITORY_SIZE, REMAINING_COUNT, TIMESTAMP);
 
         ReprocessingAllMailsTask.AdditionalInformation detailWithLimit = new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH,
-            new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.limit(10)),
+            new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.limit(10)),
             REPOSITORY_SIZE, REMAINING_COUNT, TIMESTAMP);
 
         JsonSerializationVerifier.dtoModule(ReprocessingAllMailsTaskAdditionalInformationDTO.module())
@@ -112,7 +114,7 @@ class ReprocessingAllMailsTaskTest {
 
     @Test
     void shouldDeserializePreviousTaskFormat() throws Exception {
-        ReprocessingAllMailsTask taskWithTargetProcessor = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()));
+        ReprocessingAllMailsTask taskWithTargetProcessor = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()));
         JsonTaskSerializer testee = JsonTaskSerializer.of(ReprocessingAllMailsTaskDTO.module(REPROCESSING_SERVICE));
 
         assertThat(testee.deserialize(OLD_SERIALIZED_TASK))
@@ -120,7 +122,7 @@ class ReprocessingAllMailsTaskTest {
 
         String serializedTaskWithLimit = "{\"type\":\"reprocessing-all\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\", \"limit\":10}";
         assertThat(testee.deserialize(serializedTaskWithLimit))
-            .isEqualToComparingFieldByFieldRecursively(new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.limit(10))));
+            .isEqualToComparingFieldByFieldRecursively(new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.limit(10))));
     }
 
     @Test
@@ -135,7 +137,7 @@ class ReprocessingAllMailsTaskTest {
     @Test
     void shouldDeserializePreviousAdditionalInformationFormat() throws Exception {
         ReprocessingAllMailsTask.AdditionalInformation details = new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH,
-            new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()),
+            new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()),
             REPOSITORY_SIZE, REMAINING_COUNT, TIMESTAMP);
         JsonTaskAdditionalInformationSerializer testee = JsonTaskAdditionalInformationSerializer.of(ReprocessingAllMailsTaskAdditionalInformationDTO.module());
 
@@ -146,7 +148,7 @@ class ReprocessingAllMailsTaskTest {
 
         assertThat(testee.deserialize(serializedTaskAdditionalInformation))
             .isEqualToComparingFieldByFieldRecursively(new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH,
-                new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.limit(10)),
+                new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.limit(10)),
                 REPOSITORY_SIZE, REMAINING_COUNT, TIMESTAMP));
     }
 }

@@ -68,6 +68,7 @@ class ReprocessingServiceTest {
     private static final MailQueueName SPOOL = MailQueueName.of("spool");
     private static final Consumer<MailKey> NOOP_CONSUMER = key -> { };
     private static final Optional<String> NO_TARGET_PROCESSOR = Optional.empty();
+    private static final Optional<Integer> NO_MAX_RETRIES = Optional.empty();
     private static final byte[] MESSAGE_BYTES = "header: value \r\n".getBytes(UTF_8);
     public static final boolean CONSUME = true;
 
@@ -140,7 +141,7 @@ class ReprocessingServiceTest {
         repository.store(mail2);
         repository.store(mail3);
 
-        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
+        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
 
         assertThat(repository.list()).toIterable()
             .isEmpty();
@@ -153,7 +154,7 @@ class ReprocessingServiceTest {
         repository.store(mail2);
         repository.store(mail3);
 
-        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
+        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
 
         assertThat(queueFactory.getQueue(SPOOL).get().browse())
             .toIterable()
@@ -204,7 +205,7 @@ class ReprocessingServiceTest {
         MailRepository repository = mailRepositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(PATH, MEMORY_PROTOCOL));
         repository.store(mail1);
 
-        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
+        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
 
         assertThat(queueFactory.getQueue(SPOOL).get().browse())
             .toIterable()
@@ -218,7 +219,7 @@ class ReprocessingServiceTest {
         mail1.setAttribute(new Attribute(AttributeName.of("mailRepository-reprocessing"), AttributeValue.of(1)));
         repository.store(mail1);
 
-        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
+        reprocessingService.reprocessAll(PATH, new Configuration(SPOOL, NO_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), NOOP_CONSUMER).block();
 
         assertThat(queueFactory.getQueue(SPOOL).get().browse())
             .toIterable()
@@ -249,7 +250,7 @@ class ReprocessingServiceTest {
             }
         });
 
-        reprocessingService.reprocessAll(PATH, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, Optional.empty(), CONSUME, Limit.unlimited()), concurrentRemoveConsumer).block();
+        reprocessingService.reprocessAll(PATH, new ReprocessingService.Configuration(SPOOL, NO_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), concurrentRemoveConsumer).block();
 
         assertThat(queueFactory.getQueue(SPOOL).get().browse())
             .toIterable()
