@@ -24,7 +24,6 @@ import static org.apache.james.mailbox.extension.PreDeletionHook.DeleteOperation
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -108,6 +107,7 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.io.BodyOffsetInputStream;
 import org.apache.james.util.io.InputStreamConsummer;
+import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
 
@@ -357,9 +357,9 @@ public class StoreMessageManager implements MessageManager {
             // source for the InputStream
             file = Files.createTempFile("imap", ".msg").toFile();
             try (FileOutputStream out = new FileOutputStream(file);
-                BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
-                BufferedInputStream tmpMsgIn = new BufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
-                BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
+                 BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
+                 UnsynchronizedBufferedInputStream tmpMsgIn = new UnsynchronizedBufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
+                 BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
                 Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
                 PropertyBuilder propertyBuilder = pair.getLeft();
                 HeaderImpl headers = pair.getRight();
@@ -405,7 +405,7 @@ public class StoreMessageManager implements MessageManager {
             }
 
             try (InputStream contentStream = msgIn.getInputStream();
-                    BufferedInputStream bufferedContentStream = new BufferedInputStream(contentStream);
+                 UnsynchronizedBufferedInputStream bufferedContentStream = new UnsynchronizedBufferedInputStream(contentStream);
                     BodyOffsetInputStream bIn = new BodyOffsetInputStream(bufferedContentStream)) {
                 Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
                 PropertyBuilder propertyBuilder = pair.getLeft();
