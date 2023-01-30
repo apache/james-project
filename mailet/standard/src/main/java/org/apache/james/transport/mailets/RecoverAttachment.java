@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +30,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
@@ -119,7 +119,7 @@ public class RecoverAttachment extends GenericMailet {
                     continue;
                 }
                 byte[] bytes = (byte[]) i.next().getValue();
-                InputStream is = new BufferedInputStream(
+                InputStream is = new UnsynchronizedBufferedInputStream(
                         new ByteArrayInputStream(bytes));
                 MimeBodyPart p = new MimeBodyPart(is);
                 if (!(message.isMimeType("multipart/*") && (message

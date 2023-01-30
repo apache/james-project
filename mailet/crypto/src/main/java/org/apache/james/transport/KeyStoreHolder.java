@@ -21,7 +21,6 @@
 
 package org.apache.james.transport;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -47,6 +46,7 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 import org.bouncycastle.cert.jcajce.JcaCertStoreBuilder;
 import org.bouncycastle.cert.selector.X509CertificateHolderSelector;
 import org.bouncycastle.cert.selector.jcajce.JcaX509CertSelectorConverter;
@@ -101,7 +101,7 @@ public class KeyStoreHolder {
         }
         
         keyStore = KeyStore.getInstance(keyStoreType);        
-        keyStore.load(new BufferedInputStream(new FileInputStream(keyStoreFileName)), keyStorePassword.toCharArray());
+        keyStore.load(new UnsynchronizedBufferedInputStream(new FileInputStream(keyStoreFileName)), keyStorePassword.toCharArray());
         if (keyStore.size() == 0) {
             throw new KeyStoreException("The keystore must be not empty");
         }

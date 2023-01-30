@@ -19,7 +19,6 @@
 
 package org.apache.james.server.core;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,6 +36,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.util.SizeFormat;
+import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 
 /**
  * Takes an input stream and creates a repeatable input stream source for a
@@ -186,7 +186,7 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
         if (getResource().getOut().isInMemory()) {
             return new ByteArrayInputStream(getResource().getOut().getData());
         } else {
-            InputStream in = new BufferedInputStream(new FileInputStream(getResource().getOut().getFile()), 2048);
+            InputStream in = new UnsynchronizedBufferedInputStream(new FileInputStream(getResource().getOut().getFile()), 2048);
             getResource().streams.add(in);
             return in;
         }

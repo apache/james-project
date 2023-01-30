@@ -19,10 +19,11 @@
 
 package org.apache.james.util;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+
+import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 
 import com.google.common.base.Preconditions;
 
@@ -56,7 +57,7 @@ public class DataChunker {
     public static Flux<ByteBuffer> chunkStream(InputStream data, int chunkSize) {
         Preconditions.checkNotNull(data);
         Preconditions.checkArgument(chunkSize > 0, CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE);
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(data);
+        UnsynchronizedBufferedInputStream bufferedInputStream = new UnsynchronizedBufferedInputStream(data);
         return Flux
             .<ByteBuffer>generate(sink -> {
                 try {
