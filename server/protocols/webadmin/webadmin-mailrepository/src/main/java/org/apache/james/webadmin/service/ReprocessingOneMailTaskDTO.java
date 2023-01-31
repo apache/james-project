@@ -33,6 +33,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingOneMailTaskDTO implements TaskDTO {
 
+    public static final Optional<Integer> NO_MAX_RETRIES = Optional.empty();
+
     public static TaskDTOModule<ReprocessingOneMailTask, ReprocessingOneMailTaskDTO> module(Clock clock, ReprocessingService reprocessingService) {
         return DTOModule
             .forDomainObject(ReprocessingOneMailTask.class)
@@ -85,6 +87,7 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
             new ReprocessingService.Configuration(
                 MailQueueName.of(targetQueue),
                 targetProcessor,
+                NO_MAX_RETRIES,
                 consume,
                 Limit.unlimited()),
             new MailKey(mailKey),

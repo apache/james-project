@@ -39,6 +39,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 new ReprocessingService.Configuration(
                     MailQueueName.of(dto.getTargetQueue()),
                     dto.getTargetProcessor(),
+                    dto.getMaxRetries(),
                     dto.isConsume(),
                     Limit.from(dto.getLimit())),
                 dto.initialCount,
@@ -53,7 +54,8 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 details.getInitialCount(),
                 details.getRemainingCount(),
                 details.timestamp(),
-                details.getConfiguration().getLimit().getLimit()))
+                details.getConfiguration().getLimit().getLimit(),
+                details.getConfiguration().getMaxRetries()))
             .typeName(ReprocessingAllMailsTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
@@ -67,6 +69,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
     private final long remainingCount;
     private final Instant timestamp;
     private final Optional<Integer> limit;
+    private final Optional<Integer> maxRetries;
 
     public ReprocessingAllMailsTaskAdditionalInformationDTO(
         @JsonProperty("type") String type,
@@ -77,7 +80,8 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
         @JsonProperty("initialCount") long initialCount,
         @JsonProperty("remainingCount") long remainingCount,
         @JsonProperty("timestamp") Instant timestamp,
-        @JsonProperty("limit") Optional<Integer> limit) {
+        @JsonProperty("limit") Optional<Integer> limit,
+        @JsonProperty("maxRetries") Optional<Integer> maxRetries) {
         this.type = type;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
@@ -87,6 +91,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
         this.timestamp = timestamp;
         this.consume = consume.orElse(true);
         this.limit = limit;
+        this.maxRetries = maxRetries;
     }
 
     public boolean isConsume() {
@@ -96,6 +101,10 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
     @Override
     public String getType() {
         return type;
+    }
+
+    public Optional<Integer> getMaxRetries() {
+        return maxRetries;
     }
 
     public long getInitialCount() {
