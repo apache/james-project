@@ -170,13 +170,15 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        SessionId sessionId = SessionId.generate();
         ImapSession imapsession = new NettyImapSession(ctx.channel(), secure, compress, authenticationConfiguration.isSSLRequired(),
-            authenticationConfiguration.isPlainAuthEnabled(), SessionId.generate(),
+            authenticationConfiguration.isPlainAuthEnabled(), sessionId,
             authenticationConfiguration.getOidcSASLConfiguration());
-        MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
-        imapsession.setAttribute(MDC_KEY, boundMDC);
         ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).set(imapsession);
-        try (Closeable closeable = boundMDC.build()) {
+        MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx)
+            .addToContext(MDCBuilder.SESSION_ID, sessionId.asString());
+        imapsession.setAttribute(MDC_KEY, boundMDC);
+        try (Closeable closeable = mdc(imapsession).build()) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             LOGGER.info("Connection established from {}", address.getAddress().getHostAddress());
             imapConnectionsMetric.increment();
@@ -194,7 +196,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private MDCBuilder mdc(ChannelHandlerContext ctx) {
         ImapSession maybeSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
 
-        return Optional.ofNullable(maybeSession)
+        return mdc(maybeSession);
+    }
+
+    private MDCBuilder mdc(ImapSession imapSession) {
+        return Optional.ofNullable(imapSession)
             .map(session -> {
                 MDCBuilder boundMDC = (MDCBuilder) session.getAttribute(MDC_KEY);
 
@@ -206,13 +212,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        try (Closeable closeable = mdc(ctx).build()) {
+        // remove the stored attribute for the channel to free up resources
+        // See JAMES-1195
+        ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
+        try (Closeable closeable = mdc(imapSession).build()) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             LOGGER.info("Connection closed for {}", address.getAddress().getHostAddress());
 
-            // remove the stored attribute for the channel to free up resources
-            // See JAMES-1195
-            ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
             Disposable disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY).getAndSet(null);
 
             Optional.ofNullable(imapSession)
@@ -353,7 +359,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     writer.flush();
                     ctx.fireChannelReadComplete();
                 }))
-                .contextWrite(ReactorUtils.context("imap", mdc(ctx))), message)
+                .contextWrite(ReactorUtils.context("imap", mdc(session))), message)
             // Manage throttling errors
             .doOnError(ctx::fireExceptionCaught)
             .subscribe();
