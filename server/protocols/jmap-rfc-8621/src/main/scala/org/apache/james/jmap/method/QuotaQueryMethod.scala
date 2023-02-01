@@ -74,12 +74,15 @@ class QuotaQueryMethod @Inject()(val metricFactory: MetricFactory,
 
   private def filterPredicate(filter: QuotaQueryFilter): (JmapQuota) => scala.Boolean =
     quota => {
-      ((filter.name match {
+      (filter.name match {
         case None => true
         case Some(value) => value.string == quota.name.string
-      })
-        && filter.scope.forall(_.contains(quota.scope))
-        && filter.resourceTypes.forall(_.contains(quota.resourceType))
-        && filter.dataTypes.forall(dataTypesValue => quota.dataTypes.toSet.subsetOf(dataTypesValue)))
+      }) && (filter.scope match {
+        case None => true
+        case Some(scope) => scope.asString() == quota.scope.asString()
+      }) && (filter.resourceType match {
+        case None => true
+        case Some(resourceType) => resourceType.asString() == quota.resourceType.asString()
+      }) && filter.`type`.forall(dataType => quota.types.contains(dataType))
     }
 }

@@ -153,10 +153,10 @@ trait QuotaGetMethodContract {
          |                        "used": 0,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 100,
+         |                        "hardLimit": 100,
          |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
@@ -165,10 +165,10 @@ trait QuotaGetMethodContract {
          |                        "used": 0,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
          |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 99,
+         |                        "hardLimit": 99,
          |                        "warnLimit": 89,
          |                        "resourceType": "octets",
          |                        "scope": "account"
@@ -229,10 +229,10 @@ trait QuotaGetMethodContract {
          |                        "used": 0,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 100,
+         |                        "hardLimit": 100,
          |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
@@ -341,10 +341,10 @@ trait QuotaGetMethodContract {
            |                        "used": 0,
            |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
            |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-           |                        "dataTypes": [
+           |                        "types": [
            |                            "Mail"
            |                        ],
-           |                        "limit": 100,
+           |                        "hardLimit": 100,
            |                        "warnLimit": 90,
            |                        "resourceType": "count",
            |                        "scope": "account"
@@ -353,10 +353,10 @@ trait QuotaGetMethodContract {
            |                        "used": 0,
            |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
            |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
-           |                        "dataTypes": [
+           |                        "types": [
            |                            "Mail"
            |                        ],
-           |                        "limit": 99,
+           |                        "hardLimit": 99,
            |                        "warnLimit": 89,
            |                        "resourceType": "octets",
            |                        "scope": "account"
@@ -467,10 +467,10 @@ trait QuotaGetMethodContract {
          |                        "used": 0,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 100,
+         |                        "hardLimit": 100,
          |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
@@ -540,10 +540,10 @@ trait QuotaGetMethodContract {
          |                        "used": 1,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 100,
+         |                        "hardLimit": 100,
          |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
@@ -552,10 +552,10 @@ trait QuotaGetMethodContract {
          |                        "used": 85,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
          |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 900,
+         |                        "hardLimit": 900,
          |                        "warnLimit": 810,
          |                        "resourceType": "octets",
          |                        "scope": "account"
@@ -844,7 +844,7 @@ trait QuotaGetMethodContract {
            |    {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "ids": null,
-           |      "properties": ["name","used","limit"]
+           |      "properties": ["name","used","hardLimit"]
            |    },
            |    "c1"]]
            |}""".stripMargin)
@@ -870,7 +870,7 @@ trait QuotaGetMethodContract {
          |          "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
          |          "used": 0,
          |          "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |          "limit": 100
+         |          "hardLimit": 100
          |        }
          |      ],
          |      "notFound": []
@@ -1033,10 +1033,10 @@ trait QuotaGetMethodContract {
              |                        "used": 1,
              |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
              |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-             |                        "dataTypes": [
+             |                        "types": [
              |                            "Mail"
              |                        ],
-             |                        "limit": 100,
+             |                        "hardLimit": 100,
              |                        "warnLimit": 90,
              |                        "resourceType": "count",
              |                        "scope": "account"
@@ -1045,10 +1045,10 @@ trait QuotaGetMethodContract {
              |                        "used": 85,
              |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
              |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
-             |                        "dataTypes": [
+             |                        "types": [
              |                            "Mail"
              |                        ],
-             |                        "limit": 101,
+             |                        "hardLimit": 101,
              |                        "warnLimit": 90,
              |                        "resourceType": "octets",
              |                        "scope": "account"
@@ -1116,10 +1116,10 @@ trait QuotaGetMethodContract {
          |                        "used": 0,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 100,
+         |                        "hardLimit": 100,
          |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
@@ -1188,10 +1188,10 @@ trait QuotaGetMethodContract {
          |                        "used": 0,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 100,
+         |                        "hardLimit": 100,
          |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
@@ -1201,10 +1201,10 @@ trait QuotaGetMethodContract {
          |                        "name": "#private&andre@domain.tld@domain.tld:account:count:Mail",
          |                        "warnLimit": 79,
          |                        "id": "04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 88,
+         |                        "hardLimit": 88,
          |                        "resourceType": "count",
          |                        "scope": "account"
          |                    }
@@ -1270,10 +1270,10 @@ trait QuotaGetMethodContract {
          |                        "used": 0,
          |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
          |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 100,
+         |                        "hardLimit": 100,
          |                        "warnLimit": 90,
          |                        "resourceType": "count",
          |                        "scope": "account"
@@ -1343,10 +1343,10 @@ trait QuotaGetMethodContract {
          |                        "name": "#private&andre@domain.tld@domain.tld:account:count:Mail",
          |                        "warnLimit": 79,
          |                        "id": "04cbe4578878e02a74e47ae6be66c88cc8aafd3a5fc698457d712ee5f9a5b4ca",
-         |                        "dataTypes": [
+         |                        "types": [
          |                            "Mail"
          |                        ],
-         |                        "limit": 88,
+         |                        "hardLimit": 88,
          |                        "resourceType": "count",
          |                        "scope": "account"
          |                    }

@@ -84,7 +84,7 @@ case class QuotaGetRequest(accountId: AccountId,
 
 object JmapQuota {
   val WARN_LIMIT_PERCENTAGE = 0.9
-  val allProperties: Properties = Properties("id", "resourceType", "used", "limit", "scope", "name", "dataTypes", "warnLimit", "softLimit", "description")
+  val allProperties: Properties = Properties("id", "resourceType", "used", "hardLimit", "scope", "name", "types", "warnLimit", "softLimit", "description")
   val idProperty: Properties = Properties("id")
 
   def propertiesFiltered(requestedProperties: Properties): Properties = idProperty ++ requestedProperties
@@ -96,10 +96,10 @@ object JmapQuota {
         id = countQuotaIdPlaceHolder,
         resourceType = CountResourceType,
         used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
-        limit = UnsignedInt.liftOrThrow(limit.asLong()),
+        hardLimit = UnsignedInt.liftOrThrow(limit.asLong()),
         scope = AccountScope,
         name = QuotaName.from(quotaRoot, AccountScope, CountResourceType, List(MailDataType)),
-        dataTypes = List(MailDataType),
+        types = List(MailDataType),
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 
   def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
@@ -109,24 +109,24 @@ object JmapQuota {
         id = sizeQuotaIdPlaceHolder,
         resourceType = OctetsResourceType,
         used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
-        limit = UnsignedInt.liftOrThrow(limit.asLong()),
+        hardLimit = UnsignedInt.liftOrThrow(limit.asLong()),
         scope = AccountScope,
         name = QuotaName.from(quotaRoot, AccountScope, OctetsResourceType, List(MailDataType)),
-        dataTypes = List(MailDataType),
+        types = List(MailDataType),
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 
   def correspondingState(quotas: Seq[JmapQuota]): UuidState =
-    UuidState(UUID.nameUUIDFromBytes(s"${quotas.sortBy(_.name.string).map(_.name.string).mkString("_")}:${quotas.map(_.used.value).sum + quotas.map(_.limit.value).sum}"
+    UuidState(UUID.nameUUIDFromBytes(s"${quotas.sortBy(_.name.string).map(_.name.string).mkString("_")}:${quotas.map(_.used.value).sum + quotas.map(_.hardLimit.value).sum}"
       .getBytes(StandardCharsets.UTF_8)))
 }
 
 case class JmapQuota(id: Id,
                      resourceType: ResourceType,
                      used: UnsignedInt,
-                     limit: UnsignedInt,
+                     hardLimit: UnsignedInt,
                      scope: Scope,
                      name: QuotaName,
-                     dataTypes: List[DataType],
+                     types: List[DataType],
                      warnLimit: Option[UnsignedInt] = None,
                      softLimit: Option[UnsignedInt] = None,
                      description: Option[QuotaDescription] = None)
@@ -233,13 +233,13 @@ case class QuotaChangesResponse(accountId: AccountId,
 case class QuotaQueryRequest(accountId: AccountId, filter: QuotaQueryFilter) extends WithAccountId
 
 object QuotaQueryFilter {
-  val SUPPORTED: Set[String] = Set("scope", "name", "resourceTypes", "dataTypes")
+  val SUPPORTED: Set[String] = Set("scope", "name", "resourceType", "type")
 }
 
-case class QuotaQueryFilter(scope: Option[Set[Scope]],
+case class QuotaQueryFilter(scope: Option[Scope],
                             name: Option[QuotaName],
-                            resourceTypes: Option[Set[ResourceType]],
-                            dataTypes: Option[Set[DataType]])
+                            resourceType: Option[ResourceType],
+                            `type`: Option[DataType])
 
 case class QuotaQueryResponse(accountId: AccountId,
                               queryState: QueryState,

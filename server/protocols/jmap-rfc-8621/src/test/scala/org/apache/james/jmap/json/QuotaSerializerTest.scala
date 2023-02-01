@@ -121,10 +121,10 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
         id = Id.validate("aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8").toOption.get,
         resourceType = CountResourceType,
         used = UnsignedInt.liftOrThrow(1),
-        limit = UnsignedInt.liftOrThrow(2),
+        hardLimit = UnsignedInt.liftOrThrow(2),
         scope = AccountScope,
         name = QuotaName("name1"),
-        dataTypes = List(MailDataType),
+        types = List(MailDataType),
         warnLimit = Some(UnsignedInt.liftOrThrow(123)),
         softLimit = Some(UnsignedInt.liftOrThrow(456)),
         description = Some(QuotaDescription("Description 1")))
@@ -144,10 +144,10 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |            "id": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
           |            "resourceType": "count",
           |            "used": 1,
-          |            "limit": 2,
+          |            "hardLimit": 2,
           |            "scope": "account",
           |            "name": "name1",
-          |            "dataTypes": [
+          |            "types": [
           |                "Mail"
           |            ],
           |            "warnLimit": 123,
@@ -168,10 +168,10 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
         id = Id.validate("aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8").toOption.get,
         resourceType = CountResourceType,
         used = UnsignedInt.liftOrThrow(1),
-        limit = UnsignedInt.liftOrThrow(2),
+        hardLimit = UnsignedInt.liftOrThrow(2),
         scope = AccountScope,
         name = QuotaName("name1"),
-        dataTypes = List(MailDataType),
+        types = List(MailDataType),
         description = None)
 
       val jmapQuota2 = jmapQuota.copy(id = Id.validate("aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy9").toOption.get,
@@ -194,10 +194,10 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |            "id": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
           |            "resourceType": "count",
           |            "used": 1,
-          |            "limit": 2,
+          |            "hardLimit": 2,
           |            "scope": "account",
           |            "name": "name1",
-          |            "dataTypes": [
+          |            "types": [
           |                "Mail"
           |            ]
           |        },
@@ -205,10 +205,10 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
           |            "id": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy9",
           |            "resourceType": "octets",
           |            "used": 1,
-          |            "limit": 2,
+          |            "hardLimit": 2,
           |            "scope": "account",
           |            "name": "name2",
-          |            "dataTypes": [
+          |            "types": [
           |                "Mail"
           |            ]
           |        }
