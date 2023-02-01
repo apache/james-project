@@ -178,7 +178,7 @@ trait QuotaQueryMethodContract {
            |    {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
-           |        "resourceTypes": ["count"]
+           |        "resourceType": "count"
            |      }
            |    },
            |    "c1"]]
@@ -232,7 +232,7 @@ trait QuotaQueryMethodContract {
            |    {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
-           |        "resourceTypes": ["invalid"]
+           |        "resourceType": "invalid"
            |      }
            |    },
            |    "c1"]]
@@ -254,7 +254,7 @@ trait QuotaQueryMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "'/filter/resourceTypes(0)' property is not valid: Unexpected value invalid, only 'count' and 'octets' are managed"
+         |                "description": "'/filter/resourceType' property is not valid: Unexpected value invalid, only 'count' and 'octets' are managed"
          |            },
          |            "c1"
          |        ]
@@ -263,7 +263,7 @@ trait QuotaQueryMethodContract {
   }
 
   @Test
-  def filterDataTypesShouldWork(server: GuiceJamesServer): Unit = {
+  def filterDataTypeShouldWork(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
     val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
@@ -280,7 +280,7 @@ trait QuotaQueryMethodContract {
            |    {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
-           |        "dataTypes": ["Mail"]
+           |        "type": "Mail"
            |      }
            |    },
            |    "c1"]]
@@ -318,7 +318,7 @@ trait QuotaQueryMethodContract {
   }
 
   @Test
-  def filterDataTypesShouldFailWhenInvalidDataTypes(server: GuiceJamesServer): Unit = {
+  def filterDataTypeShouldFailWhenInvalidDataType(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
     val bobQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB))
     quotaProbe.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(100L))
@@ -335,7 +335,7 @@ trait QuotaQueryMethodContract {
            |    {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
-           |        "dataTypes": ["invalid"]
+           |        "type": "invalid"
            |      }
            |    },
            |    "c1"]]
@@ -357,7 +357,7 @@ trait QuotaQueryMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "'/filter/dataTypes(0)' property is not valid: Unexpected value invalid, only 'Mail' are managed"
+         |                "description": "'/filter/type' property is not valid: Unexpected value invalid, only 'Mail' are managed"
          |            },
          |            "c1"
          |        ]
@@ -383,7 +383,7 @@ trait QuotaQueryMethodContract {
            |    {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
-           |        "scope": ["account"]
+           |        "scope": "account"
            |      }
            |    },
            |    "c1"]]
@@ -438,7 +438,7 @@ trait QuotaQueryMethodContract {
            |    {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
-           |        "scope": ["invalidScope"]
+           |        "scope": "invalidScope"
            |      }
            |    },
            |    "c1"]]
@@ -460,7 +460,7 @@ trait QuotaQueryMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "'/filter/scope(0)' property is not valid: Unexpected value invalidScope, only 'account' is managed"
+         |                "description": "'/filter/scope' property is not valid: Unexpected value invalidScope, only 'account' is managed"
          |            },
          |            "c1"
          |        ]
@@ -593,9 +593,9 @@ trait QuotaQueryMethodContract {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
            |        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-           |        "dataTypes": ["Mail"],
-           |        "scope": ["account"],
-           |        "resourceTypes": ["octets"]
+           |        "type": "Mail",
+           |        "scope": "account",
+           |        "resourceType": "octets"
            |      }
            |    },
            |    "c1"]]
@@ -650,7 +650,7 @@ trait QuotaQueryMethodContract {
            |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |      "filter" : {
            |        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-           |        "resourceTypes": ["count"]
+           |        "resourceType": "count"
            |      }
            |    },
            |    "c1"]]
