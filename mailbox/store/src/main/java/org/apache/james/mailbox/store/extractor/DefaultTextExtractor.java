@@ -25,11 +25,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Optional;
 
-import com.github.fge.lambdas.Throwing;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.ContentType;
+
+import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;

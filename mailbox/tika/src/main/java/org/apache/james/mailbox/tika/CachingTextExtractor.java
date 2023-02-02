@@ -37,7 +37,6 @@ import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalListener;
 import com.github.benmanes.caffeine.cache.Weigher;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hashing;
 
 import reactor.core.publisher.Mono;
