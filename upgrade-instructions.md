@@ -27,6 +27,21 @@ Change list:
 - [Adding the saveDate to the OpenSearch index](#adding-the-savedate-to-the-opensearch-index)
 - [Adding delegatedUser column to user_table](#adding-delegatedusers-column-to-user-table)
 
+### Adding delegated_users column to user table
+
+Date 05/01/2023
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3756
+
+Concerned product: Distributed James, Cassandra James Server
+
+Add `delegated_users` column to `user` tables in order to store delegated users that user has access to.
+
+In order to add this `delegated_users` column you need to run the following CQL commands:
+```
+ALTER TABLE james_keyspace.user ADD delegated_users set<text>;
+```
+
 ### Adding the saveDate to the OpenSearch index
 
 Date 05/12/2022
@@ -66,21 +81,6 @@ In order to add this `messageIdTable` column you need to run the following CQL c
 ```
 ALTER TABLE james_keyspace.messageIdTable ADD save_date timestamp;
 ALTER TABLE james_keyspace.imapUidTable ADD save_date timestamp;
-```
-
-### Adding delegated_users column to user table
-
-Date 05/01/2023
-
-JIRA: https://issues.apache.org/jira/browse/JAMES-3756
-
-Concerned product: Distributed James, Cassandra James Server
-
-Add `delegated_users` column to `user` tables in order to store delegated users that user has access to.
-
-In order to add this `delegated_users` column you need to run the following CQL commands:
-```
-ALTER TABLE james_keyspace.user ADD delegated_users set<text>;
 ```
 
 ### Blob Store AES upgraded to PBKDF2WithHmacSHA512
