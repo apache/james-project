@@ -27,6 +27,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.backends.pulsar.PulsarClients;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
@@ -70,7 +71,14 @@ public class PulsarQueueModule extends AbstractModule {
 
     @Provides
     @Singleton
+    private PulsarClients pulsarClients(PulsarConfiguration configuration) {
+        return PulsarClients.create(configuration);
+    }
+
+    @Provides
+    @Singleton
     public MailQueueFactory<? extends ManageableMailQueue> mailQueue(PulsarConfiguration pulsarConfig,
+                                                                     PulsarClients pulsarClients,
                                                                      BlobId.Factory blobIdFactory,
                                                                      MimeMessageStore.Factory mimeFactory,
                                                                      MailQueueItemDecoratorFactory decoratorFactory,
@@ -79,6 +87,7 @@ public class PulsarQueueModule extends AbstractModule {
         Store<MimeMessage, MimeMessagePartsId> mimeMessageMimeMessagePartsIdStore = mimeFactory.mimeMessageStore();
         return new PulsarMailQueueFactory(
                 pulsarConfig,
+                pulsarClients,
                 blobIdFactory,
                 mimeMessageMimeMessagePartsIdStore,
                 decoratorFactory,

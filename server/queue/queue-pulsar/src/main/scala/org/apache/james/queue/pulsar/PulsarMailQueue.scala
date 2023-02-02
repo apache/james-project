@@ -27,7 +27,7 @@ import akka.{Done, NotUsed}
 import com.sksamuel.pulsar4s._
 import com.sksamuel.pulsar4s.akka.streams
 import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
-import org.apache.james.backends.pulsar.PulsarReader
+import org.apache.james.backends.pulsar.{PulsarClients, PulsarReader}
 import org.apache.james.blob.api.{BlobId, ObjectNotFoundException, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.core.{MailAddress, MaybeSender}
@@ -84,6 +84,7 @@ private[pulsar] object schemas {
  */
 class PulsarMailQueue(
                        config: PulsarMailQueueConfiguration,
+                       pulsar: PulsarClients,
                        blobIdFactory: BlobId.Factory,
                        mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
                        mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
@@ -108,8 +109,8 @@ class PulsarMailQueue(
   private implicit val implicitSystem: ActorSystem = system
   private implicit val ec: ExecutionContextExecutor = system.dispatcher
   private implicit val implicitBlobIdFactory: BlobId.Factory = blobIdFactory
-  private implicit val client: PulsarAsyncClient = config.pulsar.asyncClient
-  private val admin = config.pulsar.adminClient
+  private implicit val client: PulsarAsyncClient = pulsar.asyncClient
+  private val admin = pulsar.adminClient
 
   private val outTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/James-${config.name.asString()}")
   private val scheduledTopic = Topic(s"persistent://${config.pulsar.namespace.asString}/${config.name.asString()}-scheduled")
@@ -399,7 +400,6 @@ class PulsarMailQueue(
     scheduledConsumerControl.stop()
     filtersCommandFlowControl.stop()
     scheduledFiltersCommandFlowControl.stop()
-    client.close()
   }
 
   /**

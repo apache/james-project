@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.backends.pulsar.DockerPulsarExtension;
+import org.apache.james.backends.pulsar.PulsarClients;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -83,6 +84,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     private MailQueueName mailQueueName;
     private MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem;
     private PulsarConfiguration pulsarConfiguration;
+    private PulsarClients pulsarClients;
     private ActorSystem system;
     private MemoryBlobStoreDAO memoryBlobStore;
 
@@ -105,6 +107,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     void tearDown() throws Exception {
         mailQueue.close();
         system.terminate();
+        pulsarClients.stop();
     }
 
     @Override
@@ -133,10 +136,12 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
 
     public PulsarMailQueue newInstance(DockerPulsarExtension.DockerPulsar pulsar) {
         pulsarConfiguration = pulsar.getConfiguration();
+        pulsarClients = PulsarClients.create(pulsarConfiguration);
         int enqueueBufferSize = 10;
         int requeueBufferSize = 10;
         return new PulsarMailQueue(
                 new PulsarMailQueueConfiguration(mailQueueName, pulsarConfiguration, MAX_CONCURRENCY, enqueueBufferSize, requeueBufferSize),
+                pulsarClients,
                 blobIdFactory,
                 mimeMessageStore,
                 factory,
