@@ -132,15 +132,4 @@ public class CachingTextExtractor implements TextExtractor {
             .doOnNext(next -> weightMetric.add(computeWeight(next)));
     }
 
-    private Exception unwrap(Exception e) {
-        return Optional.ofNullable(e.getCause())
-            .filter(throwable -> throwable instanceof Exception)
-            .map(throwable -> (Exception) throwable)
-            .orElse(e);
-    }
-
-    @VisibleForTesting
-    long size() {
-        return cache.synchronous().estimatedSize();
-    }
 }
