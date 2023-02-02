@@ -44,6 +44,7 @@ import org.apache.james.imap.decode.parser.IdleCommandParser;
 import org.apache.james.imap.decode.parser.ListCommandParser;
 import org.apache.james.imap.decode.parser.ListRightsCommandParser;
 import org.apache.james.imap.decode.parser.LoginCommandParser;
+import org.apache.james.imap.decode.parser.LogoutCommandParser;
 import org.apache.james.imap.decode.parser.LsubCommandParser;
 import org.apache.james.imap.decode.parser.MoveCommandParser;
 import org.apache.james.imap.decode.parser.MyRightsCommandParser;
@@ -285,7 +286,8 @@ public interface ImapPackage {
                     GetQuotaCommandParser.class,
                     SetQuotaCommandParser.class,
                     SetAnnotationCommandParser.class,
-                    GetMetadataCommandParser.class)
+                    GetMetadataCommandParser.class,
+                    LogoutCommandParser.class)
                     .stream()
                     .map(clazz -> new ClassName(clazz.getCanonicalName()))
                     .collect(ImmutableList.toImmutableList()),
