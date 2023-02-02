@@ -31,6 +31,7 @@
     <name>Apache James :: Backends Common :: Pulsar</name>
     <properties>
         <pulsar-client.version>2.11.0</pulsar-client.version>
+        <clever-cloud.pulsar4s.version>2.9.0</clever-cloud.pulsar4s.version>
     </properties>
 
     <dependencies>
@@ -51,12 +52,36 @@
         <dependency>
             <groupId>com.clever-cloud.pulsar4s</groupId>
             <artifactId>pulsar4s-akka-streams_${scala.base}</artifactId>
-            <version>2.8.1</version>
+            <version>${clever-cloud.pulsar4s.version}</version>
+            <exclusions>
+                <exclusion>
+                    <!--
+                    Using pulsar-client-all ensures that shaded dependencies are
+                    pulled only once reducing the overall bundle size
+                    This requires excluding the non-all dependencies from the
+                    scala wrapper
+                    -->
+                    <groupId>org.apache.pulsar</groupId>
+                    <artifactId>pulsar-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.clever-cloud.pulsar4s</groupId>
             <artifactId>pulsar4s-core_${scala.base}</artifactId>
-            <version>2.8.1</version>
+            <version>${clever-cloud.pulsar4s.version}</version>
+            <exclusions>
+                <exclusion>
+                    <!--
+                    Using pulsar-client-all ensures that shaded dependencies are
+                    pulled only once reducing the overall bundle size
+                    This requires excluding the non-all dependencies from the
+                    scala wrapper
+                    -->
+                    <groupId>org.apache.pulsar</groupId>
+                    <artifactId>pulsar-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.dimafeng</groupId>
@@ -94,12 +119,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.pulsar</groupId>
-            <artifactId>pulsar-client</artifactId>
-            <version>${pulsar-client.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.pulsar</groupId>
-            <artifactId>pulsar-client-admin</artifactId>
+            <artifactId>pulsar-client-all</artifactId>
             <version>${pulsar-client.version}</version>
         </dependency>
         <dependency>
