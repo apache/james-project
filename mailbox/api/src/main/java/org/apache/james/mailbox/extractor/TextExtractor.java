@@ -21,6 +21,7 @@ package org.apache.james.mailbox.extractor;
 
 import java.io.InputStream;
 
+import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailbox.model.ContentType;
 
 import reactor.core.publisher.Mono;
@@ -31,11 +32,18 @@ public interface TextExtractor {
         return true;
     }
 
+    /**
+     * This method will close the InputStream argument.
+     */
     ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception;
 
+    /**
+     * This method will close the InputStream argument.
+     */
     default Mono<ParsedContent> extractContentReactive(InputStream inputStream, ContentType contentType) {
-        return Mono.fromCallable(() -> extractContent(inputStream, contentType))
-            .subscribeOn(Schedulers.boundedElastic());
+        return Mono.using(() -> inputStream,
+                stream -> Mono.fromCallable(() -> extractContent(stream, contentType)).subscribeOn(Schedulers.boundedElastic()),
+                Throwing.consumer(InputStream::close).orDoNothing());
     }
 
 }
