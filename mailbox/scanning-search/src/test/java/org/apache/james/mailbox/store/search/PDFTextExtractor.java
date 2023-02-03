@@ -46,7 +46,7 @@ public class PDFTextExtractor implements TextExtractor {
         if (isPDF(contentType)) {
             return extractTextFromPDF(inputStream);
         }
-        return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), ImmutableMap.of());
+        return ParsedContent.of(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
     }
 
     private boolean isPDF(ContentType contentType) {
@@ -54,9 +54,6 @@ public class PDFTextExtractor implements TextExtractor {
     }
 
     private ParsedContent extractTextFromPDF(InputStream inputStream) throws IOException {
-        return new ParsedContent(
-                Optional.ofNullable(new PDFTextStripper().getText(
-                        PDDocument.load(inputStream))),
-                ImmutableMap.of());
+        return ParsedContent.of(new PDFTextStripper().getText(PDDocument.load(inputStream)));
     }
 }

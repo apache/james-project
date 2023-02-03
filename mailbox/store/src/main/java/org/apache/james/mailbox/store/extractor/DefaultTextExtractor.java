@@ -22,8 +22,6 @@ package org.apache.james.mailbox.store.extractor;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -51,9 +49,9 @@ public class DefaultTextExtractor implements TextExtractor {
         try (var input = inputStream) {
             if (applicable(contentType)) {
                 Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
-                return new ParsedContent(Optional.ofNullable(IOUtils.toString(input, charset)), new HashMap<>());
+                return ParsedContent.of(IOUtils.toString(input, charset));
             } else {
-                return new ParsedContent(Optional.empty(), new HashMap<>());
+                return ParsedContent.empty();
             }
         }
     }
@@ -63,11 +61,11 @@ public class DefaultTextExtractor implements TextExtractor {
         if (applicable(contentType)) {
             Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
             return Mono.using(() -> inputStream,
-                    stream -> Mono.fromCallable(() -> new ParsedContent(Optional.ofNullable(IOUtils.toString(stream, charset)), new HashMap<>()))
+                    stream -> Mono.fromCallable(() -> ParsedContent.of(IOUtils.toString(stream, charset)))
                             .subscribeOn(Schedulers.boundedElastic()),
                     Throwing.consumer(InputStream::close).orDoNothing());
         } else {
-            return Mono.just(new ParsedContent(Optional.empty(), new HashMap<>()));
+            return Mono.just(ParsedContent.empty());
         }
     }
 }

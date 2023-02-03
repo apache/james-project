@@ -27,11 +27,26 @@ import java.util.Optional;
 import com.google.common.collect.ImmutableMap;
 
 public class ParsedContent {
+    public static ParsedContent empty() {
+        return new ParsedContent(Optional.empty(), ImmutableMap.of());
+    }
+
+    public static ParsedContent of(String textualContent) {
+        return new ParsedContent(Optional.of(textualContent), ImmutableMap.of());
+    }
+
+    public static ParsedContent of(Optional<String> textualContent) {
+        return new ParsedContent(textualContent, ImmutableMap.of());
+    }
+
+    public static ParsedContent of(Optional<String> textualContent, Map<String, List<String>> metadata) {
+        return new ParsedContent(textualContent, metadata);
+    }
 
     private final Optional<String> textualContent;
     private final Map<String, List<String>> metadata;
 
-    public ParsedContent(Optional<String> textualContent, Map<String, List<String>> metadata) {
+    private ParsedContent(Optional<String> textualContent, Map<String, List<String>> metadata) {
         this.textualContent = textualContent;
         this.metadata = metadata;
     }
@@ -42,10 +57,6 @@ public class ParsedContent {
 
     public  Map<String, List<String>> getMetadata() {
         return metadata;
-    }
-
-    public static ParsedContent empty() {
-        return new ParsedContent(Optional.empty(), ImmutableMap.of());
     }
 
     @Override

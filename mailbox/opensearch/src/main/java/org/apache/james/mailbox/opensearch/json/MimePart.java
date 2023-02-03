@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
@@ -205,9 +204,7 @@ public class MimePart {
                     new ByteArrayInputStream(bodyContent.get()),
                     contentType.orElse(null));
             }
-            return Mono.fromCallable(() -> new ParsedContent(
-                Optional.ofNullable(IOUtils.toString(new ByteArrayInputStream(bodyContent.get()), charset.orElse(StandardCharsets.UTF_8))),
-                ImmutableMap.of()));
+            return Mono.fromCallable(() -> ParsedContent.of(IOUtils.toString(new ByteArrayInputStream(bodyContent.get()), charset.orElse(StandardCharsets.UTF_8))));
         }
 
         private boolean shouldPerformTextExtraction() {

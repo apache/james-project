@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -35,15 +32,12 @@ import org.apache.james.mailbox.model.ContentType.MimeType;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import com.google.common.collect.ImmutableMap;
-
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class JsoupTextExtractor implements TextExtractor {
     private static final String TITLE_HTML_TAG = "title";
     private static final String NO_BASE_URI = "";
-    private static final Map<String, List<String>> EMPTY_METADATA = ImmutableMap.of();
     private static final MimeType TEXT_HTML = MimeType.of("text/html");
     private static final MimeType TEXT_PLAIN = MimeType.of("text/plain");
 
@@ -88,12 +82,12 @@ public class JsoupTextExtractor implements TextExtractor {
     }
 
     private ParsedContent parsePlainTextContent(InputStream inputStream, Charset charset) throws IOException {
-        return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, charset)), EMPTY_METADATA);
+        return ParsedContent.of(IOUtils.toString(inputStream, charset));
     }
 
     private ParsedContent parseHtmlContent(InputStream inputStream, Charset charset) throws IOException {
         Document doc = Jsoup.parse(inputStream, charset.name(), NO_BASE_URI);
         doc.select(TITLE_HTML_TAG).remove();
-        return new ParsedContent(Optional.ofNullable(doc.text()), EMPTY_METADATA);
+        return ParsedContent.of(doc.text());
     }
 }
