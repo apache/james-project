@@ -60,7 +60,7 @@ public class CachingTextExtractor implements TextExtractor {
             (key, parsedContent) -> computeWeight(parsedContent);
 
         cache = Caffeine.newBuilder()
-            .expireAfterAccess(Duration.ofMillis(cacheEvictionPeriod.toMillis()))
+            .expireAfterAccess(cacheEvictionPeriod)
             .maximumWeight(cacheWeightInBytes)
             .weigher(weigher)
             .evictionListener(removalListener)
