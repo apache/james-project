@@ -138,7 +138,7 @@ public final class UidRange implements Iterable<MessageUid> {
         if (range.getUidFrom().equals(range.getUidTo())) {
             return String.valueOf(range.getUidFrom().asLong());
         } else {
-            return String.format("%d:%d", range.getUidFrom().asLong(), range.getUidTo().asLong());
+            return range.getUidFrom().asLong() + ":" + range.getUidTo().asLong();
         }
     }
 
