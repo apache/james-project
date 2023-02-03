@@ -43,7 +43,7 @@ import reactor.core.scheduler.Schedulers;
 public class DefaultTextExtractor implements TextExtractor {
     @Override
     public boolean applicable(ContentType contentType) {
-        return contentType != null && contentType.asString().startsWith("text/");
+        return contentType != null && contentType.mediaType().equals(ContentType.MediaType.TEXT);
     }
 
     @Override

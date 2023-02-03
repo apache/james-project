@@ -99,6 +99,9 @@ public class ContentType {
     }
 
     public static class MediaType {
+
+        public static MediaType TEXT = MediaType.of("text");
+
         public static MediaType of(String value) {
             Preconditions.checkState(!Strings.isNullOrEmpty(value), "'media type' is mandatory");
             return new MediaType(value);
