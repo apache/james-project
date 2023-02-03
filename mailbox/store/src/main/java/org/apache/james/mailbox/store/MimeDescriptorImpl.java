@@ -57,14 +57,12 @@ public class MimeDescriptorImpl implements MimeDescriptor {
     public static MimeDescriptorImpl build(InputStream stream) throws IOException, MimeException {
         // Disable line length limit
         // See https://issues.apache.org/jira/browse/IMAP-132
-        //
-        final MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
+        MimeTokenStream parser = new MimeTokenStream(MimeConfig.PERMISSIVE,
             new DefaultBodyDescriptorBuilder(null, FIELD_PARSER, DecodeMonitor.SILENT));
-        
-        parser.parse(stream);
-        
-        // TODO: Shouldn't this get set before we call the parse ?
+
         parser.setRecursionMode(RecursionMode.M_NO_RECURSE);
+        parser.parse(stream);
+
         return createDescriptor(parser);
     }
 
@@ -116,34 +114,51 @@ public class MimeDescriptorImpl implements MimeDescriptor {
 
     private static MimeDescriptorImpl simplePartDescriptor(MimeTokenStream parser, Collection<Header> headers)
             throws IOException, MimeException {
-        MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser
-                .getBodyDescriptor();
-        final MimeDescriptorImpl mimeDescriptorImpl;
+        MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser.getBodyDescriptor();
+
         if ("message".equalsIgnoreCase(descriptor.getMediaType())
                 && "rfc822".equalsIgnoreCase(descriptor.getSubType())) {
-            final CountingInputStream messageStream = new CountingInputStream(
-                    parser.getDecodedInputStream());
+            CountingInputStream messageStream = new CountingInputStream(parser.getDecodedInputStream());
             MimeDescriptorImpl embeddedMessageDescriptor = build(messageStream);
-            final int octetCount = messageStream.getOctetCount();
-            final int lineCount = messageStream.getLineCount();
 
-            mimeDescriptorImpl = createDescriptor(octetCount, lineCount,
+            return createDescriptor(messageStream.getOctetCount(), messageStream.getLineCount(),
                     descriptor, embeddedMessageDescriptor, headers);
         } else {
-            final InputStream body = parser.getInputStream();
-            long bodyOctets = 0;
-            long lines = 0;
-            for (int n = body.read(); n >= 0; n = body.read()) {
-                if (n == '\r') {
-                    lines++;
-                }
-                bodyOctets++;
+            if ("text".equalsIgnoreCase(descriptor.getMediaType())) {
+                return desctriptorWithSize(parser, headers, descriptor);
+            } else {
+                return desctriptorWithoutSize(parser, headers, descriptor);
             }
-
-            mimeDescriptorImpl = createDescriptor(bodyOctets, lines,
-                    descriptor, null, headers);
         }
-        return mimeDescriptorImpl;
+    }
+
+    private static MimeDescriptorImpl desctriptorWithSize(MimeTokenStream parser, Collection<Header> headers, MaximalBodyDescriptor descriptor) throws IOException {
+        InputStream body = parser.getInputStream();
+        long bodyOctets = 0;
+        long lines = 0;
+        for (int n = body.read(); n >= 0; n = body.read()) {
+            if (n == '\r') {
+                lines++;
+            }
+            bodyOctets++;
+        }
+
+        return createDescriptor(bodyOctets, lines, descriptor, null, headers);
+    }
+
+    private static MimeDescriptorImpl desctriptorWithoutSize(MimeTokenStream parser, Collection<Header> headers, MaximalBodyDescriptor descriptor) throws IOException {
+        InputStream body = parser.getInputStream();
+        long bodyOctets = 0;
+        byte [] buffer = new byte[128];
+        while (true) {
+            int read = body.read(buffer);
+            if (read < 0) {
+                break;
+            }
+            bodyOctets += read;
+        }
+
+        return createDescriptor(bodyOctets, -1, descriptor, null, headers);
     }
 
     private static MimeDescriptorImpl createDescriptor(long bodyOctets, long lines, MaximalBodyDescriptor descriptor,
@@ -207,7 +222,6 @@ public class MimeDescriptorImpl implements MimeDescriptor {
                                String disposition, Map<String, String> dispositionParams,
                                MimeDescriptor embeddedMessage, Collection<MimeDescriptor> parts,
                                String location, String md5) {
-        super();
         this.type = type;
         this.bodyOctets = bodyOctets;
         this.contentDescription = contentDescription;
