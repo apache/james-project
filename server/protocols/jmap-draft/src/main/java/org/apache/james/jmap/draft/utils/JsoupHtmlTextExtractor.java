@@ -19,18 +19,14 @@
 
 package org.apache.james.jmap.draft.utils;
 
-import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.util.StreamUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.streams.Iterators;
 import org.jsoup.Jsoup;
@@ -42,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
@@ -63,7 +58,7 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
             Element body = Optional.ofNullable(document.body()).orElse(document);
 
-            return flatten(body, INITIAL_LIST_NESTED_LEVEL)
+            return flatten(body)
                 .map(this::convertNodeToText)
                 .collect(Collectors.joining());
         } catch (Exception e) {
@@ -118,10 +113,10 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
         }
     }
 
-    Stream<HTMLNode> flatten(Node base, int listNestedLevel) {
+    Stream<HTMLNode> flatten(Node base) {
         Deque<HTMLNode> in = new ConcurrentLinkedDeque<>();
-        in.addFirst(new HTMLNode(base, listNestedLevel));
-        Deque out = new ConcurrentLinkedDeque();
+        in.addFirst(new HTMLNode(base, JsoupHtmlTextExtractor.INITIAL_LIST_NESTED_LEVEL));
+        Deque<HTMLNode> out = new ConcurrentLinkedDeque<>();
 
         while (!in.isEmpty()) {
             HTMLNode node = in.removeFirst();
