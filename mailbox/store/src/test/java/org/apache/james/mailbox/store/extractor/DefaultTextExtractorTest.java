@@ -22,14 +22,31 @@ package org.apache.james.mailbox.store.extractor;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.extractor.TextExtractorContract;
 import org.apache.james.mailbox.model.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class DefaultTextExtractorTest {
+class DefaultTextExtractorTest implements TextExtractorContract {
     TextExtractor textExtractor;
+
+    @Override
+    public TextExtractor testee() {
+        return textExtractor;
+    }
+
+    @Override
+    public ContentType supportedContentType() {
+        return ContentType.of("text/plain");
+    }
+
+    @Override
+    public byte[] supportedContent() {
+        return "foo".getBytes(StandardCharsets.UTF_8);
+    }
 
     @BeforeEach
     void setUp() {

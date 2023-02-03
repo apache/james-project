@@ -30,6 +30,8 @@ import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.ContentType;
 
+import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -46,11 +48,13 @@ public class DefaultTextExtractor implements TextExtractor {
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, ContentType contentType) throws Exception {
-        if (applicable(contentType)) {
-            Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
-            return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, charset)), new HashMap<>());
-        } else {
-            return new ParsedContent(Optional.empty(), new HashMap<>());
+        try (var input = inputStream) {
+            if (applicable(contentType)) {
+                Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
+                return new ParsedContent(Optional.ofNullable(IOUtils.toString(input, charset)), new HashMap<>());
+            } else {
+                return new ParsedContent(Optional.empty(), new HashMap<>());
+            }
         }
     }
 
@@ -58,8 +62,10 @@ public class DefaultTextExtractor implements TextExtractor {
     public Mono<ParsedContent> extractContentReactive(InputStream inputStream, ContentType contentType) {
         if (applicable(contentType)) {
             Charset charset = contentType.charset().orElse(StandardCharsets.UTF_8);
-            return Mono.fromCallable(() -> new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, charset)), new HashMap<>()))
-                .subscribeOn(Schedulers.boundedElastic());
+            return Mono.using(() -> inputStream,
+                    stream -> Mono.fromCallable(() -> new ParsedContent(Optional.ofNullable(IOUtils.toString(stream, charset)), new HashMap<>()))
+                            .subscribeOn(Schedulers.boundedElastic()),
+                    Throwing.consumer(InputStream::close).orDoNothing());
         } else {
             return Mono.just(new ParsedContent(Optional.empty(), new HashMap<>()));
         }

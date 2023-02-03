@@ -37,7 +37,6 @@ import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalListener;
 import com.github.benmanes.caffeine.cache.Weigher;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hashing;
 
 import reactor.core.publisher.Mono;
@@ -132,15 +131,4 @@ public class CachingTextExtractor implements TextExtractor {
             .doOnNext(next -> weightMetric.add(computeWeight(next)));
     }
 
-    private Exception unwrap(Exception e) {
-        return Optional.ofNullable(e.getCause())
-            .filter(throwable -> throwable instanceof Exception)
-            .map(throwable -> (Exception) throwable)
-            .orElse(e);
-    }
-
-    @VisibleForTesting
-    long size() {
-        return cache.synchronous().estimatedSize();
-    }
 }
