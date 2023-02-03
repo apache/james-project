@@ -25,6 +25,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.mockito.Mockito.*;
 
@@ -73,5 +74,10 @@ public interface TextExtractorContract {
         catchException(() -> testee().extractContentReactive(stream, supportedContentType()).block());
 
         verify(stream).close();
+    }
+
+    @Test
+    default void applicableShouldReturnFalseOnNull() {
+        assertThat(testee().applicable(null)).isFalse();
     }
 }
