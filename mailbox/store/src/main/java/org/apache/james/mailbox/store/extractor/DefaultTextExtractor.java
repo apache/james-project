@@ -38,7 +38,7 @@ import reactor.core.scheduler.Schedulers;
 /**
  * A default text extractor that is directly based on the input file provided.
  * 
- * Costs less calculations that TikaTextExtractor, but result is not that good.
+ * Costs fewer calculations than TikaTextExtractor, but result is not that good.
  */
 public class DefaultTextExtractor implements TextExtractor {
     @Override
