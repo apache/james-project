@@ -21,8 +21,9 @@ package org.apache.james.mailbox.extractor;
 
 import java.io.InputStream;
 
-import com.github.fge.lambdas.Throwing;
 import org.apache.james.mailbox.model.ContentType;
+
+import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
