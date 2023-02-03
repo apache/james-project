@@ -196,15 +196,15 @@ public class MimePart {
         }
 
         private Mono<ParsedContent> extractText(TextExtractor textExtractor) {
-            if (bodyContent.isEmpty()) {
-                return Mono.empty();
-            }
-            if (shouldPerformTextExtraction()) {
-                return textExtractor.extractContentReactive(
-                    new ByteArrayInputStream(bodyContent.get()),
-                    contentType.orElse(null));
-            }
-            return Mono.fromCallable(() -> ParsedContent.of(IOUtils.toString(new ByteArrayInputStream(bodyContent.get()), charset.orElse(StandardCharsets.UTF_8))));
+            return Mono.justOrEmpty(bodyContent)
+                .flatMap(content -> {
+                    if (shouldPerformTextExtraction()) {
+                        return textExtractor.extractContentReactive(
+                                new ByteArrayInputStream(content),
+                                contentType.orElse(null));
+                    }
+                    return Mono.fromCallable(() -> ParsedContent.of(new String(content, charset.orElse(StandardCharsets.UTF_8))));
+                });
         }
 
         private boolean shouldPerformTextExtraction() {
@@ -220,7 +220,7 @@ public class MimePart {
         }
 
     }
-    
+
     public static Builder builder(Predicate<ContentType> shouldCaryOverContent) {
         return new Builder(shouldCaryOverContent);
     }
