@@ -101,20 +101,17 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
             List<ProtocolHandlerResultHandler> resultHandlers = chain.getHandlers(ProtocolHandlerResultHandler.class);
 
             LOGGER.info("Connection established from {}", session.getRemoteAddress().getAddress().getHostAddress());
-            if (connectHandlers != null) {
-                for (ConnectHandler cHandler : connectHandlers) {
-                    long start = System.currentTimeMillis();
-                    Response response = cHandler.onConnect(session);
-                    long executionTime = System.currentTimeMillis() - start;
+            for (ConnectHandler cHandler : connectHandlers) {
+                long start = System.currentTimeMillis();
+                Response response = cHandler.onConnect(session);
+                long executionTime = System.currentTimeMillis() - start;
 
-                    for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
-                        resultHandler.onResponse(session, response, executionTime, cHandler);
-                    }
-                    if (response != null) {
-                        // TODO: This kind of sucks but I was able to come up with something more elegant here
-                        ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
-                    }
-
+                for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
+                    resultHandler.onResponse(session, response, executionTime, cHandler);
+                }
+                if (response != null) {
+                    // TODO: This kind of sucks but I was able to come up with something more elegant here
+                    ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
                 }
             }
 
