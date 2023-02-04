@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import reactor.core.publisher.Flux;
@@ -197,17 +196,15 @@ public class MimePart {
         }
 
         private Mono<ParsedContent> extractText(TextExtractor textExtractor) {
-            if (bodyContent.isEmpty()) {
-                return Mono.empty();
-            }
-            if (shouldPerformTextExtraction()) {
-                return textExtractor.extractContentReactive(
-                    new ByteArrayInputStream(bodyContent.get()),
-                    contentType.orElse(null));
-            }
-            return Mono.fromCallable(() -> new ParsedContent(
-                Optional.ofNullable(IOUtils.toString(new ByteArrayInputStream(bodyContent.get()), charset.orElse(StandardCharsets.UTF_8))),
-                ImmutableMap.of()));
+            return Mono.justOrEmpty(bodyContent)
+                .flatMap(content -> {
+                    if (shouldPerformTextExtraction()) {
+                        return textExtractor.extractContentReactive(
+                                new ByteArrayInputStream(content),
+                                contentType.orElse(null));
+                    }
+                    return Mono.fromCallable(() -> ParsedContent.of(new String(content, charset.orElse(StandardCharsets.UTF_8))));
+                });
         }
 
         private boolean shouldPerformTextExtraction() {
@@ -223,7 +220,7 @@ public class MimePart {
         }
 
     }
-    
+
     public static Builder builder(Predicate<ContentType> shouldCaryOverContent) {
         return new Builder(shouldCaryOverContent);
     }

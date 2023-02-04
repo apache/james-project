@@ -96,7 +96,7 @@ public class TikaTextExtractor implements TextExtractor {
     public Mono<ParsedContent> performContentExtraction(InputStream inputStream, ContentType contentType) {
         Mono<ContentAndMetadata> contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
         return contentAndMetadata
-            .map(result -> new ParsedContent(result.getContent(), result.getMetadata()));
+            .map(result -> ParsedContent.of(result.getContent(), result.getMetadata()));
     }
 
     private Mono<ContentAndMetadata> convert(Mono<InputStream> maybeInputStream) {
