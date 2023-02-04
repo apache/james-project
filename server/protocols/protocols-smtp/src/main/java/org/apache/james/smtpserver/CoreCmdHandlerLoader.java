@@ -19,9 +19,7 @@
 
 package org.apache.james.smtpserver;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
@@ -47,42 +45,37 @@ import org.apache.james.protocols.smtp.core.log.HookResultLogger;
  */
 public class CoreCmdHandlerLoader implements HandlersPackage {
 
-    private final List<String> commands = new LinkedList<>();
-
-    public CoreCmdHandlerLoader() {
-        // Insert the base commands in the Map
-        Stream.of(
-            JamesWelcomeMessageHandler.class,
-            CommandDispatcher.class,
-            AuthCmdHandler.class,
-            JamesDataCmdHandler.class,
-            EhloCmdHandler.class,
-            ExpnCmdHandler.class,
-            HeloCmdHandler.class,
-            HelpCmdHandler.class,
-            JamesMailCmdHandler.class,
-            NoopCmdHandler.class,
-            QuitCmdHandler.class,
-            JamesRcptCmdHandler.class,
-            RsetCmdHandler.class,
-            VrfyCmdHandler.class,
-            MailSizeEsmtpExtension.class,
-            UsersRepositoryAuthHook.class,
-            AuthRequiredToRelayRcptHook.class,
-            SenderAuthIdentifyVerificationHook.class,
-            PostmasterAbuseRcptHook.class,
-            ReceivedDataLineFilter.class,
-            DataLineJamesMessageHookHandler.class,
-            StartTlsCmdHandler.class,
-            AddDefaultAttributesMessageHook.class,
-            SendMailHandler.class,
-            UnknownCmdHandler.class,
+    private static final List<String> commands = List.of(
+            JamesWelcomeMessageHandler.class.getName(),
+            CommandDispatcher.class.getName(),
+            AuthCmdHandler.class.getName(),
+            JamesDataCmdHandler.class.getName(),
+            EhloCmdHandler.class.getName(),
+            ExpnCmdHandler.class.getName(),
+            HeloCmdHandler.class.getName(),
+            HelpCmdHandler.class.getName(),
+            JamesMailCmdHandler.class.getName(),
+            NoopCmdHandler.class.getName(),
+            QuitCmdHandler.class.getName(),
+            JamesRcptCmdHandler.class.getName(),
+            RsetCmdHandler.class.getName(),
+            VrfyCmdHandler.class.getName(),
+            MailSizeEsmtpExtension.class.getName(),
+            UsersRepositoryAuthHook.class.getName(),
+            AuthRequiredToRelayRcptHook.class.getName(),
+            SenderAuthIdentifyVerificationHook.class.getName(),
+            PostmasterAbuseRcptHook.class.getName(),
+            ReceivedDataLineFilter.class.getName(),
+            DataLineJamesMessageHookHandler.class.getName(),
+            StartTlsCmdHandler.class.getName(),
+            AddDefaultAttributesMessageHook.class.getName(),
+            SendMailHandler.class.getName(),
+            UnknownCmdHandler.class.getName(),
             // Add logging stuff
-            CommandHandlerResultLogger.class,
-            HookResultLogger.class)
-        .map(Class::getName)
-        .forEachOrdered(commands::add);
-    }
+            CommandHandlerResultLogger.class.getName(),
+            HookResultLogger.class.getName());
+
+    public CoreCmdHandlerLoader() {}
 
     @Override
     public List<String> getHandlers() {

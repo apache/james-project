@@ -25,14 +25,14 @@ import org.apache.james.protocols.lib.handler.HandlersPackage;
 
 public class JMXHandlersLoader implements HandlersPackage {
 
-    private final List<String> handlers = new ArrayList<>();
+    private static final List<String> handlers = List.of(
+            ConnectHandlerResultJMXMonitor.class.getName(),
+            CommandHandlerResultJMXMonitor.class.getName(),
+            LineHandlerResultJMXMonitor.class.getName(),
+            HookResultJMXMonitor.class.getName()
+    );
 
-    public JMXHandlersLoader() {
-        handlers.add(ConnectHandlerResultJMXMonitor.class.getName());
-        handlers.add(CommandHandlerResultJMXMonitor.class.getName());
-        handlers.add(LineHandlerResultJMXMonitor.class.getName());
-        handlers.add(HookResultJMXMonitor.class.getName());
-    }
+    public JMXHandlersLoader() {}
 
     @Override
     public List<String> getHandlers() {
