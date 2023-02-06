@@ -157,7 +157,8 @@ final case class WebSocketCapabilityProperties(supportsPush: SupportsPush,
 final case class SupportsPush(value: Boolean) extends AnyVal
 final case class MaxDelayedSend(value: Int) extends AnyVal
 final case class EhloName(value: String) extends AnyVal
-final case class EhloArgs(value: String) extends AnyVal
+final case class EhloArg(value: String) extends AnyVal
+final case class EhloArgs(values: List[EhloArg]) extends AnyVal
 
 final case class SubmissionCapability(identifier: CapabilityIdentifier = EMAIL_SUBMISSION,
                                       properties: SubmissionProperties = SubmissionProperties()) extends Capability
@@ -169,7 +170,7 @@ case object SubmissionCapabilityFactory extends CapabilityFactory {
 }
 
 final case class SubmissionProperties(maxDelayedSend: MaxDelayedSend = MaxDelayedSend(0),
-                                      submissionExtensions: Map[EhloName, List[EhloArgs]] = Map()) extends CapabilityProperties {
+                                      submissionExtensions: Map[EhloName, EhloArgs] = Map()) extends CapabilityProperties {
   override def jsonify(): JsObject = ResponseSerializer.submissionPropertiesWrites.writes(this)
 }
 
