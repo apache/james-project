@@ -19,6 +19,7 @@
 package org.apache.james.protocols.lmtp;
 
 import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 
@@ -47,5 +48,10 @@ public class LMTPConfigurationImpl extends LMTPConfiguration {
     @Override
     public Optional<OidcSASLConfiguration> saslConfiguration() {
         return Optional.empty();
+    }
+
+    @Override
+    public Properties customProperties() {
+        return null;
     }
 }

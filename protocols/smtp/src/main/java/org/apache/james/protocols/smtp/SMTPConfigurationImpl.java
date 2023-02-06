@@ -21,6 +21,7 @@
 package org.apache.james.protocols.smtp;
 
 import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolConfigurationImpl;
@@ -88,5 +89,10 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     @Override
     public Optional<OidcSASLConfiguration> saslConfiguration() {
         return Optional.empty();
+    }
+
+    @Override
+    public Properties customProperties() {
+        return null;
     }
 }

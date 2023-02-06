@@ -21,6 +21,8 @@ package org.apache.james.examples;
 
 import java.util.Map;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -34,5 +36,10 @@ public class LoggingRcptHook implements RcptHook {
 
         // Continue the SMTP transaction
         return HookResult.DECLINED;
+    }
+
+    @Override
+    public void init(Configuration config) throws ConfigurationException {
+        RcptHook.super.init(config);
     }
 }

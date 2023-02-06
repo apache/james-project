@@ -19,6 +19,7 @@
 package org.apache.james.lmtpserver.netty;
 
 import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -119,6 +120,11 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
         @Override
         public Optional<OidcSASLConfiguration> saslConfiguration() {
             return Optional.empty();
+        }
+
+        @Override
+        public Properties customProperties() {
+            return null;
         }
     }
 

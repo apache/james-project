@@ -37,15 +37,15 @@ import com.google.common.collect.ImmutableSet;
 public class MyNoopCmdHandler implements CommandHandler<SMTPSession> {
     private static final Collection<String> COMMANDS = ImmutableSet.of("MYNOOP");
 
-    private static final Response NOOP = new SMTPResponse(SMTPRetCode.MAIL_OK,
-        DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.UNDEFINED_STATUS) + " OK")
-        .immutable();
-
     @Override
     public Response onCommand(SMTPSession session, Request request) {
-        return NOOP;
+        String customResponse = session.getConfiguration().customProperties().getProperty("mynoop.response", "");
+        return new SMTPResponse(SMTPRetCode.MAIL_OK,
+            DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.UNDEFINED_STATUS) + " " +
+                customResponse)
+            .immutable();
     }
-    
+
     @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;

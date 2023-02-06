@@ -22,6 +22,7 @@
 package org.apache.james.protocols.smtp;
 
 import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolConfiguration;
@@ -76,5 +77,7 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
     boolean isPlainAuthEnabled();
 
     Optional<OidcSASLConfiguration> saslConfiguration();
+
+    Properties customProperties();
 
 }

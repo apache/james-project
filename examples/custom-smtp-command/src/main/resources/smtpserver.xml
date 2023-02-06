@@ -24,7 +24,7 @@
 <smtpservers>
     <smtpserver enabled="true">
         <jmxName>smtpserver-global</jmxName>
-        <bind>0.0.0.0:25</bind>
+        <bind>0.0.0.0:0</bind>
         <connectionBacklog>200</connectionBacklog>
         <tls socketTLS="false" startTLS="false">
             <keystore>file://conf/keystore</keystore>
@@ -41,6 +41,8 @@
         <maxmessagesize>0</maxmessagesize>
         <addressBracketsEnforcement>true</addressBracketsEnforcement>
         <smtpGreeting>Apache JAMES awesome SMTP Server</smtpGreeting>
+        <customProperties>mynoop.response=customProperty1</customProperties>
+        <customProperties>prop.b=anotherValue</customProperties>
         <handlerchain coreHandlersPackage="org.apache.james.examples.MyCmdHandlerLoader">
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
         </handlerchain>

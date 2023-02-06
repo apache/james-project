@@ -24,6 +24,7 @@ import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounc
 import java.net.MalformedURLException;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Properties;
 
 import javax.inject.Inject;
 
@@ -175,6 +176,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      */
     private long maxMessageSize = 0;
 
+    private Properties customProperties;
+
     /**
      * The configuration data to be passed to the handler
      */
@@ -244,6 +247,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             addressBracketsEnforcement = configuration.getBoolean("addressBracketsEnforcement", true);
 
             verifyIdentity = configuration.getBoolean("verifyIdentity", false);
+
+            customProperties = configuration.getProperties("customProperties");
 
             if (authenticationConfiguration.getAuthenticationAnnounceMode() == NEVER && verifyIdentity) {
                 throw new ConfigurationException(
@@ -340,6 +345,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         @Override
         public Optional<OidcSASLConfiguration> saslConfiguration() {
             return authenticationConfiguration.getSaslConfiguration();
+        }
+
+        @Override
+        public Properties customProperties() {
+            return SMTPServer.this.customProperties;
         }
     }
 
