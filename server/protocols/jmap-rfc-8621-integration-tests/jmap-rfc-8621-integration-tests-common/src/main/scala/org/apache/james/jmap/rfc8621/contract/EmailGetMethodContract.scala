@@ -6772,6 +6772,59 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def emailGetShouldSupportAllQualifierForSpecificHeader(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val alicePath = MailboxPath.inbox(ALICE)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(alicePath)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .addField(new RawField("Subject", "Another SUB"))
+      .setSender(ANDRE.asString())
+      .setFrom(ANDRE.asString())
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, bobPath, AppendCommand.from(message))
+      .getMessageId
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail"],
+               |  "methodCalls": [[
+               |     "Email/get",
+               |     {
+               |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |       "ids": ["${messageId.serialize}"],
+               |       "properties": ["header:Subject:asText:all", "header:Subject:all", "header:Missing:all"]
+               |     },
+               |     "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "id": "${messageId.serialize}",
+           |    "header:Subject:asText:all": ["test", "Another SUB"],
+           |    "header:Subject:all": [" test", " Another SUB"],
+           |    "header:Missing:all": []
+           |}""".stripMargin)
+  }
+
+  @Test
   def emailGetShouldReturnSpecificHeadersAsAddresses(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)

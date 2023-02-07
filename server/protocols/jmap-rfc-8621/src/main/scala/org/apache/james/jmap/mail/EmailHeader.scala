@@ -142,6 +142,10 @@ case class EmailHeaderName(value: String) extends AnyVal
 sealed trait EmailHeaderValue {
   def asField(name: EmailHeaderName): Field
 }
+case class AllHeaderValues(values: List[EmailHeaderValue]) extends EmailHeaderValue {
+  // Not to be used in Email Set
+  override def asField(name: EmailHeaderName): Field = throw new NotImplementedError()
+}
 case class RawHeaderValue(value: String) extends EmailHeaderValue {
   override def asField(name: EmailHeaderName): Field = new RawField(name.value, value.substring(1))
 }
