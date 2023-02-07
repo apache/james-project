@@ -53,19 +53,26 @@ object SpecificHeaderRequest {
     case property if property.value.equals(SPECIFIC_HEADER_PREFIX) => Left(property)
     case property if property.startsWith(SPECIFIC_HEADER_PREFIX)  =>
       val headerName = property.substring(SPECIFIC_HEADER_PREFIX.length)
-      if (headerName.contains(":")) {
-        val indexOfFirstColon = headerName.indexOf(":")
-        val parseOption = headerName.substring(indexOfFirstColon + 1)
-        if (ParseOptions.validate(parseOption)) {
-          scala.Right(SpecificHeaderRequest(property, headerName.substring(0, indexOfFirstColon), ParseOptions.from(parseOption)))
-        } else {
-          Left(property)
-        }
+      if (headerName.endsWith(":all")) {
+        extractSpecificHeader(property, headerName.substring(0, headerName.length - 4), isAll = true)
       } else {
-        scala.Right(SpecificHeaderRequest(property, headerName, None))
+        extractSpecificHeader(property, headerName, isAll = false)
       }
     case _ => Left(property)
   }
+
+  private def extractSpecificHeader(property: NonEmptyString, headerName: String, isAll: Boolean) =
+    if (headerName.contains(":")) {
+      val indexOfFirstColon = headerName.indexOf(":")
+      val parseOption = headerName.substring(indexOfFirstColon + 1)
+      if (ParseOptions.validate(parseOption)) {
+        scala.Right(SpecificHeaderRequest(property, headerName.substring(0, indexOfFirstColon), ParseOptions.from(parseOption), isAll))
+      } else {
+        Left(property)
+      }
+    } else {
+      scala.Right(SpecificHeaderRequest(property, headerName, None, isAll))
+    }
 }
 
 case class EmailGetRequest(accountId: AccountId,
@@ -86,19 +93,37 @@ case class EmailGetResponse(accountId: AccountId,
                             list: List[EmailView],
                             notFound: EmailNotFound)
 
-case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, parseOption: Option[ParseOption]) {
-  def retrieveHeader(zoneId: ZoneId, message: Message): (String, Option[EmailHeaderValue]) = {
+case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, parseOption: Option[ParseOption], isAll: Boolean = false) {
+  def retrieveHeader(zoneId: ZoneId, message: Message): (String, Option[EmailHeaderValue]) =
+    if (isAll) {
+      extractAllHeaders(zoneId, message)
+    } else {
+      extractLastHeader(zoneId, message)
+    }
+
+  private def extractAllHeaders(zoneId: ZoneId, message: Message) = {
+    val fields: List[Field] = Option(message.getHeader.getFields(headerName))
+      .map(_.asScala.toList)
+      .getOrElse(List())
+
+    val option = parseOption.getOrElse(AsRaw)
+    (property.value, Some(AllHeaderValues(fields.map(toHeader(zoneId, option)))))
+  }
+
+  private def extractLastHeader(zoneId: ZoneId, message: Message) = {
     val field: Option[Field] = Option(message.getHeader.getFields(headerName))
       .map(_.asScala)
       .flatMap(fields => fields.reverse.headOption)
 
-    (property.value, field.map({
-      val option = parseOption.getOrElse(AsRaw)
-        option match {
-          case AsDate => AsDate.extractHeaderValue(_, zoneId)
-          case _ => option.extractHeaderValue
-        }
-    }))
+    val option = parseOption.getOrElse(AsRaw)
+    (property.value, field.map(toHeader(zoneId, option)))
+  }
+
+  private def toHeader(zoneId: ZoneId, option: ParseOption): Field => EmailHeaderValue = {
+    option match {
+      case AsDate => AsDate.extractHeaderValue(_, zoneId)
+      case _ => option.extractHeaderValue
+    }
   }
 
   def validate: Either[IllegalArgumentException, SpecificHeaderRequest] = {
