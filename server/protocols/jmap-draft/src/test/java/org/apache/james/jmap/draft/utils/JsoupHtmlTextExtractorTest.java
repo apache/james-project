@@ -27,6 +27,8 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
+
 public class JsoupHtmlTextExtractorTest {
 
     private JsoupHtmlTextExtractor textExtractor;
@@ -59,6 +61,14 @@ public class JsoupHtmlTextExtractorTest {
     @Test
     public void toPlainTextShouldSkipLinesBetweenParagraph() {
         String html = "<p>para1</p><p>para2</p>";
+        String expectedPlainText = "para1\n\npara2\n\n";
+        assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
+    }
+
+    @Test
+    public void deeplyNestedHtmlShouldNotThrowStackOverflow() {
+        final int count = 2048;
+        String html = Strings.repeat("<div>", count) +  "<p>para1</p><p>para2</p>" + Strings.repeat("</div>", count);
         String expectedPlainText = "para1\n\npara2\n\n";
         assertThat(textExtractor.toPlainText(html)).isEqualTo(expectedPlainText);
     }

@@ -19,13 +19,16 @@
 
 package org.apache.james.jmap.draft.utils;
 
+import java.util.Deque;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
+import org.apache.james.util.streams.Iterators;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -55,7 +58,7 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
 
             Element body = Optional.ofNullable(document.body()).orElse(document);
 
-            return flatten(body, INITIAL_LIST_NESTED_LEVEL)
+            return flatten(body)
                 .map(this::convertNodeToText)
                 .collect(Collectors.joining());
         } catch (Exception e) {
@@ -110,23 +113,31 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
         }
     }
 
-    Stream<HTMLNode> flatten(Node base, int listNestedLevel) {
-        Position position = getPosition(base);
-        int nextElementLevel = getNewNestedLevel(listNestedLevel, base);
+    Stream<HTMLNode> flatten(Node base) {
+        Deque<HTMLNode> in = new ConcurrentLinkedDeque<>();
+        in.addFirst(new HTMLNode(base, JsoupHtmlTextExtractor.INITIAL_LIST_NESTED_LEVEL));
+        Deque<HTMLNode> out = new ConcurrentLinkedDeque<>();
 
-        Stream<HTMLNode> baseStream = Stream.of(new HTMLNode(base, listNestedLevel));
-        Stream<HTMLNode> flatChildren = base.childNodes()
-            .stream()
-            .flatMap(node -> flatten(node, nextElementLevel));
-        
-        switch (position) {
-            case PREFIX:
-                return Stream.concat(baseStream, flatChildren);
-            case SUFFIX:
-                return Stream.concat(flatChildren, baseStream);
-            default:
-                throw new RuntimeException("Unexpected POSITION for node element: " + position);
+        while (!in.isEmpty()) {
+            HTMLNode node = in.removeFirst();
+            if (node.isDone) {
+                out.addLast(node);
+                continue;
+            }
+            int nextElementLevel = getNewNestedLevel(node.listNestedLevel, node.underlyingNode);
+            Position position = getPosition(node.underlyingNode);
+
+            if (position == Position.SUFFIX) {
+                node.underlyingNode.childNodes()
+                    .forEach(child -> in.addFirst(new HTMLNode(child, nextElementLevel)));
+                out.addLast(node);
+            } else {
+                in.addFirst(node.done());
+                node.underlyingNode.childNodes()
+                    .forEach(child -> in.addFirst(new HTMLNode(child, nextElementLevel)));
+            }
         }
+        return Iterators.toStream(out.descendingIterator());
     }
 
     private int getNewNestedLevel(int listNestedLevel, Node node) {
@@ -161,10 +172,22 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     private static class HTMLNode {
         private final Node underlyingNode;
         private final int listNestedLevel;
+        private final boolean isDone;
+
+        public HTMLNode(Node underlyingNode, int listNestedLevel, boolean isDone) {
+            this.underlyingNode = underlyingNode;
+            this.listNestedLevel = listNestedLevel;
+            this.isDone = isDone;
+        }
 
         public HTMLNode(Node underlyingNode, int listNestedLevel) {
             this.underlyingNode = underlyingNode;
             this.listNestedLevel = listNestedLevel;
+            this.isDone = false;
+        }
+
+        public HTMLNode done() {
+            return new HTMLNode(underlyingNode, listNestedLevel, true);
         }
     }
 
