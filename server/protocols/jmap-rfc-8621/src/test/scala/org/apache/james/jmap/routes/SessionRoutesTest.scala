@@ -130,7 +130,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:submission": {
                          |      "maxDelayedSend": 0,
-                         |      "submissionExtensions": []
+                         |      "submissionExtensions": {}
                          |    },
                          |    "urn:ietf:params:jmap:core" : {
                          |      "maxSizeUpload" : 31457280,
@@ -169,7 +169,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
                          |      "accountCapabilities" : {
                          |        "urn:ietf:params:jmap:submission": {
                          |          "maxDelayedSend": 0,
-                         |          "submissionExtensions": []
+                         |          "submissionExtensions": {}
                          |        },
                          |        "urn:ietf:params:jmap:websocket": {
                          |            "supportsPush": true,

@@ -81,7 +81,7 @@ object CustomMethodContract {
       |  "capabilities" : {
       |    "urn:ietf:params:jmap:submission": {
       |      "maxDelayedSend": 0,
-      |      "submissionExtensions": []
+      |      "submissionExtensions": {}
       |    },
       |    "urn:ietf:params:jmap:core" : {
       |      "maxSizeUpload" : 20971520,
@@ -122,7 +122,7 @@ object CustomMethodContract {
       |      "accountCapabilities" : {
       |        "urn:ietf:params:jmap:submission": {
       |          "maxDelayedSend": 0,
-      |          "submissionExtensions": []
+      |          "submissionExtensions": {}
       |        },
       |        "urn:ietf:params:jmap:websocket": {
       |            "supportsPush": true,

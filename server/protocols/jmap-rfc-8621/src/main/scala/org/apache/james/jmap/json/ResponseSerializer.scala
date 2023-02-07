@@ -90,7 +90,10 @@ object ResponseSerializer {
   val mailCapabilityWrites: OWrites[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
   private implicit val maxDelayedSendWrites: Writes[MaxDelayedSend] = Json.valueWrites[MaxDelayedSend]
   private implicit val ehloNameWrites: Writes[EhloName] = Json.valueWrites[EhloName]
+  private implicit val ehloArgWrites: Writes[EhloArg] = Json.valueWrites[EhloArg]
   private implicit val ehloArgsWrites: Writes[EhloArgs] = Json.valueWrites[EhloArgs]
+  private implicit val ehloArgsMapWrite: Writes[Map[EhloName, EhloArgs]] =
+    mapWrites[EhloName, EhloArgs](_.value, ehloArgsWrites)
   private implicit val supportsPushWrites: Writes[SupportsPush] = Json.valueWrites[SupportsPush]
   val submissionPropertiesWrites: OWrites[SubmissionProperties] = Json.writes[SubmissionProperties]
   val webSocketPropertiesWrites: OWrites[WebSocketCapabilityProperties] = Json.writes[WebSocketCapabilityProperties]

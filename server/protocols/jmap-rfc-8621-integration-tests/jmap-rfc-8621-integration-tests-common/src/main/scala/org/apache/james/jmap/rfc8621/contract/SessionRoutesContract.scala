@@ -45,7 +45,7 @@ object SessionRoutesContract {
                          |  "capabilities" : {
                          |    "urn:ietf:params:jmap:submission": {
                          |      "maxDelayedSend": 0,
-                         |      "submissionExtensions": []
+                         |      "submissionExtensions": {}
                          |    },
                          |    "urn:ietf:params:jmap:core" : {
                          |      "maxSizeUpload" : 20971520,
@@ -85,7 +85,7 @@ object SessionRoutesContract {
                          |      "accountCapabilities" : {
                          |        "urn:ietf:params:jmap:submission": {
                          |          "maxDelayedSend": 0,
-                         |          "submissionExtensions": []
+                         |          "submissionExtensions": {}
                          |        },
                          |        "urn:ietf:params:jmap:websocket": {
                          |            "supportsPush": true,
@@ -243,7 +243,7 @@ trait SessionRoutesContract {
                    |            "urn:apache:james:params:jmap:delegation": {},
                    |            "urn:ietf:params:jmap:submission": {
                    |                "maxDelayedSend": 0,
-                   |                "submissionExtensions": []
+                   |                "submissionExtensions": {}
                    |            },
                    |            "urn:ietf:params:jmap:websocket": {
                    |                "supportsPush": true,
@@ -292,7 +292,7 @@ trait SessionRoutesContract {
                    |            "urn:apache:james:params:jmap:delegation": {},
                    |            "urn:ietf:params:jmap:submission": {
                    |                "maxDelayedSend": 0,
-                   |                "submissionExtensions": []
+                   |                "submissionExtensions": {}
                    |            },
                    |            "urn:ietf:params:jmap:websocket": {
                    |                "supportsPush": true,
