@@ -143,7 +143,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
           builder.setField(new RawField(FieldName.MESSAGE_ID, messageId.flatMap(_.asString).getOrElse(generateUniqueMessageId(maybeFrom))))
           validateSpecificHeaders(builder)
             .flatMap(_ => {
-              specificHeaders.map(_.asField).foreach(builder.addField)
+              specificHeaders.flatMap(_.asFields).foreach(builder.addField)
               attachments.filter(_.nonEmpty).map(attachments =>
                 createMultipartWithAttachments(maybeHtmlBody, maybeTextBody, attachments, blobResolvers, htmlTextExtractor, mailboxSession)
                   .map(multipartBuilder => {

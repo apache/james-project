@@ -153,8 +153,14 @@ trait EmailSetMethodContract {
   @ParameterizedTest
   @ValueSource(strings = Array(
     """"header:aheader": " a value"""",
+    """"header:aheader:all": [" a value"]""",
+    """"header:aheader:all": []""",
+    """"header:aheader:all": [" abc", " def"]""",
     """"header:aheader:asRaw": " a value"""",
     """"header:aheader:asText": "a value"""",
+    """"header:aheader:asText:all": []""",
+    """"header:aheader:asText:all": ["abc"]""",
+    """"header:aheader:asText:all": ["abc", "def"]""",
     """"header:aheader:asDate": "2020-10-29T06:39:04Z"""",
     """"header:aheader:asAddresses": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}]""",
     """"header:aheader:asURLs": ["url1", "url2"]""",

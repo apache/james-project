@@ -140,25 +140,24 @@ object EmailHeaderName {
 case class EmailHeaderName(value: String) extends AnyVal
 
 sealed trait EmailHeaderValue {
-  def asField(name: EmailHeaderName): Field
+  def asFields(name: EmailHeaderName): List[Field]
 }
 case class AllHeaderValues(values: List[EmailHeaderValue]) extends EmailHeaderValue {
-  // Not to be used in Email Set
-  override def asField(name: EmailHeaderName): Field = throw new NotImplementedError()
+  override def asFields(name: EmailHeaderName): List[Field] = values.flatMap(_.asFields(name))
 }
 case class RawHeaderValue(value: String) extends EmailHeaderValue {
-  override def asField(name: EmailHeaderName): Field = new RawField(name.value, value.substring(1))
+  override def asFields(name: EmailHeaderName): List[Field] = List(new RawField(name.value, value.substring(1)))
 }
 case class TextHeaderValue(value: String) extends EmailHeaderValue {
-  override def asField(name: EmailHeaderName): Field = new RawField(name.value, value)
+  override def asFields(name: EmailHeaderName): List[Field] = List(new RawField(name.value, value))
 }
 case class AddressesHeaderValue(value: List[EmailAddress]) extends EmailHeaderValue {
   def asMime4JMailboxList: Option[List[Mime4jMailbox]] = Some(value.map(_.asMime4JMailbox)).filter(_.nonEmpty)
 
-  override def asField(name: EmailHeaderName): Field = Fields.addressList(name.value, asMime4JMailboxList.getOrElse(List()).asJava)
+  override def asFields(name: EmailHeaderName): List[Field] = List(Fields.addressList(name.value, asMime4JMailboxList.getOrElse(List()).asJava))
 }
 case class GroupedAddressesHeaderValue(value: List[EmailAddressGroup]) extends EmailHeaderValue {
-  override def asField(name: EmailHeaderName): Field = Fields.addressList(name.value, value.flatMap(_.asAddress).asJava)
+  override def asFields(name: EmailHeaderName): List[Field] = List(Fields.addressList(name.value, value.flatMap(_.asAddress).asJava))
 }
 case class MessageIdsHeaderValue(value: Option[List[HeaderMessageId]]) extends EmailHeaderValue {
   def asString: Option[String] = value.map(messageIds => messageIds
@@ -166,21 +165,21 @@ case class MessageIdsHeaderValue(value: Option[List[HeaderMessageId]]) extends E
     .map(messageId => s"<${messageId}>")
     .mkString(" "))
 
-  override def asField(name: EmailHeaderName): Field = new RawField(name.value, asString.getOrElse(""))
+  override def asFields(name: EmailHeaderName): List[Field] = List(new RawField(name.value, asString.getOrElse("")))
 }
 case class DateHeaderValue(value: Option[UTCDate]) extends EmailHeaderValue {
-  override def asField(name: EmailHeaderName): Field = Fields.date(name.value,
+  override def asFields(name: EmailHeaderName): List[Field] = List(Fields.date(name.value,
     value.map(_.asUTC.toInstant)
       .map(Date.from)
-      .orNull)
+      .orNull))
 }
 case class URLsHeaderValue(value: Option[List[HeaderURL]]) extends EmailHeaderValue {
-  override def asField(name: EmailHeaderName): Field = new RawField(name.value,
-    value
+  override def asFields(name: EmailHeaderName): List[Field] =  List(new RawField(name.value,
+   value
       .map(list => list.map("<" + _.value + ">").mkString(", "))
-      .getOrElse(""))
+      .getOrElse("")))
 }
 
 case class EmailHeader(name: EmailHeaderName, value: EmailHeaderValue) {
-  def asField: Field = value.asField(name)
+  def asFields: List[Field] = value.asFields(name)
 }

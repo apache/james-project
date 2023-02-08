@@ -29,7 +29,7 @@ import org.apache.james.jmap.api.model.{EmailAddress, EmailerName}
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedMessageId}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AllHeaderValues, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedMessageId}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -329,6 +329,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
     val rawReads: Reads[RawHeaderValue] = Json.valueReads[RawHeaderValue]
     override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
   }
+  case object AllReads extends HeaderValueReads {
+    val rawReads: Reads[RawHeaderValue] = Json.valueReads[RawHeaderValue]
+    override def reads(json: JsValue): JsResult[EmailHeaderValue] = rawReads.reads(json)
+  }
   case object TextReads extends HeaderValueReads {
     val textReads: Reads[TextHeaderValue] = Json.valueReads[TextHeaderValue]
     override def reads(json: JsValue): JsResult[TextHeaderValue] = textReads.reads(json)
@@ -366,6 +370,22 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       case AsGroupedAddresses => GroupedAddressReads
     }
 
+  def asReads(specificHeaderRequest: SpecificHeaderRequest): Reads[EmailHeaderValue] = {
+    val option = specificHeaderRequest.parseOption.getOrElse(AsRaw)
+    if (specificHeaderRequest.isAll) {
+      case array: JsArray =>
+        val valueReads = asReads(option)
+        val value: JsResult[List[EmailHeaderValue]] = array.value.toList.map(v => valueReads.reads(v))
+          .foldLeft[JsResult[List[EmailHeaderValue]]](JsSuccess(List())) {
+            case (acc, value) => value.fold(invalid => JsError(invalid), valid => acc.map(v => valid :: v))
+          }
+        value.map(_.reverse).map(AllHeaderValues)
+      case _ => JsError("Expecting an array of headers when specifying :all as header qualifier")
+    } else {
+      asReads(option)
+    }
+  }
+
   private implicit val nameReads: Reads[Name] = Json.valueReads[Name]
   private implicit val charsetReads: Reads[Charset] = Json.valueReads[Charset]
   private implicit val dispositionReads: Reads[Disposition] = Json.valueReads[Disposition]
@@ -398,7 +418,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
               .flatMap(property => SpecificHeaderRequest.from(property)
                 .left.map(_ => new IllegalArgumentException(s"$name is an invalid specific header")))
               .flatMap(_.validate)
-              .flatMap(specificHeaderRequest => asReads(specificHeaderRequest.parseOption.getOrElse(AsRaw))
+              .flatMap(specificHeaderRequest => asReads(specificHeaderRequest)
                 .reads(value).asEither.left.map(e => new IllegalArgumentException(e.toString()))
                 .map(headerValue => EmailHeader(EmailHeaderName(specificHeaderRequest.headerName), headerValue)))
         }.sequence
