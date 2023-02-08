@@ -41,8 +41,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
+import net.fortuna.ical4j.data.CalendarParserFactory;
+import net.fortuna.ical4j.data.ContentHandlerContext;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 
 /**
  * <p>
@@ -131,7 +134,10 @@ public class ICalendarParser extends GenericMailet {
     }
 
     private Stream<Pair<String, Calendar>> createCalendar(String key, byte[] icsContent) {
-        CalendarBuilder builder = new CalendarBuilder();
+        CalendarBuilder builder = new CalendarBuilder(
+            CalendarParserFactory.getInstance().get(),
+            new ContentHandlerContext().withSupressInvalidProperties(true),
+            TimeZoneRegistryFactory.getInstance().createRegistry());
         try {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));

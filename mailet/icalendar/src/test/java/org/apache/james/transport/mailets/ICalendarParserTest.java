@@ -53,6 +53,39 @@ class ICalendarParserTest {
 
     static final String RIGHT_ICAL_VALUE = "BEGIN:VCALENDAR\n" +
         "END:VCALENDAR";
+    static final String FAULTY_ICAL_VALUE = "BEGIN:VCALENDAR\n" +
+        "BEGIN:VEVENT\n" +
+        "BEGIN:VALARM\n" +
+        "TRIGGER:P1800S\n" + // net.fortuna.ical4j.data.ParserException: Error at line 9:Text cannot be parsed to a Duration
+        "ACTION:display\n" +
+        "DESCRIPTION:XXXXXXXXXXXXX\n" +
+        "END:VALARM\n" +
+        "CREATED:20200903T145836Z\n" +
+        "LAST-MODIFIED:20200910T095359Z\n" +
+        "DTSTAMP:20200910T095359Z\n" +
+        "DTSTART:20200915T120000Z\n" +
+        "DURATION:PT2H30M\n" +
+        "TRANSP:OPAQUE\n" +
+        "SEQUENCE:2\n" +
+        "SUMMARY:XXXXXXXX\n" +
+        "DESCRIPTION:\n" +
+        "CLASS:PUBLIC\n" +
+        "PRIORITY:5\n" +
+        "ORGANIZER;X-OBM-ID=612;CN=XXXX:MAILTO:xxxxxx@linagora.com\n" +
+        "X-OBM-DOMAIN:linagora.com\n" +
+        "X-OBM-DOMAIN-UUID:02874f7c-d10e-102f-acda-0015176f7922\n" +
+        "LOCATION:SULLY-217R\n" +
+        "CATEGORIES:\n" +
+        "X-OBM-COLOR:\n" +
+        "X-OBM-ALERT;X-OBM-ID=612:1800\n" +
+        "UID:f1514f44bf39311568d640729686167c77935c03dc972e2286e115e86cf5d7a6e047fe\n" +
+        " b2aab16e43439a608f28671ab7c10e754c29879684a2ba5b1e4ed3eea7211d629898482b3e\n" +
+        "ATTENDEE;CUTYPE=INDIVIDUAL;RSVP=TRUE;CN=XXXXXXX;PARTSTAT=ACCEPTED;X\n" +
+        " -OBM-ID=612:MAILTO:xxxxx@linagora.com\n" +
+        "ATTENDEE;CUTYPE=INDIVIDUAL;RSVP=TRUE;CN=YYYYYYYY;PARTSTAT=DECLINED;X-OB\n" +
+        " M-ID=1329:MAILTO:yyyyyy@linagora.com\n" +
+        "END:VEVENT\n" +
+        "END:VCALENDAR";
 
     static final String WRONG_ICAL_VALUE = "anyValue";
     @SuppressWarnings("unchecked")
@@ -236,6 +269,34 @@ class ICalendarParserTest {
             assertThat(calendars)
                 .hasSize(1)
                 .containsExactly(expectedCalendar));
+    }
+
+    @Test
+    void parsingShouldRecoverFromInvalidProperties() throws Exception {
+        FakeMailetConfig mailetConfiguration = FakeMailetConfig.builder()
+            .mailetName("ICalendarParser")
+            .setProperty(SOURCE_ATTRIBUTE, SOURCE_CUSTOM_ATTRIBUTE)
+            .setProperty(DESTINATION_ATTRIBUTE, DESTINATION_CUSTOM_ATTRIBUTE)
+            .build();
+
+        mailet.init(mailetConfiguration);
+
+        Map<String, AttributeValue<byte[]>> attachments = ImmutableMap.<String, AttributeValue<byte[]>>builder()
+            .put("key1", AttributeValue.of(FAULTY_ICAL_VALUE.getBytes()))
+            .build();
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .attribute(makeCustomSourceAttribute((Serializable) attachments))
+            .build();
+
+        mailet.service(mail);
+
+        Optional<Map<String, AttributeValue<Serializable>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
+
+        assertThat(expectedCalendars).hasValueSatisfying(calendars ->
+            assertThat(calendars)
+                .hasSize(1)
+                .hasFieldOrProperty("key1"));
     }
 
     @Test
