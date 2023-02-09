@@ -21,12 +21,13 @@ package org.apache.james.transport.mailets
 
 import java.time.Duration
 import java.util
-
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
+
 import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult}
+import org.apache.james.transport.mailets.ConfigurationOps.DurationOps
 import org.apache.mailet.base.GenericMailet
 import org.apache.mailet.{Mail, ProcessingState}
 import org.reactivestreams.Publisher
@@ -109,7 +110,7 @@ class PerSenderRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) exten
 
   override def init(): Unit = {
     val duration: Duration = parseDuration()
-    val precision: Option[Duration] = parsePrecision()
+    val precision: Option[Duration] = getMailetConfig.getDuration("precision")
 
     keyPrefix = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)
@@ -123,8 +124,8 @@ class PerSenderRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) exten
   }
 
   @VisibleForTesting
-  def parseDuration(): Duration = DurationParsingUtil.parseDuration(getMailetConfig)
-  def parsePrecision(): Option[Duration] = PrecisionParsingUtil.parsePrecision(getMailetConfig)
+  def parseDuration(): Duration = getMailetConfig.getDuration("duration")
+    .getOrElse(throw new IllegalArgumentException("'duration' is compulsory"))
 
   override def service(mail: Mail): Unit = mail.getMaybeSender
       .asOptional()
