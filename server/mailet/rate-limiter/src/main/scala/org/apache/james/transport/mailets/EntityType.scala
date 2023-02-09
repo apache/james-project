@@ -33,11 +33,15 @@ import scala.util.Try
 case class KeyPrefix(value: String)
 
 object ConfigurationOps {
-  implicit class DurationOps(mailetConfig: MailetConfig) {
-    def getDuration(key: String): Option[Duration] = Option(mailetConfig.getInitParameter(key))
-      .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
+
+  implicit class OptionOps(mailetConfig: MailetConfig) {
+    def getOptionalString(key: String): Option[String] = Option(mailetConfig.getInitParameter(key))
   }
 
+  implicit class DurationOps(mailetConfig: MailetConfig) {
+    def getDuration(key: String): Option[Duration] = mailetConfig.getOptionalString(key)
+      .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
+  }
 }
 
 
