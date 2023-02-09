@@ -32,16 +32,14 @@ import scala.util.Try
 
 case class KeyPrefix(value: String)
 
-object DurationParsingUtil {
-  def parseDuration(mailetConfig: MailetConfig): Duration = Option(mailetConfig.getInitParameter("duration"))
-    .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
-    .getOrElse(throw new IllegalArgumentException("'duration' is compulsory"))
+object ConfigurationOps {
+  implicit class DurationOps(mailetConfig: MailetConfig) {
+    def getDuration(key: String): Option[Duration] = Option(mailetConfig.getInitParameter(key))
+      .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
+  }
+
 }
 
-object PrecisionParsingUtil {
-  def parsePrecision(mailetConfig: MailetConfig): Option[Duration] = Option(mailetConfig.getInitParameter("precision"))
-    .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
-}
 
 sealed trait EntityType {
   def asString(): String

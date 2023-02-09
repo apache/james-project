@@ -21,8 +21,8 @@ package org.apache.james.transport.mailets
 
 import java.time.Duration
 import java.util
-
 import com.google.common.collect.ImmutableList
+
 import javax.inject.Inject
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult}
 import org.apache.mailet.base.GenericMailet
@@ -108,8 +108,12 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
   private var keyPrefix: Option[KeyPrefix] = _
 
   override def init(): Unit = {
-    val duration: Duration = parseDuration()
-    val precision: Option[Duration] = parsePrecision()
+    import org.apache.james.transport.mailets.ConfigurationOps.DurationOps
+
+    val duration: Duration = getMailetConfig.getDuration("duration")
+      .getOrElse(throw new IllegalArgumentException("'duration' is compulsory"))
+
+    val precision: Option[Duration] = getMailetConfig.getDuration("precision")
 
     keyPrefix = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)
@@ -121,9 +125,6 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
     sizeRateLimiter = globalRateLimiter(Size)
     totalSizeRateLimiter = globalRateLimiter(TotalSize)
   }
-
-  def parseDuration(): Duration = DurationParsingUtil.parseDuration(getMailetConfig)
-  def parsePrecision(): Option[Duration] = PrecisionParsingUtil.parsePrecision(getMailetConfig)
 
   override def service(mail: Mail): Unit = {
     val pivot: RateLimitingResult = AcceptableRate
