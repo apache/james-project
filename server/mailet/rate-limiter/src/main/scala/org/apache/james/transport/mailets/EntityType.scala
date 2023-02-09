@@ -21,10 +21,10 @@ package org.apache.james.transport.mailets
 
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-
 import eu.timepit.refined.auto._
 import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.james.rate.limiter.api.{AllowedQuantity, Increment, Rule, Rules}
+import org.apache.james.transport.mailets.ConfigurationOps.{OptionOps, SizeOps}
 import org.apache.james.util.DurationParser
 import org.apache.mailet.{Mail, MailetConfig}
 
@@ -36,11 +36,21 @@ object ConfigurationOps {
 
   implicit class OptionOps(mailetConfig: MailetConfig) {
     def getOptionalString(key: String): Option[String] = Option(mailetConfig.getInitParameter(key))
+    def getOptionalLong(key: String): Option[Long] = Option(mailetConfig.getInitParameter(key)).map(_.toLong)
   }
 
   implicit class DurationOps(mailetConfig: MailetConfig) {
     def getDuration(key: String): Option[Duration] = mailetConfig.getOptionalString(key)
       .map(string => DurationParser.parse(string, ChronoUnit.SECONDS))
+  }
+
+  implicit class SizeOps(mailetConfig: MailetConfig) {
+    def getOptionalSize(key: String): Option[org.apache.james.util.Size] = mailetConfig.getOptionalString(key)
+      .map {
+        case "" => throw new IllegalArgumentException(s"'$key' field cannot be empty if specified")
+        case s => s
+      }
+      .map(org.apache.james.util.Size.parse)
   }
 }
 
@@ -58,8 +68,7 @@ case object Count extends EntityType {
 
   override def extractQuantity(mail: Mail): Option[Increment] = Some(1)
 
-  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = Option(mailetConfig.getInitParameter("count"))
-    .map(_.toLong)
+  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = mailetConfig.getOptionalLong("count")
     .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 }
@@ -69,8 +78,7 @@ case object RecipientsType extends EntityType {
 
   override def extractQuantity(mail: Mail): Option[Increment] = Some(Increment.liftOrThrow(mail.getRecipients.size()))
 
-  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = Option(mailetConfig.getInitParameter("recipients"))
-    .map(_.toLong)
+  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = mailetConfig.getOptionalLong("recipients")
     .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 }
@@ -80,12 +88,7 @@ case object Size extends EntityType {
 
   override def extractQuantity(mail: Mail): Option[Increment] = Some(Increment.liftOrThrow(mail.getMessageSize.toInt))
 
-  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = Option(mailetConfig.getInitParameter("size"))
-    .map {
-      case "" => throw new IllegalArgumentException("'size' field cannot be empty if specified")
-      case s => s
-    }
-    .map(org.apache.james.util.Size.parse)
+  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = mailetConfig.getOptionalSize("size")
     .map(_.asBytes())
     .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
@@ -99,12 +102,7 @@ case object TotalSize extends EntityType {
       .map(Increment.liftOrThrow)
       .toOption
 
-  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = Option(mailetConfig.getInitParameter("totalSize"))
-    .map {
-      case "" => throw new IllegalArgumentException("'totalSize' field cannot be empty if specified")
-      case s => s
-    }
-    .map(org.apache.james.util.Size.parse)
+  override def extractRules(duration: Duration, mailetConfig: MailetConfig): Option[Rules] = mailetConfig.getOptionalSize("totalSize")
     .map(_.asBytes())
     .map(AllowedQuantity.liftOrThrow)
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
