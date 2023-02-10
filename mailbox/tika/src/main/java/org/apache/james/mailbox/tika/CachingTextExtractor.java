@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.tika;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
@@ -40,6 +39,7 @@ import com.github.benmanes.caffeine.cache.Weigher;
 import com.google.common.hash.Hashing;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CachingTextExtractor implements TextExtractor {
     private final TextExtractor underlying;
@@ -60,7 +60,7 @@ public class CachingTextExtractor implements TextExtractor {
             (key, parsedContent) -> computeWeight(parsedContent);
 
         cache = Caffeine.newBuilder()
-            .expireAfterAccess(Duration.ofMillis(cacheEvictionPeriod.toMillis()))
+            .expireAfterAccess(cacheEvictionPeriod)
             .maximumWeight(cacheWeightInBytes)
             .weigher(weigher)
             .evictionListener(removalListener)
@@ -111,14 +111,15 @@ public class CachingTextExtractor implements TextExtractor {
 
     @Override
     public Mono<ParsedContent> extractContentReactive(InputStream inputStream, ContentType contentType) {
-        try {
-            byte[] bytes = IOUtils.toByteArray(inputStream);
-            String key = Hashing.sha256().hashBytes(bytes).toString();
-
-            return Mono.fromFuture(cache.get(key, (a, b) -> retrieveAndUpdateWeight(bytes, contentType).toFuture()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return Mono
+                .fromCallable(() -> IOUtils.toByteArray(inputStream))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(bytes ->
+                    Mono.fromCallable(() -> Hashing.sha256().hashBytes(bytes).toString())
+                        .subscribeOn(Schedulers.parallel())
+                        .publishOn(Schedulers.boundedElastic())
+                        .flatMap(key -> Mono.fromFuture(cache.get(key, (a, b) -> retrieveAndUpdateWeight(bytes, contentType).toFuture())))
+                );
     }
 
     @Override
