@@ -31,10 +31,10 @@ import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 case class GlobalKey(keyPrefix: Option[KeyPrefix], entityType: EntityType) extends RateLimitingKey {
-  val globalPrefix: String = "global"
-
-  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString}_$globalPrefix}")
-    .getOrElse(s"${entityType.asString}_$globalPrefix")
+  override val asString: String = {
+    val key = s"${entityType.asString}_global}"
+    keyPrefix.map(prefix => s"${prefix.value}_$key").getOrElse(key)
+  }
 }
 
 case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
