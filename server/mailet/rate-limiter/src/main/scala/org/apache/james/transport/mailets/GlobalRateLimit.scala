@@ -37,16 +37,21 @@ case class GlobalKey(keyPrefix: Option[KeyPrefix], entityType: EntityType) exten
   }
 }
 
-class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
-  def rateLimit(mail: Mail): Publisher[RateLimitingResult] = {
+trait GlobalRateLimiter {
+  def rateLimit(mail: Mail): Publisher[RateLimitingResult]
+}
+
+object GlobalRateLimiter {
+  def fromRateLimiter(rateLimiter: RateLimiter, keyPrefix: Option[KeyPrefix], entityType: EntityType): GlobalRateLimiter = {
     val rateLimitingKey = GlobalKey(keyPrefix, entityType)
 
-    rateLimiter.map(limiter =>
+    mail =>
       EntityType.extractQuantity(entityType, mail)
-        .map(increment => limiter.rateLimit(rateLimitingKey, increment))
-        .getOrElse(SMono.just[RateLimitingResult](RateExceeded)))
-      .getOrElse(SMono.just[RateLimitingResult](AcceptableRate))
+        .map(increment => rateLimiter.rateLimit(rateLimitingKey, increment))
+        .getOrElse(SMono.just[RateLimitingResult](RateExceeded))
   }
+
+  val acceptAll: GlobalRateLimiter = mail => SMono.just[RateLimitingResult](AcceptableRate)
 }
 
 /**
@@ -141,12 +146,17 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
     }
   }
 
+
   private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix],
                                 duration: Duration, precision: Option[Duration]): GlobalRateLimiter =
-    new GlobalRateLimiter(rateLimiter = EntityType.extractRules(entityType, duration, getMailetConfig)
-      .map(rateLimiterFactory.withSpecification(_, precision)),
-      keyPrefix = keyPrefix,
-      entityType = entityType)
+    EntityType.extractRules(entityType, duration, getMailetConfig)
+      .map(rateLimiterFactory.withSpecification(_, precision))
+      .map(rateLimiter =>
+        GlobalRateLimiter.fromRateLimiter(
+          rateLimiter = rateLimiter,
+          keyPrefix = keyPrefix,
+          entityType = entityType))
+      .getOrElse(GlobalRateLimiter.acceptAll)
 
 
   override def requiredProcessingState(): util.Collection[ProcessingState] = ImmutableList.of(new ProcessingState(exceededProcessor))
