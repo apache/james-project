@@ -130,11 +130,17 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     request.bodyProperties match {
       case None => Right(EmailBodyPart.defaultProperties)
       case Some(properties) =>
-        val invalidProperties = properties -- EmailBodyPart.allowedProperties
-        if (invalidProperties.isEmpty()) {
-          Right(properties)
+        val invalidProperties: Set[NonEmptyString] = properties.value
+          .flatMap(property => SpecificHeaderRequest.from(property)
+            .fold(
+              invalidProperty => Some(invalidProperty),
+              _ => None
+            )) -- EmailBodyPart.allowedProperties.value
+
+        if (invalidProperties.nonEmpty) {
+          Left(new IllegalArgumentException(s"The following bodyProperties [${invalidProperties.map(p => p.value).mkString(", ")}] do not exist."))
         } else {
-          Left(new IllegalArgumentException(s"The following bodyProperties [${invalidProperties.format()}] do not exist."))
+          Right(properties)
         }
     }
 

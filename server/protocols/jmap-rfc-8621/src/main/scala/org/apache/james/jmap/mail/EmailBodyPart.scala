@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import java.io.OutputStream
+import java.time.ZoneId
 
 import cats.implicits._
 import com.google.common.io.CountingOutputStream
@@ -73,16 +74,16 @@ object EmailBodyPart {
   val defaultProperties: Properties = Properties("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location")
   val allowedProperties: Properties = defaultProperties ++ Properties("subParts", "headers")
 
-  def of(messageId: MessageId, message: MessageResult): Try[EmailBodyPart] = {
+  def of(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId, message: MessageResult): Try[EmailBodyPart] = {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
 
     val mime4JMessage = Try(defaultMessageBuilder.parseMessage(message.getFullContent.getInputStream))
-    mime4JMessage.flatMap(of(messageId, _))
+    mime4JMessage.flatMap(of(properties, zoneId, messageId, _))
   }
 
-  def fromAttachment(attachment: MessageAttachmentMetadata, entity: Message): EmailBodyPart = {
+  def fromAttachment(properties: Option[Properties], zoneId: ZoneId, attachment: MessageAttachmentMetadata, entity: Message): EmailBodyPart = {
     def parseDisposition(attachment: MessageAttachmentMetadata): Option[Disposition] =
       if (attachment.isInline) {
         Option(Disposition.INLINE)
@@ -105,45 +106,48 @@ object EmailBodyPart {
       language = Option.empty,
       location = Option.empty,
       subParts = Option.empty,
-      entity = entity)
+      entity = entity,
+      specificHeaders = EmailHeaders.extractSpecificHeaders(properties)(zoneId, entity.getHeader))
   }
 
-  def of(messageId: MessageId, message: Message): Try[EmailBodyPart] =
-    of(messageId, PartId(1), message).map(_._1)
+  def of(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId, message: Message): Try[EmailBodyPart] =
+    of(properties, zoneId, messageId, PartId(1), message).map(_._1)
 
-  private def of(messageId: MessageId, partId: PartId, entity: Entity): Try[(EmailBodyPart, PartId)] =
+  private def of(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId, partId: PartId, entity: Entity): Try[(EmailBodyPart, PartId)] =
     entity.getBody match {
       case multipart: Multipart =>
         val scanResults: Try[List[(Option[EmailBodyPart], PartId)]] = multipart.getBodyParts
           .asScala.toList
-          .scanLeft[Try[(Option[EmailBodyPart], PartId)]](Success((None, partId)))(traverse(messageId))
+          .scanLeft[Try[(Option[EmailBodyPart], PartId)]](Success((None, partId)))(traverse(properties, zoneId, messageId))
           .sequence
         val highestPartIdValidation: Try[PartId] = scanResults.map(list => list.map(_._2).reverse.headOption.getOrElse(partId))
         val childrenValidation: Try[List[EmailBodyPart]] = scanResults.map(list => list.flatMap(_._1))
 
         zip(childrenValidation, highestPartIdValidation)
             .flatMap {
-              case (children, highestPartId) => of(None, partId, entity, Some(children))
+              case (children, highestPartId) => of(properties, zoneId, None, partId, entity, Some(children))
                 .map(part => (part, highestPartId))
             }
       case _ => BlobId.of(messageId, partId)
-          .flatMap(blobId => of(Some(blobId), partId, entity, None))
+          .flatMap(blobId => of(properties, zoneId, Some(blobId), partId, entity, None))
           .map(part => (part, partId))
     }
 
-  private def traverse(messageId: MessageId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
+  private def traverse(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
     acc.flatMap {
       case (_, previousPartId) =>
         val partId = previousPartId.next
 
-        of(messageId, partId, entity)
+        of(properties, zoneId, messageId, partId, entity)
           .map({
             case (part, partId) => (Some(part), partId)
           })
     }
   }
 
-  private def of(blobId: Option[BlobId],
+  private def of(properties: Option[Properties],
+                 zoneId: ZoneId,
+                 blobId: Option[BlobId],
                  partId: PartId,
                  entity: Entity,
                  subParts: Option[List[EmailBodyPart]]): Try[EmailBodyPart] =
@@ -162,7 +166,8 @@ object EmailBodyPart {
           location = headerValue(entity, "Content-Location")
             .map(Location),
           subParts = subParts,
-          entity = entity))
+          entity = entity,
+          specificHeaders = EmailHeaders.extractSpecificHeaders(properties)(zoneId, entity.getHeader)))
 
   private def headerValue(entity: Entity, headerName: String): Option[String] = entity.getHeader
     .getFields(headerName)
@@ -259,7 +264,8 @@ case class EmailBodyPart(partId: PartId,
                          language: Option[Languages],
                          location: Option[Location],
                          subParts: Option[List[EmailBodyPart]],
-                         entity: Entity) {
+                         entity: Entity,
+                         specificHeaders: Map[String, Option[EmailHeaderValue]]) {
 
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>

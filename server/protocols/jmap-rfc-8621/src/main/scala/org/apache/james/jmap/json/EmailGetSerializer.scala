@@ -44,7 +44,8 @@ object EmailBodyPartToSerialize {
     language = part.language,
     location = part.location,
     name = part.name,
-    subParts = part.subParts.map(list => list.map(EmailBodyPartToSerialize.from)))
+    subParts = part.subParts.map(list => list.map(EmailBodyPartToSerialize.from)),
+    specificHeaders = part.specificHeaders)
 }
 
 case class EmailBodyPartToSerialize(partId: PartId,
@@ -58,7 +59,8 @@ case class EmailBodyPartToSerialize(partId: PartId,
                                     cid: Option[Cid],
                                     language: Option[Languages],
                                     location: Option[Location],
-                                    subParts: Option[List[EmailBodyPartToSerialize]])
+                                    subParts: Option[List[EmailBodyPartToSerialize]],
+                                    specificHeaders: Map[String, Option[EmailHeaderValue]])
 
 object EmailGetSerializer {
   private implicit val mailboxIdWrites: Writes[MailboxId] = mailboxId => JsString(mailboxId.serialize)
@@ -147,7 +149,8 @@ object EmailGetSerializer {
       (__ \ "cid").writeNullable[Cid] and
       (__ \ "language").writeNullable[Languages] and
       (__ \ "location").writeNullable[Location] and
-      (__ \ "subParts").lazyWriteNullable(implicitly[Writes[List[EmailBodyPartToSerialize]]])
+      (__ \ "subParts").lazyWriteNullable(implicitly[Writes[List[EmailBodyPartToSerialize]]]) and
+        JsPath.write[Map[String, Option[EmailHeaderValue]]]
     )(unlift(EmailBodyPartToSerialize.unapply))
 
   private implicit val bodyPartWrites: Writes[EmailBodyPart] = part => bodyPartWritesToSerializeWrites.writes(EmailBodyPartToSerialize.from(part))

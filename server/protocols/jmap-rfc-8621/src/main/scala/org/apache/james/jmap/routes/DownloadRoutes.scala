@@ -37,7 +37,7 @@ import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, PartId}
-import org.apache.james.jmap.method.AccountNotFoundException
+import org.apache.james.jmap.method.{AccountNotFoundException, ZoneIdProvider}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.model.ContentType.{MediaType, MimeType, SubType}
@@ -54,12 +54,13 @@ import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
-
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.stream
 import java.util.stream.Stream
+
 import javax.inject.{Inject, Named}
+
 import scala.compat.java8.FunctionConverters._
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
@@ -186,7 +187,8 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager)
 }
 
 class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
-                                        val messageIdManager: MessageIdManager) extends BlobResolver {
+                                        val messageIdManager: MessageIdManager,
+                                        val zoneIdSupplier: ZoneIdProvider) extends BlobResolver {
   private def asMessageAndPartId(blobId: BlobId): Try[(MessageId, PartId)] = {
     blobId.value.value.split('_').toList match {
       case List(messageIdString, partIdString) => for {
@@ -206,7 +208,7 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
         Applicable(SMono.fromPublisher(
           messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
           .handle[EmailBodyPart] {
-            case (message, sink) => EmailBodyPart.of(messageId, message)
+            case (message, sink) => EmailBodyPart.of(None, zoneIdSupplier.get(), messageId, message)
               .fold(sink.error, sink.next)
           }
           .handle[EmailBodyPart] {

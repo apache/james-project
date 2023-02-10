@@ -94,15 +94,15 @@ case class EmailGetResponse(accountId: AccountId,
                             notFound: EmailNotFound)
 
 case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, parseOption: Option[ParseOption], isAll: Boolean = false) {
-  def retrieveHeader(zoneId: ZoneId, message: Message): (String, Option[EmailHeaderValue]) =
+  def retrieveHeader(zoneId: ZoneId, header: org.apache.james.mime4j.dom.Header): (String, Option[EmailHeaderValue]) =
     if (isAll) {
-      extractAllHeaders(zoneId, message)
+      extractAllHeaders(zoneId, header)
     } else {
-      extractLastHeader(zoneId, message)
+      extractLastHeader(zoneId, header)
     }
 
-  private def extractAllHeaders(zoneId: ZoneId, message: Message) = {
-    val fields: List[Field] = Option(message.getHeader.getFields(headerName))
+  private def extractAllHeaders(zoneId: ZoneId, header: org.apache.james.mime4j.dom.Header) = {
+    val fields: List[Field] = Option(header.getFields(headerName))
       .map(_.asScala.toList)
       .getOrElse(List())
 
@@ -110,8 +110,8 @@ case class SpecificHeaderRequest(property: NonEmptyString, headerName: String, p
     (property.value, Some(AllHeaderValues(fields.map(toHeader(zoneId, option)))))
   }
 
-  private def extractLastHeader(zoneId: ZoneId, message: Message) = {
-    val field: Option[Field] = Option(message.getHeader.getFields(headerName))
+  private def extractLastHeader(zoneId: ZoneId, header: org.apache.james.mime4j.dom.Header) = {
+    val field: Option[Field] = Option(header.getFields(headerName))
       .map(_.asScala)
       .flatMap(fields => fields.reverse.headOption)
 
