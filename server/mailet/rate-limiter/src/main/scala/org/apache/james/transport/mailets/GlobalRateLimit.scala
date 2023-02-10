@@ -37,7 +37,7 @@ case class GlobalKey(keyPrefix: Option[KeyPrefix], entityType: EntityType) exten
   }
 }
 
-case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
+class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
   def rateLimit(mail: Mail): Publisher[RateLimitingResult] = {
     val rateLimitingKey = GlobalKey(keyPrefix, entityType)
 
@@ -143,7 +143,7 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
 
   private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix],
                                 duration: Duration, precision: Option[Duration]): GlobalRateLimiter =
-    GlobalRateLimiter(rateLimiter = EntityType.extractRules(entityType, duration, getMailetConfig)
+    new GlobalRateLimiter(rateLimiter = EntityType.extractRules(entityType, duration, getMailetConfig)
       .map(rateLimiterFactory.withSpecification(_, precision)),
       keyPrefix = keyPrefix,
       entityType = entityType)
