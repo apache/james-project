@@ -53,7 +53,10 @@ public class StartTLSProcessor extends AbstractProcessor<StartTLSRequest> implem
     protected Mono<Void> doProcess(StartTLSRequest request, Responder responder, ImapSession session) {
         return Mono.fromRunnable(() -> {
             if (session.supportStartTLS()) {
-                session.startTLS(() -> responder.respond(factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS)));
+                session.startTLS(() -> {
+                    responder.respond(factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.STARTTLS));
+                    responder.flush();
+                });
             } else {
                 responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
             }

@@ -22,6 +22,7 @@ package org.apache.james.imap.encode.base;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -52,6 +53,9 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     private static final byte[] DRAFT = "\\Draft".getBytes(US_ASCII);
     private static final byte[] DELETED = "\\Deleted".getBytes(US_ASCII);
     private static final byte[] ANSWERED = "\\Answered".getBytes(US_ASCII);
+    private static final int FLUSH_BUFFER_SIZE = Optional.ofNullable(System.getProperty("james.imap.flush.buffer.size"))
+        .map(Integer::parseInt)
+        .orElse(8192);
 
     private final ImapResponseWriter writer;
 
@@ -134,9 +138,17 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     @Override
     public ImapResponseComposer end() throws IOException {
         buffer.write(LINE_END_BYTES);
-        writer.write(buffer.toByteArray());
-        buffer.reset();
+        if (buffer.size() > FLUSH_BUFFER_SIZE) {
+            flush();
+        }
         return this;
+    }
+
+    public void flush() throws IOException {
+        if (buffer.size() > 0) {
+            writer.write(buffer.toByteArray());
+            buffer.reset();
+        }
     }
 
     @Override

@@ -264,7 +264,4 @@ public interface ImapSession extends CommandDetectionSession {
 
     void schedule(Runnable runnable, Duration waitDelay);
 
-    default void flush() {
-
-    }
 }

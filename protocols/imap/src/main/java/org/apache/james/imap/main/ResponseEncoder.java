@@ -55,4 +55,13 @@ public class ResponseEncoder implements Responder {
         return failure;
     }
 
+
+    @Override
+    public void flush() {
+        try {
+            composer.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

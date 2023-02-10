@@ -78,6 +78,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
                     okComplete(request, responder);
+                    responder.flush();
                     session.stopDetectingCommandInjection();
                 } catch (BadCredentialsException e) {
                     authFailure = true;
@@ -89,6 +90,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         } catch (MailboxException e) {
             LOGGER.error("Error encountered while login", e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            responder.flush();
         }
     }
 

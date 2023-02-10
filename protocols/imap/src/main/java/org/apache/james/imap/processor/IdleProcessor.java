@@ -105,8 +105,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                             "failed. " + message));
                 LOGGER.info(message);
                 responder.respond(response);
+                responder.flush();
             } else {
                 okComplete(request, responder);
+                responder.flush();
             }
             session1.popLineHandler();
             idleActive.set(false);
@@ -168,7 +170,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         @Override
         public Publisher<Void> reactiveEvent(Event event) {
             return unsolicitedResponses(session, responder, false)
-                .then(Mono.fromRunnable(session::flush));
+                .then(Mono.fromRunnable(responder::flush));
         }
 
         @Override
