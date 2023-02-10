@@ -40,7 +40,7 @@ import scala.util.Using
 
 case class PerRecipientRateLimiter(rateLimiter: RateLimiter, keyPrefix: Option[KeyPrefix], entityType: EntityType) {
   def rateLimit(recipient: MailAddress, mail: Mail): Publisher[RateLimitingResult] =
-    entityType.extractQuantity(mail)
+    EntityType.extractQuantity(entityType, mail)
       .map(increment => rateLimiter.rateLimit(RecipientKey(keyPrefix, entityType, recipient), increment))
       .getOrElse(SMono.just[RateLimitingResult](RateExceeded))
 }
@@ -49,7 +49,7 @@ case class RecipientKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, ma
   override def asString(): String = s"${
     keyPrefix.map(prefix => prefix.value + "_")
       .getOrElse("")
-  }${entityType.asString()}_${mailAddress.asString()}"
+  }${entityType.asString}_${mailAddress.asString()}"
 }
 
 /**
@@ -135,7 +135,7 @@ class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) ex
 
   private def createRateLimiter(entityType: EntityType, duration: Duration, precision: Option[Duration],
                                 rateLimiterFactory: RateLimiterFactory, keyPrefix: Option[KeyPrefix]): Option[PerRecipientRateLimiter] =
-    entityType.extractRules(duration, getMailetConfig)
+    EntityType.extractRules(entityType, duration, getMailetConfig)
       .map(rateLimiterFactory.withSpecification(_, precision))
       .map(PerRecipientRateLimiter(_, keyPrefix, entityType))
 

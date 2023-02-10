@@ -38,7 +38,7 @@ case class PerSenderRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Opt
     val rateLimitingKey = SenderKey(keyPrefix, entityType, sender)
 
     rateLimiter.map(limiter =>
-      entityType.extractQuantity(mail)
+      EntityType.extractQuantity(entityType, mail)
         .map(increment => limiter.rateLimit(rateLimitingKey, increment))
         .getOrElse(SMono.just[RateLimitingResult](RateExceeded)))
       .getOrElse(SMono.just[RateLimitingResult](AcceptableRate))
@@ -46,8 +46,8 @@ case class PerSenderRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Opt
 }
 
 case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailAddress: MailAddress) extends RateLimitingKey {
-  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString()}_${mailAddress.asString()}")
-    .getOrElse(s"${entityType.asString()}_${mailAddress.asString()}")
+  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString}_${mailAddress.asString()}")
+    .getOrElse(s"${entityType.asString}_${mailAddress.asString()}")
 }
 
 /**
@@ -150,7 +150,7 @@ class PerSenderRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) exten
 
   private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix],
                                 duration: Duration, precision: Option[Duration]): PerSenderRateLimiter =
-    PerSenderRateLimiter(rateLimiter = entityType.extractRules(duration, getMailetConfig)
+    PerSenderRateLimiter(rateLimiter = EntityType.extractRules(entityType, duration, getMailetConfig)
       .map(rateLimiterFactory.withSpecification(_, precision)),
       keyPrefix = keyPrefix,
       entityType = entityType)
