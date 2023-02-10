@@ -929,6 +929,12 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     private void homerDeletesMessages(List<String> idsToDestroy) {
         deleteMessages(homerAccessToken, idsToDestroy);
+        // Grace period for the vault
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void bartDeletesMessages(List<String> idsToDestroy) {

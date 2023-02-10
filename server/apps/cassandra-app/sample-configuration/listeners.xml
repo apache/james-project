@@ -24,12 +24,6 @@
   <listener>
     <class>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</class>
   </listener>
-  <!-- Requires Deleted Message Vault to be activated. See deletedMessageVault.properties -->
-  <!--
-  <preDeletionHook>
-    <class>org.apache.james.vault.DeletedMessageVaultHook</class>
-  </preDeletionHook>
-  -->
 
   <!-- Enable to populate JMAP EmailQueryView -->
   <!--

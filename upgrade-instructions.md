@@ -26,6 +26,18 @@ Change list:
 - [Adding saveDate column to messageIdTable and imapUidTable](#adding-savedate-column-to-messageidtable-and-imapuidtable)
 - [Adding the saveDate to the OpenSearch index](#adding-the-savedate-to-the-opensearch-index)
 - [Adding delegatedUser column to user_table](#adding-delegatedusers-column-to-user-table)
+- [DeletedMessageVaultHook should not be used on Cassandra based products](#deleted-message-vault-is-now-deactivated-by-default)
+
+### DeletedMessageVaultHook should not be used on Cassandra based products
+
+Date: 10/02/2023
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3882
+
+Concerned products: Distributed James, Cassandra James Server
+
+When the deleted message vault is enabled in Cassandra products, now the deleted messages are directly copied
+into the vault, asynchronously upon deletions. Configuring DeletedMessageVaultHook is thus no longer needed.
 
 ### Adding delegated_users column to user table
 

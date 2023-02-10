@@ -2599,7 +2599,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
                     .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
                         softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
-                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId.getMessageId());
+                        softy.assertThat(deleteMetadata.getMessageId()).isEqualTo(composeId.getMessageId());
                     }));
             }
 
@@ -2620,7 +2620,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
                     .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
                         softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
-                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId.getMessageId());
+                        softy.assertThat(deleteMetadata.getMessageId()).isEqualTo(composeId.getMessageId());
                     }));
             }
 
@@ -2641,7 +2641,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
                     .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
                         softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
-                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId.getMessageId());
+                        softy.assertThat(deleteMetadata.getMessageId()).isEqualTo(composeId.getMessageId());
                     }));
             }
 
@@ -2667,7 +2667,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .hasSameElementsAs(preDeleteCaptor2.getAllValues())
                     .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
                     .allSatisfy(deleteMetadata -> assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId))
-                    .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+                    .extracting(deleteMetadata -> deleteMetadata.getMessageId())
                     .containsOnly(composeId1.getMessageId(), composeId2.getMessageId());
             }
 
@@ -2691,7 +2691,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
                     .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
                         softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
-                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId1.getMessageId());
+                        softy.assertThat(deleteMetadata.getMessageId()).isEqualTo(composeId1.getMessageId());
                     }));
             }
 
@@ -2726,7 +2726,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 assertThat(preDeleteCaptor1.getAllValues())
                     .hasSameElementsAs(preDeleteCaptor2.getAllValues())
                     .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
-                    .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+                    .extracting(deleteMetadata -> deleteMetadata.getMessageId())
                     .containsOnly(composeId1.getMessageId(), composeId2.getMessageId());
 
                 assertThat(preDeleteCaptor1.getAllValues())

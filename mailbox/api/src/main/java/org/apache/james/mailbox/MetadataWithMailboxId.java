@@ -22,24 +22,31 @@ package org.apache.james.mailbox;
 import java.util.Objects;
 
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 
 public class MetadataWithMailboxId {
 
     public static MetadataWithMailboxId from(MessageMetaData messageMetaData, MailboxId mailboxId) {
-        return new MetadataWithMailboxId(messageMetaData, mailboxId);
+        return new MetadataWithMailboxId(messageMetaData.getMessageId(), messageMetaData.getSize(), mailboxId);
     }
 
-    private final MessageMetaData messageMetaData;
+    private final MessageId messageId;
+    private final long size;
     private final MailboxId mailboxId;
 
-    private MetadataWithMailboxId(MessageMetaData messageMetaData, MailboxId mailboxId) {
-        this.messageMetaData = messageMetaData;
+    public MetadataWithMailboxId(MessageId messageId, long size, MailboxId mailboxId) {
+        this.messageId = messageId;
+        this.size = size;
         this.mailboxId = mailboxId;
     }
 
-    public MessageMetaData getMessageMetaData() {
-        return messageMetaData;
+    public MessageId getMessageId() {
+        return messageId;
+    }
+
+    public long getSize() {
+        return size;
     }
 
     public MailboxId getMailboxId() {
@@ -51,7 +58,8 @@ public class MetadataWithMailboxId {
         if (o instanceof MetadataWithMailboxId) {
             MetadataWithMailboxId that = (MetadataWithMailboxId) o;
 
-            return Objects.equals(this.messageMetaData, that.messageMetaData)
+            return Objects.equals(this.messageId, that.messageId)
+                && Objects.equals(this.size, that.size)
                 && Objects.equals(this.mailboxId, that.mailboxId);
         }
         return false;
@@ -59,6 +67,6 @@ public class MetadataWithMailboxId {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(messageMetaData, mailboxId);
+        return Objects.hash(messageId, size, mailboxId);
     }
 }

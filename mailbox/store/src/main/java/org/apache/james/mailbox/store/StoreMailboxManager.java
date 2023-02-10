@@ -494,8 +494,7 @@ public class StoreMailboxManager implements MailboxManager {
             .collect(ImmutableList.toImmutableList())
             .flatMap(metadata -> {
                 long totalSize = metadata.stream()
-                    .map(MetadataWithMailboxId::getMessageMetaData)
-                    .mapToLong(MessageMetaData::getSize)
+                    .mapToLong(MetadataWithMailboxId::getSize)
                     .sum();
 
                 return preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadata))
