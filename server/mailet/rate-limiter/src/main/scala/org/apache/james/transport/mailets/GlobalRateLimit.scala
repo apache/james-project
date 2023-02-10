@@ -33,8 +33,8 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 case class GlobalKey(keyPrefix: Option[KeyPrefix], entityType: EntityType) extends RateLimitingKey {
   val globalPrefix: String = "global"
 
-  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString()}_$globalPrefix}")
-    .getOrElse(s"${entityType.asString()}_$globalPrefix")
+  override def asString(): String = keyPrefix.map(prefix => s"${prefix.value}_${entityType.asString}_$globalPrefix}")
+    .getOrElse(s"${entityType.asString}_$globalPrefix")
 }
 
 case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
@@ -42,7 +42,7 @@ case class GlobalRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option
     val rateLimitingKey = GlobalKey(keyPrefix, entityType)
 
     rateLimiter.map(limiter =>
-      entityType.extractQuantity(mail)
+      EntityType.extractQuantity(entityType, mail)
         .map(increment => limiter.rateLimit(rateLimitingKey, increment))
         .getOrElse(SMono.just[RateLimitingResult](RateExceeded)))
       .getOrElse(SMono.just[RateLimitingResult](AcceptableRate))
@@ -143,7 +143,7 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
 
   private def createRateLimiter(rateLimiterFactory: RateLimiterFactory, entityType: EntityType, keyPrefix: Option[KeyPrefix],
                                 duration: Duration, precision: Option[Duration]): GlobalRateLimiter =
-    GlobalRateLimiter(rateLimiter = entityType.extractRules(duration, getMailetConfig)
+    GlobalRateLimiter(rateLimiter = EntityType.extractRules(entityType, duration, getMailetConfig)
       .map(rateLimiterFactory.withSpecification(_, precision)),
       keyPrefix = keyPrefix,
       entityType = entityType)
