@@ -59,6 +59,7 @@ class SearchResponseEncoderTest {
     @Test
     void testEncode() throws Exception {
         encoder.encode(response, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* SEARCH 1 4 9 16\r\n");
     }
 }

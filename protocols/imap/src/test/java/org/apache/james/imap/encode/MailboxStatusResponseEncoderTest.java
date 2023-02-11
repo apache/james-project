@@ -60,6 +60,7 @@ class MailboxStatusResponseEncoderTest  {
 
         encoder.encode(new MailboxStatusResponse(null, null, null, deletedStorage, messages, recent, uidNext,
                 null, uidValidity, unseen, mailbox, null), composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* STATUS \"A mailbox named desire\" (MESSAGES 2 DELETED-STORAGE 13 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n");
     }
 }

@@ -56,6 +56,7 @@ class XListResponseEncoderTest {
                 '.',
                 MailboxType.INBOX),
             composer);
+        composer.flush();
         assertThat(writer.getString()).startsWith("* XLIST");
     }
 }

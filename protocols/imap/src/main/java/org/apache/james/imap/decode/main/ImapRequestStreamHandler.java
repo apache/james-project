@@ -74,7 +74,9 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
                 return false;
             }
 
-            ImapResponseComposerImpl response = new ImapResponseComposerImpl(new OutputStreamImapResponseWriter(output));
+            OutputStreamImapResponseWriter writer = new OutputStreamImapResponseWriter(output);
+            ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
+            writer.setFlushCallback(response::flush);
 
             if (doProcessRequest(request, response, session)) {
 
@@ -96,6 +98,11 @@ public final class ImapRequestStreamHandler extends AbstractImapRequestHandler {
                 LOGGER.debug("Connection was abandoned after request processing failed.");
                 result = false;
                 abandon(output, session);
+            }
+            try {
+                response.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         return result;

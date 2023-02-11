@@ -51,6 +51,7 @@ class ListResponseEncoderTest {
         encoder.encode(new ListResponse(MailboxMetaData.Children.HAS_CHILDREN, MailboxMetaData.Selectability.NONE,
             "name", '.', false,
             false, EnumSet.noneOf(ListResponse.ChildInfo.class), MailboxType.OTHER), composer);
+        composer.flush();
         assertThat(writer.getString()).startsWith("* LIST");
     }
 }

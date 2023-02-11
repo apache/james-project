@@ -54,6 +54,7 @@ class FetchResponseEncoderTest  {
         FetchResponse message = new FetchResponse(MSN, flags, null, null, null, null, null,
                 null, null, null, null, null, null);
         encoder.encode(message, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
 
 
@@ -64,6 +65,7 @@ class FetchResponseEncoderTest  {
         FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null, null,
                 null, null, null, null, null, null, null, null);
         encoder.encode(message, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
 
 
@@ -74,6 +76,7 @@ class FetchResponseEncoderTest  {
         FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null, null,
                 null, null, null, null, null, null, null, null);
         encoder.encode(message, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
         
     }

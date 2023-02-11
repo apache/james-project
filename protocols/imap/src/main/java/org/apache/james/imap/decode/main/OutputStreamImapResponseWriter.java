@@ -32,16 +32,29 @@ import org.apache.james.imap.message.Literal;
  * client.
  */
 public class OutputStreamImapResponseWriter implements ImapResponseWriter {
+    @FunctionalInterface
+    interface FlushCallback {
+        void run() throws IOException;
+    }
 
     public static final int BUFFER_SIZE = 1024;
     private final OutputStream output;
+    private FlushCallback flushCallback;
 
     public OutputStreamImapResponseWriter(OutputStream output) {
         this.output = output;
+        this.flushCallback = () -> {
+
+        };
+    }
+
+    public void setFlushCallback(FlushCallback flushCallback) {
+        this.flushCallback = flushCallback;
     }
 
     @Override
     public void write(Literal literal) throws IOException {
+        flushCallback.run();
         try (InputStream in = literal.getInputStream()) {
             IOUtils.copy(in, output, BUFFER_SIZE);
         }
