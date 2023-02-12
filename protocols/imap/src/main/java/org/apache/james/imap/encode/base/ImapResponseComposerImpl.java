@@ -56,6 +56,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     private static final int FLUSH_BUFFER_SIZE = Optional.ofNullable(System.getProperty("james.imap.flush.buffer.size"))
         .map(Integer::parseInt)
         .orElse(8192);
+    private static final byte[] CONTINUATION_BYTES = "+\r\n".getBytes(US_ASCII);
 
     private final ImapResponseWriter writer;
 
@@ -94,8 +95,8 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     @Override
     public ImapResponseComposer continuationResponse() throws IOException {
-        buffer.write(CONTINUATION);
-        end();
+        flush();
+        writer.write(CONTINUATION_BYTES);
         return this;
     }
 

@@ -977,7 +977,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
         }
 
-        @Test
+        @RepeatedTest(100)
         void authenticatePlainShouldSucceed() {
             assertThatCode(() ->
                 testIMAPClient.connect("127.0.0.1", port)
