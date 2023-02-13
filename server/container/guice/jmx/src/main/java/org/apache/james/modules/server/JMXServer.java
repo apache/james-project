@@ -19,11 +19,22 @@
 
 package org.apache.james.modules.server;
 
+import static org.apache.james.modules.server.JmxConfiguration.JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT;
+import static org.apache.james.modules.server.JmxConfiguration.JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.rmi.registry.LocateRegistry;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
@@ -34,7 +45,10 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.RestrictingRMISocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +112,14 @@ public class JMXServer implements Startable {
                 + ":" + jmxConfiguration.getHost().getPort() + "/jmxrmi";
             restrictingRMISocketFactory = new RestrictingRMISocketFactory(jmxConfiguration.getHost().getHostName());
             LocateRegistry.createRegistry(jmxConfiguration.getHost().getPort(), restrictingRMISocketFactory, restrictingRMISocketFactory);
+            generateJMXPasswordFileIfNeed();
 
-            Map<String, ?> environment = ImmutableMap.of();
+            Map<String, String> environment = Optional.of(existJmxPasswordFile())
+                .filter(FunctionalUtils.identityPredicate())
+                .map(hasJmxPasswordFile -> ImmutableMap.of("jmx.remote.x.password.file", JmxConfiguration.PASSWORD_FILE_PATH,
+                    "jmx.remote.x.access.file", JmxConfiguration.ACCESS_FILE_PATH))
+                .orElse(ImmutableMap.of());
+
             jmxConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(new JMXServiceURL(serviceURL),
                 environment,
                 ManagementFactory.getPlatformMBeanServer());
@@ -123,6 +143,40 @@ public class JMXServer implements Startable {
             LOGGER.info("JMX server stopped");
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void generateJMXPasswordFileIfNeed() {
+        if (Boolean.parseBoolean(System.getProperty(JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY, JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT))
+            && !existJmxPasswordFile()) {
+            generateJMXPasswordFile();
+        }
+    }
+
+    private boolean existJmxPasswordFile() {
+        return Files.exists(Path.of(JmxConfiguration.PASSWORD_FILE_PATH)) && Files.exists(Path.of(JmxConfiguration.ACCESS_FILE_PATH));
+    }
+
+    private void generateJMXPasswordFile() {
+        File passwordFile = new File(JmxConfiguration.PASSWORD_FILE_PATH);
+        if (!passwordFile.exists()) {
+            try (OutputStream outputStream = new FileOutputStream(passwordFile)) {
+                String randomPassword = RandomStringUtils.random(10, true, true);
+                IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " " + randomPassword + "\n", outputStream, StandardCharsets.UTF_8);
+                LOGGER.info("Generated JMX password file: " + JmxConfiguration.PASSWORD_FILE_PATH);
+            } catch (IOException e) {
+                throw new RuntimeException("Error when creating JMX password file: " + JmxConfiguration.PASSWORD_FILE_PATH, e);
+            }
+        }
+
+        File accessFile = new File(JmxConfiguration.ACCESS_FILE_PATH);
+        if (!accessFile.exists()) {
+            try (OutputStream outputStream = new FileOutputStream(accessFile)) {
+                IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " readwrite\n", outputStream, StandardCharsets.UTF_8);
+                LOGGER.info("Generated JMX access file: " + JmxConfiguration.ACCESS_FILE_PATH);
+            } catch (IOException e) {
+                throw new RuntimeException("Error when creating JMX access file: " + JmxConfiguration.ACCESS_FILE_PATH, e);
+            }
         }
     }
 
