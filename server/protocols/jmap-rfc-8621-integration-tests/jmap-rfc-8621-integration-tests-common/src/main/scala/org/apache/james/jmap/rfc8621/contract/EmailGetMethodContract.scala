@@ -3616,6 +3616,63 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def bodyStructureShouldSupportSpecificHeaders(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(message))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["bodyStructure"],
+         |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "header:Subject:asText"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+      s"""{
+         |  "id": "${messageId.serialize}",
+         |  "bodyStructure": {
+         |    "header:Subject:asText": "test",
+         |    "charset": "UTF-8",
+         |    "size": 8,
+         |    "partId": "1",
+         |    "blobId": "1_1",
+         |    "type": "text/plain"
+         |  }
+         |}""".stripMargin)
+  }
+
+  @Test
   def bodyStructureForSimpleMultipart(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
     server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)

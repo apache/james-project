@@ -272,10 +272,10 @@ object EmailHeaders {
       sentAt = extractDate(mime4JMessage, "Date").map(date => UTCDate.from(date, zoneId)))
   }
 
-  def extractSpecificHeaders(properties: Option[Properties])(zoneId: ZoneId, mime4JMessage: Message) = {
+  def extractSpecificHeaders(properties: Option[Properties])(zoneId: ZoneId, header: org.apache.james.mime4j.dom.Header) = {
     properties.getOrElse(Properties.empty()).value
       .flatMap(property => SpecificHeaderRequest.from(property).toOption)
-      .map(_.retrieveHeader(zoneId, mime4JMessage))
+      .map(_.retrieveHeader(zoneId, header))
       .toMap
   }
 
@@ -490,7 +490,7 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
           size = sanitizeSize(firstMessage.getSize),
           keywords = keywords),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader))
     }
   }
 }
@@ -509,7 +509,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
         .map(Success(_))
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
-      bodyStructure <- EmailBodyPart.of(messageId, mime4JMessage)
+      bodyStructure <- EmailBodyPart.of(request.bodyProperties, zoneIdProvider.get(), messageId, mime4JMessage)
       bodyValues <- extractBodyValues(htmlTextExtractor)(bodyStructure, request)
       blobId <- BlobId.of(messageId)
       preview <- Try(previewFactory.fromMime4JMessage(mime4JMessage))
@@ -534,7 +534,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
           htmlBody = bodyStructure.htmlBody,
           attachments = bodyStructure.attachments,
           bodyValues = bodyValues),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader))
     }
   }
 
@@ -693,7 +693,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
           hasAttachment = HasAttachment(fastView.hasAttachment),
           preview = fastView.getPreview),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage))
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader))
     }
   }
 }
@@ -784,8 +784,8 @@ private class EmailFastViewWithAttachmentsMetadataReader @Inject()(messageIdMana
           hasAttachment = HasAttachment(fastView.hasAttachment),
           preview = fastView.getPreview),
         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage),
-        attachments = AttachmentsMetadata(firstMessage.getLoadedAttachments.asScala.toList.map(EmailBodyPart.fromAttachment(_, mime4JMessage))))
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader),
+        attachments = AttachmentsMetadata(firstMessage.getLoadedAttachments.asScala.toList.map(EmailBodyPart.fromAttachment(request.bodyProperties, zoneIdProvider.get(), _, mime4JMessage))))
     }
   }
 }
