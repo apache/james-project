@@ -75,7 +75,8 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
             CommandHandlerResultLogger.class.getName(),
             HookResultLogger.class.getName());
 
-    public CoreCmdHandlerLoader() {}
+    public CoreCmdHandlerLoader() {
+    }
 
     @Override
     public List<String> getHandlers() {

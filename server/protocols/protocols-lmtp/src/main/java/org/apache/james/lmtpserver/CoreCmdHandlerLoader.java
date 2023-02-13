@@ -19,9 +19,7 @@
 
 package org.apache.james.lmtpserver;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.lmtpserver.hook.MailboxDeliverToRecipientHandler;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
@@ -72,7 +70,8 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
             HookResultLogger.class.getName()
     );
 
-    public CoreCmdHandlerLoader() {}
+    public CoreCmdHandlerLoader() {
+    }
 
     @Override
     public List<String> getHandlers() {

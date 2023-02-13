@@ -19,7 +19,6 @@
 
 package org.apache.james.pop3server.core;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.james.protocols.api.handler.CommandDispatcher;
@@ -66,7 +65,8 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
             CommandHandlerResultLogger.class.getName()
     );
 
-    public CoreCmdHandlerLoader() {}
+    public CoreCmdHandlerLoader() {
+    }
 
     @Override
     public List<String> getHandlers() {

@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.smtpserver.jmx;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.protocols.lib.handler.HandlersPackage;
@@ -32,7 +31,8 @@ public class JMXHandlersLoader implements HandlersPackage {
             HookResultJMXMonitor.class.getName()
     );
 
-    public JMXHandlersLoader() {}
+    public JMXHandlersLoader() {
+    }
 
     @Override
     public List<String> getHandlers() {

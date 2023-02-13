@@ -19,9 +19,7 @@
 
 package org.apache.james.lmtpserver;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
@@ -72,7 +70,8 @@ public class MailetContainerCmdHandlerLoader implements HandlersPackage {
     );
 
 
-    public MailetContainerCmdHandlerLoader() { }
+    public MailetContainerCmdHandlerLoader() {
+    }
 
     @Override
     public List<String> getHandlers() {

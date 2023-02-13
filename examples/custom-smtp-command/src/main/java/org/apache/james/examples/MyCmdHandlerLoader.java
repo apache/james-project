@@ -19,9 +19,7 @@
 
 package org.apache.james.examples;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
@@ -89,7 +87,8 @@ public class MyCmdHandlerLoader implements HandlersPackage {
             MyNoopCmdHandler.class.getName()
     );
 
-    public MyCmdHandlerLoader() {}
+    public MyCmdHandlerLoader() {
+    }
 
     @Override
     public List<String> getHandlers() {
