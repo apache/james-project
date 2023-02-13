@@ -88,7 +88,7 @@ public class TemporaryJamesServer {
             .forEach(resourceName -> copyResource(resourcesFolder, resourceName));
     }
 
-    private void copyResource(Path resourcesFolder, String resourceName) {
+    public static void copyResource(Path resourcesFolder, String resourceName) {
         var resolvedResource = resourcesFolder.resolve(resourceName);
         try (OutputStream outputStream = new FileOutputStream(resolvedResource.toFile())) {
             URL resource = ClassLoader.getSystemClassLoader().getResource(resourceName);

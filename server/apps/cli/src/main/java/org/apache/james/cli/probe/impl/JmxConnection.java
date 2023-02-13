@@ -21,6 +21,7 @@ package org.apache.james.cli.probe.impl;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.management.MBeanServerConnection;
@@ -42,6 +43,21 @@ public class JmxConnection implements Closeable {
         public AuthCredential(String username, String password) {
             this.username = username;
             this.password = password;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof AuthCredential) {
+                AuthCredential that = (AuthCredential) o;
+                return Objects.equals(this.username, that.username)
+                    && Objects.equals(this.password, that.password);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(username, password);
         }
     }
 
