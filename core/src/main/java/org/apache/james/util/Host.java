@@ -78,7 +78,7 @@ public class Host {
                 .splitToList(ipAndPort);
 
         if (parts.size() < 1 || parts.size() > 2) {
-            throw new IllegalArgumentException(ipAndPort + " is not a valid cassandra node");
+            throw new IllegalArgumentException(ipAndPort + " is not a valid host string");
         }
         return parts;
     }
