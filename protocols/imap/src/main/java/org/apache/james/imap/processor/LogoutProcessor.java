@@ -25,7 +25,6 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.LogoutRequest;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
@@ -40,11 +39,11 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
 
     @Override
     protected Mono<Void> processRequestReactive(LogoutRequest request, ImapSession session, Responder responder) {
-        MailboxSession mailboxSession = session.getMailboxSession();
         return session.logout()
             .then(Mono.fromRunnable(() -> {
                 bye(responder);
                 okComplete(request, responder);
+                responder.flush();
             }));
     }
 
