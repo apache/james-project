@@ -1,7 +1,7 @@
 # Delegations extension
 
 > :information_source:
-> Not Implemented
+> Implemented
 
 ## Context
 This extension is specific to the Apache James server which defines methods to manage users' JMAP delegation settings.
