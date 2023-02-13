@@ -71,7 +71,7 @@ import com.google.common.collect.ImmutableSet;
 public class AuthCmdHandler
     implements CommandHandler<SMTPSession>, EhloExtension, ExtensibleHandler, MailParametersHook {
     private static final Collection<String> COMMANDS = ImmutableSet.of("AUTH");
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthCmdHandler.class);
     private static final String[] MAIL_PARAMS = { "AUTH" };
     private static final String AUTH_TYPES_DELIMITER = " ";
 
