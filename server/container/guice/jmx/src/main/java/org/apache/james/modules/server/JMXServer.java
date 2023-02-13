@@ -19,11 +19,25 @@
 
 package org.apache.james.modules.server;
 
+import static org.apache.james.modules.server.JmxConfiguration.ACCESS_FILE_NAME;
+import static org.apache.james.modules.server.JmxConfiguration.JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE;
+import static org.apache.james.modules.server.JmxConfiguration.JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY_KEY;
+import static org.apache.james.modules.server.JmxConfiguration.PASSWORD_FILE_NAME;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.rmi.registry.LocateRegistry;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
@@ -34,7 +48,11 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.RestrictingRMISocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +66,17 @@ public class JMXServer implements Startable {
     private final JmxConfiguration jmxConfiguration;
     private final Set<String> registeredKeys;
     private final Object lock;
+    private final String jmxPasswordFilePath;
+    private final String jmxAccessFilePath;
     private JMXConnectorServer jmxConnectorServer;
     private boolean isStarted;
     private RestrictingRMISocketFactory restrictingRMISocketFactory;
 
     @Inject
-    public JMXServer(JmxConfiguration jmxConfiguration) {
+    public JMXServer(JmxConfiguration jmxConfiguration, JamesDirectoriesProvider directoriesProvider) {
         this.jmxConfiguration = jmxConfiguration;
+        this.jmxPasswordFilePath = directoriesProvider.getConfDirectory() + PASSWORD_FILE_NAME;
+        this.jmxAccessFilePath = directoriesProvider.getConfDirectory() + ACCESS_FILE_NAME;
         isStarted = false;
         registeredKeys = new HashSet<>();
         lock = new Object();
@@ -98,8 +120,14 @@ public class JMXServer implements Startable {
                 + ":" + jmxConfiguration.getHost().getPort() + "/jmxrmi";
             restrictingRMISocketFactory = new RestrictingRMISocketFactory(jmxConfiguration.getHost().getHostName());
             LocateRegistry.createRegistry(jmxConfiguration.getHost().getPort(), restrictingRMISocketFactory, restrictingRMISocketFactory);
+            generateJMXPasswordFileIfNeed();
 
-            Map<String, ?> environment = ImmutableMap.of();
+            Map<String, String> environment = Optional.of(existJmxPasswordFile())
+                .filter(FunctionalUtils.identityPredicate())
+                .map(hasJmxPasswordFile -> ImmutableMap.of("jmx.remote.x.password.file", jmxPasswordFilePath,
+                    "jmx.remote.x.access.file", jmxAccessFilePath))
+                .orElse(ImmutableMap.of());
+
             jmxConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(new JMXServiceURL(serviceURL),
                 environment,
                 ManagementFactory.getPlatformMBeanServer());
@@ -126,4 +154,43 @@ public class JMXServer implements Startable {
         }
     }
 
+    private void generateJMXPasswordFileIfNeed() {
+        if (Boolean.parseBoolean(System.getProperty(JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY_KEY, JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE))
+            && !existJmxPasswordFile()) {
+            generateJMXPasswordFile();
+        }
+    }
+
+    private boolean existJmxPasswordFile() {
+        return Files.exists(Path.of(jmxPasswordFilePath)) && Files.exists(Path.of(jmxAccessFilePath));
+    }
+
+    private void generateJMXPasswordFile() {
+        File passwordFile = new File(jmxPasswordFilePath);
+        if (!passwordFile.exists()) {
+            try (OutputStream outputStream = new FileOutputStream(passwordFile)) {
+                String randomPassword = RandomStringUtils.random(10, true, true);
+                IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " " + randomPassword + "\n", outputStream, StandardCharsets.UTF_8);
+                setPermissionOwnerOnly(passwordFile);
+                LOGGER.info("Generated JMX password file: " + passwordFile.getPath());
+            } catch (IOException e) {
+                throw new RuntimeException("Error when creating JMX password file: " + passwordFile.getPath(), e);
+            }
+        }
+
+        File accessFile = new File(jmxAccessFilePath);
+        if (!accessFile.exists()) {
+            try (OutputStream outputStream = new FileOutputStream(accessFile)) {
+                IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " readwrite\n", outputStream, StandardCharsets.UTF_8);
+                setPermissionOwnerOnly(accessFile);
+                LOGGER.info("Generated JMX access file: " + accessFile.getPath());
+            } catch (IOException e) {
+                throw new RuntimeException("Error when creating JMX access file: " + accessFile.getPath(), e);
+            }
+        }
+    }
+
+    private void setPermissionOwnerOnly(File file) throws IOException {
+        Files.setPosixFilePermissions(file.toPath(), Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
+    }
 }
