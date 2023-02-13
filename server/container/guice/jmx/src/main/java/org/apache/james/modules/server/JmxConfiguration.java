@@ -34,10 +34,10 @@ public class JmxConfiguration {
     public static final String LOCALHOST = "localhost";
     public static final int DEFAULT_PORT = 9999;
     public static final boolean ENABLED = true;
-    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY = "james.jmx.credential.generation";
-    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT = "false";
-    public static final String PASSWORD_FILE_PATH = "/root/conf/jmxremote.password";
-    public static final String ACCESS_FILE_PATH = "/root/conf/jmxremote.access";
+    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY_KEY = "james.jmx.credential.generation";
+    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE = "false";
+    public static final String PASSWORD_FILE_NAME = "jmxremote.password";
+    public static final String ACCESS_FILE_NAME = "jmxremote.access";
     public static final String JAMES_ADMIN_USER_DEFAULT = "james-admin";
 
     public static final JmxConfiguration DEFAULT_CONFIGURATION = new JmxConfiguration(ENABLED, Optional.of(Host.from(LOCALHOST, DEFAULT_PORT)));

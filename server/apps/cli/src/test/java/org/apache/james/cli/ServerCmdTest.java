@@ -25,14 +25,24 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
+import org.apache.james.cli.probe.impl.JmxConnection;
 import org.apache.james.cli.probe.impl.JmxDataProbe;
 import org.apache.james.cli.probe.impl.JmxMailboxProbe;
 import org.apache.james.cli.probe.impl.JmxQuotaProbe;
@@ -48,6 +58,7 @@ import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import com.google.common.collect.ImmutableList;
 
@@ -1198,6 +1209,54 @@ class ServerCmdTest {
 
         assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
             .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getAuthCredentialShouldReturnEmptyWhenNotGiven(@TempDir Path tempDir) throws Exception {
+        String[] arguments = {"-h", "127.0.0.1", "-p", "99999", "command", "arg1", "arg2", "arg3"};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThat(ServerCmd.getAuthCredential(commandLine, tempDir.toString()))
+            .isEmpty();
+    }
+
+    @Test
+    void getAuthCredentialShouldReturnValueWhenGivenViaCommandLine(@TempDir Path tempDir) throws Exception {
+        String[] arguments = {"-h", "127.0.0.1", "-p", "99999", "-username", "james-admin", "-password", "123456", "command", "arg1", "arg2", "arg3"};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThat(ServerCmd.getAuthCredential(commandLine, tempDir.toString()))
+            .isEqualTo(Optional.of(new JmxConnection.AuthCredential("james-admin", "123456")));
+    }
+
+    @Test
+    void getAuthCredentialShouldReturnValueWhenGivenViaJmxPasswordFile(@TempDir Path tempDir) throws Exception {
+        String[] arguments = {"-h", "127.0.0.1", "-p", "99999", "command", "arg1", "arg2", "arg3"};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        File passwordFile = new File(tempDir.toString() + "/jmxremote.password");
+        try (OutputStream outputStream = new FileOutputStream(passwordFile)) {
+            IOUtils.write("james-admin1 pass2\n", outputStream, StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+        }
+
+        assertThat(ServerCmd.getAuthCredential(commandLine, passwordFile.getPath()))
+            .isEqualTo(Optional.of(new JmxConnection.AuthCredential("james-admin1", "pass2")));
+    }
+
+    @Test
+    void getAuthCredentialShouldPreferCommandlineValue(@TempDir Path tempDir) throws Exception {
+        String[] arguments = {"-h", "127.0.0.1", "-p", "99999", "-username", "james-admin", "-password", "123456", "command", "arg1", "arg2", "arg3"};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        File passwordFile = new File(tempDir.toString() + "/jmxremote.password");
+        try (OutputStream outputStream = new FileOutputStream(passwordFile)) {
+            IOUtils.write("james-admin1 pass2\n", outputStream, StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+        }
+
+        assertThat(ServerCmd.getAuthCredential(commandLine, tempDir.toString()))
+            .isEqualTo(Optional.of(new JmxConnection.AuthCredential("james-admin", "123456")));
     }
 
 }

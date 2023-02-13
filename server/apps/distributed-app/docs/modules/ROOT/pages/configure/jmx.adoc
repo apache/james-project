@@ -22,3 +22,37 @@ in GIT to get some examples and hints.
 
 To access from a remote location, it has been reported that `-Dcom.sun.management.jmxremote.ssl=false` is needed as
 a JVM argument.
+
+
+== JMX Security
+
+In order to set up JMX authentication, we need to put `jmxremote.password` and `jmxremote.access` file
+to `/conf` directory.
+
+- `jmxremote.password`: define the username and password, that will be used by the client (here is james-cli)
+
+File's content example:
+```
+james-admin pass1
+```
+
+- `jmxremote.access`: define the pair of username and access permission
+
+File's content example:
+```
+james-admin readWrite
+```
+
+When James runs with option `-Djames.jmx.credential.generation=true`, James will automatically generate `jmxremote.password` if the file does not exist.
+Then the default username is `james-admin` and a random password.
+
+=== James-cli
+
+When the JMX server starts with authentication configuration, it will require the client need provide username/password for bypass.
+To do that, we need set arguments `-username` and `-password` for the command request.
+
+Command example:
+```
+james-cli -h 127.0.0.1 -p 9999 -username james-admin -password pass1 listdomains
+```
+
