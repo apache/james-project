@@ -64,6 +64,7 @@ import org.apache.james.imap.decode.parser.UidCommandParser;
 import org.apache.james.imap.decode.parser.UnselectCommandParser;
 import org.apache.james.imap.decode.parser.UnsubscribeCommandParser;
 import org.apache.james.imap.decode.parser.XListCommandParser;
+import org.apache.james.imap.encode.ACLResponseEncoder;
 import org.apache.james.imap.encode.AuthenticateResponseEncoder;
 import org.apache.james.imap.encode.CapabilityResponseEncoder;
 import org.apache.james.imap.encode.ContinuationResponseEncoder;
@@ -291,7 +292,8 @@ public interface ImapPackage {
                     .stream()
                     .map(clazz -> new ClassName(clazz.getCanonicalName()))
                     .collect(ImmutableList.toImmutableList()),
-                ImmutableList.of(MetadataResponseEncoder.class,
+                ImmutableList.of(ACLResponseEncoder.class,
+                    MetadataResponseEncoder.class,
                     MyRightsResponseEncoder.class,
                     IdResponseEncoder.class,
                     ListRightsResponseEncoder.class,

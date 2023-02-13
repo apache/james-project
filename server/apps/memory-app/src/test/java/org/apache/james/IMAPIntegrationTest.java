@@ -68,4 +68,14 @@ public class IMAPIntegrationTest {
             .contains("OK LOGOUT completed.");
     }
 
+    @Test
+    void getAclShouldSucceed(GuiceJamesServer guiceJamesServer) throws Exception {
+        TestIMAPClient testIMAPClient = new TestIMAPClient();
+        testIMAPClient.connect(LOCALHOST_IP, guiceJamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB.asString(), BOB_PASSWORD);
+
+        assertThat(testIMAPClient.sendCommand("GETACL INBOX"))
+            .contains("OK GETACL completed.");
+    }
+
 }
