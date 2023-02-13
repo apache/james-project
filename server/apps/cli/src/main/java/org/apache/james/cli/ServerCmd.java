@@ -18,13 +18,16 @@
  ****************************************************************/
 package org.apache.james.cli;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -34,6 +37,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.JamesCliException;
 import org.apache.james.cli.exceptions.MissingCommandException;
@@ -72,6 +76,10 @@ public class ServerCmd {
     public static final String PORT_OPT_LONG = "port";
     public static final String PORT_OPT_SHORT = "p";
 
+    public static final String JMX_USERNAME_OPT = "username";
+    public static final String JMX_PASSWORD_OPT = "password";
+    public static final String JMX_PASSWORD_FILE_PATH_DEFAULT = System.getProperty("user.home") + "/conf/jmxremote.password";
+
     private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 9999;
     private static final Logger LOG = LoggerFactory.getLogger(ServerCmd.class);
@@ -79,7 +87,9 @@ public class ServerCmd {
     private static Options createOptions() {
         return new Options()
                 .addOption(HOST_OPT_SHORT, HOST_OPT_LONG, true, "node hostname or ip address")
-                .addOption(PORT_OPT_SHORT, PORT_OPT_LONG, true, "remote jmx agent port number");
+                .addOption(PORT_OPT_SHORT, PORT_OPT_LONG, true, "remote jmx agent port number")
+                .addOption(JMX_USERNAME_OPT, JMX_USERNAME_OPT, true, "remote jmx username")
+                .addOption(JMX_PASSWORD_OPT, JMX_PASSWORD_OPT, true, "remote jmx password");
     }
 
     /**
@@ -111,7 +121,8 @@ public class ServerCmd {
     public static void executeAndOutputToStream(String[] args, PrintStream printStream) throws Exception {
         Stopwatch stopWatch = Stopwatch.createStarted();
         CommandLine cmd = parseCommandLine(args);
-        JmxConnection jmxConnection = new JmxConnection(getHost(cmd), getPort(cmd));
+        JmxConnection jmxConnection = new JmxConnection(getHost(cmd), getPort(cmd), getAuthCredential(cmd, JMX_PASSWORD_FILE_PATH_DEFAULT));
+
         CmdType cmdType = new ServerCmd(
                 new JmxDataProbe().connect(jmxConnection),
                 new JmxMailboxProbe().connect(jmxConnection),
@@ -153,6 +164,30 @@ public class ServerCmd {
             return DEFAULT_HOST;
         }
         return host;
+    }
+
+    @VisibleForTesting
+    static Optional<JmxConnection.AuthCredential> getAuthCredential(CommandLine cmd, String jmxPasswordFilePath) {
+        return getAuthCredentialFromCommandLine(cmd)
+            .or(() -> getAuthCredentialFromJmxPasswordFile(jmxPasswordFilePath));
+    }
+
+    static Optional<JmxConnection.AuthCredential> getAuthCredentialFromCommandLine(CommandLine cmd) {
+        String username = cmd.getOptionValue(JMX_USERNAME_OPT);
+        String password = cmd.getOptionValue(JMX_PASSWORD_OPT);
+        if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password)) {
+            return Optional.empty();
+        }
+        return Optional.of(new JmxConnection.AuthCredential(username, password));
+    }
+
+    static Optional<JmxConnection.AuthCredential> getAuthCredentialFromJmxPasswordFile(String jmxPasswordFilePath) {
+        try {
+            StringTokenizer stringTokenizer = new StringTokenizer(FileUtils.readLines(new File(jmxPasswordFilePath), StandardCharsets.US_ASCII).get(0), " ");
+            return Optional.of(new JmxConnection.AuthCredential(stringTokenizer.nextToken(), stringTokenizer.nextToken()));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     @VisibleForTesting

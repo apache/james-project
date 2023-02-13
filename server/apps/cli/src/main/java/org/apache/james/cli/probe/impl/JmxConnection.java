@@ -20,6 +20,9 @@ package org.apache.james.cli.probe.impl;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
@@ -29,20 +32,50 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+import com.google.common.collect.ImmutableMap;
+
 public class JmxConnection implements Closeable {
+
+    public static class AuthCredential {
+        String username;
+        String password;
+
+        public AuthCredential(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof AuthCredential) {
+                AuthCredential that = (AuthCredential) o;
+                return Objects.equals(this.username, that.username)
+                    && Objects.equals(this.password, that.password);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(username, password);
+        }
+    }
 
     private static final String fmtUrl = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
     private static final int defaultPort = 9999;
 
     public static JmxConnection defaultJmxConnection(String host) throws IOException {
-        return new JmxConnection(host, defaultPort);
+        return new JmxConnection(host, defaultPort, Optional.empty());
     }
     
     private final JMXConnector jmxConnector;
 
-    public JmxConnection(String host, int port) throws IOException {
+    public JmxConnection(String host, int port, Optional<AuthCredential> authCredential) throws IOException {
         JMXServiceURL jmxUrl = new JMXServiceURL(String.format(fmtUrl, host, port));
-        jmxConnector = JMXConnectorFactory.connect(jmxUrl, null);
+        Map<String, ?> env = authCredential
+            .map(credential -> ImmutableMap.of("jmx.remote.credentials", new String[]{credential.username, credential.password}))
+            .orElse(ImmutableMap.of());
+        jmxConnector = JMXConnectorFactory.connect(jmxUrl, env);
     }
 
     @Override
