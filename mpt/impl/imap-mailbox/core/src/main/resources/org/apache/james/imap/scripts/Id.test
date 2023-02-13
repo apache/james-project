@@ -25,3 +25,7 @@ S: a0 OK ID completed.
 C: a1 ID ("vendor", "whatever", "version", "3.7.0", "random", "random value")
 S: \* ID \(\)
 S: a1 OK ID completed.
+
+C: a1 ID ("name" "Thunderbird" "version" "102.7.1")
+S: \* ID \(\)
+S: a1 OK ID completed.
