@@ -24,9 +24,9 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.mailet.Mail;
 
 /**
- * Custom message handlers must implement this interface The message hooks will
- * be server-wide common to all the SMTPHandlers, therefore the handlers must
- * store all the state information in the SMTPSession object
+ * Custom message handlers must implement this interface.
+ * The message hooks will be server-wide common to all the SMTPHandlers,
+ * therefore the handlers must store all the state information in the SMTPSession object
  */
 public interface JamesMessageHook extends Hook {
     /**

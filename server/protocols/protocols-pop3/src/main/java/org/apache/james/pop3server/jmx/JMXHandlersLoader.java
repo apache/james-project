@@ -18,19 +18,19 @@
  ****************************************************************/
 package org.apache.james.pop3server.jmx;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 
 public class JMXHandlersLoader implements HandlersPackage {
 
-    private final List<String> handlers = new ArrayList<>();
+    private static final List<String> handlers = List.of(
+            ConnectHandlerResultJMXMonitor.class.getName(),
+            CommandHandlerResultJMXMonitor.class.getName(),
+            LineHandlerResultJMXMonitor.class.getName()
+    );
 
     public JMXHandlersLoader() {
-        handlers.add(ConnectHandlerResultJMXMonitor.class.getName());
-        handlers.add(CommandHandlerResultJMXMonitor.class.getName());
-        handlers.add(LineHandlerResultJMXMonitor.class.getName());
     }
 
     @Override

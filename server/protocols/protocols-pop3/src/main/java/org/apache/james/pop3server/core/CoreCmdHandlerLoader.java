@@ -19,7 +19,6 @@
 
 package org.apache.james.pop3server.core;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.james.protocols.api.handler.CommandDispatcher;
@@ -42,52 +41,31 @@ import org.apache.james.protocols.pop3.core.WelcomeMessageHandler;
 
 public class CoreCmdHandlerLoader implements HandlersPackage {
 
-    private static final String CAPACMDHANDLER = CapaCmdHandler.class.getName();
-    private static final String USERCMDHANDLER = UserCmdHandler.class.getName();
-    private static final String PASSCMDHANDLER = PassCmdHandler.class.getName();
-    private static final String LISTCMDHANDLER = ListCmdHandler.class.getName();
-    private static final String UIDLCMDHANDLER = UidlCmdHandler.class.getName();
-    private static final String RSETCMDHANDLER = RsetCmdHandler.class.getName();
-    private static final String DELECMDHANDLER = DeleCmdHandler.class.getName();
-    private static final String NOOPCMDHANDLER = NoopCmdHandler.class.getName();
-    private static final String RETRSCMDHANDLER = RetrCmdHandler.class.getName();
-    private static final String TOPCMDHANDLER = TopCmdHandler.class.getName();
-    private static final String STATCMDHANDLER = StatCmdHandler.class.getName();
-    private static final String QUITCMDHANDLER = QuitCmdHandler.class.getName();
-    private static final String WELCOMEMESSAGEHANDLER = WelcomeMessageHandler.class.getName();
-    private static final String UNKOWNCMDHANDLER = UnknownCmdHandler.class.getName();
-    private static final String STLSCMDHANDLER = StlsCmdHandler.class.getName();
 
-    private static final String COMMANDDISPATCHER = CommandDispatcher.class.getName();
-
-    // logging stuff
-    private static final String COMMANDHANDLERRESULTLOGGER = CommandHandlerResultLogger.class.getName();
-
-
-    private final List<String> commands = new LinkedList<>();
+    private static final List<String> commands = List.of(
+            // Insert the base commands in the Map
+            WelcomeMessageHandler.class.getName(),
+            CommandDispatcher.class.getName(),
+            CapaCmdHandler.class.getName(),
+            UserCmdHandler.class.getName(),
+            PassCmdHandler.class.getName(),
+            ListCmdHandler.class.getName(),
+            UidlCmdHandler.class.getName(),
+            RsetCmdHandler.class.getName(),
+            DeleCmdHandler.class.getName(),
+            NoopCmdHandler.class.getName(),
+            RetrCmdHandler.class.getName(),
+            TopCmdHandler.class.getName(),
+            StatCmdHandler.class.getName(),
+            QuitCmdHandler.class.getName(),
+            UnknownCmdHandler.class.getName(),
+            // add STARTTLS support to the core. See JAMES-1224
+            StlsCmdHandler.class.getName(),
+            // Add logging stuff
+            CommandHandlerResultLogger.class.getName()
+    );
 
     public CoreCmdHandlerLoader() {
-        // Insert the base commands in the Map
-        commands.add(WELCOMEMESSAGEHANDLER);
-        commands.add(COMMANDDISPATCHER);
-        commands.add(CAPACMDHANDLER);
-        commands.add(USERCMDHANDLER);
-        commands.add(PASSCMDHANDLER);
-        commands.add(LISTCMDHANDLER);
-        commands.add(UIDLCMDHANDLER);
-        commands.add(RSETCMDHANDLER);
-        commands.add(DELECMDHANDLER);
-        commands.add(NOOPCMDHANDLER);
-        commands.add(RETRSCMDHANDLER);
-        commands.add(TOPCMDHANDLER);
-        commands.add(STATCMDHANDLER);
-        commands.add(QUITCMDHANDLER);
-        commands.add(UNKOWNCMDHANDLER);
-        // add STARTTLS support to the core. See JAMES-1224
-        commands.add(STLSCMDHANDLER);
-
-        // Add logging stuff
-        commands.add(COMMANDHANDLERRESULTLOGGER);
     }
 
     @Override

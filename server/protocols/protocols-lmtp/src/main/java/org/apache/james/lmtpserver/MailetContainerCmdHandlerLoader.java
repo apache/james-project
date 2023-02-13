@@ -19,9 +19,7 @@
 
 package org.apache.james.lmtpserver;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
@@ -48,33 +46,31 @@ import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
  */
 public class MailetContainerCmdHandlerLoader implements HandlersPackage {
 
-    private final List<String> commands = new LinkedList<>();
+    private static final List<String> commands = List.of(
+            WelcomeMessageHandler.class.getName(),
+            CommandDispatcher.class.getName(),
+            JamesDataCmdHandler.class.getName(),
+            ExpnCmdHandler.class.getName(),
+            LhloCmdHandler.class.getName(),
+            JamesMailCmdHandler.class.getName(),
+            NoopCmdHandler.class.getName(),
+            QuitCmdHandler.class.getName(),
+            JamesRcptCmdHandler.class.getName(),
+            ValidRcptHandler.class.getName(),
+            RsetCmdHandler.class.getName(),
+            VrfyCmdHandler.class.getName(),
+            MailSizeEsmtpExtension.class.getName(),
+            AuthRequiredToRelayRcptHook.class.getName(),
+            PostmasterAbuseRcptHook.class.getName(),
+            ReceivedDataLineFilter.class.getName(),
+            MailetContainerHandler.class.getName(),
+            CommandHandlerResultLogger.class.getName(),
+            NoopJamesMessageHook.class.getName(),
+            HookResultLogger.class.getName()
+    );
 
 
     public MailetContainerCmdHandlerLoader() {
-        Stream.of(
-            WelcomeMessageHandler.class,
-            CommandDispatcher.class,
-            JamesDataCmdHandler.class,
-            ExpnCmdHandler.class,
-            LhloCmdHandler.class,
-            JamesMailCmdHandler.class,
-            NoopCmdHandler.class,
-            QuitCmdHandler.class,
-            JamesRcptCmdHandler.class,
-            ValidRcptHandler.class,
-            RsetCmdHandler.class,
-            VrfyCmdHandler.class,
-            MailSizeEsmtpExtension.class,
-            AuthRequiredToRelayRcptHook.class,
-            PostmasterAbuseRcptHook.class,
-            ReceivedDataLineFilter.class,
-            MailetContainerHandler.class,
-            CommandHandlerResultLogger.class,
-            NoopJamesMessageHook.class,
-            HookResultLogger.class)
-        .map(Class::getName)
-        .forEachOrdered(commands::add);
     }
 
     @Override
