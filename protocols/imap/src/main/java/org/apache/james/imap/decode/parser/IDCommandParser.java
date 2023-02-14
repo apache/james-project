@@ -65,13 +65,15 @@ public class IDCommandParser extends AbstractImapCommandParser {
             if (first) {
                 first = false;
             } else {
-                request.nextWordChar();
-                request.consumeChar(',');
+                if (request.nextWordChar() == ',') {
+                    request.consumeChar(',');
+                }
             }
             request.nextWordChar();
             String field = request.consumeQuoted();
-            request.nextWordChar();
-            request.consumeChar(',');
+            if (request.nextWordChar() == ',') {
+                request.consumeChar(',');
+            }
             request.nextWordChar();
             String value = request.consumeQuoted();
 
