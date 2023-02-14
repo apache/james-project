@@ -36,6 +36,22 @@ under the License.
         <customProperties>pong.response=customImapParameter</customProperties>
         <customProperties>prop.b=anotherValue</customProperties>
     </imapserver>
+    <imapserver enabled="true">
+        <jmxName>imapservers</jmxName>
+        <bind>0.0.0.0:0</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <tls socketTLS="true" startTLS="false">
+            <keystore>classpath://keystore</keystore>
+            <secret>james72laBalle</secret>
+            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        </tls>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <plainAuthDisallowed>false</plainAuthDisallowed>
+        <gracefulShutdown>false</gracefulShutdown>
+        <customProperties>pong.response=bad</customProperties>
+        <customProperties>prop.b=baad</customProperties>
+    </imapserver>
     <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
     <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
 </imapservers>
