@@ -60,6 +60,7 @@ class FetchResponseEncoderNoExtensionsTest {
         FetchResponse message = new FetchResponse(MSN, flags, null, null, null, null, null,
                 null, null, null, null, null, null);
         encoder.encode(message, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
     }
 
@@ -68,6 +69,7 @@ class FetchResponseEncoderNoExtensionsTest {
         FetchResponse message = new FetchResponse(MSN, null, MessageUid.of(72), null, null,
                 null, null, null, null, null, null, null, null);
         encoder.encode(message, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
 
     }
@@ -77,6 +79,7 @@ class FetchResponseEncoderNoExtensionsTest {
         FetchResponse message = new FetchResponse(MSN, flags, MessageUid.of(72), null, null,
                 null, null, null, null, null, null, null, null);
         encoder.encode(message, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
 
     }
@@ -101,6 +104,7 @@ class FetchResponseEncoderNoExtensionsTest {
         when(stubStructure.getDescription()).thenReturn("");
 
         encoder.encode(message, composer);
+        composer.flush();
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) BODYSTRUCTURE (\"TEXT\" \"HTML\" (\"CHARSET\" \"US-ASCII\") \"\" \"\" \"7BIT\" 2279 48) UID 72)\r\n");
 
     }

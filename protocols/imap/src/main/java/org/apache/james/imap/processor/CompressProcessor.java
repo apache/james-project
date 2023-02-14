@@ -62,7 +62,7 @@ public class CompressProcessor extends AbstractProcessor<CompressRequest> implem
                     } else {
                         StatusResponse response = factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.DEFLATE_ACTIVE);
 
-                        if (session.startCompression(() -> responder.respond(response))) {
+                        if (activateCompression(responder, session, response)) {
                             session.setAttribute(COMPRESSED, true);
                         }
                     }
@@ -70,6 +70,13 @@ public class CompressProcessor extends AbstractProcessor<CompressRequest> implem
             } else {
                 responder.respond(factory.taggedBad(request.getTag(), request.getCommand(), HumanReadableText.UNKNOWN_COMMAND));
             }
+        });
+    }
+
+    private boolean activateCompression(Responder responder, ImapSession session, StatusResponse response) {
+        return session.startCompression(() -> {
+            responder.respond(response);
+            responder.flush();
         });
     }
 

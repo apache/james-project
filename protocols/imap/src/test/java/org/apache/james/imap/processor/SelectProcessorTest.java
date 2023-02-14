@@ -147,11 +147,13 @@ class SelectProcessorTest {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
+        ImapResponseComposerImpl composer = new ImapResponseComposerImpl(new OutputStreamImapResponseWriter(outputStream));
         testee.process(message,
             new ResponseEncoder(
                 new DefaultImapEncoderFactory(new DefaultLocalizer(), true).buildImapEncoder(),
-                new ImapResponseComposerImpl(new OutputStreamImapResponseWriter(outputStream))),
+                composer),
             session);
+        composer.flush();
 
         assertThat(new String(outputStream.toByteArray()))
             .contains("* VANISHED (EARLIER) 2,4");

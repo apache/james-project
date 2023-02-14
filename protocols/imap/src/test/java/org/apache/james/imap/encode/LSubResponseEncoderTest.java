@@ -46,6 +46,7 @@ class LSubResponseEncoderTest  {
     @Test
     void encoderShouldIncludeLSUBCommand() throws Exception {
         encoder.encode(new LSubResponse("name", true, '.'), composer);
+        composer.flush();
         assertThat(writer.getString()).startsWith("* LSUB");
     }
 

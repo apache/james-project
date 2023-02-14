@@ -88,6 +88,11 @@ public abstract class AbstractImapRequestHandler {
         public void respond(ImapResponseMessage message) {
             // Swallow
         }
+
+        @Override
+        public void flush() {
+
+        }
     }
 
 }

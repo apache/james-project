@@ -41,9 +41,14 @@ import io.netty.handler.stream.ChunkedStream;
  * {@link Channel}
  */
 public class ChannelImapResponseWriter implements ImapResponseWriter {
+    @FunctionalInterface
+    interface FlushCallback {
+        void run() throws IOException;
+    }
 
     private final Channel channel;
     private final boolean zeroCopy;
+    private FlushCallback flushCallback;
 
     public ChannelImapResponseWriter(Channel channel) {
         this(channel, true);
@@ -52,17 +57,25 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
     public ChannelImapResponseWriter(Channel channel, boolean zeroCopy) {
         this.channel = channel;
         this.zeroCopy = zeroCopy;
+        this.flushCallback = () -> {
+
+        };
+    }
+
+    public void setFlushCallback(FlushCallback flushCallback) {
+        this.flushCallback = flushCallback;
     }
 
     @Override
-    public void write(byte[] buffer) throws IOException {
+    public void write(byte[] buffer) {
         if (channel.isActive()) {
-            channel.write(Unpooled.wrappedBuffer(buffer));
+            channel.writeAndFlush(Unpooled.wrappedBuffer(buffer));
         }
     }
 
     @Override
     public void write(Literal literal) throws IOException {
+        flushCallback.run();
         if (channel.isActive()) {
             InputStream in = literal.getInputStream();
             if (in instanceof FileInputStream) {
@@ -72,17 +85,18 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
                 // See JAMES-1305 and JAMES-1306
                 ChannelPipeline cp = channel.pipeline();
                 if (zeroCopy && cp.get(SslHandler.class) == null && cp.get(ZlibEncoder.class) == null) {
-                    channel.write(new DefaultFileRegion(fc, fc.position(), literal.size()));
+                    channel.writeAndFlush(new DefaultFileRegion(fc, fc.position(), literal.size()));
                 } else {
-                    channel.write(new ChunkedNioFile(fc, 8192));
+                    channel.writeAndFlush(new ChunkedNioFile(fc, 8192));
                 }
             } else {
-                channel.write(new ChunkedStream(in));
+                channel.writeAndFlush(new ChunkedStream(in));
             }
         }
     }
     
-    public void flush() {
+    public void flush() throws IOException {
+        flushCallback.run();
         channel.flush();
     }
 

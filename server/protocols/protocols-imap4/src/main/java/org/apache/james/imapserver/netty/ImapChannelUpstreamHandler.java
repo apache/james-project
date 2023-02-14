@@ -36,7 +36,6 @@ import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.ImapSession.SessionId;
 import org.apache.james.imap.encode.ImapEncoder;
-import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.main.ResponseEncoder;
 import org.apache.james.imap.message.request.AbstractImapRequest;
@@ -184,10 +183,10 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             imapConnectionsMetric.increment();
 
             ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
-            ImapResponseComposer response = new ImapResponseComposerImpl(writer);
+            ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
             // write hello to client
             response.untagged().message("OK").message(hello).end();
-            writer.flush();
+            response.flush();
             super.channelActive(ctx);
         }
 
@@ -257,9 +256,9 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 //
                 // See also JAMES-1190
                 ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
-                ImapResponseComposer response = new ImapResponseComposerImpl(writer);
+                ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
                 response.untaggedResponse(ImapConstants.BAD + " failed. Maximum command line length exceeded");
-                writer.flush();
+                response.flush();
 
             } else if (cause instanceof ReactiveThrottler.RejectedException) {
                 manageRejectedException(ctx, (ReactiveThrottler.RejectedException) cause);
@@ -269,15 +268,15 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
     }
 
-    private void manageRejectedException(ChannelHandlerContext ctx, ReactiveThrottler.RejectedException cause) {
+    private void manageRejectedException(ChannelHandlerContext ctx, ReactiveThrottler.RejectedException cause) throws IOException {
         if (cause.getImapMessage() instanceof AbstractImapRequest) {
             AbstractImapRequest req = (AbstractImapRequest) cause.getImapMessage();
             ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
-            ImapResponseComposer response = new ImapResponseComposerImpl(writer);
+            ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
             new ResponseEncoder(encoder, response)
                 .respond(new ImmutableStatusResponse(StatusResponse.Type.NO, req.getTag(), req.getCommand(),
                     new HumanReadableText(cause.getClass().getName(), cause.getMessage()), null));
-            writer.flush();
+            response.flush();
         } else {
             manageUnknownError(ctx);
         }
@@ -318,7 +317,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
         Attribute<Disposable> disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY);
         ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
-        ImapResponseComposer response = new ImapResponseComposerImpl(writer);
+        ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
+        writer.setFlushCallback(response::flush);
         ImapMessage message = (ImapMessage) msg;
 
         beforeIDLEUponProcessing(ctx);
@@ -356,7 +356,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                         ctx.fireExceptionCaught(signal.getThrowable());
                     }
                     disposableAttribute.set(null);
-                    writer.flush();
+                    response.flush();
                     ctx.fireChannelReadComplete();
                 }))
                 .contextWrite(ReactorUtils.context("imap", mdc(session))), message)

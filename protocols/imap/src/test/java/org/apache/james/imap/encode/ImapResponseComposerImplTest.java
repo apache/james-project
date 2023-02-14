@@ -41,6 +41,7 @@ class ImapResponseComposerImplTest {
         Character c = 128;
         composer.quote(c.toString());
         composer.end();
+        composer.flush();
 
         assertThat(writer.getString()).isEqualTo(" \"?\"\r\n");
     }

@@ -55,6 +55,7 @@ class MetadataResponseEncoderTest {
         MetadataResponse response = new MetadataResponse(null, ImmutableList.of());
 
         encoder.encode(response, composer);
+        composer.flush();
 
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"\"\r\n");
     }
@@ -64,6 +65,7 @@ class MetadataResponseEncoderTest {
         MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of());
 
         encoder.encode(response, composer);
+        composer.flush();
 
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"INBOX\"\r\n");
     }
@@ -73,6 +75,7 @@ class MetadataResponseEncoderTest {
         MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION));
 
         encoder.encode(response, composer);
+        composer.flush();
 
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"INBOX\" (/private/comment \"My own comment\")\r\n");
     }
@@ -81,6 +84,7 @@ class MetadataResponseEncoderTest {
     void encodingShouldWellFormWhenManyReturnedAnnotations() throws Exception {
         MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION));
         encoder.encode(response, composer);
+        composer.flush();
 
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"INBOX\" (/private/comment \"My own comment\" /shared/comment \"Shared comment\")\r\n");
     }
@@ -90,6 +94,7 @@ class MetadataResponseEncoderTest {
         MetadataResponse response = new MetadataResponse("INBOX", ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY)));
 
         encoder.encode(response, composer);
+        composer.flush();
 
         assertThat(byteImapResponseWriter.getString()).isEqualTo("* METADATA \"INBOX\" ()\r\n");
     }
