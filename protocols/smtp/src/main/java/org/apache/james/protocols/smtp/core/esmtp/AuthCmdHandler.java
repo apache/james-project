@@ -72,6 +72,7 @@ public class AuthCmdHandler
     implements CommandHandler<SMTPSession>, EhloExtension, ExtensibleHandler, MailParametersHook {
     private static final Collection<String> COMMANDS = ImmutableSet.of("AUTH");
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthCmdHandler.class);
+    private static final Logger AUTHENTICATION_DEDICATED_LOGGER = LoggerFactory.getLogger("org.apache.james.protocols.smtp.AUTHENTICATION");
     private static final String[] MAIL_PARAMS = { "AUTH" };
     private static final String AUTH_TYPES_DELIMITER = " ";
 
@@ -382,10 +383,10 @@ public class AuthCmdHandler
 
                 if (res != null) {
                     if (SMTPRetCode.AUTH_FAILED.equals(res.getRetCode())) {
-                        LOGGER.info("AUTH method {} failed", authType);
+                        AUTHENTICATION_DEDICATED_LOGGER.info("AUTH method {} failed", authType);
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
                         // TODO: Make this string a more useful debug message
-                        LOGGER.debug("AUTH method {} succeeded", authType);
+                        AUTHENTICATION_DEDICATED_LOGGER.debug("AUTH method {} succeeded", authType);
                     }
                     return res;
                 }
@@ -393,7 +394,7 @@ public class AuthCmdHandler
         }
 
         res = AUTH_FAILED;
-        LOGGER.error("AUTH method {} failed from {}@{}", authType, username, session.getRemoteAddress().getAddress().getHostAddress());
+        AUTHENTICATION_DEDICATED_LOGGER.info("AUTH method {} failed from {}@{}", authType, username, session.getRemoteAddress().getAddress().getHostAddress());
         return res;
     }
 
