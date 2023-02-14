@@ -64,6 +64,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Cassandra implementation of {@link MailboxSessionMapperFactory}
@@ -233,6 +234,6 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     public DeleteMessageListener deleteMessageListener() {
         return new DeleteMessageListener(threadDAO, threadLookupDAO, imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, attachmentDAOV2,
             attachmentMessageIdDAO, aclMapper, userMailboxRightsDAO, applicableFlagDAO, firstUnseenDAO, deletedMessageDAO,
-            mailboxCounterDAO, mailboxRecentsDAO, blobStore, cassandraConfiguration);
+            mailboxCounterDAO, mailboxRecentsDAO, blobStore, cassandraConfiguration, ImmutableSet.of());
     }
 }

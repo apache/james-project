@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.mailbox.cassandra.DeleteMessageListener;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.vault.DeletedMessageVault;
 import org.apache.james.vault.blob.BlobStoreDeletedMessageVault;
@@ -28,6 +29,7 @@ import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
 import org.apache.james.vault.metadata.CassandraDeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageMetadataModule;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
+import org.apache.james.vault.metadata.DeletedMessageVaultDeletionCallback;
 import org.apache.james.vault.metadata.MetadataDAO;
 import org.apache.james.vault.metadata.StorageInformationDAO;
 import org.apache.james.vault.metadata.UserPerBucketDAO;
@@ -60,5 +62,9 @@ public class CassandraDeletedMessageVaultModule extends AbstractModule {
         bind(BlobStoreDeletedMessageVault.class).in(Scopes.SINGLETON);
         bind(DeletedMessageVault.class)
             .to(BlobStoreDeletedMessageVault.class);
+
+        Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
+            .addBinding()
+            .to(DeletedMessageVaultDeletionCallback.class);
     }
 }

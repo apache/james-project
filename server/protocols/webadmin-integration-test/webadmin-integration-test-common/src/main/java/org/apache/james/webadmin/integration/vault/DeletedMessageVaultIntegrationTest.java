@@ -253,6 +253,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         testIMAPClient.delete(MAILBOX_NAME);
 
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerAccessToken)).hasSize(0));
+        Thread.sleep(1000); // Wait for messages to be moved to the vault
 
         restoreAllMessagesOfHomer();
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerAccessToken)).hasSize(1));
@@ -929,6 +930,12 @@ public abstract class DeletedMessageVaultIntegrationTest {
 
     private void homerDeletesMessages(List<String> idsToDestroy) {
         deleteMessages(homerAccessToken, idsToDestroy);
+        // Grace period for the vault
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void bartDeletesMessages(List<String> idsToDestroy) {

@@ -171,29 +171,3 @@ To mitigate this issue you might reach your administrator in order to increase y
 
 This MailboxListener is supported.
 
-== PreDeletionHook configuration
-
-Before deleting a message in James, this message and some related information about the deletion will be passed to a set of PreDeletionHook instances,
-This process is called notifying, and it acts sequentially. If the notifying process for all PreDeletionHooks finish successfully, then the message will be processed to be deleted.
-Otherwise, that message won't be deleted.
-
-Pre Deletion Hook configuration is under the XML element <preDeletionHook>
-
-Already provided additional pre deletion hooks includes:
-
-* `org.apache.james.vault.DeletedMessageVaultHook`: Storing messages about being deleted into
-`org.apache.james.vault.DeletedMessageVault`
-
-
-Example:
-
-....
-<listeners>
-  <!-- ... -->
-  <preDeletionHook>
-    <class>org.apache.james.vault.DeletedMessageVaultHook</class>
-  </preDeletionHook>
-</listeners>
-....
-
-Read also xref:configure/vault.adoc[this page] for extra configuration required to support this feature.

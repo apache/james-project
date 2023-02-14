@@ -67,7 +67,6 @@ import org.apache.james.mailbox.model.MailboxMetaData.Selectability;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
-import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -494,8 +493,7 @@ public class StoreMailboxManager implements MailboxManager {
             .collect(ImmutableList.toImmutableList())
             .flatMap(metadata -> {
                 long totalSize = metadata.stream()
-                    .map(MetadataWithMailboxId::getMessageMetaData)
-                    .mapToLong(MessageMetaData::getSize)
+                    .mapToLong(MetadataWithMailboxId::getSize)
                     .sum();
 
                 return preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadata))

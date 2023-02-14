@@ -81,6 +81,7 @@ import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -264,15 +265,16 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private Mono<Void> deleteWithPreHooks(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession) {
-        ImmutableList<MetadataWithMailboxId> metadataWithMailbox = messageList.stream()
-            .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))
-            .collect(ImmutableList.toImmutableList());
+        ImmutableMap<MetadataWithMailboxId, MessageMetaData> metadataWithMailbox = messageList.stream()
+            .collect(ImmutableMap.toImmutableMap(
+                message -> MetadataWithMailboxId.from(message.metaData(), message.getMailboxId()),
+                MailboxMessage::metaData));
 
-        return preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadataWithMailbox))
+        return preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadataWithMailbox.keySet().asList()))
             .then(delete(messageIdMapper, messageList, mailboxSession, metadataWithMailbox));
     }
 
-    private Mono<Void> delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession, ImmutableList<MetadataWithMailboxId> metadataWithMailbox) {
+    private Mono<Void> delete(MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, MailboxSession mailboxSession, Map<MetadataWithMailboxId, MessageMetaData> metadataWithMailbox) {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
         return messageIdMapper.deleteReactive(
@@ -281,15 +283,15 @@ public class StoreMessageIdManager implements MessageIdManager {
                     Message::getMessageId,
                     MailboxMessage::getMailboxId)))
             .then(
-                Flux.fromIterable(metadataWithMailbox)
-                    .flatMap(metadataWithMailboxId -> mailboxMapper.findMailboxById(metadataWithMailboxId.getMailboxId())
+                Flux.fromIterable(metadataWithMailbox.entrySet())
+                    .flatMap(metadataWithMailboxId -> mailboxMapper.findMailboxById(metadataWithMailboxId.getKey().getMailboxId())
                         .flatMap(mailbox -> eventBus.dispatch(EventFactory.expunged()
                                 .randomEventId()
                                 .mailboxSession(mailboxSession)
                                 .mailbox(mailbox)
-                                .addMetaData(metadataWithMailboxId.getMessageMetaData())
+                                .addMetaData(metadataWithMailboxId.getValue())
                                 .build(),
-                            new MailboxIdRegistrationKey(metadataWithMailboxId.getMailboxId()))), DEFAULT_CONCURRENCY)
+                            new MailboxIdRegistrationKey(metadataWithMailboxId.getKey().getMailboxId()))), DEFAULT_CONCURRENCY)
                     .then());
     }
 

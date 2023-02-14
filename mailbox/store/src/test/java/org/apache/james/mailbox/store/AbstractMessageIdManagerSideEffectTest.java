@@ -217,8 +217,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
             .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
             .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
                 softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(mailbox1.getMailboxId());
-                softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(messageId);
-                softy.assertThat(deleteMetadata.getMessageMetaData().getFlags()).isEqualTo(FLAGS);
+                softy.assertThat(deleteMetadata.getMessageId()).isEqualTo(messageId);
             }));
 
     }
@@ -243,9 +242,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
             .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
             .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
                 softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(mailbox1.getMailboxId());
-                softy.assertThat(deleteMetadata.getMessageMetaData().getFlags()).isEqualTo(FLAGS);
             }))
-            .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+            .extracting(deleteMetadata -> deleteMetadata.getMessageId())
             .containsOnly(messageId1, messageId2);
 
     }
@@ -267,7 +265,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         assertThat(preDeleteCaptor1.getAllValues())
             .hasSameElementsAs(preDeleteCaptor2.getAllValues())
             .flatExtracting(PreDeletionHook.DeleteOperation::getDeletionMetadataList)
-            .extracting(deleteMetadata -> deleteMetadata.getMessageMetaData().getMessageId())
+            .extracting(deleteMetadata -> deleteMetadata.getMessageId())
             .containsOnly(messageId1, messageId2);
 
         assertThat(preDeleteCaptor1.getAllValues())

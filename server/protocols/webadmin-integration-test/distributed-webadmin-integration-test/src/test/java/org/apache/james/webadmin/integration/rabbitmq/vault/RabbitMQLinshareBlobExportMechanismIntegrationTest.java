@@ -60,7 +60,6 @@ class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExp
         .extension(new LinshareGuiceExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
-            .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
-            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule()))
+            .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON)))
         .build();
 }
