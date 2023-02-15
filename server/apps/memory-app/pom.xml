@@ -293,7 +293,7 @@
                             <jvmFlag>-Dworking.directory=/root/</jvmFlag>
                             <!-- Prevents Logjam (CVE-2015-4000) -->
                             <jvmFlag>-Djdk.tls.ephemeralDHKeySize=2048</jvmFlag>
-                            <jvmFlag>-Djames.jmx.credential.generation=true</jvmFlag>
+                            <jvmFlag>-Dextra.props=/root/conf/jvm.properties</jvmFlag>
                         </jvmFlags>
                         <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
                         <volumes>
