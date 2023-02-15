@@ -94,7 +94,7 @@ class Enqueuer {
         return (Throwable e) -> {
             DeleteCondition.WithEnqueueId deleteCondition = DeleteCondition.withEnqueueId(enqueueId, mailReference.getPartsId());
             return Mono.from(mailQueueView.delete(deleteCondition))
-                    .thenReturn(Mono.<Void>error(e));
+                    .then(Mono.<Void>error(e));
         };
     }
 
@@ -122,7 +122,7 @@ class Enqueuer {
             .build();
 
         OutboundMessage data = new OutboundMessage(
-            name.toRabbitExchangeName().asString(),
+            name.   toRabbitExchangeName().asString(),
             EMPTY_ROUTING_KEY,
             basicProperties,
             getMailReferenceBytes(mailReference));
