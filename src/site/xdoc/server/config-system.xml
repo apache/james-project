@@ -132,8 +132,34 @@
                     <dd>The port number the MBean Server will bind/listen to.</dd>
                 </dl>
 
-                <p>To access from a remote location, it has been reported that -Dcom.sun.management.jmxremote.ssl=false is
+                <p>To access from a remote location, it has been reported that <code>-Dcom.sun.management.jmxremote.ssl=false</code> is
                     needed in the startup script.</p>
+
+                <b>JMX Security</b>
+
+                <p>Guice only</p>
+
+                <p>In order to set up JMX authentication, we need to put <code>jmxremote.password</code> and <code>jmxremote.access</code> file
+                    to <code>/conf</code> directory.</p>
+
+                <p><code>jmxremote.password</code>: define the username and password, that will be used by the client (here is james-cli)</p>
+
+                <p>File's content example:</p>
+                <pre><code>
+                james-admin pass1
+                </code></pre>
+
+                <p><code>jmxremote.access</code>: define the pair of username and access permission</p>
+
+                <p>File's content example:</p>
+                <pre><code>
+                james-admin readWrite
+                </code></pre>
+
+                <p>When James runs with option <code>-Djames.jmx.credential.generation=true</code>, James will automatically
+                    generate <code>jmxremote.password</code> if the file does not exist.
+                    Then the default username is <code>james-admin</code> and a random password. This option defaults to true.</p>
+
 
             </subsection>
 
