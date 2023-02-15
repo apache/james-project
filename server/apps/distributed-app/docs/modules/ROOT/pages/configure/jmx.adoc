@@ -44,7 +44,7 @@ james-admin readWrite
 ```
 
 When James runs with option `-Djames.jmx.credential.generation=true`, James will automatically generate `jmxremote.password` if the file does not exist.
-Then the default username is `james-admin` and a random password.
+Then the default username is `james-admin` and a random password. This option defaults to true.
 
 === James-cli
 
