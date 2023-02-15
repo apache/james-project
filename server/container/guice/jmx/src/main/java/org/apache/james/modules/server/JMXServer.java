@@ -166,27 +166,31 @@ public class JMXServer implements Startable {
     }
 
     private void generateJMXPasswordFile() {
-        File passwordFile = new File(jmxPasswordFilePath);
-        if (!passwordFile.exists()) {
-            try (OutputStream outputStream = new FileOutputStream(passwordFile)) {
-                String randomPassword = RandomStringUtils.random(10, true, true);
-                IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " " + randomPassword + "\n", outputStream, StandardCharsets.UTF_8);
-                setPermissionOwnerOnly(passwordFile);
-                LOGGER.info("Generated JMX password file: " + passwordFile.getPath());
-            } catch (IOException e) {
-                throw new RuntimeException("Error when creating JMX password file: " + passwordFile.getPath(), e);
+        try {
+            File passwordFile = new File(jmxPasswordFilePath);
+            if (!passwordFile.exists()) {
+                try (OutputStream outputStream = new FileOutputStream(passwordFile)) {
+                    String randomPassword = RandomStringUtils.random(10, true, true);
+                    IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " " + randomPassword + "\n", outputStream, StandardCharsets.UTF_8);
+                    setPermissionOwnerOnly(passwordFile);
+                    LOGGER.info("Generated JMX password file: " + passwordFile.getPath());
+                } catch (IOException e) {
+                    throw new RuntimeException("Error when creating JMX password file: " + passwordFile.getPath(), e);
+                }
             }
-        }
 
-        File accessFile = new File(jmxAccessFilePath);
-        if (!accessFile.exists()) {
-            try (OutputStream outputStream = new FileOutputStream(accessFile)) {
-                IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " readwrite\n", outputStream, StandardCharsets.UTF_8);
-                setPermissionOwnerOnly(accessFile);
-                LOGGER.info("Generated JMX access file: " + accessFile.getPath());
-            } catch (IOException e) {
-                throw new RuntimeException("Error when creating JMX access file: " + accessFile.getPath(), e);
+            File accessFile = new File(jmxAccessFilePath);
+            if (!accessFile.exists()) {
+                try (OutputStream outputStream = new FileOutputStream(accessFile)) {
+                    IOUtils.write(JmxConfiguration.JAMES_ADMIN_USER_DEFAULT + " readwrite\n", outputStream, StandardCharsets.UTF_8);
+                    setPermissionOwnerOnly(accessFile);
+                    LOGGER.info("Generated JMX access file: " + accessFile.getPath());
+                } catch (IOException e) {
+                    throw new RuntimeException("Error when creating JMX access file: " + accessFile.getPath(), e);
+                }
             }
+        } catch (Exception e) {
+            LOGGER.warn("Failure to auto-generate JMX password, fallback to unsecure JMX", e);
         }
     }
 
