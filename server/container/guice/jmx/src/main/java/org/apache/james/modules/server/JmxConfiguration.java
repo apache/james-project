@@ -35,7 +35,7 @@ public class JmxConfiguration {
     public static final int DEFAULT_PORT = 9999;
     public static final boolean ENABLED = true;
     public static final String JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY_KEY = "james.jmx.credential.generation";
-    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE = "false";
+    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE = "true";
     public static final String PASSWORD_FILE_NAME = "jmxremote.password";
     public static final String ACCESS_FILE_NAME = "jmxremote.access";
     public static final String JAMES_ADMIN_USER_DEFAULT = "james-admin";
