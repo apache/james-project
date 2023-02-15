@@ -91,7 +91,7 @@ class Enqueuer {
         return (Throwable e) -> {
             DeleteCondition.WithEnqueueId deleteCondition = DeleteCondition.withEnqueueId(enqueueId, mailReference.getPartsId());
             return Mono.from(mailQueueView.delete(deleteCondition))
-                    .thenReturn(Mono.<Void>error(e));
+                    .then(Mono.<Void>error(e));
         };
     }
 
