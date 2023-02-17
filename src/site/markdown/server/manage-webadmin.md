@@ -471,6 +471,53 @@ Response codes:
 
 Note: Delegation is only available on top of Cassandra products and not implemented yet on top of JPA backends.
 
+
+### Change a username
+
+```
+curl -XPOST http://ip:port/users/oldUser/rename/newUser?action=rename
+```
+
+Would migrate account data from `oldUser` to `newUser`.
+
+[More details about endpoints returning a task](#_endpoints_returning_a_task).
+
+Implemented migration steps are:
+
+ - `ForwardUsernameChangeTaskStep`: creates forward from old user to new user and migrates existing forwards
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
+The `fromStep` query parameter allows skipping previous steps, allowing to resume the username change from a failed step.
+
+The scheduled task will have the following type `UsernameChangeTask` and the following `additionalInformation`:
+
+```
+{
+        "type": "UsernameChangeTask",
+        "oldUser": "jessy.jones@domain.tld",
+        "newUser": "jessy.smith@domain.tld",
+        "status": {
+            "A": "DONE",
+            "B": "FAILED",
+            "C": "ABORTED"
+        },
+        "fromStep": null,
+        "timestamp": "2023-02-17T02:54:01.246477Z"
+}
+```
+
+Valid status includes:
+
+ - `SKIPPED`: bypassed via `fromStep` setting
+ - `WAITING`: Awaits execution
+ - `IN_PROGRESS`: Currently executed
+ - `FAILED`: Error encountered while executing this step. Check the logs.
+ - `ABORTED`: Won't be executed because of previous step failures.
+
 ## Administrating mailboxes
 
 ### All mailboxes
