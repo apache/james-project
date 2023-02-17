@@ -34,6 +34,8 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,6 +45,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.concurrent.Queues;
 
 public class CassandraIndexTableHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraIndexTableHandler.class);
 
     private final CassandraMailboxRecentsDAO mailboxRecentDAO;
     private final CassandraMailboxCounterDAO mailboxCounterDAO;
@@ -195,9 +198,17 @@ public class CassandraIndexTableHandler {
 
     private Mono<Void> decrementCountersOnDelete(CassandraId mailboxId, Flags flags) {
         if (flags.contains(Flags.Flag.SEEN)) {
-            return mailboxCounterDAO.decrementCount(mailboxId);
+            return mailboxCounterDAO.decrementCount(mailboxId)
+                .onErrorResume(e -> {
+                    LOGGER.error("Failed decrementing email count for {} upon delete", mailboxId.serialize());
+                    return Mono.empty();
+                });
         }
-        return mailboxCounterDAO.decrementUnseenAndCount(mailboxId);
+        return mailboxCounterDAO.decrementUnseenAndCount(mailboxId)
+            .onErrorResume(e -> {
+                LOGGER.error("Failed decrementing email count and seen for {} upon delete", mailboxId.serialize());
+                return Mono.empty();
+            });
     }
 
     private Mono<Void> decrementCountersOnDelete(CassandraId mailboxId, Collection<MessageMetaData> metaData) {
@@ -211,18 +222,31 @@ public class CassandraIndexTableHandler {
             .filter(flag -> !flag.contains(Flags.Flag.SEEN))
             .count();
 
-        return mailboxCounterDAO.remove(MailboxCounters.builder()
+        MailboxCounters counters = MailboxCounters.builder()
             .mailboxId(mailboxId)
             .count(flags.size())
             .unseen(unseenCount)
-            .build());
+            .build();
+        return mailboxCounterDAO.remove(counters)
+            .onErrorResume(e -> {
+                LOGGER.error("Failed decrementing counters {} upon delete", counters);
+                return Mono.empty();
+            });
     }
 
     private Mono<Void> incrementCountersOnSave(CassandraId mailboxId, Flags flags) {
         if (flags.contains(Flags.Flag.SEEN)) {
-            return mailboxCounterDAO.incrementCount(mailboxId);
+            return mailboxCounterDAO.incrementCount(mailboxId)
+                .onErrorResume(e -> {
+                    LOGGER.error("Failed incrementing email count and seen for {} upon save", mailboxId.serialize());
+                    return Mono.empty();
+                });
         }
-        return mailboxCounterDAO.incrementUnseenAndCount(mailboxId);
+        return mailboxCounterDAO.incrementUnseenAndCount(mailboxId)
+            .onErrorResume(e -> {
+                LOGGER.error("Failed incrementing email count and seen for {} upon save", mailboxId.serialize());
+                return Mono.empty();
+            });
     }
 
     private Mono<Void> incrementCountersOnSave(CassandraId mailboxId, Collection<Flags> flags) {
@@ -230,11 +254,16 @@ public class CassandraIndexTableHandler {
             .filter(flag -> !flag.contains(Flags.Flag.SEEN))
             .count();
 
-        return mailboxCounterDAO.add(MailboxCounters.builder()
+        MailboxCounters counters = MailboxCounters.builder()
             .mailboxId(mailboxId)
             .count(flags.size())
             .unseen(unseenCount)
-            .build());
+            .build();
+        return mailboxCounterDAO.add(counters)
+            .onErrorResume(e -> {
+                LOGGER.error("Failed incrementing counters {} upon save", counters);
+                return Mono.empty();
+            });
     }
 
     private Mono<Void> addRecentOnSave(CassandraId mailboxId, MailboxMessage message) {
@@ -264,11 +293,16 @@ public class CassandraIndexTableHandler {
             .sum();
 
         if (sum != 0) {
-            return mailboxCounterDAO.add(MailboxCounters.builder()
+            MailboxCounters counters = MailboxCounters.builder()
                 .mailboxId(mailboxId)
                 .count(0)
                 .unseen(sum)
-                .build());
+                .build();
+            return mailboxCounterDAO.add(counters)
+                .onErrorResume(e -> {
+                    LOGGER.error("Failed incrementing counters {} upon flags update", counters);
+                    return Mono.empty();
+                });
         }
         return Mono.empty();
     }
