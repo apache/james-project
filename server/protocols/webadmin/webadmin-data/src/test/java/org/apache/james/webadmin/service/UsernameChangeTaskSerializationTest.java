@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.service;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
@@ -65,9 +66,22 @@ class UsernameChangeTaskSerializationTest {
     }
 
     private static final String SERIALIZED_TASK = "{\"newUser\":\"geraldine\",\"oldUser\":\"user\",\"type\":\"UsernameChangeTask\"}";
+    private static final String SERIALIZED_TASK_WITH_FROM_STEP = "{\"newUser\":\"geraldine\",\"fromStep\":\"B\",\"oldUser\":\"user\",\"type\":\"UsernameChangeTask\"}";
     private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{" +
         "  \"newUser\":\"geraldine\"," +
         "  \"oldUser\":\"user\"," +
+        "  \"status\":{" +
+        "    \"A\":\"DONE\"," +
+        "    \"B\":\"WAITING\"," +
+        "    \"C\":\"FAILED\"," +
+        "    \"D\":\"ABORTED\"}," +
+        "  \"timestamp\":\"2018-11-13T12:00:55Z\"," +
+        "  \"type\":\"UsernameChangeTask\"" +
+        "}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_WITH_STEP_NAME = "{" +
+        "  \"newUser\":\"geraldine\"," +
+        "  \"oldUser\":\"user\"," +
+        "  \"fromStep\":\"B\"," +
         "  \"status\":{" +
         "    \"A\":\"DONE\"," +
         "    \"B\":\"WAITING\"," +
@@ -82,8 +96,16 @@ class UsernameChangeTaskSerializationTest {
     @Test
     void taskShouldBeSerializable() throws Exception {
         JsonSerializationVerifier.dtoModule(UsernameChangeTaskDTO.module(SERVICE))
-            .bean(new UsernameChangeTask(SERVICE, OLD_USERNAME, NEW_USERNAME))
+            .bean(new UsernameChangeTask(SERVICE, OLD_USERNAME, NEW_USERNAME, Optional.empty()))
             .json(SERIALIZED_TASK)
+            .verify();
+    }
+
+    @Test
+    void taskShouldBeSerializableWithFromStep() throws Exception {
+        JsonSerializationVerifier.dtoModule(UsernameChangeTaskDTO.module(SERVICE))
+            .bean(new UsernameChangeTask(SERVICE, OLD_USERNAME, NEW_USERNAME, Optional.of(STEP_B)))
+            .json(SERIALIZED_TASK_WITH_FROM_STEP)
             .verify();
     }
 
@@ -97,8 +119,23 @@ class UsernameChangeTaskSerializationTest {
                 ImmutableMap.of(STEP_A, UsernameChangeService.StepState.DONE,
                     STEP_B, UsernameChangeService.StepState.WAITING,
                     STEP_C, UsernameChangeService.StepState.FAILED,
-                    STEP_D, UsernameChangeService.StepState.ABORTED)))
+                    STEP_D, UsernameChangeService.StepState.ABORTED), Optional.empty()))
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
+            .verify();
+    }
+
+    @Test
+    void additionalInformationShouldBeSerializableWithStepName() throws Exception {
+        JsonSerializationVerifier.dtoModule(UsernameChangeTaskAdditionalInformationDTO.module())
+            .bean(new UsernameChangeTask.AdditionalInformation(
+                TIMESTAMP,
+                OLD_USERNAME,
+                NEW_USERNAME,
+                ImmutableMap.of(STEP_A, UsernameChangeService.StepState.DONE,
+                    STEP_B, UsernameChangeService.StepState.WAITING,
+                    STEP_C, UsernameChangeService.StepState.FAILED,
+                    STEP_D, UsernameChangeService.StepState.ABORTED), Optional.of(STEP_B)))
+            .json(SERIALIZED_ADDITIONAL_INFORMATION_WITH_STEP_NAME)
             .verify();
     }
 }

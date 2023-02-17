@@ -19,10 +19,13 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.task.TaskManager;
+import org.apache.james.user.api.UsernameChangeTaskStep.StepName;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.UsernameChangeService;
@@ -73,7 +76,9 @@ public class UsernameChangeRoutes implements Routes {
             Preconditions.checkArgument(usersRepository.contains(oldUser), "'oldUser' parameter should be an existing user");
             Preconditions.checkArgument(usersRepository.contains(newUser), "'newUser' parameter should be an existing user");
 
-            return new UsernameChangeTask(service, oldUser, newUser);
+            Optional<StepName> fromStep = Optional.ofNullable(request.queryParams("fromStep")).map(StepName::new);
+
+            return new UsernameChangeTask(service, oldUser, newUser, fromStep);
         }).asRoute(taskManager);
     }
 }

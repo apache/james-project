@@ -242,5 +242,47 @@ class UsernameChangeRoutesTest {
             assertThat(behaviour1.get()).isTrue();
             assertThat(behaviour2.get()).isFalse();
         }
+
+        @Test
+        void shouldSupportSkipWhenFailure() {
+            String taskId = with()
+                .queryParam("action", "rename")
+                .queryParam("fromStep", "B")
+                .post("/users/" + OLD_USER.asString() + "/rename/" + NEW_USER.asString())
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("type", is("UsernameChangeTask"))
+                .body("status", is("failed"))
+                .body("additionalInformation.type", is("UsernameChangeTask"))
+                .body("additionalInformation.oldUser", is("jessy.jones@domain.tld"))
+                .body("additionalInformation.newUser", is("jessy.smith@domain.tld"))
+                .body("additionalInformation.status.A", is("SKIPPED"))
+                .body("additionalInformation.status.B", is("FAILED"))
+                .body("additionalInformation.status.C", is("ABORTED"));
+
+            assertThat(behaviour1.get()).isFalse();
+            assertThat(behaviour2.get()).isFalse();
+        }
+
+        @Test
+        void shouldRejectInvalidFromStep() {
+            given()
+                .queryParam("action", "rename")
+                .queryParam("fromStep", "invalid")
+            .when()
+                .post("/users/" + OLD_USER.asString() + "/rename/" + NEW_USER.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", Matchers.is(400))
+                .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", Matchers.is("Invalid arguments supplied in the user request"))
+                .body("details", Matchers.is("Starting step not found: invalid"));
+        }
     }
 }

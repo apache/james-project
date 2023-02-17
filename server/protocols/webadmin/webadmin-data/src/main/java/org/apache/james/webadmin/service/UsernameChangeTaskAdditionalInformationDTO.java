@@ -20,12 +20,13 @@ package org.apache.james.webadmin.service;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
-import org.apache.james.user.api.UsernameChangeTaskStep;
+import org.apache.james.user.api.UsernameChangeTaskStep.StepName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
@@ -40,8 +41,9 @@ public class UsernameChangeTaskAdditionalInformationDTO implements AdditionalInf
                 Username.of(dto.newUser),
                 dto.status.entrySet().stream()
                     .collect(ImmutableMap.toImmutableMap(
-                        entry -> new UsernameChangeTaskStep.StepName(entry.getKey()),
-                        entry -> UsernameChangeService.StepState.valueOf(entry.getValue())))))
+                        entry -> new StepName(entry.getKey()),
+                        entry -> UsernameChangeService.StepState.valueOf(entry.getValue()))),
+                dto.fromStep.map(StepName::new)))
             .toDTOConverter((details, type) -> new UsernameChangeTaskAdditionalInformationDTO(
                 type,
                 details.getOldUser().asString(),
@@ -50,6 +52,7 @@ public class UsernameChangeTaskAdditionalInformationDTO implements AdditionalInf
                     .collect(ImmutableMap.toImmutableMap(
                         entry -> entry.getKey().asString(),
                         entry -> entry.getValue().toString())),
+                details.getFromStep().map(StepName::asString),
                 details.timestamp()))
             .typeName(UsernameChangeTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
@@ -59,18 +62,21 @@ public class UsernameChangeTaskAdditionalInformationDTO implements AdditionalInf
     private final String oldUser;
     private final String newUser;
     private final Map<String, String> status;
+    private final Optional<String> fromStep;
     private final Instant timestamp;
 
     public UsernameChangeTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                       @JsonProperty("oldUser") String oldUser,
                                                       @JsonProperty("newUser") String newUser,
                                                       @JsonProperty("status") Map<String, String> status,
+                                                      @JsonProperty("fromStep") Optional<String> fromStep,
                                                       @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.oldUser = oldUser;
         this.newUser = newUser;
         this.status = status;
         this.timestamp = timestamp;
+        this.fromStep = fromStep;
     }
 
     public String getOldUser() {
@@ -87,6 +93,10 @@ public class UsernameChangeTaskAdditionalInformationDTO implements AdditionalInf
 
     public Instant getTimestamp() {
         return timestamp;
+    }
+
+    public Optional<String> getFromStep() {
+        return fromStep;
     }
 
     @Override
