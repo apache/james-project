@@ -18,10 +18,13 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
+import org.apache.james.user.api.UsernameChangeTaskStep.StepName;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -38,23 +41,29 @@ public class UsernameChangeTaskDTO implements TaskDTO {
     }
 
     public static UsernameChangeTaskDTO toDTO(UsernameChangeTask domainObject, String typeName) {
-        return new UsernameChangeTaskDTO(typeName, domainObject.getOldUser().asString(), domainObject.getNewUser().asString());
+        return new UsernameChangeTaskDTO(typeName,
+            domainObject.getOldUser().asString(),
+            domainObject.getNewUser().asString(),
+            domainObject.getFromStep().map(StepName::asString));
     }
 
     private final String type;
     private final String oldUser;
     private final String newUser;
+    private final Optional<String> fromStep;
 
     public UsernameChangeTaskDTO(@JsonProperty("type") String type,
                                  @JsonProperty("oldUser") String oldUser,
-                                 @JsonProperty("newUser") String newUser) {
+                                 @JsonProperty("newUser") String newUser,
+                                 @JsonProperty("fromStep") Optional<String> fromStep) {
         this.type = type;
         this.oldUser = oldUser;
         this.newUser = newUser;
+        this.fromStep = fromStep;
     }
 
     public UsernameChangeTask fromDTO(UsernameChangeService service) {
-        return new UsernameChangeTask(service, Username.of(oldUser), Username.of(newUser));
+        return new UsernameChangeTask(service, Username.of(oldUser), Username.of(newUser), fromStep.map(StepName::new));
     }
 
     @Override
@@ -68,5 +77,9 @@ public class UsernameChangeTaskDTO implements TaskDTO {
 
     public String getNewUser() {
         return newUser;
+    }
+
+    public Optional<String> getFromStep() {
+        return fromStep;
     }
 }

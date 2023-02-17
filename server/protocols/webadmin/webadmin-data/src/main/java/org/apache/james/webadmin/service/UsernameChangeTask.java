@@ -28,7 +28,7 @@ import org.apache.james.core.Username;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.apache.james.user.api.UsernameChangeTaskStep;
+import org.apache.james.user.api.UsernameChangeTaskStep.StepName;
 
 import reactor.core.publisher.Mono;
 
@@ -39,13 +39,19 @@ public class UsernameChangeTask implements Task {
         private final Instant timestamp;
         private final Username oldUser;
         private final Username newUser;
-        private final Map<UsernameChangeTaskStep.StepName, UsernameChangeService.StepState> status;
+        private final Map<StepName, UsernameChangeService.StepState> status;
+        private final Optional<StepName> fromStep;
 
-        public AdditionalInformation(Instant timestamp, Username oldUser, Username newUser, Map<UsernameChangeTaskStep.StepName, UsernameChangeService.StepState> status) {
+        public AdditionalInformation(Instant timestamp, Username oldUser, Username newUser, Map<StepName, UsernameChangeService.StepState> status, Optional<StepName> fromStep) {
             this.timestamp = timestamp;
             this.oldUser = oldUser;
             this.newUser = newUser;
             this.status = status;
+            this.fromStep = fromStep;
+        }
+
+        public Optional<StepName> getFromStep() {
+            return fromStep;
         }
 
         public Username getOldUser() {
@@ -56,7 +62,7 @@ public class UsernameChangeTask implements Task {
             return newUser;
         }
 
-        public Map<UsernameChangeTaskStep.StepName, UsernameChangeService.StepState> getStatus() {
+        public Map<StepName, UsernameChangeService.StepState> getStatus() {
             return status;
         }
 
@@ -69,12 +75,14 @@ public class UsernameChangeTask implements Task {
     private final Username oldUser;
     private final Username newUser;
     private final UsernameChangeService.Performer performer;
+    private final Optional<StepName> fromStep;
 
-    public UsernameChangeTask(UsernameChangeService service, Username oldUser, Username newUser) {
+    public UsernameChangeTask(UsernameChangeService service, Username oldUser, Username newUser, Optional<StepName> fromStep) {
         this.oldUser = oldUser;
         this.newUser = newUser;
 
-        this.performer = service.performer();
+        this.performer = service.performer(fromStep);
+        this.fromStep = fromStep;
     }
 
 
@@ -96,7 +104,7 @@ public class UsernameChangeTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(Clock.systemUTC().instant(), oldUser, newUser, performer.getStatus().getStates()));
+        return Optional.of(new AdditionalInformation(Clock.systemUTC().instant(), oldUser, newUser, performer.getStatus().getStates(), fromStep));
     }
 
     public Username getOldUser() {
@@ -105,5 +113,9 @@ public class UsernameChangeTask implements Task {
 
     public Username getNewUser() {
         return newUser;
+    }
+
+    public Optional<StepName> getFromStep() {
+        return fromStep;
     }
 }
