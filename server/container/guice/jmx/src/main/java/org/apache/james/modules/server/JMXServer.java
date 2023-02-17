@@ -121,6 +121,10 @@ public class JMXServer implements Startable {
             restrictingRMISocketFactory = new RestrictingRMISocketFactory(jmxConfiguration.getHost().getHostName());
             LocateRegistry.createRegistry(jmxConfiguration.getHost().getPort(), restrictingRMISocketFactory, restrictingRMISocketFactory);
             generateJMXPasswordFileIfNeed();
+            
+            if (!existJmxPasswordFile()) {
+                LOGGER.warn("No authentication setted up for the JMX component. This expose you to local privilege escalation attacks risk.");
+            }
 
             Map<String, String> environment = Optional.of(existJmxPasswordFile())
                 .filter(FunctionalUtils.identityPredicate())
