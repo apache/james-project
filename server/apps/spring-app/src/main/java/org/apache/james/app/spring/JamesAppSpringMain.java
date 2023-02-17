@@ -40,11 +40,16 @@ public class JamesAppSpringMain implements Daemon {
     private static final ObjectName ALL_OBJECT_NAME = null;
     private static final QueryExp ALL_QUERY_EXP = null;
 
-    private static final Logger log = LoggerFactory.getLogger(JamesAppSpringMain.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(JamesAppSpringMain.class.getName());
     private JamesServerApplicationContext context;
 
     public static void main(String[] args) throws Exception {
         unregisterLog4JMBeans();
+
+        if (System.getProperty("com.sun.management.jmxremote.password.file") == null) {
+            LOGGER.warn("No authentication setted up for the JMX component. This expose you to local privilege escalation attacks risk. " +
+                "This can be done via the 'com.sun.management.jmxremote.password.file' system property.");
+        }
 
         long start = Calendar.getInstance().getTimeInMillis();
 
@@ -53,7 +58,7 @@ public class JamesAppSpringMain implements Daemon {
 
         long end = Calendar.getInstance().getTimeInMillis();
 
-        log.info("Apache James Server is successfully started in {} milliseconds.", end - start);
+        LOGGER.info("Apache James Server is successfully started in {} milliseconds.", end - start);
 
     }
 
