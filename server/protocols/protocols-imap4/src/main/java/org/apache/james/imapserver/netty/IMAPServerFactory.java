@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -37,14 +38,25 @@ import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 public class IMAPServerFactory extends AbstractServerFactory {
 
     protected final FileSystem fileSystem;
-    protected final ImapDecoder decoder;
-    protected final ImapEncoder encoder;
-    protected final ImapProcessor processor;
+    protected final Provider<ImapDecoder> decoder;
+    protected final Provider<ImapEncoder> encoder;
+    protected final Provider<ImapProcessor> processor;
     protected final ImapMetrics imapMetrics;
     protected final GaugeRegistry gaugeRegistry;
 
     @Inject
+    @Deprecated
     public IMAPServerFactory(FileSystem fileSystem, ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor,
+                             MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
+        this.fileSystem = fileSystem;
+        this.decoder = () -> decoder;
+        this.encoder = () -> encoder;
+        this.processor = () -> processor;
+        this.imapMetrics = new ImapMetrics(metricFactory);
+        this.gaugeRegistry = gaugeRegistry;
+    }
+
+    public IMAPServerFactory(FileSystem fileSystem, Provider<ImapDecoder> decoder, Provider<ImapEncoder> encoder, Provider<ImapProcessor> processor,
                              MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         this.fileSystem = fileSystem;
         this.decoder = decoder;
@@ -55,11 +67,10 @@ public class IMAPServerFactory extends AbstractServerFactory {
     }
 
     protected IMAPServer createServer() {
-       return new IMAPServer(decoder, encoder, processor, imapMetrics, gaugeRegistry);
+       return new IMAPServer(decoder.get(), encoder.get(), processor.get(), imapMetrics, gaugeRegistry);
     }
     
     @Override
-
     protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("imapserver");

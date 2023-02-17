@@ -23,8 +23,11 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import javax.inject.Provider;
+
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.imap.api.display.Localizer;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.DefaultMailboxTyper;
@@ -52,6 +55,8 @@ import org.apache.james.imap.processor.SelectProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.imapserver.netty.IMAPServerFactory;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
@@ -78,10 +83,10 @@ public class IMAPServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(IMAPServerFactory.class).in(Scopes.SINGLETON);
         bind(Localizer.class).to(DefaultLocalizer.class);
         bind(UnpooledStatusResponseFactory.class).in(Scopes.SINGLETON);
         bind(StatusResponseFactory.class).to(UnpooledStatusResponseFactory.class);
+        bind(ImapProcessor.class).to(DefaultProcessor.class);
 
         bind(CapabilityProcessor.class).in(Scopes.SINGLETON);
         bind(AuthenticateProcessor.class).in(Scopes.SINGLETON);
@@ -93,13 +98,15 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     @Provides
-    ImapProcessor provideImapProcessor(ImmutableMap<Class, ImapProcessor> processorMap, StatusResponseFactory statusResponseFactory) {
-        return new DefaultProcessor(processorMap, new UnknownRequestProcessor(statusResponseFactory));
+    @Singleton
+    IMAPServerFactory provideServerFactory(FileSystem fileSystem, Provider<ImapDecoder> decoder, Provider<ImapEncoder> encoder, Provider<ImapProcessor> processor,
+                                        MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
+        return new IMAPServerFactory(fileSystem, decoder, encoder, processor, metricFactory, gaugeRegistry);
     }
 
     @Provides
-    ImmutableMap<Class, ImapProcessor> provideClassImapProcessors(ImapPackage imapPackage, GuiceGenericLoader loader) {
-        return imapPackage.processors()
+    DefaultProcessor provideClassImapProcessors(ImapPackage imapPackage, GuiceGenericLoader loader, StatusResponseFactory statusResponseFactory) {
+        ImmutableMap<Class, ImapProcessor> processors = imapPackage.processors()
             .stream()
             .map(Throwing.function(loader::instantiate))
             .map(AbstractProcessor.class::cast)
@@ -107,6 +114,23 @@ public class IMAPServerModule extends AbstractModule {
             .collect(ImmutableMap.toImmutableMap(
                 Pair::getLeft,
                 Pair::getRight));
+
+        Optional<EnableProcessor> enableProcessor = processors.values()
+            .stream()
+            .filter(EnableProcessor.class::isInstance)
+            .map(EnableProcessor.class::cast)
+            .findFirst();
+
+        Optional<CapabilityProcessor> capabilityProcessor = processors.values()
+            .stream()
+            .filter(CapabilityProcessor.class::isInstance)
+            .map(CapabilityProcessor.class::cast)
+            .findFirst();
+
+        enableProcessor.ifPresent(processor -> configureEnable(processor, processors));
+        capabilityProcessor.ifPresent(processor -> configureCapability(processor, processors));
+
+        return new DefaultProcessor(processors, new UnknownRequestProcessor(statusResponseFactory));
     }
 
     @Provides
@@ -134,13 +158,11 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     @Provides
-    @Singleton
     ImapDecoder provideImapDecoder(ImapCommandParserFactory imapCommandParserFactory, StatusResponseFactory statusResponseFactory) {
         return new DefaultImapDecoder(statusResponseFactory, imapCommandParserFactory);
     }
 
     @Provides
-    @Singleton
     ImapEncoder provideImapEncoder(ImapPackage imapPackage, GuiceGenericLoader loader) {
         Stream<ImapResponseEncoder> encoders = imapPackage.encoders()
             .stream()
@@ -160,26 +182,19 @@ public class IMAPServerModule extends AbstractModule {
             });
     }
 
-    @ProvidesIntoSet
-    InitializationOperation configureEnable(EnableProcessor enableProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
-        return InitilizationOperationBuilder
-            .forClass(IMAPServerFactory.class)
-            .init(() ->
-                processorMap.values().stream()
-                    .filter(PermitEnableCapabilityProcessor.class::isInstance)
-                    .map(PermitEnableCapabilityProcessor.class::cast)
-                    .forEach(enableProcessor::addProcessor));
+
+    private void configureEnable(EnableProcessor enableProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
+        processorMap.values().stream()
+            .filter(PermitEnableCapabilityProcessor.class::isInstance)
+            .map(PermitEnableCapabilityProcessor.class::cast)
+            .forEach(enableProcessor::addProcessor);
     }
 
-    @ProvidesIntoSet
-    InitializationOperation configureCapability(CapabilityProcessor capabilityProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
-        return InitilizationOperationBuilder
-            .forClass(IMAPServerFactory.class)
-            .init(() ->
-                processorMap.values().stream()
-                    .filter(CapabilityImplementingProcessor.class::isInstance)
-                    .map(CapabilityImplementingProcessor.class::cast)
-                    .forEach(capabilityProcessor::addProcessor));
+    private void configureCapability(CapabilityProcessor capabilityProcessor, ImmutableMap<Class, ImapProcessor> processorMap) {
+        processorMap.values().stream()
+            .filter(CapabilityImplementingProcessor.class::isInstance)
+            .map(CapabilityImplementingProcessor.class::cast)
+            .forEach(capabilityProcessor::addProcessor);
     }
 
     @Provides
