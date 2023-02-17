@@ -228,7 +228,7 @@ class UsernameChangeRoutesTest {
             given()
                 .basePath(TasksRoutes.BASE)
             .when()
-                .get(taskId + "/await")
+                .get(taskId + "/await").prettyPeek()
             .then()
                 .body("type", is("UsernameChangeTask"))
                 .body("status", is("failed"))
