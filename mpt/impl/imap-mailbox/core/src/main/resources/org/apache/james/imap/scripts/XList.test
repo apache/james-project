@@ -76,7 +76,7 @@ S: 10 OK LIST completed.
 
 C: 10 LIST "" * RETURN (SPECIAL-USE SUBSCRIBED)
 SUB {
-S: \* LIST \(\\HasNoChildren\) \"\.\" "INBOX"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "Other"
 S: \* LIST \(\\HasNoChildren \\Drafts\) \"\.\" "Drafts"
 S: \* LIST \(\\HasNoChildren \\Sent \\Subscribed\) \"\.\" "Sent"

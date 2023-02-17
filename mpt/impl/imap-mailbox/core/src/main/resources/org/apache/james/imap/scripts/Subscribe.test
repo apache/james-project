@@ -27,13 +27,17 @@ C: 13 CREATE subscribetest1.subfolder1
 S: 13 OK \[MAILBOXID \(.+\)\] CREATE completed.
 
 C: a01 LSUB "" "*"
+S: \* LSUB \(\) \"\.\" \"INBOX\"
 S: a01 OK LSUB completed.
 
 C: a02 SUBSCRIBE subscribetest
 S: a02 OK SUBSCRIBE completed.
 
 C: a03 LSUB "" "*"
+SUB {
+S: \* LSUB \(\) \"\.\" \"INBOX\"
 S: \* LSUB \(\) \"\.\" \"subscribetest\"
+}
 S: a03 OK LSUB completed.
 
 C: a04 SUBSCRIBE subscribetest.subfolder
@@ -45,6 +49,7 @@ S: a05 OK SUBSCRIBE completed.
 # LIST All subscribed
 C: a06 LSUB "" "*"
 SUB {
+S: \* LSUB \(\) \"\.\" \"INBOX\"
 S: \* LSUB \(\) \"\.\" \"subscribetest\"
 S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
 S: \* LSUB \(\) \"\.\" \"subscribetest1\.subfolder1\"
@@ -57,6 +62,7 @@ S: b05 OK SUBSCRIBE completed.
 # LIST All subscribed
 C: b06 LSUB "" "*"
 SUB {
+S: \* LSUB \(\) \"\.\" \"INBOX\"
 S: \* LSUB \(\) \"\.\" \"whatever\"
 S: \* LSUB \(\) \"\.\" \"subscribetest\"
 S: \* LSUB \(\) \"\.\" \"subscribetest\.subfolder\"
@@ -85,6 +91,7 @@ S: a09 OK LSUB completed.
 
 C: b01 LSUB "" "%"    
 SUB {
+S: \* LSUB \(\) \"\.\" \"INBOX\"
 S: \* LSUB \(\\Noselect\) \"\.\" \"subscribetest\"
 S: \* LSUB \(\\Noselect\) \"\.\" \"subscribetest1\"
 }
@@ -106,7 +113,10 @@ S: a11 OK UNSUBSCRIBE completed.
 
 # LIST All subscribed
 C: a12 LSUB "" "*"
+SUB {
+S: \* LSUB \(\) \"\.\" \"INBOX\"
 S: \* LSUB \(\) \"\.\" \"subscribetest1\.subfolder1\"
+}
 S: a12 OK LSUB completed.
 
 # Cleanup

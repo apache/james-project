@@ -32,6 +32,7 @@ S: a02 OK SUBSCRIBE completed.
 C: A01 LIST (SUBSCRIBED) "" "*"
 SUB {
 S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 }
 S: A01 OK LIST completed.
 
@@ -42,6 +43,7 @@ C: A012 LIST (SUBSCRIBED) "" "*"
 SUB {
 S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
 S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "listtest.subfolder"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 }
 S: A012 OK LIST completed.
 C: A013 UNSUBSCRIBE listtest.subfolder
@@ -51,6 +53,7 @@ S: A013 OK UNSUBSCRIBE completed.
 C: A10 LIST (SUBSCRIBED) "" "%"
 SUB {
 S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 }
 S: A10 OK LIST completed.
 
@@ -59,13 +62,14 @@ S: A12 OK SUBSCRIBE completed.
 C: A13 LIST (SUBSCRIBED) "" "%"
 SUB {
 S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 }
 S: A13 OK LIST completed.
 
 C: A08 LIST "" "*" RETURN (SUBSCRIBED)
 SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 S: \* LIST \(\\HasChildren \\Subscribed\) \"\.\" "listtest"
-S: \* LIST \(\\HasNoChildren\) \"\.\" "INBOX"
 S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "listtest.subfolder"
 S: \* LIST \(\\HasChildren\) \"\.\" "listtest1"
 S: \* LIST \(\\HasNoChildren\) \"\.\" "listtest1.subfolder1"
@@ -77,6 +81,7 @@ S: A14 OK UNSUBSCRIBE completed.
 C: A15 UNSUBSCRIBE listtest
 S: A15 OK UNSUBSCRIBE completed.
 C: A16 LIST (SUBSCRIBED) "" "%"
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 S: A16 OK LIST completed.
 
 # RECURSIVEMATCH should work with SUBSCRIBED
@@ -85,6 +90,7 @@ S: A21 OK SUBSCRIBE completed.
 C: A22 LIST (SUBSCRIBED RECURSIVEMATCH) "" "%"
 SUB {
 S: \* LIST \(\\HasChildren\) \"\.\" "listtest" \(\"CHILDINFO\" \(\"SUBSCRIBED\"\)\)
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 }
 S: A22 OK LIST completed.
 
@@ -121,6 +127,7 @@ C: a03 SUBSCRIBE subscribeNonExistent
 S: a03 OK SUBSCRIBE completed.
 C: A04 LIST (SUBSCRIBED) "" "*"
 SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent"
 }
 S: A04 OK LIST completed.
@@ -130,6 +137,7 @@ C: a05 SUBSCRIBE subscribeNonExistent.child1
 S: a05 OK SUBSCRIBE completed.
 C: A06 LIST (SUBSCRIBED) "" "*"
 SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent"
 S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent.child1"
 }
@@ -139,6 +147,7 @@ C: a07 SUBSCRIBE subscribeNonExistent2.child2
 S: a07 OK SUBSCRIBE completed.
 C: A08 LIST (SUBSCRIBED) "" "*"
 SUB {
+S: \* LIST \(\\HasNoChildren \\Subscribed\) \"\.\" "INBOX"
 S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent"
 S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent.child1"
 S: \* LIST \(\\Subscribed \\NonExistent\) \"\.\" "subscribeNonExistent2.child2"

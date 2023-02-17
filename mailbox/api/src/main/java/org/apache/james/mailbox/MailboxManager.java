@@ -150,6 +150,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
 
     MessageManager getMailbox(Mailbox mailbox, MailboxSession session) throws MailboxException;
 
+
+    enum CreateOption {
+        NONE, CREATE_SUBSCRIPTION
+    }
+
     /**
      * Creates a new mailbox. Any intermediary mailboxes missing from the
      * hierarchy should be created.
@@ -161,10 +166,18 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @return Empty optional when the mailbox name is empty. If mailbox is created, the id of the mailboxPath specified as
      *  parameter is returned (and potential mailboxIds of parent mailboxes created in the process will be omitted)
      */
-    Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException;
+    default Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+        return createMailbox(mailboxPath, CreateOption.NONE, mailboxSession);
+    }
 
     default Publisher<MailboxId> createMailboxReactive(MailboxPath mailboxPath, MailboxSession mailboxSession) {
-        return Mono.fromCallable(() -> createMailbox(mailboxPath, mailboxSession))
+        return createMailboxReactive(mailboxPath, CreateOption.NONE, mailboxSession);
+    }
+
+    Optional<MailboxId> createMailbox(MailboxPath mailboxPath, CreateOption createOption, MailboxSession mailboxSession) throws MailboxException;
+
+    default Publisher<MailboxId> createMailboxReactive(MailboxPath mailboxPath, CreateOption createOption, MailboxSession mailboxSession) {
+        return Mono.fromCallable(() -> createMailbox(mailboxPath, createOption, mailboxSession))
             .handle((optional, sink) -> optional.ifPresent(sink::next));
     }
 

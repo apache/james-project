@@ -330,15 +330,25 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
-        return MailboxReactorUtils.blockOptional(createMailboxReactive(mailboxPath, mailboxSession));
+    public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, CreateOption createOption, MailboxSession mailboxSession) throws MailboxException {
+        return MailboxReactorUtils.blockOptional(createMailboxReactive(mailboxPath, createOption, mailboxSession));
     }
 
-    public Mono<MailboxId> createMailboxReactive(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+    @Override
+    public Mono<MailboxId> createMailboxReactive(MailboxPath mailboxPath, CreateOption createOption, MailboxSession mailboxSession) {
         LOGGER.debug("createMailbox {}", mailboxPath);
 
         return assertMailboxPathBelongToUserReactive(mailboxSession, mailboxPath)
-            .then(doCreateMailboxReactive(mailboxPath, mailboxSession));
+            .then(doCreateMailboxReactive(mailboxPath, mailboxSession))
+            .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any));
+    }
+
+    private Mono<Void> createSubscriptionIfNeeded(MailboxPath mailboxPath, CreateOption createOption, MailboxSession session) {
+        if (createOption.equals(CreateOption.CREATE_SUBSCRIPTION)) {
+            return mailboxSessionMapperFactory.getSubscriptionMapper(session)
+                .saveReactive(new Subscription(session.getUser(), mailboxPath.asEscapedString()));
+        }
+        return Mono.empty();
     }
 
     private Mono<MailboxId> doCreateMailboxReactive(MailboxPath mailboxPath, MailboxSession mailboxSession) {

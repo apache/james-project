@@ -138,8 +138,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             LOGGER.debug("INBOX exists. No need to create it.");
         } else {
             try {
-                mailboxManager
-                    .createMailbox(inboxPath, mailboxSession)
+                mailboxManager.createMailbox(inboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, mailboxSession)
                     .ifPresentOrElse(
                         id -> LOGGER.info("Provisioning INBOX. {} created.", id),
                         () -> LOGGER.warn("Provisioning INBOX successful. But no MailboxId have been returned."));

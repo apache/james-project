@@ -21,9 +21,10 @@ package org.apache.james.jmap.http
 
 import javax.inject.Inject
 import org.apache.james.core.Username
+import org.apache.james.mailbox.MailboxManager.CreateOption
 import org.apache.james.mailbox.exception.{MailboxException, MailboxExistsException}
 import org.apache.james.mailbox.model.MailboxPath
-import org.apache.james.mailbox.{DefaultMailboxes, MailboxManager, MailboxSession, SubscriptionManager}
+import org.apache.james.mailbox.{DefaultMailboxes, MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -31,7 +32,6 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.jdk.CollectionConverters._
 
 class MailboxesProvisioner @Inject() (mailboxManager: MailboxManager,
-                                      subscriptionManager: SubscriptionManager,
                                       metricFactory: MetricFactory) {
   private val LOGGER: Logger = LoggerFactory.getLogger(classOf[MailboxesProvisioner])
 
@@ -63,8 +63,7 @@ class MailboxesProvisioner @Inject() (mailboxManager: MailboxManager,
     (mailbox: String) => MailboxPath.forUser(session.getUser, mailbox)
 
   private def createMailbox(mailboxPath: MailboxPath, session: MailboxSession): SMono[Unit] = {
-    SMono(mailboxManager.createMailboxReactive(mailboxPath, session))
-      .flatMap(id => SMono(subscriptionManager.subscribeReactive(mailboxPath, session)))
+    SMono(mailboxManager.createMailboxReactive(mailboxPath, CreateOption.CREATE_SUBSCRIPTION, session))
       .onErrorResume {
         case _: MailboxExistsException => LOGGER.info("Mailbox {} have been created concurrently", mailboxPath)
           SMono.empty

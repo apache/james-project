@@ -67,14 +67,12 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
     private final SortingHierarchicalCollections<Map.Entry<MailboxCreationId, MailboxCreateRequest>, MailboxCreationId> sortingHierarchicalCollections;
     private final MailboxFactory mailboxFactory;
     private final Factory mailboxIdFactory;
-    private final SubscriptionManager subscriptionManager;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
-    SetMailboxesCreationProcessor(MailboxManager mailboxManager, SubscriptionManager subscriptionManager, MailboxFactory mailboxFactory, Factory mailboxIdFactory, MetricFactory metricFactory) {
+    SetMailboxesCreationProcessor(MailboxManager mailboxManager, MailboxFactory mailboxFactory, Factory mailboxIdFactory, MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
-        this.subscriptionManager = subscriptionManager;
         this.metricFactory = metricFactory;
         this.sortingHierarchicalCollections =
             new SortingHierarchicalCollections<>(
@@ -117,14 +115,13 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         try {
             ensureValidMailboxName(mailboxRequest, mailboxSession);
             MailboxPath mailboxPath = computeMailboxPath(mailboxRequest, creationIdsToCreatedMailboxId, mailboxSession);
-            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, mailboxSession);
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, mailboxSession);
             Optional<Mailbox> mailbox = mailboxId.flatMap(id -> mailboxFactory.builder()
                     .id(id)
                     .session(mailboxSession)
                     .build()
                     .blockOptional());
             if (mailbox.isPresent()) {
-                subscriptionManager.subscribe(mailboxSession, mailboxPath);
                 builder.created(mailboxCreationId, mailbox.get());
                 creationIdsToCreatedMailboxId.put(mailboxCreationId, mailbox.get().getId());
             } else {
