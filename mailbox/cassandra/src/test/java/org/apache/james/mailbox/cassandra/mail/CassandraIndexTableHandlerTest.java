@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.backends.cassandra.StatementRecorder.Selector.preparedStatementStartingWith;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,7 @@ import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
@@ -122,6 +124,29 @@ class CassandraIndexTableHandlerTest {
 
             Long actual = mailboxCounterDAO.countMessagesInMailbox(mailbox).block();
             assertThat(actual).isEqualTo(1);
+        }
+
+        @Test
+        void shouldTolerateErrorsUponFlagsUpdates(CassandraCluster cassandra) throws Exception {
+            MailboxMessage message = new MessageBuilder()
+                .flags(FlagsBuilder.builder()
+                    .add(Flags.Flag.DELETED, Flags.Flag.RECENT)
+                    .add("customFlag")
+                    .build())
+                .build();
+
+            cassandra.getConf().registerScenario(fail()
+                .times(1)
+                .whenQueryStartsWith("UPDATE mailboxcounters SET count=count+1, unseen=unseen+1 WHERE mailboxid=:mailboxid"));
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandra.getConf().recordStatements(statementRecorder);
+
+            testee.updateIndexOnAdd(message, MAILBOX_ID)
+                .block();
+
+            assertThat(statementRecorder.listExecutedStatements(preparedStatementStartingWith("UPDATE mailboxcounters SET count=count+1, unseen=unseen+1 WHERE mailboxid=:mailboxid")))
+                .hasSize(1);
         }
     }
 
