@@ -40,7 +40,6 @@ import org.apache.james.jmap.draft.utils.DependencyGraph.CycleDetectedException;
 import org.apache.james.jmap.draft.utils.SortingHierarchicalCollections;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.InboxAlreadyCreated;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
