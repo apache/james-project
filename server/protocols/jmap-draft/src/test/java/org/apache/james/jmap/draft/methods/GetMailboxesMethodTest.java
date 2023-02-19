@@ -54,7 +54,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.assertj.core.groups.Tuple;
@@ -86,7 +85,7 @@ public class GetMailboxesMethodTest {
         quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
         quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
         mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
-        provisioner = new DefaultMailboxesProvisioner(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus()), new DefaultMetricFactory());
+        provisioner = new DefaultMailboxesProvisioner(mailboxManager, new DefaultMetricFactory());
 
         getMailboxesMethod = new GetMailboxesMethod(mailboxManager, quotaRootResolver, quotaManager,  mailboxFactory, new DefaultMetricFactory(), provisioner);
     }
