@@ -55,6 +55,7 @@ public class JPAJamesServerMain implements JamesServerMain {
         new TaskManagerModule());
 
     private static final Module JPA_SERVER_MODULE = Modules.combine(
+        new NaiveDelegationStoreModule(),
         new MailetProcessingModule(),
         new JPAEntityManagerModule(),
         new JPADataModule(),

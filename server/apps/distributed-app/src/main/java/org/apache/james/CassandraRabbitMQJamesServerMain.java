@@ -36,6 +36,7 @@ import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
+import org.apache.james.modules.data.CassandraDelegationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
@@ -135,6 +136,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             .toInstance(ImmutableSet.of());
 
     public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(
+        new CassandraDelegationStoreModule(),
         new CassandraDomainListModule(),
         new CassandraDLPConfigurationStoreModule(),
         new CassandraEventStoreModule(),

@@ -27,6 +27,7 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.MemoryDataModule;
+import org.apache.james.modules.data.MemoryDelegationStoreModule;
 import org.apache.james.modules.data.MemoryUsersRepositoryModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
@@ -51,6 +52,7 @@ public class CustomJamesServerMain implements JamesServerMain {
 
     public static final Module CUSTOM_SERVER_MODULE = Modules.combine(
         new MailetProcessingModule(),
+        new MemoryDelegationStoreModule(),
         new MailboxModule(),
         new MemoryDataModule(),
         new MemoryEventStoreModule(),

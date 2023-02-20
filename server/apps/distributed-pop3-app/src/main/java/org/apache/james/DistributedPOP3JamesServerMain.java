@@ -45,6 +45,7 @@ import org.apache.james.modules.TasksCleanupTaskSerializationModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
+import org.apache.james.modules.data.CassandraDelegationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
@@ -133,6 +134,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
 
     public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(
         new CassandraBlobStoreDependenciesModule(),
+        new CassandraDelegationStoreModule(),
         new CassandraDomainListModule(),
         new CassandraEventStoreModule(),
         new CassandraJmapModule(),

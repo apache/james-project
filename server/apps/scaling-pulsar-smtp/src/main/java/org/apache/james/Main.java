@@ -28,6 +28,7 @@ import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlModule;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlStore;
+import org.apache.james.modules.data.CassandraDelegationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
@@ -105,6 +106,7 @@ public class Main implements JamesServerMain {
             },
             new CassandraDomainListModule(),
             new CassandraRecipientRewriteTableModule(),
+            new CassandraDelegationStoreModule(),
             new CassandraUsersRepositoryModule(),
             new CassandraMetricsModule(),
             new TaskManagerModule()
