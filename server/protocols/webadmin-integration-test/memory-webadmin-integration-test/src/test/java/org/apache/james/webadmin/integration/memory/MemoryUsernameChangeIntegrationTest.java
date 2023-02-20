@@ -105,4 +105,25 @@ class MemoryUsernameChangeIntegrationTest {
             .body(".", hasSize(1))
             .body("[0].mailAddress", is(BOB.asString()));
     }
+
+    @Test
+    void shouldAdaptDelegation() {
+        webAdminApi.put("/users/" + ALICE.asString() + "/authorizedUsers/" + CEDRIC.asString());
+
+        String taskId = webAdminApi
+            .queryParam("action", "rename")
+            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString())
+            .jsonPath()
+            .get("taskId");
+
+        webAdminApi.get("/tasks/" + taskId + "/await");
+
+        webAdminApi.get("/users/" + ALICE.asString() + "/authorizedUsers")
+            .then()
+                .body(".", hasSize(0));
+        webAdminApi.get("/users/" + BOB.asString() + "/authorizedUsers")
+            .then()
+                .body(".", hasSize(1))
+                .body("[0]", is(CEDRIC.asString()));
+    }
 }

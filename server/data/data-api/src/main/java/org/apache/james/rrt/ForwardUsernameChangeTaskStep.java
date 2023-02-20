@@ -81,6 +81,6 @@ public class ForwardUsernameChangeTaskStep implements UsernameChangeTaskStep {
 
     @Override
     public int priority() {
-        return 10;
+        return 0;
     }
 }

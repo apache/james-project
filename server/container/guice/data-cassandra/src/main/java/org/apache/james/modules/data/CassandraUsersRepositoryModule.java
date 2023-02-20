@@ -25,6 +25,8 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.DelegationStore;
+import org.apache.james.user.api.DelegationUsernameChangeTaskStep;
+import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraDelegationStore;
 import org.apache.james.user.cassandra.CassandraRepositoryConfiguration;
@@ -53,6 +55,9 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
         bind(DelegationStore.class).to(CassandraDelegationStore.class);
         bind(Authorizator.class).to(DelegationStoreAuthorizator.class);
+
+        Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
+            .addBinding().to(DelegationUsernameChangeTaskStep.class);
     }
 
     @Provides
