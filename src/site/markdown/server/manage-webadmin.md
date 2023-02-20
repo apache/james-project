@@ -485,6 +485,7 @@ Would migrate account data from `oldUser` to `newUser`.
 Implemented migration steps are:
 
  - `ForwardUsernameChangeTaskStep`: creates forward from old user to new user and migrates existing forwards
+ - `DelegationUsernameChangeTaskStep`: migrates delegations where the impacted user is either delegatee or delegator
 
 Response codes:
 
