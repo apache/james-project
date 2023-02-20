@@ -114,7 +114,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
       .flatMap(_ => SFlux.fromPublisher(
-        emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
+        emailQueryView.listMailboxContentSinceAfterSortedBySentAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
@@ -132,7 +132,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
       .flatMap(_ => SFlux.fromPublisher(
-        emailQueryView.listMailboxContentSinceReceivedAtSortedByReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
+        emailQueryView.listMailboxContentSinceAfterSortedByReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
@@ -148,7 +148,7 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
       .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
       .flatMap(_ => SFlux.fromPublisher(
-        emailQueryView.listMailboxContent(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
+        emailQueryView.listMailboxContentSortedBySentAt(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())

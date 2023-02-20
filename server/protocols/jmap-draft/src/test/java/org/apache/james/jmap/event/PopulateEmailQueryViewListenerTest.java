@@ -128,7 +128,7 @@ public class PopulateEmailQueryViewListenerTest {
                 .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
             mailboxSession).getId();
 
-        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .containsOnly(composedId.getMessageId());
     }
 
@@ -141,7 +141,7 @@ public class PopulateEmailQueryViewListenerTest {
                 .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
             mailboxSession).getId();
 
-        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -156,7 +156,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.setFlags(new Flags(), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
 
-        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .containsOnly(composedId.getMessageId());
     }
 
@@ -170,7 +170,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.setFlags(new Flags(DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
 
-        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -184,7 +184,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         mailboxManager.deleteMailbox(inboxId, mailboxSession);
 
-        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -198,7 +198,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.delete(ImmutableList.of(composedMessageId.getUid()), mailboxSession);
 
-        assertThat(view.listMailboxContent(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
