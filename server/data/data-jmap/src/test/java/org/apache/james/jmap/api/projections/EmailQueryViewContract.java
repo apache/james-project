@@ -53,7 +53,7 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentShouldReturnEmptyByDefault() {
-        assertThat(testee().listMailboxContent(mailboxId1(), Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -63,7 +63,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
         testee().save(mailboxId1(), DATE_2, DATE_6, messageId3()).block();
 
-        assertThat(testee().listMailboxContent(mailboxId1(), Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactly(messageId2(), messageId3(), messageId1());
     }
 
@@ -73,7 +73,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
         testee().save(mailboxId1(), DATE_2, DATE_6, messageId3()).block();
 
-        assertThat(testee().listMailboxContent(mailboxId1(), Limit.limit(2)).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(2)).collectList().block())
             .containsExactly(messageId2(), messageId3());
     }
 
@@ -83,7 +83,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
         testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
 
-        assertThat(testee().listMailboxContentSinceReceivedAt(mailboxId1(), DATE_3, Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12)).collectList().block())
             .containsExactly(messageId3(), messageId2());
     }
 
@@ -93,7 +93,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
         testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
 
-        assertThat(testee().listMailboxContentSinceReceivedAt(mailboxId1(), DATE_7, Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_7, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -103,7 +103,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_3, DATE_4, messageId2()).block();
         testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
 
-        assertThat(testee().listMailboxContentSinceReceivedAt(mailboxId1(), DATE_1, Limit.limit(2)).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_1, Limit.limit(2)).collectList().block())
             .containsExactly(messageId3(), messageId2());
     }
 
@@ -145,7 +145,7 @@ public interface EmailQueryViewContract {
 
         testee().delete(mailboxId1()).block();
 
-        assertThat(testee().listMailboxContent(mailboxId1(), Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -157,7 +157,7 @@ public interface EmailQueryViewContract {
 
         testee().delete(mailboxId1(), messageId2()).block();
 
-        assertThat(testee().listMailboxContent(mailboxId1(), Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactly(messageId3(), messageId1());
     }
 
@@ -169,7 +169,7 @@ public interface EmailQueryViewContract {
 
         testee().delete(mailboxId1()).block();
 
-        assertThat(testee().listMailboxContentSinceReceivedAt(mailboxId1(), DATE_4, Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_4, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -190,7 +190,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
         testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
 
-        assertThat(testee().listMailboxContent(mailboxId1(), Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactly(messageId1());
     }
 
@@ -199,7 +199,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_1, DATE_2, messageId1()).block();
         testee().save(mailboxId1(), DATE_1, DATE_2, messageId2()).block();
 
-        assertThat(testee().listMailboxContent(mailboxId1(), Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
             .containsExactly(messageId1(), messageId2());
     }
 
@@ -211,7 +211,7 @@ public interface EmailQueryViewContract {
 
         testee().delete(mailboxId1(), messageId2()).block();
 
-        assertThat(testee().listMailboxContentSinceReceivedAt(mailboxId1(), DATE_3, Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.limit(12)).collectList().block())
             .containsExactly(messageId3());
     }
 
@@ -243,7 +243,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_2, DATE_3, messageId2()).block();
         testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
 
-        assertThat(testee().listMailboxContentSinceReceivedAtSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12)).collectList().block())
+        assertThat(testee().listMailboxContentSinceAfterSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12)).collectList().block())
             .containsExactly(messageId3(), messageId1());
     }
 
@@ -259,7 +259,7 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentShouldThrowOnUndefinedLimit() {
-        assertThatThrownBy(() -> testee().listMailboxContent(mailboxId1(), Limit.unlimited()).blockLast())
+        assertThatThrownBy(() -> testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.unlimited()).blockLast())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -271,7 +271,7 @@ public interface EmailQueryViewContract {
 
     @Test
     default void listMailboxContentSinceReceivedAtShouldThrowOnUndefinedLimit() {
-        assertThatThrownBy(() -> testee().listMailboxContentSinceReceivedAt(mailboxId1(), DATE_3, Limit.unlimited()).blockLast())
+        assertThatThrownBy(() -> testee().listMailboxContentSinceAfterSortedBySentAt(mailboxId1(), DATE_3, Limit.unlimited()).blockLast())
             .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -103,7 +103,7 @@ public interface EmailQueryView {
      *
      * @return messageIds of the messages in this mailbox, sorted by sentAt.
      */
-    Flux<MessageId> listMailboxContent(MailboxId mailboxId, Limit limit);
+    Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit);
 
     /**
      *
@@ -124,7 +124,7 @@ public interface EmailQueryView {
      *     },
      *     "c1"]
      *
-     * @return messageIds of the messages in this mailbox, sorted by sentAt.
+     * @return messageIds of the messages in this mailbox, sorted by receivedAt.
      */
     Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit);
 
@@ -147,9 +147,9 @@ public interface EmailQueryView {
      *     },
      *     "c1"]
      *
-     * @return messageIds of the messages in this mailbox, since being receivedAt. Sorted by sentAt.
+     * @return messageIds of the messages in this mailbox, since being "after". Sorted by sentAt.
      */
-    Flux<MessageId> listMailboxContentSinceReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit);
+    Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit);
 
     /**
      *  Sample JMAP requests:
@@ -170,9 +170,9 @@ public interface EmailQueryView {
      *     },
      *     "c1"]
      *
-     * @return messageIds of the messages in this mailbox, since being receivedAt. Sorted by sentAt.
+     * @return messageIds of the messages in this mailbox, since being "after". Sorted by receivedAt.
      */
-    Flux<MessageId> listMailboxContentSinceReceivedAtSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit);
+    Flux<MessageId> listMailboxContentSinceAfterSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit);
 
     /**
      *  Sample JMAP requests:

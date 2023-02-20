@@ -265,7 +265,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(view.listMailboxContent(messageId.getMailboxId(), Limit.from(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12)).collectList().block())
             .containsOnly(messageId.getMessageId());
     }
 
@@ -287,7 +287,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        assertThat(view.listMailboxContent(messageId.getMailboxId(), Limit.from(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12)).collectList().block())
             .isEmpty();
     }
 
@@ -315,7 +315,7 @@ class PopulateEmailQueryViewRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId2 + "/await");
 
-        assertThat(view.listMailboxContent(messageId.getMailboxId(), Limit.from(12)).collectList().block())
+        assertThat(view.listMailboxContentSortedBySentAt(messageId.getMailboxId(), Limit.from(12)).collectList().block())
             .containsOnly(messageId.getMessageId());
     }
 }

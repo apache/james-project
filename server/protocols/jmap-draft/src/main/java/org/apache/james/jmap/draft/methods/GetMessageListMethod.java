@@ -179,7 +179,7 @@ public class GetMessageListMethod implements Method {
             Limit aLimit = Limit.from(Math.toIntExact(limit));
 
             return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-                .then(emailQueryView.listMailboxContent(mailboxId, aLimit)
+                .then(emailQueryView.listMailboxContentSortedBySentAt(mailboxId, aLimit)
                     .skip(position)
                     .take(limit)
                     .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
@@ -195,7 +195,7 @@ public class GetMessageListMethod implements Method {
             Limit aLimit = Limit.from(Math.toIntExact(limit));
 
             return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-                .then(emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, aLimit)
+                .then(emailQueryView.listMailboxContentSinceAfterSortedBySentAt(mailboxId, after, aLimit)
                     .skip(position)
                     .take(limit)
                     .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
