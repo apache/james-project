@@ -16,29 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.modules.data;
 
-import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.jpa.JPAUsersRepository;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.user.api.DelegationStore;
+import org.apache.james.user.api.DelegationUsernameChangeTaskStep;
+import org.apache.james.user.api.UsernameChangeTaskStep;
+import org.apache.james.user.memory.MemoryDelegationStore;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.multibindings.Multibinder;
 
-public class JPAUsersRepositoryModule extends AbstractModule {
+public class MemoryDelegationStoreModule extends AbstractModule {
     @Override
     public void configure() {
-        bind(JPAUsersRepository.class).in(Scopes.SINGLETON);
-        bind(UsersRepository.class).to(JPAUsersRepository.class);
-    }
+        bind(MemoryDelegationStore.class).in(Scopes.SINGLETON);
+        bind(DelegationStore.class).to(MemoryDelegationStore.class);
 
-    @ProvidesIntoSet
-    InitializationOperation configureJpaUsers(ConfigurationProvider configurationProvider, JPAUsersRepository usersRepository) {
-        return InitilizationOperationBuilder
-            .forClass(JPAUsersRepository.class)
-            .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
+        Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
+            .addBinding().to(DelegationUsernameChangeTaskStep.class);
     }
 }

@@ -29,6 +29,7 @@ import org.apache.james.modules.CassandraConsistencyTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
+import org.apache.james.modules.data.CassandraDelegationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
@@ -135,6 +136,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
 
     public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
+        new CassandraDelegationStoreModule(),
         new CassandraBlobStoreDependenciesModule(),
         new CassandraDomainListModule(),
         new CassandraDLPConfigurationStoreModule(),
