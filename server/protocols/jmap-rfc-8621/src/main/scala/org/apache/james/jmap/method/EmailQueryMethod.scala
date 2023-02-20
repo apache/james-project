@@ -18,8 +18,12 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import java.time.ZonedDateTime
+
 import cats.implicits._
 import eu.timepit.refined.auto._
+import javax.inject.Inject
+import javax.mail.Flags.Flag.DELETED
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.EmailQueryView
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
@@ -33,15 +37,12 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.search.MailboxFilter
 import org.apache.james.jmap.utils.search.MailboxFilter.QueryFilter
 import org.apache.james.mailbox.exception.MailboxNotFoundException
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery.Namespace
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MultimailboxesSearchQuery, SearchQuery}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
 import reactor.core.scala.publisher.{SFlux, SMono}
-import java.time.ZonedDateTime
-
-import javax.inject.Inject
-import javax.mail.Flags.Flag.DELETED
 
 import scala.jdk.CollectionConverters._
 
@@ -93,73 +94,81 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   private def executeQuery(session: MailboxSession, request: EmailQueryRequest, searchQuery: MultimailboxesSearchQuery, position: Position, limit: Limit): SMono[EmailQueryResponse] = {
     val ids: SMono[Seq[MessageId]] = request match {
       case request: EmailQueryRequest if matchesInMailboxSortedBySentAt(request) =>
-        queryViewForListingSortedBySentAt(session, position, limit, request)
+        queryViewForListingSortedBySentAt(session, position, limit, request, searchQuery.getNamespace)
       case request: EmailQueryRequest if matchesInMailboxAfterSortedBySentAt(request) =>
-        queryViewForContentAfterSortedBySentAt(session, position, limit, request)
+        queryViewForContentAfterSortedBySentAt(session, position, limit, request, searchQuery.getNamespace)
       case request: EmailQueryRequest if matchesInMailboxSortedByReceivedAt(request) =>
-        queryViewForListingSortedByReceivedAt(session, position, limit, request)
+        queryViewForListingSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
       case request: EmailQueryRequest if matchesInMailboxAfterSortedByReceivedAt(request) =>
-        queryViewForContentAfterSortedByReceivedAt(session, position, limit, request)
+        queryViewForContentAfterSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
       case _ => executeQueryAgainstSearchIndex(session, searchQuery, position, limit)
     }
 
     ids.map(ids => toResponse(request, position, limit, ids))
   }
 
-  private def queryViewForContentAfterSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest): SMono[Seq[MessageId]] = {
+  private def queryViewForContentAfterSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
     val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
     val mailboxId: MailboxId = condition.inMailbox.get
     val after: ZonedDateTime = condition.after.get.asUTC
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-      .`then`(SFlux.fromPublisher(
+      .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
+      .flatMap(_ => SFlux.fromPublisher(
         emailQueryView.listMailboxContentSinceReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
+      .switchIfEmpty(SMono.just[Seq[MessageId]](Seq()))
       .onErrorResume({
         case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
         case e => SMono.error[Seq[MessageId]](e)
       })
   }
 
-  private def queryViewForContentAfterSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest): SMono[Seq[MessageId]] = {
+  private def queryViewForContentAfterSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
     val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
     val mailboxId: MailboxId = condition.inMailbox.get
     val after: ZonedDateTime = condition.after.get.asUTC
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-      .`then`(SFlux.fromPublisher(
+      .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
+      .flatMap(_ => SFlux.fromPublisher(
         emailQueryView.listMailboxContentSinceReceivedAtSortedByReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
+      .switchIfEmpty(SMono.just[Seq[MessageId]](Seq()))
       .onErrorResume({
         case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
         case e => SMono.error[Seq[MessageId]](e)
       })
   }
 
-  private def queryViewForListingSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest): SMono[Seq[MessageId]] = {
+  private def queryViewForListingSortedBySentAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
     val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-      .`then`(SFlux.fromPublisher(
+      .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
+      .flatMap(_ => SFlux.fromPublisher(
         emailQueryView.listMailboxContent(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
+      .switchIfEmpty(SMono.just[Seq[MessageId]](Seq()))
       .onErrorResume({
         case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
         case e => SMono.error[Seq[MessageId]](e)
       })
   }
 
-  private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest): SMono[Seq[MessageId]] = {
+  private def queryViewForListingSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
     val mailboxId: MailboxId = request.filter.get.asInstanceOf[FilterCondition].inMailbox.get
     SMono(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-      .`then`(SFlux.fromPublisher(
+      .filter(messageManager => namespace.keepAccessible(messageManager.getMailboxEntity))
+      .flatMap(_ => SFlux.fromPublisher(
         emailQueryView.listMailboxContentSortedByReceivedAt(mailboxId, JavaLimit.from(limitToUse.value + position.value)))
         .drop(position.value)
         .take(limitToUse.value)
         .collectSeq())
+      .switchIfEmpty(SMono.just[Seq[MessageId]](Seq()))
       .onErrorResume({
         case _: MailboxNotFoundException => SMono.just[Seq[MessageId]](Seq())
         case e => SMono.error[Seq[MessageId]](e)

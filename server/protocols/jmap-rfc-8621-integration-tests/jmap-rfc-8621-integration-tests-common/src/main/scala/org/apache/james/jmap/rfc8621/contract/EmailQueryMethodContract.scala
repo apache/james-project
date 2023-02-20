@@ -711,6 +711,304 @@ trait EmailQueryMethodContract {
   }
 
   @Test
+  def inMailboxFilterWithSortedByReceivedAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "receivedAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState()}",
+           |                "canCalculateChanges": false,
+           |                "ids": [
+           |
+           |                ],
+           |                "position": 0,
+           |                "limit": 256
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def inMailboxFilterWithSortedByReceivedAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail",
+         |		"urn:apache:james:params:jmap:mail:shares"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "receivedAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId1)}",
+           |                "canCalculateChanges": false,
+           |                "position": 0,
+           |                "limit": 256,
+           |                "ids": ["${messageId1.serialize()}"]
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  @Test
+  def inMailboxFilterWithSortedBySentAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "sentAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |        [
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState()}",
+           |                "canCalculateChanges": false,
+           |                "ids": [
+           |
+           |                ],
+           |                "position": 0,
+           |                "limit": 256
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def inMailboxFilterWithSortedBySentAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail",
+         |		"urn:apache:james:params:jmap:mail:shares"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "sentAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId1)}",
+           |                "canCalculateChanges": false,
+           |                "position": 0,
+           |                "limit": 256,
+           |                "ids": ["${messageId1.serialize()}"]
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+    }
+  }
+
+  @Test
   def inMailboxOtherThanFilterShouldReturnEmptyForSharedMailboxesWhenNoExtension(server: GuiceJamesServer): Unit = {
     val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
     val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
@@ -763,6 +1061,300 @@ trait EmailQueryMethodContract {
            |                "queryState": "${generateQueryState()}",
            |                "canCalculateChanges": false,
            |                "ids": [],
+           |                "position": 0,
+           |                "limit": 256
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def inMailboxAfterWithSortedBySentAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
+    val requestDate = ZonedDateTime.now().minusDays(1)
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}",
+         |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "sentAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState()}",
+           |                "canCalculateChanges": false,
+           |                "ids": [],
+           |                "position": 0,
+           |                "limit": 256
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def inMailboxAfterWithSortedBySentAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
+    val requestDate = ZonedDateTime.now().minusDays(1)
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail",
+         |		"urn:apache:james:params:jmap:mail:shares"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}",
+         |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "sentAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId1)}",
+           |                "canCalculateChanges": false,
+           |                "ids": ["${messageId1.serialize()}"],
+           |                "position": 0,
+           |                "limit": 256
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def inMailboxAfterWithSortedByReceivedAtShouldReturnEmptyForSharedMailboxesWhenNoSharesExtension(server: GuiceJamesServer): Unit = {
+    val requestDate = ZonedDateTime.now().minusDays(1)
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}",
+         |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "receivedAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState()}",
+           |                "canCalculateChanges": false,
+           |                "ids": [],
+           |                "position": 0,
+           |                "limit": 256
+           |            },
+           |            "c1"
+           |        ]]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def inMailboxAfterWithSortedByReceivedAtShouldAcceptSharedMailboxesWhenSharesExtension(server: GuiceJamesServer): Unit = {
+    val requestDate = ZonedDateTime.now().minusDays(1)
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    val andreInboxId = mailboxProbe.createMailbox(inbox(ANDRE))
+    val messageId1: MessageId = mailboxProbe
+      .appendMessage(ANDRE.asString, inbox(ANDRE),
+        AppendCommand.from(
+          Message.Builder
+            .of
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build))
+      .getMessageId
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .addRights(inbox(ANDRE), BOB.asString, new MailboxACL.Rfc4314Rights(Right.Read, Right.Lookup))
+
+    val request =
+      s"""{
+         |	"using": [
+         |		"urn:ietf:params:jmap:core",
+         |		"urn:ietf:params:jmap:mail",
+         |		"urn:apache:james:params:jmap:mail:shares"
+         |	],
+         |	"methodCalls": [
+         |		[
+         |			"Email/query",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"filter": {
+         |					"inMailbox": "${andreInboxId.serialize()}",
+         |					"after": "${UTCDate(requestDate).asUTC.format(UTC_DATE_FORMAT)}"
+         |				},
+         |				"sort": [{
+         |					"isAscending": false,
+         |					"property": "receivedAt"
+         |				}]
+         |			},
+         |			"c1"
+         |		]
+         |	]
+         |}""".stripMargin
+
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response).isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [[
+           |            "Email/query",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "queryState": "${generateQueryState(messageId1)}",
+           |                "canCalculateChanges": false,
+           |                "ids": ["${messageId1.serialize()}"],
            |                "position": 0,
            |                "limit": 256
            |            },
