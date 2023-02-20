@@ -23,6 +23,8 @@ import org.apache.james.UserEntityValidator;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.DelegationStore;
+import org.apache.james.user.api.DelegationUsernameChangeTaskStep;
+import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryDelegationStore;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -33,6 +35,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class MemoryUsersRepositoryModule extends AbstractModule {
@@ -41,6 +44,10 @@ public class MemoryUsersRepositoryModule extends AbstractModule {
         bind(MemoryDelegationStore.class).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(MemoryUsersRepository.class);
         bind(DelegationStore.class).to(MemoryDelegationStore.class);
+
+
+        Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
+            .addBinding().to(DelegationUsernameChangeTaskStep.class);
     }
 
     @Provides
