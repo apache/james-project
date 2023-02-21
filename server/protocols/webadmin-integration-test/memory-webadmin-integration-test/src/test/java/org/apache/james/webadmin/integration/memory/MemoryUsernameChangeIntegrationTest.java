@@ -107,7 +107,6 @@ class MemoryUsernameChangeIntegrationTest {
         .build();
 
     private RequestSpecification webAdminApi;
-    private Port jmapPort;
 
     @BeforeEach
     void setUp(GuiceJamesServer jmapServer) throws Exception {
@@ -117,12 +116,34 @@ class MemoryUsernameChangeIntegrationTest {
         dataProbe.addUser(ALICE.asString(), ALICE_PASSWORD);
         dataProbe.addUser(CEDRIC.asString(), CEDRIC_PASSWORD);
 
-        jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
+        Port jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
             .setPort(jmapPort.getValue())
             .build();
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
+    }
+
+    @Test
+    void shouldMigrateMailboxes() {
+        webAdminApi.put("/users/" + ALICE.asString() + "/mailboxes/test").prettyPeek();
+
+        String taskId = webAdminApi
+            .queryParam("action", "rename")
+            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString()).prettyPeek()
+            .jsonPath()
+            .get("taskId");
+
+        webAdminApi.get("/tasks/" + taskId + "/await");
+
+        webAdminApi.get("/users/" + ALICE.asString() + "/mailboxes").prettyPeek()
+            .then()
+            .body(".", hasSize(0));
+
+        webAdminApi.get("/users/" + BOB.asString() + "/mailboxes").prettyPeek()
+            .then()
+            .body(".", hasSize(1))
+            .body("[0].mailboxName", is("test"));
     }
 
     @Test

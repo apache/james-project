@@ -24,6 +24,7 @@ import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
+import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.events.EventListener;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
@@ -72,6 +73,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
+import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
@@ -153,6 +155,9 @@ public class MemoryMailboxModule extends AbstractModule {
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
         bind(MailboxManagerConfiguration.class).toInstance(MailboxManagerConfiguration.DEFAULT);
+
+        Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
+            .addBinding().to(MailboxUsernameChangeTaskStep.class);
     }
 
     @Singleton

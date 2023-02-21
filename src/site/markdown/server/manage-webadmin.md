@@ -487,6 +487,8 @@ Implemented migration steps are:
  - `ForwardUsernameChangeTaskStep`: creates forward from old user to new user and migrates existing forwards
  - `FilterUsernameChangeTaskStep`: migrates users filtering rules
  - `DelegationUsernameChangeTaskStep`: migrates delegations where the impacted user is either delegatee or delegator
+ - `MailboxUsernameChangeTaskStep`: migrates mailboxes belonging to the old user tto the account of the new user. It also
+ migrates user's mailbox subscriptions.
 
 Response codes:
 
