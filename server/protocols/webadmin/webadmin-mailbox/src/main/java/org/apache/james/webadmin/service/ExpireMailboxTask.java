@@ -26,13 +26,14 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.task.Task;
+import org.apache.james.task.AsyncSafeTask;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.apache.james.webadmin.service.ExpireMailboxService.Context;
 import org.apache.james.webadmin.service.ExpireMailboxService.RunningOptions;
+import org.reactivestreams.Publisher;
 
-public class ExpireMailboxTask implements Task {
+public class ExpireMailboxTask implements AsyncSafeTask {
     public static final TaskType TASK_TYPE = TaskType.of("ExpireMailboxTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
@@ -108,9 +109,8 @@ public class ExpireMailboxTask implements Task {
     }
 
     @Override
-    public Result run() {
-        return expireMailboxService.expireMailboxes(context, runningOptions, new Date())
-            .block();
+    public Publisher<Result> runAsync() {
+        return expireMailboxService.expireMailboxes(context, runningOptions, new Date());
     }
 
     @Override
