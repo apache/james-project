@@ -23,19 +23,17 @@ public class LdapHealthCheckTest {
 
     @Test
     void checkShouldReturnUnhealthyIfLdapIsDown() {
-        ldapContainer.stop();
+        ldapContainer.pause();
 
         Result checkResult = ldapHealthCheck.check().block();
         assertNotNull(checkResult);
         assertTrue(checkResult.isUnHealthy());
 
-        ldapContainer.start();
+        ldapContainer.unpause();
     }
 
     @Test
     void checkShouldReturnHealthyIfLdapIsRunning() {
-        ldapContainer.start();
-
         Result checkResult = ldapHealthCheck.check().block();
         assertNotNull(checkResult);
         assertTrue(checkResult.isHealthy());
