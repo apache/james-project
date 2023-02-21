@@ -20,10 +20,12 @@ package org.apache.james.data;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.ldap.LdapHealthCheck;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository;
 import org.apache.james.user.memory.NaiveDelegationStore;
@@ -43,6 +45,7 @@ public class LdapUsersRepositoryModule extends AbstractModule {
         bind(UsersRepository.class).to(ReadOnlyUsersLDAPRepository.class);
         bind(DelegationStore.class).to(NaiveDelegationStore.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
+        bind(HealthCheck.class).to(LdapHealthCheck.class);
     }
 
     @Provides
