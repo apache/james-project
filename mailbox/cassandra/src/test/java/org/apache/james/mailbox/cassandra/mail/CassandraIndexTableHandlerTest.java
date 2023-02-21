@@ -137,7 +137,7 @@ class CassandraIndexTableHandlerTest {
 
             cassandra.getConf().registerScenario(fail()
                 .times(1)
-                .whenQueryStartsWith("UPDATE mailboxcounters SET count=count+1, unseen=unseen+1 WHERE mailboxid=:mailboxid"));
+                .whenQueryStartsWith("UPDATE mailboxCounters SET count=count+1,unseen=unseen+1 WHERE mailboxId=:mailboxId;"));
 
             StatementRecorder statementRecorder = new StatementRecorder();
             cassandra.getConf().recordStatements(statementRecorder);
@@ -145,7 +145,7 @@ class CassandraIndexTableHandlerTest {
             testee.updateIndexOnAdd(message, MAILBOX_ID)
                 .block();
 
-            assertThat(statementRecorder.listExecutedStatements(preparedStatementStartingWith("UPDATE mailboxcounters SET count=count+1, unseen=unseen+1 WHERE mailboxid=:mailboxid")))
+            assertThat(statementRecorder.listExecutedStatements(preparedStatementStartingWith("UPDATE mailboxCounters SET count=count+1,unseen=unseen+1 WHERE mailboxId=:mailboxId;")))
                 .hasSize(1);
         }
     }
