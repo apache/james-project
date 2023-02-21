@@ -79,7 +79,7 @@ public class QuitCmdHandler extends AbstractPOP3CommandHandler {
                 () -> quit(session)));
     }
 
-    private Response quit(POP3Session session) {
+    protected Response quit(POP3Session session) {
         LOGGER.trace("QUIT command received");
         Response response = null;
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY || session.getHandlerState() == POP3Session.AUTHENTICATION_USERSET) {

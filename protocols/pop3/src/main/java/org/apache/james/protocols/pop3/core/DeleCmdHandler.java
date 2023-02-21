@@ -53,17 +53,21 @@ public class DeleCmdHandler extends AbstractPOP3CommandHandler {
         this.commandDelegate = new POP3MessageCommandDelegate(COMMANDS) {
             @Override
             protected Response handleMessageExists(POP3Session session, MessageMetaData data, POP3MessageCommandArguments args) {
-                List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction)
-                    .orElseGet(() -> {
-                        ArrayList<String> uidList = new ArrayList<>();
-                        session.setAttachment(POP3Session.DELETED_UID_LIST, uidList, State.Transaction);
-                        return uidList;
-                    });
-
-                deletedUidList.add(data.getUid());
-                return DELETED;
+                return scheduleMessageDeletion(session, data);
             }
         };
+    }
+
+    protected Response scheduleMessageDeletion(POP3Session session, MessageMetaData data) {
+        List<String> deletedUidList = session.getAttachment(POP3Session.DELETED_UID_LIST, State.Transaction)
+            .orElseGet(() -> {
+                ArrayList<String> uidList = new ArrayList<>();
+                session.setAttachment(POP3Session.DELETED_UID_LIST, uidList, State.Transaction);
+                return uidList;
+            });
+
+        deletedUidList.add(data.getUid());
+        return DELETED;
     }
 
     /**
