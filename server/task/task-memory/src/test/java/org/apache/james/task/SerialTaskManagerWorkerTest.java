@@ -247,6 +247,95 @@ class SerialTaskManagerWorkerTest {
             .block()).isEmpty();
     }
 
+    @Test
+    void theWorkerShouldCancelAnInProgressAsyncTask() throws InterruptedException {
+        TaskId id = TaskId.generateTaskId();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        Task inProgressTask = new AsyncSafeTask() {
+            @Override
+            public Mono<Result> runAsync() {
+                return Mono.fromCallable(() -> {
+                    await(latch);
+                    return Task.Result.COMPLETED;
+                });
+            }
+
+            @Override
+            public TaskType type() {
+                return TaskType.of("async memory task");
+            }
+        };
+
+        TaskWithId taskWithId = new TaskWithId(id, inProgressTask);
+
+        Mono<Task.Result> resultMono = worker.executeTask(taskWithId).cache();
+        resultMono.subscribe();
+
+        Awaitility.waitAtMost(TEN_SECONDS)
+            .untilAsserted(() -> verify(listener, atLeastOnce()).started(id));
+
+        worker.cancelTask(id);
+
+        resultMono.block(Duration.ofSeconds(10));
+
+        // Due to the use of signals, cancellation cannot be instantaneous
+        // Let a grace period for the cancellation to complete to increase test stability
+        Thread.sleep(50);
+
+        verify(listener, atLeastOnce()).cancelled(eq(id), any());
+        verifyNoMoreInteractions(listener);
+    }
+
+    @Test
+    void theWorkerShouldRunAsyncTasksInParallel() throws InterruptedException {
+        TaskId id1 = TaskId.generateTaskId();
+        TaskId id2 = TaskId.generateTaskId();
+        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch task1Started = new CountDownLatch(1);
+        CountDownLatch task2Started = new CountDownLatch(1);
+
+        Task inProgressTask1 = new AsyncSafeTask() {
+            @Override
+            public Mono<Result> runAsync() {
+                return Mono.fromCallable(() -> {
+                    task1Started.countDown();
+                    await(latch);
+                    return Task.Result.COMPLETED;
+                });
+            }
+
+            @Override
+            public TaskType type() {
+                return TaskType.of("async memory task");
+            }
+        };
+
+        Task inProgressTask2 = new AsyncSafeTask() {
+            @Override
+            public Mono<Result> runAsync() {
+                return Mono.fromCallable(() -> {
+                    task2Started.countDown();
+                    return Task.Result.COMPLETED;
+                });
+            }
+
+            @Override
+            public TaskType type() {
+                return TaskType.of("async memory task");
+            }
+        };
+
+        worker.executeTask(new TaskWithId(id1, inProgressTask1)).subscribe();
+        await(task1Started);
+
+        worker.executeTask(new TaskWithId(id2, inProgressTask2)).subscribe();
+        await(task2Started);
+
+        verify(listener, atLeastOnce()).started(id1);
+        verify(listener, atLeastOnce()).started(id2);
+        latch.countDown();
+    }
 
     private void await(CountDownLatch countDownLatch) throws InterruptedException {
         countDownLatch.await();
