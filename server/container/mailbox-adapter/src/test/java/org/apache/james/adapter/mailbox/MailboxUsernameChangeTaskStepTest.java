@@ -19,15 +19,19 @@
 
 package org.apache.james.adapter.mailbox;
 
+import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Minimal;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,18 +41,19 @@ import reactor.core.publisher.Mono;
 class MailboxUsernameChangeTaskStepTest {
     private static final Username ALICE = Username.of("alice");
     private static final Username BOB = Username.of("bob");
+    private static final Username CEDRIC = Username.of("cedric");
 
     private InMemoryMailboxManager mailboxManager;
-    private StoreSubscriptionManager storeSubscriptionManager;
+    private StoreSubscriptionManager subscriptionManager;
     private MailboxUsernameChangeTaskStep testee;
 
     @BeforeEach
     void setUp() {
-        final InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
-        storeSubscriptionManager = new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getMapperFactory(),
+        subscriptionManager = new StoreSubscriptionManager(resources.getMailboxManager().getMapperFactory(), resources.getMailboxManager().getMapperFactory(),
             resources.getEventBus());
-        testee = new MailboxUsernameChangeTaskStep(mailboxManager);
+        testee = new MailboxUsernameChangeTaskStep(mailboxManager, subscriptionManager);
     }
 
     @Test
@@ -62,6 +67,47 @@ class MailboxUsernameChangeTaskStepTest {
         assertThat(mailboxManager.list(mailboxManager.createSystemSession(BOB)))
             .containsOnly(MailboxPath.inbox(BOB),
                 MailboxPath.forUser(BOB, "test"));
+    }
+
+    @Test
+    void shouldMigrateACLsForOtherUsers() throws Exception {
+        MailboxSession fromSession = mailboxManager.createSystemSession(ALICE);
+        mailboxManager.createMailbox(MailboxPath.inbox(ALICE), MailboxManager.CreateOption.NONE, fromSession);
+        mailboxManager.applyRightsCommand(MailboxPath.inbox(ALICE),
+            MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.FULL_RIGHTS).asAddition(),
+            fromSession);
+
+        Mono.from(testee.changeUsername(ALICE, BOB)).block();
+
+        MailboxSession cedricSession = mailboxManager.createSystemSession(CEDRIC);
+        MailboxQuery allMailboxes = MailboxQuery.builder().matchesAllMailboxNames().build();
+        // Cedric sees the migrated mailbox
+        assertThat(mailboxManager.search(allMailboxes, Minimal, cedricSession)
+            .map(MailboxMetaData::getPath)
+            .collectList()
+            .block())
+            .containsOnly(MailboxPath.inbox(BOB));
+        // Cedric can access the migrated mailbox
+        assertThatCode(() -> mailboxManager.getMailbox(MailboxPath.inbox(BOB), cedricSession))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldSubscriptionsForDelegatedUsers() throws Exception {
+        MailboxSession fromSession = mailboxManager.createSystemSession(ALICE);
+        mailboxManager.createMailbox(MailboxPath.inbox(ALICE), MailboxManager.CreateOption.NONE, fromSession);
+        mailboxManager.applyRightsCommand(MailboxPath.inbox(ALICE),
+            MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.FULL_RIGHTS).asAddition(),
+            fromSession);
+
+        MailboxSession cedricSession = mailboxManager.createSystemSession(CEDRIC);
+        subscriptionManager.subscribe(cedricSession, MailboxPath.inbox(ALICE));
+
+        Mono.from(testee.changeUsername(ALICE, BOB)).block();
+
+
+        assertThat(subscriptionManager.subscriptions(cedricSession))
+            .containsOnly(MailboxPath.inbox(BOB));
     }
 
     @Test
@@ -86,7 +132,7 @@ class MailboxUsernameChangeTaskStepTest {
 
         Mono.from(testee.changeUsername(ALICE, BOB)).block();
 
-        assertThat(storeSubscriptionManager.subscriptions(fromSession)).isEmpty();
+        assertThat(subscriptionManager.subscriptions(fromSession)).isEmpty();
     }
 
     @Test
@@ -98,7 +144,7 @@ class MailboxUsernameChangeTaskStepTest {
 
         Mono.from(testee.changeUsername(ALICE, BOB)).block();
 
-        assertThat(storeSubscriptionManager.subscriptions(mailboxManager.createSystemSession(BOB)))
+        assertThat(subscriptionManager.subscriptions(mailboxManager.createSystemSession(BOB)))
             .containsOnly(MailboxPath.forUser(BOB, "subscribed"));
     }
 }

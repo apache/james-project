@@ -48,6 +48,10 @@ import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.modules.ACLProbeImpl;
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.Port;
@@ -125,22 +129,41 @@ class MemoryUsernameChangeIntegrationTest {
     }
 
     @Test
-    void shouldMigrateMailboxes() {
-        webAdminApi.put("/users/" + ALICE.asString() + "/mailboxes/test").prettyPeek();
+    void shouldMigrateACLs(GuiceJamesServer server) throws Exception {
+        server.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.inbox(CEDRIC));
+        server.getProbe(ACLProbeImpl.class).addRights(MailboxPath.inbox(CEDRIC), ALICE.asString(), MailboxACL.FULL_RIGHTS);
 
         String taskId = webAdminApi
             .queryParam("action", "rename")
-            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString()).prettyPeek()
+            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString())
             .jsonPath()
             .get("taskId");
 
         webAdminApi.get("/tasks/" + taskId + "/await");
 
-        webAdminApi.get("/users/" + ALICE.asString() + "/mailboxes").prettyPeek()
+        MailboxACL acls = server.getProbe(ACLProbeImpl.class).retrieveRights(MailboxPath.inbox(CEDRIC));
+
+        assertThat(acls.getEntries()).hasSize(2)
+            .containsEntry(MailboxACL.EntryKey.createUserEntryKey(BOB), MailboxACL.FULL_RIGHTS);
+    }
+
+    @Test
+    void shouldMigrateMailboxes() {
+        webAdminApi.put("/users/" + ALICE.asString() + "/mailboxes/test");
+
+        String taskId = webAdminApi
+            .queryParam("action", "rename")
+            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString())
+            .jsonPath()
+            .get("taskId");
+
+        webAdminApi.get("/tasks/" + taskId + "/await");
+
+        webAdminApi.get("/users/" + ALICE.asString() + "/mailboxes")
             .then()
             .body(".", hasSize(0));
 
-        webAdminApi.get("/users/" + BOB.asString() + "/mailboxes").prettyPeek()
+        webAdminApi.get("/users/" + BOB.asString() + "/mailboxes")
             .then()
             .body(".", hasSize(1))
             .body("[0].mailboxName", is("test"));

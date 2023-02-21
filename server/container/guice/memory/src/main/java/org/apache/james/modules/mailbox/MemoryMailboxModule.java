@@ -23,6 +23,7 @@ import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 
 import javax.inject.Singleton;
 
+import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
 import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
@@ -156,8 +157,9 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
         bind(MailboxManagerConfiguration.class).toInstance(MailboxManagerConfiguration.DEFAULT);
 
-        Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
-            .addBinding().to(MailboxUsernameChangeTaskStep.class);
+        Multibinder<UsernameChangeTaskStep> usernameChangeTaskStepMultibinder = Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class);
+        usernameChangeTaskStepMultibinder.addBinding().to(MailboxUsernameChangeTaskStep.class);
+        usernameChangeTaskStepMultibinder.addBinding().to(ACLUsernameChangeTaskStep.class);
     }
 
     @Singleton
