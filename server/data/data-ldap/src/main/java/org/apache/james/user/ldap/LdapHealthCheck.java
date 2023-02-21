@@ -14,11 +14,11 @@ public class LdapHealthCheck implements HealthCheck {
     public static final ComponentName COMPONENT_NAME = new ComponentName("LDAP User Server");
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapHealthCheck.class);
 
-    private final ReadOnlyLDAPUsersDAO ldapUsersDAO;
+    private final ReadOnlyUsersLDAPRepository ldapUserRepository;
 
     @Inject
-    public LdapHealthCheck(ReadOnlyLDAPUsersDAO ldapUsersDAO) {
-        this.ldapUsersDAO = ldapUsersDAO;
+    public LdapHealthCheck(ReadOnlyUsersLDAPRepository ldapUserRepository) {
+        this.ldapUserRepository = ldapUserRepository;
     }
 
     @Override
@@ -28,7 +28,7 @@ public class LdapHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        return Mono.fromCallable(() -> ldapUsersDAO.getUserByName(Username.of("test")))
+        return Mono.fromCallable(() -> ldapUserRepository.getUserByName(Username.of("test")))
             .map(user -> Result.healthy(COMPONENT_NAME))
             .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking LDAP server!", e)))
             .doOnError(e -> LOGGER.error("Error in LDAP server", e));
