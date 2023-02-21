@@ -2250,6 +2250,58 @@ class IMAPServerTest {
         }
     }
 
+    @Nested
+    class SequentialExecution {
+        IMAPServer imapServer;
+        private MailboxSession mailboxSession;
+        private MessageManager inbox;
+        private SocketChannel clientConnection;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            imapServer = createImapServer("imapServer.xml");
+            int port = imapServer.getListenAddresses().get(0).getPort();
+            mailboxSession = memoryIntegrationResources.getMailboxManager().createSystemSession(USER);
+            memoryIntegrationResources.getMailboxManager()
+                .createMailbox(MailboxPath.inbox(USER), mailboxSession);
+            inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
+            setUpTestingData();
+
+            clientConnection = SocketChannel.open();
+            clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
+            readBytes(clientConnection);
+        }
+
+        @AfterEach
+        void tearDown() throws Exception {
+            clientConnection.close();
+            imapServer.destroy();
+        }
+
+        private void setUpTestingData() {
+            IntStream.range(0, 37)
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+        }
+
+        @Test
+        void ensureSequentialExecutionOfImapRequests() throws Exception {
+            IntStream.range(0, 100)
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            clientConnection.write(ByteBuffer.wrap(("A1 SELECT INBOX\r\nA2 UID FETCH 1:100 (FLAGS)\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            // Select completes first
+            readStringUntil(clientConnection, s -> s.contains("A1 OK [READ-WRITE] SELECT completed."));
+            // Then the FETCH
+            readStringUntil(clientConnection, s -> s.contains("A2 OK FETCH completed."));
+        }
+    }
+
     private byte[] readBytes(SocketChannel channel) throws IOException {
         ByteBuffer line = ByteBuffer.allocate(1024);
         channel.read(line);
