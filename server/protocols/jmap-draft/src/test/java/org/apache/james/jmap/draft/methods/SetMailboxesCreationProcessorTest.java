@@ -46,13 +46,12 @@ public class SetMailboxesCreationProcessorTest {
     private MailboxFactory mailboxFactory;
     private SetMailboxesCreationProcessor sut;
     private MailboxManager mailboxManager;
-    private SubscriptionManager subscriptionManager;
 
     @Before
     public void setup() {
         mailboxManager = mock(MailboxManager.class);
         mailboxIdFactory = new InMemoryId.Factory();
-        sut = new SetMailboxesCreationProcessor(mailboxManager, subscriptionManager, mailboxFactory, mailboxIdFactory, new RecordingMetricFactory());
+        sut = new SetMailboxesCreationProcessor(mailboxManager, mailboxFactory, mailboxIdFactory, new RecordingMetricFactory());
     }
 
     @Test

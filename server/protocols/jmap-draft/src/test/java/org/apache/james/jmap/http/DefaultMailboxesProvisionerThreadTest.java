@@ -19,20 +19,16 @@
 package org.apache.james.jmap.http;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
-import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -49,22 +45,18 @@ public class DefaultMailboxesProvisionerThreadTest {
     private DefaultMailboxesProvisioner testee;
     private MailboxSession session;
     private MailboxManager mailboxManager;
-    private SubscriptionManager subscriptionManager;
 
     @Before
     public void before() {
         session = MailboxSessionUtil.create(USERNAME);
         mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.createMailboxReactive(any(), any())).thenReturn(Mono.empty());
-        subscriptionManager = mock(SubscriptionManager.class);
-        testee = new DefaultMailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
+        testee = new DefaultMailboxesProvisioner(mailboxManager, new RecordingMetricFactory());
     }
 
     @Test
     public void testConcurrentAccessToFilterShouldNotThrow() throws Exception {
-        doNothing().when(subscriptionManager).subscribe(eq(session), any(MailboxPath.class));
-
-        when(mailboxManager.createMailbox(any(MailboxPath.class), eq(session))).thenReturn(Optional.of(TestId.of(18L)));
+        when(mailboxManager.createMailboxReactive(any(MailboxPath.class), any(MailboxManager.CreateOption.class), eq(session))).thenReturn(Mono.just(TestId.of(18L)));
         when(mailboxManager.mailboxExists(any(MailboxPath.class), eq(session))).thenReturn(Mono.just(false));
         when(mailboxManager.createSystemSession(USERNAME)).thenReturn(session);
 

@@ -53,7 +53,7 @@ public class DefaultMailboxesProvisionerTest {
 
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory(), mailboxManager.getMapperFactory(), mailboxManager.getEventBus());
-        testee = new DefaultMailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory());
+        testee = new DefaultMailboxesProvisioner(mailboxManager, new RecordingMetricFactory());
     }
 
     @Test

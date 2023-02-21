@@ -189,6 +189,39 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     }
 
     @Test
+    void createMailboxShouldNotSubscribeByDefault() throws Exception {
+        session = mailboxManager.createSystemSession(USER_1);
+        mailboxManager.startProcessingRequest(session);
+
+        MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "name.subfolder");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
+
+        assertThat(subscriptionManager.subscriptions(session)).isEmpty();
+    }
+
+    @Test
+    void createMailboxShouldNotSubscribeWhenNone() throws Exception {
+        session = mailboxManager.createSystemSession(USER_1);
+        mailboxManager.startProcessingRequest(session);
+
+        MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "name.subfolder");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.NONE, session);
+
+        assertThat(subscriptionManager.subscriptions(session)).isEmpty();
+    }
+
+    @Test
+    void createMailboxShouldSubscribeWhenRequested() throws Exception {
+        session = mailboxManager.createSystemSession(USER_1);
+        mailboxManager.startProcessingRequest(session);
+
+        MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "name.subfolder");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, session);
+
+        assertThat(subscriptionManager.subscriptions(session)).containsOnly(mailboxPath);
+    }
+
+    @Test
     void createShouldSucceedWhenSubFolderExists() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);

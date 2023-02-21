@@ -28,7 +28,6 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
@@ -43,16 +42,13 @@ import reactor.core.publisher.Mono;
 public class DefaultMailboxesProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMailboxesProvisioner.class);
     private final MailboxManager mailboxManager;
-    private final SubscriptionManager subscriptionManager;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting
     public DefaultMailboxesProvisioner(MailboxManager mailboxManager,
-                                SubscriptionManager subscriptionManager,
                                 MetricFactory metricFactory) {
         this.mailboxManager = mailboxManager;
-        this.subscriptionManager = subscriptionManager;
         this.metricFactory = metricFactory;
     }
 
@@ -79,11 +75,11 @@ public class DefaultMailboxesProvisioner {
     }
     
     private Mono<Void> createMailbox(MailboxPath mailboxPath, MailboxSession session) {
-        return Mono.from(mailboxManager.createMailboxReactive(mailboxPath, session))
-            .flatMap(id -> Mono.from(subscriptionManager.subscribeReactive(mailboxPath, session)))
+        return Mono.from(mailboxManager.createMailboxReactive(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, session))
             .onErrorResume(MailboxExistsException.class, e -> {
                 LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
                 return Mono.empty();
-            });
+            })
+            .then();
     }
 }

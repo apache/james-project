@@ -52,7 +52,7 @@ class MailboxesProvisionerTest {
     session = MailboxSessionUtil.create(USERNAME)
     mailboxManager = InMemoryIntegrationResources.defaultResources.getMailboxManager
     subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory, mailboxManager.getMapperFactory, mailboxManager.getEventBus)
-    testee = new MailboxesProvisioner(mailboxManager, subscriptionManager, new RecordingMetricFactory)
+    testee = new MailboxesProvisioner(mailboxManager, new RecordingMetricFactory)
   }
 
   @Test
