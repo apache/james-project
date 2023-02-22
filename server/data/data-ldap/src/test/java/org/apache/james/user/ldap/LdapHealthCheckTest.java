@@ -1,12 +1,11 @@
 package org.apache.james.user.ldap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LdapHealthCheckTest {
 
