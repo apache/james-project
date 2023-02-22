@@ -34,7 +34,6 @@ public class LdapHealthCheckTest {
     @Test
     void checkShouldReturnHealthyIfLdapIsRunning() {
         Result checkResult = ldapHealthCheck.check().block();
-        assertNotNull(checkResult);
-        assertTrue(checkResult.isHealthy());
+        assertThat(checkResult.isHealthy()).isTrue();
     }
 }
