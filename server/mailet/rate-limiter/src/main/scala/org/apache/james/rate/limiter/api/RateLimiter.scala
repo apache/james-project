@@ -37,16 +37,8 @@ object AllowedQuantity {
   type AllowedQuantity = Long Refined PositiveLongConstraint
 
   def validate(value: Long): Either[NumberFormatException, AllowedQuantity] =
-    refined.refineV[PositiveLongConstraint](value) match {
-      case Right(value) => Right(value)
-      case Left(error) => Left(new NumberFormatException(error))
-    }
-
-  def liftOrThrow(value: Long): AllowedQuantity =
-    validate(value) match {
-      case Right(value) => value
-      case Left(error) => throw error
-    }
+    refined.refineV[PositiveLongConstraint](value)
+      .left.map(error => new NumberFormatException(error))
 }
 
 object Increment {
@@ -54,16 +46,8 @@ object Increment {
   type Increment = Int Refined PositiveLongConstraint
 
   def validate(value: Int): Either[NumberFormatException, Increment] =
-    refined.refineV[PositiveLongConstraint](value) match {
-      case Right(value) => Right(value)
-      case Left(error) => Left(new NumberFormatException(error))
-    }
-
-  def liftOrThrow(value: Int): Increment =
-    validate(value) match {
-      case Right(value) => value
-      case Left(error) => throw error
-    }
+    refined.refineV[PositiveLongConstraint](value)
+      .left.map(error => new NumberFormatException(error))
 }
 
 case class Rule(quantity: AllowedQuantity, duration: Duration)
