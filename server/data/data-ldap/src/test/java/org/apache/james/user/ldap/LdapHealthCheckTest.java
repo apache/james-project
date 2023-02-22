@@ -26,8 +26,7 @@ public class LdapHealthCheckTest {
         ldapContainer.pause();
 
         Result checkResult = ldapHealthCheck.check().block();
-        assertNotNull(checkResult);
-        assertTrue(checkResult.isUnHealthy());
+        assertThat(checkResult.isUnHealthy()).isTrue();
 
         ldapContainer.unpause();
     }
