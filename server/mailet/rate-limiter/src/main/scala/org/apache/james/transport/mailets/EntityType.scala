@@ -56,21 +56,32 @@ object ConfigurationOps {
 }
 
 object EntityType {
+
+  implicit class EitherOps[E <: Throwable, A](either: Either[E, A]) {
+    def orThrow(message: String): A = either.left.map(cause => new IllegalArgumentException(message, cause)).toTry.get
+  }
+
   def extractRules(entityType: EntityType, duration: Duration, mailetConfig: MailetConfig): Option[Rules] = (entityType match {
     case Count          => mailetConfig.getOptionalLong("count")
     case RecipientsType => mailetConfig.getOptionalLong("recipients")
     case Size           => mailetConfig.getOptionalSize("size").map(_.asBytes())
     case TotalSize      => mailetConfig.getOptionalSize("totalSize").map(_.asBytes())
-  }).map(AllowedQuantity.liftOrThrow)
+  }).map(AllowedQuantity.validate(_).orThrow(s"invalid quantity for ${entityType.asString}"))
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 
   def extractQuantity(entityType: EntityType, mail: Mail): Option[Increment] = entityType match {
     case Count          => Some(1)
-    case RecipientsType => Some(Increment.liftOrThrow(mail.getRecipients.size()))
-    case Size           => Some(Increment.liftOrThrow(mail.getMessageSize.toInt))
+    case RecipientsType =>
+      Some(Increment
+        .validate(mail.getRecipients.size())
+        .orThrow(s"invalid quantity for ${entityType.asString}"))
+    case Size           =>
+      Some(Increment
+        .validate(mail.getMessageSize.toInt)
+        .orThrow(s"invalid quantity for ${entityType.asString}"))
     case TotalSize      =>
       Try(Math.multiplyExact(mail.getMessageSize.toInt, mail.getRecipients.size()))
-        .map(Increment.liftOrThrow)
+        .map(Increment.validate(_).orThrow(s"invalid quantity for ${entityType.asString}"))
         .toOption
   }
 }
