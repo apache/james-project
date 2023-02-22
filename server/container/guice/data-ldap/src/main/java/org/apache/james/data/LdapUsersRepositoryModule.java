@@ -45,7 +45,7 @@ public class LdapUsersRepositoryModule extends AbstractModule {
         bind(UsersRepository.class).to(ReadOnlyUsersLDAPRepository.class);
         bind(DelegationStore.class).to(NaiveDelegationStore.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
-        bind(HealthCheck.class).to(LdapHealthCheck.class);
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(LdapHealthCheck.class);
     }
 
     @Provides
