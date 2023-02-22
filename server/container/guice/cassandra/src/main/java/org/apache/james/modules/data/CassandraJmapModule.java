@@ -27,6 +27,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.filtering.impl.FilterUsernameChangeTaskStep;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
@@ -50,6 +51,7 @@ import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.jmap.cassandra.upload.UploadConfiguration;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadModule;
+import org.apache.james.user.api.UsernameChangeTaskStep;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -97,7 +99,12 @@ public class CassandraJmapModule extends AbstractModule {
         cassandraDataDefinitions.addBinding().toInstance(CassandraPushSubscriptionModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraCustomIdentityModule.MODULE());
 
-        Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
+        Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<>() {});
         eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
+
+
+        Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
+            .addBinding()
+            .to(FilterUsernameChangeTaskStep.class);
     }
 }
