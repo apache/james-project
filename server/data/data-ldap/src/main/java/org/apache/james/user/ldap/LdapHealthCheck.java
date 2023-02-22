@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class LdapHealthCheck implements HealthCheck {
     public static final ComponentName COMPONENT_NAME = new ComponentName("LDAP User Server");
@@ -51,6 +52,7 @@ public class LdapHealthCheck implements HealthCheck {
         return Mono.fromCallable(() -> ldapUserRepository.getUserByName(LDAP_TEST_USER))
             .map(user -> Result.healthy(COMPONENT_NAME))
             .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking LDAP server!", e)))
-            .doOnError(e -> LOGGER.error("Error in LDAP server", e));
+            .doOnError(e -> LOGGER.error("Error in LDAP server", e))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 }
