@@ -19,7 +19,6 @@
 
 package org.apache.james.webadmin.integration.memory;
 
-import static io.restassured.RestAssured.given;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
 import static org.apache.james.jmap.JMAPTestingConstants.ALICE_PASSWORD;
@@ -34,28 +33,66 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.util.List;
+import java.util.Optional;
+
+import javax.inject.Inject;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.core.Username;
+import org.apache.james.jmap.api.filtering.FilteringManagement;
+import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.api.filtering.Rules;
+import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.routes.TasksRoutes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.inject.multibindings.Multibinder;
+
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
+import reactor.core.publisher.Mono;
 
 class MemoryUsernameChangeIntegrationTest {
+    public static final class FilterProbe implements GuiceProbe {
+        private final FilteringManagement filteringManagement;
+
+        @Inject
+        public FilterProbe(FilteringManagement filteringManagement) {
+            this.filteringManagement = filteringManagement;
+        }
+
+        public void defineRulesForUser(Username username, List<Rule> rules, Optional<Version> ifInState) {
+            Mono.from(filteringManagement.defineRulesForUser(username, rules, ifInState))
+                .block();
+        }
+
+        public Rules listRulesForUser(Username username) {
+            return Mono.from(filteringManagement.listRulesForUser(username))
+                .block();
+        }
+    }
+
+    private static final String NAME = "a name";
+    private static final Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
+    private static final Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
+    private static final Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).condition(CONDITION).action(ACTION);
+    private static final Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
+    private static final Rule RULE_2 = RULE_BUILDER.id(Rule.Id.of("2")).build();
+    private static final Optional<Version> NO_VERSION = Optional.empty();
+
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
         MemoryJamesConfiguration.builder()
@@ -64,6 +101,8 @@ class MemoryUsernameChangeIntegrationTest {
             .usersRepository(DEFAULT)
             .build())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class)
+                .addBinding().to(FilterProbe.class))
             .overrideWith(new TestJMAPServerModule()))
         .build();
 
@@ -125,5 +164,24 @@ class MemoryUsernameChangeIntegrationTest {
             .then()
                 .body(".", hasSize(1))
                 .body("[0]", is(CEDRIC.asString()));
+    }
+
+    @Test
+    void shouldAdaptFilters(GuiceJamesServer server) {
+        FilterProbe filterProbe = server.getProbe(FilterProbe.class);
+        filterProbe.defineRulesForUser(ALICE, List.of(RULE_1), NO_VERSION);
+
+        String taskId = webAdminApi
+            .queryParam("action", "rename")
+            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString())
+            .jsonPath()
+            .get("taskId");
+
+        webAdminApi.get("/tasks/" + taskId + "/await");
+
+        assertThat(filterProbe.listRulesForUser(BOB).getRules())
+            .containsOnly(RULE_1);
+        assertThat(filterProbe.listRulesForUser(ALICE).getRules())
+            .isEmpty();
     }
 }

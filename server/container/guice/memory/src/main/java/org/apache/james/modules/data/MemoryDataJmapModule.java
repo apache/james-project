@@ -23,6 +23,7 @@ import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.filtering.impl.FilterUsernameChangeTaskStep;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
@@ -36,6 +37,7 @@ import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
+import org.apache.james.user.api.UsernameChangeTaskStep;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -70,5 +72,8 @@ public class MemoryDataJmapModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding()
             .to(MessageFastViewProjectionHealthCheck.class);
+        Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
+            .addBinding()
+            .to(FilterUsernameChangeTaskStep.class);
     }
 }
