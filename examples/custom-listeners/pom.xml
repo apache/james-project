@@ -62,6 +62,12 @@
     </dependency>
     <dependency>
       <groupId>${james.groupId}</groupId>
+      <artifactId>james-server-testing</artifactId>
+      <version>${james.baseVersion}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${james.groupId}</groupId>
       <artifactId>metrics-tests</artifactId>
       <version>${james.baseVersion}</version>
       <scope>test</scope>
