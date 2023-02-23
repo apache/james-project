@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.data;
 
-import com.google.inject.multibindings.Multibinder;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -37,6 +36,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class LdapUsersRepositoryModule extends AbstractModule {
