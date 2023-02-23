@@ -38,6 +38,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-queue-memory</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-webadmin-core</artifactId>
         </dependency>
         <dependency>
@@ -67,11 +72,9 @@
             <artifactId>james-server-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
-            <artifactId>james-server-queue-memory</artifactId>
-            <scope>test</scope>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
-
     </dependencies>
 
 </project>
