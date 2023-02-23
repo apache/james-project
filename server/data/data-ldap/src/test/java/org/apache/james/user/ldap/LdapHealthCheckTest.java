@@ -18,34 +18,53 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
+import static org.apache.james.user.ldap.DockerLdapSingleton.ADMIN_PASSWORD;
+import static org.apache.james.user.ldap.DockerLdapSingleton.DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class LdapHealthCheckTest {
+class LdapHealthCheckTest {
+    static LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
+        .domain(DOMAIN)
+        .password(ADMIN_PASSWORD)
+        .build();
 
     LdapHealthCheck ldapHealthCheck;
-    ReadOnlyUsersLDAPRepository ldapUserRepository;
-    LdapGenericContainer ldapContainer;
+
+    @BeforeAll
+    static void setUpAll() {
+        ldapContainer.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        ldapContainer.stop();
+    }
 
     @BeforeEach
-    public void setUp() {
-        ldapUserRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+    public void setUp() throws Exception {
+        ReadOnlyUsersLDAPRepository ldapUserRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        ldapUserRepository.configure(ReadOnlyUsersLDAPRepositoryTest.ldapRepositoryConfigurationWithVirtualHosting(ldapContainer));
+        ldapUserRepository.init();
         ldapHealthCheck = new LdapHealthCheck(ldapUserRepository);
-        ldapContainer = DockerLdapSingleton.ldapContainer;
     }
 
     @Test
     void checkShouldReturnUnhealthyIfLdapIsDown() {
         ldapContainer.pause();
 
-        Result checkResult = ldapHealthCheck.check().block();
-        assertThat(checkResult.isUnHealthy()).isTrue();
-
-        ldapContainer.unpause();
+        try {
+            Result checkResult = ldapHealthCheck.check().block();
+            assertThat(checkResult.isUnHealthy()).isTrue();
+        } finally {
+            ldapContainer.unpause();
+        }
     }
 
     @Test

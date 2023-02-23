@@ -50,9 +50,9 @@ public class LdapHealthCheck implements HealthCheck {
     @Override
     public Mono<Result> check() {
         return Mono.fromCallable(() -> ldapUserRepository.getUserByName(LDAP_TEST_USER))
-            .map(user -> Result.healthy(COMPONENT_NAME))
-            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking LDAP server!", e)))
+            .thenReturn(Result.healthy(COMPONENT_NAME))
             .doOnError(e -> LOGGER.error("Error in LDAP server", e))
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking LDAP server!", e)))
             .subscribeOn(Schedulers.boundedElastic());
     }
 }
