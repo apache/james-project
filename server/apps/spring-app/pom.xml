@@ -48,10 +48,12 @@
         <javamail.system-property8>-Dmail.mime.encodeparameters=true</javamail.system-property8>
         <javamail.system-property9>-Dmail.mime.decodeparameters=true</javamail.system-property9>
         <javamail.system-property10>-Dmail.mime.address.strict=false</javamail.system-property10>
+        <javamail.system-property11>-Djmx.remote.x.mlet.allow.getMBeansFromURL=false</javamail.system-property11>
         <javamail.system-properties>${javamail.system-property1} ${javamail.system-property2}
             ${javamail.system-property3} ${javamail.system-property4} ${javamail.system-property5}
             ${javamail.system-property6} ${javamail.system-property7} ${javamail.system-property8}
-            ${javamail.system-property9} ${javamail.system-property10}</javamail.system-properties>
+            ${javamail.system-property9} ${javamail.system-property10} ${javamail.system-property11}
+        </javamail.system-properties>
 
         <!-- JMX system properties -->
         <!-- For more details see -->
