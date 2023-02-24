@@ -90,8 +90,13 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
             .concatMap(Throwing.function(userWithAccess ->
                 Flux.from(subscriptionManager.subscriptionsReactive(mailboxManager.createSystemSession(userWithAccess)))
                     .filter(subscribedMailbox -> subscribedMailbox.equals(mailbox.getPath()))
-                    .concatMap(any -> Mono.from(subscriptionManager.subscribeReactive(renamedPath, mailboxManager.createSystemSession(userWithAccess)))
-                    .then(Mono.from(subscriptionManager.unsubscribeReactive(mailbox.getPath(), mailboxManager.createSystemSession(userWithAccess)))))))
+                    .concatMap(any -> renameSubscription(mailbox, renamedPath, userWithAccess))))
             .then();
+    }
+
+    private Mono<Void> renameSubscription(MailboxMetaData mailbox, MailboxPath renamedPath, Username user) {
+        MailboxSession session = mailboxManager.createSystemSession(user);
+        return Mono.from(subscriptionManager.subscribeReactive(renamedPath, session))
+        .then(Mono.from(subscriptionManager.unsubscribeReactive(mailbox.getPath(), session)));
     }
 }
