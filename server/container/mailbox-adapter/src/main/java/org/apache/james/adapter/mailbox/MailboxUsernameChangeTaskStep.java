@@ -97,6 +97,6 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
     private Mono<Void> renameSubscription(MailboxMetaData mailbox, MailboxPath renamedPath, Username user) {
         MailboxSession session = mailboxManager.createSystemSession(user);
         return Mono.from(subscriptionManager.subscribeReactive(renamedPath, session))
-        .then(Mono.from(subscriptionManager.unsubscribeReactive(mailbox.getPath(), session)));
+            .then(Mono.from(subscriptionManager.unsubscribeReactive(mailbox.getPath(), session)));
     }
 }
