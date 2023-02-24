@@ -117,13 +117,13 @@ class GuiceLifecycleHeathCheckTest {
             .build();
 
         @Test
-        void stoppingJamesServerShouldBeUnhealthy(GuiceJamesServer server) {
+        void stoppingJamesServerShouldBeUnhealthy(GuiceJamesServer server) throws Exception {
             Sinks.Empty<Object> sink = Sinks.empty();
             try {
                 configureRequestSpecification(server);
 
                 Mono.fromRunnable(server::stop)
-                    .publishOn(Schedulers.newSingle("test"))
+                    .publishOn(Schedulers.boundedElastic())
                     .subscribe(r -> {}, e -> {}, () -> sink.emitEmpty(FAIL_FAST));
 
                 when()

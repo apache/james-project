@@ -22,6 +22,7 @@ package org.apache.james.mailetcontainer.impl;
 import static reactor.core.scheduler.Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -189,14 +190,19 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
 
         public void dispose() {
             LOGGER.info("start dispose() ...");
+            LOGGER.info("Cancel queue consumption...");
             disposable.dispose();
+            LOGGER.info("Queue consumption canceled, shutting down processor threads...");
+            scheduler.disposeGracefully()
+                .timeout(Duration.ofSeconds(5))
+                .onErrorResume(e -> Mono.empty())
+                .block();
+            LOGGER.info("Thread shutdown completed. Turning off mail queue.");
             try {
                 queue.close();
             } catch (IOException e) {
                 LOGGER.debug("error closing queue", e);
             }
-            LOGGER.info("thread shutdown completed.");
-            scheduler.dispose();
         }
 
         public int getCurrentSpoolCount() {

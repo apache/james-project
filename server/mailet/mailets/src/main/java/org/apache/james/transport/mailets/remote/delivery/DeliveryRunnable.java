@@ -204,7 +204,10 @@ public class DeliveryRunnable implements Disposable {
     @Override
     public void dispose() {
         disposable.dispose();
-        remoteDeliveryProcessScheduler.dispose();
         remoteDeliveryDequeueScheduler.dispose();
+        remoteDeliveryProcessScheduler.disposeGracefully()
+            .timeout(Duration.ofSeconds(2))
+            .onErrorResume(e -> Mono.empty())
+            .block();
     }
 }
