@@ -579,15 +579,15 @@ public class StoreMailboxManager implements MailboxManager {
                 .collectList()
                 .flatMap(subscriptions -> Flux.fromIterable(renamedResults)
                     .flatMap(renamedResult -> {
+                        Function<Subscription, Mono<Void>> renameFunction = subscription -> subscriptionMapper.deleteReactive(subscription)
+                            .then(subscriptionMapper.saveReactive(new Subscription(toSession.getUser(), renamedResult.getDestinationPath().asEscapedString())));
                         Subscription legacySubscription = new Subscription(fromSession.getUser(), renamedResult.getOriginPath().getName());
                         if (subscriptions.contains(legacySubscription)) {
-                            return subscriptionMapper.deleteReactive(legacySubscription)
-                                .then(subscriptionMapper.saveReactive(new Subscription(toSession.getUser(), renamedResult.getDestinationPath().asEscapedString())));
+                            return renameFunction.apply(legacySubscription);
                         }
                         Subscription subscription = new Subscription(fromSession.getUser(), renamedResult.getOriginPath().asEscapedString());
                         if (subscriptions.contains(subscription)) {
-                            return subscriptionMapper.deleteReactive(subscription)
-                                .then(subscriptionMapper.saveReactive(new Subscription(toSession.getUser(), renamedResult.getDestinationPath().asEscapedString())));
+                            return renameFunction.apply(subscription);
                         }
                         return Mono.empty();
                     })
