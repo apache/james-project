@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
@@ -55,6 +56,8 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 /**
  * <p>
@@ -226,10 +229,26 @@ public class ActiveMQCacheableMailQueue extends JMSCacheableMailQueue implements
     }
 
     @Override
-    protected MailQueueItem createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
-        Mail mail = createMail(message);
-        ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, session, consumer, message);
-        return mailQueueItemDecoratorFactory.decorate(activeMQMailQueueItem, queueName);
+    protected Mono<MailQueueItem> createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
+        try {
+            Mail mail = createMail(message);
+            ActiveMQMailQueueItem activeMQMailQueueItem = new ActiveMQMailQueueItem(mail, session, consumer, message);
+            return Mono.just(mailQueueItemDecoratorFactory.decorate(activeMQMailQueueItem, queueName));
+        } catch (MessagingException e) {
+            if (e.getCause() instanceof FileNotFoundException) {
+                LOGGER.warn("Blob message cannot be found, discarding email", e);
+                try {
+                    session.commit();
+                } catch (JMSException ex) {
+                    throw new MailQueueException("Unable to commit dequeue operation for mail", ex);
+                } finally {
+                    JMSCacheableMailQueue.closeConsumer(consumer);
+                    JMSCacheableMailQueue.closeSession(session);
+                }
+                return Mono.empty();
+            }
+            return Mono.error(e);
+        }
     }
 
     @Override
