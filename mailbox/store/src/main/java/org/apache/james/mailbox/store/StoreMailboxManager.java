@@ -550,10 +550,6 @@ public class StoreMailboxManager implements MailboxManager {
                     .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, fromSession, toSession)))));
     }
 
-    private Mono<MailboxPath> sanitizedPath(MailboxPath from, MailboxPath to, MailboxSession session) {
-        return sanitizedPath(from, to, session, session);
-    }
-
     private Mono<MailboxPath> sanitizedPath(MailboxPath from, MailboxPath to, MailboxSession fromSession, MailboxSession toSession) {
         MailboxPath sanitizedMailboxPath = to.sanitize(toSession.getPathDelimiter());
 
