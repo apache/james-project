@@ -18,7 +18,12 @@
  ****************************************************************/
 package org.apache.james.app.spring;
 
+import java.lang.management.ManagementFactory;
 import java.util.Calendar;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.QueryExp;
 
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
@@ -26,15 +31,20 @@ import org.apache.james.container.spring.context.JamesServerApplicationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 /**
  * Bootstraps James using a Spring container.
  */
 public class JamesAppSpringMain implements Daemon {
+    private static final ObjectName ALL_OBJECT_NAME = null;
+    private static final QueryExp ALL_QUERY_EXP = null;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JamesAppSpringMain.class.getName());
     private JamesServerApplicationContext context;
 
     public static void main(String[] args) throws Exception {
+        unregisterLog4JMBeans();
 
         if (System.getProperty("com.sun.management.jmxremote.password.file") == null) {
             LOGGER.warn("No authentication setted up for the JMX component. This expose you to local privilege escalation attacks risk. " +
@@ -50,6 +60,16 @@ public class JamesAppSpringMain implements Daemon {
 
         LOGGER.info("Apache James Server is successfully started in {} milliseconds.", end - start);
 
+    }
+
+    private static void unregisterLog4JMBeans() {
+        if (System.getProperty("james.jmx.unregister.log4j.mbeans", "true").equals("true")) {
+            MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
+            platformMBeanServer.queryMBeans(ALL_OBJECT_NAME, ALL_QUERY_EXP)
+                .stream()
+                .filter(objectInstance -> objectInstance.getClassName().startsWith("org.apache.logging.log4j"))
+                .forEach(Throwing.consumer(objectInstance -> platformMBeanServer.unregisterMBean(objectInstance.getObjectName())));
+        }
     }
 
     @Override
