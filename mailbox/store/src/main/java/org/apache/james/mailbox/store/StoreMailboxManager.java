@@ -97,6 +97,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SynchronousSink;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
@@ -533,52 +534,60 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public Mono<List<MailboxRenamedResult>> renameMailboxReactive(MailboxPath from, MailboxPath to, RenameOption option, MailboxSession session) {
-        LOGGER.debug("renameMailbox {} to {}", from, to);
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        return renameMailboxReactive(from, to, option, session, session);
+    }
 
-        return sanitizedPath(from, to, session)
+    public Mono<List<MailboxRenamedResult>> renameMailboxReactive(MailboxPath from, MailboxPath to, RenameOption option,
+                                                                  MailboxSession fromSession, MailboxSession toSession) {
+        LOGGER.debug("renameMailbox {} to {}", from, to);
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(fromSession);
+
+        return sanitizedPath(from, to, fromSession, toSession)
         .flatMap(sanitizedPath -> mapper.executeReactive(
             mapper.findMailboxByPath(from)
                 .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(from)))
-                .flatMap(mailbox -> doRenameMailbox(mailbox, sanitizedPath, session, mapper)
-                    .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, session)))));
+                .flatMap(mailbox -> doRenameMailbox(mailbox, sanitizedPath, fromSession, toSession, mapper)
+                    .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, fromSession, toSession)))));
     }
 
-    private Mono<MailboxPath> sanitizedPath(MailboxPath from, MailboxPath to, MailboxSession session) {
-        return Mono.fromCallable(() -> {
-            MailboxPath sanitizedMailboxPath = to.sanitize(session.getPathDelimiter());
-            validateDestinationPath(sanitizedMailboxPath, session);
-            assertIsOwner(session, from);
-            return sanitizedMailboxPath;
-        });
+    private Mono<MailboxPath> sanitizedPath(MailboxPath from, MailboxPath to, MailboxSession fromSession, MailboxSession toSession) {
+        MailboxPath sanitizedMailboxPath = to.sanitize(toSession.getPathDelimiter());
+
+        return validateDestinationPath(sanitizedMailboxPath, toSession)
+            .then(Mono.fromRunnable(Throwing.runnable(() -> assertIsOwner(fromSession, from))))
+            .thenReturn(sanitizedMailboxPath);
     }
 
     private Mono<MailboxPath> sanitizedPath(MailboxPath to, MailboxSession session) {
-        return Mono.fromCallable(() -> {
-            MailboxPath sanitizedMailboxPath = to.sanitize(session.getPathDelimiter());
-            validateDestinationPath(sanitizedMailboxPath, session);
-            return sanitizedMailboxPath;
-        });
+        MailboxPath sanitizedMailboxPath = to.sanitize(session.getPathDelimiter());
+
+        return validateDestinationPath(sanitizedMailboxPath, session)
+            .thenReturn(sanitizedMailboxPath);
     }
 
     private Mono<List<MailboxRenamedResult>> renameSubscriptionsIfNeeded(List<MailboxRenamedResult> renamedResults,
                                                                    RenameOption option, MailboxSession session) {
-        if (option == RenameOption.RENAME_SUBSCRIPTIONS) {
-            SubscriptionMapper subscriptionMapper = mailboxSessionMapperFactory.getSubscriptionMapper(session);
+        return renameSubscriptionsIfNeeded(renamedResults, option, session, session);
+    }
 
-            return subscriptionMapper.findSubscriptionsForUserReactive(session.getUser())
+    private Mono<List<MailboxRenamedResult>> renameSubscriptionsIfNeeded(List<MailboxRenamedResult> renamedResults,
+                                                                   RenameOption option, MailboxSession fromSession, MailboxSession toSession) {
+        if (option == RenameOption.RENAME_SUBSCRIPTIONS) {
+            SubscriptionMapper subscriptionMapper = mailboxSessionMapperFactory.getSubscriptionMapper(fromSession);
+
+            return subscriptionMapper.findSubscriptionsForUserReactive(fromSession.getUser())
                 .collectList()
                 .flatMap(subscriptions -> Flux.fromIterable(renamedResults)
                     .flatMap(renamedResult -> {
-                        Subscription legacySubscription = new Subscription(session.getUser(), renamedResult.getOriginPath().getName());
+                        Function<Subscription, Mono<Void>> renameFunction = subscription -> subscriptionMapper.deleteReactive(subscription)
+                            .then(subscriptionMapper.saveReactive(new Subscription(toSession.getUser(), renamedResult.getDestinationPath().asEscapedString())));
+                        Subscription legacySubscription = new Subscription(fromSession.getUser(), renamedResult.getOriginPath().getName());
                         if (subscriptions.contains(legacySubscription)) {
-                            return subscriptionMapper.deleteReactive(legacySubscription)
-                                .then(subscriptionMapper.saveReactive(new Subscription(session.getUser(), renamedResult.getDestinationPath().asEscapedString())));
+                            return renameFunction.apply(legacySubscription);
                         }
-                        Subscription subscription = new Subscription(session.getUser(), renamedResult.getOriginPath().asEscapedString());
+                        Subscription subscription = new Subscription(fromSession.getUser(), renamedResult.getOriginPath().asEscapedString());
                         if (subscriptions.contains(subscription)) {
-                            return subscriptionMapper.deleteReactive(subscription)
-                                .then(subscriptionMapper.saveReactive(new Subscription(session.getUser(), renamedResult.getDestinationPath().asEscapedString())));
+                            return renameFunction.apply(subscription);
                         }
                         return Mono.empty();
                     })
@@ -605,16 +614,19 @@ public class StoreMailboxManager implements MailboxManager {
                 mapper.findMailboxById(mailboxId)
                     .doOnNext(Throwing.<Mailbox>consumer(mailbox -> assertIsOwner(session, mailbox.generateAssociatedPath())).sneakyThrow())
                     .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(mailboxId)))
-                    .flatMap(mailbox -> doRenameMailbox(mailbox, sanitizedPath, session, mapper)
+                    .flatMap(mailbox -> doRenameMailbox(mailbox, sanitizedPath, session, session, mapper)
                         .flatMap(renamedResults -> renameSubscriptionsIfNeeded(renamedResults, option, session)))));
     }
 
-    private void validateDestinationPath(MailboxPath newMailboxPath, MailboxSession session) throws MailboxException {
-        if (block(mailboxExists(newMailboxPath, session))) {
-            throw new MailboxExistsException(newMailboxPath.toString());
-        }
-        assertIsOwner(session, newMailboxPath);
-        newMailboxPath.assertAcceptable(session.getPathDelimiter());
+    private Mono<Void> validateDestinationPath(MailboxPath newMailboxPath, MailboxSession session) {
+        return mailboxExists(newMailboxPath, session)
+            .handle(Throwing.<Boolean, SynchronousSink<Void>>biConsumer((exists, sink) -> {
+                if (exists) {
+                    sink.error(new MailboxExistsException(newMailboxPath.toString()));
+                }
+                assertIsOwner(session, newMailboxPath);
+                newMailboxPath.assertAcceptable(session.getPathDelimiter());
+            }).sneakyThrow());
     }
 
     private void assertIsOwner(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxNotFoundException {
@@ -624,7 +636,7 @@ public class StoreMailboxManager implements MailboxManager {
         }
     }
 
-    private Mono<List<MailboxRenamedResult>> doRenameMailbox(Mailbox mailbox, MailboxPath newMailboxPath, MailboxSession session, MailboxMapper mapper) {
+    private Mono<List<MailboxRenamedResult>> doRenameMailbox(Mailbox mailbox, MailboxPath newMailboxPath, MailboxSession fromSession, MailboxSession toSession, MailboxMapper mapper) {
         // TODO put this into a serilizable transaction
 
         ImmutableList.Builder<MailboxRenamedResult> resultBuilder = ImmutableList.builder();
@@ -636,7 +648,7 @@ public class StoreMailboxManager implements MailboxManager {
         // Find submailboxes
         MailboxQuery.UserBound query = MailboxQuery.builder()
             .userAndNamespaceFrom(from)
-            .expression(new PrefixedWildcard(from.getName() + session.getPathDelimiter()))
+            .expression(new PrefixedWildcard(from.getName() + fromSession.getPathDelimiter()))
             .build()
             .asUserBound();
 
@@ -651,6 +663,7 @@ public class StoreMailboxManager implements MailboxManager {
                         String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
                         MailboxPath fromPath = new MailboxPath(from, subOriginalName);
                         sub.setName(subNewName);
+                        sub.setUser(toSession.getUser());
                         return mapper.rename(sub)
                             .map(mailboxId -> {
                                 resultBuilder.add(new MailboxRenamedResult(sub.getMailboxId(), fromPath, sub.generateAssociatedPath()));
@@ -663,7 +676,7 @@ public class StoreMailboxManager implements MailboxManager {
             .then(Mono.defer(() -> Flux.fromIterable(resultBuilder.build())
                 .concatMap(result -> eventBus.dispatch(EventFactory.mailboxRenamed()
                         .randomEventId()
-                        .mailboxSession(session)
+                        .mailboxSession(fromSession)
                         .mailboxId(result.getMailboxId())
                         .oldPath(result.getOriginPath())
                         .newPath(result.getDestinationPath())

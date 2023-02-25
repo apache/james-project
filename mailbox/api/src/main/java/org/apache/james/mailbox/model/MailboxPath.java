@@ -133,6 +133,10 @@ public class MailboxPath {
         return user;
     }
 
+    public MailboxPath withUser(Username username) {
+        return new MailboxPath(namespace, username, name);
+    }
+
     /**
      * Get the name of the mailbox. This is the pure name without user or
      * namespace, so this is what a user would see in his client.

@@ -22,6 +22,8 @@ import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 
 import javax.inject.Singleton;
 
+import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
+import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
@@ -113,6 +115,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
+import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
@@ -240,6 +243,10 @@ public class CassandraMailboxModule extends AbstractModule {
             .addBinding().to(AttachmentBlobReferenceSource.class);
         Multibinder.newSetBinder(binder(), BlobReferenceSource.class)
             .addBinding().to(MessageBlobReferenceSource.class);
+
+        Multibinder<UsernameChangeTaskStep> usernameChangeTaskStepMultibinder = Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class);
+        usernameChangeTaskStepMultibinder.addBinding().to(MailboxUsernameChangeTaskStep.class);
+        usernameChangeTaskStepMultibinder.addBinding().to(ACLUsernameChangeTaskStep.class);
     }
 
     @Provides

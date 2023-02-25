@@ -48,6 +48,10 @@ import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.modules.ACLProbeImpl;
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.Port;
@@ -107,7 +111,6 @@ class MemoryUsernameChangeIntegrationTest {
         .build();
 
     private RequestSpecification webAdminApi;
-    private Port jmapPort;
 
     @BeforeEach
     void setUp(GuiceJamesServer jmapServer) throws Exception {
@@ -117,12 +120,53 @@ class MemoryUsernameChangeIntegrationTest {
         dataProbe.addUser(ALICE.asString(), ALICE_PASSWORD);
         dataProbe.addUser(CEDRIC.asString(), CEDRIC_PASSWORD);
 
-        jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
+        Port jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
             .setPort(jmapPort.getValue())
             .build();
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
+    }
+
+    @Test
+    void shouldMigrateACLs(GuiceJamesServer server) throws Exception {
+        server.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.inbox(CEDRIC));
+        server.getProbe(ACLProbeImpl.class).addRights(MailboxPath.inbox(CEDRIC), ALICE.asString(), MailboxACL.FULL_RIGHTS);
+
+        String taskId = webAdminApi
+            .queryParam("action", "rename")
+            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString())
+            .jsonPath()
+            .get("taskId");
+
+        webAdminApi.get("/tasks/" + taskId + "/await");
+
+        MailboxACL acls = server.getProbe(ACLProbeImpl.class).retrieveRights(MailboxPath.inbox(CEDRIC));
+
+        assertThat(acls.getEntries()).hasSize(2)
+            .containsEntry(MailboxACL.EntryKey.createUserEntryKey(BOB), MailboxACL.FULL_RIGHTS);
+    }
+
+    @Test
+    void shouldMigrateMailboxes() {
+        webAdminApi.put("/users/" + ALICE.asString() + "/mailboxes/test");
+
+        String taskId = webAdminApi
+            .queryParam("action", "rename")
+            .post("/users/" + ALICE.asString() + "/rename/" + BOB.asString())
+            .jsonPath()
+            .get("taskId");
+
+        webAdminApi.get("/tasks/" + taskId + "/await");
+
+        webAdminApi.get("/users/" + ALICE.asString() + "/mailboxes")
+            .then()
+            .body(".", hasSize(0));
+
+        webAdminApi.get("/users/" + BOB.asString() + "/mailboxes")
+            .then()
+            .body(".", hasSize(1))
+            .body("[0].mailboxName", is("test"));
     }
 
     @Test

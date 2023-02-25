@@ -635,6 +635,9 @@ Implemented migration steps are:
  - `ForwardUsernameChangeTaskStep`: creates forward from old user to new user and migrates existing forwards
  - `FilterUsernameChangeTaskStep`: migrates users filtering rules
  - `DelegationUsernameChangeTaskStep`: migrates delegations where the impacted user is either delegatee or delegator
+ - `MailboxUsernameChangeTaskStep`: migrates mailboxes belonging to the old user to the account of the new user. It also
+ migrates user's mailbox subscriptions.
+ - `ACLUsernameChangeTaskStep`: migrates ACLs on mailboxes the migrated user has access to and updates subscriptions accordingly.
 
 Response codes:
 
