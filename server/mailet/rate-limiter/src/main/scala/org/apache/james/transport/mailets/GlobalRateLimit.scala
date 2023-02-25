@@ -126,7 +126,7 @@ class GlobalRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends 
     def globalRateLimiter(entityType: EntityType): GlobalRateLimiter = createRateLimiter(rateLimiterFactory, entityType, keyPrefix, duration, precision)
 
     countRateLimiter = globalRateLimiter(Count)
-    recipientsRateLimiter = globalRateLimiter(RecipientsType)
+    recipientsRateLimiter = globalRateLimiter(Recipients)
     sizeRateLimiter = globalRateLimiter(Size)
     totalSizeRateLimiter = globalRateLimiter(TotalSize)
   }

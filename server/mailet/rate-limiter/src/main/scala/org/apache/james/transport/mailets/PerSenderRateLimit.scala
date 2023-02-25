@@ -118,7 +118,7 @@ class PerSenderRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) exten
     def perSenderRateLimiter(entityType: EntityType): PerSenderRateLimiter = createRateLimiter(rateLimiterFactory, entityType, keyPrefix, duration, precision)
 
     countRateLimiter = perSenderRateLimiter(Count)
-    recipientsRateLimiter = perSenderRateLimiter(RecipientsType)
+    recipientsRateLimiter = perSenderRateLimiter(Recipients)
     sizeRateLimiter = perSenderRateLimiter(Size)
     totalSizeRateLimiter = perSenderRateLimiter(TotalSize)
   }

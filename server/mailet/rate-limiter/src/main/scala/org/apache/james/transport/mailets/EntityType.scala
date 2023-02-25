@@ -62,20 +62,20 @@ object EntityType {
   }
 
   def extractRules(entityType: EntityType, duration: Duration, mailetConfig: MailetConfig): Option[Rules] = (entityType match {
-    case Count          => mailetConfig.getOptionalLong("count")
-    case RecipientsType => mailetConfig.getOptionalLong("recipients")
-    case Size           => mailetConfig.getOptionalSize("size").map(_.asBytes())
+    case Count      => mailetConfig.getOptionalLong("count")
+    case Recipients => mailetConfig.getOptionalLong("recipients")
+    case Size       => mailetConfig.getOptionalSize("size").map(_.asBytes())
     case TotalSize      => mailetConfig.getOptionalSize("totalSize").map(_.asBytes())
   }).map(AllowedQuantity.validate(_).orThrow(s"invalid quantity for ${entityType.asString}"))
     .map(quantity => Rules(Seq(Rule(quantity, duration))))
 
   def extractQuantity(entityType: EntityType, mail: Mail): Option[Increment] = entityType match {
-    case Count          => Some(1)
-    case RecipientsType =>
+    case Count      => Some(1)
+    case Recipients =>
       Some(Increment
         .validate(mail.getRecipients.size())
         .orThrow(s"invalid quantity for ${entityType.asString}"))
-    case Size           =>
+    case Size       =>
       Some(Increment
         .validate(mail.getMessageSize.toInt)
         .orThrow(s"invalid quantity for ${entityType.asString}"))
@@ -94,7 +94,7 @@ case object Count extends EntityType {
   override val asString: String = "count"
 }
 
-case object RecipientsType extends EntityType {
+case object Recipients extends EntityType {
   override val asString: String = "recipients"
 }
 
