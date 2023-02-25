@@ -246,7 +246,7 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
 
             if (message != null) {
                 dequeuedMailsMetric.increment();
-                return Mono.just(createMailQueueItem(session, consumer, message));
+                return createMailQueueItem(session, consumer, message);
             } else {
                 session.commit();
                 closeConsumer(consumer);
@@ -405,7 +405,6 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         } else {
             throw new MailQueueException("Not supported JMS Message received " + message);
         }
-
     }
 
     /**
@@ -509,10 +508,10 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
      * @throws JMSException
      * @throws MessagingException
      */
-    protected MailQueueItem createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
+    protected Mono<MailQueueItem> createMailQueueItem(Session session, MessageConsumer consumer, Message message) throws JMSException, MessagingException {
         Mail mail = createMail(message);
         JMSMailQueueItem jmsMailQueueItem = new JMSMailQueueItem(mail, session, consumer);
-        return mailQueueItemDecoratorFactory.decorate(jmsMailQueueItem, queueName);
+        return Mono.just(mailQueueItemDecoratorFactory.decorate(jmsMailQueueItem, queueName));
     }
 
     protected String getMessageSelector() {
