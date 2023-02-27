@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.delivery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.when;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.MessagingException;
 
@@ -47,6 +49,8 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
@@ -91,6 +95,68 @@ class MailDispatcherTest {
         verify(mailStore).storeMail(MailAddressFixture.ANY_AT_JAMES, mail);
         verify(mailStore).storeMail(MailAddressFixture.ANY_AT_JAMES2, mail);
         verifyNoMoreInteractions(mailStore);
+    }
+
+    @Test
+    void dispatchShouldPerformRetries() throws Exception {
+        MailDispatcher testee = MailDispatcher.builder()
+            .mailetContext(fakeMailContext)
+            .retries(3)
+            .mailStore(mailStore)
+            .consume(true)
+            .build();
+
+        AtomicInteger counter = new AtomicInteger(0);
+        when(mailStore.storeMail(any(), any())).thenAnswer(invocationOnMock -> Mono.error(() -> {
+            counter.getAndIncrement();
+            return new RuntimeException();
+        }));
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(MailAddressFixture.OTHER_AT_JAMES)
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .state("state")
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
+        try {
+            testee.dispatch(mail);
+        } catch (Exception e) {
+            // ignore
+        }
+
+        assertThat(counter.get()).isEqualTo(4);
+    }
+
+    @Test
+    void disableRetries() throws Exception {
+        MailDispatcher testee = MailDispatcher.builder()
+            .mailetContext(fakeMailContext)
+            .retries(0)
+            .mailStore(mailStore)
+            .consume(true)
+            .build();
+
+        AtomicInteger counter = new AtomicInteger(0);
+        when(mailStore.storeMail(any(), any())).thenAnswer(invocationOnMock -> Mono.error(() -> {
+            counter.getAndIncrement();
+            return new RuntimeException();
+        }));
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(MailAddressFixture.OTHER_AT_JAMES)
+            .recipients(MailAddressFixture.ANY_AT_JAMES)
+            .state("state")
+            .mimeMessage(MimeMessageUtil.defaultMimeMessage())
+            .build();
+        try {
+            testee.dispatch(mail);
+        } catch (Exception e) {
+            // ignore
+        }
+
+        assertThat(counter.get()).isEqualTo(1);
     }
 
     @Test
