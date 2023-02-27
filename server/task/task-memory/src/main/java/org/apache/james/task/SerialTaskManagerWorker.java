@@ -22,12 +22,12 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.james.util.MDCBuilder;
@@ -36,6 +36,7 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import reactor.core.Disposable;
@@ -43,16 +44,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 public class SerialTaskManagerWorker implements TaskManagerWorker {
     private static final Logger LOGGER = LoggerFactory.getLogger(SerialTaskManagerWorker.class);
     public static final boolean MAY_INTERRUPT_IF_RUNNING = true;
 
     private final Scheduler taskExecutor;
+    private final Scheduler asyncTaskExecutor;
     private final Listener listener;
-    private final AtomicReference<Tuple2<TaskId, CompletableFuture>> runningTask;
+    private final Map<TaskId, CompletableFuture<Task.Result>> runningTasks;
     private final Set<TaskId> cancelledTasks;
     private final Duration pollingInterval;
 
@@ -60,33 +60,54 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         this.pollingInterval = pollingInterval;
         this.taskExecutor = Schedulers.fromExecutor(
             Executors.newSingleThreadExecutor(NamedThreadFactory.withName("task executor")));
+        this.asyncTaskExecutor = Schedulers.fromExecutor(
+            Executors.newCachedThreadPool(NamedThreadFactory.withName("async task executor")));
         this.listener = listener;
         this.cancelledTasks = Sets.newConcurrentHashSet();
-        this.runningTask = new AtomicReference<>();
+        this.runningTasks = Maps.newConcurrentMap();
     }
 
     @Override
     public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
         if (!cancelledTasks.remove(taskWithId.getId())) {
-            Mono<Task.Result> taskMono = Mono.fromCallable(() -> runWithMdc(taskWithId, listener)).subscribeOn(taskExecutor);
+            Mono<Task.Result> taskMono = Mono.fromCallable(() -> runWithMdc(taskWithId, listener)).subscribeOn(schedulerForTask(taskWithId));
             CompletableFuture<Task.Result> future = taskMono.toFuture();
-            runningTask.set(Tuples.of(taskWithId.getId(), future));
+            runningTasks.put(taskWithId.getId(), future);
 
-            return Mono.using(
+            Mono<Task.Result> pollingMono = Mono.using(
                 () -> pollAdditionalInformation(taskWithId).subscribe(),
                 ignored -> Mono.fromFuture(future)
                     .onErrorResume(exception -> Mono.from(handleExecutionError(taskWithId, listener, exception))
                             .thenReturn(Task.Result.PARTIAL)),
-                Disposable::dispose);
+                Disposable::dispose)
+                .doOnTerminate(() -> runningTasks.remove(taskWithId.getId()));
+
+            if (taskWithId.getTask() instanceof AsyncSafeTask) {
+                pollingMono.subscribe();
+                return Mono.empty();
+            } else {
+                return pollingMono;
+            }
         } else {
             return Mono.from(listener.cancelled(taskWithId.getId(), taskWithId.getTask().details()))
+                .doOnTerminate(() -> runningTasks.remove(taskWithId.getId()))
                 .then(Mono.empty());
+        }
+    }
+
+    private Scheduler schedulerForTask(TaskWithId taskWithId) {
+        if (taskWithId.getTask() instanceof AsyncSafeTask) {
+            return asyncTaskExecutor;
+        } else {
+            return taskExecutor;
         }
     }
 
     private Publisher<Void> handleExecutionError(TaskWithId taskWithId, Listener listener, Throwable exception) {
         if (exception instanceof CancellationException) {
-            return listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
+            return Mono.from(listener.cancelled(taskWithId.getId(), taskWithId.getTask().details()))
+                .then(Mono.fromCallable(() -> cancelledTasks.remove(taskWithId.getId())))
+                .then();
         } else {
             return listener.failed(taskWithId.getId(), taskWithId.getTask().details(), exception);
         }
@@ -137,7 +158,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     }
 
     private Mono<Task.Result> runTask(TaskWithId taskWithId, Listener listener) {
-        return Mono.fromCallable(() -> taskWithId.getTask().run())
+        return Mono.from(taskWithId.getTask().runAsync())
             .doOnNext(result -> result
                 .onComplete(any -> Mono.from(listener.completed(taskWithId.getId(), result, taskWithId.getTask().details())).block())
                 .onFailure(() -> {
@@ -149,9 +170,8 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     @Override
     public void cancelTask(TaskId taskId) {
         cancelledTasks.add(taskId);
-        Optional.ofNullable(runningTask.get())
-            .filter(task -> task.getT1().equals(taskId))
-            .ifPresent(task -> task.getT2().cancel(MAY_INTERRUPT_IF_RUNNING));
+        Optional.ofNullable(runningTasks.get(taskId))
+            .ifPresent(task -> task.cancel(MAY_INTERRUPT_IF_RUNNING));
     }
 
     @Override
@@ -162,5 +182,6 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     @Override
     public void close() {
         taskExecutor.dispose();
+        asyncTaskExecutor.dispose();
     }
 }
