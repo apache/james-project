@@ -23,8 +23,12 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface Task {
     Logger LOGGER = LoggerFactory.getLogger(Task.class);
@@ -86,11 +90,25 @@ public interface Task {
     }
 
     /**
-     * Runs the migration
+     * Runs the actual task as a blocking operation.
+     * Must implement either this or #runAsync().
      *
-     * @return Return true if fully migrated. Returns false otherwise.
+     * @return complete or partial operation result.
      */
-    Result run() throws InterruptedException;
+    default Result run() throws InterruptedException {
+        return Mono.from(runAsync()).block();
+    }
+
+    /**
+     * Runs the actual task as an asynchronous operation.
+     * Must implement either this or #run().
+     *
+     * @return Publisher supplying complete or partial operation result.
+     */
+    default Publisher<Result> runAsync() {
+        return Mono.fromCallable(this::run)
+            .subscribeOn(Schedulers.elastic());
+    }
 
     TaskType type();
 
