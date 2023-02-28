@@ -22,7 +22,9 @@ package org.apache.james.jmap.api.model
 import org.apache.james.core.MailAddress
 import org.apache.james.mime4j.dom.address.{AddressList, MailboxList, Mailbox => Mime4jMailbox}
 
+import java.util.Optional
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.Try
 
 object EmailerName {
@@ -46,6 +48,9 @@ object EmailAddress {
         .map(email => EmailAddress(
           name = Option(mailbox.getName).map(EmailerName.from),
           email = email))
+
+  def from(name: Optional[String], email: MailAddress): EmailAddress =
+    EmailAddress(name.toScala.map(EmailerName(_)), email)
 }
 
 case class EmailAddress(name: Option[EmailerName], email: MailAddress) {

@@ -21,12 +21,20 @@ package org.apache.james.webadmin.data.jmap.dto;
 
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.mail.internet.AddressException;
+
 import org.apache.james.core.MailAddress;
+import org.apache.james.jmap.api.identity.IdentityCreationRequest;
+import org.apache.james.jmap.api.identity.IdentityUpdateRequest;
 import org.apache.james.jmap.api.model.Identity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 import scala.jdk.javaapi.CollectionConverters;
 import scala.jdk.javaapi.OptionConverters;
@@ -62,12 +70,84 @@ public class UserIdentity {
             this.mailAddress = mailAddress.asString();
         }
 
+        @JsonCreator
+        public EmailAddress(@JsonProperty("name") String emailerName,
+                            @JsonProperty("email") String mailAddress) {
+            this.emailerName = emailerName;
+            this.mailAddress = mailAddress;
+        }
+
         public String getEmailerName() {
             return emailerName;
         }
 
         public String getMailAddress() {
             return mailAddress;
+        }
+
+        public org.apache.james.jmap.api.model.EmailAddress asScalaEmailAddress() throws AddressException {
+            return org.apache.james.jmap.api.model.EmailAddress.from(Optional.ofNullable(getEmailerName()), new MailAddress(getMailAddress()));
+        }
+    }
+
+    public static class UserIdentityUpsert {
+        private final String name;
+        private final String email;
+        private final String textSignature;
+        private final String htmlSignature;
+        private final Integer sortOrder;
+        private final List<EmailAddress> bcc;
+        private final List<EmailAddress> replyTo;
+
+        @JsonCreator
+        public UserIdentityUpsert(@JsonProperty("name") String name,
+                                  @JsonProperty("email") String email,
+                                  @JsonProperty("textSignature") String textSignature,
+                                  @JsonProperty("htmlSignature") String htmlSignature,
+                                  @JsonProperty("sortOrder") Integer sortOrder,
+                                  @JsonProperty("bcc") List<EmailAddress> bcc,
+                                  @JsonProperty("replyTo") List<EmailAddress> replyTo) {
+            this.name = name;
+            this.email = email;
+            this.textSignature = textSignature;
+            this.htmlSignature = htmlSignature;
+            this.sortOrder = sortOrder;
+            this.bcc = bcc;
+            this.replyTo = replyTo;
+        }
+
+        public IdentityCreationRequest asCreationRequest() throws AddressException {
+            Preconditions.checkArgument(email != null, "email must be not null");
+            return IdentityCreationRequest.fromJava(
+                new MailAddress(email),
+                Optional.ofNullable(name),
+                Optional.ofNullable(replyTo)
+                    .map(rt -> rt.stream()
+                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
+                        .collect(Collectors.toList())),
+                Optional.ofNullable(bcc)
+                    .map(rt -> rt.stream()
+                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
+                        .collect(Collectors.toList())),
+                Optional.ofNullable(sortOrder),
+                Optional.ofNullable(textSignature),
+                Optional.ofNullable(htmlSignature));
+        }
+
+        public IdentityUpdateRequest asUpdateRequest() {
+            return IdentityUpdateRequest.fromJava(
+                Optional.ofNullable(name),
+                Optional.ofNullable(replyTo)
+                    .map(rt -> rt.stream()
+                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
+                        .collect(Collectors.toList())),
+                Optional.ofNullable(bcc)
+                    .map(rt -> rt.stream()
+                        .map(Throwing.function(EmailAddress::asScalaEmailAddress))
+                        .collect(Collectors.toList())),
+                Optional.ofNullable(sortOrder),
+                Optional.ofNullable(textSignature),
+                Optional.ofNullable(htmlSignature));
         }
     }
 

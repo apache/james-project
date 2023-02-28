@@ -33,20 +33,21 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.jdk.StreamConverters._
 import scala.util.Try
 import scala.jdk.OptionConverters._
+import scala.jdk.CollectionConverters._
 
 object IdentityCreationRequest {
   def fromJava(mailAddress: MailAddress,
                identityName: Optional[String],
-               replyTo: Optional[List[EmailAddress]],
-               bcc: Optional[List[EmailAddress]],
+               replyTo: Optional[java.util.List[EmailAddress]],
+               bcc: Optional[java.util.List[EmailAddress]],
                sortOrder: Optional[Integer],
                textSignature: Optional[String],
                htmlSignature: Optional[String]): IdentityCreationRequest = {
     IdentityCreationRequest(
       name = identityName.toScala.map(IdentityName(_)),
       email = mailAddress,
-      replyTo = replyTo.toScala,
-      bcc = bcc.toScala,
+      replyTo = replyTo.toScala.map(_.asScala.toList),
+      bcc = bcc.toScala.map(_.asScala.toList),
       sortOrder = sortOrder.toScala.map(_.toInt),
       textSignature = textSignature.toScala.map(TextSignature(_)),
       htmlSignature = htmlSignature.toScala.map(HtmlSignature(_)))
@@ -92,6 +93,23 @@ case class IdentityTextSignatureUpdate(textSignature: TextSignature) extends Ide
 }
 case class IdentityHtmlSignatureUpdate(htmlSignature: HtmlSignature) extends IdentityUpdate {
   override def update(identity: Identity): Identity = identity.copy(htmlSignature = htmlSignature)
+}
+
+object IdentityUpdateRequest {
+  def fromJava(name: Optional[String],
+               replyTo: Optional[java.util.List[EmailAddress]],
+               bcc: Optional[java.util.List[EmailAddress]],
+               sortOrder: Optional[Integer],
+               textSignature: Optional[String],
+               htmlSignature: Optional[String]): IdentityUpdateRequest = {
+    IdentityUpdateRequest(
+      name = name.toScala.map(IdentityName(_)).map(IdentityNameUpdate),
+      sortOrder = sortOrder.toScala.map(IdentitySortOrderUpdate(_)),
+      replyTo = Option(IdentityReplyToUpdate(replyTo.toScala.map(_.asScala.toList))),
+      bcc = Option(IdentityBccUpdate(bcc.toScala.map(_.asScala.toList))),
+      textSignature = textSignature.toScala.map(TextSignature(_)).map(IdentityTextSignatureUpdate),
+      htmlSignature = htmlSignature.toScala.map(HtmlSignature(_)).map(IdentityHtmlSignatureUpdate))
+  }
 }
 
 case class IdentityUpdateRequest(name: Option[IdentityNameUpdate] = None,

@@ -570,6 +570,71 @@ Response codes:
  - 400: The user is invalid
  - 404: The user is unknown or the default identity can not be found.
 
+### Creating a JMAP user-set identity
+
+API to create a new JMAP user-set identity
+
+```
+curl -XPOST http://ip:port/users/{username}/identities \
+-d '{
+	"name": "Bob",
+	"email": "bob@domain.tld",
+	"mayDelete": true,
+	"htmlSignature": "a html signature",
+	"textSignature": "a text signature",
+	"bcc": [{
+		"email": "boss2@domain.tld",
+		"name": "My Boss 2"
+	}],
+	"replyTo": [{
+		"email": "boss@domain.tld",
+		"name": "My Boss"
+	}],
+	"sortOrder": 0
+    }' \
+-H "Content-Type: application/json"
+```
+
+Response codes:
+
+* 201: The new identity was successfully created
+* 404: The username is unknown
+* 400: The payload is invalid
+
+Resource name `username` represents a valid user
+
+### Updating a JMAP user-set identity
+
+API to update an exist JMAP user-set identity
+
+```
+curl -XPUT http://ip:port/users/{username}/identities/{identityId} \
+-d '{
+	"name": "Bob",
+	"htmlSignature": "a html signature",
+	"textSignature": "a text signature",
+	"bcc": [{
+		"email": "boss2@domain.tld",
+		"name": "My Boss 2"
+	}],
+	"replyTo": [{
+		"email": "boss@domain.tld",
+		"name": "My Boss"
+	}],
+	"sortOrder": 1
+    }' \
+-H "Content-Type: application/json"
+```
+
+Response codes:
+
+ - 204: The identity were successfully updated
+ - 404: The username is unknown
+ - 400: The payload is invalid
+
+Resource name `username` represents a valid user.
+Resource name `identityId` represents a exist user identity
+
 ## Administrating mailboxes
 
 ### All mailboxes
