@@ -28,6 +28,7 @@ import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import spark.Request;
@@ -59,6 +60,19 @@ public class ParametersExtractor {
             .filter(s -> !s.isEmpty())
             .map(raw -> DurationParser.parse(raw, ChronoUnit.SECONDS));
     }
+
+    public static Optional<Boolean> extractBoolean(Request request, String parameterName) {
+        return Optional.ofNullable(request.queryParams(parameterName))
+            .filter(s -> !s.isEmpty())
+            .map(String::trim)
+            .map(s -> {
+                Preconditions.checkArgument(s.equalsIgnoreCase(Boolean.TRUE.toString())
+                        || s.equalsIgnoreCase(Boolean.FALSE.toString()),
+                    "Invalid '" + parameterName + "' query parameter");
+                return Boolean.parseBoolean(s);
+            });
+    }
+
 
     private static <T extends Number> Optional<T> extractPositiveNumber(Request request, String parameterName, Function<String, T> toNumber) {
         try {

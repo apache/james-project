@@ -53,4 +53,6 @@ case class EmailAddress(name: Option[EmailerName], email: MailAddress) {
     name.map(_.value).orNull,
     email.getLocalPart,
     email.getDomain.asString)
+
+  val nameAsString: String = name.map(_.value).orNull
 }
