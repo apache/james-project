@@ -671,6 +671,52 @@ Valid status includes:
  - `FAILED`: Error encountered while executing this step. Check the logs.
  - `ABORTED`: Won't be executed because of previous step failures.
 
+=== Retrieving the user identities
+
+....
+curl -XGET http://ip:port/users/{baseUser}/identities?default=true
+....
+
+API to get the list of identities of a user
+
+The response will look like:
+
+```
+[
+   {
+      "name":"identity name 1",
+      "email":"bob@domain.tld",
+      "id":"4c039533-75b9-45db-becc-01fb0e747aa8",
+      "mayDelete":true,
+      "textSignature":"textSignature 1",
+      "htmlSignature":"htmlSignature 1",
+      "sortOrder":1,
+      "bcc":[
+         {
+            "emailerName":"bcc name 1",
+            "mailAddress":"bcc1@domain.org"
+         }
+      ],
+      "replyTo":[
+         {
+            "emailerName":"reply name 1",
+            "mailAddress":"reply1@domain.org"
+         }
+      ]
+   }
+]
+```
+
+Query parameters:
+
+* default: (Optional) allows getting the default identity of a user. In order to do that: `default=true`
+
+Response codes:
+
+* 200: The list was successfully retrieved
+* 400: The user is invalid
+* 404: The user is unknown or the default identity can not be found.
+
 == Administrating vacation settings
 
 === Get vacation settings

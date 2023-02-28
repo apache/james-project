@@ -20,8 +20,7 @@
 package org.apache.james.jmap.api.identity
 
 import java.nio.charset.StandardCharsets
-import java.util.UUID
-
+import java.util.{Optional, UUID}
 import javax.inject.Inject
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
@@ -33,6 +32,26 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.StreamConverters._
 import scala.util.Try
+import scala.jdk.OptionConverters._
+
+object IdentityCreationRequest {
+  def fromJava(mailAddress: MailAddress,
+               identityName: Optional[String],
+               replyTo: Optional[List[EmailAddress]],
+               bcc: Optional[List[EmailAddress]],
+               sortOrder: Optional[Integer],
+               textSignature: Optional[String],
+               htmlSignature: Optional[String]): IdentityCreationRequest = {
+    IdentityCreationRequest(
+      name = identityName.toScala.map(IdentityName(_)),
+      email = mailAddress,
+      replyTo = replyTo.toScala,
+      bcc = bcc.toScala,
+      sortOrder = sortOrder.toScala.map(_.toInt),
+      textSignature = textSignature.toScala.map(TextSignature(_)),
+      htmlSignature = htmlSignature.toScala.map(HtmlSignature(_)))
+  }
+}
 
 case class IdentityCreationRequest(name: Option[IdentityName],
                                    email: MailAddress,
