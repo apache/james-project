@@ -30,6 +30,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
 
+import com.google.common.base.Preconditions;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -129,6 +130,8 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+        Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
+                "Not supported mapping of type %s", mapping.getType());
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectSourcesByMapping")
                                                               .setParameter("targetAddress", mapping.asString())
