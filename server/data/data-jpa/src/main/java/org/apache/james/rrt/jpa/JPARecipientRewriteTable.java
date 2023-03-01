@@ -18,6 +18,12 @@
  ****************************************************************/
 package org.apache.james.rrt.jpa;
 
+import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.DELETE_MAPPING_QUERY;
+import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.SELECT_ALL_MAPPINGS_QUERY;
+import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.SELECT_SOURCES_BY_MAPPING_QUERY;
+import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.SELECT_USER_DOMAIN_MAPPING_QUERY;
+import static org.apache.james.rrt.jpa.model.JPARecipientRewrite.UPDATE_MAPPING_QUERY;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +36,6 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
 
-import com.google.common.base.Preconditions;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -42,6 +47,8 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Class responsible to implement the Virtual User Table in database with JPA
@@ -93,7 +100,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try {
             @SuppressWarnings("unchecked")
-            List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectUserDomainMapping")
+            List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery(SELECT_USER_DOMAIN_MAPPING_QUERY)
                 .setParameter("user", source.getFixedUser())
                 .setParameter("domain", source.getFixedDomain())
                 .getResultList();
@@ -115,7 +122,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         Map<MappingSource, Mappings> mapping = new HashMap<>();
         try {
             @SuppressWarnings("unchecked")
-            List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectAllMappings").getResultList();
+            List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery(SELECT_ALL_MAPPINGS_QUERY).getResultList();
             for (JPARecipientRewrite virtualUser : virtualUsers) {
                 mapping.put(MappingSource.fromUser(virtualUser.getUser(), virtualUser.getDomain()), MappingsImpl.fromRawString(virtualUser.getTargetAddress()));
             }
@@ -134,7 +141,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 "Not supported mapping of type %s", mapping.getType());
 
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectSourcesByMapping")
+        List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery(SELECT_SOURCES_BY_MAPPING_QUERY)
                                                               .setParameter("targetAddress", mapping.asString())
                                                               .getResultList();
 
@@ -163,7 +170,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         try {
             transaction.begin();
             int updated = entityManager
-                .createNamedQuery("updateMapping")
+                .createNamedQuery(UPDATE_MAPPING_QUERY)
                 .setParameter("targetAddress", mapping)
                 .setParameter("user", source.getFixedUser())
                 .setParameter("domain", source.getFixedDomain())
@@ -192,7 +199,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            entityManager.createNamedQuery("deleteMapping")
+            entityManager.createNamedQuery(DELETE_MAPPING_QUERY)
                 .setParameter("user", source.getFixedUser())
                 .setParameter("domain", source.getFixedDomain())
                 .setParameter("targetAddress", mapping)
