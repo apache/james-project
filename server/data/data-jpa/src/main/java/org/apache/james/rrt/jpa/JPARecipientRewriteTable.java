@@ -141,11 +141,19 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 "Not supported mapping of type %s", mapping.getType());
 
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery(SELECT_SOURCES_BY_MAPPING_QUERY)
-                                                              .setParameter("targetAddress", mapping.asString())
-                                                              .getResultList();
-
-        return virtualUsers.stream().map(user -> MappingSource.fromUser(user.getUser(), user.getDomain()));
+        try {
+            return entityManager.createNamedQuery(SELECT_SOURCES_BY_MAPPING_QUERY, JPARecipientRewrite.class)
+                .setParameter("targetAddress", mapping.asString())
+                .getResultList()
+                .stream()
+                .map(user -> MappingSource.fromUser(user.getUser(), user.getDomain()));
+        } catch (PersistenceException e) {
+             String error = "Unable to list sources by mapping";
+             LOGGER.debug(error, e);
+            throw new RecipientRewriteTableException(error, e);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
     }
 
     @Override
