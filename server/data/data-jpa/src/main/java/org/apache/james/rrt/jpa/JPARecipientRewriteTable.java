@@ -21,6 +21,7 @@ package org.apache.james.rrt.jpa;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -124,6 +125,16 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         } finally {
             EntityManagerUtils.safelyClose(entityManager);
         }
+    }
+
+    @Override
+    public Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectSourcesByMapping")
+                                                              .setParameter("targetAddress", mapping.asString())
+                                                              .getResultList();
+
+        return virtualUsers.stream().map(user -> MappingSource.fromUser(user.getUser(), user.getDomain()));
     }
 
     @Override
