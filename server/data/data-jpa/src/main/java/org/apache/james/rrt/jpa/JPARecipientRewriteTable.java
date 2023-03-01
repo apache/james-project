@@ -132,6 +132,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     public Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
                 "Not supported mapping of type %s", mapping.getType());
+
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectSourcesByMapping")
                                                               .setParameter("targetAddress", mapping.asString())
