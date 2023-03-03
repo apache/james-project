@@ -19,7 +19,7 @@
 package org.apache.james.data;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
+import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -42,7 +42,7 @@ public class LdapUsersRepositoryModule extends AbstractModule {
     public void configure() {
         bind(ReadOnlyUsersLDAPRepository.class).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(ReadOnlyUsersLDAPRepository.class);
-        bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
+        bind(Authorizator.class).to(DelegationStoreAuthorizator.class);
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(LdapHealthCheck.class);
     }
 
