@@ -47,7 +47,6 @@ import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.Algorithm.HashingMode;
 import org.apache.james.user.lib.model.DefaultUser;
-import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -55,7 +54,6 @@ import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.Statement;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -212,11 +210,7 @@ public class CassandraUsersDAO implements UsersDAO {
             .setString(NAME, userWithAccess.asString())
             .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class));
 
-        return getUserByNameReactive(userWithAccess).hasElement()
-            .filter(FunctionalUtils.identityPredicate())
-            .map(existAuthorizedUser -> (Statement) batchBuilder.build())
-            .switchIfEmpty(Mono.just(addAuthorizedStatement))
-            .flatMap(executor::executeVoid);
+        return executor.executeVoid(batchBuilder.build());
     }
 
     public Mono<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {
