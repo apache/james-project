@@ -570,9 +570,9 @@ Response codes:
  - 400: The user is invalid
  - 404: The user is unknown or the default identity can not be found.
 
-### Creating a JMAP user-set identity
+### Creating a JMAP user identity
 
-API to create a new JMAP user-set identity
+API to create a new JMAP user identity
 
 ```
 curl -XPOST http://ip:port/users/{username}/identities \
@@ -603,9 +603,9 @@ Response codes:
 
 Resource name `username` represents a valid user
 
-### Updating a JMAP user-set identity
+### Updating a JMAP user identity
 
-API to update an exist JMAP user-set identity
+API to update an exist JMAP user identity
 
 ```
 curl -XPUT http://ip:port/users/{username}/identities/{identityId} \
