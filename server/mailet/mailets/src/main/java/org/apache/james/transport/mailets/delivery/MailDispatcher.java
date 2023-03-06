@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -182,8 +183,10 @@ public class MailDispatcher {
     }
 
     private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
+        AtomicInteger remainRetries = new AtomicInteger(retries.orElse(0));
+
         Mono<Void> operation = Mono.from(mailStore.storeMail(recipient, mail))
-            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried.", error));
+            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried for {} more times.", remainRetries.getAndDecrement(), error));
 
         return retries.map(count ->
             operation
