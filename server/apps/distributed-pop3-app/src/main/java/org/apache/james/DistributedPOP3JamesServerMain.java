@@ -80,6 +80,7 @@ import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MailboxesExportRoutesModule;
 import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.RabbitMailQueueRoutesModule;
+import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
@@ -113,7 +114,8 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new MessagesRoutesModule(),
         new Pop3FixInconsistenciesWebAdminModule(),
         new TasksCleanupRoutesModule(),
-        new WebAdminMailOverWebModule());
+        new WebAdminMailOverWebModule(),
+        new UserIdentityModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new LMTPServerModule(),

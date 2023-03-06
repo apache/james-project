@@ -311,6 +311,16 @@ public abstract class WebAdminServerIntegrationTest {
         assertThat(members).containsOnly(USERNAME, USERNAME_2);
     }
 
+    @Test
+    void getUserDefaultIdentityShouldReturnNotFoundByDefault() {
+        when()
+            .get(String.format("/users/%s/identities?default=true", USERNAME))
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .contentType(JSON_CONTENT_TYPE)
+            .body("message", is("Default identity can not be found"));
+    }
+
     // Immutable
     @Test
     void validateHealthChecksShouldReturnOk() {

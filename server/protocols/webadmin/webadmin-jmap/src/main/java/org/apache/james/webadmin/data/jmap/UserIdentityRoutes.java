@@ -61,7 +61,7 @@ public class UserIdentityRoutes implements Routes {
     public static final String IDENTITIES = "identities";
     private static final String USER_NAME = ":userName";
     private static final String IDENTITY_ID = ":identityId";
-    public static final String USERS_IDENTITY_BASE_PATH = USERS + SEPARATOR + USER_NAME + SEPARATOR + "/identities";
+    public static final String USERS_IDENTITY_BASE_PATH = USERS + SEPARATOR + USER_NAME + SEPARATOR + IDENTITIES;
 
     private Service service;
     private final IdentityRepository identityRepository;
