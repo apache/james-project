@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -50,7 +51,7 @@ import reactor.util.retry.Retry;
 public class MailDispatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailDispatcher.class);
     private static final String[] NO_HEADERS = {};
-    private static final int RETRIES = 3;
+    public static final int RETRIES = 3;
     private static final Duration FIRST_BACKOFF = Duration.ofMillis(200);
     private static final Duration MAX_BACKOFF = Duration.ofSeconds(1);
 
@@ -63,6 +64,7 @@ public class MailDispatcher {
         private MailStore mailStore;
         private Optional<Boolean> consume = Optional.empty();
         private MailetContext mailetContext;
+        private Optional<Integer> retries = Optional.empty();
 
         public Builder consume(boolean consume) {
             this.consume = Optional.of(consume);
@@ -79,10 +81,17 @@ public class MailDispatcher {
             return this;
         }
 
+        public Builder retries(int retries) {
+            if (retries > 0) {
+                this.retries = Optional.of(retries);
+            }
+            return this;
+        }
+
         public MailDispatcher build() {
             Preconditions.checkNotNull(mailStore);
             Preconditions.checkNotNull(mailetContext);
-            return new MailDispatcher(mailStore, consume.orElse(CONSUME), mailetContext);
+            return new MailDispatcher(mailStore, consume.orElse(CONSUME), mailetContext, retries);
         }
 
     }
@@ -90,11 +99,13 @@ public class MailDispatcher {
     private final MailStore mailStore;
     private final boolean consume;
     private final MailetContext mailetContext;
+    private final Optional<Integer> retries;
 
-    private MailDispatcher(MailStore mailStore, boolean consume, MailetContext mailetContext) {
+    private MailDispatcher(MailStore mailStore, boolean consume, MailetContext mailetContext, Optional<Integer> retries) {
         this.mailStore = mailStore;
         this.consume = consume;
         this.mailetContext = mailetContext;
+        this.retries = retries;
     }
 
     public void dispatch(Mail mail) throws MessagingException {
@@ -152,10 +163,16 @@ public class MailDispatcher {
     }
 
     private Mono<Void> storeMailWithRetry(Mail mail, MailAddress recipient) {
-       return Mono.from(mailStore.storeMail(recipient, mail))
-           .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried.", error))
-           .retryWhen(Retry.backoff(RETRIES, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.elastic()))
-           .then();
+        AtomicInteger remainRetries = new AtomicInteger(retries.orElse(0));
+
+        Mono<Void> operation = Mono.from(mailStore.storeMail(recipient, mail))
+            .doOnError(error -> LOGGER.warn("Error While storing mail. This error will be retried for {} more times.", remainRetries.getAndDecrement(), error));
+
+        return retries.map(count ->
+            operation
+                .retryWhen(Retry.backoff(count, FIRST_BACKOFF).maxBackoff(MAX_BACKOFF).scheduler(Schedulers.parallel()))
+                .then())
+            .orElse(operation);
     }
 
     private Map<String, List<String>> saveHeaders(Mail mail, MailAddress recipient) throws MessagingException {

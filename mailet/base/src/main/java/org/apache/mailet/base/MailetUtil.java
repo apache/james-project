@@ -25,6 +25,7 @@ import javax.mail.MessagingException;
 
 import org.apache.mailet.MailetConfig;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 
 /**
@@ -52,28 +53,31 @@ public class MailetUtil {
     }
 
     public static int getInitParameterAsStrictlyPositiveInteger(String condition, int defaultValue) throws MessagingException {
-        String defaultStringValue = String.valueOf(defaultValue);
-        return getInitParameterAsStrictlyPositiveInteger(condition, Optional.of(defaultStringValue));
+        return getInitParameterAsStrictlyPositiveInteger(condition, Optional.of(defaultValue));
     }
 
     public static int getInitParameterAsStrictlyPositiveInteger(String condition) throws MessagingException {
         return getInitParameterAsStrictlyPositiveInteger(condition, Optional.empty());
     }
 
-    private static int getInitParameterAsStrictlyPositiveInteger(String condition, Optional<String> defaultValue) throws MessagingException {
-        String value = Optional.ofNullable(condition)
-            .orElse(defaultValue.orElse(null));
+    private static int getInitParameterAsStrictlyPositiveInteger(String condition, Optional<Integer> defaultValue) throws MessagingException {
+        int valueAsInt = getInitParameterAsInteger(condition, defaultValue);
 
-        if (Strings.isNullOrEmpty(value)) {
+        if (valueAsInt < 1) {
+            throw new MessagingException("Expecting condition to be a strictly positive integer. Got " + valueAsInt);
+        }
+        return valueAsInt;
+    }
+
+    public static int getInitParameterAsInteger(String condition, Optional<Integer> defaultValue) throws MessagingException {
+        if (Strings.isNullOrEmpty(condition) && defaultValue.isEmpty()) {
             throw new MessagingException("Condition is required. It should be a strictly positive integer");
         }
 
-        int valueAsInt = tryParseInteger(value);
-
-        if (valueAsInt < 1) {
-            throw new MessagingException("Expecting condition to be a strictly positive integer. Got " + value);
-        }
-        return valueAsInt;
+        return Optional.ofNullable(condition)
+            .map(Throwing.<String, Integer>function(MailetUtil::tryParseInteger).sneakyThrow())
+            .or(() -> defaultValue)
+            .get();
     }
 
     private static int tryParseInteger(String value) throws MessagingException {

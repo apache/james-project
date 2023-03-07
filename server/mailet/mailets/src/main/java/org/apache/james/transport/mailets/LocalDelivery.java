@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
@@ -32,6 +34,7 @@ import org.apache.james.transport.mailets.delivery.SimpleMailStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.apache.mailet.base.MailetUtil;
 
 /**
  * Receives a Mail from the Queue and takes care of delivery of the
@@ -77,6 +80,7 @@ public class LocalDelivery extends GenericMailet {
                 .metric(metricFactory.generate(LOCAL_DELIVERED_MAILS_METRIC_NAME))
                 .build())
             .consume(getInitParameter("consume", true))
+            .retries(MailetUtil.getInitParameterAsInteger(getInitParameter("retries"), Optional.of(MailDispatcher.RETRIES)))
             .mailetContext(getMailetContext())
             .build();
     }
