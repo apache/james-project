@@ -21,6 +21,8 @@ package org.apache.james;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.data.UsersRepositoryModuleChooser;
+import org.apache.james.jmap.api.identity.CustomIdentityDAO;
+import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -56,6 +58,7 @@ import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
@@ -66,6 +69,7 @@ import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
+import com.google.inject.Scopes;
 import com.google.inject.util.Modules;
 
 public class MemoryJamesServerMain implements JamesServerMain {
@@ -80,7 +84,8 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new SieveRoutesModule());
+        new SieveRoutesModule(),
+        new UserIdentityModule());
 
     public static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(ImmutableList.of());
 
@@ -88,8 +93,12 @@ public class MemoryJamesServerMain implements JamesServerMain {
         binder -> binder.bind(AuthenticationFilter.class).to(NoAuthenticationFilter.class),
         binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
 
+    private static final Module CUSTOM_IDENTITY_DAO_TESTING = binder -> binder.bind(CustomIdentityDAO.class)
+        .to(MemoryCustomIdentityDAO.class)
+        .in(Scopes.SINGLETON);
+
     public static final Module WEBADMIN_TESTING = Modules.override(WEBADMIN)
-        .with(WEBADMIN_NO_AUTH_MODULE, new NoJwtModule());
+        .with(WEBADMIN_NO_AUTH_MODULE, new NoJwtModule(), CUSTOM_IDENTITY_DAO_TESTING);
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
