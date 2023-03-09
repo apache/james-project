@@ -19,8 +19,6 @@
 
 package org.apache.james.modules.data;
 
-import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
-import org.apache.james.mailbox.Authorizator;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
@@ -40,7 +38,6 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         bind(UsersDAO.class).to(CassandraUsersDAO.class);
         bind(new TypeLiteral<UsersRepositoryImpl<CassandraUsersDAO>>() {}).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(new TypeLiteral<UsersRepositoryImpl<CassandraUsersDAO>>() {});
-        bind(Authorizator.class).to(DelegationStoreAuthorizator.class);
     }
 
     @ProvidesIntoSet

@@ -151,6 +151,54 @@ public interface DelegationStoreContract {
     }
 
     @Test
+    default void delegateesSourceAndDelegatorsSourceShouldBeAlignedWhenBothUsersDoNotExist() {
+        // LDAP case where there are no user entries in user table
+
+        // ALICE delegates BOB
+        Mono.from(testee().addAuthorizedUser(ALICE, BOB)).block();
+
+        // Delegatees source of ALICE should be aligned with Delegators source of BOB
+        assertThat(Flux.from(testee().authorizedUsers(ALICE)).collectList().block())
+            .containsOnly(BOB);
+        assertThat(Flux.from(testee().delegatedUsers(BOB)).collectList().block())
+            .containsOnly(ALICE);
+    }
+
+    @Test
+    default void removeDelegateeLDAPCaseShouldSucceed() {
+        // LDAP case where there are no user entries in user table
+
+        // ALICE delegates BOB
+        Mono.from(testee().addAuthorizedUser(ALICE, BOB)).block();
+
+        // ALICE remove BOB's access
+        Mono.from(testee().removeAuthorizedUser(ALICE, BOB)).block();
+
+        // Delegatees source of ALICE and Delegators source of BOB should both return empty
+        assertThat(Flux.from(testee().authorizedUsers(ALICE)).collectList().block())
+            .isEmpty();
+        assertThat(Flux.from(testee().delegatedUsers(BOB)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
+    default void removeDelegatorLDAPCaseShouldSucceed() {
+        // LDAP case where there are no user entries in user table
+
+        // ALICE delegates BOB
+        Mono.from(testee().addAuthorizedUser(ALICE, BOB)).block();
+
+        // BOB withdraws access to ALICE account
+        Mono.from(testee().removeDelegatedUser(BOB, ALICE)).block();
+
+        // Delegatees source of ALICE and Delegators source of BOB should both return empty
+        assertThat(Flux.from(testee().authorizedUsers(ALICE)).collectList().block())
+            .isEmpty();
+        assertThat(Flux.from(testee().delegatedUsers(BOB)).collectList().block())
+            .isEmpty();
+    }
+
+    @Test
     default void delegatedUsersShouldReturnUpdateEntryAfterClearDelegatedBaseUser() {
         addUser(BOB);
         Mono.from(testee().addAuthorizedUser(ALICE, BOB)).block();

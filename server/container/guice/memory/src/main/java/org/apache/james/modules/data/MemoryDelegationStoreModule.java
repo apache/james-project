@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.data;
 
+import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
+import org.apache.james.mailbox.Authorizator;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.DelegationUsernameChangeTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -33,6 +35,7 @@ public class MemoryDelegationStoreModule extends AbstractModule {
     public void configure() {
         bind(MemoryDelegationStore.class).in(Scopes.SINGLETON);
         bind(DelegationStore.class).to(MemoryDelegationStore.class);
+        bind(Authorizator.class).to(DelegationStoreAuthorizator.class);
 
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
             .addBinding().to(DelegationUsernameChangeTaskStep.class);
