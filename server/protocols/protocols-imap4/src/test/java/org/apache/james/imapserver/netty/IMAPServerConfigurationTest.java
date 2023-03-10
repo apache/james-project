@@ -43,6 +43,7 @@ class IMAPServerConfigurationTest {
                 .idleTimeIntervalUnit(ImapConfiguration.DEFAULT_HEARTBEAT_INTERVAL_UNIT)
                 .maxQueueSize(ImapConfiguration.DEFAULT_QUEUE_SIZE)
                 .concurrentRequests(ImapConfiguration.DEFAULT_CONCURRENT_REQUESTS)
+                .isProvisionDefaultMailboxes(ImapConfiguration.DEFAULT_PROVISION_DEFAULT_MAILBOXES)
                 .disabledCaps(ImmutableSet.<String>of())
                 .build();
 
@@ -58,6 +59,7 @@ class IMAPServerConfigurationTest {
         configurationBuilder.addProperty("concurrentRequests", "42");
         configurationBuilder.addProperty("idleTimeIntervalUnit", "MINUTES");
         configurationBuilder.addProperty("disabledCaps", "ACL | MOVE");
+        configurationBuilder.addProperty("provisionDefaultMailboxes", "false");
         configurationBuilder.addProperty("customProperties", "abc=def");
         configurationBuilder.addProperty("customProperties", "ghi=jkl");
         ImapConfiguration imapConfiguration = IMAPServer.getImapConfiguration(configurationBuilder);
@@ -72,6 +74,7 @@ class IMAPServerConfigurationTest {
                 .disabledCaps(ImmutableSet.of("ACL", "MOVE"))
                 .maxQueueSize(12)
                 .concurrentRequests(42)
+                .isProvisionDefaultMailboxes(false)
                 .withCustomProperties(customProperties)
                 .build();
 

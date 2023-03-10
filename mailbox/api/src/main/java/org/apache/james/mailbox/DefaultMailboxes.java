@@ -38,7 +38,7 @@ public interface DefaultMailboxes {
     String TEMPLATES = "Templates";
     String RESTORED_MESSAGES = "Restored-Messages";
 
-    List<String> DEFAULT_MAILBOXES = ImmutableList.of(INBOX, OUTBOX, SENT, TRASH, DRAFTS, SPAM);
+    List<String> DEFAULT_MAILBOXES = ImmutableList.of(INBOX, OUTBOX, SENT, TRASH, DRAFTS, ARCHIVE, SPAM);
 
     static List<MailboxPath> defaultMailboxesAsPath(Username username) {
         return DEFAULT_MAILBOXES.stream()

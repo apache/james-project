@@ -38,6 +38,7 @@ public class ImapConfiguration {
     public static final TimeUnit DEFAULT_HEARTBEAT_INTERVAL_UNIT = TimeUnit.SECONDS;
     public static final int DEFAULT_CONCURRENT_REQUESTS = 128;
     public static final int DEFAULT_QUEUE_SIZE = 4096;
+    public static final boolean DEFAULT_PROVISION_DEFAULT_MAILBOXES = true;
 
     public static Builder builder() {
         return new Builder();
@@ -59,6 +60,7 @@ public class ImapConfiguration {
         private Optional<Boolean> enableIdle;
         private ImmutableSet<String> disabledCaps;
         private Optional<Boolean> isCondstoreEnable;
+        private Optional<Boolean> provisionDefaultMailboxes;
         private Optional<Properties> customProperties;
 
         private Builder() {
@@ -70,6 +72,7 @@ public class ImapConfiguration {
             this.enableIdle = Optional.empty();
             this.disabledCaps = ImmutableSet.of();
             this.isCondstoreEnable = Optional.empty();
+            this.provisionDefaultMailboxes = Optional.empty();
             this.customProperties = Optional.empty();
         }
 
@@ -130,6 +133,11 @@ public class ImapConfiguration {
             return this;
         }
 
+        public Builder isProvisionDefaultMailboxes(Boolean isProvisionDefaultMailboxes) {
+            this.provisionDefaultMailboxes = Optional.of(isProvisionDefaultMailboxes);
+            return this;
+        }
+
         public Builder withCustomProperties(Properties customProperties) {
             this.customProperties = Optional.of(customProperties);
             return this;
@@ -150,6 +158,7 @@ public class ImapConfiguration {
                     idleTimeIntervalUnit.orElse(DEFAULT_HEARTBEAT_INTERVAL_UNIT),
                     normalizeDisableCaps,
                     isCondstoreEnable.orElse(DEFAULT_CONDSTORE_DISABLE),
+                    provisionDefaultMailboxes.orElse(DEFAULT_PROVISION_DEFAULT_MAILBOXES),
                     customProperties.orElseGet(Properties::new));
         }
     }
@@ -162,9 +171,10 @@ public class ImapConfiguration {
     private final ImmutableSet<Capability> disabledCaps;
     private final boolean enableIdle;
     private final boolean isCondstoreEnable;
+    private final boolean provisionDefaultMailboxes;
     private final Properties customProperties;
 
-    private ImapConfiguration(Optional<Long> appendLimit, boolean enableIdle, long idleTimeInterval, int concurrentRequests, int maxQueueSize, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable, Properties customProperties) {
+    private ImapConfiguration(Optional<Long> appendLimit, boolean enableIdle, long idleTimeInterval, int concurrentRequests, int maxQueueSize, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable, boolean provisionDefaultMailboxes, Properties customProperties) {
         this.appendLimit = appendLimit;
         this.enableIdle = enableIdle;
         this.idleTimeInterval = idleTimeInterval;
@@ -173,6 +183,7 @@ public class ImapConfiguration {
         this.idleTimeIntervalUnit = idleTimeIntervalUnit;
         this.disabledCaps = disabledCaps;
         this.isCondstoreEnable = isCondstoreEnable;
+        this.provisionDefaultMailboxes = provisionDefaultMailboxes;
         this.customProperties = customProperties;
     }
 
@@ -208,6 +219,10 @@ public class ImapConfiguration {
         return isCondstoreEnable;
     }
 
+    public boolean isProvisionDefaultMailboxes() {
+        return provisionDefaultMailboxes;
+    }
+
     public Duration idleTimeIntervalAsDuration() {
         return Duration.of(getIdleTimeInterval(), getIdleTimeIntervalUnit().toChronoUnit());
     }
@@ -227,6 +242,7 @@ public class ImapConfiguration {
                 && Objects.equal(that.getConcurrentRequests(), concurrentRequests)
                 && Objects.equal(that.getMaxQueueSize(), maxQueueSize)
                 && Objects.equal(that.getDisabledCaps(), disabledCaps)
+                && Objects.equal(that.isProvisionDefaultMailboxes(), provisionDefaultMailboxes)
                 && Objects.equal(that.getCustomProperties(), customProperties)
                 && Objects.equal(that.isCondstoreEnable(), isCondstoreEnable);
         }
@@ -236,7 +252,7 @@ public class ImapConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hashCode(enableIdle, idleTimeInterval, idleTimeIntervalUnit, disabledCaps, isCondstoreEnable,
-            concurrentRequests, maxQueueSize, appendLimit, customProperties);
+            concurrentRequests, maxQueueSize, appendLimit, provisionDefaultMailboxes, customProperties);
     }
 
     @Override
@@ -250,6 +266,7 @@ public class ImapConfiguration {
                 .add("isCondstoreEnable", isCondstoreEnable)
                 .add("concurrentRequests", concurrentRequests)
                 .add("maxQueueSize", maxQueueSize)
+                .add("provisionDefaultMailboxes", provisionDefaultMailboxes)
                 .add("customProperties", customProperties)
                 .toString();
     }

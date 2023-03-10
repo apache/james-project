@@ -181,5 +181,30 @@ class ImapConfigurationTest {
                 .build();
 
         assertThat(imapConfiguration.isCondstoreEnable()).isFalse();
+    }
+
+    @Test
+    void isProvisionDefaultMailboxesShouldBeTrueWhenNoSetting() {
+        ImapConfiguration imapConfiguration = ImapConfiguration.builder().build();
+
+        assertThat(imapConfiguration.isProvisionDefaultMailboxes()).isTrue();
+   }
+
+    @Test
+    void isProvisionDefaultMailboxesShouldBeTrueWhenValueIsTrue() {
+        ImapConfiguration imapConfiguration = ImapConfiguration.builder()
+                .isProvisionDefaultMailboxes(true)
+                .build();
+
+        assertThat(imapConfiguration.isProvisionDefaultMailboxes()).isTrue();
+   }
+
+    @Test
+    void isProvisionDefaultMailboxesShouldBeFalseWhenValueIsFalse() {
+        ImapConfiguration imapConfiguration = ImapConfiguration.builder()
+                .isProvisionDefaultMailboxes(false)
+                .build();
+
+        assertThat(imapConfiguration.isProvisionDefaultMailboxes()).isFalse();
    }
 }
