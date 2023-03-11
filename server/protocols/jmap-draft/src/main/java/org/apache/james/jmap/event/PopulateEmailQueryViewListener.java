@@ -36,6 +36,7 @@ import org.apache.james.events.Group;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
@@ -54,6 +55,7 @@ import org.apache.james.mime4j.dom.field.DateTimeField;
 import org.apache.james.mime4j.field.DateTimeFieldLenientImpl;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.util.FunctionalUtils;
 import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableList;
@@ -156,11 +158,24 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
 
     private Mono<Void> handleAdded(Added added, MessageMetaData messageMetaData, MailboxSession session) {
         MessageId messageId = messageMetaData.getMessageId();
+        MailboxId mailboxId = added.getMailboxId();
 
-        return Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
+        Mono<Void> doHandleAdded = Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
             .next()
             .filter(message -> !message.getFlags().contains(DELETED))
             .flatMap(messageResult -> handleAdded(added.getMailboxId(), messageResult));
+        if (Role.from(added.getMailboxPath().getName()).equals(Optional.of(Role.OUTBOX))) {
+            return checkMessageStillInOriginMailbox(messageId, session, mailboxId)
+                .filter(FunctionalUtils.identityPredicate())
+                .flatMap(stillInOriginMailbox -> doHandleAdded);
+        }
+        return doHandleAdded;
+    }
+
+    private Mono<Boolean> checkMessageStillInOriginMailbox(MessageId messageId, MailboxSession session, MailboxId targetMailboxId) {
+        return Flux.from(messageIdManager.messageMetadata(messageId, session))
+            .filter(composedMessageIdWithMetaData -> composedMessageIdWithMetaData.getComposedMessageId().getMailboxId().equals(targetMailboxId))
+            .hasElements();
     }
 
     public Mono<Void> handleAdded(MailboxId mailboxId, MessageResult messageResult) {

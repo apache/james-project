@@ -20,16 +20,19 @@
 package org.apache.james.jmap.event;
 
 import static javax.mail.Flags.Flag.DELETED;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
 import org.apache.james.events.Group;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
@@ -40,11 +43,16 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.SessionProviderImpl;
@@ -56,6 +64,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+
+import reactor.core.publisher.Mono;
 
 public class PopulateEmailQueryViewListenerTest {
     private static final Username BOB = Username.of("bob");
@@ -69,6 +80,7 @@ public class PopulateEmailQueryViewListenerTest {
     MessageManager otherBoxMessageManager;
     PopulateEmailQueryViewListener listener;
     MessageIdManager messageIdManager;
+    SessionProviderImpl sessionProvider;
     private MemoryEmailQueryView view;
     private MailboxId inboxId;
 
@@ -97,7 +109,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(BOB, "12345");
-        SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, FakeAuthorizator.defaultReject());
+        sessionProvider = new SessionProviderImpl(authenticator, FakeAuthorizator.defaultReject());
 
         view = new MemoryEmailQueryView();
         listener = new PopulateEmailQueryViewListener(messageIdManager, view, sessionProvider);
@@ -133,7 +145,7 @@ public class PopulateEmailQueryViewListenerTest {
     }
 
     @Test
-    void appendingADeletedMessageSHouldNotAddItToTheView() throws Exception {
+    void appendingADeletedMessageShouldNotAddItToTheView() throws Exception {
         inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T15:12:00Z").toInstant()))
@@ -144,6 +156,44 @@ public class PopulateEmailQueryViewListenerTest {
         assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
+
+    @Test
+    void appendingAOutdatedMessageInOutBoxShouldNotAddItToTheView() throws Exception {
+        MemoryEmailQueryView emailQueryView = new MemoryEmailQueryView();
+        PopulateEmailQueryViewListener queryViewListener = new PopulateEmailQueryViewListener(messageIdManager, emailQueryView, sessionProvider);
+        MailboxPath outboxPath = MailboxPath.forUser(BOB, "Outbox");
+        MailboxId outboxId = mailboxManager.createMailbox(outboxPath, mailboxSession).orElseThrow();
+
+        // given: save a message in Inbox
+        ComposedMessageId composedId = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T15:12:00Z").toInstant()))
+                .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
+            mailboxSession).getId();
+
+        // mock an outDated message by assigning above message in OutBox
+        MessageMetaData outdatedMessageMetaData = new MessageMetaData(MessageUid.of(1),
+            ModSeq.of(35), new Flags(), 12,
+            new Date(),
+            Optional.empty(),
+            composedId.getMessageId(),
+            ThreadId.fromBaseMessageId(composedId.getMessageId()));
+
+        // the latest mailboxId should be `composedId.getMailboxId()`, not `outboxId`
+        MailboxEvents.Added addedOutDatedEvent = new MailboxEvents.Added(MailboxSession.SessionId.of(42),
+            BOB,
+            outboxPath,
+            outboxId,
+            ImmutableSortedMap.of(MessageUid.of(1), outdatedMessageMetaData),
+            Event.EventId.random(),
+            !IS_DELIVERY);
+
+        Mono.from(queryViewListener.reactiveEvent(addedOutDatedEvent)).block();
+
+        assertThat(emailQueryView.listMailboxContentSortedBySentAt(outboxId, Limit.limit(12)).collectList().block())
+            .isEmpty();
+    }
+
 
     @Test
     void removingDeletedFlagsShouldAddItToTheView() throws Exception {
