@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.opensearch.events;
 
+import static org.apache.james.jmap.JMAPTestingConstants.BOB;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,12 +38,14 @@ import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
 import org.apache.james.core.Username;
+import org.apache.james.events.Event;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -55,6 +59,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -93,7 +98,10 @@ import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
+
+import reactor.core.publisher.Mono;
 
 class OpenSearchListeningMessageSearchIndexTest {
 
@@ -287,6 +295,54 @@ class OpenSearchListeningMessageSearchIndexTest {
             .hasCauseInstanceOf(IOException.class);
 
         openSearch.getDockerOpenSearch().unpause();
+    }
+
+    @Test
+    void addAOutdatedMessageInOutBoxShouldNotIndex() throws Exception {
+        // given
+        MailboxPath outboxPath = MailboxPath.forUser(USERNAME, DefaultMailboxes.OUTBOX);
+        Mailbox outbox = mapperFactory.getMailboxMapper(session).create(outboxPath, UidValidity.generate()).block();
+        assert outbox != null;
+        Mailbox inbox = mailbox;
+        SimpleMailboxMessage outDatedMessage = SimpleMailboxMessage.builder()
+            .mailboxId(inbox.getMailboxId())
+            .flags(new Flags())
+            .bodyStartOctet(BODY_START_OCTET)
+            .internalDate(new Date(1433628000000L))
+            .size(SIZE)
+            .content(new ByteContent("message".getBytes(StandardCharsets.UTF_8)))
+            .properties(new PropertyBuilder())
+            .modseq(MOD_SEQ)
+            .messageId(MESSAGE_ID_1)
+            .threadId(ThreadId.fromBaseMessageId(MESSAGE_ID_1))
+            .uid(MESSAGE_UID_1)
+            .build();
+        mapperFactory.getMessageMapper(session).add(inbox, outDatedMessage);
+
+        // when
+        MessageMetaData outdatedMessageMetaData = new MessageMetaData(MESSAGE_UID_1,
+            outDatedMessage.getModSeq(),
+            outDatedMessage.metaData().getFlags(),
+            SIZE,
+            outDatedMessage.getInternalDate(),
+            outDatedMessage.getSaveDate(),
+            MESSAGE_ID_1,
+            outDatedMessage.getThreadId());
+
+        MailboxEvents.Added addedOutDatedEvent = new MailboxEvents.Added(MailboxSession.SessionId.of(42),
+            BOB,
+            outboxPath,
+            outbox.getMailboxId(),
+            ImmutableSortedMap.of(MESSAGE_UID_1, outdatedMessageMetaData),
+            Event.EventId.random(),
+            !IS_DELIVERY);
+
+        Mono.from(testee.reactiveEvent(addedOutDatedEvent)).block();
+
+        // then
+        Thread.sleep(1000);
+        assertThat(testee.search(session, outbox, SearchQuery.of(SearchQuery.all())).collectList().block())
+            .isEmpty();
     }
 
     @Test
