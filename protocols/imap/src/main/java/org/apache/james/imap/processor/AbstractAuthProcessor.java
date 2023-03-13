@@ -159,6 +159,10 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     private void provisionMailbox(String mailbox, ImapSession session, MailboxManager mailboxManager,
                                   MailboxSession mailboxSession) throws MailboxException {
         var mailboxPath = PathConverter.forSession(session).buildFullPath(mailbox);
+        if (Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession)).block()) {
+            LOGGER.debug("{} exists. No need to create it.", mailbox);
+            return;
+        }
         try {
             mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, mailboxSession)
                     .ifPresentOrElse(id -> LOGGER.info("Provisioning mailbox {}. {} created.", mailbox, id),
