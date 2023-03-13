@@ -24,6 +24,7 @@ import static org.apache.james.transport.mailets.remote.delivery.Bouncer.IS_DELI
 import java.io.Closeable;
 import java.time.Duration;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import org.apache.james.dnsservice.api.DNSService;
@@ -38,6 +39,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
+import org.awaitility.Awaitility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +69,7 @@ public class DeliveryRunnable implements Disposable {
     private final MailDelivrer mailDelivrer;
     private final Supplier<Date> dateSupplier;
     private final MailetContext mailetContext;
+    private final AtomicInteger pendingDeliveries;
     private Disposable disposable;
     private Scheduler remoteDeliveryProcessScheduler;
     private Scheduler remoteDeliveryDequeueScheduler;
@@ -89,6 +92,7 @@ public class DeliveryRunnable implements Disposable {
         this.dateSupplier = dateSupplier;
         this.metricFactory = metricFactory;
         this.mailetContext = mailetContext;
+        this.pendingDeliveries = new AtomicInteger(0);
     }
 
     public void start() {
@@ -111,6 +115,7 @@ public class DeliveryRunnable implements Disposable {
     private Mono<Void> processMail(MailQueue.MailQueueItem queueItem) {
         return Mono.create(sink -> {
             Mail mail = queueItem.getMail();
+            pendingDeliveries.incrementAndGet();
 
             try (Closeable closeable =
                      MDCBuilder.create()
@@ -136,6 +141,7 @@ public class DeliveryRunnable implements Disposable {
                 sink.error(e);
             } finally {
                 LifecycleUtil.dispose(mail);
+                pendingDeliveries.decrementAndGet();
             }
         });
     }
@@ -204,6 +210,16 @@ public class DeliveryRunnable implements Disposable {
     @Override
     public void dispose() {
         disposable.dispose();
+
+        try {
+            Awaitility.await()
+                .atMost(Duration.ofSeconds(2))
+                .pollDelay(Duration.ofMillis(100))
+                .until(() -> pendingDeliveries.get() == 0);
+        } catch (Exception e) {
+            LOGGER.warn("Failure disposing gracefully RemoteDelivery", e);
+        }
+
         remoteDeliveryProcessScheduler.dispose();
         remoteDeliveryDequeueScheduler.dispose();
     }

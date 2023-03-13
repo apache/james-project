@@ -19,7 +19,10 @@
 
 package org.apache.james.mailetcontainer.impl;
 
+import static reactor.core.scheduler.Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE;
+
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -50,6 +53,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.awaitility.Awaitility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +63,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 /**
@@ -75,6 +80,8 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         private final reactor.core.Disposable disposable;
         private final MailQueue queue;
         private final Configuration configuration;
+        private final Scheduler scheduler;
+        private final Scheduler queueScheduler;
 
         private Runner(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, MailProcessor mailProcessor,
                        MailRepository errorRepository, MailQueue queue, Configuration configuration) {
@@ -84,7 +91,13 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
             this.queue = queue;
             this.configuration = configuration;
 
-            this.disposable = run(queue);
+            scheduler = Schedulers.newBoundedElastic(configuration.getConcurrencyLevel() + 1, DEFAULT_BOUNDED_ELASTIC_QUEUESIZE,
+                "spooler");
+
+            queueScheduler = Schedulers.newBoundedElastic(1, DEFAULT_BOUNDED_ELASTIC_QUEUESIZE,
+                "queueScheduler");
+
+            disposable = run(queue);
 
             gaugeRegistry.register(SPOOL_PROCESSING + ".inFlight",
                 processingActive::get);
@@ -92,9 +105,9 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
 
         private reactor.core.Disposable run(MailQueue queue) {
             return Flux.from(queue.deQueue())
-                .flatMap(item -> handleOnQueueItem(item).subscribeOn(Schedulers.elastic()), configuration.getConcurrencyLevel())
+                .flatMap(item -> handleOnQueueItem(item).subscribeOn(scheduler), configuration.getConcurrencyLevel())
                 .onErrorContinue((throwable, item) -> LOGGER.error("Exception processing mail while spooling {}", item, throwable))
-                .subscribeOn(Schedulers.elastic())
+                .subscribeOn(queueScheduler)
                 .subscribe();
         }
 
@@ -180,13 +193,28 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
 
         public void dispose() {
             LOGGER.info("start dispose() ...");
+            LOGGER.info("Cancel queue consumption...");
+            queueScheduler.dispose();
+            LOGGER.info("Queue consumption canceled, awaiting task completion...");
+
+            try {
+                Awaitility.await()
+                    .atMost(Duration.ofSeconds(2))
+                    .pollDelay(Duration.ofMillis(100))
+                    .until(() -> processingActive.get() == 0);
+            } catch (Exception e) {
+                LOGGER.warn("Failure disposing gracefully JamesMailSpooler", e);
+            }
+
+            LOGGER.info("Shutting down processor threads...");
+            scheduler.dispose();
             disposable.dispose();
+            LOGGER.info("Thread shutdown completed. Turning off mail queue.");
             try {
                 queue.close();
             } catch (IOException e) {
                 LOGGER.debug("error closing queue", e);
             }
-            LOGGER.info("thread shutdown completed.");
         }
 
         public int getCurrentSpoolCount() {
