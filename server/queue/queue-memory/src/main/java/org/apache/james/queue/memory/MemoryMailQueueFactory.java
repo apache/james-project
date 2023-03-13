@@ -116,7 +116,13 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
             this.inProcessingMailItems = new LinkedBlockingDeque<>();
             this.name = name;
             this.scheduler = Schedulers.newSingle("memory-mail-queue");
-            this.flux = Mono.fromCallable(mailItems::take)
+            this.flux = Mono.<MemoryMailQueueItem>create(sink -> {
+                try {
+                    sink.success(mailItems.take());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            })
                 .repeat()
                 .subscribeOn(scheduler)
                 .flatMap(item ->
