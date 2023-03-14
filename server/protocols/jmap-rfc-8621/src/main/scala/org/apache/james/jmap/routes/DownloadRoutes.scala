@@ -18,6 +18,11 @@
  ****************************************************************/
 package org.apache.james.jmap.routes
 
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+import java.util.stream
+import java.util.stream.Stream
+
 import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
@@ -25,6 +30,7 @@ import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus._
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
+import javax.inject.{Inject, Named}
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
@@ -54,12 +60,6 @@ import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
-import java.io.InputStream
-import java.nio.charset.StandardCharsets
-import java.util.stream
-import java.util.stream.Stream
-
-import javax.inject.{Inject, Named}
 
 import scala.compat.java8.FunctionConverters._
 import scala.jdk.CollectionConverters._
@@ -178,8 +178,9 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager)
     AttachmentId.from(blobId.value.value) match {
       case attachmentId: AttachmentId =>
         Try(attachmentManager.getAttachment(attachmentId, mailboxSession)) match {
-          case Success(attachmentMetadata) => Applicable(
-            SMono.fromCallable(() => AttachmentBlob(attachmentMetadata, attachmentManager.load(attachmentMetadata, mailboxSession))))
+          case Success(attachmentMetadata) =>
+            Applicable(SMono(attachmentManager.loadReactive(attachmentMetadata, mailboxSession))
+              .map(content => AttachmentBlob(attachmentMetadata, content)))
           case Failure(_) => NonApplicable
         }
       case _ => NonApplicable

@@ -24,9 +24,16 @@ import java.io.InputStream;
 
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.util.ReactorUtils;
+
+import reactor.core.publisher.Mono;
 
 public interface AttachmentContentLoader {
 
     InputStream load(AttachmentMetadata attachment, MailboxSession mailboxSession) throws IOException, AttachmentNotFoundException;
 
+    default Mono<InputStream> loadReactive(AttachmentMetadata attachment, MailboxSession mailboxSession) {
+        return Mono.fromCallable(() -> load(attachment, mailboxSession))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    }
 }

@@ -38,6 +38,8 @@ import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 public class StoreAttachmentManager implements AttachmentManager {
     private final AttachmentMapperFactory attachmentMapperFactory;
     private final MessageIdManager messageIdManager;
@@ -55,8 +57,19 @@ public class StoreAttachmentManager implements AttachmentManager {
         return exists(attachment, session);
     }
 
+    public Mono<Boolean> existsReactive(AttachmentId attachmentId, MailboxSession session) {
+        return attachmentMapperFactory.getAttachmentMapper(session)
+            .getAttachmentReactive(attachmentId)
+            .flatMap(attachment -> existsReactive(attachment, session));
+    }
+
     public boolean exists(AttachmentMetadata attachment, MailboxSession session) throws MailboxException {
         return !messageIdManager.accessibleMessages(ImmutableList.of(attachment.getMessageId()), session).isEmpty();
+    }
+
+    public Mono<Boolean> existsReactive(AttachmentMetadata attachment, MailboxSession session) {
+        return Mono.from(messageIdManager.accessibleMessagesReactive(ImmutableList.of(attachment.getMessageId()), session))
+            .map(accessibleMessages -> !accessibleMessages.isEmpty());
     }
 
     @Override
@@ -93,5 +106,16 @@ public class StoreAttachmentManager implements AttachmentManager {
             throw new RuntimeException(e);
         }
         return attachmentMapperFactory.getAttachmentMapper(mailboxSession).loadAttachmentContent(attachmentId);
+    }
+
+    @Override
+    public Mono<InputStream> loadAttachmentContentReactive(AttachmentId attachmentId, MailboxSession mailboxSession) {
+        return existsReactive(attachmentId, mailboxSession)
+            .flatMap(exist -> {
+                    if (!exist) {
+                        return Mono.error(new AttachmentNotFoundException(attachmentId.getId()));
+                    }
+                    return attachmentMapperFactory.getAttachmentMapper(mailboxSession).loadAttachmentContentReactive(attachmentId);
+                });
     }
 }
