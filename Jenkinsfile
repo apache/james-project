@@ -59,10 +59,6 @@ pipeline {
         skipDefaultCheckout(true)
     }
 
-    triggers {
-        issueCommentTrigger('.*test this please.*')
-    }
-
     stages {
         stage('Initialization') {
             steps {
