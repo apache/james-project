@@ -57,10 +57,6 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-    triggers {
-        issueCommentTrigger('.*test this please.*')
-    }
-
     stages {
         stage('Initialization') {
             steps {
