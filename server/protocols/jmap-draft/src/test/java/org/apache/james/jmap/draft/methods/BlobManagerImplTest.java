@@ -63,6 +63,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class BlobManagerImplTest {
     static final String ID = "abc";
@@ -97,8 +98,8 @@ class BlobManagerImplTest {
                 .size(BYTES.length)
                 .type(CONTENT_TYPE)
                 .build());
-        when(attachmentManager.loadAttachmentContent(ATTACHMENT_ID, session))
-            .thenReturn(new ByteArrayInputStream(BYTES));
+        when(attachmentManager.loadAttachmentContentReactive(ATTACHMENT_ID, session))
+            .thenReturn(Mono.just(new ByteArrayInputStream(BYTES)));
 
         Blob blob = blobManager.retrieve(BLOB_ID_ATTACHMENT, session);
 

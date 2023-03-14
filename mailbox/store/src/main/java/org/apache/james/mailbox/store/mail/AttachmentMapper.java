@@ -39,7 +39,17 @@ public interface AttachmentMapper extends Mapper {
 
     InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException;
 
+    default Mono<InputStream> loadAttachmentContentReactive(AttachmentId attachmentId) {
+        return Mono.fromCallable(() -> loadAttachmentContent(attachmentId))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    }
+
     AttachmentMetadata getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException;
+
+    default Mono<AttachmentMetadata> getAttachmentReactive(AttachmentId attachmentId) {
+        return Mono.fromCallable(() -> getAttachment(attachmentId))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    }
 
     List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds);
 

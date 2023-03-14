@@ -178,8 +178,9 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager)
     AttachmentId.from(blobId.value.value) match {
       case attachmentId: AttachmentId =>
         Try(attachmentManager.getAttachment(attachmentId, mailboxSession)) match {
-          case Success(attachmentMetadata) => Applicable(
-            SMono.fromCallable(() => AttachmentBlob(attachmentMetadata, attachmentManager.load(attachmentMetadata, mailboxSession))))
+          case Success(attachmentMetadata) =>
+            Applicable(SMono(attachmentManager.loadReactive(attachmentMetadata, mailboxSession))
+              .map(content => AttachmentBlob(attachmentMetadata, content)))
           case Failure(_) => NonApplicable
         }
       case _ => NonApplicable

@@ -28,6 +28,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 
+import reactor.core.publisher.Mono;
+
 public interface AttachmentManager extends AttachmentContentLoader {
 
     boolean exists(AttachmentId attachmentId, MailboxSession session) throws MailboxException;
@@ -38,9 +40,16 @@ public interface AttachmentManager extends AttachmentContentLoader {
 
     InputStream loadAttachmentContent(AttachmentId attachmentId, MailboxSession mailboxSession) throws AttachmentNotFoundException, IOException;
 
+    Mono<InputStream> loadAttachmentContentReactive(AttachmentId attachmentId, MailboxSession mailboxSession);
+
     @Override
     default InputStream load(AttachmentMetadata attachment, MailboxSession mailboxSession) throws IOException, AttachmentNotFoundException {
         return loadAttachmentContent(attachment.getAttachmentId(), mailboxSession);
+    }
+
+    @Override
+    default Mono<InputStream> loadReactive(AttachmentMetadata attachment, MailboxSession mailboxSession) {
+        return loadAttachmentContentReactive(attachment.getAttachmentId(), mailboxSession);
     }
 
 }

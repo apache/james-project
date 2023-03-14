@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.draft.methods;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -156,11 +158,26 @@ public class BlobManagerImpl implements BlobManager {
         BlobId blobId = BlobId.of(attachment.getAttachmentId());
         return Blob.builder()
             .id(blobId)
-            .payload(() -> {
-                try {
-                    return attachmentManager.loadAttachmentContent(attachment.getAttachmentId(), mailboxSession);
-                } catch (AttachmentNotFoundException e) {
-                    throw new BlobNotFoundException(blobId, e);
+            .payload(new Blob.InputStreamSupplier() {
+                @Override
+                public InputStream load() throws IOException, BlobNotFoundException {
+                    try {
+                        return loadReactive().block();
+                    } catch (RuntimeException e) {
+                        if (e.getCause() instanceof IOException) {
+                            throw (IOException) e.getCause();
+                        }
+                        if (e.getCause() instanceof BlobNotFoundException) {
+                            throw (BlobNotFoundException) e.getCause();
+                        }
+                        throw e;
+                    }
+                }
+
+                @Override
+                public Mono<InputStream> loadReactive() {
+                    return attachmentManager.loadAttachmentContentReactive(attachment.getAttachmentId(), mailboxSession)
+                        .onErrorResume(AttachmentNotFoundException.class, e -> Mono.error(new BlobNotFoundException(blobId, e)));
                 }
             })
             .size(attachment.getSize())
