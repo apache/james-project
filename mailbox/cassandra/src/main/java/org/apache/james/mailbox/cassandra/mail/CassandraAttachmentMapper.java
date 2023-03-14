@@ -73,6 +73,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
+    public Mono<AttachmentMetadata> getAttachmentReactive(AttachmentId attachmentId) {
+        Preconditions.checkArgument(attachmentId != null);
+        return getAttachmentInternal(attachmentId)
+            .switchIfEmpty(Mono.error(() -> new AttachmentNotFoundException(attachmentId.getId())));
+    }
+
+    @Override
     public List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
         return Flux.fromIterable(attachmentIds)
@@ -87,6 +94,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             .map(daoAttachment -> blobStore.read(blobStore.getDefaultBucketName(), daoAttachment.getBlobId(), LOW_COST))
             .blockOptional()
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.toString()));
+    }
+
+    @Override
+    public Mono<InputStream> loadAttachmentContentReactive(AttachmentId attachmentId) {
+        return attachmentDAOV2.getAttachment(attachmentId, messageIdFallback(attachmentId))
+            .flatMap(daoAttachment -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), daoAttachment.getBlobId(), LOW_COST)))
+            .switchIfEmpty(Mono.error(() -> new AttachmentNotFoundException(attachmentId.toString())));
     }
 
     private Mono<CassandraMessageId> messageIdFallback(AttachmentId attachmentId) {

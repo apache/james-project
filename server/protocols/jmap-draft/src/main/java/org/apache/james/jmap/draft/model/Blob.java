@@ -25,10 +25,13 @@ import java.util.Objects;
 
 import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.util.ReactorUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Mono;
 
 public class Blob {
 
@@ -40,6 +43,11 @@ public class Blob {
          * The caller is responsible of closing it.
          */
         InputStream load() throws IOException, BlobNotFoundException;
+
+        default Mono<InputStream> loadReactive() {
+            return Mono.fromCallable(this::load)
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+        }
     }
 
     public static class Builder {
@@ -109,6 +117,10 @@ public class Blob {
 
     public InputStream getStream() throws IOException {
         return payload.load();
+    }
+
+    public Mono<InputStream> getStreamReactive() {
+        return payload.loadReactive();
     }
 
     public long getSize() {
