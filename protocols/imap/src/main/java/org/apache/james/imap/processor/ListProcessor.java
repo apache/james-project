@@ -226,7 +226,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
                 }
             })
             .doOnNext(metaData -> respondMyRights(request, responder, mailboxSession, metaData))
-            .flatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(retrieveMessageManager(metaData, mailboxSession), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
+            .concatMap(metaData -> request.getStatusDataItems().map(statusDataItems -> statusProcessor.sendStatus(retrieveMessageManager(metaData, mailboxSession), statusDataItems, responder, session, mailboxSession)).orElse(Mono.empty()))
             .then();
     }
 
@@ -246,7 +246,7 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
             .flatMapIterable(list -> list)
             .doOnNext(pathAndResponse -> responder.respond(pathAndResponse.getMiddle()))
             .doOnNext(pathAndResponse -> pathAndResponse.getRight().ifPresent(mailboxMetaData -> respondMyRights(request, responder, mailboxSession, mailboxMetaData)))
-            .flatMap(pathAndResponse -> sendStatusWhenSubscribed(session, request, responder, mailboxSession, pathAndResponse))
+            .concatMap(pathAndResponse -> sendStatusWhenSubscribed(session, request, responder, mailboxSession, pathAndResponse))
             .then();
     }
 
