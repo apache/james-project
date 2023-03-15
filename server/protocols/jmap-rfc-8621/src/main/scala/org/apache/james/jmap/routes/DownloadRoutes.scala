@@ -18,13 +18,19 @@
  ****************************************************************/
 package org.apache.james.jmap.routes
 
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+import java.util.stream
+import java.util.stream.Stream
+
 import com.google.common.base.CharMatcher
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.refineV
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus._
-import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus, QueryStringDecoder}
+import io.netty.handler.codec.http.{HttpHeaderValidationUtil, HttpMethod, HttpResponseStatus, QueryStringDecoder}
+import javax.inject.{Inject, Named}
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
@@ -54,12 +60,6 @@ import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 import reactor.core.scheduler.Schedulers
 import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
-import java.io.InputStream
-import java.nio.charset.StandardCharsets
-import java.util.stream
-import java.util.stream.Stream
-
-import javax.inject.{Inject, Named}
 
 import scala.compat.java8.FunctionConverters._
 import scala.jdk.CollectionConverters._
@@ -312,7 +312,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       (stream: InputStream) => addContentDispositionHeader(optionalName)
         .compose(addContentLengthHeader(blob.size))
         .apply(response)
-        .header(CONTENT_TYPE, blobContentType.asString)
+        .header(CONTENT_TYPE, sanitizeHeaderValue(blobContentType.asString))
         .status(OK)
         .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
           .map(Unpooled.wrappedBuffer(_))
@@ -324,6 +324,13 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
   private def addContentDispositionHeader(optionalName: Option[String]): HttpServerResponse => HttpServerResponse =
     resp => optionalName.map(addContentDispositionHeaderRegardingEncoding(_, resp))
       .getOrElse(resp)
+
+  private def sanitizeHeaderValue(s: String): String =
+    if (HttpHeaderValidationUtil.validateValidHeaderValue(s) == -1) {
+      s
+    } else {
+      "application/octet-stream"
+    }
 
   private def addContentLengthHeader(sizeTry: Try[Size]): HttpServerResponse => HttpServerResponse =
     resp => sizeTry

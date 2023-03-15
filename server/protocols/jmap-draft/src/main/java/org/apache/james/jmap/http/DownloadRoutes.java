@@ -67,6 +67,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 
 import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.HttpHeaderValidationUtil;
 import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -226,12 +227,19 @@ public class DownloadRoutes implements JMAPRoutes {
     private Mono<Void> downloadBlob(Optional<String> optionalName, HttpServerResponse response, long blobSize, ContentType blobContentType, InputStream stream) {
         return addContentDispositionHeader(optionalName, response)
             .header("Content-Length", String.valueOf(blobSize))
-            .header(CONTENT_TYPE, blobContentType.asString())
+            .header(CONTENT_TYPE, sanitizeHeaderValue(blobContentType.asString()))
             .status(OK)
             .send(ReactorUtils.toChunks(stream, BUFFER_SIZE)
                 .map(Unpooled::wrappedBuffer)
                 .subscribeOn(Schedulers.boundedElastic()))
             .then();
+    }
+
+    public String sanitizeHeaderValue(String s) {
+        if (HttpHeaderValidationUtil.validateValidHeaderValue(s) == -1) {
+            return s;
+        }
+        return "application/octet-stream";
     }
 
     private HttpServerResponse addContentDispositionHeader(Optional<String> optionalName, HttpServerResponse resp) {
