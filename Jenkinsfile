@@ -59,10 +59,6 @@ pipeline {
         skipDefaultCheckout(true)
     }
 
-    triggers {
-        issueCommentTrigger('.*test this please.*')
-    }
-
     stages {
         stage('Initialization') {
             steps {
@@ -74,7 +70,8 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo 'Cleaning up the workspace'
-                cleanWs()
+                // cleanWs()
+                deleteDir()
             }
         }
 
