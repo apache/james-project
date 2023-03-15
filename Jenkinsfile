@@ -70,7 +70,8 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo 'Cleaning up the workspace'
-                cleanWs()
+                // cleanWs()
+                deleteDir()
             }
         }
 
