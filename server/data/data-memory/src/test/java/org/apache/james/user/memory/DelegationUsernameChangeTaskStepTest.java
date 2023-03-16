@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationUsernameChangeTaskStep;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,7 @@ import reactor.core.publisher.Mono;
 class DelegationUsernameChangeTaskStepTest {
     private static final Username ALICE_OLD = Username.of("alice-old@domain.tld");
     private static final Username ALICE_NEW = Username.of("alice-new@domain.tld");
+    private static final Username ANDRE = Username.of("andre@domain.tld");
     private static final Username BOB = Username.of("bob@domain.tld");
 
     private MemoryDelegationStore delegationStore;
@@ -57,14 +59,32 @@ class DelegationUsernameChangeTaskStepTest {
 
     @Test
     void shouldRemoveDelegationForOldUser() {
+        // ALICE_OLD delegates BOB to access her account
         Mono.from(delegationStore.addAuthorizedUser(BOB)
             .forUser(ALICE_OLD))
             .block();
 
+        // ALICE_OLD can access ANDRE account
+        Mono.from(delegationStore.addAuthorizedUser(ALICE_OLD)
+            .forUser(ANDRE))
+            .block();
+
         Mono.from(testee.changeUsername(ALICE_OLD, ALICE_NEW)).block();
 
-        assertThat(Flux.from(delegationStore.authorizedUsers(ALICE_OLD)).collectList().block())
-            .isEmpty();
+        SoftAssertions.assertSoftly(softly -> {
+            // Check delegatees of ALICE_OLD (make sure it is truncated)
+            softly.assertThat(Flux.from(delegationStore.authorizedUsers(ALICE_OLD)).collectList().block())
+                .isEmpty();
+            // Check delegators of ALICE_OLD (make sure it is truncated)
+            softly.assertThat(Flux.from(delegationStore.delegatedUsers(ALICE_OLD)).collectList().block())
+                .isEmpty();
+            // Check delegatees of ANDRE (make sure ANDRE delegatees do not contain ALICE_OLD)
+            softly.assertThat(Flux.from(delegationStore.authorizedUsers(ANDRE)).collectList().block())
+                .doesNotContain(ALICE_OLD);
+            // Check delegators of BOB (make sure BOB delegators do not contain ALICE_OLD)
+            softly.assertThat(Flux.from(delegationStore.delegatedUsers(BOB)).collectList().block())
+                .doesNotContain(ALICE_OLD);
+        });
     }
 
     @Test
