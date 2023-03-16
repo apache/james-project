@@ -77,7 +77,7 @@ trait ProvisioningContract {
       .post
     .`then`
       .statusCode(SC_OK)
-      .body(s"$ARGUMENTS.list", hasSize(6))
+      .body(s"$ARGUMENTS.list", hasSize(DefaultMailboxes.DEFAULT_MAILBOXES.size()))
       .body(s"$ARGUMENTS.list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray:_*))
   }
 }

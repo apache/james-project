@@ -752,7 +752,7 @@ trait MailboxGetMethodContract {
       .post
     .`then`
       .statusCode(SC_OK)
-      .body(s"$ARGUMENTS.list", hasSize(7))
+      .body(s"$ARGUMENTS.list", hasSize(DefaultMailboxes.DEFAULT_MAILBOXES.size()))
       .body(s"$ARGUMENTS.list.name", hasItems(expectedList.toArray:_*))
   }
 
