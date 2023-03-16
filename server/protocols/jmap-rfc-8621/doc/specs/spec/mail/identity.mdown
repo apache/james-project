@@ -50,6 +50,8 @@ For **create**:
 
 ## Example
 
+### Get identity
+
 Request:
 
     [ "Identity/get", {
@@ -89,3 +91,94 @@ with response:
       ],
       "notFound": []
     }, "0" ]
+
+### Create a custom identity
+
+Request:
+
+    [
+      "Identity/set",
+      {
+        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        "create": {"4f29": {
+          "bcc": [{
+            "name": "David",
+            "email": "david@domain.tld"
+          }],
+          "textSignature": "Some text signature",
+          "name": "Bob",
+          "replyTo": [{
+            "name": "Alice",
+            "email": "alice@domain.tld"
+          }],
+          "htmlSignature": "<p>Some html signature<\/p>",
+          "email": "bob@domain.tld"
+        }}
+      },
+      "c1"
+    ]
+
+with response:
+
+    [
+      "Identity/set",
+      {
+        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        "created": {"4f29": {
+          "mayDelete": true,
+          "id": "$${json-unit.ignore}"
+        }},
+        "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
+      },
+      "c1"
+    ]
+
+### Delete a custom identity
+
+Request:
+
+    [
+      "Identity/set",
+      {
+        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        "destroy": ["XD-3301-222-11_22AAz"]
+      },
+      "c1"
+    ]
+
+Response:
+
+    [
+      "Identity/set",
+      {
+        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        "destroyed": ["XD-3301-222-11_22AAz"],
+        "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
+      },
+      "c1"
+    ]
+
+## Update a custom identity
+
+Request:
+
+    [
+      "Identity/set",
+      {
+        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        "update": {"XD-3301-222-11_22AAz": {"name": "NewName1"}}
+      },
+      "c1"
+    ]
+
+Response:
+
+    [
+      "Identity/set",
+      {
+        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+        "updated": {"XD-3301-222-11_22AAz": {}},
+        "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943"
+      },
+      "c1"
+    ]
