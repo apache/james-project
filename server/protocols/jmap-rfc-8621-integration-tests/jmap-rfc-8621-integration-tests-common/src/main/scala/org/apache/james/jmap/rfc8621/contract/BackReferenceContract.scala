@@ -85,13 +85,14 @@ trait BackReferenceContract {
       .post
     .`then`
       .statusCode(SC_OK)
-      .header("Content-Length", "551")
+      .header("Content-Length", "573")
       .extract()
       .body()
       .asString()
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state", "methodResponses[1][1].state")
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -107,7 +108,8 @@ trait BackReferenceContract {
          |                    {"id": "2"},
          |                    {"id": "3"},
          |                    {"id": "4"},
-         |                    {"id": "6"}
+         |                    {"id": "6"},
+         |                    {"id": "7"}
          |                ],
          |                "notFound": []
          |            },
@@ -123,7 +125,8 @@ trait BackReferenceContract {
          |                    {"id": "2"},
          |                    {"id": "3"},
          |                    {"id": "4"},
-         |                    {"id": "6"}
+         |                    {"id": "6"},
+         |                    {"id": "7"}
          |                ],
          |                "notFound": []
          |            },
@@ -172,6 +175,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -186,7 +190,8 @@ trait BackReferenceContract {
          |                    {"id": "2"},
          |                    {"id": "3"},
          |                    {"id": "4"},
-         |                    {"id": "6"}
+         |                    {"id": "6"},
+         |                    {"id": "7"}
          |                ],
          |                "notFound": []
          |            },
@@ -243,6 +248,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -257,7 +263,8 @@ trait BackReferenceContract {
          |                    {"id": "2"},
          |                    {"id": "3"},
          |                    {"id": "4"},
-         |                    {"id": "6"}
+         |                    {"id": "6"},
+         |                    {"id": "7"}
          |                ],
          |                "notFound": []
          |            },
@@ -314,6 +321,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -328,7 +336,8 @@ trait BackReferenceContract {
          |                    {"id": "2"},
          |                    {"id": "3"},
          |                    {"id": "4"},
-         |                    {"id": "6"}
+         |                    {"id": "6"},
+         |                    {"id": "7"}
          |                ],
          |                "notFound": []
          |            },
@@ -385,6 +394,7 @@ trait BackReferenceContract {
 
     assertThatJson(response)
       .whenIgnoringPaths("methodResponses[0][1].state")
+      .withOptions(new Options(Option.IGNORING_ARRAY_ORDER))
       .isEqualTo(
       s"""{
          |    "sessionState": "${SESSION_STATE.value}",
@@ -399,7 +409,8 @@ trait BackReferenceContract {
          |                    {"id": "2"},
          |                    {"id": "3"},
          |                    {"id": "4"},
-         |                    {"id": "6"}
+         |                    {"id": "6"},
+         |                    {"id": "7"}
          |                ],
          |                "notFound": []
          |            },
