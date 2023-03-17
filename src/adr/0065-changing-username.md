@@ -9,7 +9,7 @@ Accepted (lazy consensus).
 Implemented.
 
 ## Context
-Changing username is a desired feature for an email server. It is a common practice when a user marries. For example:
+Changing username is a desired feature for an email server. It is a common practice especially when a user marries or divorces. For example:
 
 Alice MARTINEZ have an email address `alice.martinez@domain.tld` and gets married to Bob ERNANDEZ. She thus wants to
 change her email address to `alice.ernandez@domain.tld` while preserving her email data.
@@ -18,10 +18,6 @@ Nowadays, James uses username as an identifier for user data. Therefore, this fe
 directly identifier to another value is difficult and could break data consistency if we do not do it carefully.
 
 ## Decision
-
-Need to copy the data
-Modular design
-
 We decided to do changing username with two steps: first, create new username, then migrate the old user's data to the new account -
 the way we expect that is less dangerous to current data consistency. The data in the old account need to be truncated after migrating to the new account.
 
@@ -43,6 +39,7 @@ This option could ease operators in case the data migration fails in the middle.
 
 ## Consequences
 - Add one more useful feature to James rich feature set: Users can change their name while preserving their email data.
+- Modular design for changing username is extension friendly for tailor James servers.
 - Users would be aware that they have a new account through a new username/password. No implicit migration without user attention is archived today.
 - JMAP Identity data is not migrated because they are tightly coupled to the old username, users should create identities again themselves.
 - Some data considered not critical like Push subscription, Vacation response,... are not migrated today. Contributions for them are welcome.
