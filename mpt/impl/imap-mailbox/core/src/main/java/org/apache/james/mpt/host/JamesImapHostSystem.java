@@ -80,7 +80,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         this.decoder = decoder;
         this.encoder = encoder;
         this.processor = processor;
-        processor.configure(ImapConfiguration.builder().isProvisionDefaultMailboxes(false).build());
+        configure(ImapConfiguration.builder().isProvisionDefaultMailboxes(false).build());
     }
 
     @Override
