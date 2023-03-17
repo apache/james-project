@@ -45,6 +45,7 @@ import org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -254,13 +255,17 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
     }
 
     private Mono<Optional<MailboxIterationResult>> iterateMailbox(StatusDataItems statusDataItems, MessageManager messageManager, MailboxSession session) {
-        if (statusDataItems.isSize()) {
+        if (statusDataItems.isSize() || statusDataItems.isDeletedStorage()) {
             return Flux.from(messageManager.getMessagesReactive(MessageRange.all(), FetchGroup.MINIMAL, session))
                 .reduce(new MailboxIterationResult(), MailboxIterationResult::accumulate)
                 .map(Optional::of);
-        } else {
-            return Mono.just(Optional.empty());
         }
+        if (statusDataItems.isDeleted()) {
+            return Flux.from(messageManager.listMessagesMetadata(MessageRange.all(), session))
+                .reduce(new MailboxIterationResult(), MailboxIterationResult::accumulateDeleted)
+                .map(Optional::of);
+        }
+        return Mono.just(Optional.empty());
     }
 
     public static class MailboxIterationResult {
@@ -274,6 +279,13 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
                 deletedStorage += messageResult.getSize();
             }
             size += messageResult.getSize();
+            return this;
+        }
+
+        public MailboxIterationResult accumulateDeleted(ComposedMessageIdWithMetaData metaData) {
+            if (metaData.getFlags().contains(Flags.Flag.DELETED)) {
+                deleted++;
+            }
             return this;
         }
 
