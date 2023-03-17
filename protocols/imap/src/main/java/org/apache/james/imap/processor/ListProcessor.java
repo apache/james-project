@@ -39,6 +39,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.Capability;
+import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -382,6 +383,9 @@ public class ListProcessor<T extends ListRequest> extends AbstractMailboxProcess
         return MDCBuilder.create()
             .addToContext(MDCBuilder.ACTION, "LIST")
             .addToContext("base", request.getBaseReferenceName())
-            .addToContext("pattern", request.getMailboxPattern());
+            .addToContext("pattern", request.getMailboxPattern())
+            .addToContext("returnOptions", request.getReturnOptions().toString())
+            .addToContext("selectOptions", request.getSelectOptions().toString())
+            .addToContextIfPresent("statusItems", request.getStatusDataItems().map(StatusDataItems::toString));
     }
 }
