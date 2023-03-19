@@ -6,7 +6,7 @@ Date: 2022-11-15
 
 Accepted (lazy consensus).
 
-Not yet implemented.
+Implemented.
 
 ## Context
 
@@ -43,6 +43,6 @@ The account delegation will help owner and delegated account:
 
 ## References
 
-- [JIRA](https://issues.apache.org/jira/browse/JAMES-xxx)
+- [JIRA](https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3756)
 - [JMAP Sharing](https://datatracker.ietf.org/doc/draft-ietf-jmap-sharing/)
 - [James Delegation](https://github.com/apache/james-project/blob/master/src/adr/0061-delegation.md)
