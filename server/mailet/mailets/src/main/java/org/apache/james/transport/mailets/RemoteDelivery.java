@@ -253,7 +253,7 @@ public class RemoteDelivery extends GenericMailet {
      * service.
      */
     @Override
-    public synchronized void destroy() {
+    public void destroy() {
         if (startThreads == ThreadState.START_THREADS) {
             deliveryRunnable.dispose();
         }
