@@ -1446,6 +1446,74 @@ trait MailboxChangesMethodContract {
   }
 
   @Test
+  def mailboxChangesShouldReturnDestroyedChangeWhenOwnerRevokingMailboxShareeRights(server: GuiceJamesServer): Unit = {
+    val accountId: AccountId = AccountId.fromUsername(BOB)
+    val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
+    val provisioningState: State = provisionSystemMailboxes(server)
+
+    val path = MailboxPath.forUser(BOB, "mailbox1")
+    val mailboxId: String = mailboxProbe
+      .createMailbox(path)
+      .serialize
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights(Right.Lookup, Right.Read))
+
+    waitForNextState(server, accountId, provisioningState)
+    val oldStateAndre: State = waitForNextStateWithDelegation(server, AccountId.fromUsername(ANDRE), State.INITIAL)
+
+    server.getProbe(classOf[ACLProbeImpl])
+      .replaceRights(path, ANDRE.asString, new MailboxACL.Rfc4314Rights())
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
+         |  "methodCalls": [[
+         |    "Mailbox/changes",
+         |    {
+         |      "accountId": "$ANDRE_ACCOUNT_ID",
+         |      "sinceState": "${oldStateAndre.getValue}"
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`(
+        baseRequestSpecBuilder(server)
+          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .setBody(request)
+          .build, new ResponseSpecBuilder().build)
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
+
+      assertThatJson(response)
+        .whenIgnoringPaths("methodResponses[0][1].newState")
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |      [ "Mailbox/changes", {
+             |        "accountId": "$ANDRE_ACCOUNT_ID",
+             |        "oldState": "${oldStateAndre.getValue}",
+             |        "hasMoreChanges": false,
+             |        "updatedProperties": null,
+             |        "created": [],
+             |        "updated": [],
+             |        "destroyed": ["$mailboxId"]
+             |      }, "c1"]
+             |    ]
+             |}""".stripMargin)
+    }
+  }
+
+  @Test
   def returnedIdsShouldNotReturnDuplicatesAccrossCreatedUpdatedOrDestroyed(server: GuiceJamesServer): Unit = {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
 

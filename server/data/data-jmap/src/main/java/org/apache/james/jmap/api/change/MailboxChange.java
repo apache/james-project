@@ -198,7 +198,21 @@ public class MailboxChange implements JmapChange {
                     .delegated()
                     .build());
 
-            return Stream.concat(Stream.of(ownerChange), shareeChanges)
+            Stream<MailboxChange> deletionChanges = mailboxACLUpdated.getAclDiff()
+                .removedEntries()
+                .filter(entry -> entry.getKey().getNameType().equals(MailboxACL.NameType.user))
+                .filter(entry -> !entry.getKey().isNegative())
+                .map(entry -> MailboxChange.builder()
+                    .accountId(AccountId.fromString(entry.getKey().getName()))
+                    .state(stateFactory.generate())
+                    .date(now)
+                    .isCountChange(false)
+                    .destroyed(ImmutableList.of(mailboxACLUpdated.getMailboxId()))
+                    .delegated()
+                    .build());
+
+            return Stream.of(Stream.of(ownerChange), shareeChanges, deletionChanges)
+                .flatMap(e -> e)
                 .collect(ImmutableList.toImmutableList());
         }
 
