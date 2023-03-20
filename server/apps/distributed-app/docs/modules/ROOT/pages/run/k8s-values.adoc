@@ -31,7 +31,7 @@ JMAP instance in the cluster
 |replicaImapSmtpInstanceCount |1 |The number of pods we deploy for James
 IMAP/SMTP instance in the cluster
 
-|image |apache/james:distributed-3.7.3 |The James image used for
+|image |apache/james:distributed-3.7.4 |The James image used for
 deployment (Cassandra - RabbitMQ - LDAP distributed James flavor)
 |===
 
