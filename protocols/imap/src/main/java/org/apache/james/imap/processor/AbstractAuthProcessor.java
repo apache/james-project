@@ -21,11 +21,13 @@ package org.apache.james.imap.processor;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
+import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.main.PathConverter;
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.BadCredentialsException;
@@ -50,6 +52,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
 
     // TODO: this should be configurable
     private static final int MAX_FAILURES = 3;
+    private ImapConfiguration imapConfiguration;
 
     @FunctionalInterface
     protected interface MailboxSessionAuthWithDelegationSupplier {
@@ -59,6 +62,13 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
     public AbstractAuthProcessor(Class<R> acceptableClass, MailboxManager mailboxManager, StatusResponseFactory factory,
                                  MetricFactory metricFactory) {
         super(acceptableClass, mailboxManager, factory, metricFactory);
+    }
+
+    @Override
+    public void configure(ImapConfiguration imapConfiguration) {
+        super.configure(imapConfiguration);
+
+        this.imapConfiguration = imapConfiguration;
     }
 
     protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
@@ -137,14 +147,30 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         if (Mono.from(mailboxManager.mailboxExists(inboxPath, mailboxSession)).block()) {
             LOGGER.debug("INBOX exists. No need to create it.");
         } else {
-            try {
-                mailboxManager.createMailbox(inboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, mailboxSession)
-                    .ifPresentOrElse(
-                        id -> LOGGER.info("Provisioning INBOX. {} created.", id),
-                        () -> LOGGER.warn("Provisioning INBOX successful. But no MailboxId have been returned."));
-            } catch (MailboxExistsException e) {
-                LOGGER.warn("Mailbox INBOX created by concurrent call. Safe to ignore this exception.");
+            provisionMailbox(DefaultMailboxes.INBOX, session, mailboxManager, mailboxSession);
+            if (imapConfiguration.isProvisionDefaultMailboxes()) {
+                for (String mailbox : DefaultMailboxes.DEFAULT_MAILBOXES) {
+                    provisionMailbox(mailbox, session, mailboxManager, mailboxSession);
+                }
             }
+        }
+    }
+
+    private void provisionMailbox(String mailbox, ImapSession session, MailboxManager mailboxManager,
+                                  MailboxSession mailboxSession) throws MailboxException {
+        var mailboxPath = PathConverter.forSession(session).buildFullPath(mailbox);
+        if (Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession)).block()) {
+            LOGGER.debug("{} exists. No need to create it.", mailbox);
+            return;
+        }
+        try {
+            mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, mailboxSession)
+                    .ifPresentOrElse(id -> LOGGER.info("Provisioning mailbox {}. {} created.", mailbox, id),
+                                     () -> LOGGER.warn(
+                                             "Provisioning mailbox {} successful. But no MailboxId have been returned.",
+                                             mailbox));
+        } catch (MailboxExistsException e) {
+            LOGGER.warn("Mailbox {} created by concurrent call. Safe to ignore this exception.", mailbox);
         }
     }
 

@@ -99,7 +99,7 @@ public abstract class ProvisioningTest {
             .header("Content-Length", notNullValue())
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(6))
+            .body(ARGUMENTS + ".list", hasSize(DefaultMailboxes.DEFAULT_MAILBOXES.size()))
             .body(ARGUMENTS + ".list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray()));
     }
 

@@ -752,7 +752,7 @@ trait MailboxGetMethodContract {
       .post
     .`then`
       .statusCode(SC_OK)
-      .body(s"$ARGUMENTS.list", hasSize(7))
+      .body(s"$ARGUMENTS.list", hasSize(expectedList.size))
       .body(s"$ARGUMENTS.list.name", hasItems(expectedList.toArray:_*))
   }
 
@@ -769,7 +769,7 @@ trait MailboxGetMethodContract {
       .post
     .`then`
       .statusCode(SC_OK)
-      .body(s"$ARGUMENTS.list", hasSize(6))
+      .body(s"$ARGUMENTS.list", hasSize(DefaultMailboxes.DEFAULT_MAILBOXES.size()))
       .body(s"$ARGUMENTS.list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray:_*))
       .body(s"$ARGUMENTS.list.name", not(hasItem(andreMailbox)))
   }
@@ -912,7 +912,7 @@ trait MailboxGetMethodContract {
     .`then`
       .statusCode(SC_OK)
       // Only system mailboxes are included
-      .body(s"$ARGUMENTS.list", hasSize(6))
+      .body(s"$ARGUMENTS.list", hasSize(DefaultMailboxes.DEFAULT_MAILBOXES.size()))
   }
 
   @Test

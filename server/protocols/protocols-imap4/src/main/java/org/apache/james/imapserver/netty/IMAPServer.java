@@ -202,6 +202,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                 .appendLimit(Optional.of(parseLiteralSizeLimit(configuration)).filter(i -> i > 0))
                 .maxQueueSize(configuration.getInteger("maxQueueSize", ImapConfiguration.DEFAULT_QUEUE_SIZE))
                 .concurrentRequests(configuration.getInteger("concurrentRequests", ImapConfiguration.DEFAULT_CONCURRENT_REQUESTS))
+                .isProvisionDefaultMailboxes(configuration.getBoolean("provisionDefaultMailboxes", ImapConfiguration.DEFAULT_PROVISION_DEFAULT_MAILBOXES))
                 .withCustomProperties(configuration.getProperties("customProperties"))
                 .build();
     }
