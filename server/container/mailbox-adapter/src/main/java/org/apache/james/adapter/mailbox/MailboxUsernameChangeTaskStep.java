@@ -77,20 +77,23 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
 
     private Mono<Void> migrateMailbox(MailboxSession fromSession, MailboxSession toSession, org.apache.james.mailbox.model.MailboxMetaData mailbox) {
         MailboxPath renamedPath = mailbox.getPath().withUser(toSession.getUser());
-        Mono<Void> renamePublisher = mailboxManager.renameMailboxReactive(mailbox.getPath(), renamedPath,
+        return mailboxManager.mailboxExists(renamedPath, toSession)
+            .flatMap(exist -> {
+                if (!exist) {
+                    return renameMailboxAndRenameSubscriptionForDelegatee(fromSession, toSession, mailbox, renamedPath);
+                } else {
+                    return renameWhenMailboxExist(toSession, renamedPath,
+                        renameMailboxAndRenameSubscriptionForDelegatee(fromSession, toSession, mailbox, renamedPath));
+                }
+            });
+    }
+
+    private Mono<Void> renameMailboxAndRenameSubscriptionForDelegatee(MailboxSession fromSession, MailboxSession toSession, MailboxMetaData mailbox, MailboxPath renamedPath) {
+        return mailboxManager.renameMailboxReactive(mailbox.getPath(), renamedPath,
                 MailboxManager.RenameOption.RENAME_SUBSCRIPTIONS,
                 fromSession, toSession)
             .then(renameSubscriptionsForDelegatee(mailbox, renamedPath))
             .then();
-
-        return mailboxManager.mailboxExists(renamedPath, toSession)
-            .flatMap(exist -> {
-                if (!exist) {
-                    return renamePublisher;
-                } else {
-                    return renameWhenMailboxExist(toSession, renamedPath, renamePublisher);
-                }
-            });
     }
 
     // rename: renamedPath -> temporaryPath
