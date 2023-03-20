@@ -182,7 +182,7 @@ class MailboxUsernameChangeTaskStepTest {
     }
 
     @Test
-    void shouldMigrateSubMailboxesWhenNewUserHasAlreadyMailbox() throws Exception {
+    void shouldMigrateMailboxesWhenNewUserHasAlreadyOtherMailboxes() throws Exception {
         MailboxSession fromSession = mailboxManager.createSystemSession(ALICE);
         mailboxManager.createMailbox(MailboxPath.forUser(ALICE, "test"), MailboxManager.CreateOption.NONE, fromSession);
         mailboxManager.createMailbox(MailboxPath.forUser(ALICE, "test.child"), MailboxManager.CreateOption.NONE, fromSession);
