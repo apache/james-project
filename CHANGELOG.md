@@ -241,7 +241,7 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - JAMES-3881 -Djmx.remote.x.mlet.allow.getMBeansFromURL=false (#1460)
  - [UPGRADE] commons-fileupload 1.4 -> 1.5 (#1462)
  - JAMES-3881 Prevent CommonsBeanutils1 deserialization exploit [BACKPORT] (#1455)
-22313d557d JAMES-3881 Unregister LOG4J MBeans (#1459)
+ - JAMES-3881 Unregister LOG4J MBeans (#1459)
 
 ### Fixes
 
