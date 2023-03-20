@@ -45,7 +45,7 @@ will have no effect. Optional. Default value 1.
 |cassandra.local.dc
 |Optional. Allows specifying the local DC as part of the load balancing policy. Specifying it
 would result in the use of `new TokenAwarePolicy(DCAwareRoundRobinPolicy.builder().withLocalDc(value).build())` as a LoadBalancingPolicy.
-This value is useful in a multi-DC Cassandra setup. Be aware of xref:../architecture/consistency-model.html#_about_multi_data_center_setups[limitation of multi-DC setups for James]
+This value is useful in a multi-DC Cassandra setup. Be aware of xref:../architecture/consistency-model.adoc#_about_multi_data_center_setups[limitation of multi-DC setups for James]
 Not specifying this value results in the driver's default load balancing policy to be used.
 
 |optimistic.consistency.level.enabled
