@@ -23,9 +23,12 @@ import static org.apache.james.mailbox.MailboxManager.MailboxSearchFetchType.Min
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.nio.charset.StandardCharsets;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -33,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mime4j.dom.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -146,5 +150,52 @@ class MailboxUsernameChangeTaskStepTest {
 
         assertThat(subscriptionManager.subscriptions(mailboxManager.createSystemSession(BOB)))
             .containsOnly(MailboxPath.forUser(BOB, "subscribed"));
+    }
+
+    @Test
+    void shouldMigrateMailboxesWhenNewUserHasAlreadyMailbox() throws Exception {
+        MailboxSession aliceSession = mailboxManager.createSystemSession(ALICE);
+        MailboxSession bobSession = mailboxManager.createSystemSession(BOB);
+        MailboxPath aliceInbox = MailboxPath.inbox(ALICE);
+        MailboxPath bobInbox = MailboxPath.inbox(BOB);
+        mailboxManager.createMailbox(aliceInbox, MailboxManager.CreateOption.NONE, aliceSession);
+        mailboxManager.createMailbox(bobInbox, MailboxManager.CreateOption.NONE, bobSession);
+
+        mailboxManager.getMailbox(aliceInbox, aliceSession)
+            .appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("toto")
+                .setBody("alice33333", StandardCharsets.UTF_8)
+                .build()), aliceSession);
+
+        mailboxManager.getMailbox(bobInbox, bobSession)
+            .appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("toto")
+                .setBody("bob", StandardCharsets.UTF_8)
+                .build()), bobSession);
+
+        Mono.from(testee.changeUsername(ALICE, BOB)).block();
+
+        assertThat(mailboxManager.getMailbox(bobInbox, bobSession).getMessageCount(bobSession))
+            .isEqualTo(2);
+
+        assertThat(mailboxManager.list(bobSession)).containsOnly(bobInbox);
+    }
+
+    @Test
+    void shouldMigrateSubMailboxesWhenNewUserHasAlreadyMailbox() throws Exception {
+        MailboxSession fromSession = mailboxManager.createSystemSession(ALICE);
+        mailboxManager.createMailbox(MailboxPath.forUser(ALICE, "test"), MailboxManager.CreateOption.NONE, fromSession);
+        mailboxManager.createMailbox(MailboxPath.forUser(ALICE, "test.child"), MailboxManager.CreateOption.NONE, fromSession);
+
+        MailboxSession bobSession = mailboxManager.createSystemSession(BOB);
+        MailboxPath bobInbox = MailboxPath.inbox(BOB);
+        mailboxManager.createMailbox(bobInbox, MailboxManager.CreateOption.NONE, bobSession);
+
+        Mono.from(testee.changeUsername(ALICE, BOB)).block();
+
+        assertThat(mailboxManager.list(mailboxManager.createSystemSession(BOB)))
+            .containsOnly(MailboxPath.forUser(BOB, "test"),
+                MailboxPath.forUser(BOB, "test.child"),
+                bobInbox);
     }
 }

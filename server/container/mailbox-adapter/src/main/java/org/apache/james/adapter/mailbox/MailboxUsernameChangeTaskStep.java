@@ -28,6 +28,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -76,11 +77,35 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
 
     private Mono<Void> migrateMailbox(MailboxSession fromSession, MailboxSession toSession, org.apache.james.mailbox.model.MailboxMetaData mailbox) {
         MailboxPath renamedPath = mailbox.getPath().withUser(toSession.getUser());
-        return mailboxManager.renameMailboxReactive(mailbox.getPath(), renamedPath,
-            MailboxManager.RenameOption.RENAME_SUBSCRIPTIONS,
-            fromSession, toSession)
+        Mono<Void> renamePublisher = mailboxManager.renameMailboxReactive(mailbox.getPath(), renamedPath,
+                MailboxManager.RenameOption.RENAME_SUBSCRIPTIONS,
+                fromSession, toSession)
             .then(renameSubscriptionsForDelegatee(mailbox, renamedPath))
             .then();
+
+        return mailboxManager.mailboxExists(renamedPath, toSession)
+            .flatMap(exist -> {
+                if (!exist) {
+                    return renamePublisher;
+                } else {
+                    return renameWhenMailboxExist(toSession, renamedPath, renamePublisher);
+                }
+            });
+    }
+
+    // rename: renamedPath -> temporaryPath
+    // rename: mailbox.getPath -> renamedPath
+    // copy messages: temporaryPath -> renamedPath
+    // delete: temporaryPath
+    private Mono<Void> renameWhenMailboxExist(MailboxSession toSession, MailboxPath renamedPath, Mono<Void> renamePublisher) {
+        MailboxPath temporaryPath = new MailboxPath(renamedPath.getNamespace(), renamedPath.getUser(), renamedPath.getName() + "tmp");
+        return mailboxManager.renameMailboxReactive(renamedPath, temporaryPath,
+                MailboxManager.RenameOption.NONE, toSession)
+            .then(renamePublisher)
+            .then(mailboxManager.copyMessagesReactive(MessageRange.all(),
+                    temporaryPath, renamedPath, toSession)
+                .then())
+            .then(mailboxManager.deleteMailboxReactive(temporaryPath, toSession));
     }
 
     private Mono<Void> renameSubscriptionsForDelegatee(MailboxMetaData mailbox, MailboxPath renamedPath) {
