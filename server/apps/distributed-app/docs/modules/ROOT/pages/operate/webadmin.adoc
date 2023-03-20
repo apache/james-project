@@ -456,7 +456,7 @@ curl -XPUT http://ip:port/users/usernameToBeUsed \
 ....
 
 Resource name usernameToBeUsed representing valid users, hence it should
-match the criteria at xref:confgure/usersrepository.adoc[User Repositories documentation]
+match the criteria at xref:configure/usersrepository.adoc[User Repositories documentation]
 
 Response codes:
 
@@ -2727,7 +2727,7 @@ member will receive it.
 Note that the group mail address is virtual: it does not correspond to
 an existing user.
 
-This feature uses xref:architecture.adoc#_recipient_rewrite_tables[Recipients rewrite table]
+This feature uses xref:architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table]
 and requires the
 https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java[RecipientRewriteTable
 mailet] to be configured.
@@ -2816,7 +2816,7 @@ mail. Otherwise he is ommitted.
 Forwards can be defined for existing users. It then defers from
 ``groups''.
 
-This feature uses xref:architecture.adoc#_recipient_rewrite_tables[Recipients rewrite table]
+This feature uses xref:architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table]
 and requires the
 https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java[RecipientRewriteTable
 mailet] to be configured.
@@ -2903,7 +2903,7 @@ address of the alias will receive it.
 
 Aliases can be defined for existing users.
 
-This feature uses xref:architecture.adoc#_recipient_rewrite_tables[Recipients rewrite table]
+This feature uses xref:architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table]
 and requires the
 https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java[RecipientRewriteTable
 mailet] to be configured.
@@ -2997,7 +2997,7 @@ destination domains `james.org` and `apache-james.org`, when a mail is
 sent to `admin@james.apache.org`, then it will be routed to
 `admin@james.org` and `admin@apache-james.org`
 
-This feature uses xref:architecture.adoc#_recipient_rewrite_tables[Recipients rewrite table]
+This feature uses xref:architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table]
 and requires the
 https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java[RecipientRewriteTable
 mailet] to be configured.
@@ -3099,7 +3099,7 @@ A regex mapping contains a mapping source and a Java Regular Expression
 a recipient matched with the mapping source, then that mail will be
 re-routed to a new recipient address which is re written by the regex.
 
-This feature uses xref:architecture.adoc#_recipient_rewrite_tables[Recipients rewrite table]
+This feature uses xref:architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table]
 and requires the
 https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java[RecipientRewriteTable
 API] to be configured.
@@ -3168,7 +3168,7 @@ You can use *webadmin* to define address mappings.
 When a specific email is sent to the base mail address, every
 destination addresses will receive it.
 
-This feature uses xref:architecture.adoc#_recipient_rewrite_tables[Recipients rewrite table]
+This feature uses xref:architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table]
 and requires the
 https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java[RecipientRewriteTable
 mailet] to be configured.
@@ -3222,7 +3222,7 @@ curl -XGET http://ip:port/mappings
 ....
 
 Get all mappings from the
-xref:architecture.adoc#_recipient_rewrite_tables[Recipients rewrite table].
+xref:architecture/index.adoc#_recipient_rewrite_tables[Recipients rewrite table].
 
 Response body:
 

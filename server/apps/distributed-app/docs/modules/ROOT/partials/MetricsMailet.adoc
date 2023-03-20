@@ -2,7 +2,7 @@
 
 This Metrics mailet increments a counter on every incoming emails.
 
-This counter is accessible via JMX, or grafana. Read xref:distributed/operate/metrics.adoc[more about metrics].
+This counter is accessible via JMX, or grafana. Read xref:operate/metrics.adoc[more about metrics].
 
 Example :
 

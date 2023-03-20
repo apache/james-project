@@ -32,4 +32,4 @@ to get some examples and hints.
 ....
 
 Only the *CassandraMailRepository* is available by default for the Distributed Server. Mails metadata are stored in
-Cassandra while the headers and bodies are stored within the xref:architecture.adoc#_blobstore[BlobStore].
+Cassandra while the headers and bodies are stored within the xref:architecture/index.adoc#_blobstore[BlobStore].
