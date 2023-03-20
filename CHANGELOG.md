@@ -231,6 +231,31 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - JAMES-3793 Prevent needless defensive copies within S3BlobStoreDAO (#1147)
  - JAMES-3793 Prevent Bytes concat upon reading FULL messages (#1152)
 
+## [3.7.4] - 2023-03-20
+
+### Security
+
+ - JAMES-3881 WARN if no JMX authentication is setup
+ - JAMES-3881 Enable JMX password generation by default (guice)
+ - JAMES-3881 Set a JMX password
+ - JAMES-3881 -Djmx.remote.x.mlet.allow.getMBeansFromURL=false (#1460)
+ - [UPGRADE] commons-fileupload 1.4 -> 1.5 (#1462)
+ - JAMES-3881 Prevent CommonsBeanutils1 deserialization exploit [BACKPORT] (#1455)
+22313d557d JAMES-3881 Unregister LOG4J MBeans (#1459)
+
+### Fixes
+
+ - JAMES-3891 Graceful shutdown for queue consumers [3.7.x] (#1479)
+ - JAMES-3881 Docker packagings should locate jvm.properties
+ - JAMES-3891 ActiveMQCacheableMailQueue: discard emails not backed by a blob (#1464)
+ - JAMES-3892 Allow configuring the count of retries in LocalDelivery [BACKPORT] (#1469)
+ - JAMES-3886 Handle Mailbox counter updates failures more gracefully [3.7.x] (#1449)
+ - JAMES-3875 JDBCMailRepository, cut off to long error messages
+
+### Changes
+
+ - JAMES-3890 Allow parallel execution of safe tasks (backport)
+
 ## [3.7.3] - 2022-12-30
 
 ### Security
