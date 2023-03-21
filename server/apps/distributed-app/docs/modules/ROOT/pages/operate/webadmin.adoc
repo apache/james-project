@@ -122,7 +122,7 @@ Response codes:
 
 * 200: The check has answered with a Healthy or Degraded status.
 * 404: A component with the given name was not found.
-* 503: The check has anwered with a Unhealthy status.
+* 503: The check has answered with an Unhealthy status.
 
 === List all health checks
 
@@ -204,8 +204,8 @@ above is returned
 One can await the end of a task, then receive its final execution
 report.
 
-That feature is especially usefull for testing purpose but still can
-serve real-life scenari.
+That feature is especially usefully for testing purpose but still can
+serve real-life scenario.
 
 ....
 curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2/await?timeout=duration
@@ -2229,7 +2229,7 @@ Response codes:
 * 200: The domain’s quota was successfully retrieved
 * 404: The domain does not exist
 * 405: Domain Quota configuration not supported when virtual hosting is
-desactivated.
+deactivated.
 
 ==== Updating the quota for a domain
 
@@ -2257,7 +2257,7 @@ Response codes:
 (-1).
 * 404: The domain does not exist
 * 405: Domain Quota configuration not supported when virtual hosting is
-desactivated.
+deactivated.
 
 ==== Getting the quota count for a domain
 
@@ -2318,7 +2318,7 @@ Response codes:
 * 204: The quota has been updated to unlimited value.
 * 404: The domain does not exist
 * 405: Domain Quota configuration not supported when virtual hosting is
-desactivated.
+deactivated.
 
 ==== Getting the quota size for a domain
 
@@ -2341,7 +2341,7 @@ Response codes:
 domain
 * 404: The domain does not exist
 * 405: Domain Quota configuration not supported when virtual hosting is
-desactivated.
+deactivated.
 
 ==== Updating the quota size for a domain
 
@@ -2364,7 +2364,7 @@ Response codes:
 (-1).
 * 404: The domain does not exist
 * 405: Domain Quota configuration not supported when virtual hosting is
-desactivated.
+deactivated.
 
 ==== Deleting the quota size for a domain
 
@@ -2811,7 +2811,7 @@ destination addresses will receive it.
 
 Please note that the base address can be optionaly part of the forward
 destination. In that case, the base recipient also receive a copy of the
-mail. Otherwise he is ommitted.
+mail. Otherwise he is omitted.
 
 Forwards can be defined for existing users. It then defers from
 ``groups''.

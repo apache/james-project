@@ -36,7 +36,7 @@ Electronic mail messages are defined as having contents and an envelope. The con
 consist of header fields and, optionally, a body. The body is nothing more than
 a (potentially empty) sequence of lines of text.
 
-Although this sounds like a an extremely simple concept, to get two completely separate systems
+Although this sounds like an extremely simple concept, to get two completely separate systems
 to agree and understand each other is a surprisingly complex problem that most people
 today take for granted. Most of RFC822 deals with the nitty-gritty of formatting and parsing
 this type of text message.

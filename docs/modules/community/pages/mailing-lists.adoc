@@ -65,7 +65,7 @@ dedicated to that already.
 
 == How to unsubscribe your old email address
 
-First, find out the particular email adress to which ezmlm is sending. The email headers are visible in Microsoft Outlook
+First, find out the particular email address to which ezmlm is sending. The email headers are visible in Microsoft Outlook
 via the messages menu "View | Options".
 
     Microsoft Mail Internet Headers Version 2.0

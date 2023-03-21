@@ -3,8 +3,8 @@
 
 This section presents how to configure the Distributed server.
 
-The Distributed Server relies on separated files for configuring various components. Some files follow an *xml* format
-and some others follow a *property* format. Some files can be ommited, in which case the functionality can be disabled,
+The Distributed Server relies on separated files for configuring various components. Some files follow a *xml* format
+and some others follow a *property* format. Some files can be omitted, in which case the functionality can be disabled,
 or rely on reasonable defaults.
 
 The following configuration files are exposed:

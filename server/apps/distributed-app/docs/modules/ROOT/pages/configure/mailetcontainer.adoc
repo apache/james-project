@@ -10,7 +10,7 @@ xref:architecture/index.adoc#_mail_processing[the mailet container feature descr
 Apache James Server includes a number of xref:configure/mailets.adoc[Packaged Mailets] and
 xref:configure/matchers.adoc[Packaged Matchers].
 
-Futhermore, you can write and use with James xref:extending/mail-processing.adoc[your own mailet and matchers].
+Furthermore, you can write and use with James xref:extending/mail-processing.adoc[your own mailet and matchers].
 
 Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/mailetcontainer.xml[example]
 to get some examples and hints.

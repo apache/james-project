@@ -3,7 +3,7 @@
 
 This documentation page lists and documents SMTP hooks that can be used within the
 Distributed Server SMTP protocol stack in order to customize the way your SMTP server
-behaves with out of the box components.
+behaves without of the box components.
 
 == DNSRBLHandler
 
@@ -84,7 +84,7 @@ required as well to be spec compliant.
 
 This handler can add a hint to the mail which tells the MailQueue which email should get processed first.
 
-Normally the MailQueue will just handles Mails in FIFO manner.
+Normally the MailQueue will just handle Mails in FIFO manner.
 
 Valid priority values are 1,5,9 where 9 is the highest.
 
@@ -203,7 +203,7 @@ Example configuration:
 == SpamAssassinHandler
 
 This MessageHandler could be used to check message against spamd before
-accept the email. So its possible to reject a message on smtplevel if a
+accept the email. So it's possible to reject a message on smtplevel if a
 configured hits amount is reached.
 
 This handler should be considered experimental.

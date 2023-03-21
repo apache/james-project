@@ -148,7 +148,7 @@ IMAP decoders, processors and encoder can be customized. xref:extending/imap.ado
 
 Check this link:https://github.com/apache/james-project/tree/master/examples/custom-imap[example].
 
-The following configuration properties are available for extentions:
+The following configuration properties are available for extensions:
 
 .imapserver.xml content
 |===

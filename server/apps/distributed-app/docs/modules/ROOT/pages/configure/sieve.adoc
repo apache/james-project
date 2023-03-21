@@ -19,7 +19,7 @@ The following Sieve capabilities are supported by Apache James:
   - link:https://tools.ietf.org/html/rfc5173[RFC 5173 Body Extension]
   - link:https://datatracker.ietf.org/doc/html/rfc5230[RFC 5230 Vacations]
 
-To be correctly executed, please note that the *Sieve* mailet is required to be positionned prior the
+To be correctly executed, please note that the *Sieve* mailet is required to be positioned prior the
 *LocalDelivery* mailet.
 
 == Managing Sieve scripts

@@ -8,7 +8,7 @@ mailto:matthieu@baechler-craftsmanship.fr[*Baechler Craftsmanship*] has a very s
 run by a long-time contributor and PMC of James which contributed significant enhancements
 over the years.
 
-The company is commited to contribute to James and offers consultancy for companies willing
+The company is committed to contribute to James and offers consultancy for companies willing
 to use James on their own infrastructure and/or need enhancements to fit their own needs.
 
 Free Software is a core value of the company and it can also help customers to work with
@@ -20,7 +20,7 @@ image::linagora.png[link=https://linagora.com]
 
 *Linagora* is an Open Source Software Company.
 
-Their mission is to bring digital independency to their customers.
+Their mission is to bring digital independence to their customers.
 
 They are focused on large organizations both from private and public sector. They have set themselves the goal of
 helping Governments to achieve their digital sovereignty.

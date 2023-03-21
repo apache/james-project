@@ -215,7 +215,7 @@ When you read a Jmap message, some calculated properties are expected to
 be fast to retrieve, like `preview`, `hasAttachment`. James achieves it
 by pre-calculating and storing them into a caching table
 (`message_fast_view_projection`). Missing caches are populated on
-message reads and will temporary decrease the performance.
+message reads and will temporarily decrease the performance.
 
 ==== How to detect the outdated projections
 
@@ -441,7 +441,7 @@ These options are:
 * The https://cassandra.apache.org/doc/latest/operating/compaction.html[compaction algorithms]
 * The https://cassandra.apache.org/doc/latest/operating/bloom_filters.html[bloom filter sizing]
 * The https://cassandra.apache.org/doc/latest/operating/compression.html?highlight=chunk%20size[chunk size]
-* Thehttps://www.datastax.com/blog/2011/04/maximizing-cache-benefit-cassandra[cachingoptions]
+* The https://www.datastax.com/blog/2011/04/maximizing-cache-benefit-cassandra[cachingoptions]
 
 The compaction algorithms allow a tradeoff between background IO upon
 writes and reads. We recommend:

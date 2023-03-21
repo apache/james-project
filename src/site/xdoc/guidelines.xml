@@ -227,7 +227,7 @@
         <li>Establishing an Apache profile with the Apache secretary.</li>
         <li>Access will directly be granted on the<a href="https://issues.apache.org/jira/projects/JAMES">JIRA</a>,
           the ASF Git repository and the <a href="https://ci-builds.apache.org/job/james/job/ApacheJames/">ci</a>.</li>
-        <li>Extra steps should be taken for Github access (see below).</li>
+        <li>Extra steps should be taken for GitHub access (see below).</li>
         <li>A PMC should have had announced your nomination. If you have not already been doing it, we strongly
         encourage you to write an email on public mailing list, presenting you, and your motivations toward
           contributing on Apache James. A reply to the announce would do the trick!</li>
@@ -235,14 +235,14 @@
 
       <h3>Accessing Apache GitHub as a Committer</h3>
       <ul>
-        <li>Verify you have a Github ID enabled with <a href="https://help.github.com/articles/securing-your-account-with-two-factor-authentication-2fa/">2FA</a></li>
-        <li>Enter your Github ID into your <a href="https://id.apache.org/">Apache ID profile</a></li>
+        <li>Verify you have a GitHub ID enabled with <a href="https://help.github.com/articles/securing-your-account-with-two-factor-authentication-2fa/">2FA</a></li>
+        <li>Enter your GitHub ID into your <a href="https://id.apache.org/">Apache ID profile</a></li>
         <li>Merge your Apache and GitHub accounts using <a href="https://gitbox.apache.org/setup/">GitBox</a> (Apache Account Linking utility). You should see 3 green checks in GitBox.</li>
       </ul>
 
       <p>Wait at least 30  minutes for an email inviting you to Apache GitHub Organization and accept invitation.</p>
 
-      <p>After accepting the Github Invitation verify that you are a member of the <a href="https://github.com/orgs/apache/teams/james-committers">GitHub Apache James team</a>.</p>
+      <p>After accepting the GitHub Invitation verify that you are a member of the <a href="https://github.com/orgs/apache/teams/james-committers">GitHub Apache James team</a>.</p>
 
     </section>
     

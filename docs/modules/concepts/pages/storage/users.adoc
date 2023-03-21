@@ -6,7 +6,7 @@
 Whereas xref:storage/mailbox.adoc[mailboxes] are clearly a core component of
 any email system, user management is a lighter shade of gray.
 
-// "Repository" should be "Diretory". See JAMES-3360.
+// "Repository" should be "Directory". See JAMES-3360.
 On the one hand, mailboxes ought to match up with actual 
 xref:user/index.adoc#_user[Users], so there is
 a clear relationship between mailbox management and user management.
@@ -25,7 +25,7 @@ amount of unproductive work.
 
 == Common Operations
 
-// "Repository" should be "Diretory". See JAMES-3360.
+// "Repository" should be "Directory". See JAMES-3360.
 Because the user repository is used in the context of managing mailboxes, there
 are some operations that are relatively common to any email system.
 

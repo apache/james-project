@@ -163,7 +163,7 @@ from being loaded in memory. This settings complements protocol limits.
 | Property name | explanation
 
 | objectstorage.bucketPrefix
-| Bucket is an concept in James and similar to Containers in Swift or Buckets in AWS S3.
+| Bucket is a concept in James and similar to Containers in Swift or Buckets in AWS S3.
 BucketPrefix is the prefix of bucket names in James BlobStore
 
 | objectstorage.namespace

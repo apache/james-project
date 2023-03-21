@@ -10,7 +10,7 @@ syntax of an email message.
 
 [[email_server]]
 Email Server (or Mail Server)::
-Any host that contains a sofware application that acts as a POP Server, an
+Any host that contains a software application that acts as a POP Server, an
 IMAP Server, or an MTA.
 
 IMAP::

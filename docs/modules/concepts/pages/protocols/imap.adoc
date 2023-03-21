@@ -8,7 +8,7 @@ or IMAP, is a protocol used by email clients to retrieve
 xref:messages/index.adoc[email messages] from a xref:glossary.adoc#email_server[mail server].
 One could say that it is effectively in competition with xref:protocols/pop.adoc[POP]
 because it accomplishes a function similar in nature, and most clients will force you
-to choose one or the other..
+to choose one or the other.
 These days, the natural choice of protocol tends to be IMAP rather than POP.
 
 The main difference between IMAP and POP is that messages are kept on the server, which
@@ -42,7 +42,7 @@ by <<RFC1176>>.
 ==== RFC1176
 
 https://tools.ietf.org/html/rfc1176[RFC1176] ("Interactive Mail Access Protocol - Version 2")
-provides various, somewhat minor updates to <<RFC1064>>. This specification was supseded by
+provides various, somewhat minor updates to <<RFC1064>>. This specification was superseded by
 the first IMAP3 specification, <<RFC1203>>.
 
 === IMAP3
@@ -50,7 +50,7 @@ the first IMAP3 specification, <<RFC1203>>.
 ==== RFC1203
 
 https://tools.ietf.org/html/rfc1203[RFC1203] ("Interactive Mail Access Protocol - Version 3")
-obsoletes <<RFC1064>>, and presumedly also <<RFC1176>>.
+obsoletes <<RFC1064>>, and presumably also <<RFC1176>>.
 It appears to be the only version of IMAP3 that was published. Apparently, IMAP3 is a rare
 version, and was never really adopted by the marketplace.
 
@@ -80,7 +80,7 @@ Extensions to IMAP have been published as recently as in 2018.
 
 ==== Extensions to RFC3501
 
-For brevity, we simply refence a number of extentions to RFC3501: 
+For brevity, we simply reference a number of extensions to RFC3501:
 
  * https://tools.ietf.org/html/rfc4466[RFC4466] ("Collected Extensions to IMAP4 ABNF")
  * https://tools.ietf.org/html/rfc4469[RFC4469] ("Internet Message Access Protocol (IMAP) CATENATE Extension")
@@ -179,6 +179,6 @@ l logout <7>
 <3> Select `INBOX` as the current folder
 <4> Fetch the contents of the INBOX folder, showing only the subject
 <5> Mark the message for deletion
-<6> Epunge the INBOX by deleting mails marked for deletion
+<6> Expunge the INBOX by deleting mails marked for deletion
 <7> Exit the session
 

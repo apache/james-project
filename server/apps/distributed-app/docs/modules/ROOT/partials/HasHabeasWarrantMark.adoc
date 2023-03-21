@@ -11,7 +11,7 @@ Usage: Place this matcher
 </mailet>
 ....
 
-in the root processs before the DNSRBL block lists (the InSpammerBlacklist matcher).
+in the root processes before the DNSRBL block lists (the InSpammerBlacklist matcher).
 
 Because the Habeas Warrant Mark is copyright material, I have asked for and
 received the following explicit statement from Habeas:

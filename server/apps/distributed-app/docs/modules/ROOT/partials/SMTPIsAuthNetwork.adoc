@@ -1,6 +1,6 @@
 === SMTPIsAuthNetwork
 
-Matches mails that are sent by an client which is allowed to relay.
+Matches mails that are sent by a client which is allowed to relay.
 
 ....
 <mailet match="SMTPIsAuthNetwork" class="<any-class>">

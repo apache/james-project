@@ -10,7 +10,7 @@ to a known trusted certificate.
 This check is composed by two steps: firstly it's ensured that the signature
 is valid, then it's checked if a chain of trust starting from the signer
 certificate and that leads to a trusted certificate can be created. The first
-check verifies that the the message has not been modified after the signature
+check verifies that the message has not been modified after the signature
 was put and that the signer's certificate was valid at the time of the
 signing. The latter should ensure that the signer is who he declare to be.
 

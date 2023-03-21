@@ -1,7 +1,7 @@
 = Distributed James Server &mdash; Custom SMTP hooks
 :navtitle: Custom SMTP hooks
 
-SMTP hooks enable extening capabilities of the SMTP server and are run synchronously upon email reception, before the email is
+SMTP hooks enable extending capabilities of the SMTP server and are run synchronously upon email reception, before the email is
 enqueued in the MailQueue, and before any mail processing takes place.
 
 == Available generic hooks

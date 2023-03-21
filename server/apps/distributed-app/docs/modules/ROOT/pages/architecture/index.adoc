@@ -15,7 +15,7 @@ a known pattern.
  email bodies, headers or attachments. Different technologies can be used: *Cassandra*, or S3 compatible *Object Storage*
 (S3 or Swift).
  * *OpenSearch* component empowers full text search on emails. It also enables querying data with unplanned access
-patterns. OpenSearch throughtput do not however match the one of Cassandra thus its use is avoided upon regular workloads.
+patterns. OpenSearch throughput do not however match the one of Cassandra thus its use is avoided upon regular workloads.
  * *RabbitMQ* enables James nodes of a same cluster to collaborate together. It is used to implement connected protocols,
 notification patterns as well as distributed resilient work queues and mail queue.
  * *Tika* (optional) enables text extraction from attachments, thus improving full text search results.
@@ -63,7 +63,7 @@ image::server-components.png[Server components mobilized for SMTP & IMAP]
 
  - The SMTP protocol receives a mail, and enqueue it on the MailQueue
  - The MailetContainer will start processing the mail Asynchronously and will take business decisions like storing the
- email localy in a user mailbox. The behaviour of the MailetContainer is highly customizable thanks to the Mailets and
+ email locally in a user mailbox. The behaviour of the MailetContainer is highly customizable thanks to the Mailets and
  the Matcher composibility.
  - The Mailbox component is responsible of storing a user's mails.
  - The user can use the IMAP or the JMAP protocol to retrieve and read his mails.
@@ -105,7 +105,7 @@ denied: missing authentication can, for instance, be a cause. In
 addition to prevent disasters upon miss configuration, an email review
 of this mail repository can help refine a host spammer blacklist.
 ** `cassandra://var/mail/rrt-error/` : runtime error upon Recipient
-Rewritting occurred. This is typically due to a loop.
+Rewriting occurred. This is typically due to a loop.
 
 === Mail Queue
 
@@ -164,7 +164,7 @@ within the xref:#_blobstore[BlobStore].
 ==== Search index
 
 Emails are indexed asynchronously in OpenSearch via the xref:#_event_bus[EventBus]
-in order to enpower advanced and fast email full text search.
+in order to empower advanced and fast email full text search.
 
 Text extraction can be set up using link:https://tika.apache.org/[Tika], allowing
 to extract the text from attachment, allowing to search your emails based on the attachment
@@ -239,11 +239,11 @@ Users can be managed in Cassandra, or via a LDAP (read only).
 
 === Recipient rewrite tables
 
-Storage of Recipients Rewritting rules, in Cassandra.
+Storage of Recipients Rewriting rules, in Cassandra.
 
 ==== Mapping types
 
-James allows using various mapping types for better expressing the intent of your address rewritting logic:
+James allows using various mapping types for better expressing the intent of your address rewriting logic:
 
 * *Domain mapping*: Rewrites the domain of mail addresses. Use it for technical purposes, user will not
 be allowed to use the source in their FROM address headers. Domain mappings can be managed via the CLI and
@@ -293,7 +293,7 @@ based on bloom filters can be used and triggered using the WebAdmin REST API.
 
 Allows to control and schedule long running tasks run by other
 components. Among other it enables scheduling, progress monitoring,
-cancelation of long running tasks.
+cancellation of long running tasks.
 
 Distributed James leverage a task manager using Event Sourcing and RabbitMQ for messaging.
 

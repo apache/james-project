@@ -102,7 +102,7 @@ using it to expose JMAP and attach our SSL certificates for
 SMTP/IMAP/JMAP. Default is false
 
 |james.tls.secretName |the-name-of-a-secret |The name of the secret
-created separately contening the SSL certificate for JMAP, IMAPS and
+created separately contenting the SSL certificate for JMAP, IMAPS and
 SMTPS
 |===
 

@@ -1,6 +1,6 @@
 = Short Demo
 
-In this short demo (~5 minutes), we will set up a runing James demo very quickly
+In this short demo (~5 minutes), we will set up a running James demo very quickly
 using a prepared Docker image.
 Then you will add a domain, and a user account within that domain.
 
@@ -24,7 +24,7 @@ Explanation:
  * The `-d` parameter runs the container in "detached" mode
  * `-p "25:25" -p "143:143"` attaches the image ports to the ports 25 (SMTP) and 143 (IMAP) on the host machine
  * The `--name james` parameter gives the running container a name to make it easier to manipulate
- * `linagora/james-jpa-sample:3.4.0` is the image that is used for this demo
+ * `apache/james:demo-latest` is the image that is used for this demo
 
 Docker will pull the image and start the container.
 
