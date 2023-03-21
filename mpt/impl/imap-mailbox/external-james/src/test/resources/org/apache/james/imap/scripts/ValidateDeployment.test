@@ -241,6 +241,12 @@ C: A11 LIST "" "*"
 SUB {
 S: \* LIST \(\\HasNoChildren\) "\." "testmailbox"
 S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasNoChildren\) "\." "Archive"
+S: \* LIST \(\\HasNoChildren\) "\." "Drafts"
+S: \* LIST \(\\HasNoChildren\) "\." "Trash"
+S: \* LIST \(\\HasNoChildren\) "\." "Outbox"
+S: \* LIST \(\\HasNoChildren\) "\." "Sent"
+S: \* LIST \(\\HasNoChildren\) "\." "Spam"
 }
 S: A11 OK LIST completed\.
 
@@ -251,6 +257,12 @@ C: A13 LIST "" "*"
 SUB {
 S: \* LIST \(\\HasNoChildren\) "\." "anothermailbox"
 S: \* LIST \(\\HasNoChildren\) "\." "INBOX"
+S: \* LIST \(\\HasNoChildren\) "\." "Archive"
+S: \* LIST \(\\HasNoChildren\) "\." "Drafts"
+S: \* LIST \(\\HasNoChildren\) "\." "Trash"
+S: \* LIST \(\\HasNoChildren\) "\." "Outbox"
+S: \* LIST \(\\HasNoChildren\) "\." "Sent"
+S: \* LIST \(\\HasNoChildren\) "\." "Spam"
 }
 S: A13 OK LIST completed\.
 
