@@ -906,7 +906,7 @@ The scheduled task will have the following type
 ....
 
 Note that conflicting entry inconsistencies will not be fixed and will
-require to explicitly use link:#correcting-ghost-mailbox[ghost mailbox]
+require to explicitly use link:#_correcting_ghost_mailbox[ghost mailbox]
 endpoint in order to merge the conflicting mailboxes and prevent any
 message loss.
 
@@ -951,7 +951,7 @@ The scheduled task will have the following type
 ....
 
 Note that conflicting inconsistencies entries will not be fixed and will
-require to explicitly use link:#correcting-ghost-mailbox[ghost mailbox]
+require to explicitly use link:#_correcting_ghost_mailbox[ghost mailbox]
 endpoint in order to merge the conflicting mailboxes and prevent any
 message loss.
 
@@ -2115,7 +2115,7 @@ to be returned.
 Please note that users are alphabetically ordered on username.
 
 The response is a list of usernames, with attached quota details as
-defined link:#getting-the-quota-for-a-user[here].
+defined link:#_getting_the_quota_for_a_user[here].
 
 Response codes:
 
@@ -4136,12 +4136,12 @@ backend.
 
 Note that currently the progress can be tracked by logs.
 
-* link:#Retrieving_current_Cassandra_schema_version[Retrieving current
+* link:#_retrieving_current_cassandra_schema_version_[Retrieving current
 Cassandra schema version]
-* link:#Retrieving_latest_available_Cassandra_schema_version[Retrieving
+* link:#_retrieving_latest_available_cassandra_schema_version_[Retrieving
 latest available Cassandra schema version]
-* link:#Upgrading_to_a_specific_version[Upgrading to a specific version]
-* link:#Upgrading_to_the_latest_version[Upgrading to the latest version]
+* link:#_upgrading_to_a_specific_version_[Upgrading to a specific version]
+* link:#_upgrading_to_the_latest_version_[Upgrading to the latest version]
 
 ==== Retrieving current Cassandra schema version
 
@@ -4481,7 +4481,7 @@ BODY: is the json query has the same structure with Restore Deleted Messages sec
 ....
 
 *Note*: Json query passing into the body follows the same rules &
-restrictions like in link:#Restore_deleted_messages[Restore Deleted
+restrictions like in link:#_restore_deleted_messages[Restore Deleted
 Messages]
 
 Response code:

@@ -116,7 +116,7 @@ This is controlled in the `search.properties` file via the `implementation` prop
 to `OpenSearch`). Setting this configuration parameter to `scanning` will effectively disable OpenSearch, no
 further indexation will be done however searches will rely on the scrolling search, leading to expensive and longer
 searches. Disabling OpenSearch requires no extra action, however
-xref:operate/webadmin.adoc#reindexing_all_mails[a full re-indexing]needs to be carried out when enabling OpenSearch.
+xref:operate/webadmin.adoc#_reindexing_all_mails[a full re-indexing]needs to be carried out when enabling OpenSearch.
 
 == SSL Trusting Configuration
 
