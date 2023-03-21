@@ -4,7 +4,6 @@ Enable evaluation of incoming emails against DLP rules (Data Leak Prevention) at
 
 Example:
 
-[xml]
 ----
 <mailet match="DLP" class="ToRepository">
    <repositoryPath>/var/mail/quarantine</repositoryPath>
@@ -19,7 +18,6 @@ Additionally a cache can be added to reduce queries done to the underlying datab
 
 Example:
 
-[xml]
 ----
 <mailet match="DLP=cache:60s" class="ToRepository">
    <repositoryPath>/var/mail/quarantine</repositoryPath>
