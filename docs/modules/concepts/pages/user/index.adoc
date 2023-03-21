@@ -2,8 +2,8 @@
 :navtitle: User Model
 
 
-For clarity, we have defined various roles for actors who interact 
-with xref:servers/index.adoc[James servers] in one way or another.
+For clarity, we have defined various roles for actors who interact
+with xref:servers:index.adoc[James servers] in one way or another.
 The deliverables we make available are produced with these roles in mind.
 Note that any given person may play more than one role, even at the same
 time.
@@ -21,10 +21,10 @@ time.
 A **User** simply uses email without any notion of what server is providing the service.
 
 More precisely, in typical cases a User will have an email client for reading and writing email. The
-xref:glossary.adoc[email client] will connect to the James server via 
-xref:mail/protocols/smtp.adoc[SMTP], 
-xref:mail/protocols/pop.adoc[POP], or 
-xref:mail/protocols/imap.adoc[IMAP].
+xref:glossary.adoc[email client] will connect to the James server via
+xref:protocols/smtp.adoc[SMTP],
+xref:protocols/pop.adoc[POP], or
+xref:protocols/imap.adoc[IMAP].
 The User will have no indication anywhere that the server is a James server.
 
 
@@ -36,8 +36,7 @@ The Operator does not compile any Java code, and does not require any software
 development environment. 
 
 Apache James offers Operators a range of servers for various use cases, including:
-
- * A xref:server/basic/index.adoc[Basic Server] ideal for busy Operators who 
+ * A xref:servers:basic/index.adoc[Basic Server] ideal for busy Operators who
    are interested in an easy-to-use self-hosting solution, but who may not have the
    time to gain deep expertise
  * An xref:server/advanced/index.adoc[Advanced Server] well-suited for Operators with

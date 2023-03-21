@@ -64,7 +64,7 @@ to emails being stored in `cassandra://var/mail/rrt-error/`.
 We recommend monitoring the content of this mail repository to be empty.
 
 If it is not empty, we recommend
-verifying user mappings via xref:operate/webadmin.adoc#_user_mappings[User Mappings webadmin API] then once identified break the loop by removing
+verifying user mappings via xref:operate/webadmin.adoc#_listing_user_mappings_[User Mappings webadmin API] then once identified break the loop by removing
 some Recipient Rewrite Table entry via the
 xref:operate/webadmin.adoc#_removing_an_alias_of_an_user[Delete Alias],
 xref:operate/webadmin.adoc#_removing_a_group_member[Delete Group member],
@@ -428,7 +428,7 @@ http://cassandra.apache.org/doc/3.11.11/cql/security.html[cassandra documentatio
 Except for the case above, the permissions are not auto available for a
 specific role unless they are granted by `GRANT` command. Therefore, if
 you didn’t provide more permissions than
-link:#Grant_permissions_on_created_keyspace_to_the_role[granting
+link:#_grant_permissions_on_created_keyspace_to_the_role[granting
 section], there’s no need to revoke.
 
 == Cassandra table level configuration
@@ -602,7 +602,7 @@ by default if not defined).
 === Restore deleted messages after deletion
 
 After users deleted their mails and emptied the trash, the admin can use
-xref:operate/webadmin.adoc#_restore_deleted_messagest[Restore Deleted Messages]
+xref:operate/webadmin.adoc#_restore_deleted_messages[Restore Deleted Messages]
 to restore all the deleted mails.
 
 === Cleaning expired deleted messages

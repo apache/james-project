@@ -15,7 +15,7 @@ can be performed via WebAdmin or the CLI.
  ** Read xref:operate/webadmin.adoc#_create_a_user[this section] for creating users
  * Using the CLI :
  ** Read xref:operate/cli.adoc#_manage_domains[this section] for creating domains
- ** Read xref:operate/cli.adoc#_manage_users[this section] for creating users
+ ** Read xref:operate/cli.adoc#_managing_users[this section] for creating users
 
 Second, you want to allow an administrator account of your Distributed Server to have write access on other user mailboxes.
 This can be setted up this the *administratorId* configuration option of the xref:configure/usersrepository.adoc[usersrepository.xml] configuration file.
