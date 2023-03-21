@@ -3,7 +3,7 @@
 
 An email message is essentially a simple text message that is communicated
 from one party to another. It is no miracle that two unknown parties are
-able to communicate; rather rather we can thank a set of standards that
+able to communicate; rather we can thank a set of standards that
 allow any two unrelated systems to process an email even if the system owners
 do not know each other.
 

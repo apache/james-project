@@ -47,7 +47,7 @@ James PMC members and Apache Software Foundation Members.
 
 Topics to be discussed on the private mailing list:
 
- - Discussion of board reports. PMC members need to report quaterly project activity to the Apache board of directors,
+ - Discussion of board reports. PMC members need to report quarterly project activity to the Apache board of directors,
 which is done through link:https://reporter.apache.org[reporter.apache.org]. Prior report submission, the draft should
 be discussed on the private mailing list.
  - Discussions of link:https://community.apache.org/newcommitter.html[new committers, new PMCs], including proposition discussions, votes and process follow up.
@@ -69,7 +69,7 @@ We actively rely on link:https://community.apache.org/committers/lazyConsensus.h
 decisions, be them validating xref:contributing.adoc#_how_to_contribute_some_code[code changes], enacting
 xref:contributing.adoc#_idea_or_design_proposals[design decisions].
 
-All code modifications should achieve lazy consensus under the form of github pull requests.
+All code modifications should achieve lazy consensus under the form of GitHub pull requests.
 
 === Voting
 
@@ -104,12 +104,12 @@ Abstain, no opinion, or I am happy to let the other group members decide this is
 effects if too many people abstain.
 
 *-1*
-No. On issues where consensus is required, this vote counts as a veto. All vetos must include an explanation of why the
+No. On issues where consensus is required, this vote counts as a veto. All vetoes must include an explanation of why the
 veto is appropriate. A veto with no explanation is void. No veto can be overruled. If you disagree with the veto, you
 should lobby the person who casts the veto. Voters intending to veto an action item should make their opinions known to
 the group immediately, so that the problem can be remedied as early as possible.
 
-An action item requiring consensus approval must receive at least 3 binding +1 votes and no vetos. An action item
+An action item requiring consensus approval must receive at least 3 binding +1 votes and no vetoes. An action item
 requiring majority approval must receive at least 3 binding +1 votes and more +1 votes than -1 votes (i.e., a majority
 with a minimum quorum of three positive votes). All other action items are considered to have lazy approval until
 someone votes -1, after which point they are decided by either consensus or a majority vote, depending upon the type
@@ -130,17 +130,17 @@ As part of the link:https://community.apache.org/newcommitter.html[process to be
  - Establishing an Apache profile with the Apache secretary.
  - Access will directly be granted on the link:https://issues.apache.org/jira/projects/JAMES[JIRA],
 the ASF Git repository and the link:https://ci-builds.apache.org/job/james/job/ApacheJames/[ci].
- - Extra steps should be taken for xref:#_accessing_apache_github_as_a_committer[Github access].
+ - Extra steps should be taken for xref:#_accessing_apache_github_as_a_committer[GitHub access].
  - A PMC should have had announced your nomination. If you have not already been doing it, we strongly
 encourage you to write an email on public mailing list, presenting you, and your motivations toward
-contributing on Apache James. A reply to the announce would do the trick!
+contributing on Apache James. A reply to the announcement would do the trick!
 
 === Accessing Apache GitHub as a Committer
 
-- Verify you have a Github ID enabled with link:https://help.github.com/articles/securing-your-account-with-two-factor-authentication-2fa/[2FA]
-- Enter your Github ID into your link:https://id.apache.org/[Apache ID profile]
+- Verify you have a GitHub ID enabled with link:https://help.github.com/articles/securing-your-account-with-two-factor-authentication-2fa/[2FA]
+- Enter your GitHub ID into your link:https://id.apache.org/[Apache ID profile]
 - Merge your Apache and GitHub accounts using link:https://gitbox.apache.org/setup/[GitBox] (Apache Account Linking utility). You should see 3 green checks in GitBox.
 
 Wait at least 30  minutes for an email inviting you to Apache GitHub Organization and accept invitation.
 
-- After accepting the Github Invitation verify that you are a member of the link:https://github.com/orgs/apache/teams/james-committers[GitHub Apache James team].
+- After accepting the GitHub Invitation verify that you are a member of the link:https://github.com/orgs/apache/teams/james-committers[GitHub Apache James team].

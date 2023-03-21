@@ -15,7 +15,7 @@ The more general term is "Email Storage". It is necessary to store email for
 many reasons:
 
  * As a mailbox system &mdash; part of a queue to await processing
- * As a persistance mechanism &mdash; a place where you can go back and predictably
+ * As a persistence mechanism &mdash; a place where you can go back and predictably
     locate a message that you may want to refer to again in the future
  * As an archive &mdash; a place where you may want to store "deleted" emails so that
     you can potentially retrieve them if you wish to change your mind later
@@ -118,7 +118,7 @@ https://tools.ietf.org/html/rfc5322[RFC5322] weighs in on how to describe a "mai
 
 == Indexing
 
-// "Repository" should be "Diretory". See JAMES-3360.
+// "Repository" should be "Directory". See JAMES-3360.
 Once a system grows over time it will likely contain many messages
 stored in its xref:storage/mailbox.adoc[Mailboxes].
 Searching for the right email becomes increasingly difficult. At some point

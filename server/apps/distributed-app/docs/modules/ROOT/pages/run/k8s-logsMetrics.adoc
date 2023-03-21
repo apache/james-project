@@ -2,7 +2,7 @@
 
 === Logs
 
-James exposes its logs on the console. Then a fluentbit instance scraps
+James exposes its logs on the console. Then a fluent bit instance scraps
 and collects them, before being indexed and used by Kibana, with nice
 search possibilities.
 

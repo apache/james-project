@@ -1,7 +1,7 @@
 = Distributed James Server &mdash; recipientrewritetable.xml
 :navtitle: recipientrewritetable.xml
 
-Here are explanations on the different kinds about xref:architecture/index.adoc#_recipient_rewrite_tables[recipient rewritting].
+Here are explanations on the different kinds about xref:architecture/index.adoc#_recipient_rewrite_tables[recipient rewriting].
 
 Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/recipientrewritetable.xml[example]
 to get some examples and hints.

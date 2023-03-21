@@ -49,7 +49,7 @@ This should be the goal of the Basic server.
 
 Regarding "Advanced server":
 
-Free email servers are generaly old, written in complex languages (C) and extending their behavior is not one of there main concerns. 
+Free email servers are generally old, written in complex languages (C) and extending their behavior is not one of there main concerns.
 
 Apache James Advanced server have been designed with extensibility in mind. It provides several extension mechanisms allowing you to easily configure and extend the behavior of your email server in order to make it fits your needs. Java and other JVM languages can be used to write your own extensions.
 And for the Apache James Distributed server:

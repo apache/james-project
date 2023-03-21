@@ -92,9 +92,9 @@ changes the writing of xref:#_idea_or_design_proposals[ADRs] is encouraged.
 Your code contribution *must* be backed by a xref:_reporting_bugs[JIRA ticket].
 
 * Clone the source code of the project from its link:git://git.apache.org/james-project.git[apache git repository] or its
-https://github.com/apache/james-project[Github]
+https://github.com/apache/james-project[GitHub]
 * Create your branch and name it with the JIRA ticket number.
-* Create a Pull Request on Github with your branch name and prefix its different commits with the same name.
+* Create a Pull Request on GitHub with your branch name and prefix its different commits with the same name.
 * A build will be started for your work on the link:https://ci-builds.apache.org/job/james/job/ApacheJames/[Apache CI].
 * Active contributors will review your work, and merge it.
 
@@ -170,7 +170,7 @@ sometimes remove whitespaces which may not be desirable.
 
 === Code patches
 
-While we definitely prefer receiving contributions under the form of xref:#_how_to_contribute_some_code[Github pull requests],
+While we definitely prefer receiving contributions under the form of xref:#_how_to_contribute_some_code[GitHub pull requests],
 in order to still be vendor neutral on the contribution process, we do accept submission of patches, in a process described
 below.
 

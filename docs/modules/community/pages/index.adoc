@@ -12,7 +12,7 @@ There are many ways for Users, Developers, Curious and Fans to join and be part 
  * xref:mailing-lists.adoc[Mailing lists]: Subscribe to the appropriate Mailing Lists according to your interests and profile.
  * https://gitter.im/apache/james-project[Gitter chat room]: Chat in live with the community on Gitter.
  * https://twitter.com/ApacheJames[Twitter]: Express yourself and follow us @ApacheJames.
- * https://github.com/apache/james-project[Github]: Read and contribute to the source code of the project.
+ * https://github.com/apache/james-project[GitHub]: Read and contribute to the source code of the project.
  * https://issues.apache.org/jira/projects/JAMES[JIRA]: Report issues or make suggestions for the project on our bug tracker.
  * https://builds.apache.org/job/ApacheJames/[CI]: Check the status of James builds on our Jenkins CI.
  * xref:download.adoc[Download releases]: Download artifacts and sources your need for the James Server and James libraries.

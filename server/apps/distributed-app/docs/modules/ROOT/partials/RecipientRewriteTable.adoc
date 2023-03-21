@@ -5,7 +5,7 @@ implementations for mappings of forwards and aliases.
 
 By specifying an 'errorProcessor' you can specify your logic upon RecipientRewriteTable failures.
 
-Exemple:
+Example:
 
 ....
  <mailet match="All" class="RecipientRewriteTable">

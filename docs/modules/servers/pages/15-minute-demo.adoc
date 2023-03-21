@@ -1,6 +1,6 @@
 = Long Demo
 
-In this demo (~15 minutes), we will set up a runing James demo using a prepared Docker image.
+In this demo (~15 minutes), we will set up a running James demo using a prepared Docker image.
 We will then test the server by connecting with an email client. Finally, we
 will connect to the server via the REST-based Admin API.
 
@@ -45,7 +45,7 @@ Explanation:
  * `-p "127.0.0.1:8000:8000" attaches the port 8000 to localhost on the host machine to allow us to connect to the Admin API
  * `-v $(pwd)/webadmin.properties:/root/conf/webadmin.properties` mounts the webadmin.properties file to configure the Admin API
  * The `--name james` parameter gives the running container a name to make it easier to manipulate
- * `linagora/james-jpa-sample:3.4.0` is the image that is used for this demo
+ * `apache/james:demo-latest` is the image that is used for this demo
 
 Docker will pull the image and start the container.
 

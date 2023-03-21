@@ -1,6 +1,6 @@
 === RemoteAddrInNetwork
 
-Checks the IP address of the sending server against a comma- delimited list
+Checks the IP address of the sending server against a comma-delimited list
 of IP addresses, domain names or sub-nets.
 
 See AbstractNetworkMatcher for details on how to specify entries.

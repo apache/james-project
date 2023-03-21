@@ -83,7 +83,7 @@ public class MyMailet extends GenericMailet {
 
 However, to inject an interface into your extension, you will need additional injection definitions.
 
-To to so:
+To so:
 
  * 1. Given an interface defined in an additional JAR:
 
@@ -136,7 +136,7 @@ Note that overriding injection definitions of the Distributed Server for your in
 
 === Starting your components
 
-Sometime you wish to 'start' your extensions. This can be achieved through defining your own `UserDefinedStartable`:
+Sometimes you wish to 'start' your extensions. This can be achieved through defining your own `UserDefinedStartable`:
 
 ```
 public class MyStartable implements UserDefinedStartable {

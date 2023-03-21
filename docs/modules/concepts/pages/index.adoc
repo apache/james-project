@@ -1,7 +1,7 @@
 = Apache James Core Concepts
 :navtitle: Concepts
 
-The core domain of Apache James is intimitely related to email communications.
+The core domain of Apache James is intimately related to email communications.
 Therefore this section is divided into topics that deal with the various
 aspect of email systems.
 

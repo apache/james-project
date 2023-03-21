@@ -168,7 +168,7 @@
       <p>
         Clone the source code of the project from its
         <a href="git://git.apache.org/james-project.git">apache git repository</a>
-        or its <a href="https://github.com/apache/james-project">Github</a>
+        or its <a href="https://github.com/apache/james-project">GitHub</a>
         <br />
         Create your branch and name it with the JIRA ticket number.<br />
         Create a Pull Request with your branch name and prefix its different commits with the same name.
@@ -281,7 +281,7 @@ Here is some more details about what my commit does, and the rationals of the ch
     </section>
 
     <section name="Code Patches">
-      <p>While we definitely prefer receiving contributions under the form of Github pull requests,
+      <p>While we definitely prefer receiving contributions under the form of GitHub pull requests,
         in order to still be vendor neutral on the contribution process, we do accept submission of patches, in a process described
         below.
       </p>

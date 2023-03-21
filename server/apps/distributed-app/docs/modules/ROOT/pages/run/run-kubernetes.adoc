@@ -9,7 +9,7 @@ cluster using the link:https://helm.sh[Helm] package manager.
 == Before Starting
 
 
-Before runnning the Helm chart, James should have particularly access to the following external products:
+Before running the Helm chart, James should have particularly accessed to the following external products:
 
 Apache Cassandra::
 - You can deploy Cassandra on Kubernetes with a link:https://github.com/bitnami/charts/tree/master/bitnami/cassandra[Cassandra chart] for testing purpose. However we would recommend running Cassandra on VirtualMachine for better stablilty.
@@ -46,7 +46,7 @@ You can find our Helm chart for James in link:https://github.com/apache/james-pr
 
 The configuration files proper to James are stored in the Chart `james/configs` folder. They are being stored in a `ConfigMap` and then being mounted in the James pod at /root/conf path.
 
-If you need to change a conf in James, this is were you need to look at.
+If you need to change a conf in James, this is where you need to look at.
 
 For now all configuration files are the same for every deployment, except for `mailetcontainer.xml` that has been excluded (see section below).
 
@@ -161,7 +161,7 @@ A summary of different resources that could be interesting to have in hand.
 ### James documentation
 
 * link:https://james.apache.org/[James Official Website]
-* link:https://github.com/apache/james-project[James Github Project]
+* link:https://github.com/apache/james-project[James GitHub Project]
 * xref:operate/webadmin.adoc[WebAdmin]
 * xref:operate/cli.adoc[James CLI]
 * link:https://james.apache.org/server/manage-guice-distributed-james.html[Manage Guice Distributed James]

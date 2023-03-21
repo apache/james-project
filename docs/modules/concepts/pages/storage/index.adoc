@@ -7,14 +7,14 @@ Email is useful because any one person can send a message to any other person,
 anywhere in the world. The heart of email is the ability to transfer some message
 based on a  commonly-understood message format between two different systems that
 may have been developed entirely independently of each other. The concept is relatively
-simple, but the fact that email is so ubiquitious is simply a miracle.
+simple, but the fact that email is so ubiquitous is simply a miracle.
 
 However, there is more to email than just the transfer of messages.
 
 For starters, I want people I know to be able to send me a mail even when 
 I happen to be out mountain climbing. I want to be able to receive the message
 when I'm not available, then review it afterward when I am back at my desk.
-For this reason, email is by design asynchromous. Time can pass between the moment
+For this reason, email is by design asynchronous. Time can pass between the moment
 a mail is sent and the moment it is read. 
 In the meantime, it needs to be stored somewhere.
 
@@ -36,5 +36,5 @@ xref:protocols/index.adoc[protocols].
 In this section, we describe the two principle types of storage that James manages:
 
  * xref:storage/mailbox.adoc[Mailboxes] for email storage, and
-// "Repository" should be "Diretory". See JAMES-3360.
+// "Repository" should be "Directory". See JAMES-3360.
  * xref:storage/users.adoc[User Repository] for data about Mailbox users.
