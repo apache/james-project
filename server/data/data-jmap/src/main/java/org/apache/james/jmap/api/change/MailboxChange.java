@@ -207,7 +207,7 @@ public class MailboxChange implements JmapChange {
                     .state(stateFactory.generate())
                     .date(now)
                     .isCountChange(false)
-                    .destroyed(ImmutableList.of(mailboxACLUpdated.getMailboxId()))
+                    .updated(ImmutableList.of(mailboxACLUpdated.getMailboxId()))
                     .delegated()
                     .build());
 
