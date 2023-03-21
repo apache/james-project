@@ -91,11 +91,9 @@ case class MailboxChangeListener @Inject() (@Named(InjectionKeys.JMAP) eventBus:
           .flatMapMany(sharees =>
             SFlux(emailChangeFactory.fromExpunged(expunged, now, sharees.map(_.getIdentifier).map(Username.of).asJava)))
       case subscribed: MailboxEvents.MailboxSubscribedEvent =>
-        getSharees(mailboxId, username)
-          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxSubscribed(sharees.asJava, subscribed, now).asScala)
+        SFlux.just(mailboxChangeFactory.fromMailboxSubscribed(subscribed, now))
       case unSubscribed: MailboxEvents.MailboxUnsubscribedEvent =>
-        getSharees(mailboxId, username)
-          .flatMapIterable(sharees => mailboxChangeFactory.fromMailboxUnSubscribed(sharees.asJava, unSubscribed, now).asScala)
+        SFlux.just(mailboxChangeFactory.fromMailboxUnSubscribed(unSubscribed, now))
     }
   }
 
