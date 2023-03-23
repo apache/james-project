@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.james.examples</groupId>
     <artifactId>examples</artifactId>
-    <version>3.7.4</version>
+    <version>3.7.5-SNAPSHOT</version>
   </parent>
   <artifactId>custom-mailets</artifactId>
   <name>Apache James :: Examples :: Custom Mailets</name>
