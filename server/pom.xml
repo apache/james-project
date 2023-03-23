@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-project</artifactId>
-        <version>3.7.4-SNAPSHOT</version>
+        <version>3.7.4</version>
     </parent>
 
     <artifactId>james-server</artifactId>
