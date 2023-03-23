@@ -638,6 +638,7 @@ Implemented migration steps are:
  - `MailboxUsernameChangeTaskStep`: migrates mailboxes belonging to the old user to the account of the new user. It also
  migrates user's mailbox subscriptions.
  - `ACLUsernameChangeTaskStep`: migrates ACLs on mailboxes the migrated user has access to and updates subscriptions accordingly.
+ - `QuotaUsernameChangeTaskStep`: migrates quotas user from old user to new user.
 
 Response codes:
 

@@ -24,6 +24,7 @@ import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
+import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
@@ -247,6 +248,7 @@ public class CassandraMailboxModule extends AbstractModule {
         Multibinder<UsernameChangeTaskStep> usernameChangeTaskStepMultibinder = Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class);
         usernameChangeTaskStepMultibinder.addBinding().to(MailboxUsernameChangeTaskStep.class);
         usernameChangeTaskStepMultibinder.addBinding().to(ACLUsernameChangeTaskStep.class);
+        usernameChangeTaskStepMultibinder.addBinding().to(QuotaUsernameChangeTaskStep.class);
     }
 
     @Provides
