@@ -29,8 +29,11 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableMap;
+
+import reactor.core.publisher.Mono;
 
 /**
  * A Max Quota Manager that simply throws exceptions
@@ -45,8 +48,18 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<Void> setMaxStorageReactive(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
+    }
+
+    @Override
     public void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) throws MailboxException {
         throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public Publisher<Void> setMaxMessageReactive(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
     }
 
     @Override
@@ -55,8 +68,18 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<Void> removeMaxMessageReactive(QuotaRoot quotaRoot) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
+    }
+
+    @Override
     public void removeMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
         throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public Publisher<Void> removeMaxStorageReactive(QuotaRoot quotaRoot) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
     }
 
     @Override
@@ -65,8 +88,18 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<Void> setDomainMaxMessageReactive(Domain domain, QuotaCountLimit count) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
+    }
+
+    @Override
     public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) throws MailboxException {
         throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public Publisher<Void> setDomainMaxStorageReactive(Domain domain, QuotaSizeLimit size) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
     }
 
     @Override
@@ -75,8 +108,18 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<Void> removeDomainMaxMessageReactive(Domain domain) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
+    }
+
+    @Override
     public void removeDomainMaxStorage(Domain domain) throws MailboxException {
         throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public Publisher<Void> removeDomainMaxStorageReactive(Domain domain) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
     }
 
     @Override
@@ -85,8 +128,18 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<Void> setGlobalMaxStorageReactive(QuotaSizeLimit globalMaxStorage) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
+    }
+
+    @Override
     public void removeGlobalMaxStorage() throws MailboxException {
         throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public Publisher<Void> removeGlobalMaxStorageReactive() {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
     }
 
     @Override
@@ -95,8 +148,18 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<Void> removeGlobalMaxMessageReactive() {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
+    }
+
+    @Override
     public void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) throws MailboxException {
         throw new MailboxException("Operation is not supported");
+    }
+
+    @Override
+    public Publisher<Void> setGlobalMaxMessageReactive(QuotaCountLimit globalMaxMessageCount) {
+        return Mono.error(() -> new MailboxException("Operation is not supported"));
     }
 
     @Override
@@ -125,8 +188,18 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<QuotaCountLimit> getDomainMaxMessageReactive(Domain domain) {
+        return Mono.empty();
+    }
+
+    @Override
     public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
         return Optional.empty();
+    }
+
+    @Override
+    public Publisher<QuotaSizeLimit> getDomainMaxStorageReactive(Domain domain) {
+        return Mono.empty();
     }
 
     @Override
@@ -135,7 +208,17 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<QuotaSizeLimit> getGlobalMaxStorageReactive() {
+        return Mono.empty();
+    }
+
+    @Override
     public Optional<QuotaCountLimit> getGlobalMaxMessage() {
         return Optional.empty();
+    }
+
+    @Override
+    public Publisher<QuotaCountLimit> getGlobalMaxMessageReactive() {
+        return Mono.empty();
     }
 }
