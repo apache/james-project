@@ -56,82 +56,162 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public void setMaxStorage(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) {
-        perUserQuota.setMaxStorage(quotaRoot, maxStorageQuota).block();
+        setMaxStorageReactive(quotaRoot, maxStorageQuota).block();
+    }
+
+    @Override
+    public Mono<Void> setMaxStorageReactive(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) {
+        return perUserQuota.setMaxStorage(quotaRoot, maxStorageQuota);
     }
 
     @Override
     public void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
-        perUserQuota.setMaxMessage(quotaRoot, maxMessageCount).block();
+        setMaxMessageReactive(quotaRoot, maxMessageCount).block();
+    }
+
+    @Override
+    public Mono<Void> setMaxMessageReactive(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
+        return perUserQuota.setMaxMessage(quotaRoot, maxMessageCount);
     }
 
     @Override
     public void setDomainMaxMessage(Domain domain, QuotaCountLimit count) {
-        perDomainQuota.setMaxMessage(domain, count).block();
+        setDomainMaxMessageReactive(domain, count).block();
+    }
+
+    @Override
+    public Mono<Void> setDomainMaxMessageReactive(Domain domain, QuotaCountLimit count) {
+        return perDomainQuota.setMaxMessage(domain, count);
     }
 
     @Override
     public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) {
-        perDomainQuota.setMaxStorage(domain, size).block();
+        setDomainMaxStorageReactive(domain, size).block();
+    }
+
+    @Override
+    public Mono<Void> setDomainMaxStorageReactive(Domain domain, QuotaSizeLimit size) {
+        return perDomainQuota.setMaxStorage(domain, size);
     }
 
     @Override
     public void removeDomainMaxMessage(Domain domain) {
-        perDomainQuota.removeMaxMessage(domain).block();
+        removeDomainMaxMessageReactive(domain).block();
+    }
+
+    @Override
+    public Mono<Void> removeDomainMaxMessageReactive(Domain domain) {
+        return perDomainQuota.removeMaxMessage(domain);
     }
 
     @Override
     public void removeDomainMaxStorage(Domain domain) {
-        perDomainQuota.removeMaxStorage(domain).block();
+        removeDomainMaxStorageReactive(domain).block();
+    }
+
+    @Override
+    public Mono<Void> removeDomainMaxStorageReactive(Domain domain) {
+        return perDomainQuota.removeMaxStorage(domain);
     }
 
     @Override
     public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
-        return perDomainQuota.getMaxMessage(domain).blockOptional();
+        return getDomainMaxMessageReactive(domain).blockOptional();
+    }
+
+    @Override
+    public Mono<QuotaCountLimit> getDomainMaxMessageReactive(Domain domain) {
+        return perDomainQuota.getMaxMessage(domain);
     }
 
     @Override
     public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
-        return perDomainQuota.getMaxStorage(domain).blockOptional();
+        return getDomainMaxStorageReactive(domain).blockOptional();
+    }
+
+    @Override
+    public Mono<QuotaSizeLimit> getDomainMaxStorageReactive(Domain domain) {
+        return perDomainQuota.getMaxStorage(domain);
     }
 
     @Override
     public void removeMaxMessage(QuotaRoot quotaRoot) {
-        perUserQuota.removeMaxMessage(quotaRoot).block();
+        removeMaxMessageReactive(quotaRoot).block();
+    }
+
+    @Override
+    public Mono<Void> removeMaxMessageReactive(QuotaRoot quotaRoot) {
+        return perUserQuota.removeMaxMessage(quotaRoot);
     }
 
     @Override
     public void removeMaxStorage(QuotaRoot quotaRoot) {
-        perUserQuota.removeMaxStorage(quotaRoot).block();
+        removeMaxStorageReactive(quotaRoot).block();
+    }
+
+    @Override
+    public Mono<Void> removeMaxStorageReactive(QuotaRoot quotaRoot) {
+        return perUserQuota.removeMaxStorage(quotaRoot);
     }
 
     @Override
     public void setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {
-        globalQuota.setGlobalMaxStorage(globalMaxStorage).block();
+        setGlobalMaxStorageReactive(globalMaxStorage).block();
+    }
+
+    @Override
+    public Mono<Void> setGlobalMaxStorageReactive(QuotaSizeLimit globalMaxStorage) {
+        return globalQuota.setGlobalMaxStorage(globalMaxStorage);
     }
 
     @Override
     public void removeGlobalMaxStorage() {
-        globalQuota.removeGlobaltMaxStorage().block();
+        removeGlobalMaxStorageReactive().block();
+    }
+
+    @Override
+    public Mono<Void> removeGlobalMaxStorageReactive() {
+        return globalQuota.removeGlobaltMaxStorage();
     }
 
     @Override
     public void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) {
-        globalQuota.setGlobalMaxMessage(globalMaxMessageCount).block();
+        setGlobalMaxMessageReactive(globalMaxMessageCount).block();
+    }
+
+    @Override
+    public Mono<Void> setGlobalMaxMessageReactive(QuotaCountLimit globalMaxMessageCount) {
+        return globalQuota.setGlobalMaxMessage(globalMaxMessageCount);
     }
 
     @Override
     public void removeGlobalMaxMessage() {
-        globalQuota.removeGlobalMaxMessage().block();
+        removeGlobalMaxMessageReactive().block();
+    }
+
+    @Override
+    public Mono<Void> removeGlobalMaxMessageReactive() {
+        return globalQuota.removeGlobalMaxMessage();
     }
 
     @Override
     public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
-        return globalQuota.getGlobalMaxStorage().blockOptional();
+        return getGlobalMaxStorageReactive().blockOptional();
+    }
+
+    @Override
+    public Mono<QuotaSizeLimit> getGlobalMaxStorageReactive() {
+        return globalQuota.getGlobalMaxStorage();
     }
 
     @Override
     public Optional<QuotaCountLimit> getGlobalMaxMessage() {
-        return globalQuota.getGlobalMaxMessage().blockOptional();
+        return getGlobalMaxMessageReactive().blockOptional();
+    }
+
+    @Override
+    public Mono<QuotaCountLimit> getGlobalMaxMessageReactive() {
+        return globalQuota.getGlobalMaxMessage();
     }
 
     @Override

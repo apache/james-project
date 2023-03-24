@@ -53,6 +53,8 @@ public interface MaxQuotaManager {
      */
     void setMaxStorage(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) throws MailboxException;
 
+    Publisher<Void> setMaxStorageReactive(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota);
+
     /**
      * Method allowing you to set the maximum message count allowed for this quotaroot
      *
@@ -61,12 +63,16 @@ public interface MaxQuotaManager {
      */
     void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) throws MailboxException;
 
+    Publisher<Void> setMaxMessageReactive(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount);
+
     /**
      * Method allowing you to remove the maximum messages count allowed for this quotaroot
      *
      * @param quotaRoot Quota root argument from RFC 2087
      */
     void removeMaxMessage(QuotaRoot quotaRoot) throws MailboxException;
+
+    Publisher<Void> removeMaxMessageReactive(QuotaRoot quotaRoot);
 
     /**
      * Method allowing you to remove the maximum messages size allowed for this quotaroot
@@ -75,6 +81,8 @@ public interface MaxQuotaManager {
      */
     void removeMaxStorage(QuotaRoot quotaRoot) throws MailboxException;
 
+    Publisher<Void> removeMaxStorageReactive(QuotaRoot quotaRoot);
+
     /**
      * Method allowing you to set the global maximum storage in bytes.
      *
@@ -82,10 +90,14 @@ public interface MaxQuotaManager {
      */
     void setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) throws MailboxException;
 
+    Publisher<Void> setGlobalMaxStorageReactive(QuotaSizeLimit globalMaxStorage);
+
     /**
      * Method allowing you to remove the global maximum messages size in bytes.
      */
     void removeGlobalMaxStorage() throws MailboxException;
+
+    Publisher<Void> removeGlobalMaxStorageReactive();
 
     /**
      * Method allowing you to set the global maximum message count allowed
@@ -94,10 +106,14 @@ public interface MaxQuotaManager {
      */
     void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) throws MailboxException;
 
+    Publisher<Void> setGlobalMaxMessageReactive(QuotaCountLimit globalMaxMessageCount);
+
     /**
      * Method allowing you to remove the global maximum messages count.
      */
     void removeGlobalMaxMessage() throws MailboxException;
+
+    Publisher<Void> removeGlobalMaxMessageReactive();
 
     /**
      * Method allowing you to get the global maximum storage in bytes.
@@ -106,12 +122,16 @@ public interface MaxQuotaManager {
      */
     Optional<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException;
 
+    Publisher<QuotaSizeLimit> getGlobalMaxStorageReactive();
+
     /**
      * Method allowing you to get the global maximum message count allowed
      *
      * @return global maximum message count, if defined
      */
     Optional<QuotaCountLimit> getGlobalMaxMessage() throws MailboxException;
+
+    Publisher<QuotaCountLimit> getGlobalMaxMessageReactive();
 
     /**
      * Return the maximum storage which is allowed for the given {@link QuotaRoot} (in fact the user which the session is bound to)
@@ -179,15 +199,27 @@ public interface MaxQuotaManager {
 
     Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain);
 
+    Publisher<QuotaCountLimit> getDomainMaxMessageReactive(Domain domain);
+
     void setDomainMaxMessage(Domain domain, QuotaCountLimit count) throws MailboxException;
+
+    Publisher<Void> setDomainMaxMessageReactive(Domain domain, QuotaCountLimit count);
 
     void removeDomainMaxMessage(Domain domain) throws MailboxException;
 
+    Publisher<Void> removeDomainMaxMessageReactive(Domain domain);
+
     void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) throws MailboxException;
+
+    Publisher<Void> setDomainMaxStorageReactive(Domain domain, QuotaSizeLimit size);
 
     Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain);
 
+    Publisher<QuotaSizeLimit> getDomainMaxStorageReactive(Domain domain);
+
     void removeDomainMaxStorage(Domain domain) throws MailboxException;
+
+    Publisher<Void> removeDomainMaxStorageReactive(Domain domain);
 
     default Optional<QuotaCountLimit> getComputedMaxMessage(Domain domain) throws MailboxException {
         return Stream.of(
