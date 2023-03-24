@@ -29,7 +29,6 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -44,6 +43,8 @@ import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+
+import reactor.core.publisher.Mono;
 
 public class UserQuotaService {
 
@@ -61,49 +62,44 @@ public class UserQuotaService {
     }
 
     public void defineQuota(Username username, ValidatedQuotaDTO quota) {
-        try {
-            QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
-            if (quota.getCount().isPresent()) {
-                maxQuotaManager.setMaxMessage(quotaRoot, quota.getCount().get());
-            } else {
-                maxQuotaManager.removeMaxMessage(quotaRoot);
-            }
-
-            if (quota.getSize().isPresent()) {
-                maxQuotaManager.setMaxStorage(quotaRoot, quota.getSize().get());
-            } else {
-                maxQuotaManager.removeMaxStorage(quotaRoot);
-            }
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
+        QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
+        defineUserMaxMessage(quotaRoot, quota)
+            .then(defineUserMaxStorage(quotaRoot, quota))
+            .block();
     }
 
-    public QuotaDetailsDTO getQuota(Username username) throws MailboxException {
+    private Mono<Void> defineUserMaxMessage(QuotaRoot quotaRoot, ValidatedQuotaDTO quota) {
+        return quota.getCount()
+            .map(countLimit -> Mono.from(maxQuotaManager.setMaxMessageReactive(quotaRoot, countLimit)))
+            .orElseGet(() -> Mono.from(maxQuotaManager.removeMaxMessageReactive(quotaRoot)));
+    }
+
+    private Mono<Void> defineUserMaxStorage(QuotaRoot quotaRoot, ValidatedQuotaDTO quota) {
+        return quota.getSize()
+            .map(sizeLimit -> Mono.from(maxQuotaManager.setMaxStorageReactive(quotaRoot, sizeLimit)))
+            .orElseGet(() -> Mono.from(maxQuotaManager.removeMaxStorageReactive(quotaRoot)));
+    }
+
+    public QuotaDetailsDTO getQuota(Username username) {
         return getQuota(userQuotaRootResolver.forUser(username));
     }
 
-    private QuotaDetailsDTO getQuota(QuotaRoot quotaRoot) throws MailboxException {
-        QuotaManager.Quotas quotas = quotaManager.getQuotas(quotaRoot);
-        QuotaDetailsDTO.Builder quotaDetails = QuotaDetailsDTO.builder()
-            .occupation(quotas.getStorageQuota(),
-                quotas.getMessageQuota());
-
-        mergeMaps(
-                maxQuotaManager.listMaxMessagesDetails(quotaRoot),
-                maxQuotaManager.listMaxStorageDetails(quotaRoot))
-            .forEach(quotaDetails::valueForScope);
-
-        quotaDetails.computed(computedQuota(quotaRoot));
-        return quotaDetails.build();
-    }
-
-    private ValidatedQuotaDTO computedQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return ValidatedQuotaDTO
-                .builder()
-                .count(maxQuotaManager.getMaxMessage(quotaRoot))
-                .size(maxQuotaManager.getMaxStorage(quotaRoot))
-                .build();
+    private QuotaDetailsDTO getQuota(QuotaRoot quotaRoot) {
+        return Mono.zip(
+            Mono.from(quotaManager.getQuotasReactive(quotaRoot)),
+            Mono.from(maxQuotaManager.listMaxMessagesDetailsReactive(quotaRoot)),
+            Mono.from(maxQuotaManager.listMaxStorageDetailsReactive(quotaRoot)))
+            .map(tuple3 -> QuotaDetailsDTO.builder()
+                    .occupation(tuple3.getT1().getStorageQuota(),
+                        tuple3.getT1().getMessageQuota())
+                    .computed(ValidatedQuotaDTO
+                        .builder()
+                        .count(maxQuotaManager.getMaxMessage(tuple3.getT2()))
+                        .size(maxQuotaManager.getMaxStorage(tuple3.getT3()))
+                        .build())
+                    .valueForScopes(mergeMaps(tuple3.getT2(), tuple3.getT3()))
+                .build())
+            .block();
     }
 
     private Map<Quota.Scope, ValidatedQuotaDTO> mergeMaps(Map<Quota.Scope, QuotaCountLimit> counts, Map<Quota.Scope, QuotaSizeLimit> sizes) {
@@ -118,28 +114,32 @@ public class UserQuotaService {
     }
 
 
-    public Optional<QuotaSizeLimit> getMaxSizeQuota(Username username) throws MailboxException {
-        return maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(username));
+    public Optional<QuotaSizeLimit> getMaxSizeQuota(Username username) {
+        return Mono.from(maxQuotaManager.listMaxStorageDetailsReactive(userQuotaRootResolver.forUser(username)))
+            .map(maxQuotaManager::getMaxStorage)
+            .block();
     }
 
-    public void defineMaxSizeQuota(Username username, QuotaSizeLimit quotaSize) throws MailboxException {
-        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(username), quotaSize);
+    public void defineMaxSizeQuota(Username username, QuotaSizeLimit quotaSize) {
+        Mono.from(maxQuotaManager.setMaxStorageReactive(userQuotaRootResolver.forUser(username), quotaSize)).block();
     }
 
-    public void deleteMaxSizeQuota(Username username) throws MailboxException {
-        maxQuotaManager.removeMaxStorage(userQuotaRootResolver.forUser(username));
+    public void deleteMaxSizeQuota(Username username) {
+        Mono.from(maxQuotaManager.removeMaxStorageReactive(userQuotaRootResolver.forUser(username))).block();
     }
 
-    public Optional<QuotaCountLimit> getMaxCountQuota(Username username) throws MailboxException {
-        return maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(username));
+    public Optional<QuotaCountLimit> getMaxCountQuota(Username username) {
+        return Mono.from(maxQuotaManager.listMaxMessagesDetailsReactive(userQuotaRootResolver.forUser(username)))
+            .map(maxQuotaManager::getMaxMessage)
+            .block();
     }
 
-    public void defineMaxCountQuota(Username username, QuotaCountLimit quotaCount) throws MailboxException {
-        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(username), quotaCount);
+    public void defineMaxCountQuota(Username username, QuotaCountLimit quotaCount) {
+        Mono.from(maxQuotaManager.setMaxMessageReactive(userQuotaRootResolver.forUser(username), quotaCount)).block();
     }
 
-    public void deleteMaxCountQuota(Username username) throws MailboxException {
-        maxQuotaManager.removeMaxMessage(userQuotaRootResolver.forUser(username));
+    public void deleteMaxCountQuota(Username username) {
+        Mono.from(maxQuotaManager.removeMaxMessageReactive(userQuotaRootResolver.forUser(username))).block();
     }
 
     public List<UsersQuotaDetailsDTO> getUsersQuota(QuotaQuery quotaQuery) {

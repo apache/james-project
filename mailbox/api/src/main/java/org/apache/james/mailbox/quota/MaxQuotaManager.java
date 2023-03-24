@@ -22,7 +22,6 @@ package org.apache.james.mailbox.quota;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.james.core.Domain;
@@ -34,8 +33,6 @@ import org.apache.james.mailbox.model.Quota.Scope;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
-
-import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 
@@ -220,24 +217,6 @@ public interface MaxQuotaManager {
     void removeDomainMaxStorage(Domain domain) throws MailboxException;
 
     Publisher<Void> removeDomainMaxStorageReactive(Domain domain);
-
-    default Optional<QuotaCountLimit> getComputedMaxMessage(Domain domain) throws MailboxException {
-        return Stream.of(
-                Throwing.supplier(() -> getDomainMaxMessage(domain)).sneakyThrow(),
-                Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow())
-            .map(Supplier::get)
-            .flatMap(Optional::stream)
-            .findFirst();
-    }
-
-    default Optional<QuotaSizeLimit> getComputedMaxStorage(Domain domain) throws MailboxException {
-        return Stream.of(
-                Throwing.supplier(() -> getDomainMaxStorage(domain)).sneakyThrow(),
-                Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow())
-            .map(Supplier::get)
-            .flatMap(Optional::stream)
-            .findFirst();
-    }
 
     class QuotaDetails {
         private final Map<Quota.Scope, QuotaCountLimit> maxMessageDetails;
