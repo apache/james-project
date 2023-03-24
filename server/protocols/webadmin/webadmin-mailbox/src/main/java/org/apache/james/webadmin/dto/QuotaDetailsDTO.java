@@ -20,6 +20,7 @@
 
 package org.apache.james.webadmin.dto;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -83,6 +84,11 @@ public class QuotaDetailsDTO {
                 case User:
                     return user(value);
             }
+            return this;
+        }
+
+        public Builder valueForScopes(Map<Quota.Scope, ValidatedQuotaDTO> value) {
+            value.forEach(this::valueForScope);
             return this;
         }
 

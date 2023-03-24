@@ -24,9 +24,10 @@ import javax.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
+
+import reactor.core.publisher.Mono;
 
 public class GlobalQuotaService {
 
@@ -37,51 +38,60 @@ public class GlobalQuotaService {
         this.maxQuotaManager = maxQuotaManager;
     }
 
-    public void defineQuota(ValidatedQuotaDTO quota) throws MailboxException {
-        Optional<QuotaCountLimit> count = quota.getCount();
-        if (count.isPresent()) {
-            maxQuotaManager.setGlobalMaxMessage(count.get());
-        } else {
-            maxQuotaManager.removeGlobalMaxMessage();
-        }
-
-        Optional<QuotaSizeLimit> size = quota.getSize();
-        if (size.isPresent()) {
-            maxQuotaManager.setGlobalMaxStorage(size.get());
-        } else {
-            maxQuotaManager.removeGlobalMaxStorage();
-        }
+    public void defineQuota(ValidatedQuotaDTO quota) {
+        defineGlobalMaxMessage(quota)
+            .then(defineGlobalMaxStorage(quota))
+            .block();
     }
 
-    public ValidatedQuotaDTO getQuota() throws MailboxException {
-        return ValidatedQuotaDTO
-            .builder()
-            .count(maxQuotaManager.getGlobalMaxMessage())
-            .size(maxQuotaManager.getGlobalMaxStorage())
-            .build();
+    private Mono<Void> defineGlobalMaxStorage(ValidatedQuotaDTO quota) {
+        return quota.getSize()
+            .map(sizeLimit -> Mono.from(maxQuotaManager.setGlobalMaxStorageReactive(sizeLimit)))
+            .orElseGet(() -> Mono.from(maxQuotaManager.removeGlobalMaxStorageReactive()));
     }
 
-    public Optional<QuotaSizeLimit> getMaxSizeQuota() throws MailboxException {
-        return maxQuotaManager.getGlobalMaxStorage();
+    private Mono<Void> defineGlobalMaxMessage(ValidatedQuotaDTO quota) {
+        return quota.getCount()
+            .map(countLimit -> Mono.from(maxQuotaManager.setGlobalMaxMessageReactive(countLimit)))
+            .orElseGet(() -> Mono.from(maxQuotaManager.removeGlobalMaxMessageReactive()));
     }
 
-    public void defineMaxSizeQuota(QuotaSizeLimit quotaRequest) throws MailboxException {
-        maxQuotaManager.setGlobalMaxStorage(quotaRequest);
+    public ValidatedQuotaDTO getQuota() {
+        return Mono.zip(Mono.from(maxQuotaManager.getGlobalMaxMessageReactive())
+                    .map(Optional::of)
+                    .switchIfEmpty(Mono.just(Optional.empty())),
+                Mono.from(maxQuotaManager.getGlobalMaxStorageReactive())
+                    .map(Optional::of)
+                    .switchIfEmpty(Mono.just(Optional.empty())))
+            .map(tuple -> ValidatedQuotaDTO
+                .builder()
+                .count(tuple.getT1())
+                .size(tuple.getT2())
+                .build())
+            .block();
     }
 
-    public void deleteMaxSizeQuota() throws MailboxException {
-        maxQuotaManager.removeGlobalMaxStorage();
+    public Optional<QuotaSizeLimit> getMaxSizeQuota() {
+        return Mono.from(maxQuotaManager.getGlobalMaxStorageReactive()).blockOptional();
     }
 
-    public Optional<QuotaCountLimit> getMaxCountQuota() throws MailboxException {
-        return maxQuotaManager.getGlobalMaxMessage();
+    public void defineMaxSizeQuota(QuotaSizeLimit quotaRequest) {
+        Mono.from(maxQuotaManager.setGlobalMaxStorageReactive(quotaRequest)).block();
     }
 
-    public void defineMaxCountQuota(QuotaCountLimit value) throws MailboxException {
-        maxQuotaManager.setGlobalMaxMessage(value);
+    public void deleteMaxSizeQuota() {
+        Mono.from(maxQuotaManager.removeGlobalMaxStorageReactive()).block();
     }
 
-    public void deleteMaxCountQuota() throws MailboxException {
-        maxQuotaManager.removeGlobalMaxMessage();
+    public Optional<QuotaCountLimit> getMaxCountQuota() {
+        return Mono.from(maxQuotaManager.getGlobalMaxMessageReactive()).blockOptional();
+    }
+
+    public void defineMaxCountQuota(QuotaCountLimit value) {
+        Mono.from(maxQuotaManager.setGlobalMaxMessageReactive(value)).block();
+    }
+
+    public void deleteMaxCountQuota() {
+        Mono.from(maxQuotaManager.removeGlobalMaxMessageReactive()).block();
     }
 }
