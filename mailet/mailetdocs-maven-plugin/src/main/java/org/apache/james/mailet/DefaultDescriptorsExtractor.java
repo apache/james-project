@@ -20,6 +20,7 @@
 package org.apache.james.mailet;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
 import org.apache.mailet.ExcludeFromDocumentation;
@@ -44,6 +46,8 @@ import org.apache.maven.project.MavenProject;
 import com.thoughtworks.qdox.JavaProjectBuilder;
 import com.thoughtworks.qdox.model.JavaAnnotation;
 import com.thoughtworks.qdox.model.JavaClass;
+
+import sun.reflect.ReflectionFactory;
 
 /**
  * Finds implementations of Mailet and Matchers in the source trees.
@@ -171,13 +175,18 @@ public class DefaultDescriptorsExtractor {
 
     private Optional<String> fetchInfo(Log log, String nameOfClass, Class<?> klass, String infoMethodName, Type type) {
         try {
-            final Object instance = klass.getDeclaredConstructor().newInstance();
-            final String info = (String) klass.getMethod(infoMethodName).invoke(instance);
+            Constructor<?> constructor = klass.getConstructors()[0];
+            Object[ ] studentObjects = new Object[constructor.getParameterCount()];
+
+            Object instance = constructor.newInstance(studentObjects);
+            String info = (String) klass.getMethod(infoMethodName).invoke(instance);
+
             if (info != null && info.length() > 0) {
                 return Optional.of(info);
             }
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                 | InvocationTargetException | SecurityException | NoSuchMethodException e) {
+            e.printStackTrace();
             handleInfoLoadFailure(log, nameOfClass, type, e);
         }
 
