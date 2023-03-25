@@ -31,7 +31,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
 import org.apache.mailet.ExcludeFromDocumentation;
@@ -46,8 +45,6 @@ import org.apache.maven.project.MavenProject;
 import com.thoughtworks.qdox.JavaProjectBuilder;
 import com.thoughtworks.qdox.model.JavaAnnotation;
 import com.thoughtworks.qdox.model.JavaClass;
-
-import sun.reflect.ReflectionFactory;
 
 /**
  * Finds implementations of Mailet and Matchers in the source trees.
@@ -175,10 +172,7 @@ public class DefaultDescriptorsExtractor {
 
     private Optional<String> fetchInfo(Log log, String nameOfClass, Class<?> klass, String infoMethodName, Type type) {
         try {
-            Constructor<?> constructor = klass.getConstructors()[0];
-            Object[ ] studentObjects = new Object[constructor.getParameterCount()];
-
-            Object instance = constructor.newInstance(studentObjects);
+            Object instance = instantiateClass(klass);
             String info = (String) klass.getMethod(infoMethodName).invoke(instance);
 
             if (info != null && info.length() > 0) {
@@ -186,11 +180,22 @@ public class DefaultDescriptorsExtractor {
             }
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                 | InvocationTargetException | SecurityException | NoSuchMethodException e) {
-            e.printStackTrace();
             handleInfoLoadFailure(log, nameOfClass, type, e);
         }
 
         return Optional.empty();
+    }
+
+    private Object instantiateClass(Class<?> klass) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
+        Constructor<?>[] constructors = klass.getConstructors();
+        if (constructors.length > 0) {
+            Constructor<?> constructor = constructors[0];
+            Object[] studentObjects = new Object[constructor.getParameterCount()];
+
+            return constructor.newInstance(studentObjects);
+        }
+        return klass.getDeclaredConstructor()
+            .newInstance();
     }
 
 
