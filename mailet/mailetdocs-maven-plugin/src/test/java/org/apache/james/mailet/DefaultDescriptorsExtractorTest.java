@@ -71,6 +71,25 @@ class DefaultDescriptorsExtractorTest {
 
         assertThat(descriptors).containsOnly(experimentalMailet, nonExperimentalMailet);
     }
+
+    @Test
+    void extractShouldSupportArgumentsInConstructor() {
+        when(mavenProject.getCompileSourceRoots())
+            .thenReturn(ImmutableList.of("src/test/java/org/apache/james/mailet/constructor"));
+
+        List<MailetMatcherDescriptor> descriptors = testee.extract(mavenProject, log)
+            .descriptors();
+
+        MailetMatcherDescriptor mailet = MailetMatcherDescriptor.builder()
+            .name("ConstructorMailet")
+            .fullyQualifiedClassName("org.apache.james.mailet.constructor.ConstructorMailet")
+            .type(Type.MAILET)
+            .info("info")
+            .noClassDocs()
+            .isNotExperimental();
+
+        assertThat(descriptors).containsOnly(mailet);
+    }
     
     @Test
     void extractShouldExcludeAnnotatedClassesWhenScanningMailets() {

@@ -20,6 +20,7 @@
 package org.apache.james.mailet;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -171,8 +172,9 @@ public class DefaultDescriptorsExtractor {
 
     private Optional<String> fetchInfo(Log log, String nameOfClass, Class<?> klass, String infoMethodName, Type type) {
         try {
-            final Object instance = klass.getDeclaredConstructor().newInstance();
-            final String info = (String) klass.getMethod(infoMethodName).invoke(instance);
+            Object instance = instantiateClass(klass);
+            String info = (String) klass.getMethod(infoMethodName).invoke(instance);
+
             if (info != null && info.length() > 0) {
                 return Optional.of(info);
             }
@@ -182,6 +184,18 @@ public class DefaultDescriptorsExtractor {
         }
 
         return Optional.empty();
+    }
+
+    private Object instantiateClass(Class<?> klass) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
+        Constructor<?>[] constructors = klass.getConstructors();
+        if (constructors.length > 0) {
+            Constructor<?> constructor = constructors[0];
+            Object[] studentObjects = new Object[constructor.getParameterCount()];
+
+            return constructor.newInstance(studentObjects);
+        }
+        return klass.getDeclaredConstructor()
+            .newInstance();
     }
 
 
