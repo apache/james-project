@@ -29,29 +29,42 @@ import static org.apache.james.jmap.JMAPTestingConstants.CEDRIC_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.http.HttpStatus;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.Port;
@@ -59,10 +72,13 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.awaitility.Awaitility;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.inject.multibindings.Multibinder;
 
 import io.restassured.RestAssured;
@@ -227,5 +243,54 @@ class MemoryUsernameChangeIntegrationTest {
             .containsOnly(RULE_1);
         assertThat(filterProbe.listRulesForUser(ALICE).getRules())
             .isEmpty();
+    }
+
+    @Test
+    void shouldAdaptQuotas(GuiceJamesServer server) throws Exception {
+        server.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.inbox(BOB));
+
+        QuotaProbesImpl quotaProbes = server.getProbe(QuotaProbesImpl.class);
+        QuotaRoot bobQuotaRoot = quotaProbes.getQuotaRoot(MailboxPath.inbox(BOB));
+
+        quotaProbes.setMaxMessageCount(bobQuotaRoot, QuotaCountLimit.count(50));
+        quotaProbes.setMaxStorage(bobQuotaRoot, QuotaSizeLimit.size(1000));
+
+        server.getProbe(MailboxProbeImpl.class)
+            .appendMessage(BOB.asString(), MailboxPath.inbox(BOB),
+                MessageManager.AppendCommand.from(Message.Builder.of()
+                    .setSubject("test")
+                    .setBody("testmail", StandardCharsets.UTF_8)
+                    .build()));
+
+        Awaitility.await()
+            .atMost(TEN_SECONDS)
+            .untilAsserted(() -> {
+                assertThat(quotaProbes.getMessageCountQuota(bobQuotaRoot)
+                    .getUsed().asLong())
+                    .isEqualTo(1L);
+                assertThat(quotaProbes.getStorageQuota(bobQuotaRoot)
+                    .getUsed().asLong())
+                    .isEqualTo(85L);
+            });
+
+        String taskId = webAdminApi
+            .queryParam("action", "rename")
+            .post("/users/" + BOB.asString() + "/rename/" + ALICE.asString())
+            .jsonPath()
+            .get("taskId");
+
+        webAdminApi.get("/tasks/" + taskId + "/await")
+            .then()
+            .statusCode(HttpStatus.SC_OK)
+            .body("additionalInformation.status.QuotaUsernameChangeTaskStep", Matchers.is("DONE"));
+
+        QuotaRoot aliceQuotaRoot = quotaProbes.getQuotaRoot(MailboxPath.inbox(ALICE));
+
+        assertSoftly(softly -> {
+            softly.assertThat(Throwing.supplier(() -> quotaProbes.getMessageCountQuota(aliceQuotaRoot)).get())
+                .isEqualTo(Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(1)).computedLimit(QuotaCountLimit.count(50)).build());
+            softly.assertThat(Throwing.supplier(() -> quotaProbes.getStorageQuota(aliceQuotaRoot)).get())
+                .isEqualTo(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(85)).computedLimit(QuotaSizeLimit.size(1000)).build());
+        });
     }
 }
