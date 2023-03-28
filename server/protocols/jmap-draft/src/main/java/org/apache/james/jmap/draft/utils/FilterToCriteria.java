@@ -56,7 +56,7 @@ public class FilterToCriteria {
                         SearchQuery.address(AddressType.To, text),
                         SearchQuery.address(AddressType.Cc, text),
                         SearchQuery.address(AddressType.Bcc, text),
-                        SearchQuery.headerContains("Subject", text),
+                        SearchQuery.subject(text),
                         SearchQuery.attachmentContains(text),
                         SearchQuery.bodyContains(text),
                         SearchQuery.attachmentFileName(text)))
@@ -65,7 +65,7 @@ public class FilterToCriteria {
         filter.getTo().ifPresent(to -> builder.add(SearchQuery.address(AddressType.To, to)));
         filter.getCc().ifPresent(cc -> builder.add(SearchQuery.address(AddressType.Cc, cc)));
         filter.getBcc().ifPresent(bcc -> builder.add(SearchQuery.address(AddressType.Bcc, bcc)));
-        filter.getSubject().ifPresent(subject -> builder.add(SearchQuery.headerContains("Subject", subject)));
+        filter.getSubject().ifPresent(subject -> builder.add(SearchQuery.subject(subject)));
         filter.getAttachments().ifPresent(attachments ->  builder.add(SearchQuery.attachmentContains(attachments)));
         filter.getBody().ifPresent(body ->  builder.add(SearchQuery.bodyContains(body)));
         filter.getAfter().ifPresent(after -> builder.add(SearchQuery.sentDateAfter(Date.from(after.toInstant()), DateResolution.Second)));

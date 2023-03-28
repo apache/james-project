@@ -188,6 +188,9 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
         } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
             SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
             return isMatch(mimeMessageIDCriterion.asHeaderCriterion(), message, recentMessageUids);
+        } else if (criterion instanceof SearchQuery.SubjectCriterion) {
+            SearchQuery.SubjectCriterion subjectCriterion = (SearchQuery.SubjectCriterion) criterion;
+            return isMatch(subjectCriterion.asHeaderCriterion(), message, recentMessageUids);
         } else if (criterion instanceof SearchQuery.ThreadIdCriterion) {
             SearchQuery.ThreadIdCriterion threadIdCriterion = (SearchQuery.ThreadIdCriterion) criterion;
             return matches(threadIdCriterion, message);

@@ -133,7 +133,8 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         if (crit instanceof SearchQuery.AllCriterion || crit instanceof SearchQuery.TextCriterion) {
             return FetchType.FULL;
         }
-        if (crit instanceof SearchQuery.HeaderCriterion || crit instanceof SearchQuery.MimeMessageIDCriterion) {
+        if (crit instanceof SearchQuery.HeaderCriterion || crit instanceof SearchQuery.MimeMessageIDCriterion
+            || crit instanceof SearchQuery.SubjectCriterion) {
             return FetchType.HEADERS;
         }
         return FetchType.METADATA;

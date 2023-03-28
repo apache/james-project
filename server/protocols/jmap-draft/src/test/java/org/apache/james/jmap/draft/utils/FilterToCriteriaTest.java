@@ -123,7 +123,7 @@ public class FilterToCriteriaTest {
                 .subject(subject)
                 .build());
 
-        assertThat(criteria).containsExactly(SearchQuery.headerContains("Subject", subject));
+        assertThat(criteria).containsExactly(SearchQuery.subject(subject));
     }
 
     @Test
@@ -158,7 +158,7 @@ public class FilterToCriteriaTest {
             SearchQuery.address(AddressType.To, text),
             SearchQuery.address(AddressType.Cc, text),
             SearchQuery.address(AddressType.Bcc, text),
-            SearchQuery.headerContains("Subject", text),
+            SearchQuery.subject(text),
             SearchQuery.bodyContains(text),
             SearchQuery.attachmentContains(text),
             SearchQuery.attachmentFileName(text))));
@@ -336,7 +336,7 @@ public class FilterToCriteriaTest {
         assertThat(criteria).containsExactly(SearchQuery.and(ImmutableList.of(
             SearchQuery.address(AddressType.From, from),
             SearchQuery.address(AddressType.To, to),
-            SearchQuery.headerContains("Subject", subject))));
+            SearchQuery.subject(subject))));
     }
 
     @Test
@@ -357,7 +357,7 @@ public class FilterToCriteriaTest {
         assertThat(criteria).containsExactly(SearchQuery.or(ImmutableList.of(
             SearchQuery.address(AddressType.From, from),
             SearchQuery.address(AddressType.To, to),
-            SearchQuery.headerContains("Subject", subject))));
+            SearchQuery.subject(subject))));
     }
 
     @Test
@@ -378,7 +378,7 @@ public class FilterToCriteriaTest {
         assertThat(criteria).containsExactly(SearchQuery.not(ImmutableList.of(
             SearchQuery.address(AddressType.From, from),
             SearchQuery.address(AddressType.To, to),
-            SearchQuery.headerContains("Subject", subject))));
+            SearchQuery.subject(subject))));
     }
 
     @Test
