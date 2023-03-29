@@ -938,6 +938,11 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Publisher<Boolean> hasRightReactive(MailboxPath mailboxPath, Right right, MailboxSession session) {
+        return storeRightManager.hasRightReactive(mailboxPath, right, session);
+    }
+
+    @Override
     public boolean hasRight(Mailbox mailbox, Right right, MailboxSession session) throws MailboxException {
         return storeRightManager.hasRight(mailbox, right, session);
     }
@@ -950,6 +955,11 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
         return storeRightManager.myRights(mailboxPath, session);
+    }
+
+    @Override
+    public Publisher<Rfc4314Rights> myRightsReactive(MailboxPath mailboxPath, MailboxSession session) {
+        return storeRightManager.myRightsReactive(mailboxPath, session);
     }
 
     @Override
@@ -985,6 +995,11 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
         storeRightManager.applyRightsCommand(mailboxPath, mailboxACLCommand, session);
+    }
+
+    @Override
+    public Publisher<Void> applyRightsCommandReactive(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) {
+        return storeRightManager.applyRightsCommandReactive(mailboxPath, mailboxACLCommand, session);
     }
 
     @Override

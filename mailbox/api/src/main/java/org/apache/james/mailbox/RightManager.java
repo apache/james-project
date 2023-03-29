@@ -45,6 +45,8 @@ public interface RightManager {
      */
     boolean hasRight(MailboxPath mailboxPath, Right right, MailboxSession session) throws MailboxException;
 
+    Publisher<Boolean> hasRightReactive(MailboxPath mailboxPath, Right right, MailboxSession session);
+
     boolean hasRight(Mailbox mailbox, Right right, MailboxSession session) throws MailboxException;
 
     /**
@@ -104,6 +106,8 @@ public interface RightManager {
      */
     Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
+    Publisher<Rfc4314Rights> myRightsReactive(MailboxPath mailboxPath, MailboxSession session);
+
     /**
      * Returns the rights applicable to the user who has sent the current
      * request on the mailbox designated by this mailboxPath.
@@ -139,6 +143,8 @@ public interface RightManager {
      * @throws MailboxException in case of unknown mailbox or unsupported right
      */
     void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException;
+
+    Publisher<Void> applyRightsCommandReactive(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session);
 
     /**
      * Update the Mailbox ACL of the designated mailbox. We can either ADD REPLACE or REMOVE entries.
