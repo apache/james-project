@@ -34,6 +34,7 @@ import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
+import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.DifferentDomainException;
@@ -79,6 +80,13 @@ public class StoreRightManager implements RightManager {
     }
 
     @Override
+    public Mono<Boolean> hasRightReactive(MailboxPath mailboxPath, Right right, MailboxSession session) {
+        return myRightsReactive(mailboxPath, session)
+            .filter(rights -> rights.contains(right))
+            .hasElement();
+    }
+
+    @Override
     public boolean hasRight(MailboxId mailboxId, Right right, MailboxSession session) throws MailboxException {
         return block(Mono.from(myRights(mailboxId, session))).contains(right);
     }
@@ -90,17 +98,20 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        if (mailboxPath.belongsTo(session)) {
-            if (mailboxSessionMapperFactory.getMailboxMapper(session).pathExists(mailboxPath).block()) {
-                return MailboxACL.FULL_RIGHTS;
-            } else {
-                throw new MailboxNotFoundException(mailboxPath);
-            }
-        }
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = blockOptional(mapper.findMailboxByPath(mailboxPath))
-            .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
-        return myRights(mailbox, session);
+        return MailboxReactorUtils.block(myRightsReactive(mailboxPath, session));
+    }
+
+    @Override
+    public Mono<Rfc4314Rights> myRightsReactive(MailboxPath mailboxPath, MailboxSession session) {
+        return mailboxSessionMapperFactory.getMailboxMapper(session)
+            .findMailboxByPath(mailboxPath)
+            .map(mailbox -> {
+                if (mailboxPath.belongsTo(session)) {
+                    return MailboxACL.FULL_RIGHTS;
+                } else {
+                    return myRights(mailbox, session);
+                }
+            }).switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)));
     }
 
     @Override
@@ -158,21 +169,27 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public void applyRightsCommand(MailboxPath mailboxPath, ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
-        assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACLCommand);
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        block(mapper.findMailboxByPath(mailboxPath)
-            .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> {
-                assertHaveAccessTo(mailbox, session);
+        MailboxReactorUtils.block(applyRightsCommandReactive(mailboxPath, mailboxACLCommand, session));
+    }
 
-                return mapper.updateACL(mailbox, mailboxACLCommand)
-                    .flatMap(aclDiff -> eventBus.dispatch(EventFactory.aclUpdated()
-                            .randomEventId()
-                            .mailboxSession(session)
-                            .mailbox(mailbox)
-                            .aclDiff(aclDiff)
-                            .build(),
-                        new MailboxIdRegistrationKey(mailbox.getMailboxId())));
-            }).sneakyThrow()));
+    @Override
+    public Mono<Void> applyRightsCommandReactive(MailboxPath mailboxPath, ACLCommand mailboxACLCommand, MailboxSession session) {
+        return Mono.just(mailboxSessionMapperFactory.getMailboxMapper(session))
+            .doOnNext(Throwing.consumer(mapper -> assertSharesBelongsToUserDomain(mailboxPath.getUser(), mailboxACLCommand)))
+            .flatMap(mapper -> mapper.findMailboxByPath(mailboxPath)
+                .doOnNext(Throwing.consumer(mailbox -> assertHaveAccessTo(mailbox, session)))
+                .flatMap(mailbox -> mapper.updateACL(mailbox, mailboxACLCommand)
+                    .flatMap(aclDiff -> dispatchACLUpdateEvent(session, mailbox, aclDiff))));
+    }
+
+    private Mono<Void> dispatchACLUpdateEvent(MailboxSession session, Mailbox mailbox, ACLDiff aclDiff) {
+        return eventBus.dispatch(EventFactory.aclUpdated()
+                .randomEventId()
+                .mailboxSession(session)
+                .mailbox(mailbox)
+                .aclDiff(aclDiff)
+                .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
     }
 
     @Override
@@ -275,13 +292,7 @@ public class StoreRightManager implements RightManager {
 
     private Mono<Void> setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox, MailboxSession session) {
         return mapper.setACL(mailbox, mailboxACL)
-            .flatMap(aclDiff -> eventBus.dispatch(EventFactory.aclUpdated()
-                    .randomEventId()
-                    .mailboxSession(session)
-                    .mailbox(mailbox)
-                    .aclDiff(aclDiff)
-                    .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId())));
+            .flatMap(aclDiff -> dispatchACLUpdateEvent(session, mailbox, aclDiff));
     }
 
     /**
