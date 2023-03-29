@@ -19,10 +19,14 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -41,11 +45,14 @@ import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * SETACL Processor.
@@ -62,19 +69,39 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     }
 
     @Override
-    protected void processRequest(SetACLRequest request, ImapSession session, Responder responder) {
-
+    protected Mono<Void> processRequestReactive(SetACLRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
         final String identifier = request.getIdentifier();
-        try {
-            
-            /* parsing the rights is the the cheapest thing to begin with */
-            EditMode editMode = EditMode.REPLACE;
-            String rights = request.getRights();
-            if (rights != null && rights.length() > 0) {
-                switch (rights.charAt(0)) {
+        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
+
+        return checkLookupRight(request, responder, mailboxManager, mailboxSession, mailboxPath)
+            .filter(FunctionalUtils.identityPredicate())
+            .flatMap(hasLookupRight -> checkAdminRight(request, responder, mailboxManager, mailboxSession, mailboxName, mailboxPath))
+            .filter(FunctionalUtils.identityPredicate())
+            .flatMap(hasAdminRight -> applyRight(mailboxManager, mailboxSession, identifier, request, mailboxPath)
+                .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+                .then())
+            .onErrorResume(UnsupportedRightException.class,
+                error -> Mono.fromRunnable(() -> taggedBad(request, responder,
+                    new HumanReadableText(
+                        HumanReadableText.UNSUPPORTED_RIGHT_KEY,
+                        HumanReadableText.UNSUPPORTED_RIGHT_DEFAULT_VALUE,
+                        error.getUnsupportedRight()))))
+            .onErrorResume(MailboxNotFoundException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND)))
+            .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e)))
+            .onErrorResume(MailboxException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING)));
+    }
+
+    /* parsing the rights is the cheapest thing to begin with */
+    private Pair<Rfc4314Rights, EditMode> parsingRightAndEditMode(SetACLRequest request) throws UnsupportedRightException {
+        EditMode editMode = EditMode.REPLACE;
+        String rights = request.getRights();
+        if (StringUtils.isNotEmpty(rights)) {
+            switch (rights.charAt(0)) {
                 case MailboxACL.ADD_RIGHTS_MARKER:
                     editMode = EditMode.ADD;
                     rights = rights.substring(1);
@@ -83,74 +110,49 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
                     editMode = EditMode.REMOVE;
                     rights = rights.substring(1);
                     break;
-                }
             }
-            Rfc4314Rights mailboxAclRights = Rfc4314Rights.fromSerializedRfc4314Rights(rights);
-
-            MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
-            // Check that mailbox exists
-            mailboxManager.getMailbox(mailboxPath, mailboxSession);
-
-            /*
-             * RFC 4314 section 6.
-             * An implementation MUST make sure the ACL commands themselves do
-             * not give information about mailboxes with appropriately
-             * restricted ACLs. For example, when a user agent executes a GETACL
-             * command on a mailbox that the user has no permission to LIST, the
-             * server would respond to that request with the same error that
-             * would be used if the mailbox did not exist, thus revealing no
-             * existence information, much less the mailbox’s ACL.
-             */
-            if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
-                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-            } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
-                /* RFC 4314 section 4. */
-                Object[] params = new Object[] {
-                        MailboxACL.Right.Administer.toString(),
-                        request.getCommand().getName(),
-                        mailboxName
-                };
-                HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(request, responder, text);
-            } else {
-                
-                EntryKey key = EntryKey.deserialize(identifier);
-                
-                // FIXME check if identifier is a valid user or group
-                // FIXME Servers, when processing a command that has an identifier as a
-                // parameter (i.e., any of SETACL, DELETEACL, and LISTRIGHTS commands),
-                // SHOULD first prepare the received identifier using "SASLprep" profile
-                // [SASLprep] of the "stringprep" algorithm [Stringprep].  If the
-                // preparation of the identifier fails or results in an empty string,
-                // the server MUST refuse to perform the command with a BAD response.
-                // Note that Section 6 recommends additional identifier’s verification
-                // steps.
-
-                mailboxManager.applyRightsCommand(mailboxPath,
-                    MailboxACL.command().key(key).mode(editMode).rights(mailboxAclRights).build(),
-                    mailboxSession);
-
-                okComplete(request, responder);
-                // FIXME should we send unsolicited responses here?
-                // unsolicitedResponses(session, responder, false);
-            }
-        } catch (UnsupportedRightException e) {
-            /*
-             * RFc 4314, section 3.1
-             * Note that an unrecognized right MUST cause the command to return the
-             * BAD response.  In particular, the server MUST NOT silently ignore
-             * unrecognized rights.
-             * */
-            Object[] params = new Object[] {e.getUnsupportedRight()};
-            HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUPPORTED_RIGHT_KEY, HumanReadableText.UNSUPPORTED_RIGHT_DEFAULT_VALUE, params);
-            taggedBad(request, responder, text);
-        } catch (MailboxNotFoundException e) {
-            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
-        } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+        return Pair.of(Rfc4314Rights.fromSerializedRfc4314Rights(rights), editMode);
+    }
 
+    private Mono<Void> applyRight(MailboxManager mailboxManager,
+                                  MailboxSession mailboxSession,
+                                  String identifier,
+                                  SetACLRequest request,
+                                  MailboxPath mailboxPath) {
+        return Mono.fromCallable(() -> parsingRightAndEditMode(request))
+            .flatMap(rightAndEditMode -> Mono.from(mailboxManager.applyRightsCommandReactive(
+                mailboxPath,
+                MailboxACL.command()
+                    .key(EntryKey.deserialize(identifier))
+                    .mode(rightAndEditMode.getRight())
+                    .rights(rightAndEditMode.getLeft())
+                    .build(),
+                mailboxSession)));
+    }
+
+    private Mono<Boolean> checkAdminRight(SetACLRequest request, Responder responder, MailboxManager mailboxManager, MailboxSession mailboxSession, String mailboxName, MailboxPath mailboxPath) {
+        return Mono.from(mailboxManager.hasRightReactive(mailboxPath, MailboxACL.Right.Administer, mailboxSession))
+            .doOnNext(hasRight -> {
+                if (!hasRight) {
+                    no(request, responder,
+                        new HumanReadableText(
+                            HumanReadableText.UNSUFFICIENT_RIGHTS_KEY,
+                            HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE,
+                            MailboxACL.Right.Administer.toString(),
+                            request.getCommand().getName(),
+                            mailboxName));
+                }
+            });
+    }
+
+    private Mono<Boolean> checkLookupRight(SetACLRequest request, Responder responder, MailboxManager mailboxManager, MailboxSession mailboxSession, MailboxPath mailboxPath) {
+        return Mono.from(mailboxManager.hasRightReactive(mailboxPath, MailboxACL.Right.Lookup, mailboxSession))
+            .doOnNext(hasRight -> {
+                if (!hasRight) {
+                    no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                }
+            });
     }
 
     @Override
