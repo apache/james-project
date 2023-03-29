@@ -41,7 +41,6 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData.FetchGroup;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -106,9 +105,9 @@ class DeleteACLProcessorTest {
     }
     
     @Test
-    void testNoListRight() throws Exception {
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
-            .thenReturn(false);
+    void testNoListRight() {
+        when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Lookup, mailboxSession))
+            .thenReturn(Mono.just(false));
 
         subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
@@ -122,11 +121,11 @@ class DeleteACLProcessorTest {
     }
 
     @Test
-    void testNoAdminRight() throws Exception {
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
-            .thenReturn(true);
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
-            .thenReturn(false);
+    void testNoAdminRight() {
+        when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Lookup, mailboxSession))
+            .thenReturn(Mono.just(true));
+        when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Administer, mailboxSession))
+            .thenReturn(Mono.just(false));
 
         subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
@@ -140,9 +139,10 @@ class DeleteACLProcessorTest {
     }
 
     @Test
-    void testNonExistentMailboxName() throws Exception {
-        when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
-            .thenThrow(new MailboxNotFoundException(""));
+    void testNonExistentMailboxName() {
+        when(mailboxManager.hasRightReactive(any(MailboxPath.class),
+            any(),any(MailboxSession.class)))
+            .thenReturn(Mono.error(new MailboxNotFoundException("")));
 
         subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
@@ -157,17 +157,20 @@ class DeleteACLProcessorTest {
 
     
     @Test
-    void testDelete() throws MailboxException {
+    void testDelete() {
         MailboxACL acl = MailboxACL.OWNER_FULL_ACL;
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
-            .thenReturn(true);
-        when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
-            .thenReturn(true);
+        when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Lookup, mailboxSession))
+            .thenReturn(Mono.just(true));
+        when(mailboxManager.hasRightReactive(path, MailboxACL.Right.Administer, mailboxSession))
+            .thenReturn(Mono.just(true));
         when(metaData.getACL()).thenReturn(acl);
+        when(mailboxManager.applyRightsCommandReactive(path, MailboxACL.command().key(user1Key).noRights().asReplacement(),
+            mailboxSession))
+            .thenReturn(Mono.empty());
 
         subject.doProcess(deleteACLRequest, responder, imapSession).block();
 
-        verify(mailboxManager).applyRightsCommand(path,
+        verify(mailboxManager).applyRightsCommandReactive(path,
             MailboxACL.command().key(user1Key).noRights().asReplacement(),
             mailboxSession);
 
