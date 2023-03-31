@@ -76,9 +76,9 @@
                     <tr>
                         <td>Docker image</td>
                         <td>Not available. Contributions welcomed for JIB support.</td>
-                        <td>apache/james:cassandra-3.7.3</td>
-                        <td>apache/james:distributed-3.7.3</td>
-                        <td>apache/james:jpa-3.7.3</td>
+                        <td>apache/james:cassandra-3.7.4</td>
+                        <td>apache/james:distributed-3.7.4</td>
+                        <td>apache/james:jpa-3.7.4</td>
                         <td>None</td>
                     </tr>
                     <tr>
@@ -230,7 +230,7 @@
                         <th>Supported protocols</th>
                     </tr>
                     <tr>
-                        <td>apache/james:distributed-3.7.3</td>
+                        <td>apache/james:distributed-3.7.4</td>
                         <td>Multi-node</td>
                         <td>Cassandra</td>
                         <td>S3 or Cassandra</td>
@@ -239,7 +239,7 @@
                         <td>SMTP, IMAP, JMAP, POP3, LMTP, WebAdmin</td>
                     </tr>
                     <tr>
-                        <td>apache/james:jpa-3.7.3</td>
+                        <td>apache/james:jpa-3.7.4</td>
                         <td>Single node</td>
                         <td>Embedded Derby database (JPA, SQL)</td>
                         <td>Not applicable</td>
@@ -248,7 +248,7 @@
                         <td>SMTP, IMAP, POP3, LMTP, WebAdmin</td>
                     </tr>
                     <tr>
-                        <td>apache/james:demo-3.7.3</td>
+                        <td>apache/james:demo-3.7.4</td>
                         <td>Pre-provisioned Single node instance to ease project discovery</td>
                         <td>Embedded Derby database (JPA, SQL)</td>
                         <td>Not applicable</td>
@@ -257,7 +257,7 @@
                         <td>SMTP, IMAP, POP3, LMTP, WebAdmin</td>
                     </tr>
                     <tr>
-                        <td>apache/james:memory-3.7.3</td>
+                        <td>apache/james:memory-3.7.4</td>
                         <td>Single node for test purposes</td>
                         <td>Memory (no persistence)</td>
                         <td>Memory (no persistence)</td>
@@ -266,7 +266,7 @@
                         <td>SMTP, IMAP, JMAP, POP3, LMTP, WebAdmin</td>
                     </tr>
                     <tr>
-                        <td>apache/james:cassandra-3.7.3</td>
+                        <td>apache/james:cassandra-3.7.4</td>
                         <td>Single node on top of a shared database</td>
                         <td>Cassandra</td>
                         <td>Cassandra</td>

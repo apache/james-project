@@ -9,7 +9,7 @@ dns:
 james:
   replicaJmapInstanceCount: 1
   replicaImapSmtpInstanceCount: 1
-  image: apache/james:distributed-3.7.3
+  image: apache/james:distributed-3.7.4
   ## Environment for James
   env:
     jamesCassandraKeyspace: sandbox_james

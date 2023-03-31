@@ -39,6 +39,10 @@
                 of a <a href="https://github.com/apache/james-project/blob/master/CHANGELOG.md">changelog file</a>
                 as well as details <a href="https://github.com/apache/james-project/blob/master/upgrade-instructions.md">upgrade instructions</a>.</p>
         </section>
+        <section name="Version 3.7.4">
+            <p>Released March 2023</p>
+            <p><a href="https://james.apache.org/james/update/2023/03/20/james-3.7.4.html">Read the release announce</a>. </p>
+        </section>
         <section name="Version 3.7.3">
             <p>Released December 2022</p>
             <p><a href="https://james.apache.org/james/update/2022/12/30/james-3.7.3.html">Read the release announce</a>. </p>
