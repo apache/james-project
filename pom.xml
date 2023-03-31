@@ -534,6 +534,22 @@
     </mailingLists>
 
     <modules>
+        <module>backends-common</module>
+        <module>core</module>
+        <module>event-bus</module>
+        <module>event-sourcing</module>
+        <module>examples</module>
+        <module>javax-mail-extension</module>
+        <module>json</module>
+        <module>mailbox</module>
+        <module>mailet</module>
+        <module>mdn</module>
+        <module>metrics</module>
+        <module>mpt</module>
+        <module>protocols</module>
+        <module>server</module>
+        <module>testing/base</module>
+        <module>third-party</module>
     </modules>
 
     <scm>
