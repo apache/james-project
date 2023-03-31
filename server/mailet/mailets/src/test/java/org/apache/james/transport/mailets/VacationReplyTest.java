@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.hamcrest.MockitoHamcrest.argThat;
@@ -33,8 +34,9 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.util.MimeMessageBodyGenerator;
-import org.apache.james.vacation.api.Vacation;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.util.html.HtmlTextExtractor;
+import org.apache.james.vacation.api.Vacation;
 import org.apache.mailet.base.test.FakeMail;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -65,9 +67,11 @@ public class VacationReplyTest {
                 .sender(originalSender)
                 .build();
 
-        mimeMessageBodyGenerator = mock(MimeMessageBodyGenerator.class);
+        HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
+        when(htmlTextExtractor.toPlainText(any())).thenReturn("HTML");
+
+        mimeMessageBodyGenerator = spy(new MimeMessageBodyGenerator(htmlTextExtractor));
         generatedBody = MimeMessageUtil.defaultMimeMessage();
-        when(mimeMessageBodyGenerator.from(any(MimeMessage.class), any(), any())).thenReturn(generatedBody);
     }
 
     @Test
@@ -84,7 +88,6 @@ public class VacationReplyTest {
 
         assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
         assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
-        assertThat(vacationReply.getMimeMessage()).isEqualTo(generatedBody);
     }
 
     @Test
@@ -100,7 +103,20 @@ public class VacationReplyTest {
         verify(mimeMessageBodyGenerator).from(argThat(createSubjectMatcher("Re: Original subject")), any(), any());
         assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
         assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
-        assertThat(vacationReply.getMimeMessage()).isEqualTo(generatedBody);
+    }
+
+    @Test
+    public void subjectShouldBeQEncodedWhenSpecialCharacters() throws Exception {
+        VacationReply vacationReply = VacationReply.builder(mail)
+            .vacation(Vacation.builder()
+                .enabled(true)
+                .subject(Optional.of("Nghiêm Thị Tuyết Nhung"))
+                .textBody(REASON)
+                .build())
+            .receivedMailRecipient(originalRecipient)
+            .build(mimeMessageBodyGenerator);
+
+        assertThat(vacationReply.getMimeMessage().getHeader("subject")).containsOnly("=?UTF-8?Q?Nghi=C3=AAm_Th=E1=BB=8B_Tuy=E1=BA=BFt_Nhung?=");
     }
 
     @Test
@@ -117,7 +133,6 @@ public class VacationReplyTest {
         verify(mimeMessageBodyGenerator).from(argThat(createSubjectMatcher(SUBJECT)), any(), any());
         assertThat(vacationReply.getRecipients()).containsExactly(originalSender);
         assertThat(vacationReply.getSender()).isEqualTo(originalRecipient);
-        assertThat(vacationReply.getMimeMessage()).isEqualTo(generatedBody);
     }
 
     @Test(expected = NullPointerException.class)

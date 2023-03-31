@@ -45,7 +45,7 @@ public class MimeMessageBodyGenerator {
 
     @Inject
     @VisibleForTesting
-    MimeMessageBodyGenerator(HtmlTextExtractor htmlTextExtractor) {
+    public MimeMessageBodyGenerator(HtmlTextExtractor htmlTextExtractor) {
         this.htmlTextExtractor = htmlTextExtractor;
     }
 

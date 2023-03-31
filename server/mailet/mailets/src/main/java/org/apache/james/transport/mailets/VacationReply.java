@@ -74,7 +74,7 @@ public class VacationReply {
 
         private MimeMessage generateMimeMessage(MimeMessageBodyGenerator mimeMessageBodyGenerator) throws MessagingException {
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(NOT_REPLY_TO_ALL);
-            vacation.getSubject().ifPresent(Throwing.consumer(subjectString -> reply.setHeader("subject", subjectString)));
+            vacation.getSubject().ifPresent(Throwing.consumer(subjectString -> reply.setSubject(subjectString)));
             reply.setHeader(FROM_HEADER, mailRecipient.toString());
             reply.setHeader(TO_HEADER, originalMail.getMaybeSender().get().asString());
             reply.setHeader(AutomaticallySentMailDetector.AUTO_SUBMITTED_HEADER, AutomaticallySentMailDetector.AUTO_REPLIED_VALUE);
