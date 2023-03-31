@@ -233,6 +233,18 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
 
 ## [3.7.4] - 2023-03-20
 
+### CVE-2023-26269: Privilege escalation through unauthenticated JMX
+
+Apache James distribution prior to release 3.7.4 allows privilege escalation through the use of JMX.
+
+*Severity*: Moderate
+
+*Mitigation*: We recommend turning on authentication on. If the CLI is unused we recommend turning JMX off.
+
+Release 3.7.4 set up implicitly JMX authentication for Guice based products and addresses the underlying JMX exploits.
+
+Upgrading to Apache James 3.7.4 is thus advised.
+
 ### Security
 
  - JAMES-3881 WARN if no JMX authentication is setup
