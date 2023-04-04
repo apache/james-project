@@ -227,7 +227,8 @@ public class CassandraFirstUnseenDAO {
                 return listUnseen(cassandraId);
             case FROM:
                 return cassandraAsyncExecutor.executeRows(
-                    listStatement.bind()
+                    selectFromUidStatement.bind()
+                        .setLong(UID_FROM, range.getUidFrom().asLong())
                         .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
                     .map(this::asMessageUid);
             case RANGE:
@@ -239,8 +240,8 @@ public class CassandraFirstUnseenDAO {
                     .map(this::asMessageUid);
             case ONE:
                 return cassandraAsyncExecutor.executeRows(
-                    selectFromUidStatement.bind()
-                        .setLong(UID_FROM, range.getUidFrom().asLong())
+                    selectOneUidStatement.bind()
+                        .setLong(UID, range.getUidFrom().asLong())
                         .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.TIMEUUID))
                     .map(this::asMessageUid);
             default:
