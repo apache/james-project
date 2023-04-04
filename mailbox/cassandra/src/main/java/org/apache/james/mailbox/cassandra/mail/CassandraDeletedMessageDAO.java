@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MessageRange;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.ProtocolVersion;
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
 import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
@@ -64,6 +65,7 @@ public class CassandraDeletedMessageDAO {
     private final PreparedStatement selectOneUidStatement;
     private final PreparedStatement selectBetweenUidStatement;
     private final PreparedStatement selectFromUidStatement;
+    private final ProtocolVersion protocolVersion;
 
     @Inject
     public CassandraDeletedMessageDAO(CqlSession session) {
@@ -75,6 +77,7 @@ public class CassandraDeletedMessageDAO {
         this.selectOneUidStatement = prepareOneUidStatement(session);
         this.selectBetweenUidStatement = prepareBetweenUidStatement(session);
         this.selectFromUidStatement = prepareFromUidStatement(session);
+        this.protocolVersion = session.getContext().getProtocolVersion();
     }
 
     private PreparedStatement prepareAllUidStatement(CqlSession session) {
@@ -192,7 +195,7 @@ public class CassandraDeletedMessageDAO {
 
     public Flux<MessageUid> retrieveDeletedMessage(CassandraId cassandraId, MessageRange range) {
         return retrieveResultSetOfDeletedMessage(cassandraId, range)
-            .map(row -> MessageUid.of(row.getLong(0)));
+            .map(this::asMessageUid);
     }
 
     private Flux<Row> retrieveResultSetOfDeletedMessage(CassandraId cassandraId, MessageRange range) {
@@ -236,5 +239,9 @@ public class CassandraDeletedMessageDAO {
             selectFromUidStatement.bind()
                 .setUuid(MAILBOX_ID, cassandraId.asUuid())
                 .setLong(UID_FROM, from.asLong()));
+    }
+
+    private MessageUid asMessageUid(Row row) {
+        return MessageUid.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(0), protocolVersion));
     }
 }
