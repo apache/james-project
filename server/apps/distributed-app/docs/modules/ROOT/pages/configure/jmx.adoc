@@ -40,7 +40,7 @@ james-admin pass1
 
 File's content example:
 ```
-james-admin readWrite
+james-admin readwrite
 ```
 
 When James runs with option `-Djames.jmx.credential.generation=true`, James will automatically generate `jmxremote.password` if the file does not exist.
