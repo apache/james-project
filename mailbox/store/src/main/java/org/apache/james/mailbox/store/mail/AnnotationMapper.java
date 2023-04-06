@@ -26,6 +26,10 @@ import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.transaction.Mapper;
+import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface AnnotationMapper extends Mapper {
     /**
@@ -37,6 +41,10 @@ public interface AnnotationMapper extends Mapper {
      */
     List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId);
 
+    default Publisher<MailboxAnnotation> getAllAnnotationsReactive(MailboxId mailboxId) {
+        return Flux.fromIterable(getAllAnnotations(mailboxId));
+    }
+
     /**
      * Search all the <code>MailboxAnnotation</code> of selected mailbox by the set of annotation's keys. The result is not ordered and should not
      * contain duplicate by key
@@ -46,6 +54,10 @@ public interface AnnotationMapper extends Mapper {
      * @return List<MailboxAnnotation>
      */
     List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
+
+    default Publisher<MailboxAnnotation> getAnnotationsByKeysReactive(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
+        return Flux.fromIterable(getAnnotationsByKeys(mailboxId, keys));
+    }
 
     /**
      * Search all the <code>MailboxAnnotation</code> of selected mailbox by the set of annotation's keys as well as its children entries
@@ -57,6 +69,10 @@ public interface AnnotationMapper extends Mapper {
      */
     List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
+    default Publisher<MailboxAnnotation> getAnnotationsByKeysWithOneDepthReactive(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
+        return Flux.fromIterable(getAnnotationsByKeysWithOneDepth(mailboxId, keys));
+    }
+
     /**
      * Search all the <code>MailboxAnnotation</code> of selected mailbox by the set of annotation's keys and entries below the keys
      * The result is not ordered and should not contain duplicate by key
@@ -67,6 +83,10 @@ public interface AnnotationMapper extends Mapper {
      */
     List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
+    default Publisher<MailboxAnnotation> getAnnotationsByKeysWithAllDepthReactive(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
+        return Flux.fromIterable(getAnnotationsByKeysWithAllDepth(mailboxId, keys));
+    }
+
     /**
      * Delete the annotation of selected mailbox by its key.
      *
@@ -74,6 +94,10 @@ public interface AnnotationMapper extends Mapper {
      * @param key the key of annotation should be deleted
      */
     void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key);
+
+    default Publisher<Void> deleteAnnotationReactive(MailboxId mailboxId, MailboxAnnotationKey key) {
+        return Mono.fromRunnable(() -> deleteAnnotation(mailboxId, key));
+    }
 
     /**
      * - Insert new annotation if it does not exist on store
@@ -84,6 +108,10 @@ public interface AnnotationMapper extends Mapper {
      */
     void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation);
 
+    default Publisher<Void> insertAnnotationReactive(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
+        return Mono.fromRunnable(() -> insertAnnotation(mailboxId, mailboxAnnotation));
+    }
+
     /**
      * Checking the current annotation of selected mailbox exists on store or not. It's checked by annotation key, not by its value.
      *
@@ -93,9 +121,17 @@ public interface AnnotationMapper extends Mapper {
      */
     boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation);
 
+    default Publisher<Boolean> existReactive(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
+        return Mono.fromCallable(() -> exist(mailboxId, mailboxAnnotation));
+    }
+
     /**
      * Getting total number of current annotation on mailbox
      *
      */
     int countAnnotations(MailboxId mailboxId);
+
+    default Publisher<Integer> countAnnotationsReactive(MailboxId mailboxId) {
+        return Mono.fromCallable(() -> countAnnotations(mailboxId));
+    }
 }
