@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.Comparator;
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -51,7 +52,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Support for RFC-5464 IMAP METADATA (GETMETADATA command)
@@ -82,27 +85,23 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
     }
 
     @Override
-    protected void processRequest(GetMetadataRequest request, ImapSession session, Responder responder) {
-        try {
-            proceed(request, session, responder);
-        } catch (MailboxNotFoundException e) {
-            LOGGER.info("The command: {} is failed because not found mailbox {}", request.getCommand().getName(), request.getMailboxName());
-            no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
-        } catch (MailboxException e) {
-            LOGGER.error("GetAnnotation on mailbox {} failed for user {}", request.getMailboxName(), session.getUserName(), e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
-    }
+    protected Mono<Void> processRequestReactive(GetMetadataRequest request, ImapSession session, Responder responder) {
+        String mailboxName = request.getMailboxName();
+        Optional<Integer> maxsize = request.getMaxsize();
 
-    private void proceed(GetMetadataRequest message, ImapSession session, Responder responder) throws MailboxException {
-        String mailboxName = message.getMailboxName();
-        Optional<Integer> maxsize = message.getMaxsize();
-        MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
-
-        List<MailboxAnnotation> mailboxAnnotations = getMailboxAnnotations(session, message.getKeys(), message.getDepth(), mailboxPath);
-        Optional<Integer> maximumOversizedSize = getMaxSizeValue(mailboxAnnotations, maxsize);
-
-        respond(message, responder, mailboxName, mailboxAnnotations, maxsize, maximumOversizedSize);
+        return getMailboxAnnotations(session, request.getKeys(), request.getDepth(), PathConverter.forSession(session).buildFullPath(mailboxName))
+            .collectList()
+            .flatMap(mailboxAnnotations -> Mono.fromCallable(() -> getMaxSizeValue(mailboxAnnotations, maxsize))
+                .flatMap(maximumOversizedSize -> Mono.fromRunnable(() -> respond(request, responder, mailboxName, mailboxAnnotations, maxsize, maximumOversizedSize)))
+                .then())
+            .doOnEach(logOnError(MailboxNotFoundException.class,
+                e -> LOGGER.info("The command: {} is failed because not found mailbox {}", request.getCommand().getName(), request.getMailboxName())))
+            .onErrorResume(MailboxNotFoundException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate())))
+            .doOnEach(logOnError(MailboxException.class,
+                e -> LOGGER.error("GetAnnotation on mailbox {} failed for user {}", request.getMailboxName(), session.getUserName(), e)))
+            .onErrorResume(MailboxException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING)));
     }
 
     private void respond(ImapRequest request, Responder responder, String mailboxName,
@@ -116,11 +115,11 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
         }
     }
 
-    private Optional<Integer> getMaxSizeValue(final List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize) {
-        if (maxsize.isPresent()) {
-            return maxsize.map(value -> getMaxSizeOfOversizedItems(mailboxAnnotations, value)).get();
-        }
-        return Optional.empty();
+    private Optional<Integer> getMaxSizeValue(List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize) {
+        return maxsize.flatMap(value -> mailboxAnnotations.stream()
+            .map(MailboxAnnotation::size)
+            .filter(size -> size > value)
+            .reduce(Integer::max));
     }
 
     private List<MailboxAnnotation> filterItemsBySize(List<MailboxAnnotation> mailboxAnnotations, final Optional<Integer> maxsize) {
@@ -133,40 +132,26 @@ public class GetMetadataProcessor extends AbstractMailboxProcessor<GetMetadataRe
             .collect(ImmutableList.toImmutableList());
     }
 
-    private List<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetMetadataRequest.Depth depth, MailboxPath mailboxPath) throws MailboxException {
+    private Flux<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetMetadataRequest.Depth depth, MailboxPath mailboxPath) {
         MailboxSession mailboxSession = session.getMailboxSession();
         switch (depth) {
             case ZERO:
                 return getMailboxAnnotationsWithDepthZero(keys, mailboxPath, mailboxSession);
             case ONE:
-                return getMailboxManager().getAnnotationsByKeysWithOneDepth(mailboxPath, mailboxSession, keys);
+                return Flux.from(getMailboxManager().getAnnotationsByKeysWithOneDepthReactive(mailboxPath, mailboxSession, keys));
             case INFINITY:
-                return getMailboxManager().getAnnotationsByKeysWithAllDepth(mailboxPath, mailboxSession, keys);
+                return Flux.from(getMailboxManager().getAnnotationsByKeysWithAllDepthReactive(mailboxPath, mailboxSession, keys));
             default:
-                throw new NotImplementedException("Not implemented");
+                return Flux.error(new NotImplementedException("Not implemented"));
         }
     }
 
-    private List<MailboxAnnotation> getMailboxAnnotationsWithDepthZero(Set<MailboxAnnotationKey> keys, MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
+    private Flux<MailboxAnnotation> getMailboxAnnotationsWithDepthZero(Set<MailboxAnnotationKey> keys, MailboxPath mailboxPath, MailboxSession mailboxSession) {
         if (keys.isEmpty()) {
-            return getMailboxManager().getAllAnnotations(mailboxPath, mailboxSession);
+            return Flux.from(getMailboxManager().getAllAnnotationsReactive(mailboxPath, mailboxSession));
         } else {
-            return getMailboxManager().getAnnotationsByKeys(mailboxPath, mailboxSession, keys);
+            return Flux.from(getMailboxManager().getAnnotationsByKeysReactive(mailboxPath, mailboxSession, keys));
         }
-    }
-
-    private Optional<Integer> getMaxSizeOfOversizedItems(List<MailboxAnnotation> mailboxAnnotations, final Integer maxsize) {
-        Predicate<MailboxAnnotation> filterOverSizedAnnotation = annotation -> annotation.size() > maxsize;
-
-        ImmutableSortedSet<Integer> overLimitSizes = mailboxAnnotations.stream()
-            .filter(filterOverSizedAnnotation)
-            .map(MailboxAnnotation::size)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.reverseOrder()));
-
-        if (overLimitSizes.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(overLimitSizes.first());
     }
 
     @Override

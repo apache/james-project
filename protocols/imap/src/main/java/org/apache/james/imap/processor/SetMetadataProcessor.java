@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.util.ReactorUtils.logOnError;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -37,13 +39,14 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Support for RFC-5464 IMAP METADATA (SETMETADATA command)
@@ -74,26 +77,23 @@ public class SetMetadataProcessor extends AbstractMailboxProcessor<SetMetadataRe
     }
 
     @Override
-    protected void processRequest(SetMetadataRequest request, ImapSession session, Responder responder) {
+    protected Mono<Void> processRequestReactive(SetMetadataRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
-        try {
-            MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
-            mailboxManager.updateAnnotations(mailboxPath, mailboxSession, request.getMailboxAnnotations());
-
-            okComplete(request, responder);
-        } catch (MailboxNotFoundException e) {
-            LOGGER.info("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
-            no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
-        } catch (AnnotationException e) {
-            LOGGER.info("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
-            no(request, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
-        } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
+        return Mono.from(mailboxManager.updateAnnotationsReactive(
+                PathConverter.forSession(session).buildFullPath(mailboxName),
+                mailboxSession, request.getMailboxAnnotations()))
+            .then(Mono.fromRunnable(() -> okComplete(request, responder)).then())
+            .doOnEach(logOnError(MailboxException.class,
+                e -> LOGGER.info("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e)))
+            .onErrorResume(MailboxNotFoundException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate())))
+            .onErrorResume(AnnotationException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, error.getMessage()))))
+            .onErrorResume(MailboxException.class,
+                error -> Mono.fromRunnable(() -> no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING)));
     }
 
     @Override
