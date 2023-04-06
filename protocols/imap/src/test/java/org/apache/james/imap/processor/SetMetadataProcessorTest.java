@@ -23,7 +23,6 @@ import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -113,9 +112,9 @@ class SetMetadataProcessorTest {
     }
 
     @Test
-    void processShouldResponseNoWithNoSuchMailboxWhenManagerThrowMailboxNotFoundException() throws Exception {
-        doThrow(MailboxNotFoundException.class).when(mockMailboxManager).updateAnnotations(eq(inbox),
-            eq(mockMailboxSession), eq(mailboxAnnotations));
+    void processShouldResponseNoWithNoSuchMailboxWhenManagerThrowMailboxNotFoundException() {
+        when(mockMailboxManager.updateAnnotationsReactive(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations)))
+            .thenReturn(Mono.error(new MailboxNotFoundException("")));
 
         processor.process(request, mockResponder, imapSession);
 
@@ -126,8 +125,9 @@ class SetMetadataProcessorTest {
     }
 
     @Test
-    void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
-        doThrow(MailboxException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
+    void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() {
+        when(mockMailboxManager.updateAnnotationsReactive(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations)))
+            .thenReturn(Mono.error(new MailboxException("")));
 
         processor.process(request, mockResponder, imapSession);
 
@@ -137,13 +137,15 @@ class SetMetadataProcessorTest {
     }
 
     @Test
-    void processShouldWorkWithCompleteResponse() throws Exception {
+    void processShouldWorkWithCompleteResponse() {
+        when(mockMailboxManager.updateAnnotationsReactive(inbox, mockMailboxSession, mailboxAnnotations))
+            .thenReturn(Mono.empty());
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(okResponse);
 
         processor.process(request, mockResponder, imapSession);
 
-        verify(mockMailboxManager).updateAnnotations(inbox, mockMailboxSession, mailboxAnnotations);
+        verify(mockMailboxManager).updateAnnotationsReactive(inbox, mockMailboxSession, mailboxAnnotations);
         verify(mockResponder).respond(okResponse);
         verify(mockStatusResponseFactory, times(1)).taggedOk(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
 
@@ -152,7 +154,8 @@ class SetMetadataProcessorTest {
 
     @Test
     void processShouldResponseNoWhenManagerThrowsAnnotationException() throws Exception {
-        doThrow(AnnotationException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
+        when(mockMailboxManager.updateAnnotationsReactive(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations)))
+            .thenReturn(Mono.error(new AnnotationException()));
 
         processor.process(request, mockResponder, imapSession);
 
