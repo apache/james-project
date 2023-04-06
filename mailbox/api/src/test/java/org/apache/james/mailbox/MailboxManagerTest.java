@@ -612,7 +612,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws Exception {
+        void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
             session = mailboxManager.createSystemSession(USER_2);
             MailboxPath inbox = MailboxPath.inbox(session);
@@ -677,7 +677,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void getAnnotationsByKeysWithOneDepthShouldRetriveAnnotationsWithOneDepth() throws Exception {
+        void getAnnotationsByKeysWithOneDepthShouldRetrieveAnnotationsWithOneDepth() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
             session = mailboxManager.createSystemSession(USER_2);
             MailboxPath inbox = MailboxPath.inbox(session);
@@ -700,7 +700,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void getAnnotationsByKeysWithAllDepthShouldRetriveAnnotationsWithAllDepth() throws Exception {
+        void getAnnotationsByKeysWithAllDepthShouldRetrieveAnnotationsWithAllDepth() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
             session = mailboxManager.createSystemSession(USER_2);
             MailboxPath inbox = MailboxPath.inbox(session);

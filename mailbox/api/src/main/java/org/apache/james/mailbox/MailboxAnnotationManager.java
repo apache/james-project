@@ -27,6 +27,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.reactivestreams.Publisher;
 
 /**
  * <p>
@@ -49,6 +50,8 @@ public interface MailboxAnnotationManager {
      */
     List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
+    Publisher<MailboxAnnotation> getAllAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session);
+
     /**
      * Return all mailbox's annotation filter by the list of the keys without order and
      * do not contain any two annotations with the same key
@@ -60,6 +63,8 @@ public interface MailboxAnnotationManager {
      * @throws MailboxException in case of selected mailbox does not exist
      */
     List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
+
+    Publisher<MailboxAnnotation> getAnnotationsByKeysReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys);
 
     /**
      * Return all mailbox's annotation by the list of the keys and its children entries without order and
@@ -73,6 +78,8 @@ public interface MailboxAnnotationManager {
      */
     List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
 
+    Publisher<MailboxAnnotation> getAnnotationsByKeysWithOneDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys);
+
     /**
      * Return all mailbox's annotation by the list of the keys and its below entries without order and
      * do not contain any two annotations with the same key
@@ -84,6 +91,8 @@ public interface MailboxAnnotationManager {
      * @throws MailboxException in case of selected mailbox does not exist
      */
     List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException;
+
+    Publisher<MailboxAnnotation> getAnnotationsByKeysWithAllDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys);
 
     /**
      * Update the mailbox's annotations. This method can:
@@ -97,4 +106,6 @@ public interface MailboxAnnotationManager {
      * @throws MailboxException in case of selected mailbox does not exist
      */
     void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException, AnnotationException;
+
+    Publisher<Void> updateAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations);
 }

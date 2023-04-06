@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -30,7 +31,6 @@ import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -38,13 +38,14 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.transaction.Mapper;
+import org.apache.james.util.FunctionalUtils;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
 
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-
     private final StoreRightManager rightManager;
     private final int limitOfAnnotations;
     private final int limitAnnotationSize;
@@ -68,82 +69,114 @@ public class StoreMailboxAnnotationManager implements MailboxAnnotationManager {
         this.limitAnnotationSize = limitAnnotationSize;
     }
 
-    public MailboxId checkThenGetMailboxId(MailboxPath path, MailboxSession session) throws MailboxException {
-        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = mailboxMapper.findMailboxByPath(path)
-            .blockOptional()
-            .orElseThrow(() -> new MailboxNotFoundException(path));
-        if (!rightManager.hasRight(mailbox, Right.Read, session)) {
-            throw new InsufficientRightsException("Not enough rights on " + path);
-        }
-        return mailbox.getMailboxId();
+    @Override
+    public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+        return MailboxReactorUtils.block(getAllAnnotationsReactive(mailboxPath, session).collectList());
     }
 
     @Override
-    public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    public Flux<MailboxAnnotation> getAllAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session) {
         AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-
-        MailboxId mailboxId = checkThenGetMailboxId(mailboxPath, session);
-
-        return annotationMapper.execute(
-            () -> annotationMapper.getAllAnnotations(mailboxId));
+        return checkThenGetMailboxId(mailboxPath, session)
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
+            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAllAnnotationsReactive(mailboxId))
+                    .collectList())
+                .flatMapIterable(Function.identity()));
     }
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, final Set<MailboxAnnotationKey> keys)
-            throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = checkThenGetMailboxId(mailboxPath, session);
+        throws MailboxException {
+        return MailboxReactorUtils.block(getAnnotationsByKeysReactive(mailboxPath, session, keys).collectList());
+    }
 
-        return annotationMapper.execute(
-            () -> annotationMapper.getAnnotationsByKeys(mailboxId, keys));
+    @Override
+    public Flux<MailboxAnnotation> getAnnotationsByKeysReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
+        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+
+        return checkThenGetMailboxId(mailboxPath, session)
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
+            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysReactive(mailboxId, keys))
+                    .collectList())
+                .flatMapIterable(Function.identity()));
     }
 
     @Override
     public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations)
-            throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = checkThenGetMailboxId(mailboxPath, session);
-
-        annotationMapper.execute(Mapper.toTransaction(() -> {
-            for (MailboxAnnotation annotation : mailboxAnnotations) {
-                if (annotation.isNil()) {
-                    annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
-                } else if (canInsertOrUpdate(mailboxId, annotation, annotationMapper)) {
-                    annotationMapper.insertAnnotation(mailboxId, annotation);
-                }
-            }
-        }));
+        throws MailboxException {
+        MailboxReactorUtils.block(updateAnnotationsReactive(mailboxPath, session, mailboxAnnotations));
     }
 
-    private boolean canInsertOrUpdate(MailboxId mailboxId, MailboxAnnotation annotation, AnnotationMapper annotationMapper) throws AnnotationException {
-        if (annotation.size() > limitAnnotationSize) {
-            throw new AnnotationException("annotation too big.");
-        }
-        if (!annotationMapper.exist(mailboxId, annotation)
-            && annotationMapper.countAnnotations(mailboxId) >= limitOfAnnotations) {
-            throw new AnnotationException("too many annotations.");
-        }
-        return true;
+    @Override
+    public Mono<Void> updateAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) {
+        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        return annotationMapper.executeReactive(checkThenGetMailboxId(mailboxPath, session)
+                .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
+            .flatMapMany(mailboxId -> Flux.fromIterable(mailboxAnnotations)
+                .concatMap(annotation -> {
+                    if (annotation.isNil()) {
+                        return Mono.from(annotationMapper.deleteAnnotationReactive(mailboxId, annotation.getKey()));
+                    }
+                    return canInsertOrUpdate(mailboxId, annotation, annotationMapper)
+                        .filter(FunctionalUtils.identityPredicate())
+                        .flatMap(can -> Mono.from(annotationMapper.insertAnnotationReactive(mailboxId, annotation)));
+                }))
+            .then());
+    }
+
+    private Mono<Boolean> canInsertOrUpdate(MailboxId mailboxId, MailboxAnnotation annotation, AnnotationMapper annotationMapper) {
+        return Mono.just(annotation.size() > limitAnnotationSize)
+            .filter(FunctionalUtils.identityPredicate())
+            .flatMap(limited -> Mono.<Boolean>error(new AnnotationException("annotation too big.")))
+            .switchIfEmpty(annotationCountCanInsertOrUpdate(mailboxId, annotation, annotationMapper));
+    }
+
+    private Mono<Boolean> annotationCountCanInsertOrUpdate(MailboxId mailboxId, MailboxAnnotation annotation, AnnotationMapper annotationMapper) {
+        return Mono.from(annotationMapper.existReactive(mailboxId, annotation))
+            .filter(FunctionalUtils.identityPredicate().negate())
+            .flatMap(exist -> Mono.from(annotationMapper.countAnnotationsReactive(mailboxId))
+                .filter(count -> count >= limitOfAnnotations)
+                .flatMap(limited -> Mono.<Boolean>error(new AnnotationException("too many annotations."))))
+            .switchIfEmpty(Mono.just(true));
     }
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session,
-            Set<MailboxAnnotationKey> keys) throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        final MailboxId mailboxId = checkThenGetMailboxId(mailboxPath, session);
+                                                                    Set<MailboxAnnotationKey> keys) throws MailboxException {
+        return MailboxReactorUtils.block(getAnnotationsByKeysWithOneDepthReactive(mailboxPath, session, keys).collectList());
+    }
 
-        return annotationMapper.execute(
-            () -> annotationMapper.getAnnotationsByKeysWithOneDepth(mailboxId, keys));
+    @Override
+    public Flux<MailboxAnnotation> getAnnotationsByKeysWithOneDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
+        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        return checkThenGetMailboxId(mailboxPath, session)
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
+            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithOneDepthReactive(mailboxId, keys))
+                    .collectList())
+                .flatMapIterable(Function.identity()));
     }
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session,
-            Set<MailboxAnnotationKey> keys) throws MailboxException {
-        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
-        MailboxId mailboxId = checkThenGetMailboxId(mailboxPath, session);
+                                                                    Set<MailboxAnnotationKey> keys) throws MailboxException {
+        return MailboxReactorUtils.block(getAnnotationsByKeysWithAllDepthReactive(mailboxPath, session, keys).collectList());
+    }
 
-        return annotationMapper.execute(
-            () -> annotationMapper.getAnnotationsByKeysWithAllDepth(mailboxId, keys));
+    @Override
+    public Flux<MailboxAnnotation> getAnnotationsByKeysWithAllDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
+        AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(session);
+        return checkThenGetMailboxId(mailboxPath, session)
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
+            .flatMapMany(mailboxId -> annotationMapper.executeReactive(Flux.from(annotationMapper.getAnnotationsByKeysWithAllDepthReactive(mailboxId, keys))
+                    .collectList())
+                .flatMapIterable(Function.identity()));
+    }
+
+    private Mono<MailboxId> checkThenGetMailboxId(MailboxPath mailboxPath, MailboxSession session) {
+        return mailboxSessionMapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath)
+            .flatMap(mailbox -> Mono.from(rightManager.hasRightReactive(mailboxPath, Right.Read, session))
+                .filter(FunctionalUtils.identityPredicate().negate())
+                .flatMap(hasRight -> Mono.<MailboxId>error(new InsufficientRightsException("Not enough rights on " + mailboxPath)))
+                .switchIfEmpty(Mono.just(mailbox.getMailboxId())));
     }
 }
