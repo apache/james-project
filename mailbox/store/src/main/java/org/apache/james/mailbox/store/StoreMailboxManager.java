@@ -1023,15 +1023,30 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Publisher<MailboxAnnotation> getAllAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session) {
+        return annotationManager.getAllAnnotationsReactive(mailboxPath, session);
+    }
+
+    @Override
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys)
         throws MailboxException {
         return annotationManager.getAnnotationsByKeys(mailboxPath, session, keys);
     }
 
     @Override
+    public Publisher<MailboxAnnotation> getAnnotationsByKeysReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
+        return annotationManager.getAnnotationsByKeysReactive(mailboxPath, session, keys);
+    }
+
+    @Override
     public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations)
         throws MailboxException {
         annotationManager.updateAnnotations(mailboxPath, session, mailboxAnnotations);
+    }
+
+    @Override
+    public Publisher<Void> updateAnnotationsReactive(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) {
+        return annotationManager.updateAnnotationsReactive(mailboxPath, session, mailboxAnnotations);
     }
 
 
@@ -1047,9 +1062,19 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Publisher<MailboxAnnotation> getAnnotationsByKeysWithOneDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
+        return annotationManager.getAnnotationsByKeysWithOneDepthReactive(mailboxPath, session, keys);
+    }
+
+    @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session,
                                                                     Set<MailboxAnnotationKey> keys) throws MailboxException {
         return annotationManager.getAnnotationsByKeysWithAllDepth(mailboxPath, session, keys);
+    }
+
+    @Override
+    public Publisher<MailboxAnnotation> getAnnotationsByKeysWithAllDepthReactive(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) {
+        return annotationManager.getAnnotationsByKeysWithAllDepthReactive(mailboxPath, session, keys);
     }
 
     @Override

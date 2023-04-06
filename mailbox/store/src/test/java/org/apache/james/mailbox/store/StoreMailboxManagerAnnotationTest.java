@@ -28,7 +28,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -53,6 +52,7 @@ import org.mockito.MockitoAnnotations;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 class StoreMailboxManagerAnnotationTest {
@@ -93,8 +93,13 @@ class StoreMailboxManagerAnnotationTest {
                 Mapper.Transaction<?> transaction = (Mapper.Transaction<?>) invocationOnMock.getArguments()[0];
                 return transaction.run();
             });
+        when(annotationMapper.executeReactive(any(Mono.class)))
+            .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
+
         when(storeRightManager.hasRight(any(Mailbox.class), any(MailboxACL.Right.class), any(MailboxSession.class)))
             .thenReturn(true);
+        when(storeRightManager.hasRightReactive(any(MailboxPath.class), any(MailboxACL.Right.class), any(MailboxSession.class)))
+            .thenReturn(Mono.just(true));
 
         annotationManager = spy(new StoreMailboxAnnotationManager(mailboxSessionMapperFactory,
             storeRightManager));
@@ -105,24 +110,27 @@ class StoreMailboxManagerAnnotationTest {
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.error(new MailboxException()));
 
         assertThatThrownBy(() -> annotationManager.updateAnnotations(mailboxPath, session, ImmutableList.of(PRIVATE_ANNOTATION)))
-            .hasCauseInstanceOf(MailboxException.class);
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
-    void updateAnnotationsShouldCallAnnotationMapperToInsertAnnotation() throws Exception {
-        when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.just(mailbox));
+    void updateAnnotationsShouldCallAnnotationMapperToInsertAnnotation() throws MailboxException {
+        when(annotationMapper.existReactive(eq(mailbox.getMailboxId()), any())).thenReturn(Mono.just(true));
+        when(annotationMapper.insertAnnotationReactive(eq(mailbox.getMailboxId()), any())).thenReturn(Mono.empty());
         annotationManager.updateAnnotations(mailboxPath, session, ANNOTATIONS);
 
-        verify(annotationMapper, times(2)).insertAnnotation(eq(mailboxId), any(MailboxAnnotation.class));
+        verify(annotationMapper, times(2)).insertAnnotationReactive(eq(mailboxId), any(MailboxAnnotation.class));
     }
 
     @Test
-    void updateAnnotationsShouldCallAnnotationMapperToDeleteAnnotation() throws Exception {
-        when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.just(mailbox));
+    void updateAnnotationsShouldCallAnnotationMapperToDeleteAnnotation() throws MailboxException {
+        when(annotationMapper.existReactive(eq(mailbox.getMailboxId()), any())).thenReturn(Mono.just(true));
+        when(annotationMapper.insertAnnotationReactive(eq(mailbox.getMailboxId()), any())).thenReturn(Mono.empty());
+        when(annotationMapper.deleteAnnotationReactive(eq(mailbox.getMailboxId()), any())).thenReturn(Mono.empty());
         annotationManager.updateAnnotations(mailboxPath, session, ANNOTATIONS_WITH_NIL_ENTRY);
 
-        verify(annotationMapper, times(1)).insertAnnotation(eq(mailboxId), eq(PRIVATE_ANNOTATION));
-        verify(annotationMapper, times(1)).deleteAnnotation(eq(mailboxId), eq(SHARED_KEY));
+        verify(annotationMapper, times(1)).insertAnnotationReactive(eq(mailboxId), eq(PRIVATE_ANNOTATION));
+        verify(annotationMapper, times(1)).deleteAnnotationReactive(eq(mailboxId), eq(SHARED_KEY));
     }
 
     @Test
@@ -130,13 +138,13 @@ class StoreMailboxManagerAnnotationTest {
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.error(new MailboxException()));
 
         assertThatThrownBy(() -> annotationManager.getAllAnnotations(mailboxPath, session))
-            .hasCauseInstanceOf(MailboxException.class);
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
     void getAllAnnotationsShouldReturnEmptyForNonStoredAnnotation() throws Exception {
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.just(mailbox));
-        when(annotationMapper.getAllAnnotations(eq(mailboxId))).thenReturn(Collections.<MailboxAnnotation>emptyList());
+        when(annotationMapper.getAllAnnotationsReactive(eq(mailboxId))).thenReturn(Flux.fromIterable(List.of()));
 
         assertThat(annotationManager.getAllAnnotations(mailboxPath, session)).isEmpty();
     }
@@ -144,7 +152,7 @@ class StoreMailboxManagerAnnotationTest {
     @Test
     void getAllAnnotationsShouldReturnStoredAnnotation() throws Exception {
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.just(mailbox));
-        when(annotationMapper.getAllAnnotations(eq(mailboxId))).thenReturn(ANNOTATIONS);
+        when(annotationMapper.getAllAnnotationsReactive(eq(mailboxId))).thenReturn(Flux.fromIterable(ANNOTATIONS));
 
         assertThat(annotationManager.getAllAnnotations(mailboxPath, session)).isEqualTo(ANNOTATIONS);
     }
@@ -154,13 +162,13 @@ class StoreMailboxManagerAnnotationTest {
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.error(new MailboxException()));
 
         assertThatThrownBy(() -> annotationManager.getAnnotationsByKeys(mailboxPath, session, KEYS))
-            .hasCauseInstanceOf(MailboxException.class);
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
-    void getAnnotationsByKeysShouldRetrieveStoreAnnotationsByKey() throws Exception {
+    void getAnnotationsByKeysShouldRetrieveStoreAnnotationsByKey() throws MailboxException {
         when(mailboxMapper.findMailboxByPath(eq(mailboxPath))).thenReturn(Mono.just(mailbox));
-        when(annotationMapper.getAnnotationsByKeys(eq(mailboxId), eq(KEYS))).thenReturn(ANNOTATIONS);
+        when(annotationMapper.getAnnotationsByKeysReactive(eq(mailboxId), eq(KEYS))).thenReturn(Flux.fromIterable(ANNOTATIONS));
 
         assertThat(annotationManager.getAnnotationsByKeys(mailboxPath, session, KEYS)).isEqualTo(ANNOTATIONS);
     }
