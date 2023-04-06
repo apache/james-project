@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.event;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.apache.james.events.Event;
@@ -28,12 +26,15 @@ import org.apache.james.events.Group;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
-import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
+import org.reactivestreams.Publisher;
 
-public class MailboxAnnotationListener implements EventListener.GroupEventListener {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public class MailboxAnnotationListener implements EventListener.ReactiveGroupEventListener {
     public static final class MailboxAnnotationListenerGroup extends Group {
 
     }
@@ -60,20 +61,16 @@ public class MailboxAnnotationListener implements EventListener.GroupEventListen
     }
 
     @Override
-    public void event(Event event) {
+    public Publisher<Void> reactiveEvent(Event event) {
         if (event instanceof MailboxDeletion) {
             MailboxSession mailboxSession = sessionProvider.createSystemSession(event.getUsername());
             AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(mailboxSession);
             MailboxId mailboxId = ((MailboxDeletion) event).getMailboxId();
 
-            deleteRelatedAnnotations(mailboxId, annotationMapper);
+            return Flux.from(annotationMapper.getAllAnnotationsReactive(mailboxId))
+                .flatMap(annotation -> Mono.from(annotationMapper.deleteAnnotationReactive(mailboxId, annotation.getKey())))
+                .then();
         }
-    }
-
-    private void deleteRelatedAnnotations(MailboxId mailboxId, AnnotationMapper annotationMapper) {
-        List<MailboxAnnotation> annotations = annotationMapper.getAllAnnotations(mailboxId);
-        for (MailboxAnnotation annotation : annotations) {
-            annotationMapper.deleteAnnotation(mailboxId, annotation.getKey());
-        }
+        return Mono.empty();
     }
 }

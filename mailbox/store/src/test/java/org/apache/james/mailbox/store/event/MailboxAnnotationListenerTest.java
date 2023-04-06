@@ -56,6 +56,9 @@ import org.mockito.MockitoAnnotations;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 class MailboxAnnotationListenerTest {
     static final Username USER = Username.of("user");
     static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", USER, "name");
@@ -116,13 +119,13 @@ class MailboxAnnotationListenerTest {
     }
 
     @Test
-    void eventShoudlDoNothingIfMailboxDoesNotHaveAnyAnnotation() throws Exception {
-        when(annotationMapper.getAllAnnotations(any(MailboxId.class))).thenReturn(ImmutableList.<MailboxAnnotation>of());
+    void eventShouldDoNothingIfMailboxDoesNotHaveAnyAnnotation() throws Exception {
+        when(annotationMapper.getAllAnnotationsReactive(any(MailboxId.class))).thenReturn(Flux.fromIterable(List.of()));
 
         listener.event(deleteEvent);
 
         verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
-        verify(annotationMapper).getAllAnnotations(eq(mailboxId));
+        verify(annotationMapper).getAllAnnotationsReactive(eq(mailboxId));
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);
         verifyNoMoreInteractions(annotationMapper);
@@ -131,14 +134,15 @@ class MailboxAnnotationListenerTest {
 
     @Test
     void eventShoudlDeleteAllMailboxAnnotation() throws Exception {
-        when(annotationMapper.getAllAnnotations(eq(mailboxId))).thenReturn(ANNOTATIONS);
+        when(annotationMapper.getAllAnnotationsReactive(eq(mailboxId))).thenReturn(Flux.fromIterable(ANNOTATIONS));
+        when(annotationMapper.deleteAnnotationReactive(eq(mailboxId), any())).thenReturn(Mono.empty());
 
         listener.event(deleteEvent);
 
         verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
-        verify(annotationMapper).getAllAnnotations(eq(mailboxId));
-        verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(PRIVATE_KEY));
-        verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(SHARED_KEY));
+        verify(annotationMapper).getAllAnnotationsReactive(eq(mailboxId));
+        verify(annotationMapper).deleteAnnotationReactive(eq(mailboxId), eq(PRIVATE_KEY));
+        verify(annotationMapper).deleteAnnotationReactive(eq(mailboxId), eq(SHARED_KEY));
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);
         verifyNoMoreInteractions(annotationMapper);
@@ -146,15 +150,16 @@ class MailboxAnnotationListenerTest {
     }
 
     @Test
-    void eventShouldPropagateFailure() throws Exception {
-        when(annotationMapper.getAllAnnotations((eq(mailboxId)))).thenReturn(ANNOTATIONS);
-        doThrow(new RuntimeException()).when(annotationMapper).deleteAnnotation(eq(mailboxId), eq(PRIVATE_KEY));
+    void eventShouldPropagateFailure() {
+        when(annotationMapper.getAllAnnotationsReactive(eq(mailboxId))).thenReturn(Flux.fromIterable(ANNOTATIONS));
+        when(annotationMapper.deleteAnnotationReactive(eq(mailboxId), eq(PRIVATE_KEY)))
+            .thenReturn(Mono.error(new RuntimeException()));
 
         assertThatThrownBy(() -> listener.event(deleteEvent)).isInstanceOf(RuntimeException.class);
 
         verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
-        verify(annotationMapper).getAllAnnotations(eq(mailboxId));
-        verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(PRIVATE_KEY));
+        verify(annotationMapper).getAllAnnotationsReactive(eq(mailboxId));
+        verify(annotationMapper).deleteAnnotationReactive(eq(mailboxId), eq(PRIVATE_KEY));
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);
         verifyNoMoreInteractions(annotationMapper);
