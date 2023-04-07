@@ -21,7 +21,9 @@ package org.apache.james.transport.mailets.delivery;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
+import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -54,9 +56,9 @@ public class MailboxAppenderImpl implements MailboxAppender {
         this.mailboxManager = mailboxManager;
     }
 
-    public Mono<ComposedMessageId> append(MimeMessage mail, Username user, String folder) throws MessagingException {
+    public Mono<ComposedMessageId> append(MimeMessage mail, Username user, String folder, Optional<Flags> flags) throws MessagingException {
         MailboxSession session = createMailboxSession(user);
-        return append(mail, user, useSlashAsSeparator(folder, session), session)
+        return append(mail, user, useSlashAsSeparator(folder, session), flags, session)
             .map(AppendResult::getId);
     }
 
@@ -71,26 +73,29 @@ public class MailboxAppenderImpl implements MailboxAppender {
         return destination;
     }
 
-    private Mono<AppendResult> append(MimeMessage mail, Username user, String folder, MailboxSession mailboxSession) {
+    private Mono<AppendResult> append(MimeMessage mail, Username user, String folder, Optional<Flags> flags, MailboxSession mailboxSession) {
         MailboxPath mailboxPath = MailboxPath.forUser(user, folder);
         return Mono.using(
             () -> {
                 mailboxManager.startProcessingRequest(mailboxSession);
                 return mailboxSession;
             },
-            session -> appendMessageToMailbox(mail, session, mailboxPath),
+            session -> appendMessageToMailbox(mail, session, mailboxPath, flags),
             this::closeProcessing)
             .onErrorMap(MailboxException.class, e -> new MessagingException("Unable to access mailbox.", e));
     }
 
-    protected Mono<AppendResult> appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) {
+    protected Mono<AppendResult> appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path, Optional<Flags> flags) {
         return createMailboxIfNotExist(session, path)
-            .flatMap(mailbox -> Mono.from(mailbox.appendMessageReactive(
-                MessageManager.AppendCommand.builder()
-                    .recent()
-                    .delivery()
-                    .build(extractContent(mail)),
-                session)));
+            .flatMap(mailbox -> Mono.from(mailbox.appendMessageReactive(appendCommand(flags).build(extractContent(mail)), session)));
+    }
+
+    private MessageManager.AppendCommand.Builder appendCommand(Optional<Flags> flags) {
+        MessageManager.AppendCommand.Builder builder = MessageManager.AppendCommand.builder()
+            .recent()
+            .delivery();
+        return flags.map(builder::withFlags)
+            .orElse(builder);
     }
 
     private Content extractContent(MimeMessage mail) {

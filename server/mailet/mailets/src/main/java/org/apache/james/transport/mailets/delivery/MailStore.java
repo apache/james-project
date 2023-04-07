@@ -25,6 +25,9 @@ import org.reactivestreams.Publisher;
 
 public interface MailStore {
     String DELIVERY_PATH_PREFIX = "DeliveryPath_";
+    String SEEN_PREFIX = "Seen_";
+    String IMPORTANT_PREFIX = "Important_";
+    String KEYWORDS_PREFIX = "Keywords_";
 
     Publisher<Void> storeMail(MailAddress recipient, Mail mail);
 }

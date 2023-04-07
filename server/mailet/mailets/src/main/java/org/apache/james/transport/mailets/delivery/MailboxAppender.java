@@ -19,6 +19,9 @@
 
 package org.apache.james.transport.mailets.delivery;
 
+import java.util.Optional;
+
+import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -27,5 +30,5 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.reactivestreams.Publisher;
 
 public interface MailboxAppender {
-    Publisher<ComposedMessageId> append(MimeMessage mail, Username user, String folder) throws MessagingException;
+    Publisher<ComposedMessageId> append(MimeMessage mail, Username user, String folder, Optional<Flags> flags) throws MessagingException;
 }

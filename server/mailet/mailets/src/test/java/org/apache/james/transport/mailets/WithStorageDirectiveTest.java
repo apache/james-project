@@ -33,6 +33,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 class WithStorageDirectiveTest {
     private static final DomainList NO_DOMAIN_LIST = null;
@@ -79,6 +80,102 @@ class WithStorageDirectiveTest {
             .containsOnly(
                 new Attribute(recipient1, AttributeValue.of(targetFolderName)),
                 new Attribute(recipient2, AttributeValue.of(targetFolderName)));
+    }
+
+    @Test
+    void shouldSupportSeen() throws Exception {
+        testee.init(FakeMailetConfig.builder()
+            .setProperty(WithStorageDirective.SEEN, "true")
+            .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .recipients(MailAddressFixture.RECIPIENT1)
+            .build();
+
+        testee.service(mail);
+
+        AttributeName recipient1 = AttributeName.of("Seen_recipient1@localhost");
+        assertThat(mail.attributes())
+            .containsOnly(
+                new Attribute(recipient1, AttributeValue.of(true)));
+    }
+
+    @Test
+    void shouldSupportImportant() throws Exception {
+        testee.init(FakeMailetConfig.builder()
+            .setProperty(WithStorageDirective.IMPORTANT, "true")
+            .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .recipients(MailAddressFixture.RECIPIENT1)
+            .build();
+
+        testee.service(mail);
+
+        AttributeName recipient1 = AttributeName.of("Important_recipient1@localhost");
+        assertThat(mail.attributes())
+            .containsOnly(
+                new Attribute(recipient1, AttributeValue.of(true)));
+    }
+
+    @Test
+    void shouldSupportKeywords() throws Exception {
+        testee.init(FakeMailetConfig.builder()
+            .setProperty(WithStorageDirective.KEYWORDS, "abc,def")
+            .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .recipients(MailAddressFixture.RECIPIENT1)
+            .build();
+
+        testee.service(mail);
+
+        AttributeName recipient1 = AttributeName.of("Keywords_recipient1@localhost");
+        assertThat(mail.attributes())
+            .containsOnly(
+                new Attribute(recipient1, AttributeValue.of(ImmutableSet.of(
+                    AttributeValue.of("abc"),
+                    AttributeValue.of("def")))));
+    }
+
+    @Test
+    void shouldSanitizeKeywords() throws Exception {
+        testee.init(FakeMailetConfig.builder()
+            .setProperty(WithStorageDirective.KEYWORDS, "abc, def,,")
+            .build());
+
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .recipients(MailAddressFixture.RECIPIENT1)
+            .build();
+
+        testee.service(mail);
+
+        AttributeName recipient1 = AttributeName.of("Keywords_recipient1@localhost");
+        assertThat(mail.attributes())
+            .containsOnly(
+                new Attribute(recipient1, AttributeValue.of(ImmutableSet.of(
+                    AttributeValue.of("abc"),
+                    AttributeValue.of("def")))));
+    }
+
+    @Test
+    void shouldRejectBadSeenValue() {
+        assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
+            .setProperty(WithStorageDirective.SEEN, "bad")
+            .build()))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void shouldRejectBadImportantValue() {
+        assertThatThrownBy(() -> testee.init(FakeMailetConfig.builder()
+            .setProperty(WithStorageDirective.IMPORTANT, "bad")
+            .build()))
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
