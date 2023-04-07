@@ -59,9 +59,10 @@ This release brings the following significant changes:
    - Support for RFC-7889 APPENDLIMIT
    - Support for RFC-7889 Special use
    - Support for RFC-8437 UNAUTHENTICATE
-   - Support for XLIST
    - Support for RFC-8474 OBJECTID
+   - Support for RFC-8508 IMAP REPLACE (#1354)
    - Fix RFC-5464 Capability typo (METADATA)
+   - Support for XLIST
  - JAMES-3850 Implement urn:ietf:params:jmap:quota draft
  - JAMES-3842 Access SSLSession from Hooks and Handlers
  - JAMES-3292 More powerful task listing (#1263)
@@ -70,6 +71,14 @@ This release brings the following significant changes:
  - JAMES-3826 Introduce loading additional healthcheck mechanism
  - JAMES-3825 Task to clean up tasks (#1208)
  - JAMES-2656 - Add initial JPAMailRepository implementation (#1176)
+ - JAMES-3885 - Change username (#1489)
+ - JAMES-3893 Add a WebAdmin API allowing managing user identity
+ - JAMES-2601 Implement a LDAP healthCheck (#1453)
+ - JAMES-3419 JMAP EmailBodyPart individual headers (#1433)
+ - JAMES-3379 Support header:Name:all syntax (JMAP)
+ - JAMES-3880 MailRepositories: add a way to count retries (#1411)
+ - JAMES-3756 JMAP APIs to manage delegation
+ - JAMES-3867 Allow IMAP extensions configuration
 
 ### Changes
 
@@ -106,6 +115,13 @@ This release brings the following significant changes:
  - [UPGRADE] JDKIM 0.2 -> 0.3 (#1258)
  - JAMES-3836 Rework MailRepository loading
  - JAMES-3813 Module chooser for DeletedMessagesVault on Cassandra based… (#1195)
+ - [UPGRADE] MIME4J 0.8.7 -> 0.8.9
+ - JAMES-3895 Automatically provision default (IMAP) mailboxes (#1476)
+ - JAMES-3892 Allow configuring the count of retries in LocalDelivery (#1467)
+ - JAMES-3890 Allow parallel execution of safe tasks
+ - JAMES-3694 RabbitMQ: Apply queue expiracy only for per-node queues
+ - JAMES-3876 Load-balancing flag for Remote Delivery Gateways (#1403)
+ - JAMES-3878 - Remove icu4j dependency (#1406)
  
 ### Fixed
 
@@ -155,6 +171,18 @@ This release brings the following significant changes:
  - JAMES-3835 EmailSubmission/set response is wrong (#1254)
  - JAMES-3828 Fix AttributeValue serialization for calendar related mailet
  - [FIX] S3: apply timeouts configuration (#1202)
+ - JAMES-3898 VacationMailet should Q-Encode special characters (#1508)
+ - [FIX] Subscribe/unsubscribe mailbox should be per user based (#1491)
+ - [FIX] Prevent sending invalid content type upon downloads
+ - JAMES-3440 Fixbug: Data race issue with JMAP email query view
+ - JAMES-3440 Email/query (EmailQueryView usage case) should filter share mailboxes
+ - JAMES-3886 Handle Mailbox counter updates failures more gracefully (#1445)
+ - JAMES-3887 Provisioned mailboxes should be subscribed (#1444)
+ - JAMES-3881 Docker packagings should locate jvm.properties
+ - JAMES-3884 One ImapProcessor set per IMAP server (#1442)
+ - [FIX] Misleeading error log in Host class (#1441)
+ - [FIX] JMAP urn:ietf:params:jmap:submission submissionExtensions shoul… (#1424)
+ - [FIX] OidcJwtTokenVerifier: be resilient upon missing kid
  
 ### Documentation
 
@@ -230,6 +258,16 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - [PERF] Improve Mailbox/get algorithm (#1164)
  - JAMES-3793 Prevent needless defensive copies within S3BlobStoreDAO (#1147)
  - JAMES-3793 Prevent Bytes concat upon reading FULL messages (#1152)
+ - [FIX] Reactify attachments
+ - JAMES-2643 Optimize listing mapping by destination on top of JPA (#1472)
+ - JAMES-3882 Move messages into DeletedMessageVault asynchronously for … (#1436)
+ - [PERF] JsoupHtmlTextExtractor without recursion (#1422)
+ - [PERF] Fasten IMAP vanished
+ - [PERF] Use UnsynchronizedBufferedInputStream
+ - [PERF] UidMsnConverter should not call contains for the last UID
+ - [PERF] Avoid converting mailbox list to map for all mailboxes (#1383)
+ - JAMES-3872 Add a FetchType that support getting the attachments' metadata without fetching the body content
+ - JAMES-3870 Group IMAP response line within TCP packets (#1364)
 
 ## [3.7.4] - 2023-03-20
 
