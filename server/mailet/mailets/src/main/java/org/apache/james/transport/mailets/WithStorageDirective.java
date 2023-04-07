@@ -26,9 +26,9 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.transport.mailets.delivery.StorageDirective;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
+import org.apache.mailet.StorageDirective;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.consumers.ThrowingConsumer;

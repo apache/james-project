@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageUtil;
+import org.apache.mailet.StorageDirective;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

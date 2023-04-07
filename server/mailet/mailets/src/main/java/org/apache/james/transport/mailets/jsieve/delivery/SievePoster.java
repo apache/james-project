@@ -25,13 +25,11 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
-import org.apache.james.transport.mailets.delivery.MailStore;
-import org.apache.james.transport.mailets.delivery.StorageDirective;
 import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
+import org.apache.mailet.StorageDirective;
 
 public class SievePoster implements Poster {
     private final String folder;
