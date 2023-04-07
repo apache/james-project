@@ -30,6 +30,27 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Booleans;
 
+/**
+ * StorageDirective allows mailets to set storage instructions applied by mailet container.
+ *
+ * Usage:
+ *
+ * <pre>
+ *     <code>
+ *         StorageDirective.builder()
+ *             .targetFolder("target")
+ *             .seen(true)
+ *             .important(true)
+ *             .keywords(ImmutableList.of("abc", "def")
+ *             .build()
+ *             .encodeAsAttributes(Username.of("bob@localhost")
+ *             .forEach(mail::setAttribute);
+ *      </code></code>
+ * </pre>
+ *
+ * This will result in this mail to be placed for bob@localhost into the folder target,
+ * with user flags abc, def and marked as Flagged and Seen.
+ */
 public class StorageDirective {
     public static class Builder {
         private Optional<String> targetFolder = Optional.empty();
