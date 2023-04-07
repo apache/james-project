@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 
@@ -74,6 +75,67 @@ class WithStorageDirectiveIntegrationTest {
 
         testIMAPClient.select("target")
             .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
+    void seenShouldWork(@TempDir File temporaryFolder) throws Exception {
+        setUp(temporaryFolder, MailetConfiguration.builder()
+            .matcher(SenderIsLocal.class)
+            .mailet(WithStorageDirective.class)
+            .addProperty("seen", "true"));
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT);
+
+        testIMAPClient.select("INBOX")
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(testIMAPClient.hasAMessageWithFlags("\\Seen")).isTrue();
+    }
+
+    @Test
+    void importantShouldWork(@TempDir File temporaryFolder) throws Exception {
+        setUp(temporaryFolder, MailetConfiguration.builder()
+            .matcher(SenderIsLocal.class)
+            .mailet(WithStorageDirective.class)
+            .addProperty("important", "true"));
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT);
+
+        testIMAPClient.select("INBOX")
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(testIMAPClient.hasAMessageWithFlags("\\Flagged")).isTrue();
+    }
+
+    @Test
+    void keywordsShouldWork(@TempDir File temporaryFolder) throws Exception {
+        setUp(temporaryFolder, MailetConfiguration.builder()
+            .matcher(SenderIsLocal.class)
+            .mailet(WithStorageDirective.class)
+            .addProperty("keywords", "abc,def"));
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT);
+
+        testIMAPClient.select("INBOX")
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(testIMAPClient.hasAMessageWithFlags("abc")).isTrue();
+        assertThat(testIMAPClient.hasAMessageWithFlags("def")).isTrue();
     }
 
     private void setUp(File temporaryFolder, MailetConfiguration.Builder mailet) throws Exception {

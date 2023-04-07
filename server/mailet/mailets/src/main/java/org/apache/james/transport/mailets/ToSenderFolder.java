@@ -18,8 +18,11 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.mail.Flags;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
@@ -53,6 +56,7 @@ import org.slf4j.LoggerFactory;
 @Experimental
 public class ToSenderFolder extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ToSenderFolder.class);
+    private static final Optional<Flags> NO_FLAGS = Optional.empty();
 
     private final UsersRepository usersRepository;
     private final MailboxManager mailboxManager;
@@ -84,7 +88,7 @@ public class ToSenderFolder extends GenericMailet {
             MailAddress sender = mail.getMaybeSender().get();
             Username username = retrieveUser(sender);
 
-            mailboxAppender.append(mail.getMessage(), username, folder).block();
+            mailboxAppender.append(mail.getMessage(), username, folder, NO_FLAGS).block();
 
             LOGGER.error("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
         }

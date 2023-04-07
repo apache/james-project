@@ -50,7 +50,7 @@ class SimpleMailStoreTest {
     @BeforeEach
     void setUp() throws Exception {
         mailboxAppender = mock(MailboxAppenderImpl.class);
-        when(mailboxAppender.append(any(), any(), any())).thenReturn(Mono.empty());
+        when(mailboxAppender.append(any(), any(), any(), any())).thenReturn(Mono.empty());
         usersRepository = mock(UsersRepository.class);
         testee = SimpleMailStore.builder()
             .usersRepository(usersRepository)
@@ -76,7 +76,7 @@ class SimpleMailStoreTest {
             .build();
         testee.storeMail(recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.asString())), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.asString())), eq(FOLDER), any());
     }
 
     @Test
@@ -89,7 +89,7 @@ class SimpleMailStoreTest {
             .build();
         testee.storeMail(recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.getLocalPart())), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.getLocalPart())), eq(FOLDER), any());
     }
 
     @Test
@@ -102,6 +102,6 @@ class SimpleMailStoreTest {
             .build();
         testee.storeMail(recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.toString())), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.toString())), eq(FOLDER), any());
     }
 }

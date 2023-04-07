@@ -19,6 +19,11 @@
 
 package org.apache.james.transport.mailets.delivery;
 
+import java.util.Collection;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import javax.mail.Flags;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
@@ -26,8 +31,10 @@ import org.apache.james.core.Username;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +104,9 @@ public class SimpleMailStore implements MailStore {
         String locatedFolder = locateFolder(username, mail);
 
         try {
-            return Mono.from(mailboxAppender.append(mail.getMessage(), username, locatedFolder))
+            return Mono.from(mailboxAppender.append(mail.getMessage(), username,
+                locateFolder(username, mail),
+                extractFlags(username, mail)))
                 .doOnSuccess(ids -> {
                     metric.increment();
                     LOGGER.info("Local delivered mail {} with messageId {} successfully from {} to {} in folder {} with composedMessageId {}",
@@ -108,7 +117,54 @@ public class SimpleMailStore implements MailStore {
             throw new RuntimeException("Could not retrieve mail message content", e);
         }
     }
-    
+
+    private Optional<Flags> extractFlags(Username username, Mail mail) {
+        Optional<Attribute> seen = mail.getAttribute(AttributeName.of(MailStore.SEEN_PREFIX + username.asString()));
+        Optional<Attribute> important = mail.getAttribute(AttributeName.of(MailStore.IMPORTANT_PREFIX + username.asString()));
+        Optional<Attribute> keywords = mail.getAttribute(AttributeName.of(MailStore.KEYWORDS_PREFIX + username.asString()));
+
+        if (seen.isEmpty() && important.isEmpty() && keywords.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Flags flags = new Flags();
+        flags.add(encodeFlag(seen, Flags.Flag.SEEN));
+        flags.add(encodeFlag(important, Flags.Flag.FLAGGED));
+        extractKeywords(keywords).forEach(flags::add);
+
+        return Optional.of(flags);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Stream<String> extractKeywords(Optional<Attribute> keywords) {
+        return keywords
+            .map(Attribute::getValue)
+            .map(AttributeValue::getValue)
+            .filter(Collection.class::isInstance)
+            .map(Collection.class::cast)
+            .stream()
+            .flatMap(Collection::stream)
+            .filter(AttributeValue.class::isInstance)
+            .map(AttributeValue.class::cast)
+            .map(a -> ((AttributeValue<?>) a).getValue())
+            .filter(String.class::isInstance)
+            .map(String.class::cast);
+    }
+
+    private Flags encodeFlag(Optional<Attribute> attr, Flags.Flag flag) {
+        Flags flags = new Flags();
+        attr.map(Attribute::getValue)
+            .map(AttributeValue::getValue)
+            .filter(Boolean.class::isInstance)
+            .map(Boolean.class::cast)
+            .ifPresent(seenFlag -> {
+                if (seenFlag) {
+                    flags.add(flag);
+                }
+            });
+        return flags;
+    }
+
     private String getMessageId(Mail mail) {
         try {
             return mail.getMessage().getMessageID();
