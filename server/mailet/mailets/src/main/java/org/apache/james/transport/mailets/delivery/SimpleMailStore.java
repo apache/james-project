@@ -19,11 +19,6 @@
 
 package org.apache.james.transport.mailets.delivery;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
@@ -31,11 +26,8 @@ import org.apache.james.core.Username;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.mailet.Attribute;
-import org.apache.mailet.AttributeName;
-import org.apache.mailet.AttributeUtils;
-import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
+import org.apache.mailet.StorageDirective;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

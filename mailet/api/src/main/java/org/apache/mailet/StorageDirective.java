@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.transport.mailets.delivery;
+package org.apache.mailet;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -25,11 +25,6 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.mailet.Attribute;
-import org.apache.mailet.AttributeName;
-import org.apache.mailet.AttributeUtils;
-import org.apache.mailet.AttributeValue;
-import org.apache.mailet.Mail;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
