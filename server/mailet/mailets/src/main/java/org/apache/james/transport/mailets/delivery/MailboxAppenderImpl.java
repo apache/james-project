@@ -43,6 +43,7 @@ import org.apache.james.server.core.MimeMessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import reactor.core.publisher.Mono;
@@ -56,9 +57,11 @@ public class MailboxAppenderImpl implements MailboxAppender {
         this.mailboxManager = mailboxManager;
     }
 
-    public Mono<ComposedMessageId> append(MimeMessage mail, Username user, String folder, Optional<Flags> flags) throws MessagingException {
+    public Mono<ComposedMessageId> append(MimeMessage mail, Username user, StorageDirective storageDirective) throws MessagingException {
+        Preconditions.checkArgument(storageDirective.getTargetFolder().isPresent(), "'targetFolder' field is needed");
+
         MailboxSession session = createMailboxSession(user);
-        return append(mail, user, useSlashAsSeparator(folder, session), flags, session)
+        return append(mail, user, useSlashAsSeparator(storageDirective.getTargetFolder().get(), session), storageDirective.getFlags(), session)
             .map(AppendResult::getId);
     }
 

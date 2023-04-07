@@ -101,83 +101,20 @@ public class SimpleMailStore implements MailStore {
     @Override
     public Mono<Void> storeMail(MailAddress recipient, Mail mail) {
         Username username = computeUsername(recipient);
-        String locatedFolder = locateFolder(username, mail);
+        StorageDirective storageDirective = StorageDirective.fromMail(computeUsername(recipient), mail)
+            .withDefaultFolder(folder);
 
         try {
-            return Mono.from(mailboxAppender.append(mail.getMessage(), username,
-                locateFolder(username, mail),
-                extractFlags(username, mail)))
+            return Mono.from(mailboxAppender.append(mail.getMessage(), username, storageDirective))
                 .doOnSuccess(ids -> {
                     metric.increment();
                     LOGGER.info("Local delivered mail {} with messageId {} successfully from {} to {} in folder {} with composedMessageId {}",
-                        mail.getName(), getMessageId(mail), mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, ids);
+                        mail.getName(), getMessageId(mail), mail.getMaybeSender().asString(), recipient.asPrettyString(), storageDirective.getTargetFolder().get(), ids);
                 })
                 .then();
         } catch (MessagingException e) {
             throw new RuntimeException("Could not retrieve mail message content", e);
         }
-    }
-
-    private Optional<Flags> extractFlags(Username username, Mail mail) {
-        Optional<Attribute> seen = mail.getAttribute(AttributeName.of(MailStore.SEEN_PREFIX + username.asString()));
-        Optional<Attribute> important = mail.getAttribute(AttributeName.of(MailStore.IMPORTANT_PREFIX + username.asString()));
-        Optional<Attribute> keywords = mail.getAttribute(AttributeName.of(MailStore.KEYWORDS_PREFIX + username.asString()));
-
-        if (seen.isEmpty() && important.isEmpty() && keywords.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Flags flags = new Flags();
-        flags.add(encodeFlag(seen, Flags.Flag.SEEN));
-        flags.add(encodeFlag(important, Flags.Flag.FLAGGED));
-        extractKeywords(keywords).forEach(flags::add);
-
-        return Optional.of(flags);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Stream<String> extractKeywords(Optional<Attribute> keywords) {
-        return keywords
-            .map(Attribute::getValue)
-            .map(AttributeValue::getValue)
-            .filter(Collection.class::isInstance)
-            .map(Collection.class::cast)
-            .stream()
-            .flatMap(Collection::stream)
-            .filter(AttributeValue.class::isInstance)
-            .map(AttributeValue.class::cast)
-            .map(a -> ((AttributeValue<?>) a).getValue())
-            .filter(String.class::isInstance)
-            .map(String.class::cast);
-    }
-
-    private Flags encodeFlag(Optional<Attribute> attr, Flags.Flag flag) {
-        Flags flags = new Flags();
-        attr.map(Attribute::getValue)
-            .map(AttributeValue::getValue)
-            .filter(Boolean.class::isInstance)
-            .map(Boolean.class::cast)
-            .ifPresent(seenFlag -> {
-                if (seenFlag) {
-                    flags.add(flag);
-                }
-            });
-        return flags;
-    }
-
-    private String getMessageId(Mail mail) {
-        try {
-            return mail.getMessage().getMessageID();
-        } catch (MessagingException e) {
-            LOGGER.debug("failed to extract messageId from message {}", mail.getName(), e);
-            return null;
-        }
-    }
-
-    private String locateFolder(Username username, Mail mail) {
-        return AttributeUtils
-            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username.asString()), String.class)
-            .orElse(folder);
     }
 
     private Username computeUsername(MailAddress recipient) {
@@ -186,6 +123,15 @@ public class SimpleMailStore implements MailStore {
         } catch (UsersRepositoryException e) {
             LOGGER.warn("Unable to retrieve username for {}", recipient.asPrettyString(), e);
             return Username.of(recipient.asString());
+        }
+    }
+
+    private String getMessageId(Mail mail) {
+        try {
+            return mail.getMessage().getMessageID();
+        } catch (MessagingException e) {
+            LOGGER.debug("failed to extract messageId from message {}", mail.getName(), e);
+            return null;
         }
     }
 }

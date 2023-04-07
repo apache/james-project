@@ -29,6 +29,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.transport.mailets.delivery.MailboxAppenderImpl;
+import org.apache.james.transport.mailets.delivery.StorageDirective;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Experimental;
@@ -88,7 +89,7 @@ public class ToSenderFolder extends GenericMailet {
             MailAddress sender = mail.getMaybeSender().get();
             Username username = retrieveUser(sender);
 
-            mailboxAppender.append(mail.getMessage(), username, folder, NO_FLAGS).block();
+            mailboxAppender.append(mail.getMessage(), username, StorageDirective.builder().targetFolder(folder).build()).block();
 
             LOGGER.error("Local delivery with ToSenderFolder mailet for mail {} with sender {} in folder {}", mail.getName(), sender, folder);
         }

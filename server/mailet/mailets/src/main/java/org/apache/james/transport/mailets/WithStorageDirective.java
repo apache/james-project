@@ -26,20 +26,14 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.Username;
-import org.apache.james.transport.mailets.delivery.MailStore;
+import org.apache.james.transport.mailets.delivery.StorageDirective;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.mailet.Attribute;
-import org.apache.mailet.AttributeName;
-import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.primitives.Booleans;
 
 /**
  * WithStorageDirective position storage directive for the recipients of this email.
@@ -74,10 +68,7 @@ public class WithStorageDirective extends GenericMailet {
 
     private final UsersRepository usersRepository;
 
-    private Optional<AttributeValue<String>> targetFolderName;
-    private Optional<AttributeValue<Boolean>> seen;
-    private Optional<AttributeValue<Boolean>> important;
-    private Optional<AttributeValue<Collection<AttributeValue<?>>>> keywords;
+    private StorageDirective storageDirective;
 
     @Inject
     public WithStorageDirective(UsersRepository usersRepository) {
@@ -86,28 +77,20 @@ public class WithStorageDirective extends GenericMailet {
 
     @Override
     public void init() throws MessagingException {
-        Preconditions.checkState(
-            Booleans.countTrue(
-                getInitParameterAsOptional(TARGET_FOLDER_NAME).isPresent(),
-                getInitParameterAsOptional(SEEN).isPresent(),
-                getInitParameterAsOptional(IMPORTANT).isPresent(),
-                getInitParameterAsOptional(KEYWORDS).isPresent()) > 0,
-                "Expecting one of the storage directives to be specified: [%s, %s, %s, %s]",
-                TARGET_FOLDER_NAME, SEEN, IMPORTANT, KEYWORDS);
         Preconditions.checkState(validBooleanParameter(getInitParameterAsOptional(SEEN)), "'%s' needs to be a boolean", SEEN);
         Preconditions.checkState(validBooleanParameter(getInitParameterAsOptional(IMPORTANT)), "'%s' needs to be a boolean", IMPORTANT);
 
-        targetFolderName = getInitParameterAsOptional(TARGET_FOLDER_NAME).map(AttributeValue::of);
-        seen = getInitParameterAsOptional(SEEN).map(Boolean::parseBoolean).map(AttributeValue::of);
-        important = getInitParameterAsOptional(IMPORTANT).map(Boolean::parseBoolean).map(AttributeValue::of);
-        keywords = getInitParameterAsOptional(KEYWORDS).map(this::parseKeywords).map(AttributeValue::of);
+        storageDirective = StorageDirective.builder()
+            .targetFolder(getInitParameterAsOptional(TARGET_FOLDER_NAME))
+            .seen(getInitParameterAsOptional(SEEN).map(Boolean::parseBoolean))
+            .important(getInitParameterAsOptional(IMPORTANT).map(Boolean::parseBoolean))
+            .keywords(getInitParameterAsOptional(KEYWORDS).map(this::parseKeywords))
+            .build();
     }
 
-    private Collection<AttributeValue<?>> parseKeywords(String s) {
+    private Collection<String> parseKeywords(String s) {
         return KEYWORD_SPLITTER
-            .splitToStream(s)
-            .map(AttributeValue::of)
-            .collect(ImmutableSet.toImmutableSet());
+            .splitToList(s);
     }
 
     private boolean validBooleanParameter(Optional<String> parameter) {
@@ -122,12 +105,7 @@ public class WithStorageDirective extends GenericMailet {
     }
 
     public ThrowingConsumer<MailAddress> addStorageDirective(Mail mail) {
-        return recipient -> {
-            Username username = usersRepository.getUsername(recipient);
-            targetFolderName.ifPresent(value -> mail.setAttribute(new Attribute(AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + username.asString()), value)));
-            seen.ifPresent(value -> mail.setAttribute(new Attribute(AttributeName.of(MailStore.SEEN_PREFIX + username.asString()), value)));
-            important.ifPresent(value -> mail.setAttribute(new Attribute(AttributeName.of(MailStore.IMPORTANT_PREFIX + username.asString()), value)));
-            keywords.ifPresent(value -> mail.setAttribute(new Attribute(AttributeName.of(MailStore.KEYWORDS_PREFIX + username.asString()), value)));
-        };
+        return recipient -> storageDirective.encodeAsAttributes(usersRepository.getUsername(recipient))
+            .forEach(mail::setAttribute);
     }
 }

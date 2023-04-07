@@ -66,12 +66,12 @@ class SieveIntegrationTest {
     private static final MailboxPath INBOX = MailboxPath.inbox(LOCAL_USER);
     private static final MailboxPath INBOX_ANY = MailboxPath.forUser(LOCAL_USER, "INBOX.any");
 
-    private static final AttributeName ATTRIBUTE_NAME = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART);
+    private static final AttributeName ATTRIBUTE_NAME = AttributeName.of("DeliveryPath_" + LOCAL_PART);
     private static final Attribute ATTRIBUTE_INBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
     private static final Attribute ATTRIBUTE_INBOX_ANY = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX_ANY.getName())));
     private static final Attribute ATTRIBUTE_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(SELECTED_MAILBOX.getName())));
     private static final Attribute ATTRIBUTE_NOT_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(NOT_SELECTED_MAILBOX.getName())));
-    private static final AttributeName ATTRIBUTE_NAME_DOMAIN = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + RECEIVER_DOMAIN_COM);
+    private static final AttributeName ATTRIBUTE_NAME_DOMAIN = AttributeName.of("DeliveryPath_" + RECEIVER_DOMAIN_COM);
     private static final Attribute ATTRIBUTE_INBOX_DOMAIN = new Attribute(ATTRIBUTE_NAME_DOMAIN, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
 
     private Sieve testee;
