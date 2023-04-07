@@ -49,6 +49,9 @@ class MailboxAppenderImplTest {
 
     public static final Username USER = Username.of("user");
     public static final String FOLDER = "folder";
+    public static final StorageDirective STORAGE_DIRECTIVE = StorageDirective.builder()
+        .targetFolder(FOLDER)
+        .build();
     public static final String EMPTY_FOLDER = "";
     private static final Optional<Flags> NO_FLAGS = Optional.empty();
 
@@ -73,7 +76,7 @@ class MailboxAppenderImplTest {
 
     @Test
     void appendShouldAddMessageToDesiredMailbox() throws Exception {
-        Mono.from(testee.append(mimeMessage, USER, FOLDER, NO_FLAGS)).block();
+        Mono.from(testee.append(mimeMessage, USER, STORAGE_DIRECTIVE)).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER), session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -87,7 +90,7 @@ class MailboxAppenderImplTest {
         MailboxPath mailboxPath = MailboxPath.forUser(USER, FOLDER);
         mailboxManager.createMailbox(mailboxPath, session);
 
-        Mono.from(testee.append(mimeMessage, USER, FOLDER, NO_FLAGS)).block();
+        Mono.from(testee.append(mimeMessage, USER, STORAGE_DIRECTIVE)).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(mailboxPath, session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -98,13 +101,17 @@ class MailboxAppenderImplTest {
 
     @Test
     void appendShouldNotAppendToEmptyFolder() {
-        assertThatThrownBy(() -> Mono.from(testee.append(mimeMessage, USER, EMPTY_FOLDER, NO_FLAGS)).block())
+        assertThatThrownBy(() -> Mono.from(testee.append(mimeMessage, USER, StorageDirective.builder()
+            .targetFolder(EMPTY_FOLDER)
+            .build())).block())
             .isInstanceOf(MessagingException.class);
     }
 
     @Test
     void appendShouldRemovePathSeparatorAsFirstChar() throws Exception {
-        Mono.from(testee.append(mimeMessage, USER, "." + FOLDER, NO_FLAGS)).block();
+        Mono.from(testee.append(mimeMessage, USER, StorageDirective.builder()
+            .targetFolder("." + FOLDER)
+            .build())).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER), session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -115,7 +122,10 @@ class MailboxAppenderImplTest {
 
     @Test
     void appendShouldSupportFlags() throws Exception {
-        Mono.from(testee.append(mimeMessage, USER, "." + FOLDER, Optional.of(new Flags(Flags.Flag.SEEN)))).block();
+        Mono.from(testee.append(mimeMessage, USER, StorageDirective.builder()
+            .targetFolder("." + FOLDER)
+            .seen(Optional.of(true))
+            .build())).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER), session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -125,7 +135,9 @@ class MailboxAppenderImplTest {
 
     @Test
     void appendShouldReplaceSlashBySeparator() throws Exception {
-        Mono.from(testee.append(mimeMessage, USER, FOLDER + "/any", NO_FLAGS)).block();
+        Mono.from(testee.append(mimeMessage, USER, StorageDirective.builder()
+            .targetFolder(FOLDER + "/any")
+            .build())).block();
 
         MessageResultIterator messages = mailboxManager.getMailbox(MailboxPath.forUser(USER, FOLDER + ".any"), session)
             .getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session);
@@ -137,7 +149,9 @@ class MailboxAppenderImplTest {
     @RepeatedTest(20)
     void appendShouldNotFailInConcurrentEnvironment() throws Exception {
         ConcurrentTestRunner.builder()
-            .reactorOperation((a, b) -> Mono.from(testee.append(mimeMessage, USER, FOLDER + "/any", NO_FLAGS)).then())
+            .reactorOperation((a, b) -> Mono.from(testee.append(mimeMessage, USER, StorageDirective.builder()
+                .targetFolder(FOLDER + "/any")
+                .build())).then())
             .threadCount(100)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
     }
