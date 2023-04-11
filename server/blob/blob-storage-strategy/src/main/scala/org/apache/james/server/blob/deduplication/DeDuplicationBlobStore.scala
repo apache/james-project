@@ -31,6 +31,7 @@ import org.apache.james.blob.api.{BlobId, BlobStore, BlobStoreDAO, BucketName}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scala.publisher.SMono
+import reactor.core.scheduler.Schedulers
 import reactor.util.function.{Tuple2, Tuples}
 
 import scala.compat.java8.FunctionConverters._
@@ -58,10 +59,10 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     Preconditions.checkNotNull(bucketName)
     Preconditions.checkNotNull(data)
 
-    val blobId = blobIdFactory.forPayload(data)
-
-    SMono(blobStoreDAO.save(bucketName, blobId, data))
-      .`then`(SMono.just(blobId))
+    SMono.fromCallable(() => blobIdFactory.forPayload(data))
+      .subscribeOn(Schedulers.boundedElastic())
+      .flatMap(blobId => SMono(blobStoreDAO.save(bucketName, blobId, data))
+        .`then`(SMono.just(blobId)))
   }
 
   override def save(bucketName: BucketName, data: InputStream, storagePolicy: BlobStore.StoragePolicy): Publisher[BlobId] = {
@@ -82,7 +83,7 @@ class DeDuplicationBlobStore @Inject()(blobStoreDAO: BlobStoreDAO,
     SMono.fromCallable(() => {
       IOUtils.copy(hashingInputStream, fileBackedOutputStream)
       Tuples.of(blobIdFactory.from(hashingInputStream.hash.toString), fileBackedOutputStream.asByteSource)
-    })
+    }).subscribeOn(Schedulers.boundedElastic())
       .flatMap((tuple: Tuple2[BlobId, ByteSource]) =>
         SMono(blobStoreDAO.save(bucketName, tuple.getT1, tuple.getT2))
           .`then`(SMono.just(tuple.getT1)))

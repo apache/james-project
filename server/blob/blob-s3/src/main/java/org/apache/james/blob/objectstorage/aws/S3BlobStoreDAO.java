@@ -323,7 +323,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                 .bucket(resolvedBucketName.asString())
                 .contentLength(contentLength)
                 .key(blobId.asString()),
-            AsyncRequestBody.fromPublisher(chunkStream(chunkSize, stream))));
+            AsyncRequestBody.fromPublisher(chunkStream(chunkSize, stream)
+                .subscribeOn(Schedulers.boundedElastic()))));
     }
 
     private Flux<ByteBuffer> chunkStream(int chunkSize, InputStream stream) {
