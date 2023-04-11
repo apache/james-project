@@ -67,6 +67,7 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
@@ -188,7 +189,8 @@ class OpenSearchListeningMessageSearchIndexTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("UTC"),
-            IndexAttachments.YES);
+            IndexAttachments.YES,
+            IndexHeaders.YES);
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
@@ -272,7 +274,8 @@ class OpenSearchListeningMessageSearchIndexTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new FailingTextExtractor(),
             ZoneId.of("Europe/Paris"),
-            IndexAttachments.YES);
+            IndexAttachments.YES,
+            IndexHeaders.YES);
 
         testee = new OpenSearchListeningMessageSearchIndex(mapperFactory,
             ImmutableSet.of(), openSearchIndexer, openSearchSearcher,

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
@@ -103,7 +104,7 @@ public class OpenSearchHostSystem extends JamesImapHostSystem {
                     MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), OpenSearchSearcher.DEFAULT_SEARCH_SIZE,
                     MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+                new MessageToOpenSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()

@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -95,7 +96,7 @@ class MessageToOpenSearchJsonTest {
     void spamEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 date,
@@ -113,10 +114,31 @@ class MessageToOpenSearchJsonTest {
     }
 
     @Test
+    void spamEmailShouldBeWellConvertedToJsonWhenNoHeaders() throws IOException {
+        MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.NO, IndexHeaders.NO);
+        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
+                date,
+                SIZE,
+                BODY_START_OCTET,
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/spamMail.eml"))),
+                new Flags(),
+                propertyBuilder.build(),
+                MAILBOX_ID);
+        spamMail.setUid(UID);
+        spamMail.setModSeq(MOD_SEQ);
+        assertThatJson(messageToOpenSearchJson.convertToJson(spamMail).block())
+            .when(IGNORING_ARRAY_ORDER)
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/spamMailNoHeaders.json"));
+    }
+
+    @Test
     void inlinedMultipartEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 date,
@@ -138,7 +160,7 @@ class MessageToOpenSearchJsonTest {
     void invalidCharsetShouldBeWellConvertedToJson() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 date,
@@ -161,7 +183,7 @@ class MessageToOpenSearchJsonTest {
     void htmlEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage htmlMail = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 date,
@@ -182,7 +204,7 @@ class MessageToOpenSearchJsonTest {
     void pgpSignedEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage pgpSignedMail = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 date,
@@ -203,7 +225,7 @@ class MessageToOpenSearchJsonTest {
     void simpleEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 date,
@@ -224,7 +246,7 @@ class MessageToOpenSearchJsonTest {
     void recursiveEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage recursiveMail = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 date,
@@ -245,7 +267,7 @@ class MessageToOpenSearchJsonTest {
     void emailWithNoInternalDateShouldUseNowDate() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
                 THREAD_ID,
                 null,
@@ -282,7 +304,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
-            IndexAttachments.YES);
+            IndexAttachments.YES, IndexHeaders.YES);
         String convertToJson = messageToOpenSearchJson.convertToJson(mailWithNoInternalDate).block();
 
         // Then
@@ -311,7 +333,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
-            IndexAttachments.NO);
+            IndexAttachments.NO, IndexHeaders.YES);
         String convertToJson = messageToOpenSearchJson.convertToJson(mailWithNoInternalDate).block();
 
         // Then
@@ -325,7 +347,7 @@ class MessageToOpenSearchJsonTest {
     void emailWithNoMailboxIdShouldThrow() throws Exception {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date,
             SIZE,
             BODY_START_OCTET,
@@ -346,7 +368,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
-            IndexAttachments.YES);
+            IndexAttachments.YES, IndexHeaders.YES);
         assertThatJson(messageToOpenSearchJson.getUpdatedJsonMessagePart(new Flags(), MOD_SEQ))
             .isEqualTo("{\"modSeq\":42,\"isAnswered\":false,\"isDeleted\":false,\"isDraft\":false,\"isFlagged\":false,\"isRecent\":false,\"userFlags\":[],\"isUnread\":true}");
     }
@@ -356,7 +378,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
-            IndexAttachments.YES);
+            IndexAttachments.YES, IndexHeaders.YES);
         assertThatJson(messageToOpenSearchJson.getUpdatedJsonMessagePart(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED).add("user").build(), MOD_SEQ))
             .isEqualTo("{\"modSeq\":42,\"isAnswered\":false,\"isDeleted\":true,\"isDraft\":false,\"isFlagged\":true,\"isRecent\":false,\"userFlags\":[\"user\"],\"isUnread\":true}");
     }
@@ -366,7 +388,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
-            IndexAttachments.YES);
+            IndexAttachments.YES, IndexHeaders.YES);
 
         assertThatThrownBy(() -> messageToOpenSearchJson.getUpdatedJsonMessagePart(null, MOD_SEQ))
             .isInstanceOf(NullPointerException.class);
@@ -377,7 +399,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             textExtractor,
             ZoneId.of("Europe/Paris"),
-            IndexAttachments.YES);
+            IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID, THREAD_ID, date,
             SIZE,
             BODY_START_OCTET,
@@ -413,7 +435,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
                 new DefaultTextExtractor(),
                 ZoneId.of("Europe/Paris"),
-                IndexAttachments.NO);
+                IndexAttachments.NO, IndexHeaders.YES);
         String convertToJsonWithoutAttachment = messageToOpenSearchJson.convertToJsonWithoutAttachment(message).block();
 
         // Then
@@ -442,7 +464,7 @@ class MessageToOpenSearchJsonTest {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
                 new JsoupTextExtractor(),
                 ZoneId.of("Europe/Paris"),
-                IndexAttachments.NO);
+                IndexAttachments.NO, IndexHeaders.YES);
         String convertToJsonWithoutAttachment = messageToOpenSearchJson.convertToJsonWithoutAttachment(message).block();
 
         // Then
@@ -458,7 +480,7 @@ class MessageToOpenSearchJsonTest {
         Date saveDate = new Date(1433628000000L); // 2015/06/07 00:00:00 0200 (Paris time zone)
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
-            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
         MailboxMessage mail = new SimpleMailboxMessage(MESSAGE_ID,
             THREAD_ID,
             date,

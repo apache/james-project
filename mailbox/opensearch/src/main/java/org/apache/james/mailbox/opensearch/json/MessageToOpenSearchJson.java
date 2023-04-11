@@ -27,6 +27,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -44,19 +45,21 @@ public class MessageToOpenSearchJson {
     private final TextExtractor textExtractor;
     private final ZoneId zoneId;
     private final IndexAttachments indexAttachments;
+    private final IndexHeaders indexHeaders;
 
-    public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments) {
+    public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments, IndexHeaders indexHeaders) {
         this.textExtractor = textExtractor;
         this.zoneId = zoneId;
         this.indexAttachments = indexAttachments;
+        this.indexHeaders = indexHeaders;
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new GuavaModule());
         this.mapper.registerModule(new Jdk8Module());
     }
 
     @Inject
-    public MessageToOpenSearchJson(TextExtractor textExtractor, IndexAttachments indexAttachments) {
-        this(textExtractor, ZoneId.systemDefault(), indexAttachments);
+    public MessageToOpenSearchJson(TextExtractor textExtractor, IndexAttachments indexAttachments, IndexHeaders indexHeaders) {
+        this(textExtractor, ZoneId.systemDefault(), indexAttachments, indexHeaders);
     }
 
     public Mono<String> convertToJson(MailboxMessage message) {
@@ -67,6 +70,7 @@ public class MessageToOpenSearchJson {
             .extractor(textExtractor)
             .zoneId(zoneId)
             .indexAttachments(indexAttachments)
+            .indexHeaders(indexHeaders)
             .build()
             .map(Throwing.function(mapper::writeValueAsString));
     }
@@ -77,6 +81,7 @@ public class MessageToOpenSearchJson {
             .extractor(textExtractor)
             .zoneId(zoneId)
             .indexAttachments(IndexAttachments.NO)
+            .indexHeaders(indexHeaders)
             .build()
             .map(Throwing.function(mapper::writeValueAsString));
     }

@@ -1,0 +1,45 @@
+{
+  "messageId":"184",
+  "threadId": "184",
+  "uid":25,
+  "mailboxId": "18",
+  "modSeq": 42,
+  "size": 25,
+  "date": "2015-06-07T00:00:00+0200",
+  "saveDate": null,
+  "mediaType": "plain",
+  "subtype": "text",
+  "mimeMessageID": "<VASs-IZaXqmZao@spam.minet.net>",
+  "userFlags": [],
+  "headers": [],
+  "from": [
+	{
+	  "name": "Content-filter at spam.minet.net",
+	  "address": "postmaster@minet.net",
+	  "domain": "minet"
+	}
+  ],
+  "to": [
+	{
+	  "name": null,
+	  "address": "root@listes.minet.net",
+      "domain": "listes.minet"
+	}
+  ],
+  "cc": [],
+  "bcc": [],
+  "subject": [
+	"[root] UNCHECKED contents in mail FROM <quentin.h@riseup.net>"
+  ],
+  "sentDate": "2015-06-03T09:05:46+0000",
+  "attachments": [],
+  "textBody": "No viruses were found.\r\n\r\nContent type: Unchecked\r\nInternal reference code for the message is 12583-16/Ss-IZaXqmZao\r\n\r\nAccording to a 'Received:' trace, the message apparently originated at:\r\n  [198.252.153.129], [127.0.0.1] localhost [127.0.0.1] Authenticated sender:\r\n  quentin.h\r\n\r\nReturn-Path: <quentin.h@riseup.net>\r\nFrom: Quentin <quentin.h@riseup.net>\r\nMessage-ID: <556EC361.6000308@riseup.net>\r\nSubject: =?UTF-8?B?UmU6IEZ3ZDogW1RtcGxhYl0gW0FQUEVMIEEgUEFSVElDSVBBVElPTl0=?=\r\n  =?UTF-8?B?IFdvb3QgZGV2aWNlcyAjMiAgOiB2ZW5leiBmYWlyZSBsZXVyIGhhY2tmw6p0ZSA=?=\r\n  =?UTF-8?B?YXV4IHBldGl0ZXMgbWFjaGluZXMgcHJvZ3JhbW1hYmxlcyBsZXMgNi03IGp1aW4=?=\r\n  =?UTF-8?B?IGF1IEphcmRpbiBkJ2FsaWNlL0JsYWNrbG9vcA==?=\r\nNot quarantined.\r\n\r\nThe message WILL BE relayed to:\r\n<yann@minet.net>\r\n\r\n",
+  "htmlBody": null,
+  "isAnswered": false,
+  "isDeleted": false,
+  "isDraft": false,
+  "isFlagged": false,
+  "isRecent": false,
+  "hasAttachment": false,
+  "isUnread": true
+}

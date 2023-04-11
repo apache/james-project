@@ -135,7 +135,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                     MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                     MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
-                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()

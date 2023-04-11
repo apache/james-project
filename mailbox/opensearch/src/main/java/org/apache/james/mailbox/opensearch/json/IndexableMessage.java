@@ -31,6 +31,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
@@ -56,9 +57,9 @@ public class IndexableMessage {
         }
 
         private IndexAttachments indexAttachments;
+        private IndexHeaders indexHeaders;
         private MailboxMessage message;
         private TextExtractor textExtractor;
-
         private ZoneId zoneId;
 
         private Builder() {
@@ -68,6 +69,7 @@ public class IndexableMessage {
             Preconditions.checkNotNull(message.getMailboxId());
             Preconditions.checkNotNull(textExtractor);
             Preconditions.checkNotNull(indexAttachments);
+            Preconditions.checkNotNull(indexHeaders);
             Preconditions.checkNotNull(zoneId);
 
             try {
@@ -84,6 +86,11 @@ public class IndexableMessage {
 
         public Builder indexAttachments(IndexAttachments indexAttachments) {
             this.indexAttachments = indexAttachments;
+            return this;
+        }
+
+        public Builder indexHeaders(IndexHeaders indexHeaders) {
+            this.indexHeaders = indexHeaders;
             return this;
         }
 
@@ -149,7 +156,7 @@ public class IndexableMessage {
                         date,
                         from,
                         hasAttachment,
-                        headers,
+                        filterHeadersIfNeeded(headers),
                         isAnswered,
                         isDeleted,
                         isDraft,
@@ -171,6 +178,14 @@ public class IndexableMessage {
                         userFlags,
                         mimeMessageID);
                 });
+        }
+
+        private List<HeaderCollection.Header> filterHeadersIfNeeded(List<HeaderCollection.Header> headers) {
+            if (IndexHeaders.YES.equals(indexHeaders)) {
+                return headers;
+            } else {
+                return ImmutableList.of();
+            }
         }
 
         private List<MimePart> setFlattenedAttachments(MimePart parsingResult, IndexAttachments indexAttachments) {
