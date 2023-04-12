@@ -106,7 +106,6 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
      */
     @Override
     public char nextChar() throws DecodingException {
-        
         if (!nextSeen) {
             int next;
             try {
@@ -127,8 +126,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
 
     /**
      * Reads and consumes a number of characters from the underlying reader,
-     * filling the char array provided. TODO: remove unnecessary copying of
-     * bits; line reader should maintain an internal ByteBuffer;
+     * filling the char array provided.
      * 
      * @param size
      *            number of characters to read and consume
@@ -144,7 +142,6 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         nextSeen = false;
         nextChar = 0;
 
-        //TODO move this copy in netty stack and try to avoid it
         try {
             long offset = in.getCount();
             in.skip(size);
