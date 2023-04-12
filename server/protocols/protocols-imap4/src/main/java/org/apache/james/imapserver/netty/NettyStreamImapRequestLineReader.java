@@ -24,19 +24,23 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.utils.EolInputStream;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CountingInputStream;
 
 import io.netty.channel.Channel;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLineReader implements Closeable {
-    private class FileLiteral implements Literal, Closeable {
+    private static class FileLiteral implements Literal, Closeable {
         private final long offset;
         private final int size;
         private final boolean extraCRLF;
@@ -53,7 +57,9 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
 
         @Override
         public void close() {
-            file.delete();
+            Mono.fromRunnable(Throwing.runnable(() -> Files.delete(file.toPath())))
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe();
         }
 
         @Override
