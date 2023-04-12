@@ -75,7 +75,6 @@ import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
@@ -405,10 +404,8 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return addUidAndModseqAndSaveDate(message, mailboxId)
-            .flatMap(Throwing.function((MailboxMessage messageWithUidAndModSeq) ->
-                save(mailbox, messageWithUidAndModSeq)
-                    .thenReturn(messageWithUidAndModSeq)))
-            .map(MailboxMessage::metaData);
+            .flatMap(messageWithUidAndModSeq -> save(mailbox, messageWithUidAndModSeq)
+                .thenReturn(messageWithUidAndModSeq.metaData()));
     }
 
     private Mono<MailboxMessage> addUidAndModseqAndSaveDate(MailboxMessage message, CassandraId mailboxId) {
@@ -620,7 +617,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .map(MailboxMessage::metaData);
     }
 
-    private Mono<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
+    private Mono<Void> save(Mailbox mailbox, MailboxMessage message) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return messageDAOV3.save(message)
             .flatMap(headerAndBodyBlobIds -> insertIds(message, mailboxId, headerAndBodyBlobIds.getT1()));
