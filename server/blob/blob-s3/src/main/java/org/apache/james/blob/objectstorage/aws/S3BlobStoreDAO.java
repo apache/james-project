@@ -330,7 +330,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         if (chunkSize == 0) {
             return Flux.empty();
         }
-        return DataChunker.chunkStream(stream, chunkSize);
+        return ReactorUtils.toChunks(stream, chunkSize)
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     private RetryBackoffSpec createBucketOnRetry(BucketName bucketName) {

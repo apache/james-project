@@ -54,6 +54,7 @@ import com.google.common.io.ByteSource;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
@@ -125,7 +126,8 @@ public class CassandraBlobStoreDAO implements BlobStoreDAO {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(inputStream);
 
-        return Mono.fromCallable(() -> DataChunker.chunkStream(inputStream, configuration.getBlobPartSize()))
+        return Mono.fromCallable(() -> ReactorUtils.toChunks(inputStream, configuration.getBlobPartSize())
+                .subscribeOn(Schedulers.boundedElastic()))
             .flatMap(chunks -> save(bucketName, blobId, chunks))
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving input stream", e));
     }
