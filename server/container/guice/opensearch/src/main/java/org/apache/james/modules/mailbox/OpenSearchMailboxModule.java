@@ -39,6 +39,7 @@ import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
@@ -180,11 +181,16 @@ public class OpenSearchMailboxModule extends AbstractModule {
         return configuration.getIndexAttachment();
     }
 
+    @Provides
+    @Singleton
+    public IndexHeaders provideIndexHeaders(OpenSearchMailboxConfiguration configuration) {
+        return configuration.getIndexHeaders();
+    }
+
     @ProvidesIntoSet
     InitializationOperation createIndex(MailboxIndexCreator instance) {
         return InitilizationOperationBuilder
             .forClass(MailboxIndexCreator.class)
             .init(instance::createIndex);
     }
-
 }

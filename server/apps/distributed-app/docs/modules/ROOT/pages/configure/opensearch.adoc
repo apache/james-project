@@ -85,6 +85,12 @@ The target of the alias is the index name configured above.
 
 | opensearch.indexAttachments
 | Indicates if you wish to index attachments or not (default: true).
+
+| opensearch.indexHeaders
+| Indicates if you wish to index headers or not (default: true). Note that specific headers
+(From, To, Cc, Bcc, Subject, Message-Id, Date, Content-Type) are still indexed in their dedicated type.
+Header indexing is expensive as each header currently need to be stored as a nested document but
+turning off headers indexing result in non-strict compliance with the IMAP / JMAP standards.
 |===
 
 === Quota search
