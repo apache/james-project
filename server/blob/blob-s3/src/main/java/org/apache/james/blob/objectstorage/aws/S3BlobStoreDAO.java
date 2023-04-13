@@ -44,7 +44,6 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.util.DataChunker;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
