@@ -1545,6 +1545,36 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
  - 404: User not found.
+ 
+ 
+### Recomputing Cassandra filtering projection
+
+You can force the reset of the Cassandra filtering projection by calling the following
+endpoint:
+
+```
+curl -XPOST /mailboxes?task=populateFilteringProjection
+```
+
+Will schedule a task.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+The scheduled task will have the following type
+`PopulateFilteringProjectionTask` and the following
+`additionalInformation`:
+
+```{
+  "type":"RecomputeAllPreviewsTask",
+  "processedUserCount": 3,
+  "failedUserCount": 2
+}
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
 
 ## Administrating quotas by users
 

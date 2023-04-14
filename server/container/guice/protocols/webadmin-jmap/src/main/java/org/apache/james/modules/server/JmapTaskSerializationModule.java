@@ -18,16 +18,20 @@
  ****************************************************************/
 package org.apache.james.modules.server;
 
+import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.data.jmap.EmailQueryViewPopulator;
 import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector;
 import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewTask;
 import org.apache.james.webadmin.data.jmap.PopulateEmailQueryViewTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.data.jmap.PopulateFilteringProjectionTask;
+import org.apache.james.webadmin.data.jmap.PopulateFilteringProjectionTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewProjectionItemsTask;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewProjectionItemsTask;
@@ -47,6 +51,13 @@ public class JmapTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> populateEmailQueryViewTask(EmailQueryViewPopulator populator) {
         return PopulateEmailQueryViewTask.module(populator);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> populateFilteringProjectionTask(EventSourcingFilteringManagement.NoReadProjection noReadProjection,
+                                                                                            EventSourcingFilteringManagement.ReadProjection readProjection,
+                                                                                            UsersRepository usersRepository) {
+        return PopulateFilteringProjectionTask.module(noReadProjection, readProjection, usersRepository);
     }
 
     @ProvidesIntoSet
@@ -74,6 +85,17 @@ public class JmapTaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminPopulateEmailQueryViewAdditionalInformation() {
         return PopulateEmailQueryViewTaskAdditionalInformationDTO.module();
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> populateFilteringProjectionAdditionalInformation() {
+        return PopulateFilteringProjectionTaskAdditionalInformationDTO.module();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminPopulateFilteringProjectionAdditionalInformation() {
+        return PopulateFilteringProjectionTaskAdditionalInformationDTO.module();
     }
 
     @ProvidesIntoSet

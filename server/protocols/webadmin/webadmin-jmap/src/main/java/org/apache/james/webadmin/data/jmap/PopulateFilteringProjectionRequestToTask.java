@@ -17,25 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.filtering;
+package org.apache.james.webadmin.data.jmap;
 
-import static com.datastax.oss.driver.api.core.type.DataTypes.INT;
-import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static org.apache.james.webadmin.data.jmap.Constants.POPULATE_FILTERING_PROJECTION;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import javax.inject.Inject;
 
-public interface CassandraFilteringProjectionModule {
-    String TABLE_NAME = "filters_projection";
+import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 
-    String AGGREGATE_ID = "aggregate_id";
-    String EVENT_ID = "event_id";
-    String RULES = "rules";
-
-    CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
-        .comment("Holds read projection for the event sourcing system managing JMAP filters.")
-        .statement(statement -> types -> statement
-            .withPartitionKey(AGGREGATE_ID, TEXT)
-            .withColumn(EVENT_ID, INT)
-            .withColumn(RULES, TEXT))
-        .build();
+public class PopulateFilteringProjectionRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
+    @Inject
+    PopulateFilteringProjectionRequestToTask(EventSourcingFilteringManagement.NoReadProjection noReadProjection,
+                                             EventSourcingFilteringManagement.ReadProjection readProjection,
+                                             UsersRepository usersRepository) {
+        super(POPULATE_FILTERING_PROJECTION,
+            request -> new PopulateFilteringProjectionTask(noReadProjection, readProjection, usersRepository));
+    }
 }

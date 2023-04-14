@@ -142,4 +142,21 @@ public abstract class WebAdminServerIntegrationImmutableTest {
             .body("status", is("completed"))
             .body("type", is("RecomputeAllFastViewProjectionItemsTask"));
     }
+
+    @Test
+    void jmapFilteringProjectionTasksShouldBeExposed() {
+        String taskId = with()
+            .queryParam("task", "populateFilteringProjection")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("PopulateFilteringProjectionTask"));
+    }
 }

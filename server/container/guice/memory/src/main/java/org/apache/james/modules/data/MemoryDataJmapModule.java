@@ -58,6 +58,7 @@ public class MemoryDataJmapModule extends AbstractModule {
 
         bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
         bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);
+        bind(EventSourcingFilteringManagement.ReadProjection.class).to(EventSourcingFilteringManagement.NoReadProjection.class);
 
         bind(DefaultTextExtractor.class).in(Scopes.SINGLETON);
         bind(TextExtractor.class).to(JsoupTextExtractor.class);

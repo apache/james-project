@@ -17,7 +17,6 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.ReactiveSubscriber;
-import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
@@ -91,7 +90,7 @@ public class CassandraFilteringProjection implements EventSourcingFilteringManag
     }
 
     @Override
-    public Optional<Subscriber> subscriber() {
+    public Optional<ReactiveSubscriber> subscriber() {
         return Optional.of(this);
     }
 
