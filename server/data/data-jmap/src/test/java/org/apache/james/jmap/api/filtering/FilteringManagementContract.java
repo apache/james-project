@@ -46,26 +46,24 @@ public interface FilteringManagementContract {
     String BART_SIMPSON_CARTOON = "bart@simpson.cartoon";
     Username USERNAME = Username.of(BART_SIMPSON_CARTOON);
 
-    default FilteringManagement instantiateFilteringManagement(EventStore eventStore) {
-        return new EventSourcingFilteringManagement(eventStore);
-    }
+    FilteringManagement instantiateFilteringManagement();
 
     @Test
-    default void listingRulesForUnknownUserShouldReturnEmptyList(EventStore eventStore) {
-        assertThat(Mono.from(instantiateFilteringManagement(eventStore).listRulesForUser(USERNAME)).block())
+    default void listingRulesForUnknownUserShouldReturnEmptyList() {
+        assertThat(Mono.from(instantiateFilteringManagement().listRulesForUser(USERNAME)).block())
             .isEqualTo(new Rules(ImmutableList.of(), new Version(-1)));
     }
 
     @Test
-    default void listingRulesShouldThrowWhenNullUser(EventStore eventStore) {
+    default void listingRulesShouldThrowWhenNullUser() {
         Username username = null;
-        assertThatThrownBy(() -> instantiateFilteringManagement(eventStore).listRulesForUser(username))
+        assertThatThrownBy(() -> instantiateFilteringManagement().listRulesForUser(username))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    default void listingRulesShouldReturnDefinedRules(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void listingRulesShouldReturnDefinedRules() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_1, RULE_2)).block();
 
@@ -74,8 +72,8 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void listingRulesShouldReturnLastDefinedRules(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void listingRulesShouldReturnLastDefinedRules() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_1, RULE_2)).block();
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_2, RULE_1)).block();
@@ -85,24 +83,24 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void definingRulesShouldThrowWhenDuplicateRules(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void definingRulesShouldThrowWhenDuplicateRules() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_1, RULE_1)).block())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    default void definingRulesShouldThrowWhenNullUser(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void definingRulesShouldThrowWhenNullUser() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(null, Optional.empty(), RULE_1, RULE_1)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    default void definingRulesShouldThrowWhenNullRuleList(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void definingRulesShouldThrowWhenNullRuleList() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         List<Rule> rules = null;
         assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, rules, Optional.empty())).block())
@@ -110,8 +108,8 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void definingRulesShouldKeepOrdering(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void definingRulesShouldKeepOrdering() {
+        FilteringManagement testee = instantiateFilteringManagement();
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
 
 
@@ -120,8 +118,8 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void definingEmptyRuleListShouldRemoveExistingRules(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void definingEmptyRuleListShouldRemoveExistingRules() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
         Mono.from(testee.clearRulesForUser(USERNAME)).block();
@@ -131,8 +129,8 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void allFieldsAndComparatorShouldWellBeStored(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void allFieldsAndComparatorShouldWellBeStored() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1)).block();
 
@@ -141,16 +139,16 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void setRulesWithEmptyVersionShouldSucceed(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void setRulesWithEmptyVersionShouldSucceed() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block())
             .isEqualTo(new Version(0));
     }
 
     @Test
-    default void modifyExistingRulesWithWrongCurrentVersionShouldFail(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void modifyExistingRulesWithWrongCurrentVersionShouldFail() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
 
@@ -159,8 +157,8 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void modifyExistingRulesWithRightVersionShouldSucceed(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void modifyExistingRulesWithRightVersionShouldSucceed() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
 
@@ -169,8 +167,8 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void givenARulesWithVersionIsOneThenUpdateRulesWithIfInStateIsOneShouldSucceed(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void givenARulesWithVersionIsOneThenUpdateRulesWithIfInStateIsOneShouldSucceed() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2)).block();
@@ -183,16 +181,16 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void setRulesWithEmptyIfInStateWhenNonStateIsDefinedShouldSucceed(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void setRulesWithEmptyIfInStateWhenNonStateIsDefinedShouldSucceed() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2)).block())
             .isEqualTo(new Version(0));
     }
 
     @Test
-    default void setRulesWithEmptyIfInStateWhenAStateIsDefinedShouldSucceed(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void setRulesWithEmptyIfInStateWhenAStateIsDefinedShouldSucceed() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2)).block();
 
@@ -201,16 +199,16 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void setRulesWithIfInStateIsInitialWhenNonStateIsDefinedShouldSucceed(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void setRulesWithIfInStateIsInitialWhenNonStateIsDefinedShouldSucceed() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         assertThat(Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(Version.INITIAL), RULE_3, RULE_2)).block())
             .isEqualTo(new Version(0));
     }
 
     @Test
-    default void setRulesWithIfInStateIsInitialWhenAStateIsDefinedShouldFail(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void setRulesWithIfInStateIsInitialWhenAStateIsDefinedShouldFail() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
 
@@ -222,24 +220,24 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void setRulesWithIfInStateIsOneWhenNonStateIsDefinedShouldFail(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void setRulesWithIfInStateIsOneWhenNonStateIsDefinedShouldFail() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         assertThatThrownBy(() -> Mono.from(testee.defineRulesForUser(USERNAME, Optional.of(new Version(1)), RULE_2, RULE_1)).block())
             .isInstanceOf(StateMismatchException.class);
     }
 
     @Test
-    default void getLatestVersionWhenNonVersionIsDefinedShouldReturnVersionInitial(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void getLatestVersionWhenNonVersionIsDefinedShouldReturnVersionInitial() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         assertThat(Mono.from(testee.getLatestVersion(USERNAME)).block())
             .isEqualTo(Version.INITIAL);
     }
 
     @Test
-    default void getLatestVersionAfterSetRulesFirstTimeShouldReturnVersionZero(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void getLatestVersionAfterSetRulesFirstTimeShouldReturnVersionZero() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
 
@@ -248,8 +246,8 @@ public interface FilteringManagementContract {
     }
 
     @Test
-    default void getLatestVersionAfterSetRulesNotSucceedShouldReturnOldVersion(EventStore eventStore) {
-        FilteringManagement testee = instantiateFilteringManagement(eventStore);
+    default void getLatestVersionAfterSetRulesNotSucceedShouldReturnOldVersion() {
+        FilteringManagement testee = instantiateFilteringManagement();
 
         Mono.from(testee.defineRulesForUser(USERNAME, Optional.empty(), RULE_3, RULE_2, RULE_1)).block();
         assertThat(Mono.from(testee.getLatestVersion(USERNAME)).block())

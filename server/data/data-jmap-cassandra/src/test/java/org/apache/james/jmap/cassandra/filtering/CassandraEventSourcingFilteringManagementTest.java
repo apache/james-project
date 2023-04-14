@@ -19,16 +19,38 @@
 
 package org.apache.james.jmap.cassandra.filtering;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule$;
+import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
+import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FilteringManagementContract;
+import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraEventSourcingFilteringManagementTest implements FilteringManagementContract {
     @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension =
-        new CassandraEventStoreExtension(JsonEventSerializer.forModules(
+    static CassandraClusterExtension eventStoreExtension = new CassandraClusterExtension(CassandraModule.aggregateModules(
+        CassandraEventStoreModule$.MODULE$.MODULE(),
+        CassandraFilteringProjectionModule.MODULE));
+
+    private EventStore eventStore;
+
+    @BeforeEach
+    void setUp() {
+        eventStore = new CassandraEventStore(new EventStoreDao(eventStoreExtension.getCassandraCluster().getConf(),
+            JsonEventSerializer.forModules(
                 FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED,
-                FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT)
-            .withoutNestedType());
+                FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT).withoutNestedType()));
+    }
+
+    @Override
+    public FilteringManagement instantiateFilteringManagement() {
+        return new EventSourcingFilteringManagement(eventStore,
+            new CassandraFilteringProjection(eventStoreExtension.getCassandraCluster().getConf()));
+    }
 }

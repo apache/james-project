@@ -125,6 +125,12 @@
                     <dd>Optional boolean. Prevent server side request forgery by preventing calls to the private network
                         ranges. Defaults to true, can be disabled for testing.
                     </dd>
+
+                    <dt><strong>cassandra.filter.projection.activated</strong></dt>
+                    <dd>Optional boolean. Defaults to false. Casandra backends only. Whether to use or not the Cassandra projection
+                        for JMAP filters. This projection optimizes reads, but needs to be correctly populated. Turning it on on
+                        systems with filters already defined would result in those filters to be not read.
+                    </dd>
                 </dl>
 
             </subsection>

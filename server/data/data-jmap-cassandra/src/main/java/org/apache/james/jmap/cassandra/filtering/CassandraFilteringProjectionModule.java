@@ -17,26 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.filtering.impl;
+package org.apache.james.jmap.cassandra.filtering;
 
-import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
-import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStoreExtension;
-import org.apache.james.jmap.api.filtering.FilteringManagement;
-import org.apache.james.jmap.api.filtering.FilteringManagementContract;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import static com.datastax.oss.driver.api.core.type.DataTypes.INT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.core.type.DataTypes.frozenListOf;
 
-public class InMemoryEventSourcingFilteringManagementTest implements FilteringManagementContract {
-    private EventStore eventStore;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 
-    @BeforeEach
-    void setUp() {
-        eventStore = new InMemoryEventStore();
-    }
+public interface CassandraFilteringProjectionModule {
+    String TABLE_NAME = "filters_projection";
 
-    @Override
-    public FilteringManagement instantiateFilteringManagement() {
-        return new EventSourcingFilteringManagement(eventStore);
-    }
+    String AGGREGATE_ID = "aggregate_id";
+    String EVENT_ID = "event_id";
+    String RULES = "rules";
+
+    CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
+        .comment("Holds read projection for the event sourcing system managing JMAP filters.")
+        .statement(statement -> types -> statement
+            .withPartitionKey(AGGREGATE_ID, TEXT)
+            .withColumn(EVENT_ID, INT)
+            .withColumn(RULES, TEXT))
+        .build();
 }
