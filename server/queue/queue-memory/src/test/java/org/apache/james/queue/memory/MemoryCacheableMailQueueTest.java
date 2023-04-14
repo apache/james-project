@@ -22,6 +22,8 @@ package org.apache.james.queue.memory;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
+
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueName;
@@ -37,7 +39,7 @@ public class MemoryCacheableMailQueueTest implements DelayedManageableMailQueueC
 
     @BeforeEach
     public void setUp() {
-        mailQueue = new MemoryMailQueueFactory.MemoryCacheableMailQueue(MailQueueName.of("test"), new RawMailQueueItemDecoratorFactory());
+        mailQueue = new MemoryMailQueueFactory.MemoryCacheableMailQueue(MailQueueName.of("test"), new RawMailQueueItemDecoratorFactory(), Clock.systemUTC());
     }
 
     @AfterEach
