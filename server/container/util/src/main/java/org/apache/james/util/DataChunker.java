@@ -19,17 +19,12 @@
 
 package org.apache.james.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
-
-import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public class DataChunker {
 
@@ -53,27 +48,5 @@ public class DataChunker {
             return Mono.empty();
         }
         return Mono.just(ByteBuffer.wrap(data, offset, data.length - offset));
-    }
-
-    public static Flux<ByteBuffer> chunkStream(InputStream data, int chunkSize) {
-        Preconditions.checkNotNull(data);
-        Preconditions.checkArgument(chunkSize > 0, CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE);
-        UnsynchronizedBufferedInputStream bufferedInputStream = new UnsynchronizedBufferedInputStream(data);
-        return Flux.<ByteBuffer>generate(sink -> {
-                try {
-                    byte[] buffer = new byte[chunkSize];
-
-                    int size = bufferedInputStream.read(buffer);
-                    if (size <= 0) {
-                        sink.complete();
-                    } else {
-                        sink.next(ByteBuffer.wrap(buffer, 0, size));
-                    }
-                } catch (IOException e) {
-                    sink.error(e);
-                }
-            })
-            .subscribeOn(Schedulers.boundedElastic())
-            .defaultIfEmpty(ByteBuffer.wrap(new byte[0]));
     }
 }

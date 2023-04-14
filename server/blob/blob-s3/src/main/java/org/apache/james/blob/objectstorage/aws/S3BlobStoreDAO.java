@@ -44,7 +44,6 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.util.DataChunker;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
@@ -330,7 +329,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         if (chunkSize == 0) {
             return Flux.empty();
         }
-        return DataChunker.chunkStream(stream, chunkSize);
+        return ReactorUtils.toChunks(stream, chunkSize)
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     private RetryBackoffSpec createBucketOnRetry(BucketName bucketName) {
