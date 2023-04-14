@@ -60,10 +60,10 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
     @Override
     public Publisher<Version> defineRulesForUser(Username username, List<Rule> rules, Optional<Version> ifInState) {
         return Mono.from(eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules, ifInState)))
-            .then(Mono.from(eventStore.getEventsOfAggregate(new FilteringAggregateId(username)))
-                .map(History::getVersionAsJava)
-                .map(eventIdOptional -> eventIdOptional.map(eventId -> new Version(eventId.value()))
-                    .orElse(Version.INITIAL)));
+            .map(events -> Version.from(events.stream()
+                .map(Event::eventId)
+                .sorted(Comparator.reverseOrder())
+                .findFirst()));
     }
 
     @Override

@@ -20,11 +20,20 @@
 package org.apache.james.jmap.api.filtering;
 
 import java.util.Objects;
+import java.util.Optional;
+
+import org.apache.james.eventsourcing.EventId;
 
 import com.google.common.base.MoreObjects;
 
 public class Version {
     public static final Version INITIAL = new Version(-1);
+
+    public static Version from(Optional<EventId> eventId) {
+        return eventId.map(EventId::value)
+            .map(Version::new)
+            .orElse(Version.INITIAL);
+    }
 
     private final int version;
 
