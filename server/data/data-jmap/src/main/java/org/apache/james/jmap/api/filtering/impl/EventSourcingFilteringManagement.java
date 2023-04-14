@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventSourcingSystem;
+import org.apache.james.eventsourcing.ReactiveSubscriber;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.History;
@@ -49,7 +50,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
 
         Publisher<Version> getLatestVersion(Username username);
 
-        Optional<Subscriber> subscriber();
+        Optional<ReactiveSubscriber> subscriber();
     }
 
     public static class NoReadProjection implements ReadProjection {
@@ -84,7 +85,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
         }
 
         @Override
-        public Optional<Subscriber> subscriber() {
+        public Optional<ReactiveSubscriber> subscriber() {
             return Optional.empty();
         }
     }
@@ -103,7 +104,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
         this.readProjection = new NoReadProjection(eventStore);
         this.eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(new DefineRulesCommandHandler(eventStore)),
-            readProjection.subscriber().map(ImmutableSet::of).orElse(NO_SUBSCRIBER),
+            readProjection.subscriber().map(Subscriber.class::cast).map(ImmutableSet::of).orElse(NO_SUBSCRIBER),
             eventStore);
     }
 

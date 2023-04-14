@@ -17,25 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.filtering;
+package org.apache.james.webadmin.data.jmap;
 
-import static com.datastax.oss.driver.api.core.type.DataTypes.INT;
-import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import java.time.Instant;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.util.ClassLoaderUtils;
+import org.junit.jupiter.api.Test;
 
-public interface CassandraFilteringProjectionModule {
-    String TABLE_NAME = "filters_projection";
+class PopulateFilteringProjectionItemsTaskAdditionalInformationDTOTest {
+    private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
+    private static final PopulateFilteringProjectionTask.AdditionalInformation DOMAIN_OBJECT = new PopulateFilteringProjectionTask.AdditionalInformation(
+        1,
+        2,
+        INSTANT);
 
-    String AGGREGATE_ID = "aggregate_id";
-    String EVENT_ID = "event_id";
-    String RULES = "rules";
-
-    CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
-        .comment("Holds read projection for the event sourcing system managing JMAP filters.")
-        .statement(statement -> types -> statement
-            .withPartitionKey(AGGREGATE_ID, TEXT)
-            .withColumn(EVENT_ID, INT)
-            .withColumn(RULES, TEXT))
-        .build();
+    @Test
+    void shouldMatchJsonSerializationContract() throws Exception {
+        JsonSerializationVerifier.dtoModule(PopulateFilteringProjectionTaskAdditionalInformationDTO.module())
+            .bean(DOMAIN_OBJECT)
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/populateFilters.additionalInformation.json"))
+            .verify();
+    }
 }

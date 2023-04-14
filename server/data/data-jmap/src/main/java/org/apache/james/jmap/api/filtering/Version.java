@@ -69,4 +69,11 @@ public class Version {
     public int asInteger() {
         return version;
     }
+
+    public Optional<EventId> asEventId() {
+        if (version == -1) {
+            return Optional.empty();
+        }
+        return Optional.of(EventId.apply(version));
+    }
 }

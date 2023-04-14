@@ -24,4 +24,5 @@ import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 public interface Constants {
     TaskRegistrationKey TASK_REGISTRATION_KEY = TaskRegistrationKey.of("recomputeFastViewProjectionItems");
     TaskRegistrationKey POPULATE_EMAIL_QUERY_VIEW = TaskRegistrationKey.of("populateEmailQueryView");
+    TaskRegistrationKey POPULATE_FILTERING_PROJECTION = TaskRegistrationKey.of("populateFilteringProjection");
 }

@@ -82,6 +82,7 @@ public class CassandraJmapModule extends AbstractModule {
         bind(CustomIdentityDAO.class).to(CassandraCustomIdentityDAO.class);
 
         bind(CassandraFilteringProjection.class).in(Scopes.SINGLETON);
+        bind(EventSourcingFilteringManagement.ReadProjection.class).to(CassandraFilteringProjection.class);
 
         bind(CassandraPushSubscriptionRepository.class).in(Scopes.SINGLETON);
         bind(PushSubscriptionRepository.class).to(CassandraPushSubscriptionRepository.class);

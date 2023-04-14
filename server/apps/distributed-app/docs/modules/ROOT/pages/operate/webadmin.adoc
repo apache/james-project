@@ -1044,6 +1044,37 @@ Response codes:
 * 201: Success. Corresponding task id is returned.
 * 400: Error in the request. Details can be found in the reported error.
 
+==== Recomputing Cassandra filtering projection
+
+You can force the reset of the Cassandra filtering projection by calling the following
+endpoint:
+
+....
+curl -XPOST /mailboxes?task=populateFilteringProjection
+....
+
+Will schedule a task.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+The scheduled task will have the following type
+`PopulateFilteringProjectionTask` and the following
+`additionalInformation`:
+
+....
+{
+  "type":"RecomputeAllPreviewsTask",
+  "processedUserCount": 3,
+  "failedUserCount": 2
+}
+....
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
 ==== ReIndexing action
 
 Be also aware of the limits of this API:
