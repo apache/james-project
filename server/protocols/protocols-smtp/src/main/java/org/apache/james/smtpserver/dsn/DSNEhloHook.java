@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class DSNEhloHook implements HeloHook {
     @Override
-    public Set<String> implementedEsmtpFeatures() {
+    public Set<String> implementedEsmtpFeatures(SMTPSession session) {
         return ImmutableSet.of("DSN");
     }
 
