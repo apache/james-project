@@ -17,31 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.smtp.hook;
+package org.apache.james.smtpserver.futurerelease;
 
-import java.util.Set;
+import org.junit.jupiter.api.Test;
 
-import org.apache.james.protocols.smtp.SMTPSession;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-import com.google.common.collect.ImmutableSet;
-
-/**
- * Implement this interfaces to hook in the HELO Command
- */
-public interface HeloHook extends Hook {
-    /**
-     * @return ESMTP extensions to be advertised as part of EHLO answers
-     */
-    default Set<String> implementedEsmtpFeatures(SMTPSession session) {
-        return ImmutableSet.of();
+class FutureReleaseParametersTest {
+    @Test
+    void testEqualsVerifiersForHoldForClass() {
+        EqualsVerifier.forClass(FutureReleaseParameters.HoldFor.class).verify();
     }
-
-    /**
-     * Return the HookResult after run the hook
-     * 
-     * @param session the SMTPSession
-     * @param helo the helo name
-     * @return HockResult
-     */
-    HookResult doHelo(SMTPSession session, String helo);
 }

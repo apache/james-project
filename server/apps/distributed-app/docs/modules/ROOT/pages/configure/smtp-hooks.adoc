@@ -302,3 +302,18 @@ Example configuration:
     <handler class="org.apache.james.smtpserver.fastfail.ValidSenderDomainHandler"/>
 </handlerchain>
 ....
+
+== FUTURERELEASE hooks
+
+The Distributed server has optional support for FUTURERELEASE (link:https://www.rfc-editor.org/rfc/rfc4865.html[RFC-4865])
+
+....
+<smtpserver enabled="true">
+    <...> <!-- The rest of your SMTP configuration, unchanged -->
+    <handlerchain>
+        <handler class="org.apache.james.smtpserver.futurerelease.FutureReleaseEHLOHook"/>
+        <handler class="org.apache.james.smtpserver.futurerelease.FutureReleaseMailParameterHook"/>
+        <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    </handlerchain>
+</smtpserver>
+....

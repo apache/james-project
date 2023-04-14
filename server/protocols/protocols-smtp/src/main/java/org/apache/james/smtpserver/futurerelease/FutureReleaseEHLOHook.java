@@ -16,32 +16,48 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.smtpserver.futurerelease;
 
-package org.apache.james.protocols.smtp.hook;
+import static org.apache.james.smtpserver.futurerelease.FutureReleaseParameters.MAX_HOLD_FOR_SUPPORTED;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.hook.HeloHook;
+import org.apache.james.protocols.smtp.hook.HookResult;
 
 import com.google.common.collect.ImmutableSet;
 
-/**
- * Implement this interfaces to hook in the HELO Command
- */
-public interface HeloHook extends Hook {
-    /**
-     * @return ESMTP extensions to be advertised as part of EHLO answers
-     */
-    default Set<String> implementedEsmtpFeatures(SMTPSession session) {
+public class FutureReleaseEHLOHook implements HeloHook {
+    private final Clock clock;
+
+    @Inject
+    public FutureReleaseEHLOHook(Clock clock) {
+        this.clock = clock;
+    }
+
+    @Override
+    public Set<String> implementedEsmtpFeatures(SMTPSession session) {
+        if (session.getUsername() != null) {
+            Instant now = LocalDateTime.now(clock).toInstant(ZoneOffset.UTC);
+            String dateAsString = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")).format(now.plus(MAX_HOLD_FOR_SUPPORTED));
+
+            return ImmutableSet.of("FUTURERELEASE " + MAX_HOLD_FOR_SUPPORTED.toSeconds() + " " + dateAsString);
+        }
         return ImmutableSet.of();
     }
 
-    /**
-     * Return the HookResult after run the hook
-     * 
-     * @param session the SMTPSession
-     * @param helo the helo name
-     * @return HockResult
-     */
-    HookResult doHelo(SMTPSession session, String helo);
+    @Override
+    public HookResult doHelo(SMTPSession session, String helo) {
+        return HookResult.DECLINED;
+    }
 }
+

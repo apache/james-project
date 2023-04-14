@@ -19,22 +19,29 @@
 
 package org.apache.james.smtpserver;
 
+import static org.apache.james.smtpserver.futurerelease.FutureReleaseMailParameterHook.FUTURERELEASE_HOLDFOR;
+
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.smtpserver.futurerelease.FutureReleaseParameters;
 import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * Queue the message
@@ -72,12 +79,25 @@ public class SendMailHandler implements JamesMessageHook {
         LOGGER.debug("sending mail");
 
         try (Closeable closeable = MDCBuilder.ofValue("messageId", mail.getMessage().getMessageID()).build()) {
-            queue.enQueue(mail);
-            LOGGER.info("Successfully spooled mail {} with messageId {} from {} on {} for {}", mail.getName(),
-                mail.getMessage().getMessageID(),
-                mail.getMaybeSender().asString(),
-                session.getRemoteAddress().getAddress(),
-                mail.getRecipients());
+            Optional<FutureReleaseParameters.HoldFor> delays = session.getAttachment(FUTURERELEASE_HOLDFOR, ProtocolSession.State.Transaction);
+
+            delays.ifPresentOrElse(Throwing.consumer(holdFor -> {
+                    queue.enQueue(mail, holdFor.value());
+                    LOGGER.info("Successfully spooled mail {} with messageId {} from {} on {} for {} with delay {}", mail.getName(),
+                        mail.getMessage().getMessageID(),
+                        mail.getMaybeSender().asString(),
+                        session.getRemoteAddress().getAddress(),
+                        mail.getRecipients(),
+                        holdFor.value());
+                }),
+                Throwing.runnable(() -> {
+                    queue.enQueue(mail);
+                    LOGGER.info("Successfully spooled mail {} with messageId {} from {} on {} for {}", mail.getName(),
+                        mail.getMessage().getMessageID(),
+                        mail.getMaybeSender().asString(),
+                        session.getRemoteAddress().getAddress(),
+                        mail.getRecipients());
+                }));
         } catch (Exception me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
             return HookResult.builder()
