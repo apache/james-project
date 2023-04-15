@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Optional;
@@ -71,6 +72,122 @@ public class TasksRoutes implements Routes {
         @Override
         public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
             return stream.filter(taskExecutionDetails -> taskExecutionDetails.getType().equals(taskType));
+        }
+    }
+
+    static class SubmittedBeforeTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public SubmittedBeforeTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getSubmittedDate().isBefore(time));
+        }
+    }
+
+    static class StartedBeforeTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public StartedBeforeTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getStartedDate()
+                .map(started -> started.isBefore(time))
+                .orElse(false));
+        }
+    }
+
+    static class FailedBeforeTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public FailedBeforeTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getFailedDate()
+                .map(started -> started.isBefore(time))
+                .orElse(false));
+        }
+    }
+
+    static class CompetedBeforeTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public CompetedBeforeTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getCompletedDate()
+                .map(started -> started.isBefore(time))
+                .orElse(false));
+        }
+    }
+
+    static class SubmittedAfterTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public SubmittedAfterTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getSubmittedDate().isAfter(time));
+        }
+    }
+
+    static class StartedAfterTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public StartedAfterTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getStartedDate()
+                .map(started -> started.isAfter(time))
+                .orElse(false));
+        }
+    }
+
+    static class FailedAfterTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public FailedAfterTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getFailedDate()
+                .map(started -> started.isAfter(time))
+                .orElse(false));
+        }
+    }
+
+    static class CompetedAfterTaskListTransformation implements TaskListTransformation {
+        private final ZonedDateTime time;
+
+        public CompetedAfterTaskListTransformation(ZonedDateTime time) {
+            this.time = time;
+        }
+
+        @Override
+        public Stream<TaskExecutionDetails> apply(Stream<TaskExecutionDetails> stream) {
+            return stream.filter(taskExecutionDetails -> taskExecutionDetails.getCompletedDate()
+                .map(started -> started.isAfter(time))
+                .orElse(false));
         }
     }
 
@@ -157,9 +274,25 @@ public class TasksRoutes implements Routes {
 
     Stream<TaskListTransformation> taskListTransformations(Request req) {
         return Stream.of(Optional.ofNullable(req.queryParams("type")).map(TaskType::of).map(TypeTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("failedBefore")).map(this::parseDate).map(FailedBeforeTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("failedAfter")).map(this::parseDate).map(FailedAfterTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("completedBefore")).map(this::parseDate).map(CompetedBeforeTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("completedAfter")).map(this::parseDate).map(CompetedAfterTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("startedBefore")).map(this::parseDate).map(StartedBeforeTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("startedAfter")).map(this::parseDate).map(StartedAfterTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("submittedBefore")).map(this::parseDate).map(SubmittedBeforeTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("submittedAfter")).map(this::parseDate).map(SubmittedAfterTaskListTransformation::new),
             Optional.ofNullable(req.queryParams("offset")).map(Integer::valueOf).map(OffsetTaskListTransformation::new),
             Optional.ofNullable(req.queryParams("limit")).map(Integer::valueOf).map(LimitTaskListTransformation::new))
             .flatMap(Optional::stream);
+    }
+
+    private ZonedDateTime parseDate(String s) {
+        try {
+            return ZonedDateTime.parse(s);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     public Object getStatus(Request req, Response response) {

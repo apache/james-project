@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
@@ -30,6 +31,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.oneOf;
 
+import java.time.ZonedDateTime;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
@@ -49,6 +51,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.restassured.RestAssured;
 
@@ -478,5 +482,234 @@ class TasksRoutesTest {
             .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
             .body("type", is("InvalidArgument"))
             .body("message", is("Invalid status query parameter"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"failedBefore", "failedAfter", "startedBefore", "startedAfter", "completedBefore",
+        "completedAfter", "submittedBefore", "submittedAfter"})
+    void listShouldRejectInvalidDateParameter(String paramName) {
+        given()
+            .param(paramName, "invalid")
+            .get()
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+            .body("type", is("InvalidArgument"))
+            .body("message", is("Invalid status query parameter"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"failedBefore", "failedAfter", "startedBefore", "startedAfter", "completedBefore",
+        "completedAfter", "submittedBefore", "submittedAfter"})
+    void listShouldAcceptValidDateParameter(String paramName) {
+        given()
+            .param(paramName, ZonedDateTime.now().toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
+    void getTasksShouldFilterWhenSubmitBefore() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(1);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(1);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(1);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(1);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(1);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(1);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("submittedBefore", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId2.asString(), taskId1.asString()));
+    }
+
+    @Test
+    void getTasksShouldFilterWhenSubmitAfter() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(1);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(1);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(1);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(1);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(1);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(1);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("submittedAfter", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId3.asString()));
+    }
+
+    @Test
+    void getTasksShouldFilterWhenCompletedBefore() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("completedBefore", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId2.asString(), taskId1.asString()));
+    }
+
+    @Test
+    void getTasksShouldFilterWhenCompletedAfter() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("completedAfter", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId3.asString()));
+    }
+
+    @Test
+    void getTasksShouldFilterWhenFailedBefore() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("failedBefore", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId2.asString(), taskId1.asString()));
+    }
+
+    @Test
+    void getTasksShouldFilterWhenFailedAfter() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("failedAfter", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId3.asString()));
+    }
+
+    @Test
+    void getTasksShouldFilterWhenStartedBefore() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("startedBefore", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId2.asString(), taskId1.asString()));
+    }
+
+    @Test
+    void getTasksShouldFilterWhenStartedAfter() throws Exception {
+        ZonedDateTime t1 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId1 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t2 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId2 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Thread.sleep(100);
+        ZonedDateTime t3 = ZonedDateTime.now();
+        Thread.sleep(100);
+        TaskId taskId3 = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.PARTIAL));
+        Thread.sleep(100);
+        ZonedDateTime t4 = ZonedDateTime.now();
+
+        given()
+            .param("startedAfter", t3.toString())
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("taskId", contains(taskId3.asString()));
     }
 }
