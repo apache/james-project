@@ -92,12 +92,13 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true jacoco:report-aggregate@jacoco-report'
             }
             post {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+                    archiveArtifacts artifacts: 'code-coverage-report/target/jacoco/**/*' , fingerprint: true, allowEmptyArchive: true
                 }
                 failure {
                     archiveArtifacts artifacts: '**/target/test-run.log' , fingerprint: true

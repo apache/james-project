@@ -535,6 +535,7 @@
 
     <modules>
         <module>backends-common</module>
+        <module>code-coverage-report</module>
         <module>core</module>
         <module>event-bus</module>
         <module>event-sourcing</module>
@@ -661,6 +662,7 @@
         <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
         <mockito.version>4.8.0</mockito.version>
+        <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -3321,7 +3323,9 @@
                             <james.lifecycle.leak.detection.mode>NONE</james.lifecycle.leak.detection.mode>
                             <james.exit.on.startup.error>false</james.exit.on.startup.error>
                         </systemPropertyVariables>
-                        <argLine>-Xms512m -Xmx1024m</argLine>
+                        <argLine>-Djava.library.path=
+                            -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
+                            -Xms512m -Xmx1024m</argLine>
                         <reuseForks>true</reuseForks>
                         <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                         <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
@@ -3489,6 +3493,23 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <destFile>${basedir}/target/jacoco.exec</destFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>com.github.ekryd.sortpom</groupId>
                 <artifactId>sortpom-maven-plugin</artifactId>

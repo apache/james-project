@@ -182,7 +182,9 @@
                         <!--https://netty.io/wiki/reference-counted-objects.html#best-practices-to-avoid-leaks -->
                         <io.netty.leakDetection.level>PARANOID</io.netty.leakDetection.level>
                     </systemPropertyVariables>
-                    <argLine>-Xms512m -Xmx1024m</argLine>
+                    <argLine>-Djava.library.path=
+                        -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
+                        -Xms512m -Xmx1024m</argLine>
                     <reuseForks>true</reuseForks>
                     <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
                     <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
