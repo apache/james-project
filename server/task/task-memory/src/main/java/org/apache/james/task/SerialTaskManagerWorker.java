@@ -123,7 +123,12 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
             .delayElement(pollingInterval, Schedulers.parallel())
             .repeat()
             .handle(publishIfPresent())
-            .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), Mono.just(information))).thenReturn(information), DEFAULT_CONCURRENCY);
+            .flatMap(information -> Mono.from(listener.updated(taskWithId.getId(), Mono.just(information)))
+                .thenReturn(information)
+                .onErrorResume(e -> {
+                    LOGGER.error("Error upon polling additional information updates", e);
+                    return Mono.empty();
+                }), DEFAULT_CONCURRENCY);
     }
 
 
