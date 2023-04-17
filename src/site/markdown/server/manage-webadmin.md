@@ -4361,7 +4361,7 @@ Additionnal optional task parameters are supported:
 - `completedBefore`: Date. Returns only tasks completed before this date.
 - `completedAfter`: Date. Returns only tasks completed after this date.
 - `failedBefore`: Date. Returns only tasks failed before this date.
-- `faieldAfter`: Date. Returns only tasks faield after this date.
+- `failedAfter`: Date. Returns only tasks faield after this date.
  - `offset`: Integer, number of tasks to skip in the response. Useful for paging.
  - `limit`: Integer, maximum number of tasks to return in one call
  

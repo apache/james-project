@@ -118,10 +118,10 @@ public class TasksRoutes implements Routes {
         }
     }
 
-    static class CompetedBeforeTaskListTransformation implements TaskListTransformation {
+    static class CompletedBeforeTaskListTransformation implements TaskListTransformation {
         private final ZonedDateTime time;
 
-        public CompetedBeforeTaskListTransformation(ZonedDateTime time) {
+        public CompletedBeforeTaskListTransformation(ZonedDateTime time) {
             this.time = time;
         }
 
@@ -176,10 +176,10 @@ public class TasksRoutes implements Routes {
         }
     }
 
-    static class CompetedAfterTaskListTransformation implements TaskListTransformation {
+    static class CompletedAfterTaskListTransformation implements TaskListTransformation {
         private final ZonedDateTime time;
 
-        public CompetedAfterTaskListTransformation(ZonedDateTime time) {
+        public CompletedAfterTaskListTransformation(ZonedDateTime time) {
             this.time = time;
         }
 
@@ -276,8 +276,8 @@ public class TasksRoutes implements Routes {
         return Stream.of(Optional.ofNullable(req.queryParams("type")).map(TaskType::of).map(TypeTaskListTransformation::new),
             Optional.ofNullable(req.queryParams("failedBefore")).map(this::parseDate).map(FailedBeforeTaskListTransformation::new),
             Optional.ofNullable(req.queryParams("failedAfter")).map(this::parseDate).map(FailedAfterTaskListTransformation::new),
-            Optional.ofNullable(req.queryParams("completedBefore")).map(this::parseDate).map(CompetedBeforeTaskListTransformation::new),
-            Optional.ofNullable(req.queryParams("completedAfter")).map(this::parseDate).map(CompetedAfterTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("completedBefore")).map(this::parseDate).map(CompletedBeforeTaskListTransformation::new),
+            Optional.ofNullable(req.queryParams("completedAfter")).map(this::parseDate).map(CompletedAfterTaskListTransformation::new),
             Optional.ofNullable(req.queryParams("startedBefore")).map(this::parseDate).map(StartedBeforeTaskListTransformation::new),
             Optional.ofNullable(req.queryParams("startedAfter")).map(this::parseDate).map(StartedAfterTaskListTransformation::new),
             Optional.ofNullable(req.queryParams("submittedBefore")).map(this::parseDate).map(SubmittedBeforeTaskListTransformation::new),
