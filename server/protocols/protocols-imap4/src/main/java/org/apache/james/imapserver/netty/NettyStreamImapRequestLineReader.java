@@ -30,7 +30,6 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.message.Literal;
 import org.apache.james.imap.utils.EolInputStream;
-import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.io.ByteStreams;
@@ -88,7 +87,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         super(channel, retry);
         this.backingFile = file;
         try {
-            this.in = new CountingInputStream(new UnsynchronizedBufferedInputStream(new FileInputStream(file)));
+            this.in = new CountingInputStream(new FileInputStream(file));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
