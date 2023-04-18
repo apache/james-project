@@ -25,6 +25,7 @@ public interface RuleFixture {
     Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
     Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).condition(CONDITION).action(ACTION);
     Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
+    Rule RULE_1_MODIFIED = RULE_BUILDER.id(Rule.Id.of("1")).name("newname").build();
     Rule RULE_2 = RULE_BUILDER.id(Rule.Id.of("2")).build();
     Rule RULE_3 = RULE_BUILDER.id(Rule.Id.of("3")).build();
 
