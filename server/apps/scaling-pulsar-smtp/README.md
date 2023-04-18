@@ -41,7 +41,7 @@ For security reasons you are required to generate your own keystore, that you ca
 
 ```
 keytool -genkey -alias james -keyalg RSA -keystore keystore
-docker run -v $PWD/keystore:/root/conf/keystore docker run apache/james:scaling-pulsar-smtp-latest
+docker run -v $PWD/keystore:/root/conf/keystore apache/james:scaling-pulsar-smtp-latest
 ```
 
 Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags) 
