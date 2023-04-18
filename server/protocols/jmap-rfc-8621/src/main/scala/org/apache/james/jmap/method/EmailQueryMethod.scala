@@ -101,6 +101,8 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
         queryViewForListingSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
       case request: EmailQueryRequest if matchesInMailboxAfterSortedByReceivedAt(request) =>
         queryViewForContentAfterSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
+      case request: EmailQueryRequest if matchesInMailboxBeforeSortedByReceivedAt(request) =>
+        queryViewForContentBeforeSortedByReceivedAt(session, position, limit, request, searchQuery.getNamespace)
       case _ => executeQueryAgainstSearchIndex(session, searchQuery, position, limit)
     }
 
@@ -122,6 +124,15 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
     val mailboxId: MailboxId = condition.inMailbox.get
     val after: ZonedDateTime = condition.after.get.asUTC
     val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryView.listMailboxContentSinceAfterSortedByReceivedAt(mailboxId, after, JavaLimit.from(limitToUse.value + position.value)))
+
+    fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
+  }
+
+  private def queryViewForContentBeforeSortedByReceivedAt(mailboxSession: MailboxSession, position: Position, limitToUse: Limit, request: EmailQueryRequest, namespace: Namespace): SMono[Seq[MessageId]] = {
+    val condition: FilterCondition = request.filter.get.asInstanceOf[FilterCondition]
+    val mailboxId: MailboxId = condition.inMailbox.get
+    val before: ZonedDateTime = condition.before.get.asUTC
+    val queryViewEntries: SFlux[MessageId] = SFlux.fromPublisher(emailQueryView.listMailboxContentBeforeSortedByReceivedAt(mailboxId, before, JavaLimit.from(limitToUse.value + position.value)))
 
     fromQueryViewEntries(mailboxId, queryViewEntries, mailboxSession, position, limitToUse, namespace)
   }
@@ -171,6 +182,11 @@ class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
   private def matchesInMailboxAfterSortedByReceivedAt(request: EmailQueryRequest): Boolean =
     configuration.isEmailQueryViewEnabled &&
       request.filter.exists(_.inMailboxAndAfterFilterOnly) &&
+      request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
+
+  private def matchesInMailboxBeforeSortedByReceivedAt(request: EmailQueryRequest): Boolean =
+    configuration.isEmailQueryViewEnabled &&
+      request.filter.exists(_.inMailboxAndBeforeFilterOnly) &&
       request.sort.contains(Set(Comparator.RECEIVED_AT_DESC))
 
   private def toResponse(request: EmailQueryRequest, position: Position, limitToUse: Limit, ids: Seq[MessageId]): EmailQueryResponse =

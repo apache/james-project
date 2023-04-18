@@ -41,6 +41,8 @@ sealed trait FilterQuery {
 
   def inMailboxAndAfterFilterOnly: Boolean
 
+  def inMailboxAndBeforeFilterOnly: Boolean
+
   def countNestedMailboxFilter: Int
 
   def countMailboxFilter: Int
@@ -56,6 +58,8 @@ case class FilterOperator(operator: Operator,
   override val inMailboxFilterOnly: Boolean = false
 
   override val inMailboxAndAfterFilterOnly: Boolean = false
+
+  override val inMailboxAndBeforeFilterOnly: Boolean = false
 
   override def countNestedMailboxFilter: Int = conditions.map(_.countNestedMailboxFilter).sum
 
@@ -102,9 +106,8 @@ case class FilterCondition(inMailbox: Option[MailboxId],
                            subject: Option[Subject],
                            header: Option[Header],
                            body: Option[Body]) extends FilterQuery {
-  private val noOtherFiltersThanInMailboxAndAfter: Boolean = inMailboxOtherThan.isEmpty &&
-    before.isEmpty &&
-    hasKeyword.isEmpty &&
+
+  private val emailQueryViewInvalidCriteria: Boolean = hasKeyword.isEmpty &&
     notKeyword.isEmpty &&
     minSize.isEmpty &&
     maxSize.isEmpty &&
@@ -121,14 +124,25 @@ case class FilterCondition(inMailbox: Option[MailboxId],
     header.isEmpty &&
     body.isEmpty
 
+  private val noOtherFiltersThanInMailboxAndAfter: Boolean = inMailboxOtherThan.isEmpty &&
+    before.isEmpty &&
+    emailQueryViewInvalidCriteria
+
+  private val noOtherFiltersThanInMailboxAndBefore: Boolean = inMailboxOtherThan.isEmpty &&
+    after.isEmpty &&
+    emailQueryViewInvalidCriteria
+
   override val inMailboxFilterOnly: Boolean = inMailbox.nonEmpty &&
     after.isEmpty &&
     noOtherFiltersThanInMailboxAndAfter
 
-
   override val inMailboxAndAfterFilterOnly: Boolean = inMailbox.nonEmpty &&
     after.nonEmpty &&
     noOtherFiltersThanInMailboxAndAfter
+
+  override val inMailboxAndBeforeFilterOnly: Boolean = inMailbox.nonEmpty &&
+    before.nonEmpty &&
+    noOtherFiltersThanInMailboxAndBefore
 
   override def countNestedMailboxFilter: Int = countMailboxFilter
 
