@@ -114,6 +114,28 @@ class MessageToOpenSearchJsonTest {
     }
 
     @Test
+    void badContentDescriptionShouldStillBeIndexed() throws IOException {
+        MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
+        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
+                date,
+                SIZE,
+                BODY_START_OCTET,
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/james-3901.eml"))),
+                new Flags(),
+                propertyBuilder.build(),
+                MAILBOX_ID);
+        spamMail.setUid(UID);
+        spamMail.setModSeq(MOD_SEQ);
+
+        assertThatJson(messageToOpenSearchJson.convertToJson(spamMail).block())
+            .when(IGNORING_ARRAY_ORDER)
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/james-3901.json"));
+    }
+
+    @Test
     void spamEmailShouldBeWellConvertedToJsonWhenNoHeaders() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),
