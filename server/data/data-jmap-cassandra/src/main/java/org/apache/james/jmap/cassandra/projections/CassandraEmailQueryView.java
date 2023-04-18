@@ -65,6 +65,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     private final PreparedStatement listMailboxContentByReceivedAt;
     private final PreparedStatement listMailboxContentSinceSentAt;
     private final PreparedStatement listMailboxContentSinceReceivedAt;
+    private final PreparedStatement listMailboxContentBeforeReceivedAt;
     private final PreparedStatement insertInLookupTable;
     private final PreparedStatement insertReceivedAt;
     private final PreparedStatement insertSentAt;
@@ -106,6 +107,13 @@ public class CassandraEmailQueryView implements EmailQueryView {
             .columns(MESSAGE_ID, SENT_AT)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .whereColumn(RECEIVED_AT).isGreaterThanOrEqualTo(bindMarker(RECEIVED_AT))
+            .orderBy(RECEIVED_AT, DESC)
+            .build());
+
+        listMailboxContentBeforeReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
+            .columns(MESSAGE_ID, SENT_AT)
+            .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
+            .whereColumn(RECEIVED_AT).isLessThanOrEqualTo(bindMarker(RECEIVED_AT))
             .orderBy(RECEIVED_AT, DESC)
             .build());
 
@@ -214,6 +222,19 @@ public class CassandraEmailQueryView implements EmailQueryView {
         CassandraId cassandraId = (CassandraId) mailboxId;
 
         return executor.executeRows(listMailboxContentSinceReceivedAt.bind()
+            .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
+            .setInstant(RECEIVED_AT, since.toInstant()))
+            .<MessageId>map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)))
+            .take(limit.getLimit().get());
+    }
+
+    @Override
+    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
+        Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
+
+        CassandraId cassandraId = (CassandraId) mailboxId;
+
+        return executor.executeRows(listMailboxContentBeforeReceivedAt.bind()
             .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
             .setInstant(RECEIVED_AT, since.toInstant()))
             .<MessageId>map(row -> CassandraMessageId.Factory.of(row.get(0, TypeCodecs.UUID)))

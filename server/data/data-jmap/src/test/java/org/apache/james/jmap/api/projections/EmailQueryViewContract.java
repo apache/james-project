@@ -248,6 +248,16 @@ public interface EmailQueryViewContract {
     }
 
     @Test
+    default void listMailboxContentBeforeSortedByReceivedAtShouldBeSortedByReceivedAt() {
+        testee().save(mailboxId1(), DATE_1, DATE_4, messageId1()).block();
+        testee().save(mailboxId1(), DATE_2, DATE_3, messageId2()).block();
+        testee().save(mailboxId1(), DATE_5, DATE_6, messageId3()).block();
+
+        assertThat(testee().listMailboxContentBeforeSortedByReceivedAt(mailboxId1(), DATE_4, Limit.limit(12)).collectList().block())
+            .containsExactly(messageId1(), messageId2());
+    }
+
+    @Test
     default void clearShouldNotFailWhenEmpty() {
         assertThatCode(() -> testee().delete(mailboxId1()).block()).doesNotThrowAnyException();
     }
