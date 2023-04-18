@@ -26,7 +26,7 @@
         <relativePath>..</relativePath>
     </parent>
     <artifactId>apache-james-mpt-all</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <name>Apache James :: MPT :: All</name>
 
     <description>This module assembles distributions 
