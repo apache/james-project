@@ -10,6 +10,7 @@
     <artifactId>code-coverage-report</artifactId>
     <name>Apache James :: Code Coverage Report</name>
     <description>Generate code coverage report for Apache James</description>
+    <packaging>pom</packaging>
 
     <dependencies>
         <!--        Parent dependencies are in pom package type, can not directly declare as jar-->
