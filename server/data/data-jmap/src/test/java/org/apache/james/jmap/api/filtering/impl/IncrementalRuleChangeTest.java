@@ -43,7 +43,7 @@ class IncrementalRuleChangeTest {
             ImmutableList.of(RULE_1),
             ImmutableList.of()))
             .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(),
-                ImmutableSet.of(RULE_1.getId())));
+                ImmutableSet.of(RULE_1.getId()), ImmutableList.of()));
     }
 
     @Test
@@ -52,7 +52,7 @@ class IncrementalRuleChangeTest {
             ImmutableList.of(RULE_1, RULE_2),
             ImmutableList.of(RULE_2)))
             .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(),
-                ImmutableSet.of(RULE_1.getId())));
+                ImmutableSet.of(RULE_1.getId()), ImmutableList.of()));
     }
 
     @Test
@@ -61,7 +61,7 @@ class IncrementalRuleChangeTest {
             ImmutableList.of(RULE_1, RULE_2, RULE_3),
             ImmutableList.of(RULE_1, RULE_3)))
             .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(),
-                ImmutableSet.of(RULE_2.getId())));
+                ImmutableSet.of(RULE_2.getId()), ImmutableList.of()));
     }
 
     @Test
@@ -69,7 +69,7 @@ class IncrementalRuleChangeTest {
         assertThat(IncrementalRuleChange.ofDiff(AGGREGATE_ID, EVENT_ID,
             ImmutableList.of(RULE_1, RULE_2, RULE_3),
             ImmutableList.of(RULE_1, RULE_2, RULE_3)))
-            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(), ImmutableSet.of()));
+            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(), ImmutableSet.of(), ImmutableList.of()));
     }
 
     @Test
@@ -93,7 +93,7 @@ class IncrementalRuleChangeTest {
         assertThat(IncrementalRuleChange.ofDiff(AGGREGATE_ID, EVENT_ID,
             ImmutableList.of(RULE_1, RULE_2),
             ImmutableList.of(RULE_1, RULE_2, RULE_3)))
-            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(RULE_3), ImmutableSet.of()));
+            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(RULE_3), ImmutableSet.of(), ImmutableList.of()));
     }
 
     @Test
@@ -101,7 +101,7 @@ class IncrementalRuleChangeTest {
         assertThat(IncrementalRuleChange.ofDiff(AGGREGATE_ID, EVENT_ID,
             ImmutableList.of(RULE_1, RULE_2),
             ImmutableList.of(RULE_3, RULE_1, RULE_2)))
-            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(), ImmutableSet.of()));
+            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(), ImmutableSet.of(), ImmutableList.of()));
     }
 
     @Test
@@ -109,7 +109,7 @@ class IncrementalRuleChangeTest {
         assertThat(IncrementalRuleChange.ofDiff(AGGREGATE_ID, EVENT_ID,
             ImmutableList.of(RULE_1),
             ImmutableList.of(RULE_3, RULE_1, RULE_2)))
-            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(RULE_2), ImmutableSet.of()));
+            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(RULE_2), ImmutableSet.of(), ImmutableList.of()));
     }
 
     @Test
@@ -117,22 +117,23 @@ class IncrementalRuleChangeTest {
         assertThat(IncrementalRuleChange.ofDiff(AGGREGATE_ID, EVENT_ID,
             ImmutableList.of(RULE_1),
             ImmutableList.of(RULE_3, RULE_2)))
-            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3, RULE_2), ImmutableList.of(), ImmutableSet.of(RULE_1.getId())));
+            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3, RULE_2), ImmutableList.of(), ImmutableSet.of(RULE_1.getId()), ImmutableList.of()));
     }
 
     @Test
-    void ruleModificationIsNotManagedByIncrement() {
+    void ruleModification() {
         assertThat(IncrementalRuleChange.ofDiff(AGGREGATE_ID, EVENT_ID,
             ImmutableList.of(RULE_1),
             ImmutableList.of(RULE_1_MODIFIED)))
-            .isEmpty();
+            .contains(new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(), ImmutableSet.of(),
+                ImmutableList.of(RULE_1_MODIFIED)));
     }
 
     @Test
     void removingOneRuleShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1);
         IncrementalRuleChange incrementalChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(),
-            ImmutableSet.of(RULE_1.getId()));
+            ImmutableSet.of(RULE_1.getId()), ImmutableList.of());
         assertThat(incrementalChange.apply(origin))
             .isEqualTo(ImmutableList.of());
     }
@@ -141,7 +142,7 @@ class IncrementalRuleChangeTest {
     void removingOneRuleOutOfTwoShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1, RULE_2);
         IncrementalRuleChange incrementalChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(),
-            ImmutableSet.of(RULE_1.getId()));
+            ImmutableSet.of(RULE_1.getId()), ImmutableList.of());
         assertThat(incrementalChange.apply(origin))
             .isEqualTo(ImmutableList.of(RULE_2));
     }
@@ -150,7 +151,7 @@ class IncrementalRuleChangeTest {
     void removingMiddleRuleShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1, RULE_2, RULE_3);
         IncrementalRuleChange incrementalChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(),
-            ImmutableSet.of(RULE_2.getId()));
+            ImmutableSet.of(RULE_2.getId()), ImmutableList.of());
         assertThat(incrementalChange.apply(origin))
             .isEqualTo(ImmutableList.of(RULE_1, RULE_3));
     }
@@ -159,7 +160,7 @@ class IncrementalRuleChangeTest {
     void noopShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1, RULE_2, RULE_3);
 
-        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(), ImmutableSet.of());
+        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(), ImmutableSet.of(), ImmutableList.of());
 
         assertThat(incrementalRuleChange.apply(origin))
             .isEqualTo(origin);
@@ -169,7 +170,7 @@ class IncrementalRuleChangeTest {
     void postPendingOneRuleShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1, RULE_2);
 
-        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(RULE_3), ImmutableSet.of());
+        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(), ImmutableList.of(RULE_3), ImmutableSet.of(), ImmutableList.of());
 
         assertThat(incrementalRuleChange.apply(origin))
             .isEqualTo(ImmutableList.of(RULE_1, RULE_2, RULE_3));
@@ -179,7 +180,7 @@ class IncrementalRuleChangeTest {
     void prependingOneRuleShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1, RULE_2);
 
-        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(), ImmutableSet.of());
+        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(), ImmutableSet.of(), ImmutableList.of());
 
         assertThat(incrementalRuleChange.apply(origin))
             .isEqualTo(ImmutableList.of(RULE_3, RULE_1, RULE_2));
@@ -189,7 +190,7 @@ class IncrementalRuleChangeTest {
     void prependingAndPostpendingShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1);
 
-        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(RULE_2), ImmutableSet.of());
+        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(RULE_2), ImmutableSet.of(), ImmutableList.of());
 
         assertThat(incrementalRuleChange.apply(origin))
             .isEqualTo(ImmutableList.of(RULE_3, RULE_1, RULE_2));
@@ -199,9 +200,19 @@ class IncrementalRuleChangeTest {
     void prependingAndPostpendingAndRemovalShouldBeWellApplied() {
         ImmutableList<Rule> origin = ImmutableList.of(RULE_1);
 
-        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(RULE_2), ImmutableSet.of(RULE_1.getId()));
+        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(RULE_3), ImmutableList.of(RULE_2), ImmutableSet.of(RULE_1.getId()), ImmutableList.of());
 
         assertThat(incrementalRuleChange.apply(origin))
             .isEqualTo(ImmutableList.of(RULE_3, RULE_2));
+    }
+
+    @Test
+    void ruleModificationShouldBeWellApplied() {
+        ImmutableList<Rule> origin = ImmutableList.of(RULE_1);
+        IncrementalRuleChange incrementalRuleChange = new IncrementalRuleChange(AGGREGATE_ID, EVENT_ID, ImmutableList.of(),
+            ImmutableList.of(), ImmutableSet.of(), ImmutableList.of(RULE_1_MODIFIED));
+
+        assertThat(incrementalRuleChange.apply(origin))
+            .isEqualTo(ImmutableList.of(RULE_1_MODIFIED));
     }
 }

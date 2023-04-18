@@ -22,8 +22,6 @@ package org.apache.james.jmap.api.filtering.impl;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;
@@ -34,7 +32,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 
 public class IncrementalRuleChange implements Event {
@@ -54,6 +51,7 @@ public class IncrementalRuleChange implements Event {
         List<Rule.Id> commonElements = ImmutableList.copyOf(Sets.intersection(idsBefore, idsAfter).immutableCopy());
 
         ImmutableList<Rule.Id> idsAfterList = idsAfter.asList();
+        ImmutableList.Builder<Rule> updatedRules = ImmutableList.builder();
         int prependedItems = 0;
         int postPendedItems = 0;
         boolean inPrepended = true;
@@ -98,8 +96,9 @@ public class IncrementalRuleChange implements Event {
                     return Optional.empty();
                 }
                 if (!beforeIndexed.get(id).equals(afterIndexed.get(id))) {
-                    // Rule content changed
-                    return Optional.empty();
+                    updatedRules.add(afterIndexed.get(id));
+                    position++;
+                    continue;
                 }
                 // All fine
                 position++;
@@ -122,7 +121,7 @@ public class IncrementalRuleChange implements Event {
             .reverse();
 
         return Optional.of(new IncrementalRuleChange(aggregateId, eventId,
-            preprended, postPended, deleted));
+            preprended, postPended, deleted, updatedRules.build()));
     }
 
     private final FilteringAggregateId aggregateId;
@@ -130,13 +129,15 @@ public class IncrementalRuleChange implements Event {
     private final ImmutableList<Rule> rulesPrepended;
     private final ImmutableList<Rule> rulesPostpended;
     private final ImmutableSet<Rule.Id> rulesDeleted;
+    private final ImmutableList<Rule> rulesUpdated;
 
-    public IncrementalRuleChange(FilteringAggregateId aggregateId, EventId eventId, ImmutableList<Rule> rulesPrepended, ImmutableList<Rule> rulesPostpended, ImmutableSet<Rule.Id> rulesDeleted) {
+    public IncrementalRuleChange(FilteringAggregateId aggregateId, EventId eventId, ImmutableList<Rule> rulesPrepended, ImmutableList<Rule> rulesPostpended, ImmutableSet<Rule.Id> rulesDeleted, ImmutableList<Rule> rulesUpdated) {
         this.aggregateId = aggregateId;
         this.eventId = eventId;
         this.rulesPrepended = rulesPrepended;
         this.rulesPostpended = rulesPostpended;
         this.rulesDeleted = rulesDeleted;
+        this.rulesUpdated = rulesUpdated;
     }
 
     @Override
@@ -162,10 +163,17 @@ public class IncrementalRuleChange implements Event {
     }
 
     public ImmutableList<Rule> apply(ImmutableList<Rule> rules) {
+        ImmutableMap<Rule.Id, Rule> indexedUpdates = rulesUpdated.stream()
+            .collect(ImmutableMap.toImmutableMap(
+                Rule::getId,
+                rule -> rule));
+
         return ImmutableList.<Rule>builder()
             .addAll(rulesPrepended)
             .addAll(rules.stream()
                 .filter(rule -> !rulesDeleted.contains(rule.getId()))
+                .map(rule -> Optional.ofNullable(indexedUpdates.get(rule.getId()))
+                    .orElse(rule))
                 .collect(ImmutableList.toImmutableList()))
             .addAll(rulesPostpended)
             .build();
@@ -184,12 +192,13 @@ public class IncrementalRuleChange implements Event {
             Objects.equals(eventId, that.eventId) &&
             Objects.equals(rulesDeleted, that.rulesDeleted) &&
             Objects.equals(rulesPrepended, that.rulesPrepended) &&
+            Objects.equals(rulesUpdated, that.rulesUpdated) &&
             Objects.equals(rulesPostpended, that.rulesPostpended);
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(aggregateId, eventId, rulesPrepended, rulesPostpended, rulesDeleted);
+        return Objects.hash(aggregateId, eventId, rulesPrepended, rulesPostpended, rulesDeleted, rulesDeleted);
     }
 
     @Override
@@ -200,6 +209,7 @@ public class IncrementalRuleChange implements Event {
             .add("rulesDeleted", rulesDeleted)
             .add("rulesPrepended", rulesPrepended)
             .add("rulesPostpended", rulesPostpended)
+            .add("rulesUpdated", rulesUpdated)
             .toString();
     }
 }
