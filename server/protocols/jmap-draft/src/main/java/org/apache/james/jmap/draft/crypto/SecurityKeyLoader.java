@@ -19,24 +19,46 @@
 
 package org.apache.james.jmap.draft.crypto;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.RunArguments;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jwt.PublicKeyReader;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -45,25 +67,48 @@ import nl.altindag.ssl.util.KeyStoreUtils;
 import nl.altindag.ssl.util.PemUtils;
 
 public class SecurityKeyLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityKeyLoader.class);
     private static final String ALIAS = "james";
 
     private final FileSystem fileSystem;
     private final JMAPDraftConfiguration jmapDraftConfiguration;
 
+    private final RunArguments runArguments;
+
     @VisibleForTesting
     @Inject
-    SecurityKeyLoader(FileSystem fileSystem, JMAPDraftConfiguration jmapDraftConfiguration) {
+    SecurityKeyLoader(FileSystem fileSystem,
+                      JMAPDraftConfiguration jmapDraftConfiguration,
+                      RunArguments runArguments) {
         this.fileSystem = fileSystem;
         this.jmapDraftConfiguration = jmapDraftConfiguration;
+        this.runArguments = runArguments;
+    }
+
+    SecurityKeyLoader(FileSystem fileSystem,
+                      JMAPDraftConfiguration jmapDraftConfiguration) {
+        this.fileSystem = fileSystem;
+        this.jmapDraftConfiguration = jmapDraftConfiguration;
+        this.runArguments = RunArguments.empty();
     }
 
     public AsymmetricKeys load() throws Exception {
         Preconditions.checkState(jmapDraftConfiguration.isEnabled(), "JMAP is not enabled");
 
-        if (jmapDraftConfiguration.getKeystore().isPresent()) {
-            return loadFromKeystore();
+        try {
+            LOGGER.info("tung keystore" + jmapDraftConfiguration.getKeystore());
+            if (jmapDraftConfiguration.getKeystore().isPresent()) {
+                return loadFromKeystore();
+            }
+            return loadFromPEM();
+        } catch (FileNotFoundException e) {
+            if (runArguments.containStartDev()) {
+                LOGGER.warn("Can not load asymmetric key from configuration file" + e.getMessage());
+                LOGGER.warn("James will try the auto-generate an asymmetric key. It is just for development, should not use it on production");
+                return generateAsymmetricKeys();
+            }
+            throw e;
         }
-        return loadFromPEM();
     }
 
     private AsymmetricKeys loadFromKeystore() throws Exception {
@@ -111,4 +156,56 @@ public class SecurityKeyLoader {
                 .orElseThrow(() -> new IllegalArgumentException("Key must either be a valid certificate or a public key"));
         }
     }
+
+    private AsymmetricKeys generateAsymmetricKeys() throws Exception {
+        KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+        kpg.initialize(4096);
+        KeyPair keyPair = kpg.generateKeyPair();
+
+        X500Name subjName = new X500Name("CN=james");
+        X509CertificateHolder x509CertificateHolder = new JcaX509v3CertificateBuilder(subjName,
+            new BigInteger(64, new SecureRandom()),
+            Date.from(Instant.now()),
+            Date.from(Instant.now().plus(365, ChronoUnit.DAYS)),
+            subjName, keyPair.getPublic())
+            .build(new JcaContentSignerBuilder("SHA256WITHRSA")
+                .build(keyPair.getPrivate()));
+
+        X509Certificate mySelfSignedCert = new JcaX509CertificateConverter().getCertificate(
+            x509CertificateHolder);
+
+        final char[] password =  jmapDraftConfiguration.getSecret()
+            .orElseGet(() -> {
+                String dummyPass = new String(new byte[8]);
+                LOGGER.warn("Keystore dummy password: " + dummyPass);
+                return dummyPass;
+            }).toCharArray();
+
+        KeyStore keystore = KeyStore.getInstance(jmapDraftConfiguration.getKeystoreType());
+        keystore.load(null, password);
+
+        KeyStore.PrivateKeyEntry privKeyEntry = new KeyStore.PrivateKeyEntry(keyPair.getPrivate(),
+            new Certificate[] {mySelfSignedCert});
+        keystore.setEntry(ALIAS, privKeyEntry, new KeyStore.PasswordProtection(password));
+
+        storeFile(password, keystore);
+
+        return new AsymmetricKeys(keyPair.getPrivate(), keyPair.getPublic());
+    }
+
+    private void storeFile(char[] password, KeyStore keystore) throws KeyStoreException, NoSuchAlgorithmException, CertificateException {
+        File keystoreFile = jmapDraftConfiguration.getKeystore()
+            .map(Throwing.function(fileSystem::getFile))
+            .orElseThrow(() -> new IllegalArgumentException("tls.keystoreURL was not defined"));
+
+        if (!keystoreFile.exists()) {
+            try (OutputStream outputStream = new FileOutputStream(keystoreFile)) {
+                keystore.store(outputStream, password);
+                LOGGER.info("Generated keystore file: " + keystoreFile.getPath());
+            } catch (IOException e) {
+                throw new RuntimeException("Error when creating Keystore file: " + keystoreFile.getPath(), e);
+            }
+        }
+    }
+
 }

@@ -41,6 +41,7 @@ import org.apache.james.modules.DistributedTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.Pop3FixInconsistenciesWebAdminModule;
+import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.TasksCleanupTaskSerializationModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
@@ -178,7 +179,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
 
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
-            .combineWith(new JMXServerModule());
+            .combineWith(new JMXServerModule(), RunArgumentsModule.EMPTY);
 
         JamesServerMain.main(server);
     }

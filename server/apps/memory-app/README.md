@@ -32,6 +32,14 @@ keytool -genkey -alias james -keyalg RSA -keystore keystore
 docker run -v $PWD/keystore:/root/conf/keystore apache/james:memory-latest
 ```
 
+In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `start-dev` when running,
+James will auto-generate keystore file with the default setting:
+
+```
+docker run apache/james:memory-latest start-dev
+```
+
+
 Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags) 
 to pass extra JVM flags. For instance:
 

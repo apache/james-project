@@ -21,6 +21,7 @@ package org.apache.james;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.JPAAuthorizatorModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.JPAEntityManagerModule;
@@ -72,6 +73,7 @@ public class JPAJamesServerMain implements JamesServerMain {
 
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration);
+        server.combineWith(RunArgumentsModule.EMPTY);
 
         JamesServerMain.main(server);
     }

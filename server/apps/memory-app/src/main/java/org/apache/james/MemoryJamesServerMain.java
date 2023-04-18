@@ -29,6 +29,7 @@ import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.BlobMemoryModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.data.MemoryDelegationStoreModule;
@@ -157,6 +158,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
 
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
+            .combineWith(new RunArgumentsModule(args))
             .combineWith(new FakeSearchMailboxModule(), new JMXServerModule());
 
         JamesServerMain.main(server);
