@@ -95,6 +95,15 @@ public class MemoryEmailQueryView implements EmailQueryView {
     }
 
     @Override
+    public Flux<MessageId> listMailboxContentBeforeSortedByReceivedAt(MailboxId mailboxId, ZonedDateTime before, Limit limit) {
+        return Flux.fromIterable(entries.row(mailboxId).values())
+            .filter(e -> e.getReceivedAt().isBefore(before) || e.getReceivedAt().isEqual(before))
+            .sort(Comparator.comparing(Entry::getReceivedAt).reversed())
+            .map(Entry::getMessageId)
+            .take(limit.getLimit().get());
+    }
+
+    @Override
     public Mono<Void> delete(MailboxId mailboxId, MessageId messageId) {
         return Mono.fromRunnable(() -> entries.remove(mailboxId, messageId));
     }
