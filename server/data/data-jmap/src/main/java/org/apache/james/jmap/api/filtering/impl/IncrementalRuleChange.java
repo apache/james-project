@@ -162,6 +162,10 @@ public class IncrementalRuleChange implements Event {
         return rulesDeleted;
     }
 
+    public ImmutableList<Rule> getRulesUpdated() {
+        return rulesUpdated;
+    }
+
     public ImmutableList<Rule> apply(ImmutableList<Rule> rules) {
         ImmutableMap<Rule.Id, Rule> indexedUpdates = rulesUpdated.stream()
             .collect(ImmutableMap.toImmutableMap(

@@ -70,8 +70,10 @@ public class FilteringAggregate {
     public List<? extends Event> defineRules(DefineRulesCommand storeCommand) {
         Preconditions.checkArgument(shouldNotContainDuplicates(storeCommand.getRules()));
         StateMismatchException.checkState(expectedState(storeCommand.getIfInState()), "Provided state must be as same as the current state");
-        ImmutableList<RuleSetDefined> events = ImmutableList.of(
-            new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(storeCommand.getRules())));
+
+        ImmutableList<Event> events = IncrementalRuleChange.ofDiff(aggregateId, history.getNextEventId(), state.rules, storeCommand.getRules())
+            .map(ImmutableList::<Event>of)
+            .orElseGet(() -> ImmutableList.of(new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(storeCommand.getRules()))));
         events.forEach(this::apply);
         return events;
     }
@@ -100,6 +102,9 @@ public class FilteringAggregate {
     private void apply(Event event) {
         if (event instanceof RuleSetDefined) {
             state = state.set(((RuleSetDefined)event).getRules());
+        }
+        if (event instanceof IncrementalRuleChange) {
+            state = state.set(((IncrementalRuleChange)event).apply(state.rules));
         }
     }
 }
