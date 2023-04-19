@@ -122,17 +122,21 @@ public class MimePartParser {
     }
 
     private void extractMimePartBodyDescription(MimeTokenStream stream) {
-        MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) stream.getBodyDescriptor();
+        try {
+            MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) stream.getBodyDescriptor();
 
-        Optional.ofNullable(descriptor.getMediaType())
-            .map(MediaType::of)
-            .ifPresent(currentlyBuildMimePart::addMediaType);
-        Optional.ofNullable(descriptor.getSubType())
-            .map(SubType::of)
-            .ifPresent(currentlyBuildMimePart::addSubType);
-        currentlyBuildMimePart.addContentDisposition(descriptor.getContentDispositionType())
-            .addFileName(descriptor.getContentDispositionFilename());
-        extractCharset(descriptor);
+            Optional.ofNullable(descriptor.getMediaType())
+                .map(MediaType::of)
+                .ifPresent(currentlyBuildMimePart::addMediaType);
+            Optional.ofNullable(descriptor.getSubType())
+                .map(SubType::of)
+                .ifPresent(currentlyBuildMimePart::addSubType);
+            currentlyBuildMimePart.addContentDisposition(descriptor.getContentDispositionType())
+                .addFileName(descriptor.getContentDispositionFilename());
+            extractCharset(descriptor);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to extract mime body part description", e);
+        }
     }
 
     private void extractCharset(MaximalBodyDescriptor descriptor) {
