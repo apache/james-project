@@ -276,8 +276,18 @@ Additional optional task parameters are supported:
 - `status` one of `waiting`, `inProgress`, `canceledRequested`, `completed`, `canceled`, `failed`. Only
 tasks with the given status are returned.
 - `type`: only tasks with the given type are returned.
+- `submittedBefore`: Date. Returns only tasks submitted before this date.
+- `submittedAfter`: Date. Returns only tasks submitted after this date.
+- `startedBefore`: Date. Returns only tasks started before this date.
+- `startedAfter`: Date. Returns only tasks started after this date.
+- `completedBefore`: Date. Returns only tasks completed before this date.
+- `completedAfter`: Date. Returns only tasks completed after this date.
+- `failedBefore`: Date. Returns only tasks failed before this date.
+- `failedAfter`: Date. Returns only tasks faield after this date.
 - `offset`: Integer, number of tasks to skip in the response. Useful for paging.
 - `limit`: Integer, maximum number of tasks to return in one call
+
+Example of date format: `2023-04-15T07:23:27.541254+07:00` and `2023-04-15T07%3A23%3A27.541254%2B07%3A00` once URL encoded.
 
 === Endpoints returning a task
 
