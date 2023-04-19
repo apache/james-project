@@ -25,22 +25,30 @@ import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_FROM;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_RECIPIENT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO;
+import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT;
 import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
+
+import java.util.Optional;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
+import org.apache.james.jmap.api.filtering.impl.IncrementalRuleChange;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
+import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 class DTOTest {
     static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");
     static final String EVENT_EMPTY_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventEmpty.json");
     static final String EVENT_COMPLEX_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex.json");
+
     static final RuleSetDefined SIMPLE_RULE = new RuleSetDefined(
                     new FilteringAggregateId(Username.of("Bart")),
                     EventId.first(),
@@ -53,6 +61,13 @@ class DTOTest {
                     new FilteringAggregateId(Username.of("Bart")),
                     EventId.first(),
                     ImmutableList.of(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO));
+    static final IncrementalRuleChange INCREMENT =  new IncrementalRuleChange(
+                    new FilteringAggregateId(Username.of("Bart")),
+                    EventId.first(),
+                    ImmutableList.of(RULE_FROM, RULE_TO),
+                    ImmutableList.of(RULE_RECIPIENT),
+                    ImmutableSet.of(Rule.Id.of("abdcd")),
+                    ImmutableList.of(RULE_SUBJECT));
 
     @Test
     void shouldSerializeRule() throws Exception {
@@ -60,6 +75,13 @@ class DTOTest {
             .testCase(EMPTY_RULE, EVENT_EMPTY_JSON)
             .testCase(SIMPLE_RULE, EVENT_JSON)
             .testCase(COMPLEX_RULE, EVENT_COMPLEX_JSON)
+            .verify();
+    }
+
+    @Test
+    void shouldSerializeIncrements() throws Exception {
+        JsonSerializationVerifier.dtoModule(FILTERING_INCREMENT)
+            .testCase(INCREMENT, ClassLoaderUtils.getSystemResourceAsString("json/increment.json"))
             .verify();
     }
 }
