@@ -96,7 +96,6 @@ public class SecurityKeyLoader {
         Preconditions.checkState(jmapDraftConfiguration.isEnabled(), "JMAP is not enabled");
 
         try {
-            LOGGER.info("tung keystore" + jmapDraftConfiguration.getKeystore());
             if (jmapDraftConfiguration.getKeystore().isPresent()) {
                 return loadFromKeystore();
             }

@@ -26,6 +26,7 @@ import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
+import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.data.MemoryDelegationStoreModule;
 import org.apache.james.modules.data.MemoryUsersRepositoryModule;
@@ -73,6 +74,7 @@ public class CustomJamesServerMain implements JamesServerMain {
             .build();
 
         JamesServerMain.main(GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(RunArgumentsModule.EMPTY)
             .combineWith(CUSTOM_SERVER_AGGREGATE_MODULE)
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
                                              .chooseModules(configuration.getUsersRepositoryImplementation()))

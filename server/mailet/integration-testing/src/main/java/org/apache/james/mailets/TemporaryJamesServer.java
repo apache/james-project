@@ -40,6 +40,7 @@ import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
+import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.data.MemoryUsersRepositoryModule;
 import org.apache.james.server.core.configuration.Configuration;
@@ -155,6 +156,7 @@ public class TemporaryJamesServer {
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(additionalModules)
             .overrideWith(new TestJMAPServerModule())
+            .overrideWith(RunArgumentsModule.EMPTY)
             .overrideWith((binder) -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
     }
 
