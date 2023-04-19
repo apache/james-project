@@ -28,6 +28,21 @@ Change list:
 - [Adding delegatedUser column to user_table](#adding-delegatedusers-column-to-user-table)
 - [DeletedMessageVaultHook should not be used on Cassandra based products](#deleted-message-vault-is-now-deactivated-by-default)
 
+### JMAP filters event sourcing increments and snapshots
+
+Date: 19/04/2023
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3777
+
+Concerned products: Distributed James, Cassandra James Server
+
+We recommend disabling increments during rolling updates (as older nodes in the cluster won't support them).
+This can be done with the following system property:
+
+```
+-Djames.jmap.filters.eventsource.increments.enabled=false
+```
+
 ### DeletedMessageVaultHook should not be used on Cassandra based products
 
 Date: 10/02/2023
