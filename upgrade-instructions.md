@@ -36,6 +36,12 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-3777
 
 Concerned products: Distributed James, Cassandra James Server
 
+Cassandra Event store table needs to be modified in order to support snapshots:
+
+```
+ALTER TABLE james_keyspace.eventStore ADD snapshot int static;
+```
+
 We recommend disabling increments during rolling updates (as older nodes in the cluster won't support them).
 This can be done with the following system property:
 
