@@ -21,4 +21,4 @@ package org.apache.james.eventsourcing.eventstore.cassandra
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules
 import org.junit.jupiter.api.extension.Extension
 
-class CassandraEventStoreExtensionForTestEvents extends CassandraEventStoreExtension(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE).withoutNestedType) with Extension
+class CassandraEventStoreExtensionForTestEvents extends CassandraEventStoreExtension(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE, TestEventDTOModules.SNAPSHOT_TYPE).withoutNestedType) with Extension

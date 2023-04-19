@@ -20,25 +20,23 @@ package org.apache.james.eventsourcing.eventstore.cassandra
 
 import com.google.common.base.Preconditions
 import javax.inject.Inject
-
 import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreFailedException, History}
-import org.apache.james.eventsourcing.{AggregateId, Event}
+import org.apache.james.eventsourcing.{AggregateId, Event, EventId}
 import org.reactivestreams.Publisher
-
 import reactor.core.scala.publisher.SMono
 
 class CassandraEventStore @Inject() (eventStoreDao: EventStoreDao) extends EventStore {
-  override def appendAll(events: Iterable[Event]): Publisher[Void] = {
+  override def appendAll(events: Iterable[Event]): Publisher[Void] =
     if (events.nonEmpty) {
       doAppendAll(events)
     } else {
       SMono.empty
     }
-  }
 
   private def doAppendAll(events: Iterable[Event]): SMono[Void] = {
     Preconditions.checkArgument(Event.belongsToSameAggregate(events))
-    eventStoreDao.appendAll(events)
+    val snapshotId = events.filter(_.isASnapshot).map(_.eventId).headOption
+    eventStoreDao.appendAll(events, snapshotId)
       .filter(success => success)
       .single()
       .onErrorMap({
@@ -48,9 +46,10 @@ class CassandraEventStore @Inject() (eventStoreDao: EventStoreDao) extends Event
       .`then`(SMono.empty)
   }
 
-  override def getEventsOfAggregate(aggregateId: AggregateId): SMono[History] = {
-    eventStoreDao.getEventsOfAggregate(aggregateId)
-  }
+  override def getEventsOfAggregate(aggregateId: AggregateId): SMono[History] =
+    eventStoreDao.getSnapshot(aggregateId)
+      .flatMap(snapshotId => eventStoreDao.getEventsOfAggregate(aggregateId, snapshotId))
+      .switchIfEmpty(eventStoreDao.getEventsOfAggregate(aggregateId))
 
   override def remove(aggregateId: AggregateId): Publisher[Void] = eventStoreDao.delete(aggregateId)
 }

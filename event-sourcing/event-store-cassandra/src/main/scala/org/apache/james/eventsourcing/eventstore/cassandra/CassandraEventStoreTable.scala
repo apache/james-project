@@ -25,4 +25,5 @@ object CassandraEventStoreTable {
   val AGGREGATE_ID = CqlIdentifier.fromCql("aggregateId")
   val EVENT = CqlIdentifier.fromCql("event")
   val EVENT_ID = CqlIdentifier.fromCql("eventId")
+  val SNAPSHOT = CqlIdentifier.fromCql("snapshot")
 }

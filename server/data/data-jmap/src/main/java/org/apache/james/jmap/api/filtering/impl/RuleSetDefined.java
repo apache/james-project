@@ -56,6 +56,11 @@ public class RuleSetDefined implements Event {
     }
 
     @Override
+    public boolean isASnapshot() {
+        return true;
+    }
+
+    @Override
     public final boolean equals(Object o) {
         if (this == o) {
             return true;

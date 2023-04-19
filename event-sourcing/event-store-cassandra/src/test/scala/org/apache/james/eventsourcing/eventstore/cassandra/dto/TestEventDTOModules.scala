@@ -43,4 +43,16 @@ object TestEventDTOModules {
       event.getAggregateId.getId))
     .typeName("other-type")
     .withFactory(EventDTOModule.apply)
+
+  val SNAPSHOT_TYPE: EventDTOModule[SnapshotEvent, SnapshotEventDTO] = EventDTOModule
+    .forEvent(classOf[SnapshotEvent])
+    .convertToDTO(classOf[SnapshotEventDTO])
+    .toDomainObjectConverter(_.toEvent)
+    .toDTOConverter((event: SnapshotEvent, typeName: String) => SnapshotEventDTO(
+      typeName,
+      event.getPayload,
+      event.eventId.serialize,
+      event.getAggregateId.getId))
+    .typeName("snapshot-type")
+    .withFactory(EventDTOModule.apply)
 }
