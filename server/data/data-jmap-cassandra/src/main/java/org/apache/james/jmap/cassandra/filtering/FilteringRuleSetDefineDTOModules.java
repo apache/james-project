@@ -20,11 +20,13 @@
 package org.apache.james.jmap.cassandra.filtering;
 
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.jmap.api.filtering.impl.IncrementalRuleChange;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 
 public interface FilteringRuleSetDefineDTOModules {
 
     String TYPE = "filtering-rule-set-defined";
+    String TYPE_INCREMENTAL = "filtering-increment";
 
     EventDTOModule<RuleSetDefined, FilteringRuleSetDefinedDTO> FILTERING_RULE_SET_DEFINED =
         EventDTOModule
@@ -33,6 +35,15 @@ public interface FilteringRuleSetDefineDTOModules {
             .toDomainObjectConverter(FilteringRuleSetDefinedDTO::toEvent)
             .toDTOConverter(FilteringRuleSetDefinedDTO::from)
             .typeName(TYPE)
+            .withFactory(EventDTOModule::new);
+
+    EventDTOModule<IncrementalRuleChange, FilteringIncrementalRuleChangeDTO> FILTERING_INCREMENT =
+        EventDTOModule
+            .forEvent(IncrementalRuleChange.class)
+            .convertToDTO(FilteringIncrementalRuleChangeDTO.class)
+            .toDomainObjectConverter(FilteringIncrementalRuleChangeDTO::toEvent)
+            .toDTOConverter(FilteringIncrementalRuleChangeDTO::from)
+            .typeName(TYPE_INCREMENTAL)
             .withFactory(EventDTOModule::new);
 
 }

@@ -27,5 +27,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraEventSourcingFilteringManagementTest implements FilteringManagementContract {
     @RegisterExtension
     static CassandraEventStoreExtension eventStoreExtension =
-        new CassandraEventStoreExtension(JsonEventSerializer.forModules(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED).withoutNestedType());
+        new CassandraEventStoreExtension(JsonEventSerializer.forModules(
+                FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED,
+                FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT)
+            .withoutNestedType());
 }
