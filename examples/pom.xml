@@ -51,4 +51,28 @@
     <module>custom-healthcheck</module>
     <module>custom-imap</module>
   </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>jacoco-report</id>
+            <goals>
+              <goal>report-aggregate</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <dataFileIncludes>
+                <dataFileInclude>**/jacoco.exec</dataFileInclude>
+              </dataFileIncludes>
+              <outputDirectory>${basedir}/target/jacoco</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
