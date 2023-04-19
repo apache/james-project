@@ -23,6 +23,7 @@ import static org.awaitility.Durations.TEN_SECONDS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
@@ -40,6 +41,8 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
@@ -125,6 +128,31 @@ class SerialTaskManagerWorkerTest {
         worker.executeTask(taskWithId).block();
 
         verify(listener, atMost(3)).updated(eq(taskWithId.getId()), notNull());
+    }
+
+    @Test
+    void errorUponUpdatesShouldNotAbortTheRunningTaskPolledUpdates() {
+        AtomicInteger updatedCounter = new AtomicInteger(0);
+        when(listener.updated(any(), any())).thenAnswer(new Answer<Mono<Void>>() {
+            @Override
+            public Mono<Void> answer(InvocationOnMock invocationOnMock) {
+                if (updatedCounter.getAndIncrement() == 1) {
+                    return Mono.error(new RuntimeException());
+                }
+                return Mono.empty();
+            }
+        });
+
+        TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
+            Mono.fromCallable(counter::incrementAndGet)
+                .delayElement(Duration.ofMillis(1))
+                .repeat(600)
+                .then(Mono.just(Task.Result.COMPLETED))
+                .block()));
+
+        worker.executeTask(taskWithId).block();
+
+        verify(listener, atLeast(3)).updated(eq(taskWithId.getId()), notNull());
     }
 
     @Test
