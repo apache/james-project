@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 
 public class FilteringAggregate {
     private static final boolean ENABLE_INCREMENTS = Boolean.parseBoolean(System.getProperty("james.jmap.filters.eventsource.increments.enabled", "true"));
+    private static final boolean ENABLE_SNAPSHOTS = Boolean.parseBoolean(System.getProperty("james.jmap.filters.eventsource.snapshots.enabled", "true"));
 
     public static FilteringAggregate load(FilteringAggregateId aggregateId, History eventsOfAggregate) {
         return new FilteringAggregate(aggregateId, eventsOfAggregate);
@@ -77,13 +78,22 @@ public class FilteringAggregate {
     }
 
     private ImmutableList<Event> generateEvents(DefineRulesCommand storeCommand) {
+        EventId nextEventId = history.getNextEventId();
         if (ENABLE_INCREMENTS) {
-            return IncrementalRuleChange.ofDiff(aggregateId, history.getNextEventId(), state.rules, storeCommand.getRules())
+            // SNAPSHOT periodically
+            if (ENABLE_SNAPSHOTS && history.getEvents().size() >= 100) {
+                return resetRules(storeCommand, nextEventId);
+            }
+            return IncrementalRuleChange.ofDiff(aggregateId, nextEventId, state.rules, storeCommand.getRules())
                 .map(ImmutableList::<Event>of)
-                .orElseGet(() -> ImmutableList.of(new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(storeCommand.getRules()))));
+                .orElseGet(() -> resetRules(storeCommand, nextEventId));
         } else {
-            return ImmutableList.of(new RuleSetDefined(aggregateId, history.getNextEventId(), ImmutableList.copyOf(storeCommand.getRules())));
+            return resetRules(storeCommand, nextEventId);
         }
+    }
+
+    private ImmutableList<Event> resetRules(DefineRulesCommand storeCommand, EventId nextEventId) {
+        return ImmutableList.of(new RuleSetDefined(aggregateId, nextEventId, ImmutableList.copyOf(storeCommand.getRules())));
     }
 
     private boolean shouldNotContainDuplicates(List<Rule> rules) {

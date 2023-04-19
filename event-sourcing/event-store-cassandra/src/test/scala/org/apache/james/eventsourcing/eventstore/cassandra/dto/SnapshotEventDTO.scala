@@ -21,11 +21,11 @@ package org.apache.james.eventsourcing.eventstore.cassandra.dto
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
 import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
 
-final case class TestEventDTO @JsonCreator() ( @JsonProperty("type") `type`: String,
-                                    @JsonProperty("data") data: String,
-                                    @JsonProperty("eventId") eventId: Int,
-                                    @JsonProperty("aggregate") aggregate: Int) extends EventDTO {
-  override val getType: String = `type`
+final case class SnapshotEventDTO @JsonCreator()(@JsonProperty("type") `type`: String,
+                                                 @JsonProperty("data") data: String,
+                                                 @JsonProperty("eventId") eventId: Int,
+                                                 @JsonProperty("aggregate") aggregate: Int) extends EventDTO {
+  override def getType: String = `type`
 
   def getData: String = data
 
@@ -33,5 +33,5 @@ final case class TestEventDTO @JsonCreator() ( @JsonProperty("type") `type`: Str
 
   def getAggregate: Int = aggregate
 
-  @JsonIgnore def toEvent: TestEvent = TestEvent(EventId.fromSerialized(eventId), TestAggregateId(aggregate), data)
+  @JsonIgnore def toEvent: SnapshotEvent = SnapshotEvent(EventId.fromSerialized(eventId), TestAggregateId(aggregate), data)
 }
