@@ -32,7 +32,7 @@ case class DecisionProjection(status: Status, latestUpdateAdditionalInformationU
         case event: Cancelled => DecisionProjection(Status.CANCELLED, event.additionalInformation.map(_.timestamp))
         case event: Completed => DecisionProjection(Status.COMPLETED, event.additionalInformation.map(_.timestamp))
         case event: Failed => DecisionProjection(Status.FAILED, event.additionalInformation.map(_.timestamp))
-        case event: AdditionalInformationUpdated => DecisionProjection(status, Some(event.additionalInformation.timestamp))
+        case event: AdditionalInformationUpdated => DecisionProjection(Status.IN_PROGRESS, Some(event.additionalInformation.timestamp))
       }
   }
 
@@ -41,6 +41,11 @@ case class DecisionProjection(status: Status, latestUpdateAdditionalInformationU
 }
 
 object DecisionProjection {
-  def initial(created : Created): DecisionProjection = DecisionProjection(Status.WAITING, None)
+  def initial(taskEvent : TaskEvent): DecisionProjection = {
+    taskEvent match {
+      case _: Created => DecisionProjection(Status.WAITING, None)
+      case updated: AdditionalInformationUpdated => DecisionProjection(Status.IN_PROGRESS, Some(updated.additionalInformation.timestamp))
+    }
+  }
 }
 

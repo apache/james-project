@@ -33,7 +33,9 @@ case class Created(aggregateId: TaskAggregateId, override val eventId: EventId, 
 
 case class Started(aggregateId: TaskAggregateId, override val eventId: EventId, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
-case class AdditionalInformationUpdated(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: AdditionalInformation) extends TaskEvent(aggregateId, eventId)
+case class AdditionalInformationUpdated(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: AdditionalInformation) extends TaskEvent(aggregateId, eventId) {
+  override val isASnapshot = true
+}
 
 case class CancelRequested(aggregateId: TaskAggregateId, override val eventId: EventId, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 

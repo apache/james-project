@@ -27,9 +27,13 @@ import org.apache.james.task.{Hostname, Task}
 
 class TaskAggregate private(val aggregateId: TaskAggregateId, private val history: History) {
 
-  val initialEvent = history.getEvents.headOption match {
-    case Some(created @ Created(_, _, _, _)) => created
-    case _ => throw new IllegalArgumentException("History must start with Created event")
+  private val initialEvent: TaskEvent = history.getEvents.head match {
+    case created @ Created(_, _, _, _) if created.eventId.equals(EventId.first) => created
+    case any: TaskEvent => if (any.eventId.equals(EventId.first)) {
+      throw new IllegalArgumentException("History must start with Created event")
+    } else {
+      any
+    }
   }
 
   private val currentDecisionProjection: DecisionProjection = history
