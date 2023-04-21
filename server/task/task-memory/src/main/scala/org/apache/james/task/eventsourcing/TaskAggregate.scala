@@ -25,16 +25,23 @@ import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.TaskManager.Status
 import org.apache.james.task.{Hostname, Task}
 
-class TaskAggregate private(val aggregateId: TaskAggregateId, private val history: History) {
+import scala.util.{Failure, Success}
 
-  private val initialEvent: TaskEvent = history.getEvents.head match {
-    case created @ Created(_, _, _, _) if created.eventId.equals(EventId.first) => created
-    case any: TaskEvent => if (any.eventId.equals(EventId.first)) {
-      throw new IllegalArgumentException("History must start with Created event")
-    } else {
-      any
+class TaskAggregate private(val aggregateId: TaskAggregateId, private val history: History) {
+  private val initialEvent: TaskEvent = history.getEvents.headOption
+    .map(e => Success(initialEvent(e)))
+    .getOrElse(Failure(new IllegalArgumentException("History must start with Created event")))
+    .get
+
+  private def initialEvent(event: Event) =
+    event match {
+      case created@Created(_, _, _, _) if created.eventId.equals(EventId.first) => created
+      case any: TaskEvent => if (any.eventId.equals(EventId.first)) {
+        throw new IllegalArgumentException("History must start with Created event")
+      } else {
+        any
+      }
     }
-  }
 
   private val currentDecisionProjection: DecisionProjection = history
     .getEvents
