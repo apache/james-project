@@ -32,6 +32,7 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.eventsourcing.AggregateId;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
@@ -131,8 +132,8 @@ public class UserQuotaThresholds {
             .collect(Collectors.toList());
     }
 
-    public List<QuotaThresholdChangedEvent> detectThresholdCrossing(QuotaMailingListenerConfiguration configuration,
-                                                                    DetectThresholdCrossing command) {
+    public List<EventWithState> detectThresholdCrossing(QuotaMailingListenerConfiguration configuration,
+                                                        DetectThresholdCrossing command) {
 
         List<QuotaThresholdChangedEvent> events = generateEvents(
             configuration.getThresholds(),
@@ -141,7 +142,9 @@ public class UserQuotaThresholds {
             command.getSizeQuota(),
             command.getInstant());
         events.forEach(this::apply);
-        return events;
+        return events.stream()
+            .map(EventWithState::noState)
+            .collect(ImmutableList.toImmutableList());
     }
 
     private List<QuotaThresholdChangedEvent> generateEvents(QuotaThresholds configuration, Duration gracePeriod, Quota<QuotaCountLimit, QuotaCountUsage> countQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, Instant now) {

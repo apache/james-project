@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
@@ -65,21 +66,27 @@ public class MailboxACLAggregate {
             .forEach(this::apply);
     }
 
-    public List<Event> deleteMailbox() {
-        return ImmutableList.of(new ACLUpdated(aggregateId, history.getNextEventId(),
-            ACLDiff.computeDiff(state.acl.orElse(MailboxACL.EMPTY), MailboxACL.EMPTY)));
+    public List<EventWithState> deleteMailbox() {
+        ACLUpdated event = new ACLUpdated(aggregateId, history.getNextEventId(),
+            ACLDiff.computeDiff(state.acl.orElse(MailboxACL.EMPTY), MailboxACL.EMPTY));
+        apply(event);
+        return ImmutableList.of(EventWithState.noState(event));
     }
 
-    public List<Event> set(SetACLCommand setACLCommand) {
-        return ImmutableList.of(new ACLUpdated(aggregateId, history.getNextEventId(),
-            ACLDiff.computeDiff(state.acl.orElse(MailboxACL.EMPTY), setACLCommand.getAcl())));
+    public List<EventWithState> set(SetACLCommand setACLCommand) {
+        ACLUpdated event = new ACLUpdated(aggregateId, history.getNextEventId(),
+            ACLDiff.computeDiff(state.acl.orElse(MailboxACL.EMPTY), setACLCommand.getAcl()));
+        apply(event);
+        return ImmutableList.of(EventWithState.noState(event));
     }
 
-    public List<Event> update(UpdateACLCommand command) throws UnsupportedRightException {
+    public List<EventWithState> update(UpdateACLCommand command) throws UnsupportedRightException {
         MailboxACL oldACL = state.acl.orElse(MailboxACL.EMPTY);
-        return ImmutableList.of(new ACLUpdated(command.getId(), history.getNextEventId(),
+        ACLUpdated event = new ACLUpdated(command.getId(), history.getNextEventId(),
             ACLDiff.computeDiff(oldACL,
-                oldACL.apply(command.getAclCommand()))));
+                oldACL.apply(command.getAclCommand())));
+        apply(event);
+        return ImmutableList.of(EventWithState.noState(event));
     }
 
     private void apply(Event event) {

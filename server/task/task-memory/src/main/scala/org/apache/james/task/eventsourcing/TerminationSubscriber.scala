@@ -19,15 +19,15 @@
 
 package org.apache.james.task.eventsourcing
 
-import org.apache.james.eventsourcing.{Event, ReactiveSubscriber}
+import org.apache.james.eventsourcing.{Event, EventWithState, ReactiveSubscriber}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST
 import reactor.core.publisher.{Mono, Sinks}
 
 trait TerminationSubscriber extends ReactiveSubscriber {
-  override def handleReactive(event: Event): Publisher[Void] = Mono.fromRunnable(() => handle(event))
+  override def handleReactive(event: EventWithState): Publisher[Void] = Mono.fromRunnable(() => handle(event))
 
-  override def handle(event: Event): Unit = event match {
+  override def handle(event: EventWithState): Unit = event.event match {
     case event: TerminalTaskEvent => addEvent(event)
     case _ =>
   }

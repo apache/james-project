@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.ReactiveSubscriber;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 
@@ -34,7 +35,8 @@ public class AclV2DAOSubscriber implements ReactiveSubscriber {
     }
 
     @Override
-    public Mono<Void> handleReactive(Event event) {
+    public Mono<Void> handleReactive(EventWithState eventWithState) {
+        Event event = eventWithState.event();
         if (event instanceof ACLUpdated) {
             ACLUpdated aclUpdated = (ACLUpdated) event;
 

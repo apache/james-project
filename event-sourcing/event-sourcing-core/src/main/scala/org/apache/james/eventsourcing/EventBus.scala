@@ -30,20 +30,20 @@ object EventBus {
 
 class EventBus @Inject() (eventStore: EventStore, subscribers: Set[Subscriber]) {
   @throws[EventStoreFailedException]
-  def publish(events: Iterable[Event]): SMono[Void] =
-    SMono(eventStore.appendAll(events))
+  def publish(events: Iterable[EventWithState]): SMono[Void] =
+    SMono(eventStore.appendAll(events.map(_.event)))
         .`then`(runHandlers(events))
 
-  private def runHandlers(events: Iterable[Event]): SMono[Void] =
-    SFlux.fromIterable(events.flatMap((event: Event) => subscribers.map(subscriber => (event, subscriber))))
+  private def runHandlers(events: Iterable[EventWithState]): SMono[Void] =
+    SFlux.fromIterable(events.flatMap((commandExecuted: EventWithState) => subscribers.map(subscriber => (commandExecuted, subscriber))))
       .concatMap(infos => runHandler(infos._1, infos._2))
       .`then`()
       .`then`(SMono.empty)
 
-  private def runHandler(event: Event, subscriber: Subscriber): Publisher[Void] =
-    SMono(ReactiveSubscriber.asReactiveSubscriber(subscriber).handleReactive(event))
+  private def runHandler(commandExecuted: EventWithState, subscriber: Subscriber): Publisher[Void] =
+    SMono(ReactiveSubscriber.asReactiveSubscriber(subscriber).handleReactive(commandExecuted))
       .onErrorResume(e => {
-        EventBus.LOGGER.error("Error while calling {} for {}", subscriber, event, e)
+        EventBus.LOGGER.error("Error while calling {} for {}", subscriber, commandExecuted, e)
         SMono.empty
       })
 }

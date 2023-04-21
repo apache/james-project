@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.CommandHandler;
-import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.reactivestreams.Publisher;
 
@@ -45,7 +45,7 @@ public class RegisterStorageStrategyCommandHandler implements CommandHandler<Reg
     }
 
     @Override
-    public Publisher<List<? extends Event>> handle(RegisterStorageStrategy command) {
+    public Publisher<List<EventWithState>> handle(RegisterStorageStrategy command) {
         return Mono.from(eventStore.getEventsOfAggregate(AGGREGATE_ID))
             .map(history -> StorageStrategyAggregate.load(AGGREGATE_ID, history))
             .map(aggregate -> aggregate.registerStorageStrategy(command));

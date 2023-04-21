@@ -42,7 +42,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
                                                                                  val terminationSubscriber: TerminationSubscriber) extends TaskManager with Closeable with Startable {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[EventSourcingTaskManager])
 
-  private def workDispatcher: Subscriber = {
+  private def workDispatcher: Subscriber = event => event.event match {
     case Created(aggregateId, _, task, _) =>
       val taskWithId = new TaskWithId(aggregateId.taskId, task)
       workQueue.submit(taskWithId)

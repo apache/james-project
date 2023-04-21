@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.History;
 
 import com.google.common.base.Preconditions;
@@ -54,7 +55,7 @@ class ConfigurationAggregate {
         return new ConfigurationAggregate(aggregateId, history);
     }
 
-    private static final List<? extends Event> EMPTY_EVENTS = ImmutableList.of();
+    private static final List<EventWithState> EMPTY_EVENTS = ImmutableList.of();
 
     private final AggregateId aggregateId;
     private final History history;
@@ -68,7 +69,7 @@ class ConfigurationAggregate {
         history.getEventsJava().forEach(this::apply);
     }
 
-    List<? extends Event> registerConfiguration(CassandraMailQueueViewConfiguration configuration) {
+    List<EventWithState> registerConfiguration(CassandraMailQueueViewConfiguration configuration) {
         boolean isSame = state.maybeConfiguration.map(configuration::equals).orElse(false);
         if (isSame) {
             return EMPTY_EVENTS;
@@ -76,10 +77,10 @@ class ConfigurationAggregate {
 
         state.maybeConfiguration.ifPresent(oldConfiguration -> oldConfiguration.validateConfigurationChange(configuration));
 
-        return ImmutableList.of(new ConfigurationChanged(
+        return ImmutableList.of(EventWithState.noState(new ConfigurationChanged(
             aggregateId,
             history.getNextEventId(),
-            configuration));
+            configuration)));
     }
 
     Optional<CassandraMailQueueViewConfiguration> getCurrentConfiguration() {

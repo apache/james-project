@@ -22,7 +22,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 import java.util.List;
 
 import org.apache.james.eventsourcing.CommandHandler;
-import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.reactivestreams.Publisher;
 
@@ -42,7 +42,7 @@ class RegisterConfigurationCommandHandler implements CommandHandler<RegisterConf
     }
 
     @Override
-    public Publisher<List<? extends Event>> handle(RegisterConfigurationCommand command) {
+    public Publisher<List<EventWithState>> handle(RegisterConfigurationCommand command) {
         return Mono.from(eventStore.getEventsOfAggregate(command.getAggregateId()))
             .map(history -> ConfigurationAggregate
                 .load(command.getAggregateId(), history)

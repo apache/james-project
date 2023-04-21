@@ -30,6 +30,7 @@ import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsAdded;
 import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsRemoved;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.History;
 
 import com.google.common.collect.ImmutableList;
@@ -80,30 +81,31 @@ public class DLPDomainConfiguration {
         return new DLPRules(ImmutableList.copyOf(state.rules));
     }
 
-    public List<Event> clear() {
+    public List<EventWithState> clear() {
         ImmutableList<DLPConfigurationItem> rules = retrieveRules().getItems();
         if (!rules.isEmpty()) {
-            ImmutableList<Event> events = ImmutableList.of(new ConfigurationItemsRemoved(aggregateId, history.getNextEventId(), rules));
-            events.forEach(this::apply);
-            return events;
+            Event event = new ConfigurationItemsRemoved(aggregateId, history.getNextEventId(), rules);
+            apply(event);
+            return ImmutableList.of(EventWithState.noState(event));
         } else {
             return ImmutableList.of();
         }
     }
 
-    public List<Event> store(DLPRules updatedRules) {
+    public List<EventWithState> store(DLPRules updatedRules) {
         ImmutableSet<DLPConfigurationItem> existingRules = retrieveRules().getItems().stream().collect(ImmutableSet.toImmutableSet());
         ImmutableSet<DLPConfigurationItem> updatedRulesSet = ImmutableSet.copyOf(updatedRules);
 
         Optional<Event> removedRulesEvent = generateRemovedRulesEvent(existingRules, updatedRulesSet);
         Optional<Event> addedRulesEvent = generateAddedRulesEvent(existingRules, updatedRulesSet, computeNextEventId(removedRulesEvent));
 
-        ImmutableList<Event> events = Stream
+        ImmutableList<EventWithState> events = Stream
             .of(removedRulesEvent, addedRulesEvent)
             .flatMap(Optional::stream)
+            .map(EventWithState::noState)
             .collect(ImmutableList.toImmutableList());
 
-        events.forEach(this::apply);
+        events.forEach(e -> apply(e.event()));
         return events;
     }
 

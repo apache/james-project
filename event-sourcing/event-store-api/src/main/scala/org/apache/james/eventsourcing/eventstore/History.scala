@@ -52,9 +52,9 @@ final case class History private(events: List[Event]) {
 
   def getVersionAsJava: Optional[EventId] = getVersion.toJava
 
-  def getEvents:List[Event] = events
+  def getEvents: List[Event] = events
 
-  def getEventsJava:java.util.List[Event] = events.asJava
+  def getEventsJava: java.util.List[Event] = events.asJava
 
   def getNextEventId: EventId = getVersion
     .map(eventId => eventId.next)

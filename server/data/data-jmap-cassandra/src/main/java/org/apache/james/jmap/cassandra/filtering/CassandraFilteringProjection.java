@@ -1,3 +1,22 @@
+/***************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
 package org.apache.james.jmap.cassandra.filtering;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
@@ -19,14 +38,14 @@ import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.ReactiveSubscriber;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.filtering.impl.FilteringAggregate;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
-import org.apache.james.jmap.api.filtering.impl.IncrementalRuleChange;
-import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 import org.reactivestreams.Publisher;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -39,7 +58,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraFilteringProjection implements EventSourcingFilteringManagement.ReadProjection {
+public class CassandraFilteringProjection implements EventSourcingFilteringManagement.ReadProjection, ReactiveSubscriber {
     private final CassandraAsyncExecutor executor;
 
     private final PreparedStatement insertStatement;
@@ -89,39 +108,25 @@ public class CassandraFilteringProjection implements EventSourcingFilteringManag
 
     @Override
     public Optional<ReactiveSubscriber> subscriber(Function<Username, Publisher<Rules>> ruleLoader) {
-        return Optional.of(new ReactiveSubscriber() {
-            @Override
-            public Publisher<Void> handleReactive(Event event) {
-                if (event instanceof RuleSetDefined) {
-                    return persist((RuleSetDefined) event);
-                }
-                if (event instanceof IncrementalRuleChange) {
-                    return persist((IncrementalRuleChange) event);
-                }
-                throw new RuntimeException("Unsupported event");
-            }
+        return Optional.of(this);
+    }
 
-            private Mono<Void> persist(RuleSetDefined ruleSetDefined) {
-                return persistRules(ruleSetDefined.getAggregateId(), ruleSetDefined.eventId(), ruleSetDefined.getRules());
-            }
+    @Override
+    public Publisher<Void> handleReactive(EventWithState eventWithState) {
+        Event event = eventWithState.event();
+        FilteringAggregate.FilterState state = (FilteringAggregate.FilterState) eventWithState.state().get();
+        return persistRules(event.getAggregateId(), event.eventId(), state.getRules());
+    }
 
-            private Mono<Void> persistRules(AggregateId aggregateId, EventId eventId, ImmutableList<Rule> rules) {
-                try {
-                    return executor.executeVoid(insertStatement.bind()
-                        .setString(AGGREGATE_ID, aggregateId.asAggregateKey())
-                        .setInt(EVENT_ID, eventId.value())
-                        .setString(RULES, objectMapper.writeValueAsString(RuleDTO.from(rules))));
-                } catch (JsonProcessingException e) {
-                    return Mono.error(e);
-                }
-            }
-
-            private Mono<Void> persist(IncrementalRuleChange incrementalRuleChange) {
-                FilteringAggregateId filteringAggregateId = (FilteringAggregateId) incrementalRuleChange.getAggregateId();
-                return Mono.from(ruleLoader.apply(filteringAggregateId.getUsername()))
-                    .flatMap(rules -> persistRules(filteringAggregateId, incrementalRuleChange.eventId(), ImmutableList.copyOf(rules.getRules())));
-            }
-        });
+    private Mono<Void> persistRules(AggregateId aggregateId, EventId eventId, ImmutableList<Rule> rules) {
+        try {
+            return executor.executeVoid(insertStatement.bind()
+                .setString(AGGREGATE_ID, aggregateId.asAggregateKey())
+                .setInt(EVENT_ID, eventId.value())
+                .setString(RULES, objectMapper.writeValueAsString(RuleDTO.from(rules))));
+        } catch (JsonProcessingException e) {
+            return Mono.error(e);
+        }
     }
 
     private Version parseVersion(Row row) {

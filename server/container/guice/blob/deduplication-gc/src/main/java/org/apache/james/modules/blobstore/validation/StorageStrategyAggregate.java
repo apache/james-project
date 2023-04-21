@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 
@@ -81,7 +82,7 @@ public class StorageStrategyAggregate {
             .forEach(this::apply);
     }
 
-    public List<Event> registerStorageStrategy(RegisterStorageStrategy command) {
+    public List<EventWithState> registerStorageStrategy(RegisterStorageStrategy command) {
         if (state.holds(command.getStorageStrategy())) {
             return ImmutableList.of();
         }
@@ -93,7 +94,8 @@ public class StorageStrategyAggregate {
                     state.getStorageStrategy()));
         }
 
-        return ImmutableList.of(new StorageStrategyChanged(history.getNextEventId(), aggregateId, command.getStorageStrategy()));
+        return ImmutableList.of(EventWithState.noState(
+            new StorageStrategyChanged(history.getNextEventId(), aggregateId, command.getStorageStrategy())));
     }
 
     private void apply(Event event) {
