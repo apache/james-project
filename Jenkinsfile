@@ -98,6 +98,8 @@ pipeline {
                 always {
                     junit(testResults: '**/surefire-reports/*.xml', allowEmptyResults: false)
                     junit(testResults: '**/failsafe-reports/*.xml', allowEmptyResults: true)
+                }
+                success {
                     archiveArtifacts artifacts: 'code-coverage-report/target/jacoco/**/*' , fingerprint: true, allowEmptyArchive: true
                 }
                 failure {
