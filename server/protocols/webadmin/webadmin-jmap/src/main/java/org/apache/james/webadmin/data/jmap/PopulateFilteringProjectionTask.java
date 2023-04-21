@@ -133,7 +133,7 @@ public class PopulateFilteringProjectionTask implements Task {
             .concatMap(user -> Mono.from(noReadProjection.listRulesForUser(user))
                 .flatMap(rules ->
                     rules.getVersion().asEventId()
-                        .flatMap(eventId -> readProjection.subscriber()
+                        .flatMap(eventId -> readProjection.subscriber(any -> Mono.empty())
                             .map(s -> Mono.from(s.handleReactive(asEvent(user, rules, eventId)))))
                         .orElse(Mono.empty()))
                 .thenReturn(Result.COMPLETED)

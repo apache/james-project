@@ -10,17 +10,22 @@ import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjec
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
+import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.ReactiveSubscriber;
+import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
+import org.apache.james.jmap.api.filtering.impl.IncrementalRuleChange;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 import org.reactivestreams.Publisher;
 
@@ -30,10 +35,11 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
-public class CassandraFilteringProjection implements EventSourcingFilteringManagement.ReadProjection, ReactiveSubscriber {
+public class CassandraFilteringProjection implements EventSourcingFilteringManagement.ReadProjection {
     private final CassandraAsyncExecutor executor;
 
     private final PreparedStatement insertStatement;
@@ -82,27 +88,40 @@ public class CassandraFilteringProjection implements EventSourcingFilteringManag
     }
 
     @Override
-    public Publisher<Void> handleReactive(Event event) {
-        if (event instanceof RuleSetDefined) {
-            return persist((RuleSetDefined) event);
-        }
-        throw new RuntimeException("Unsupported event");
-    }
+    public Optional<ReactiveSubscriber> subscriber(Function<Username, Publisher<Rules>> ruleLoader) {
+        return Optional.of(new ReactiveSubscriber() {
+            @Override
+            public Publisher<Void> handleReactive(Event event) {
+                if (event instanceof RuleSetDefined) {
+                    return persist((RuleSetDefined) event);
+                }
+                if (event instanceof IncrementalRuleChange) {
+                    return persist((IncrementalRuleChange) event);
+                }
+                throw new RuntimeException("Unsupported event");
+            }
 
-    @Override
-    public Optional<ReactiveSubscriber> subscriber() {
-        return Optional.of(this);
-    }
+            private Mono<Void> persist(RuleSetDefined ruleSetDefined) {
+                return persistRules(ruleSetDefined.getAggregateId(), ruleSetDefined.eventId(), ruleSetDefined.getRules());
+            }
 
-    private Mono<Void> persist(RuleSetDefined ruleSetDefined) {
-        try {
-            return executor.executeVoid(insertStatement.bind()
-                .setString(AGGREGATE_ID, ruleSetDefined.getAggregateId().asAggregateKey())
-                .setInt(EVENT_ID, ruleSetDefined.eventId().value())
-                .setString(RULES, objectMapper.writeValueAsString(RuleDTO.from(ruleSetDefined.getRules()))));
-        } catch (JsonProcessingException e) {
-            return Mono.error(e);
-        }
+            private Mono<Void> persistRules(AggregateId aggregateId, EventId eventId, ImmutableList<Rule> rules) {
+                try {
+                    return executor.executeVoid(insertStatement.bind()
+                        .setString(AGGREGATE_ID, aggregateId.asAggregateKey())
+                        .setInt(EVENT_ID, eventId.value())
+                        .setString(RULES, objectMapper.writeValueAsString(RuleDTO.from(rules))));
+                } catch (JsonProcessingException e) {
+                    return Mono.error(e);
+                }
+            }
+
+            private Mono<Void> persist(IncrementalRuleChange incrementalRuleChange) {
+                FilteringAggregateId filteringAggregateId = (FilteringAggregateId) incrementalRuleChange.getAggregateId();
+                return Mono.from(ruleLoader.apply(filteringAggregateId.getUsername()))
+                    .flatMap(rules -> persistRules(filteringAggregateId, incrementalRuleChange.eventId(), ImmutableList.copyOf(rules.getRules())));
+            }
+        });
     }
 
     private Version parseVersion(Row row) {

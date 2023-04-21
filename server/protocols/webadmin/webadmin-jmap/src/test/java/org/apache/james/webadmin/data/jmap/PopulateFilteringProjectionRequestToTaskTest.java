@@ -225,7 +225,7 @@ class PopulateFilteringProjectionRequestToTaskTest {
         Mockito.when(noReadProjection.listRulesForUser(any()))
             .thenReturn(Mono.just(new Rules(ImmutableList.of(rule), new Version(4))));
         ReactiveSubscriber subscriber = mock(ReactiveSubscriber.class);
-        Mockito.when(readProjection.subscriber()).thenReturn(Optional.of(subscriber));
+        Mockito.when(readProjection.subscriber(any())).thenReturn(Optional.of(subscriber));
         Mockito.when(subscriber.handleReactive(any())).thenReturn(Mono.empty());
 
         String taskId = with()

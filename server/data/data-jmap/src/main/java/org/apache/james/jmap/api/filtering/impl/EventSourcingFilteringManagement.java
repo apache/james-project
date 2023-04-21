@@ -22,6 +22,7 @@ package org.apache.james.jmap.api.filtering.impl;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -50,7 +51,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
 
         Publisher<Version> getLatestVersion(Username username);
 
-        Optional<ReactiveSubscriber> subscriber();
+        Optional<ReactiveSubscriber> subscriber(Function<Username, Publisher<Rules>> ruleLoader);
     }
 
     public static class NoReadProjection implements ReadProjection {
@@ -85,7 +86,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
         }
 
         @Override
-        public Optional<ReactiveSubscriber> subscriber() {
+        public Optional<ReactiveSubscriber> subscriber(Function<Username, Publisher<Rules>> ruleLoader) {
             return Optional.empty();
         }
     }
@@ -104,7 +105,8 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
         this.readProjection = new NoReadProjection(eventStore);
         this.eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(new DefineRulesCommandHandler(eventStore)),
-            readProjection.subscriber().map(Subscriber.class::cast).map(ImmutableSet::of).orElse(NO_SUBSCRIBER),
+            readProjection.subscriber(aggregateId -> new NoReadProjection(eventStore).listRulesForUser(aggregateId))
+                .map(Subscriber.class::cast).map(ImmutableSet::of).orElse(NO_SUBSCRIBER),
             eventStore);
     }
 
