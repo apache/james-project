@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
@@ -52,7 +53,8 @@ public class QuotaThresholdMailer implements Subscriber {
     }
 
     @Override
-    public void handle(Event event) {
+    public void handle(EventWithState eventWithState) {
+        Event event = eventWithState.event();
         if (event instanceof QuotaThresholdChangedEvent) {
             handleEvent((QuotaThresholdChangedEvent) event);
         }

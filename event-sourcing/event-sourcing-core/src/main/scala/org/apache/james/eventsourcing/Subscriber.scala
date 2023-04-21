@@ -23,13 +23,13 @@ import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
 trait Subscriber {
-  def handle(event: Event) : Unit
+  def handle(commandExecuted: EventWithState) : Unit
 }
 
 trait ReactiveSubscriber extends Subscriber {
-  def handleReactive(event: Event): Publisher[Void]
+  def handleReactive(commandExecuted: EventWithState): Publisher[Void]
 
-  override def handle(event: Event) : Unit = SMono(handleReactive(event)).block()
+  override def handle(commandExecuted: EventWithState) : Unit = SMono(handleReactive(commandExecuted)).block()
 }
 
 object ReactiveSubscriber {
@@ -40,9 +40,9 @@ object ReactiveSubscriber {
 }
 
 class ReactiveSubscriberWrapper(delegate: Subscriber) extends ReactiveSubscriber {
-  override def handle(event: Event) : Unit = delegate.handle(event)
+  override def handle(commandExecuted: EventWithState) : Unit = delegate.handle(commandExecuted)
 
-  def handleReactive(event: Event): Publisher[Void] = SMono.fromCallable(() => handle(event))
+  def handleReactive(commandExecuted: EventWithState): Publisher[Void] = SMono.fromCallable(() => handle(commandExecuted))
     .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
     .`then`()
 }

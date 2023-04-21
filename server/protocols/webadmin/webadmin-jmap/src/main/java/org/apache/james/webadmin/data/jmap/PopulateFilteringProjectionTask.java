@@ -26,8 +26,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.jmap.api.filtering.impl.FilteringAggregate;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 import org.apache.james.json.DTOModule;
@@ -43,6 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import scala.Some;
 
 public class PopulateFilteringProjectionTask implements Task {
     static final TaskType TASK_TYPE = TaskType.of("PopulateFilteringProjectionTask");
@@ -148,8 +151,9 @@ public class PopulateFilteringProjectionTask implements Task {
             .block();
     }
 
-    private RuleSetDefined asEvent(Username user, Rules rules, EventId eventId) {
-        return new RuleSetDefined(new FilteringAggregateId(user), eventId, ImmutableList.copyOf(rules.getRules()));
+    private EventWithState asEvent(Username user, Rules rules, EventId eventId) {
+        return new EventWithState(new RuleSetDefined(new FilteringAggregateId(user), eventId, ImmutableList.copyOf(rules.getRules())),
+            Some.apply(new FilteringAggregate.FilterState(ImmutableList.copyOf(rules.getRules()))));
     }
 
     @Override

@@ -22,7 +22,6 @@ package org.apache.james.webadmin.data.jmap;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
-import static javax.mail.Flags.Flag.DELETED;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.CONTAINS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.SUBJECT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,12 +34,10 @@ import static org.mockito.Mockito.verify;
 
 import java.util.Optional;
 
-import javax.mail.Flags;
-
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.ReactiveSubscriber;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
@@ -48,14 +45,10 @@ import org.apache.james.jmap.api.filtering.Version;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
-import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Hostname;
@@ -63,7 +56,6 @@ import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.TaskManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -238,13 +230,13 @@ class PopulateFilteringProjectionRequestToTaskTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        ArgumentCaptor<EventWithState> captor = ArgumentCaptor.forClass(EventWithState.class);
         verify(subscriber, times(1)).handleReactive(captor.capture());
 
-        assertThat(captor.getValue().eventId()).isEqualTo(EventId.fromSerialized(4));
-        assertThat(captor.getValue().getAggregateId()).isEqualTo(new FilteringAggregateId(BOB));
-        assertThat(captor.getValue()).isInstanceOf(RuleSetDefined.class);
-        RuleSetDefined ruleSetDefined = (RuleSetDefined) captor.getValue();
+        assertThat(captor.getValue().event().eventId()).isEqualTo(EventId.fromSerialized(4));
+        assertThat(captor.getValue().event().getAggregateId()).isEqualTo(new FilteringAggregateId(BOB));
+        assertThat(captor.getValue().event()).isInstanceOf(RuleSetDefined.class);
+        RuleSetDefined ruleSetDefined = (RuleSetDefined) captor.getValue().event();
         assertThat(ruleSetDefined.getRules()).containsOnly(rule);
     }
 }

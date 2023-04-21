@@ -37,3 +37,11 @@ trait Event extends Comparable[Event] {
 
   override def compareTo(o: Event): Int = eventId.compareTo(o.eventId)
 }
+
+trait ImmutableState
+
+object EventWithState {
+  def noState(event: Event): EventWithState = EventWithState(event, None)
+}
+
+case class EventWithState(event: Event, state: Option[ImmutableState])

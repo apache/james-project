@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 import java.util.List;
 
 import org.apache.james.eventsourcing.Command;
-import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.reactivestreams.Publisher;
 
@@ -42,7 +42,7 @@ public class DeleteMailboxCommand implements Command {
         }
 
         @Override
-        public Publisher<List<? extends Event>> handle(DeleteMailboxCommand command) {
+        public Publisher<List<EventWithState>> handle(DeleteMailboxCommand command) {
             return Mono.from(eventStore.getEventsOfAggregate(command.getId()))
                 .map(history -> MailboxACLAggregate.load(command.getId(), history))
                 .map(MailboxACLAggregate::deleteMailbox);

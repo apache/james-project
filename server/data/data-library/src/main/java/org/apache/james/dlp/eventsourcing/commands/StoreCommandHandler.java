@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPDomainConfiguration;
 import org.apache.james.eventsourcing.CommandHandler;
-import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.reactivestreams.Publisher;
 
@@ -44,7 +44,7 @@ public class StoreCommandHandler implements CommandHandler<StoreCommand> {
     }
 
     @Override
-    public Publisher<List<? extends Event>> handle(StoreCommand storeCommand) {
+    public Publisher<List<EventWithState>> handle(StoreCommand storeCommand) {
         DLPAggregateId aggregateId = new DLPAggregateId(storeCommand.getDomain());
 
         return Mono.from(eventStore.getEventsOfAggregate(aggregateId))

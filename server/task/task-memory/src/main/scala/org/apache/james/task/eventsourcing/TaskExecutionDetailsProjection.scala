@@ -29,7 +29,7 @@ import scala.compat.java8.OptionConverters._
 import scala.jdk.CollectionConverters._
 
 trait TaskExecutionDetailsProjection {
-  def asSubscriber(hostname: Hostname): ReactiveSubscriber = {
+  def asSubscriber(hostname: Hostname): ReactiveSubscriber = event => event.event match {
     case created: Created =>
       updateReactive(TaskExecutionDetails.from(created.task, created.aggregateId.taskId, created.hostname))
     case cancelRequested: CancelRequested =>

@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 import java.util.List;
 
 import org.apache.james.eventsourcing.Command;
-import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.reactivestreams.Publisher;
@@ -43,7 +43,7 @@ public class SetACLCommand implements Command {
         }
 
         @Override
-        public Publisher<List<? extends Event>> handle(SetACLCommand command) {
+        public Publisher<List<EventWithState>> handle(SetACLCommand command) {
             return Mono.from(eventStore.getEventsOfAggregate(command.getId()))
                 .map(history -> MailboxACLAggregate.load(command.getId(), history))
                 .map(aggregate -> aggregate.set(command));

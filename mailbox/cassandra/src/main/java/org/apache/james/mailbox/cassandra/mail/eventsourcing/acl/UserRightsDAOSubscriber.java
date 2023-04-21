@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.ReactiveSubscriber;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.reactivestreams.Publisher;
@@ -34,7 +35,8 @@ public class UserRightsDAOSubscriber implements ReactiveSubscriber {
     }
 
     @Override
-    public Publisher<Void> handleReactive(Event event) {
+    public Publisher<Void> handleReactive(EventWithState eventWithState) {
+        Event event = eventWithState.event();
         if (event instanceof ACLUpdated) {
             ACLUpdated aclUpdated = (ACLUpdated) event;
             return userRightsDAO.update(aclUpdated.mailboxId(), aclUpdated.getAclDiff());

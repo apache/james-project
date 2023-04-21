@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
@@ -151,6 +152,7 @@ public interface TerminationSubscriberContract {
             .flatMapMany(ignored -> Flux.fromArray(events)
                 .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
                 .delayElements(DELAY_BETWEEN_EVENTS)
+                .map(EventWithState::noState)
                 .doOnNext(subscriber::handle))
             .subscribe();
     }

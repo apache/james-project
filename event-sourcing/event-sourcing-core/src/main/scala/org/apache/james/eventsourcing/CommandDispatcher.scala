@@ -19,8 +19,9 @@
 package org.apache.james.eventsourcing
 
 import java.util
-import com.google.common.base.Preconditions
 
+import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.apache.james.eventsourcing.eventstore.EventStoreFailedException
 import org.reactivestreams.Publisher
@@ -74,13 +75,14 @@ class CommandDispatcher @Inject()(eventBus: EventBus, handlers: Set[CommandHandl
     handleCommand(c) match {
       case Some(eventsPublisher) =>
         SMono(eventsPublisher)
-          .flatMap(events => eventBus.publish(events.asScala).`then`(SMono.just(events)))
+          .flatMap(events => eventBus.publish(events.asScala)
+            .`then`(SMono.just(events.asScala.map(_.event).asJava)))
       case _ =>
         SMono.error(CommandDispatcher.UnknownCommandException(c))
     }
   }
 
-  private def handleCommand(c: Command): Option[Publisher[util.List[_ <: Event]]] = {
+  private def handleCommand(c: Command): Option[Publisher[util.List[EventWithState]]] = {
     handlersByClass
       .get(c.getClass)
       .map(commandHandler =>

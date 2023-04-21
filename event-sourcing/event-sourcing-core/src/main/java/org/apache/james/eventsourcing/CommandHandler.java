@@ -25,5 +25,5 @@ import org.reactivestreams.Publisher;
 public interface CommandHandler<C extends Command> {
   Class<C> handledClass();
 
-  Publisher<List<? extends Event>> handle(C command);
+  Publisher<List<EventWithState>> handle(C command);
 }

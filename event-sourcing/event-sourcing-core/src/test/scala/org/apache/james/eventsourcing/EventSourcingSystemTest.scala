@@ -73,7 +73,7 @@ trait EventSourcingSystemTest {
     val subscriber = new DataCollectorSubscriber
     val eventSourcingSystem = new EventSourcingSystem(
       Set(simpleDispatcher(eventStore)),
-      Set((_: Event) => throw new RuntimeException, subscriber),
+      Set((_: EventWithState) => throw new RuntimeException, subscriber),
       eventStore)
     Mono.from(eventSourcingSystem.dispatch(new EventSourcingSystemTest.MyCommand(EventSourcingSystemTest.PAYLOAD_1))).block()
     assertThat(subscriber.getData.asJava).containsExactly(EventSourcingSystemTest.PAYLOAD_1)
@@ -87,7 +87,7 @@ trait EventSourcingSystemTest {
     val subscriber = new DataCollectorSubscriber
     val eventSourcingSystem = new EventSourcingSystem(
       Set(simpleDispatcher(eventStore)),
-      Set((_: Event) => throw new RuntimeException, subscriber),
+      Set((_: EventWithState) => throw new RuntimeException, subscriber),
       eventStore)
     assertThatThrownBy(() => Mono.from(eventSourcingSystem.dispatch(new EventSourcingSystemTest.MyCommand(EventSourcingSystemTest.PAYLOAD_1))).block())
       .isInstanceOf(classOf[RuntimeException])
@@ -151,22 +151,23 @@ trait EventSourcingSystemTest {
   def simpleDispatcher(eventStore: EventStore) = new CommandHandler[EventSourcingSystemTest.MyCommand]() {
     override def handledClass: Class[EventSourcingSystemTest.MyCommand] = classOf[EventSourcingSystemTest.MyCommand]
 
-    override def handle(myCommand: EventSourcingSystemTest.MyCommand): Publisher[JavaList[_ <: Event]] = {
+    override def handle(myCommand: EventSourcingSystemTest.MyCommand): Publisher[JavaList[EventWithState]] = {
       SMono.apply(eventStore.getEventsOfAggregate(EventSourcingSystemTest.AGGREGATE_ID))
-          .map(history => Seq(TestEvent(history.getNextEventId, EventSourcingSystemTest.AGGREGATE_ID, myCommand.getPayload)).asJava)
+          .map(history => Seq(EventWithState.noState(
+            TestEvent(history.getNextEventId, EventSourcingSystemTest.AGGREGATE_ID, myCommand.getPayload))).asJava)
     }
   }
 
   def wordCuttingDispatcher(eventStore: EventStore) = new CommandHandler[EventSourcingSystemTest.MyCommand]() {
     override def handledClass: Class[EventSourcingSystemTest.MyCommand] = classOf[EventSourcingSystemTest.MyCommand]
 
-    override def handle(myCommand: EventSourcingSystemTest.MyCommand): Publisher[JavaList[_ <: Event]] = {
+    override def handle(myCommand: EventSourcingSystemTest.MyCommand): Publisher[JavaList[EventWithState]] = {
       SMono.apply(eventStore.getEventsOfAggregate(EventSourcingSystemTest.AGGREGATE_ID))
         .map(history => new EventSourcingSystemTest.EventIdIncrementer(history.getNextEventId))
         .map(eventIdIncrementer => Splitter.on(" ").splitToList(myCommand.getPayload)
           .asScala
           .toList
-          .map((word: String) => TestEvent(eventIdIncrementer.next, EventSourcingSystemTest.AGGREGATE_ID, word)).asJava)
+          .map((word: String) => EventWithState.noState(TestEvent(eventIdIncrementer.next, EventSourcingSystemTest.AGGREGATE_ID, word))).asJava)
     }
   }
 }

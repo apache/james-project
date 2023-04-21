@@ -22,7 +22,7 @@ package org.apache.james.mailbox.quota.mailing.commands;
 import java.util.List;
 
 import org.apache.james.eventsourcing.CommandHandler;
-import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
@@ -43,7 +43,7 @@ public class DetectThresholdCrossingHandler implements CommandHandler<DetectThre
     }
 
     @Override
-    public Publisher<List<? extends Event>> handle(DetectThresholdCrossing command) {
+    public Publisher<List<EventWithState>> handle(DetectThresholdCrossing command) {
         return loadAggregate(command)
             .map(aggregate -> aggregate.detectThresholdCrossing(quotaMailingListenerConfiguration, command));
     }

@@ -23,7 +23,7 @@ import scala.collection.mutable
 class DataCollectorSubscriber() extends Subscriber {
   private val data = new mutable.ListBuffer[String]
 
-  override def handle(event: Event): Unit = event match {
+  override def handle(event: EventWithState): Unit = event.event match {
     case event: TestEvent => data += event.getData
   }
 
