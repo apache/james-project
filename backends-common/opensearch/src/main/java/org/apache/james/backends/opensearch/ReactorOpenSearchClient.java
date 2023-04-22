@@ -21,7 +21,6 @@ package org.apache.james.backends.opensearch;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 
 import org.opensearch.client.RestClient;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
@@ -55,7 +54,6 @@ import org.opensearch.client.transport.endpoints.BooleanResponse;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
 import reactor.core.scheduler.Schedulers;
 
 public class ReactorOpenSearchClient implements AutoCloseable {
@@ -133,17 +131,7 @@ public class ReactorOpenSearchClient implements AutoCloseable {
     }
 
     private static <T> Mono<T> toReactor(CompletableFuture<T> async) {
-        return Mono.<T>create(sink -> async.whenComplete(getFuture(sink)))
+        return Mono.fromFuture(async)
             .publishOn(Schedulers.boundedElastic());
-    }
-
-    private static <T> BiConsumer<? super T, ? super Throwable> getFuture(MonoSink<T> sink) {
-        return (response, exception) -> {
-            if (exception != null) {
-                sink.error(exception);
-            } else {
-                sink.success(response);
-            }
-        };
     }
 }
