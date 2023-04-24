@@ -58,6 +58,7 @@ public class LdapRepositoryConfiguration {
             userIdAttribute = Optional.empty();
             userObjectClass = Optional.empty();
             poolSize = Optional.empty();
+            trustAllCerts = Optional.empty();
         }
 
         public Builder ldapHost(String ldapHost) {
