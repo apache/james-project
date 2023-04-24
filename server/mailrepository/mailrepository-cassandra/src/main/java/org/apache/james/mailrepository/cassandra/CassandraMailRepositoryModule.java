@@ -20,7 +20,6 @@
 package org.apache.james.mailrepository.cassandra;
 
 import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
-import static com.datastax.oss.driver.api.core.type.DataTypes.COUNTER;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TIMESTAMP;
 import static com.datastax.oss.driver.api.core.type.DataTypes.listOf;
