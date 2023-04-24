@@ -21,7 +21,6 @@ package org.apache.james.mailrepository.cassandra;
 
 public interface MailRepositoryTable {
     String KEYS_TABLE_NAME = "mailRepositoryKeys";
-    String COUNT_TABLE = "mailRepositoryCount";
 
     String REPOSITORY_NAME = "name";
 
@@ -38,8 +37,6 @@ public interface MailRepositoryTable {
     String REMOTE_ADDR = "remoteAddr";
     String LAST_UPDATED = "lastUpdated";
     String PER_RECIPIENT_SPECIFIC_HEADERS = "perRecipientSpecificHeaders";
-
-    String COUNT = "count";
 
     String HEADER_TYPE = "header";
     String HEADER_NAME = "headerName";

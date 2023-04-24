@@ -36,11 +36,6 @@ public interface CassandraMailRepositoryModule {
             .withField(MailRepositoryTable.HEADER_NAME, TEXT)
             .withField(MailRepositoryTable.HEADER_VALUE, TEXT))
 
-        .table(MailRepositoryTable.COUNT_TABLE)
-        .comment("Projection maintaining per mail repository mail counter")
-        .statement(statement -> types -> statement
-            .withPartitionKey(MailRepositoryTable.REPOSITORY_NAME, TEXT)
-            .withColumn(MailRepositoryTable.COUNT, COUNTER))
         .table(MailRepositoryTable.KEYS_TABLE_NAME)
         .comment("Per-mailRepository mail key list")
         .statement(statement -> types -> statement

@@ -28,19 +28,15 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 public class CassandraMailRepositoryFactory implements MailRepositoryFactory {
     private final CassandraMailRepositoryKeysDAO keysDAO;
-    private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDaoV2 mailDAO;
     private final MimeMessageStore.Factory mimeMessageStoreFactory;
 
     @Inject
     public CassandraMailRepositoryFactory(
             CassandraMailRepositoryKeysDAO keysDAO,
-            CassandraMailRepositoryCountDAO countDAO,
             CassandraMailRepositoryMailDaoV2 mailDAO,
-            MimeMessageStore.Factory mimeMessageStoreFactory
-    ) {
+            MimeMessageStore.Factory mimeMessageStoreFactory) {
         this.keysDAO = keysDAO;
-        this.countDAO = countDAO;
         this.mailDAO = mailDAO;
         this.mimeMessageStoreFactory = mimeMessageStoreFactory;
     }
@@ -52,6 +48,6 @@ public class CassandraMailRepositoryFactory implements MailRepositoryFactory {
 
     @Override
     public MailRepository create(MailRepositoryUrl url) {
-        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, mimeMessageStoreFactory);
+        return new CassandraMailRepository(url, keysDAO, mailDAO, mimeMessageStoreFactory);
     }
 }

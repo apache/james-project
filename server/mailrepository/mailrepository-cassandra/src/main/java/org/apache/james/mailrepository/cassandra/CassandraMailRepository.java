@@ -48,19 +48,16 @@ import reactor.core.publisher.Mono;
 public class CassandraMailRepository implements MailRepository {
     private final MailRepositoryUrl url;
     private final CassandraMailRepositoryKeysDAO keysDAO;
-    private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDaoV2 mailDAO;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
 
     @Inject
     CassandraMailRepository(MailRepositoryUrl url,
                             CassandraMailRepositoryKeysDAO keysDAO,
-                            CassandraMailRepositoryCountDAO countDAO,
                             CassandraMailRepositoryMailDaoV2 mailDAO,
                             MimeMessageStore.Factory mimeMessageStoreFactory) {
         this.url = url;
         this.keysDAO = keysDAO;
-        this.countDAO = countDAO;
         this.mailDAO = mailDAO;
         this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
     }
@@ -74,16 +71,8 @@ public class CassandraMailRepository implements MailRepository {
                 parts.getHeaderBlobId(),
                 parts.getBodyBlobId()))
             .then(keysDAO.store(url, mailKey))
-            .flatMap(this::increaseSizeIfStored)
             .thenReturn(mailKey)
             .block();
-    }
-
-    private Mono<Void> increaseSizeIfStored(Boolean isStored) {
-        if (isStored) {
-            return countDAO.increment(url);
-        }
-        return Mono.empty();
     }
 
     @Override
@@ -135,7 +124,6 @@ public class CassandraMailRepository implements MailRepository {
         return mailDAO.read(url, key)
             .flatMap(maybeMailDTO ->
                 keysDAO.remove(url, key)
-                    .flatMap(this::decreaseSizeIfDeleted)
                     .then(mailDAO.remove(url, key))
                     .then(deleteBlobs(maybeMailDTO)));
     }
@@ -145,21 +133,15 @@ public class CassandraMailRepository implements MailRepository {
             .flatMap(mailDTO -> Mono.from(mimeMessageStore.delete(blobIds(mailDTO))));
     }
 
-    private Mono<Void> decreaseSizeIfDeleted(Boolean isDeleted) {
-        if (isDeleted) {
-            return countDAO.decrement(url);
-        }
-        return Mono.empty();
-    }
 
     @Override
     public long size() {
-        return countDAO.getCount(url).block();
+        return keysDAO.getCount(url).block();
     }
 
     @Override
     public Publisher<Long> sizeReactive() {
-        return countDAO.getCount(url);
+        return keysDAO.getCount(url);
     }
 
     @Override

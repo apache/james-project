@@ -45,11 +45,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryKeysDAO {
+    private static final String COUNT = "count";
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement insertKey;
     private final PreparedStatement deleteKey;
     private final PreparedStatement listKeys;
+    private final PreparedStatement countKeys;
     private final boolean strongConsistency;
 
     @Inject
@@ -60,11 +62,19 @@ public class CassandraMailRepositoryKeysDAO {
         this.insertKey = prepareInsert(session);
         this.deleteKey = prepareDelete(session);
         this.listKeys = prepareList(session);
+        this.countKeys = prepareCount(session);
     }
 
     private PreparedStatement prepareList(CqlSession session) {
         return session.prepare(selectFrom(KEYS_TABLE_NAME)
             .column(MAIL_KEY)
+            .where(column(REPOSITORY_NAME).isEqualTo(bindMarker(REPOSITORY_NAME)))
+            .build());
+    }
+
+    private PreparedStatement prepareCount(CqlSession session) {
+        return session.prepare(selectFrom(KEYS_TABLE_NAME)
+            .countAll().as(COUNT)
             .where(column(REPOSITORY_NAME).isEqualTo(bindMarker(REPOSITORY_NAME)))
             .build());
     }
@@ -107,6 +117,13 @@ public class CassandraMailRepositoryKeysDAO {
         return executor.executeRows(listKeys.bind()
                 .setString(REPOSITORY_NAME, url.asString()))
             .map(row -> new MailKey(row.getString(MAIL_KEY)));
+    }
+
+    public Mono<Long> getCount(MailRepositoryUrl url) {
+        return executor.executeSingleRow(countKeys.bind()
+            .setString(REPOSITORY_NAME, url.asString()))
+            .map(row -> row.getLong(COUNT))
+            .switchIfEmpty(Mono.just(0L));
     }
 
     public Mono<Boolean> remove(MailRepositoryUrl url, MailKey key) {
