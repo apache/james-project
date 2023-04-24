@@ -26,6 +26,7 @@ import static org.apache.james.user.ldap.DockerLdapSingleton.DOMAIN;
 import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
 import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
@@ -380,9 +381,9 @@ class ReadOnlyUsersLDAPRepositoryTest {
     }
 
     @Test
-    void shouldSupportLDAPS() throws Exception {
+    void shouldThrowWhenLdapsOnLdapPort() throws Exception {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
-        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsHost());
+        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsBadHost());
 
         ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
         usersLDAPRepository.configure(configuration);
@@ -393,9 +394,9 @@ class ReadOnlyUsersLDAPRepositoryTest {
     }
 
     @Test
-    void shouldSupportLDAPSWithoutCertificateValidation() throws Exception {
+    void shouldThrowWhenLdapsOnLdapPortWithoutCertificateValidation() throws Exception {
         HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
-        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsHost());
+        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsBadHost());
         configuration.addProperty("[@trustAllCerts]", "true");
 
         ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
