@@ -63,3 +63,13 @@ Example:
 <repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
     principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/>;
 ....
+
+SSL can be enabled by using `ldaps` scheme. `trustAllCerts` option can be used to trust all LDAP client certificates.
+
+Example:
+
+....
+<repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldaps://myldapserver:389"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
+    trustAllCerts="true"/>;
+....

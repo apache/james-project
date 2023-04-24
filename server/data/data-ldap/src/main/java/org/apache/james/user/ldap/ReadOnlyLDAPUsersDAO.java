@@ -20,6 +20,12 @@
 package org.apache.james.user.ldap;
 
 import java.net.URI;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -32,6 +38,10 @@ import java.util.stream.Stream;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -58,9 +68,27 @@ import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
+import com.unboundid.util.ssl.SSLUtil;
 
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
+
+    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            // Always trust
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {
+            // Always trust
+        }
+    };
 
     private LdapRepositoryConfiguration ldapConfiguration;
     private LDAPConnectionPool ldapConnectionPool;
@@ -112,7 +140,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         connectionOptions.setResponseTimeoutMillis(ldapConfiguration.getReadTimeout());
 
         URI uri = new URI(ldapConfiguration.getLdapHost());
-        SocketFactory socketFactory = null;
+        SocketFactory socketFactory = supportLDAPS(uri);
         LDAPConnection ldapConnection = new LDAPConnection(socketFactory, connectionOptions, uri.getHost(), uri.getPort(), ldapConfiguration.getPrincipal(), ldapConfiguration.getCredentials());
         ldapConnectionPool = new LDAPConnectionPool(ldapConnection, 4);
         ldapConnectionPool.setRetryFailedOperationsDueToInvalidConnections(true);
@@ -122,6 +150,19 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         objectClassFilter = Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass());
         listingFilter = userExtraFilter.map(extraFilter -> Filter.createANDFilter(objectClassFilter, extraFilter))
             .orElse(objectClassFilter);
+    }
+
+    private SocketFactory supportLDAPS(URI uri) throws KeyManagementException, NoSuchAlgorithmException {
+        if (uri.getScheme().equals("ldaps")) {
+            if (ldapConfiguration.isTrustAllCerts()) {
+                SSLContext context = SSLContext.getInstance("TLSv1.2");
+                context.init(null, new TrustManager[]{DUMMY_TRUST_MANAGER}, null);
+                return context.getSocketFactory();
+            }
+            return SSLSocketFactory.getDefault();
+        } else {
+            return null;
+        }
     }
 
     @PreDestroy

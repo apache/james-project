@@ -379,6 +379,33 @@ class ReadOnlyUsersLDAPRepositoryTest {
         }
     }
 
+    @Test
+    void shouldSupportLDAPS() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsHost());
+
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository.configure(configuration);
+
+        assertThatThrownBy(usersLDAPRepository::init)
+            .isInstanceOf(LDAPException.class)
+            .hasMessageContaining("SSLHandshakeException");
+    }
+
+    @Test
+    void shouldSupportLDAPSWithoutCertificateValidation() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsHost());
+        configuration.addProperty("[@trustAllCerts]", "true");
+
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository.configure(configuration);
+
+        assertThatThrownBy(usersLDAPRepository::init)
+            .isInstanceOf(LDAPException.class)
+            .hasMessageContaining("SSLHandshakeException");
+    }
+
     private static ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration,
                                                              DomainList domainList) throws Exception {
         ReadOnlyUsersLDAPRepository ldapRepository = new ReadOnlyUsersLDAPRepository(domainList);
