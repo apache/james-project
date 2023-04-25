@@ -26,6 +26,7 @@ import static org.apache.james.user.ldap.DockerLdapSingleton.DOMAIN;
 import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
 import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
@@ -377,6 +378,33 @@ class ReadOnlyUsersLDAPRepositoryTest {
             assertThatThrownBy(() -> usersLDAPRepository.configure(configuration))
                 .isInstanceOf(ConversionException.class);
         }
+    }
+
+    @Test
+    void shouldThrowWhenLdapsOnLdapPort() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsBadHost());
+
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository.configure(configuration);
+
+        assertThatThrownBy(usersLDAPRepository::init)
+            .isInstanceOf(LDAPException.class)
+            .hasMessageContaining("SSLHandshakeException");
+    }
+
+    @Test
+    void shouldThrowWhenLdapsOnLdapPortWithoutCertificateValidation() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration(ldapContainer);
+        configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsBadHost());
+        configuration.addProperty("[@trustAllCerts]", "true");
+
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository.configure(configuration);
+
+        assertThatThrownBy(usersLDAPRepository::init)
+            .isInstanceOf(LDAPException.class)
+            .hasMessageContaining("SSLHandshakeException");
     }
 
     private static ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration,

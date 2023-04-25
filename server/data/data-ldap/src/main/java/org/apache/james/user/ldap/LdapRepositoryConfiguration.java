@@ -48,6 +48,7 @@ public class LdapRepositoryConfiguration {
         private Optional<String> userIdAttribute;
         private Optional<String> userObjectClass;
         private Optional<Integer> poolSize;
+        private Optional<Boolean> trustAllCerts;
 
         public Builder() {
             ldapHost = Optional.empty();
@@ -57,6 +58,7 @@ public class LdapRepositoryConfiguration {
             userIdAttribute = Optional.empty();
             userObjectClass = Optional.empty();
             poolSize = Optional.empty();
+            trustAllCerts = Optional.empty();
         }
 
         public Builder ldapHost(String ldapHost) {
@@ -94,6 +96,11 @@ public class LdapRepositoryConfiguration {
             return this;
         }
 
+        public Builder trustAllCerts(boolean trustAllCerts) {
+            this.trustAllCerts = Optional.of(trustAllCerts);
+            return this;
+        }
+
         public LdapRepositoryConfiguration build() throws ConfigurationException {
             Preconditions.checkState(ldapHost.isPresent(), "'ldapHost' is mandatory");
             Preconditions.checkState(principal.isPresent(), "'principal' is mandatory");
@@ -115,7 +122,8 @@ public class LdapRepositoryConfiguration {
                 poolSize.orElse(DEFAULT_POOL_SIZE),
                 NO_RESTRICTION,
                 NO_FILTER,
-                NO_ADMINISTRATOR_ID);
+                NO_ADMINISTRATOR_ID,
+                trustAllCerts.orElse(false));
         }
     }
 
@@ -145,6 +153,7 @@ public class LdapRepositoryConfiguration {
 
         //see if there is a filter argument
         String filter = configuration.getString("[@filter]");
+        Boolean trustAllCerts = configuration.getBoolean("[@trustAllCerts]", false);
 
         Optional<String> administratorId = Optional.ofNullable(configuration.getString("[@administratorId]"));
         int poolSize = Optional.ofNullable(configuration.getInteger("[@poolSize]", null))
@@ -163,7 +172,8 @@ public class LdapRepositoryConfiguration {
             poolSize,
             restriction,
             filter,
-            administratorId);
+            administratorId,
+            trustAllCerts);
     }
 
     /**
@@ -240,11 +250,12 @@ public class LdapRepositoryConfiguration {
      * The administrator is allowed to log in as other users
      */
     private final Optional<Username> administratorId;
+    private final boolean trustAllCerts;
 
     private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
                                         String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
-                                        Optional<String> administratorId) throws ConfigurationException {
+                                        Optional<String> administratorId, boolean trustAllCerts) throws ConfigurationException {
         this.ldapHost = ldapHost;
         this.principal = principal;
         this.credentials = credentials;
@@ -258,6 +269,7 @@ public class LdapRepositoryConfiguration {
         this.restriction = restriction;
         this.filter = filter;
         this.administratorId = administratorId.map(Username::of);
+        this.trustAllCerts = trustAllCerts;
 
         checkState();
     }
@@ -326,6 +338,10 @@ public class LdapRepositoryConfiguration {
         return administratorId;
     }
 
+    public boolean isTrustAllCerts() {
+        return trustAllCerts;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof LdapRepositoryConfiguration) {
@@ -343,7 +359,8 @@ public class LdapRepositoryConfiguration {
                 && Objects.equals(this.restriction, that.restriction)
                 && Objects.equals(this.filter, that.filter)
                 && Objects.equals(this.poolSize, that.poolSize)
-                && Objects.equals(this.administratorId, that.administratorId);
+                && Objects.equals(this.administratorId, that.administratorId)
+                && Objects.equals(this.trustAllCerts, that.trustAllCerts);
         }
         return false;
     }
@@ -351,6 +368,7 @@ public class LdapRepositoryConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(ldapHost, principal, credentials, userBase, userIdAttribute, userObjectClass,
-            connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize);
+            connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize,
+            trustAllCerts);
     }
 }

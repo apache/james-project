@@ -121,4 +121,14 @@ public class LdapGenericContainer extends ExternalResource {
                 ":" +
                 LdapGenericContainer.DEFAULT_LDAP_PORT;
     }
+
+    /**
+     * @return LDAPS URL on LDAP port (as string)
+     */
+    public String getLdapsBadHost() {
+        return "ldaps://" +
+                container.getContainerIp() +
+                ":" +
+                LdapGenericContainer.DEFAULT_LDAP_PORT;
+    }
 }
