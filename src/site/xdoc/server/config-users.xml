@@ -94,19 +94,36 @@
        <p>Example:</p>
 
        <source>
-&lt;repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
-    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/&gt;</source>
+&lt;usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"&gt;
+           &lt;enableVirtualHosting&gt;true&lt;/enableVirtualHosting&gt;
+&lt;/usersrepository&gt;
+       </source>
 
 
         <p>SSL can be enabled by using <code>ldaps</code> scheme. <code>trustAllCerts</code> option can be used to trust all LDAP client certificates
             (optional, defaults to false).</p>
 
-        Example:
+        <p>Example:</p>
 
         <source>
  &lt;repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldaps://myldapserver:636"
      principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
-     trustAllCerts="true"/&gt;</source>
+     trustAllCerts="true"&gt;
+            &lt;enableVirtualHosting&gt;true&lt;/enableVirtualHosting&gt;
+&lt;/usersrepository&gt;</source>
+
+        <p>Moreover, per domain base DN can be configured:</p>
+
+        <source>
+            &lt;repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldaps://myldapserver:636"
+            principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
+            trustAllCerts="true"&gt;
+            &lt;enableVirtualHosting&gt;true&lt;/enableVirtualHosting&gt;
+            &lt;domains&gt;
+                &lt;domain.tld&gt;ou=People,o=other.com,ou=system&lt;/domain.tld&gt;
+            &lt;/domains&gt;
+&lt;/usersrepository&gt;</source>
 
      </subsection>
 

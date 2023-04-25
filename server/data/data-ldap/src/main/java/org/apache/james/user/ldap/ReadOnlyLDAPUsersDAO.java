@@ -43,6 +43,7 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -52,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.DN;
@@ -61,6 +63,7 @@ import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.LDAPSearchException;
 import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
@@ -146,6 +149,10 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         objectClassFilter = Filter.createEqualityFilter("objectClass", ldapConfiguration.getUserObjectClass());
         listingFilter = userExtraFilter.map(extraFilter -> Filter.createANDFilter(objectClassFilter, extraFilter))
             .orElse(objectClassFilter);
+
+        if (!ldapConfiguration.getPerDomainBaseDN().isEmpty()) {
+            Preconditions.checkState(ldapConfiguration.supportsVirtualHosting(), "'virtualHosting' is needed for per domain DNs");
+        }
     }
 
     private SocketFactory supportLDAPS(URI uri) throws KeyManagementException, NoSuchAlgorithmException {
@@ -205,30 +212,46 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return result;
     }
 
+    private String userBase(Domain domain) {
+        return ldapConfiguration.getPerDomainBaseDN()
+            .getOrDefault(domain, ldapConfiguration.getUserBase());
+    }
+
+    private String userBase(Username username) {
+        return username.getDomainPart().map(this::userBase).orElse(ldapConfiguration.getUserBase());
+    }
+
     private Set<DN> getAllUsersDNFromLDAP() throws LDAPException {
-        SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
-            SearchScope.SUB,
-            listingFilter,
-            SearchRequest.NO_ATTRIBUTES);
-
-        SearchResult searchResult = ldapConnectionPool.search(searchRequest);
-
-        return searchResult.getSearchEntries()
-            .stream()
+        return allDNs()
+            .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(this::entriesFromDN).sneakyThrow())
             .map(Throwing.function(Entry::getParsedDN))
             .collect(ImmutableSet.toImmutableSet());
     }
 
-    private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {
-        SearchRequest searchRequest = new SearchRequest(ldapConfiguration.getUserBase(),
+    private Stream<String> allDNs() {
+        return Stream.concat(
+            Stream.of(ldapConfiguration.getUserBase()),
+            ldapConfiguration.getPerDomainBaseDN().values().stream());
+    }
+
+    private Stream<SearchResultEntry> entriesFromDN(String dn) throws LDAPSearchException {
+        return entriesFromDN(dn, SearchRequest.NO_ATTRIBUTES);
+    }
+
+    private Stream<SearchResultEntry> entriesFromDN(String dn, String attributes) throws LDAPSearchException {
+        SearchRequest searchRequest = new SearchRequest(dn,
             SearchScope.SUB,
             listingFilter,
-            ldapConfiguration.getUserIdAttribute());
+            attributes);
 
-        SearchResult searchResult = ldapConnectionPool.search(searchRequest);
+        return ldapConnectionPool.search(searchRequest)
+            .getSearchEntries()
+            .stream();
+    }
 
-        return searchResult.getSearchEntries()
-            .stream()
+    private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {
+        return allDNs()
+            .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(s -> entriesFromDN(s, ldapConfiguration.getUserIdAttribute())).sneakyThrow())
             .flatMap(entry -> Optional.ofNullable(entry.getAttribute(ldapConfiguration.getUserIdAttribute())).stream())
             .map(Attribute::getValue)
             .map(Username::of);
@@ -260,7 +283,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Optional<ReadOnlyLDAPUser> searchAndBuildUser(Username name) throws LDAPException {
-        SearchResult searchResult = ldapConnectionPool.search(ldapConfiguration.getUserBase(),
+        SearchResult searchResult = ldapConnectionPool.search(userBase(name),
             SearchScope.SUB,
             createFilter(name.asString()),
             ldapConfiguration.getUserIdAttribute());
@@ -269,6 +292,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             .stream()
             .findFirst()
             .orElse(null);
+
         if (result == null) {
             return Optional.empty();
         }

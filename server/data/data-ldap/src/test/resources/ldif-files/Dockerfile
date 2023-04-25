@@ -1,3 +1,3 @@
 FROM dinkel/openldap:latest
 
-COPY populate.ldif /etc/ldap/prepopulate/prepop.ldif
+COPY populate.ldif /etc/ldap.dist/prepopulate/prepop.ldif
