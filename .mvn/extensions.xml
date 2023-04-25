@@ -1,0 +1,25 @@
+<extensions xmlns="http://maven.apache.org/EXTENSIONS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/EXTENSIONS/1.0.0 http://maven.apache.org/xsd/core-extensions-1.0.0.xsd">
+<!--    <extension>-->
+<!--        &lt;!&ndash; outputs resultt directly to the build log &ndash;&gt;-->
+<!--        <groupId>com.soebes.maven.extensions</groupId>-->
+<!--        <artifactId>maven-buildtime-profiler</artifactId>-->
+<!--        <version>0.2.0</version>-->
+<!--    </extension>-->
+
+    <extension>
+        <!-- outputs log only in debug mode, for convenience can output to csv file:
+        `-Dbuildtime.output.csv=true -Dbuildtime.output.csv.file=buildtime.csv` -->
+        <groupId>co.leantechniques</groupId>
+        <artifactId>maven-buildtime-extension</artifactId>
+        <version>3.0.3</version>
+    </extension>
+
+    <extension>
+        <!-- requires enabling during execution: `-Dprofile -DprofileFormat=JSON,HTML` -->
+        <groupId>fr.jcgay.maven</groupId>
+        <artifactId>maven-profiler</artifactId>
+        <version>3.2</version>
+    </extension>
+</extensions>
+
