@@ -59,19 +59,17 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
 
     CassandraMailRepository cassandraMailRepository;
-    CassandraMailRepositoryCountDAO countDAO;
     CassandraMailRepositoryKeysDAO keysDAO;
 
     @BeforeEach
     void setup(CassandraCluster cassandra) {
         CassandraMailRepositoryMailDaoV2 mailDAO = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
         keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
-        countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
         BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
             .passthrough();
 
         cassandraMailRepository = new CassandraMailRepository(URL,
-            keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore));
+            keysDAO, mailDAO, MimeMessageStore.factory(blobStore));
     }
 
     @Nested
@@ -180,7 +178,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             assertThatThrownBy(() -> cassandraMailRepository.store(mail))
                     .isInstanceOf(RuntimeException.class);
 
-            assertThat(countDAO.getCount(URL).block()).isEqualTo(0);
+            assertThat(keysDAO.getCount(URL).block()).isEqualTo(0L);
         }
 
         @Test

@@ -66,12 +66,11 @@ class CassandraMailRepositoryTest {
         void setup(CassandraCluster cassandra) {
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
             CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
-            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
+                keysDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override
@@ -80,11 +79,10 @@ class CassandraMailRepositoryTest {
 
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
             CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
-            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .passthrough();
 
-           return new CassandraMailRepository(MailRepositoryUrl.fromPathAndProtocol(new Protocol("cassandra"), url), keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
+           return new CassandraMailRepository(MailRepositoryUrl.fromPathAndProtocol(new Protocol("cassandra"), url), keysDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override
@@ -129,12 +127,11 @@ class CassandraMailRepositoryTest {
         void setup(CassandraCluster cassandra) {
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
             CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
-            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .deduplication();
 
             cassandraMailRepository = new CassandraMailRepository(URL,
-                keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
+                keysDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override
@@ -143,11 +140,10 @@ class CassandraMailRepositoryTest {
 
             CassandraMailRepositoryMailDaoV2 v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
             CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
-            CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             BlobStore blobStore = CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
                 .deduplication();
 
-            return new CassandraMailRepository(MailRepositoryUrl.fromPathAndProtocol(new Protocol("cassandra"), url), keysDAO, countDAO, v2, MimeMessageStore.factory(blobStore));
+            return new CassandraMailRepository(MailRepositoryUrl.fromPathAndProtocol(new Protocol("cassandra"), url), keysDAO, v2, MimeMessageStore.factory(blobStore));
         }
 
         @Override

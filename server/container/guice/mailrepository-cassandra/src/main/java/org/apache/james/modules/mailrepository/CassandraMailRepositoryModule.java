@@ -26,7 +26,6 @@ import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepository;
-import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryCountDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryFactory;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryKeysDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoV2;
@@ -46,7 +45,6 @@ public class CassandraMailRepositoryModule extends AbstractModule {
     protected void configure() {
         bind(CassandraMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
         bind(CassandraMailRepositoryKeysDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraMailRepositoryCountDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailRepositoryMailDaoV2.class).in(Scopes.SINGLETON);
 
         bind(MailRepositoryUrlStore.class).to(CassandraMailRepositoryUrlStore.class);
