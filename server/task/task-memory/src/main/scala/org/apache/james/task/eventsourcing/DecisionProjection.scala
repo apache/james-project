@@ -28,7 +28,7 @@ case class DecisionProjection(status: Status, latestUpdateAdditionalInformationU
       event match {
         case _: Created => this
         case _: Started => DecisionProjection(Status.IN_PROGRESS, None)
-        case _: CancelRequested => DecisionProjection(Status.CANCEL_REQUESTED,latestUpdateAdditionalInformationUpdate)
+        case _: CancelRequested => DecisionProjection(Status.CANCEL_REQUESTED, latestUpdateAdditionalInformationUpdate)
         case event: Cancelled => DecisionProjection(Status.CANCELLED, event.additionalInformation.map(_.timestamp))
         case event: Completed => DecisionProjection(Status.COMPLETED, event.additionalInformation.map(_.timestamp))
         case event: Failed => DecisionProjection(Status.FAILED, event.additionalInformation.map(_.timestamp))

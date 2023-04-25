@@ -240,8 +240,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     @Test
     void badPayloadShouldNotAffectTaskManagerOnCancelTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
+        CountDownLatch latch = new CountDownLatch(1);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
-            Thread.sleep(250);
+            latch.await();
             return Task.Result.COMPLETED;
         }));
 
@@ -250,6 +251,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             .block();
 
         taskManager.cancel(id);
+        Awaitility.await()
+            .until(() -> taskManager.getExecutionDetails(id).getStatus().equals(CANCELLED));
+        latch.countDown();
         taskManager.await(id, TIMEOUT);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(CANCELLED);
@@ -258,8 +262,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     @Test
     void badPayloadsShouldNotAffectTaskManagerOnCancelTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
+        CountDownLatch latch = new CountDownLatch(1);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
-            Thread.sleep(250);
+            latch.await();
             return Task.Result.COMPLETED;
         }));
 
@@ -269,6 +274,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             .block());
 
         taskManager.cancel(id);
+        Awaitility.await()
+            .until(() -> taskManager.getExecutionDetails(id).getStatus().equals(CANCELLED));
+        latch.countDown();
         taskManager.await(id, TIMEOUT);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(CANCELLED);
@@ -277,8 +285,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     @Test
     void badPayloadShouldNotAffectTaskManagerOnCompleteTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
+        CountDownLatch latch = new CountDownLatch(1);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
-            Thread.sleep(250);
+            latch.await();
             return Task.Result.COMPLETED;
         }));
 
@@ -286,6 +295,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
             .block();
 
+        latch.countDown();
         taskManager.await(id, TIMEOUT);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(TaskManager.Status.COMPLETED);
@@ -294,8 +304,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     @Test
     void badPayloadsShouldNotAffectTaskManagerOnCompleteTask() throws Exception {
         TaskManager taskManager = taskManager(HOSTNAME);
+        CountDownLatch latch = new CountDownLatch(1);
         TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
-            Thread.sleep(250);
+            latch.await();
             return Task.Result.COMPLETED;
         }));
 
@@ -304,6 +315,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             .send(Mono.just(new OutboundMessage(EXCHANGE_NAME, ROUTING_KEY, BAD_PAYLOAD)))
             .block());
 
+        latch.countDown();
         taskManager.await(id, TIMEOUT);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(TaskManager.Status.COMPLETED);
@@ -401,8 +413,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     void givenTwoTaskManagersATaskRunningOnOneShouldBeWaitableFromTheOtherOne() throws Exception {
         TaskManager taskManager1 = taskManager(HOSTNAME);
         TaskManager taskManager2 = taskManager(HOSTNAME_2);
+        CountDownLatch latch = new CountDownLatch(1);
         TaskId id = taskManager1.submit(new MemoryReferenceTask(() -> {
-            Thread.sleep(250);
+            latch.await();
             return Task.Result.COMPLETED;
         }));
 
@@ -411,6 +424,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
         TaskManager remoteTaskManager = getOtherTaskManager(runningNode, Pair.of(HOSTNAME, taskManager1), Pair.of(HOSTNAME_2, taskManager2)).getValue();
 
+        latch.countDown();
         remoteTaskManager.await(id, TIMEOUT);
         assertThat(taskManager1.getExecutionDetails(id).getStatus())
             .isEqualTo(TaskManager.Status.COMPLETED);
@@ -602,8 +616,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     @Test
     void inProgressTaskShouldBeCanceledWhenCloseTaskManager() throws Exception {
         try (EventSourcingTaskManager taskManager = taskManager()) {
+            CountDownLatch latch = new CountDownLatch(1);
             TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> {
-                TimeUnit.SECONDS.sleep(5);
+                latch.await();
                 return Task.Result.COMPLETED;
             }));
 
