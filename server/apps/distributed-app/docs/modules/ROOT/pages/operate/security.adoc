@@ -84,6 +84,9 @@ Filtering with third party systems upstream is also possible.
  - 5. In order to limit your attack surface, disable protocols you or your users do not use. This includes the JMAP protocol,
 POP3, ManagedSieve, etc... Be conservative on what you expose.
 
+ - 6. If operating behind a load-balancer, set up the link:https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt[PROXY protocol] for
+TCP based protocols (IMAP and SMTP `proxyRequired` option)
+
 === Best practice: Could
 
  - 1. Set up link:https://openid.net/connect/[OIDC] for IMAP, SMTP and JMAP. Disable login/plain/basic authentication.
