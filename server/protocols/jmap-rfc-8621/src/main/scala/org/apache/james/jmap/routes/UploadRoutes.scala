@@ -56,7 +56,7 @@ import reactor.netty.http.server.{HttpServerRequest, HttpServerResponse}
 case class TooBigUploadException() extends RuntimeException
 
 object UploadRoutes {
-  val LOGGER: Logger = LoggerFactory.getLogger(classOf[DownloadRoutes])
+  val LOGGER: Logger = LoggerFactory.getLogger(classOf[UploadRoutes])
 }
 
 case class UploadResponse(accountId: AccountId,
