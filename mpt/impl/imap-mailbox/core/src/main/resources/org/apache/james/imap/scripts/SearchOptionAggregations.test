@@ -143,6 +143,62 @@ S: \* 5 FETCH .*
 }
 S: i OK FETCH completed.
 
-C: h SEARCH RETURN (ALL) FLAGGED
-S: \* ESEARCH \(TAG "h"\) ALL 1:2,4:5
-S: h OK SEARCH completed.
+C: j SEARCH RETURN (ALL) FLAGGED
+S: \* ESEARCH \(TAG "j"\) ALL 1:2,4:5
+S: j OK SEARCH completed.
+
+C: k UID SEARCH RETURN (ALL) FLAGGED
+S: \* ESEARCH \(TAG "k"\) UID ALL 1:2,4:5
+S: k OK SEARCH completed.
+
+C: l UID SEARCH RETURN (MIN MAX COUNT) FLAGGED
+S: \* ESEARCH \(TAG "l"\) UID MIN 1 MAX 5 COUNT 4
+S: l OK SEARCH completed.
+
+C: m UID SEARCH RETURN (ALL SAVE) FLAGGED
+S: \* ESEARCH \(TAG "m"\) UID ALL 1:2,4:5
+S: m OK SEARCH completed.
+
+C: n FETCH $ FLAGS
+SUB {
+S: \* 1 FETCH .*
+S: \* 2 FETCH .*
+S: \* 4 FETCH .*
+S: \* 5 FETCH .*
+}
+S: n OK FETCH completed.
+
+C: o UID SEARCH RETURN (MIN MAX SAVE) FLAGGED
+S: \* ESEARCH \(TAG "o"\) UID MIN 1 MAX 5
+S: o OK SEARCH completed.
+
+C: p FETCH $ FLAGS
+SUB {
+S: \* 1 FETCH .*
+S: \* 5 FETCH .*
+}
+S: p OK FETCH completed.
+
+C: q UID SEARCH RETURN (MIN MAX COUNT SAVE) FLAGGED
+S: \* ESEARCH \(TAG "q"\) UID MIN 1 MAX 5 COUNT 4
+S: q OK SEARCH completed.
+
+C: r FETCH $ FLAGS
+SUB {
+S: \* 1 FETCH .*
+S: \* 2 FETCH .*
+S: \* 4 FETCH .*
+S: \* 5 FETCH .*
+}
+S: r OK FETCH completed.
+
+C: s UID SEARCH RETURN (MIN MAX) ANSWERED
+S: \* ESEARCH \(TAG "s"\) UID
+S: s OK SEARCH completed.
+
+C: t UID SEARCH RETURN (MIN MAX SAVE) ANSWERED
+S: \* ESEARCH \(TAG "t"\) UID
+S: t OK SEARCH completed.
+
+C: u FETCH $ FLAGS
+S: u OK FETCH completed.
