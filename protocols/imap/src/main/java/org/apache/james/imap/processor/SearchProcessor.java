@@ -22,7 +22,6 @@ package org.apache.james.imap.processor;
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -76,7 +75,6 @@ import com.google.common.collect.ImmutableList;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongComparators;
-import it.unimi.dsi.fastutil.longs.LongConsumer;
 import it.unimi.dsi.fastutil.longs.LongList;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -161,11 +159,11 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         if (resultOptions == null || resultOptions.isEmpty()) {
             return new SearchResponse(ids, highestModSeq.orElse(null));
         } else {
-            return handleResultOptions(request, session, uids, highestModSeq.orElse(null), ids);
+            return handleResultOptions(request, session, highestModSeq.orElse(null), ids);
         }
     }
 
-    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, Collection<MessageUid> uids, ModSeq highestModSeq, LongList ids) {
+    private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, ModSeq highestModSeq, LongList ids) {
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
 
         IdRange[] idRanges = asRanges(ids);
@@ -206,24 +204,12 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
                 }
             }
-            UidRange[] uidRanges = uidRangeIfNeeded(request, resultOptions, uids);
-            return new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, request.getTag(), request.isUseUids(), resultOptions);
+            return new ESearchResponse(min, max, count, idRanges, highestModSeq, request.getTag(), request.isUseUids(), resultOptions);
         } else {
             // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
             SearchResUtil.saveSequenceSet(session, idRanges);
             return new SearchResponse(ids, highestModSeq);
         }
-    }
-
-    private UidRange[] uidRangeIfNeeded(SearchRequest request, List<SearchResultOption> resultOptions, Collection<MessageUid> uids) {
-        if (resultOptions.contains(SearchResultOption.ALL) && request.isUseUids()) {
-            List<UidRange> uidsAsRanges = new ArrayList<>();
-            for (MessageUid uid: uids) {
-                uidsAsRanges.add(new UidRange(uid));
-            }
-            return UidRange.mergeRanges(uidsAsRanges).toArray(UidRange[]::new);
-        }
-        return null;
     }
 
     /**

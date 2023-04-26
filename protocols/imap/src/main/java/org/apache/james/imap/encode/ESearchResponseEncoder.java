@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
-import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.message.response.ESearchResponse;
 import org.apache.james.mailbox.ModSeq;
@@ -45,7 +44,6 @@ public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchRespon
         long max = response.getMaxUid();
         long count = response.getCount();
         IdRange[] all = response.getAll();
-        UidRange[] allUids = response.getAllUids();
         boolean useUid = response.getUseUid();
         ModSeq highestModSeq = response.getHighestModSeq();
         List<SearchResultOption> options = response.getSearchResultOptions();
@@ -63,13 +61,9 @@ public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchRespon
         if (options.contains(SearchResultOption.COUNT)) {
             composer.message(SearchResultOption.COUNT.name()).message(count);
         }
-        if (!useUid && all != null && all.length > 0 && options.contains(SearchResultOption.ALL)) {
+        if (all != null && all.length > 0 && options.contains(SearchResultOption.ALL)) {
             composer.message(SearchResultOption.ALL.name());
             composer.sequenceSet(all);
-        }
-        if (useUid && allUids != null && allUids.length > 0 && options.contains(SearchResultOption.ALL)) {
-            composer.message(SearchResultOption.ALL.name());
-            composer.sequenceSet(allUids);
         }
         
         // Add the MODSEQ to the response if needed. 
