@@ -283,7 +283,6 @@ public class LdapRepositoryConfiguration {
     private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
                                         String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
-
                                         Optional<String> administratorId, boolean trustAllCerts,
                                         ImmutableMap<Domain, String> perDomainBaseDN) throws ConfigurationException {
         this.ldapHost = ldapHost;
