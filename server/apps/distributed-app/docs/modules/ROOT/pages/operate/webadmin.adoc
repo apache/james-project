@@ -1044,6 +1044,62 @@ Response codes:
 * 201: Success. Corresponding task id is returned.
 * 400: Error in the request. Details can be found in the reported error.
 
+==== Populate email query view
+
+Email query view is an optional projection to offload common JMAP `Email/query` requests used for listing mails on Cassandra
+and not on the search index thus improving the overall reliability / performance on this operation.
+
+These projection items are asynchronously computed on mailbox events.
+
+You can populate this projection with the following request:
+
+....
+curl -XPOST /mailboxes?task=populateEmailQueryView
+....
+
+Will schedule a task for recomputing the fast message view projection
+for all mailboxes.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+An admin can specify the concurrency that should be used when running
+the task:
+
+* `messagesPerSecond` rate at which messages should be processed, per
+second. Defaults to 10.
+
+This optional parameter must have a strictly positive integer as a value
+and be passed as query parameters.
+
+Example:
+
+....
+curl -XPOST /mailboxes?task=populateEmailQueryView&messagesPerSecond=20
+....
+
+The scheduled task will have the following type
+`PopulateEmailQueryViewTask` and the following
+`additionalInformation`:
+
+....
+{
+  "type":"PopulateEmailQueryViewTask",
+  "processedUserCount": 3,
+  "processedMessageCount": 3,
+  "failedUserCount": 2,
+  "failedMessageCount": 1,
+  "runningOptions": {
+    "messagesPerSecond":20
+  }
+}
+....
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
 ==== Recomputing Cassandra filtering projection
 
 You can force the reset of the Cassandra filtering projection by calling the following
