@@ -569,6 +569,15 @@ class IMAPServerTest {
 
             inbox.getMessageByUID(1);
         }
+
+        @Test
+        void compressShouldFailWhenUnknownCompressionAlgorithm() throws Exception {
+            String reply = testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .sendCommand("COMPRESS BAD");
+
+            assertThat(reply).contains("AAAB BAD COMPRESS failed. Illegal arguments.");
+        }
     }
 
     @Nested
@@ -2282,6 +2291,15 @@ class IMAPServerTest {
             IntStream.range(0, 37)
                 .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
                     .build("MIME-Version: 1.0\r\n\r\nCONTENT\r\n"), mailboxSession)));
+        }
+
+        @Test
+        void compressShouldFailWhenNotEnabled() throws Exception {
+            String reply = testIMAPClient.connect("127.0.0.1", imapServer.getListenAddresses().get(0).getPort())
+                .login(USER.asString(), USER_PASS)
+                .sendCommand("COMPRESS DEFLATE");
+
+            assertThat(reply).contains("AAAB BAD COMPRESS failed. Unknown command.");
         }
 
         @Test
