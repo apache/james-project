@@ -467,4 +467,12 @@ public abstract class AuthenticatedState extends BasicImapCommands {
             .withLocale(Locale.KOREA)
             .run("ListMailboxes");
     }
+
+    @Test
+    public void rightsCommandsShouldBeSupported() throws Exception {
+        system.createMailbox(MailboxPath.forUser(USER_2, "Other"));
+        simpleScriptedTestProtocol
+            .withLocale(Locale.KOREA)
+            .run("Rights");
+    }
 }
