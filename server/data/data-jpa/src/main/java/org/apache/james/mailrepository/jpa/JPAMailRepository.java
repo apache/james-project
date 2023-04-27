@@ -44,6 +44,7 @@ import javax.persistence.NoResultException;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Configurable;
@@ -70,6 +71,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Implementation of a MailRepository on a database via JPA.
@@ -183,9 +185,9 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
     }
 
     private String serializeAttributes(Stream<Attribute> attributes) {
-        Map<String, JsonNode> map = attributes.collect(Collectors.toMap(
-            attribute -> attribute.getName().asString(),
-            attribute -> attribute.getValue().toJson()));
+        Map<String, JsonNode> map = attributes
+            .flatMap(entry -> entry.getValue().toJson().map(value -> Pair.of(entry.getName().asString(), value)).stream())
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
 
         return new ObjectNode(JsonNodeFactory.instance, map).toString();
     }

@@ -123,7 +123,7 @@ public class ICalendarParser extends GenericMailet {
         Map<String, AttributeValue<?>> calendars = icsAttachments.entrySet()
             .stream()
             .flatMap(entry -> createCalendar(entry.getKey(), entry.getValue().getValue()))
-            .collect(ImmutableMap.toImmutableMap(Pair::getKey, pair -> AttributeValue.ofSerializable(pair.getValue())));
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, pair -> AttributeValue.ofUnserializable(pair.getValue())));
 
         mail.setAttribute(new Attribute(destinationAttributeName, AttributeValue.of(calendars)));
     }

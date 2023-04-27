@@ -44,6 +44,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -685,9 +686,8 @@ public class MailImpl implements Disposable, Mail {
     private Map<String, String> getAttributesAsJson() {
         return attributes.values()
             .stream()
-            .collect(Collectors.toMap(
-                attribute -> attribute.getName().asString(),
-                attribute -> attribute.getValue().toJson().toString()));
+            .flatMap(entry -> entry.getValue().toJson().map(value -> Pair.of(entry.getName().asString(), value.toString())).stream())
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
     }
 
     /**

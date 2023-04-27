@@ -42,6 +42,7 @@ import org.apache.mailet.PerRecipientHeaders;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
 import com.google.common.collect.ImmutableList;
@@ -83,11 +84,9 @@ class MailReferenceDTO {
     }
 
     private static ImmutableMap<String, String> serializedAttributes(Mail mail) {
-        Function<Attribute, String> name = attribute -> attribute.getName().asString();
-        Function<Attribute, String> value = attribute -> attribute.getValue().toJson().toString();
-        return mail
-                .attributes()
-                .collect(ImmutableMap.toImmutableMap(name, value));
+        return mail.attributes()
+            .flatMap(attribute -> attribute.getValue().toJson().map(JsonNode::toString).map(value -> Pair.of(attribute.getName().asString(), value)).stream())
+            .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
     private final String enqueueId;

@@ -65,7 +65,7 @@ public class ProcessorUtil {
         String errorString = sout.toString();
         mail.setErrorMessage(errorString);
         logger.error(errorString);
-        mail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(me)));
+        mail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(me)));
     }
 
     /**

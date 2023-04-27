@@ -206,7 +206,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         Mail mail = FakeMail.builder()
@@ -226,7 +226,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/no_event.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         Mail mail = FakeMail.builder()
@@ -248,7 +248,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         Mail mail = FakeMail.builder()
@@ -268,7 +268,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
@@ -310,7 +310,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
@@ -361,7 +361,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
@@ -399,7 +399,7 @@ public class ICALToJsonAttributeTest {
     void serviceShouldAttachJsonForSeveralRecipient() throws Exception {
         testee.init(FakeMailetConfig.builder().build());
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         Mail mail = FakeMail.builder()
@@ -437,8 +437,8 @@ public class ICALToJsonAttributeTest {
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
         AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_2.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
-        AttributeValue<Serializable> calendar2 = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar2 = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar, "key2", calendar2);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics, "key2", ics2);
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
@@ -488,8 +488,8 @@ public class ICALToJsonAttributeTest {
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
         AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_uid.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
-        AttributeValue<Serializable> calendar2 = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar2 = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar, "key2", calendar2);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics, "key2", ics2);
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
@@ -528,8 +528,8 @@ public class ICALToJsonAttributeTest {
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
         AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_2.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
-        AttributeValue<Serializable> calendar2 = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar2 = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar, "key2", calendar2);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
@@ -567,7 +567,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
@@ -607,7 +607,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;
@@ -645,7 +645,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<Serializable> calendar = AttributeValue.ofSerializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
+        AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar);
         Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key", ics);
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES2;

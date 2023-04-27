@@ -61,7 +61,7 @@ class AttributeValueTest {
         void stringShouldBeSerializedAndBack() {
             AttributeValue<String> expected = AttributeValue.of("value");
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -71,7 +71,7 @@ class AttributeValueTest {
         void emptyStringShouldBeSerializedAndBack() {
             AttributeValue<String> expected = AttributeValue.of("");
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -105,7 +105,7 @@ class AttributeValueTest {
         void trueShouldBeSerializedAndBack() {
             AttributeValue<Boolean> expected = AttributeValue.of(true);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -115,7 +115,7 @@ class AttributeValueTest {
         void falseShouldBeSerializedAndBack() {
             AttributeValue<Boolean> expected = AttributeValue.of(true);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -149,7 +149,7 @@ class AttributeValueTest {
         void intShouldBeSerializedAndBack() {
             AttributeValue<Integer> expected = AttributeValue.of(42);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -196,7 +196,7 @@ class AttributeValueTest {
         void longShouldBeSerializedAndBack() {
             AttributeValue<Long> expected = AttributeValue.of(42L);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -206,7 +206,7 @@ class AttributeValueTest {
         void longShouldBeSerializedAndBackForLongMaxValue() {
             AttributeValue<Long> expected = AttributeValue.of(Long.MAX_VALUE);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -246,7 +246,7 @@ class AttributeValueTest {
         void floatShouldBeSerializedAndBack() {
             AttributeValue<Float> expected = AttributeValue.of(1.0f);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -286,7 +286,7 @@ class AttributeValueTest {
         void doubleShouldBeSerializedAndBack() {
             AttributeValue<Double> expected = AttributeValue.of(1.0d);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -296,7 +296,7 @@ class AttributeValueTest {
         void doubleShouldBeSerializedAndBackForMaxValue() {
             AttributeValue<Double> expected = AttributeValue.of(Double.MAX_VALUE);
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -336,7 +336,7 @@ class AttributeValueTest {
         void dateShouldBeSerializedAndBack() {
             AttributeValue<ZonedDateTime> expected = AttributeValue.of(ZonedDateTime.parse("2015-10-30T16:12:00Z"));
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -376,7 +376,7 @@ class AttributeValueTest {
         void queueSerializableShouldBeSerializedAndBack() {
             AttributeValue<TestArbitrarySerializable> expected = AttributeValue.of(new TestArbitrarySerializable(42));
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -399,7 +399,7 @@ class AttributeValueTest {
         void urlShouldBeSerializedAndBack() throws MalformedURLException {
             AttributeValue<URL> expected = AttributeValue.of(new URL("https://james.apache.org/"));
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -439,7 +439,7 @@ class AttributeValueTest {
         void messageIdShouldBeSerializedAndBack() {
             AttributeValue<MessageIdDto> expected = AttributeValue.of(new MessageIdDto(TestMessageId.of(42)));
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -479,7 +479,7 @@ class AttributeValueTest {
         void emptyStringListShouldBeSerializedAndBack() {
             AttributeValue<?> expected = AttributeValue.ofAny(ImmutableList.<String>of());
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -489,7 +489,7 @@ class AttributeValueTest {
         void listShouldBeSerializedAndBack() {
             AttributeValue<?> expected = AttributeValue.of(ImmutableList.of(AttributeValue.of("first"), AttributeValue.of("second")));
 
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -540,7 +540,7 @@ class AttributeValueTest {
         @Test
         void emptyMapShouldBeSerializedAndBack() {
             AttributeValue<?> expected = AttributeValue.of(ImmutableMap.of());
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -549,7 +549,7 @@ class AttributeValueTest {
         @Test
         void mapWithPrimitiveTypesShouldBeSerializedAndBack() {
             AttributeValue<?> expected = AttributeValue.of(ImmutableMap.of("a", AttributeValue.of("value"), "b", AttributeValue.of(12)));
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -603,7 +603,7 @@ class AttributeValueTest {
         @Test
         void emptyOptionalShouldBeSerializedAndBack() {
             AttributeValue<?> expected = AttributeValue.of(Optional.empty());
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -612,7 +612,7 @@ class AttributeValueTest {
         @Test
         void optionalShouldBeSerializedAndBack() {
             AttributeValue<?> expected = AttributeValue.of(Optional.of(AttributeValue.of(42)));
-            JsonNode json = expected.toJson();
+            JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
 
             assertThat(actual).isEqualTo(expected);
@@ -649,34 +649,6 @@ class AttributeValueTest {
 
             assertThatThrownBy(() -> AttributeValue.of(invalid))
                 .isInstanceOf(ClassCastException.class);
-        }
-    }
-
-    @Nested
-    class SerializableSerialization {
-        @Test
-        void filledSerializabletrueShouldBeSerializedAndBack() {
-            AttributeValue<java.io.Serializable> expected = AttributeValue.ofSerializable(new TestSerializable("me"));
-
-            JsonNode json = expected.toJson();
-            AttributeValue<?> actual = AttributeValue.fromJson(json);
-
-            assertThat(actual).isEqualTo(expected);
-        }
-
-        @Test
-        void nullSerializableShouldThrowAnException() {
-            assertThatNullPointerException()
-                .isThrownBy(() -> AttributeValue.ofSerializable((java.io.Serializable) null));
-        }
-
-        @Test
-        void fromJsonStringShouldReturnBooleanAttributeValueWhenBoolean() throws Exception {
-            AttributeValue<java.io.Serializable> expected = AttributeValue.ofSerializable(new TestSerializable("me"));
-
-            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"FSTSerializer\",\"value\":{\"typ\":\"org.apache.mailet.AttributeValueTest$TestSerializable\",\"obj\":{\"name\":\"me\"}}}");
-
-            assertThat(actual).isEqualTo(expected);
         }
     }
 
