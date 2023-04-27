@@ -120,7 +120,7 @@ public class Main implements JamesServerMain {
 
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
-            .combineWith(RunArgumentsModule.EMPTY);
+            .overrideWith(new RunArgumentsModule(args));
 
         try {
             JamesServerMain.main(server);

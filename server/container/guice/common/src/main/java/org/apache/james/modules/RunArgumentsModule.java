@@ -19,6 +19,7 @@
 
 package org.apache.james.modules;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.james.RunArguments;
 
 import com.google.inject.AbstractModule;
@@ -30,6 +31,10 @@ public class RunArgumentsModule extends AbstractModule {
 
     public RunArgumentsModule(String[] args) {
         this.args = args;
+    }
+
+    public RunArgumentsModule mergeArgs(String... mergeArgs) {
+       return new RunArgumentsModule(ArrayUtils.addAll(this.args, mergeArgs));
     }
 
     @Override

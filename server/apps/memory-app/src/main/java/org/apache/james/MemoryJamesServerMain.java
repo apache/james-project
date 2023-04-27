@@ -158,8 +158,8 @@ public class MemoryJamesServerMain implements JamesServerMain {
 
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
-            .combineWith(new RunArgumentsModule(args))
-            .combineWith(new FakeSearchMailboxModule(), new JMXServerModule());
+            .combineWith(new FakeSearchMailboxModule(), new JMXServerModule())
+            .overrideWith(new RunArgumentsModule(args).mergeArgs(RunArguments.Argument.GENERATE_KEYSTORE.getRawValue()));
 
         JamesServerMain.main(server);
     }

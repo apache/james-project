@@ -72,8 +72,8 @@ public class JPAJamesServerMain implements JamesServerMain {
             .build();
 
         LOGGER.info("Loading configuration {}", configuration.toString());
-        GuiceJamesServer server = createServer(configuration);
-        server.combineWith(RunArgumentsModule.EMPTY);
+        GuiceJamesServer server = createServer(configuration)
+            .overrideWith(new RunArgumentsModule(args));
 
         JamesServerMain.main(server);
     }

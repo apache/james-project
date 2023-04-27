@@ -28,7 +28,6 @@ import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.CassandraConsistencyTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
-import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDelegationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
@@ -183,7 +182,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
 
         LOGGER.info("Loading configuration {}", configuration.toString());
         GuiceJamesServer server = createServer(configuration)
-            .combineWith(new JMXServerModule(), RunArgumentsModule.EMPTY);
+            .combineWith(new JMXServerModule());
 
         JamesServerMain.main(server);
     }
