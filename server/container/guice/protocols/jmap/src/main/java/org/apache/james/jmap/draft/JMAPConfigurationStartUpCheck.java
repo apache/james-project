@@ -41,6 +41,7 @@ import java.util.Date;
 import javax.inject.Inject;
 
 import org.apache.james.RunArguments;
+import org.apache.james.RunArguments.Argument;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.draft.crypto.SecurityKeyLoader;
 import org.apache.james.lifecycle.api.StartUpCheck;
@@ -108,7 +109,7 @@ public class JMAPConfigurationStartUpCheck implements StartUpCheck {
         try {
             securityKeyLoader.load();
         } catch (FileNotFoundException e) {
-            if (runArguments.containStartDev()) {
+            if (runArguments.contain(Argument.GENERATE_KEYSTORE)) {
                 LOGGER.warn("Can not load asymmetric key from configuration file" + e.getMessage());
                 LOGGER.warn("James will try the auto-generate an asymmetric key. It is just for development, should not use it on production");
                 generateKeystore();

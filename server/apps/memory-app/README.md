@@ -32,11 +32,11 @@ keytool -genkey -alias james -keyalg RSA -keystore keystore
 docker run -v $PWD/keystore:/root/conf/keystore apache/james:memory-latest
 ```
 
-In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `start-dev` when running,
+In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `--generate-keystore` when running,
 James will auto-generate keystore file with the default setting:
 
 ```
-docker run apache/james:memory-latest start-dev
+docker run apache/james:memory-latest --generate-keystore
 ```
 
 

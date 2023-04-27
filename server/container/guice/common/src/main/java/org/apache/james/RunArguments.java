@@ -36,15 +36,23 @@ public class RunArguments {
     }
 
     public enum Argument {
-        START_DEV;
+        GENERATE_KEYSTORE("--generate-keystore");
+
+        private final String rawValue;
+
+        Argument(String rawValue) {
+            this.rawValue = rawValue;
+        }
 
         public static Argument parse(String arg) {
-            switch (arg) {
-                case "start-dev":
-                    return START_DEV;
-                default:
-                    throw new IllegalArgumentException("Invalid running argument: " + arg);
-            }
+            return Arrays.stream(Argument.values())
+                .filter(argument -> argument.rawValue.equals(arg))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid running argument: " + arg));
+        }
+
+        public String getRawValue() {
+            return rawValue;
         }
     }
 
@@ -58,7 +66,7 @@ public class RunArguments {
         return arguments;
     }
 
-    public boolean containStartDev() {
-        return getArguments().contains(Argument.START_DEV);
+    public boolean contain(Argument argument) {
+        return getArguments().contains(argument);
     }
 }
