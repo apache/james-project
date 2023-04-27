@@ -2802,6 +2802,52 @@ class IMAPServerTest {
         }
 
         @Test
+        void fetchShouldSupportVanishedModifiedWithoutChangedSince() throws Exception {
+            inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a1 ENABLE QRESYNC\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a1 OK ENABLE completed."));
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(clientConnection))).contains("I00104 BAD FETCH VANISHED used without CHANGEDSINCE");
+        }
+
+        @Test
+        void fetchShouldRejectVanishedWhenNoQRESYNC() throws Exception {
+            inbox.delete(ImmutableList.of(MessageUid.of(14)), mailboxSession);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+            clientConnection.write(ByteBuffer.wrap(("a2 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK [READ-WRITE] SELECT completed."));
+
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(10)), mailboxSession);
+            memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(25)), mailboxSession);
+
+            ModSeq highestModSeq = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession)
+                .getMetaData(IGNORE, mailboxSession, NO_COUNT)
+                .getHighestModSeq();
+            clientConnection.write(ByteBuffer.wrap(String.format("I00104 UID FETCH 12:37 (FLAGS) (CHANGEDSINCE %d VANISHED)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(clientConnection))).contains("I00104 BAD FETCH QRESYNC not enabled.");
+        }
+
+        @Test
         void unsolicitedNotificationsShouldBeSent() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
