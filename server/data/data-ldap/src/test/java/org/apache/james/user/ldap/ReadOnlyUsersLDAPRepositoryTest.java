@@ -90,6 +90,52 @@ class ReadOnlyUsersLDAPRepositoryTest {
     }
 
     @Nested
+    class ExtraDNTests {
+        private ReadOnlyUsersLDAPRepository usersLDAPRepository;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(ldapContainer);
+            configuration.addProperty("domains.extra.org", "ou=whatever,dc=james,dc=org");
+
+            usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository.configure(configuration);
+            usersLDAPRepository.init();
+        }
+
+        @Test
+        void shouldContainMasterDomain() throws Exception {
+            assertThat(usersLDAPRepository.contains(JAMES_USER_MAIL)).isTrue();
+        }
+
+        @Test
+        void shouldRejectUnhandledDomain() throws Exception {
+            assertThat(usersLDAPRepository.contains(Username.of("bob@nonexistant.org"))).isFalse();
+        }
+
+        @Test
+        void shouldContainEntriesInExtraDN() throws Exception {
+            assertThat(usersLDAPRepository.contains(Username.of("bob@extra.org"))).isTrue();
+
+            assertThat(usersLDAPRepository.countUsers()).isEqualTo(2);
+
+            assertThat(ImmutableList.copyOf(usersLDAPRepository.list()))
+                .containsOnly(JAMES_USER_MAIL, Username.of("bob@extra.org"));
+        }
+
+        @Test
+        void shouldCountUsersInBothOrgs() throws Exception {
+            assertThat(usersLDAPRepository.countUsers()).isEqualTo(2);
+        }
+
+        @Test
+        void shouldListUsersInBothOrgs() throws Exception {
+            assertThat(ImmutableList.copyOf(usersLDAPRepository.list()))
+                .containsOnly(JAMES_USER_MAIL, Username.of("bob@extra.org"));
+        }
+    }
+
+    @Nested
     class FilterTests {
         @Test
         void filterShouldKeepMatchingEntries() throws Exception {

@@ -60,8 +60,10 @@ to get some examples and hints.
 Example:
 
 ....
-<repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
-    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/>;
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
 ....
 
 SSL can be enabled by using `ldaps` scheme. `trustAllCerts` option can be used to trust all LDAP client certificates
@@ -70,7 +72,21 @@ SSL can be enabled by using `ldaps` scheme. `trustAllCerts` option can be used t
 Example:
 
 ....
-<repository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldaps://myldapserver:636"
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldaps://myldapserver:636"
     principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
-    trustAllCerts="true"/>;
+    trustAllCerts="true">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
+....
+
+Moreover, per domain base DN can be configured:
+
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHost="ldap://myldapserver:389"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"
+    <enableVirtualHosting>true</enableVirtualHosting>
+    <domains>
+        <domain.tld>ou=People,o=other.com,ou=system</domain.tld>
+    </domains>
+</usersrepository>
 ....

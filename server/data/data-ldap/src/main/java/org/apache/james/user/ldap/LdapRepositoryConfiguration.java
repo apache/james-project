@@ -19,15 +19,18 @@
 
 package org.apache.james.user.ldap;
 
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 public class LdapRepositoryConfiguration {
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
@@ -49,6 +52,7 @@ public class LdapRepositoryConfiguration {
         private Optional<String> userObjectClass;
         private Optional<Integer> poolSize;
         private Optional<Boolean> trustAllCerts;
+        private ImmutableMap.Builder<Domain, String> perDomainBaseDN;
 
         public Builder() {
             ldapHost = Optional.empty();
@@ -59,6 +63,7 @@ public class LdapRepositoryConfiguration {
             userObjectClass = Optional.empty();
             poolSize = Optional.empty();
             trustAllCerts = Optional.empty();
+            perDomainBaseDN = ImmutableMap.builder();
         }
 
         public Builder ldapHost(String ldapHost) {
@@ -101,6 +106,11 @@ public class LdapRepositoryConfiguration {
             return this;
         }
 
+        public Builder addPerDomainDN(Domain domain, String dn) {
+            this.perDomainBaseDN.put(domain, dn);
+            return this;
+        }
+
         public LdapRepositoryConfiguration build() throws ConfigurationException {
             Preconditions.checkState(ldapHost.isPresent(), "'ldapHost' is mandatory");
             Preconditions.checkState(principal.isPresent(), "'principal' is mandatory");
@@ -123,7 +133,8 @@ public class LdapRepositoryConfiguration {
                 NO_RESTRICTION,
                 NO_FILTER,
                 NO_ADMINISTRATOR_ID,
-                trustAllCerts.orElse(false));
+                trustAllCerts.orElse(false),
+                perDomainBaseDN.build());
         }
     }
 
@@ -159,6 +170,19 @@ public class LdapRepositoryConfiguration {
         int poolSize = Optional.ofNullable(configuration.getInteger("[@poolSize]", null))
                 .orElse(DEFAULT_POOL_SIZE);
 
+        ImmutableMap.Builder<Domain, String> builder = ImmutableMap.builder();
+        if (configuration.getNodeModel()
+                .getInMemoryRepresentation()
+                .getChildren()
+                .stream()
+                .anyMatch(n -> n.getNodeName().equals("domains"))) {
+            HierarchicalConfiguration<ImmutableNode> domains = configuration.configurationAt("domains");
+            Iterator<String> keys = domains.getKeys();
+            while (keys.hasNext()) {
+                String next = keys.next();
+                builder.put(Domain.of(next), domains.getString(next));
+            }
+        }
         return new LdapRepositoryConfiguration(
             ldapHost,
             principal,
@@ -173,7 +197,8 @@ public class LdapRepositoryConfiguration {
             restriction,
             filter,
             administratorId,
-            trustAllCerts);
+            trustAllCerts,
+            builder.build());
     }
 
     /**
@@ -250,12 +275,16 @@ public class LdapRepositoryConfiguration {
      * The administrator is allowed to log in as other users
      */
     private final Optional<Username> administratorId;
+
     private final boolean trustAllCerts;
+
+    private final ImmutableMap<Domain, String> perDomainBaseDN;
 
     private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
                                         String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
-                                        Optional<String> administratorId, boolean trustAllCerts) throws ConfigurationException {
+                                        Optional<String> administratorId, boolean trustAllCerts,
+                                        ImmutableMap<Domain, String> perDomainBaseDN) throws ConfigurationException {
         this.ldapHost = ldapHost;
         this.principal = principal;
         this.credentials = credentials;
@@ -270,6 +299,7 @@ public class LdapRepositoryConfiguration {
         this.filter = filter;
         this.administratorId = administratorId.map(Username::of);
         this.trustAllCerts = trustAllCerts;
+        this.perDomainBaseDN = perDomainBaseDN;
 
         checkState();
     }
@@ -342,6 +372,10 @@ public class LdapRepositoryConfiguration {
         return trustAllCerts;
     }
 
+    public ImmutableMap<Domain, String> getPerDomainBaseDN() {
+        return perDomainBaseDN;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof LdapRepositoryConfiguration) {
@@ -360,7 +394,8 @@ public class LdapRepositoryConfiguration {
                 && Objects.equals(this.filter, that.filter)
                 && Objects.equals(this.poolSize, that.poolSize)
                 && Objects.equals(this.administratorId, that.administratorId)
-                && Objects.equals(this.trustAllCerts, that.trustAllCerts);
+                && Objects.equals(this.trustAllCerts, that.trustAllCerts)
+                && Objects.equals(this.perDomainBaseDN, that.perDomainBaseDN);
         }
         return false;
     }
@@ -369,6 +404,6 @@ public class LdapRepositoryConfiguration {
     public final int hashCode() {
         return Objects.hash(ldapHost, principal, credentials, userBase, userIdAttribute, userObjectClass,
             connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize,
-            trustAllCerts);
+            trustAllCerts, perDomainBaseDN);
     }
 }
