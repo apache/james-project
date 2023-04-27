@@ -39,6 +39,26 @@ S: \* 5 EXISTS
 S: \* 5 RECENT
 S: A007 OK (\[.+\] )?APPEND completed.
 
+C: A008 APPEND selected {596+}
+C: Date: Mon, 10 Feb 1994 21:52:25 -0800 (PST)
+C: From: mooch@owatagu.siam.edu
+C: Sender: mooch@owatagu.siam.edu, Boss <boss@owatagu.siam.edu>
+C: Reply-to: Bin <dev.null@owatagu.siam.edu>, Thin Air <air@owatagu.siam.edu>
+C: Subject: Re: Test 05
+C: To: group: john.doe@acme.org, Mary Smithhhhhhhhhhhhh <mary@example.net>
+C: Cc: Moo <moo@example.COM>, Hugh <hugh@example.COM>
+C: Bcc: Secret <spy@owatagu.siam.ed>, Audit <audit@owatagu.siam.ed>
+C: Message-Id: <12345677890-mooch@owatagu.siam.edu>
+C: In-reply-to: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Works!
+C:
+S: \* 6 EXISTS
+S: \* 6 RECENT
+S: A008 OK (\[.+\] )?APPEND completed.
+
 TIMER print append
 
 TIMER start fetch
@@ -53,5 +73,12 @@ TIMER reset fetch
 C: f2 FETCH 5 (ENVELOPE)
 S: \* 5 FETCH \(ENVELOPE \(\"Mon, 10 Feb 1994 21:52:25 -0800 \(PST\)\" \"Re: Test 05\" \(\(NIL NIL \"mooch\" \"owatagu.siam.edu\"\)\) \(\(NIL NIL \"mooch\" \"owatagu.siam.edu\"\)\(\"Boss\" NIL \"boss\" \"owatagu.siam.edu\"\)\) \(\(\"Bin\" NIL \"dev.null\" \"owatagu.siam.edu\"\)\(\"Thin Air\" NIL \"air\" \"owatagu.siam.edu\"\)\) \(\(\"Fred Foobar\" NIL \"foobar\" \"Blurdybloop.COM\"\)\(\"Sue\" NIL \"sue.foo\" \"Blurdybloop.COM\"\)\) \(\(\"Moo\" NIL \"moo\" \"example.COM\"\)\(\"Hugh\" NIL \"hugh\" \"example.COM\"\)\) \(\(\"Secret\" NIL \"spy\" \"owatagu.siam.ed\"\)\(\"Audit\" NIL \"audit\" \"owatagu.siam.ed\"\)\) \"<B27397-0100000@Blurdybloop.COM>\" \"<12345677890-mooch@owatagu.siam.edu>\"\)\)
 S: f2 OK FETCH completed.
+
+TIMER print fetch
+TIMER reset fetch
+
+C: f3 FETCH 6 (ENVELOPE)
+S: \* 6 FETCH \(ENVELOPE \("Mon, 10 Feb 1994 21:52:25 -0800 \(PST\)" "Re: Test 05" \(\(NIL NIL "mooch" "owatagu.siam.edu"\)\) \(\(NIL NIL "mooch" "owatagu.siam.edu"\)\("Boss" NIL "boss" "owatagu.siam.edu"\)\) \(\("Bin" NIL "dev.null" "owatagu.siam.edu"\)\("Thin Air" NIL "air" "owatagu.siam.edu"\)\) \(\(NIL NIL "group" NIL\)\(NIL NIL "john.doe" "acme.org"\)\("Mary Smithhhhhhhhhhhhh" NIL "mary" "example.net"\)\(NIL NIL NIL NIL\)\) \(\("Moo" NIL "moo" "example.COM"\)\("Hugh" NIL "hugh" "example.COM"\)\) \(\("Secret" NIL "spy" "owatagu.siam.ed"\)\("Audit" NIL "audit" "owatagu.siam.ed"\)\) "<B27397-0100000@Blurdybloop.COM>" "<12345677890-mooch@owatagu.siam.edu>"\)\)
+S: f3 OK FETCH completed.
 
 TIMER print fetch
