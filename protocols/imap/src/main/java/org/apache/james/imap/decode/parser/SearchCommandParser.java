@@ -1018,7 +1018,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     /**
      * Parse the {@link SearchResultOption}'s which are used for ESEARCH
      */
-    private List<SearchResultOption> parseOptions(ImapRequestLineReader reader) throws DecodingException {
+    List<SearchResultOption> parseOptions(ImapRequestLineReader reader) throws DecodingException {
         List<SearchResultOption> options = new ArrayList<>();
         reader.consumeChar('(');
         reader.nextWordChar();

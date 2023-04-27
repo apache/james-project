@@ -20,18 +20,21 @@
 package org.apache.james.imap.decode.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
+import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -60,9 +63,9 @@ class SearchCommandParserSearchKeyTest {
         checkValid("ALL\r\n", key);
         checkValid("all\r\n", key);
         checkValid("alL\r\n", key);
-        checkInvalid("al\r\n", key);
-        checkInvalid("alm\r\n", key);
-        checkInvalid("alm\r\n", key);
+        checkInvalid("al\r\n");
+        checkInvalid("alm\r\n");
+        checkInvalid("alm\r\n");
     }
 
     @Test
@@ -71,13 +74,37 @@ class SearchCommandParserSearchKeyTest {
         checkValid("ANSWERED\r\n", key);
         checkValid("answered\r\n", key);
         checkValid("aNSWEred\r\n", key);
-        checkInvalid("a\r\n", key);
-        checkInvalid("an\r\n", key);
-        checkInvalid("ans\r\n", key);
-        checkInvalid("answ\r\n", key);
-        checkInvalid("answe\r\n", key);
-        checkInvalid("answer\r\n", key);
-        checkInvalid("answere\r\n", key);
+        checkInvalid("a\r\n");
+        checkInvalid("an\r\n");
+        checkInvalid("ans\r\n");
+        checkInvalid("answ\r\n");
+        checkInvalid("answe\r\n");
+        checkInvalid("answer\r\n");
+        checkInvalid("answere\r\n");
+    }
+
+    @Test
+    void testShouldParseYounger() throws Exception {
+        SearchKey key = SearchKey.buildYounger(123);
+        checkValid("younger 123\r\n", key);
+        checkValid("YOUNGER 123\r\n", key);
+        checkValid("yOunGeR  123\r\n", key);
+        checkInvalid("y\r\n");
+        checkInvalid("yo\r\n");
+        checkInvalid("you\r\n");
+        checkInvalid("youn\r\n");
+        checkInvalid("young\r\n");
+        checkInvalid("younge\r\n");
+        checkInvalid("younger\r\n");
+        checkInvalid("younger \r\n");
+    }
+
+    @Test
+    void testShouldParseOlder() throws Exception {
+        SearchKey key = SearchKey.buildOlder(123);
+        checkValid("older 123\r\n", key);
+        checkValid("OLDER 123\r\n", key);
+        checkValid("OlDeR  123\r\n", key);
     }
 
     @Test
@@ -89,10 +116,10 @@ class SearchCommandParserSearchKeyTest {
         checkValid("bcc \"Somebody\"\r\n", key);
         checkValid("Bcc Somebody\r\n", key);
         checkValid("Bcc \"Somebody\"\r\n", key);
-        checkInvalid("b\r\n", key);
-        checkInvalid("bc\r\n", key);
-        checkInvalid("bg\r\n", key);
-        checkInvalid("bccc\r\n", key);
+        checkInvalid("b\r\n");
+        checkInvalid("bc\r\n");
+        checkInvalid("bg\r\n");
+        checkInvalid("bccc\r\n");
     }
 
     @Test
@@ -101,16 +128,16 @@ class SearchCommandParserSearchKeyTest {
         checkValid("ON 1-Jan-2000\r\n", key);
         checkValid("on 1-Jan-2000\r\n", key);
         checkValid("oN 1-Jan-2000\r\n", key);
-        checkInvalid("o\r\n", key);
-        checkInvalid("om\r\n", key);
-        checkInvalid("oni\r\n", key);
-        checkInvalid("on \r\n", key);
-        checkInvalid("on 1\r\n", key);
-        checkInvalid("on 1-\r\n", key);
-        checkInvalid("on 1-J\r\n", key);
-        checkInvalid("on 1-Ja\r\n", key);
-        checkInvalid("on 1-Jan\r\n", key);
-        checkInvalid("on 1-Jan-\r\n", key);
+        checkInvalid("o\r\n");
+        checkInvalid("om\r\n");
+        checkInvalid("oni\r\n");
+        checkInvalid("on \r\n");
+        checkInvalid("on 1\r\n");
+        checkInvalid("on 1-\r\n");
+        checkInvalid("on 1-J\r\n");
+        checkInvalid("on 1-Ja\r\n");
+        checkInvalid("on 1-Jan\r\n");
+        checkInvalid("on 1-Jan-\r\n");
     }
 
     @Test
@@ -119,21 +146,22 @@ class SearchCommandParserSearchKeyTest {
         checkValid("SENTBEFORE 1-Jan-2000\r\n", key);
         checkValid("sentbefore 1-Jan-2000\r\n", key);
         checkValid("SentBefore 1-Jan-2000\r\n", key);
-        checkInvalid("s\r\n", key);
-        checkInvalid("se\r\n", key);
-        checkInvalid("sent\r\n", key);
-        checkInvalid("sentb \r\n", key);
-        checkInvalid("sentbe \r\n", key);
-        checkInvalid("sentbef \r\n", key);
-        checkInvalid("sentbefo \r\n", key);
-        checkInvalid("sentbefor \r\n", key);
-        checkInvalid("sentbefore \r\n", key);
-        checkInvalid("sentbefore 1\r\n", key);
-        checkInvalid("sentbefore 1-\r\n", key);
-        checkInvalid("sentbefore 1-J\r\n", key);
-        checkInvalid("sentbefore 1-Ja\r\n", key);
-        checkInvalid("sentbefore 1-Jan\r\n", key);
-        checkInvalid("sentbefore 1-Jan-\r\n", key);
+        checkInvalid("s\r\n");
+        checkInvalid("se\r\n");
+        checkInvalid("sent\r\n");
+        checkInvalid("seny\r\n");
+        checkInvalid("sentb \r\n");
+        checkInvalid("sentbe \r\n");
+        checkInvalid("sentbef \r\n");
+        checkInvalid("sentbefo \r\n");
+        checkInvalid("sentbefor \r\n");
+        checkInvalid("sentbefore \r\n");
+        checkInvalid("sentbefore 1\r\n");
+        checkInvalid("sentbefore 1-\r\n");
+        checkInvalid("sentbefore 1-J\r\n");
+        checkInvalid("sentbefore 1-Ja\r\n");
+        checkInvalid("sentbefore 1-Jan\r\n");
+        checkInvalid("sentbefore 1-Jan-\r\n");
     }
 
     @Test
@@ -142,17 +170,17 @@ class SearchCommandParserSearchKeyTest {
         checkValid("SENTON 1-Jan-2000\r\n", key);
         checkValid("senton 1-Jan-2000\r\n", key);
         checkValid("SentOn 1-Jan-2000\r\n", key);
-        checkInvalid("s\r\n", key);
-        checkInvalid("se\r\n", key);
-        checkInvalid("sent\r\n", key);
-        checkInvalid("sento \r\n", key);
-        checkInvalid("senton \r\n", key);
-        checkInvalid("senton 1\r\n", key);
-        checkInvalid("senton 1-\r\n", key);
-        checkInvalid("senton 1-J\r\n", key);
-        checkInvalid("senton 1-Ja\r\n", key);
-        checkInvalid("senton 1-Jan\r\n", key);
-        checkInvalid("senton 1-Jan-\r\n", key);
+        checkInvalid("s\r\n");
+        checkInvalid("se\r\n");
+        checkInvalid("sent\r\n");
+        checkInvalid("sento \r\n");
+        checkInvalid("senton \r\n");
+        checkInvalid("senton 1\r\n");
+        checkInvalid("senton 1-\r\n");
+        checkInvalid("senton 1-J\r\n");
+        checkInvalid("senton 1-Ja\r\n");
+        checkInvalid("senton 1-Jan\r\n");
+        checkInvalid("senton 1-Jan-\r\n");
     }
 
     @Test
@@ -161,20 +189,20 @@ class SearchCommandParserSearchKeyTest {
         checkValid("SENTSINCE 1-Jan-2000\r\n", key);
         checkValid("sentsince 1-Jan-2000\r\n", key);
         checkValid("SentSince 1-Jan-2000\r\n", key);
-        checkInvalid("s\r\n", key);
-        checkInvalid("se\r\n", key);
-        checkInvalid("sent\r\n", key);
-        checkInvalid("sents \r\n", key);
-        checkInvalid("sentsi \r\n", key);
-        checkInvalid("sentsin \r\n", key);
-        checkInvalid("sentsinc \r\n", key);
-        checkInvalid("sentsince \r\n", key);
-        checkInvalid("sentsince 1\r\n", key);
-        checkInvalid("sentsince 1-\r\n", key);
-        checkInvalid("sentsince 1-J\r\n", key);
-        checkInvalid("sentsince 1-Ja\r\n", key);
-        checkInvalid("sentsince 1-Jan\r\n", key);
-        checkInvalid("sentsince 1-Jan-\r\n", key);
+        checkInvalid("s\r\n");
+        checkInvalid("se\r\n");
+        checkInvalid("sent\r\n");
+        checkInvalid("sents \r\n");
+        checkInvalid("sentsi \r\n");
+        checkInvalid("sentsin \r\n");
+        checkInvalid("sentsinc \r\n");
+        checkInvalid("sentsince \r\n");
+        checkInvalid("sentsince 1\r\n");
+        checkInvalid("sentsince 1-\r\n");
+        checkInvalid("sentsince 1-J\r\n");
+        checkInvalid("sentsince 1-Ja\r\n");
+        checkInvalid("sentsince 1-Jan\r\n");
+        checkInvalid("sentsince 1-Jan-\r\n");
     }
 
     @Test
@@ -183,17 +211,17 @@ class SearchCommandParserSearchKeyTest {
         checkValid("SINCE 1-Jan-2000\r\n", key);
         checkValid("since 1-Jan-2000\r\n", key);
         checkValid("Since 1-Jan-2000\r\n", key);
-        checkInvalid("s \r\n", key);
-        checkInvalid("si \r\n", key);
-        checkInvalid("sin \r\n", key);
-        checkInvalid("sinc \r\n", key);
-        checkInvalid("since \r\n", key);
-        checkInvalid("since 1\r\n", key);
-        checkInvalid("since 1-\r\n", key);
-        checkInvalid("since 1-J\r\n", key);
-        checkInvalid("since 1-Ja\r\n", key);
-        checkInvalid("since 1-Jan\r\n", key);
-        checkInvalid("since 1-Jan-\r\n", key);
+        checkInvalid("s \r\n");
+        checkInvalid("si \r\n");
+        checkInvalid("sin \r\n");
+        checkInvalid("sinc \r\n");
+        checkInvalid("since \r\n");
+        checkInvalid("since 1\r\n");
+        checkInvalid("since 1-\r\n");
+        checkInvalid("since 1-J\r\n");
+        checkInvalid("since 1-Ja\r\n");
+        checkInvalid("since 1-Jan\r\n");
+        checkInvalid("since 1-Jan-\r\n");
     }
 
     @Test
@@ -202,21 +230,21 @@ class SearchCommandParserSearchKeyTest {
         checkValid("BEFORE 1-Jan-2000\r\n", key);
         checkValid("before 1-Jan-2000\r\n", key);
         checkValid("BEforE 1-Jan-2000\r\n", key);
-        checkInvalid("b\r\n", key);
-        checkInvalid("B\r\n", key);
-        checkInvalid("BE\r\n", key);
-        checkInvalid("BEf\r\n", key);
-        checkInvalid("BEfo\r\n", key);
-        checkInvalid("BEfor\r\n", key);
-        checkInvalid("BEforE\r\n", key);
-        checkInvalid("BEforEi\r\n", key);
-        checkInvalid("BEforE \r\n", key);
-        checkInvalid("BEforE 1\r\n", key);
-        checkInvalid("BEforE 1-\r\n", key);
-        checkInvalid("BEforE 1-J\r\n", key);
-        checkInvalid("BEforE 1-Ja\r\n", key);
-        checkInvalid("BEforE 1-Jan\r\n", key);
-        checkInvalid("BEforE 1-Jan-\r\n", key);
+        checkInvalid("b\r\n");
+        checkInvalid("B\r\n");
+        checkInvalid("BE\r\n");
+        checkInvalid("BEf\r\n");
+        checkInvalid("BEfo\r\n");
+        checkInvalid("BEfor\r\n");
+        checkInvalid("BEforE\r\n");
+        checkInvalid("BEforEi\r\n");
+        checkInvalid("BEforE \r\n");
+        checkInvalid("BEforE 1\r\n");
+        checkInvalid("BEforE 1-\r\n");
+        checkInvalid("BEforE 1-J\r\n");
+        checkInvalid("BEforE 1-Ja\r\n");
+        checkInvalid("BEforE 1-Jan\r\n");
+        checkInvalid("BEforE 1-Jan-\r\n");
     }
 
     @Test
@@ -228,11 +256,11 @@ class SearchCommandParserSearchKeyTest {
         checkValid("body \"Text\"\r\n", key);
         checkValid("BodY Text\r\n", key);
         checkValid("BodY \"Text\"\r\n", key);
-        checkInvalid("b\r\n", key);
-        checkInvalid("Bo\r\n", key);
-        checkInvalid("Bod\r\n", key);
-        checkInvalid("Bodd\r\n", key);
-        checkInvalid("Bodym\r\n", key);
+        checkInvalid("b\r\n");
+        checkInvalid("Bo\r\n");
+        checkInvalid("Bod\r\n");
+        checkInvalid("Bodd\r\n");
+        checkInvalid("Bodym\r\n");
     }
 
     @Test
@@ -244,10 +272,10 @@ class SearchCommandParserSearchKeyTest {
         checkValid("to \"AnAddress\"\r\n", key);
         checkValid("To AnAddress\r\n", key);
         checkValid("To \"AnAddress\"\r\n", key);
-        checkInvalid("t\r\n", key);
-        checkInvalid("to\r\n", key);
-        checkInvalid("too\r\n", key);
-        checkInvalid("to \r\n", key);
+        checkInvalid("t\r\n");
+        checkInvalid("to\r\n");
+        checkInvalid("too\r\n");
+        checkInvalid("to \r\n");
     }
 
     @Test
@@ -259,11 +287,11 @@ class SearchCommandParserSearchKeyTest {
         checkValid("text \"SomeText\"\r\n", key);
         checkValid("Text SomeText\r\n", key);
         checkValid("Text \"SomeText\"\r\n", key);
-        checkInvalid("t\r\n", key);
-        checkInvalid("te\r\n", key);
-        checkInvalid("tex\r\n", key);
-        checkInvalid("text\r\n", key);
-        checkInvalid("text \r\n", key);
+        checkInvalid("t\r\n");
+        checkInvalid("te\r\n");
+        checkInvalid("tex\r\n");
+        checkInvalid("text\r\n");
+        checkInvalid("text \r\n");
     }
 
     @Test
@@ -275,14 +303,14 @@ class SearchCommandParserSearchKeyTest {
         checkValid("subject \"ASubject\"\r\n", key);
         checkValid("Subject ASubject\r\n", key);
         checkValid("Subject \"ASubject\"\r\n", key);
-        checkInvalid("s\r\n", key);
-        checkInvalid("su\r\n", key);
-        checkInvalid("sub\r\n", key);
-        checkInvalid("subj\r\n", key);
-        checkInvalid("subje\r\n", key);
-        checkInvalid("subjec\r\n", key);
-        checkInvalid("subject\r\n", key);
-        checkInvalid("subject \r\n", key);
+        checkInvalid("s\r\n");
+        checkInvalid("su\r\n");
+        checkInvalid("sub\r\n");
+        checkInvalid("subj\r\n");
+        checkInvalid("subje\r\n");
+        checkInvalid("subjec\r\n");
+        checkInvalid("subject\r\n");
+        checkInvalid("subject \r\n");
     }
 
     @Test
@@ -294,9 +322,9 @@ class SearchCommandParserSearchKeyTest {
         checkValid("cc \"SomeText\"\r\n", key);
         checkValid("Cc SomeText\r\n", key);
         checkValid("Cc \"SomeText\"\r\n", key);
-        checkInvalid("c\r\n", key);
-        checkInvalid("cd\r\n", key);
-        checkInvalid("ccc\r\n", key);
+        checkInvalid("c\r\n");
+        checkInvalid("cd\r\n");
+        checkInvalid("ccc\r\n");
     }
 
     @Test
@@ -308,50 +336,50 @@ class SearchCommandParserSearchKeyTest {
         checkValid("from \"Someone\"\r\n", key);
         checkValid("FRom Someone\r\n", key);
         checkValid("FRom \"Someone\"\r\n", key);
-        checkInvalid("f\r\n", key);
-        checkInvalid("fr\r\n", key);
-        checkInvalid("ftom\r\n", key);
-        checkInvalid("froml\r\n", key);
+        checkInvalid("f\r\n");
+        checkInvalid("fr\r\n");
+        checkInvalid("ftom\r\n");
+        checkInvalid("froml\r\n");
     }
 
     @Test
     void testShouldParseKeyword() throws Exception {
         SearchKey key = SearchKey.buildKeyword("AFlag");
         checkValid("KEYWORD AFlag\r\n", key);
-        checkInvalid("KEYWORD \"AFlag\"\r\n", key);
+        checkInvalid("KEYWORD \"AFlag\"\r\n");
         checkValid("keyword AFlag\r\n", key);
-        checkInvalid("keyword \"AFlag\"\r\n", key);
+        checkInvalid("keyword \"AFlag\"\r\n");
         checkValid("KEYword AFlag\r\n", key);
-        checkInvalid("KEYword \"AFlag\"\r\n", key);
-        checkInvalid("k\r\n", key);
-        checkInvalid("ke\r\n", key);
-        checkInvalid("key\r\n", key);
-        checkInvalid("keyw\r\n", key);
-        checkInvalid("keywo\r\n", key);
-        checkInvalid("keywor\r\n", key);
-        checkInvalid("keywordi\r\n", key);
-        checkInvalid("keyword \r\n", key);
+        checkInvalid("KEYword \"AFlag\"\r\n");
+        checkInvalid("k\r\n");
+        checkInvalid("ke\r\n");
+        checkInvalid("key\r\n");
+        checkInvalid("keyw\r\n");
+        checkInvalid("keywo\r\n");
+        checkInvalid("keywor\r\n");
+        checkInvalid("keywordi\r\n");
+        checkInvalid("keyword \r\n");
     }
 
     @Test
     void testShouldParseUnKeyword() throws Exception {
         SearchKey key = SearchKey.buildUnkeyword("AFlag");
         checkValid("UNKEYWORD AFlag\r\n", key);
-        checkInvalid("UNKEYWORD \"AFlag\"\r\n", key);
+        checkInvalid("UNKEYWORD \"AFlag\"\r\n");
         checkValid("unkeyword AFlag\r\n", key);
-        checkInvalid("unkeyword \"AFlag\"\r\n", key);
+        checkInvalid("unkeyword \"AFlag\"\r\n");
         checkValid("UnKEYword AFlag\r\n", key);
-        checkInvalid("UnKEYword \"AFlag\"\r\n", key);
-        checkInvalid("u\r\n", key);
-        checkInvalid("un\r\n", key);
-        checkInvalid("unk\r\n", key);
-        checkInvalid("unke\r\n", key);
-        checkInvalid("unkey\r\n", key);
-        checkInvalid("unkeyw\r\n", key);
-        checkInvalid("unkeywo\r\n", key);
-        checkInvalid("unkeywor\r\n", key);
-        checkInvalid("unkeywordi\r\n", key);
-        checkInvalid("unkeyword \r\n", key);
+        checkInvalid("UnKEYword \"AFlag\"\r\n");
+        checkInvalid("u\r\n");
+        checkInvalid("un\r\n");
+        checkInvalid("unk\r\n");
+        checkInvalid("unke\r\n");
+        checkInvalid("unkey\r\n");
+        checkInvalid("unkeyw\r\n");
+        checkInvalid("unkeywo\r\n");
+        checkInvalid("unkeywor\r\n");
+        checkInvalid("unkeywordi\r\n");
+        checkInvalid("unkeyword \r\n");
     }
 
     @Test
@@ -363,14 +391,14 @@ class SearchCommandParserSearchKeyTest {
         checkValid("header \"Field\" \"Value\"\r\n", key);
         checkValid("HEAder Field Value\r\n", key);
         checkValid("HEAder \"Field\" \"Value\"\r\n", key);
-        checkInvalid("h\r\n", key);
-        checkInvalid("he\r\n", key);
-        checkInvalid("hea\r\n", key);
-        checkInvalid("head\r\n", key);
-        checkInvalid("heade\r\n", key);
-        checkInvalid("header\r\n", key);
-        checkInvalid("header field\r\n", key);
-        checkInvalid("header field \r\n", key);
+        checkInvalid("h\r\n");
+        checkInvalid("he\r\n");
+        checkInvalid("hea\r\n");
+        checkInvalid("head\r\n");
+        checkInvalid("heade\r\n");
+        checkInvalid("header\r\n");
+        checkInvalid("header field\r\n");
+        checkInvalid("header field \r\n");
     }
 
    
@@ -388,96 +416,88 @@ class SearchCommandParserSearchKeyTest {
         checkValid("DELETED\r\n", key);
         checkValid("deleted\r\n", key);
         checkValid("deLEteD\r\n", key);
-        checkInvalid("d\r\n", key);
-        checkInvalid("de\r\n", key);
-        checkInvalid("del\r\n", key);
-        checkInvalid("dele\r\n", key);
-        checkInvalid("delet\r\n", key);
-        checkInvalid("delete\r\n", key);
+        checkInvalid("d\r\n");
+        checkInvalid("de\r\n");
+        checkInvalid("del\r\n");
+        checkInvalid("dele\r\n");
+        checkInvalid("delet\r\n");
+        checkInvalid("delete\r\n");
     }
 
     @Test
-    void testEShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("e\r\n", key);
-        checkInvalid("ee\r\n", key);
+    void testEShouldBeInvalid() {
+        checkInvalid("e\r\n");
+        checkInvalid("ee\r\n");
     }
 
     @Test
-    void testGShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("g\r\n", key);
-        checkInvalid("G\r\n", key);
+    void testGShouldBeInvalid() {
+        checkInvalid("g\r\n");
+        checkInvalid("G\r\n");
     }
 
     @Test
-    void testIShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("i\r\n", key);
-        checkInvalid("I\r\n", key);
+    void testIShouldBeInvalid() {
+        checkInvalid("i\r\n");
+        checkInvalid("I\r\n");
     }
 
     @Test
-    void testJShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("j\r\n", key);
-        checkInvalid("J\r\n", key);
+    void testJShouldBeInvalid() {
+        checkInvalid("j\r\n");
+        checkInvalid("J\r\n");
     }
 
     @Test
-    void testMShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("m\r\n", key);
-        checkInvalid("M\r\n", key);
+    void testMShouldBeInvalid() {
+        checkInvalid("m\r\n");
+        checkInvalid("M\r\n");
     }
     
     @Test
-    void testPShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("p\r\n", key);
-        checkInvalid("Pp\r\n", key);
+    void testPShouldBeInvalid() {
+        checkInvalid("p\r\n");
+        checkInvalid("Pp\r\n");
     }
 
     @Test
-    void testQShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("q\r\n", key);
-        checkInvalid("Qq\r\n", key);
+    void testQShouldBeInvalid() {
+        checkInvalid("q\r\n");
+        checkInvalid("Qq\r\n");
     }
 
     @Test
-    void testWShouldBeInvalid() throws Exception {
-        SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("w\r\n", key);
-        checkInvalid("ww\r\n", key);
+    void testWShouldBeInvalid() {
+        checkInvalid("w\r\n");
+        checkInvalid("ww\r\n");
     }
 
     @Test
-    void testVShouldBeInvalid() throws Exception {
+    void testVShouldBeInvalid() {
         SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("v\r\n", key);
-        checkInvalid("vv\r\n", key);
+        checkInvalid("v\r\n");
+        checkInvalid("vv\r\n");
     }
 
     @Test
-    void testXShouldBeInvalid() throws Exception {
+    void testXShouldBeInvalid() {
         SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("x\r\n", key);
-        checkInvalid("xx\r\n", key);
+        checkInvalid("x\r\n");
+        checkInvalid("xx\r\n");
     }
 
     @Test
-    void testYShouldBeInvalid() throws Exception {
+    void testYShouldBeInvalid() {
         SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("y\r\n", key);
-        checkInvalid("yy\r\n", key);
+        checkInvalid("y\r\n");
+        checkInvalid("yy\r\n");
     }
 
     @Test
-    void testZShouldBeInvalid() throws Exception {
+    void testZShouldBeInvalid() {
         SearchKey key = SearchKey.buildDeleted();
-        checkInvalid("z\r\n", key);
-        checkInvalid("zz\r\n", key);
+        checkInvalid("z\r\n");
+        checkInvalid("zz\r\n");
     }
 
     @Test
@@ -486,11 +506,11 @@ class SearchCommandParserSearchKeyTest {
         checkValid("RECENT\r\n", key);
         checkValid("recent\r\n", key);
         checkValid("reCENt\r\n", key);
-        checkInvalid("r\r\n", key);
-        checkInvalid("re\r\n", key);
-        checkInvalid("rec\r\n", key);
-        checkInvalid("rece\r\n", key);
-        checkInvalid("recen\r\n", key);
+        checkInvalid("r\r\n");
+        checkInvalid("re\r\n");
+        checkInvalid("rec\r\n");
+        checkInvalid("rece\r\n");
+        checkInvalid("recen\r\n");
     }
 
     @Test
@@ -499,10 +519,10 @@ class SearchCommandParserSearchKeyTest {
         checkValid("DRAFT\r\n", key);
         checkValid("draft\r\n", key);
         checkValid("DRaft\r\n", key);
-        checkInvalid("D\r\n", key);
-        checkInvalid("DR\r\n", key);
-        checkInvalid("DRA\r\n", key);
-        checkInvalid("DRAF\r\n", key);
+        checkInvalid("D\r\n");
+        checkInvalid("DR\r\n");
+        checkInvalid("DRA\r\n");
+        checkInvalid("DRAF\r\n");
     }
 
     @Test
@@ -511,15 +531,15 @@ class SearchCommandParserSearchKeyTest {
         checkValid("UNANSWERED\r\n", key);
         checkValid("unanswered\r\n", key);
         checkValid("UnAnswered\r\n", key);
-        checkInvalid("u\r\n", key);
-        checkInvalid("un\r\n", key);
-        checkInvalid("una\r\n", key);
-        checkInvalid("unan\r\n", key);
-        checkInvalid("unans\r\n", key);
-        checkInvalid("unansw\r\n", key);
-        checkInvalid("unanswe\r\n", key);
-        checkInvalid("unanswer\r\n", key);
-        checkInvalid("unanswere\r\n", key);
+        checkInvalid("u\r\n");
+        checkInvalid("un\r\n");
+        checkInvalid("una\r\n");
+        checkInvalid("unan\r\n");
+        checkInvalid("unans\r\n");
+        checkInvalid("unansw\r\n");
+        checkInvalid("unanswe\r\n");
+        checkInvalid("unanswer\r\n");
+        checkInvalid("unanswere\r\n");
     }
 
     @Test
@@ -528,14 +548,14 @@ class SearchCommandParserSearchKeyTest {
         checkValid("UNDELETED\r\n", key);
         checkValid("undeleted\r\n", key);
         checkValid("UnDeleted\r\n", key);
-        checkInvalid("u\r\n", key);
-        checkInvalid("un\r\n", key);
-        checkInvalid("und\r\n", key);
-        checkInvalid("unde\r\n", key);
-        checkInvalid("undel\r\n", key);
-        checkInvalid("undele\r\n", key);
-        checkInvalid("undelet\r\n", key);
-        checkInvalid("undelete\r\n", key);
+        checkInvalid("u\r\n");
+        checkInvalid("un\r\n");
+        checkInvalid("und\r\n");
+        checkInvalid("unde\r\n");
+        checkInvalid("undel\r\n");
+        checkInvalid("undele\r\n");
+        checkInvalid("undelet\r\n");
+        checkInvalid("undelete\r\n");
     }
 
     @Test
@@ -544,11 +564,11 @@ class SearchCommandParserSearchKeyTest {
         checkValid("UNSEEN\r\n", key);
         checkValid("unseen\r\n", key);
         checkValid("UnSeen\r\n", key);
-        checkInvalid("u\r\n", key);
-        checkInvalid("un\r\n", key);
-        checkInvalid("uns\r\n", key);
-        checkInvalid("unse\r\n", key);
-        checkInvalid("unsee\r\n", key);
+        checkInvalid("u\r\n");
+        checkInvalid("un\r\n");
+        checkInvalid("uns\r\n");
+        checkInvalid("unse\r\n");
+        checkInvalid("unsee\r\n");
     }
 
     @Test
@@ -557,12 +577,12 @@ class SearchCommandParserSearchKeyTest {
         checkValid("UNDRAFT\r\n", key);
         checkValid("undraft\r\n", key);
         checkValid("UnDraft\r\n", key);
-        checkInvalid("u\r\n", key);
-        checkInvalid("un\r\n", key);
-        checkInvalid("und\r\n", key);
-        checkInvalid("undr\r\n", key);
-        checkInvalid("undra\r\n", key);
-        checkInvalid("undraf\r\n", key);
+        checkInvalid("u\r\n");
+        checkInvalid("un\r\n");
+        checkInvalid("und\r\n");
+        checkInvalid("undr\r\n");
+        checkInvalid("undra\r\n");
+        checkInvalid("undraf\r\n");
     }
 
     @Test
@@ -571,14 +591,14 @@ class SearchCommandParserSearchKeyTest {
         checkValid("UNFLAGGED\r\n", key);
         checkValid("unflagged\r\n", key);
         checkValid("UnFlagged\r\n", key);
-        checkInvalid("u\r\n", key);
-        checkInvalid("un\r\n", key);
-        checkInvalid("unf\r\n", key);
-        checkInvalid("unfl\r\n", key);
-        checkInvalid("unfla\r\n", key);
-        checkInvalid("unflag\r\n", key);
-        checkInvalid("unflagg\r\n", key);
-        checkInvalid("unflagge\r\n", key);
+        checkInvalid("u\r\n");
+        checkInvalid("un\r\n");
+        checkInvalid("unf\r\n");
+        checkInvalid("unfl\r\n");
+        checkInvalid("unfla\r\n");
+        checkInvalid("unflag\r\n");
+        checkInvalid("unflagg\r\n");
+        checkInvalid("unflagge\r\n");
     }
 
     @Test
@@ -587,9 +607,9 @@ class SearchCommandParserSearchKeyTest {
         checkValid("SEEN\r\n", key);
         checkValid("seen\r\n", key);
         checkValid("SEen\r\n", key);
-        checkInvalid("s\r\n", key);
-        checkInvalid("se\r\n", key);
-        checkInvalid("see\r\n", key);
+        checkInvalid("s\r\n");
+        checkInvalid("se\r\n");
+        checkInvalid("see\r\n");
     }
 
     @Test
@@ -598,9 +618,9 @@ class SearchCommandParserSearchKeyTest {
         checkValid("NEW\r\n", key);
         checkValid("new\r\n", key);
         checkValid("NeW\r\n", key);
-        checkInvalid("n\r\n", key);
-        checkInvalid("ne\r\n", key);
-        checkInvalid("nwe\r\n", key);
+        checkInvalid("n\r\n");
+        checkInvalid("ne\r\n");
+        checkInvalid("nwe\r\n");
     }
 
     @Test
@@ -609,9 +629,9 @@ class SearchCommandParserSearchKeyTest {
         checkValid("OLD\r\n", key);
         checkValid("old\r\n", key);
         checkValid("oLd\r\n", key);
-        checkInvalid("o\r\n", key);
-        checkInvalid("ol\r\n", key);
-        checkInvalid("olr\r\n", key);
+        checkInvalid("o\r\n");
+        checkInvalid("ol\r\n");
+        checkInvalid("olr\r\n");
     }
 
     @Test
@@ -620,13 +640,13 @@ class SearchCommandParserSearchKeyTest {
         checkValid("FLAGGED\r\n", key);
         checkValid("flagged\r\n", key);
         checkValid("FLAGged\r\n", key);
-        checkInvalid("F\r\n", key);
-        checkInvalid("FL\r\n", key);
-        checkInvalid("FLA\r\n", key);
-        checkInvalid("FLAG\r\n", key);
-        checkInvalid("FLAGG\r\n", key);
-        checkInvalid("FLAGGE\r\n", key);
-        checkInvalid("FLoas\r\n", key);
+        checkInvalid("F\r\n");
+        checkInvalid("FL\r\n");
+        checkInvalid("FLA\r\n");
+        checkInvalid("FLAG\r\n");
+        checkInvalid("FLAGG\r\n");
+        checkInvalid("FLAGGE\r\n");
+        checkInvalid("FLoas\r\n");
     }
 
     @Test
@@ -635,14 +655,14 @@ class SearchCommandParserSearchKeyTest {
         checkValid("SMALLER 1729\r\n", key);
         checkValid("smaller 1729\r\n", key);
         checkValid("SMaller 1729\r\n", key);
-        checkInvalid("s\r\n", key);
-        checkInvalid("sm\r\n", key);
-        checkInvalid("sma\r\n", key);
-        checkInvalid("smal\r\n", key);
-        checkInvalid("small\r\n", key);
-        checkInvalid("smalle\r\n", key);
-        checkInvalid("smaller \r\n", key);
-        checkInvalid("smaller peach\r\n", key);
+        checkInvalid("s\r\n");
+        checkInvalid("sm\r\n");
+        checkInvalid("sma\r\n");
+        checkInvalid("smal\r\n");
+        checkInvalid("small\r\n");
+        checkInvalid("smalle\r\n");
+        checkInvalid("smaller \r\n");
+        checkInvalid("smaller peach\r\n");
     }
 
     @Test
@@ -651,14 +671,14 @@ class SearchCommandParserSearchKeyTest {
         checkValid("LARGER 1234\r\n", key);
         checkValid("lArGEr 1234\r\n", key);
         checkValid("larger 1234\r\n", key);
-        checkInvalid("l\r\n", key);
-        checkInvalid("la\r\n", key);
-        checkInvalid("lar\r\n", key);
-        checkInvalid("larg\r\n", key);
-        checkInvalid("large\r\n", key);
-        checkInvalid("larger\r\n", key);
-        checkInvalid("larger \r\n", key);
-        checkInvalid("larger peach\r\n", key);
+        checkInvalid("l\r\n");
+        checkInvalid("la\r\n");
+        checkInvalid("lar\r\n");
+        checkInvalid("larg\r\n");
+        checkInvalid("large\r\n");
+        checkInvalid("larger\r\n");
+        checkInvalid("larger \r\n");
+        checkInvalid("larger peach\r\n");
     }
 
     @Test
@@ -668,10 +688,10 @@ class SearchCommandParserSearchKeyTest {
         checkValid("UID 1\r\n", key);
         checkValid("Uid 1\r\n", key);
         checkValid("uid 1\r\n", key);
-        checkInvalid("u\r\n", key);
-        checkInvalid("ui\r\n", key);
-        checkInvalid("uid\r\n", key);
-        checkInvalid("uid \r\n", key);
+        checkInvalid("u\r\n");
+        checkInvalid("ui\r\n");
+        checkInvalid("uid\r\n");
+        checkInvalid("uid \r\n");
     }
 
     @Test
@@ -681,10 +701,33 @@ class SearchCommandParserSearchKeyTest {
         checkValid("NOT SEEN\r\n", key);
         checkValid("Not seen\r\n", key);
         checkValid("not Seen\r\n", key);
-        checkInvalid("n\r\n", key);
-        checkInvalid("no\r\n", key);
-        checkInvalid("not\r\n", key);
-        checkInvalid("not \r\n", key);
+        checkInvalid("n\r\n");
+        checkInvalid("no\r\n");
+        checkInvalid("not\r\n");
+        checkInvalid("not \r\n");
+    }
+
+    @Test
+    void testSearchOptionWhenEmpty() throws Exception {
+        assertThat(parseOptions("()"))
+            .containsOnly(SearchResultOption.ALL);
+    }
+
+    @Test
+    void testSearchOptionShouldThrowWhenMBAD() {
+        assertThatThrownBy(() -> parseOptions("(MBAD)"))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void testSearchOptionShouldThrowWhenBAD() {
+        assertThatThrownBy(() -> parseOptions("(BAD)"))
+            .isInstanceOf(DecodingException.class);
+    }
+
+    @Test
+    void savedWithInvalidSuffixShouldFail() {
+        checkInvalid("savedy\r\n");
     }
 
     @Test
@@ -695,11 +738,11 @@ class SearchCommandParserSearchKeyTest {
         checkValid("OR SEEN DRAFT\r\n", key);
         checkValid("oR seen draft\r\n", key);
         checkValid("or Seen drAFT\r\n", key);
-        checkInvalid("o\r\n", key);
-        checkInvalid("or\r\n", key);
-        checkInvalid("or \r\n", key);
-        checkInvalid("or seen\r\n", key);
-        checkInvalid("or seen \r\n", key);
+        checkInvalid("o\r\n");
+        checkInvalid("or\r\n");
+        checkInvalid("or \r\n");
+        checkInvalid("or seen\r\n");
+        checkInvalid("or seen \r\n");
     }
 
     @Test
@@ -726,8 +769,7 @@ class SearchCommandParserSearchKeyTest {
         checkValid(number + "\r\n", key);
     }
 
-    private void checkInvalid(String input, SearchKey key)
-            throws Exception {
+    private void checkInvalid(String input) {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
@@ -738,5 +780,13 @@ class SearchCommandParserSearchKeyTest {
         } catch (DecodingException e) {
             // expected
         }
+    }
+
+    private List<SearchResultOption> parseOptions(String input) throws DecodingException {
+        ImapRequestLineReader reader = new ImapRequestStreamLineReader(
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
+                new ByteArrayOutputStream());
+
+        return parser.parseOptions(reader);
     }
 }
