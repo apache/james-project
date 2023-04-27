@@ -163,7 +163,11 @@ public class SMIMEDecrypt extends GenericMailet {
             // it is possible to reuse the same matchers to analyze
             // the result of the operation.
             ArrayList<AttributeValue<?>> list = new ArrayList<>(1);
-            list.add(AttributeValue.ofSerializable(keyHolder.getCertificate()));
+            try {
+                list.add(AttributeValue.of(keyHolder.getCertificate().getEncoded()));
+            } catch (CertificateEncodingException e) {
+                LOGGER.warn("Failed to encode certificate", e);
+            }
             mail.setAttribute(new Attribute(mailAttribute, AttributeValue.of(list)));
 
             // I start the message stripping.

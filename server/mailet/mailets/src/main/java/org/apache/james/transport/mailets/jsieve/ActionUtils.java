@@ -42,10 +42,6 @@ public class ActionUtils {
 
     /**
      * Answers the sole intended recipient for aMail.
-     * 
-     * @param aMail
-     * @return String
-     * @throws MessagingException
      */
     public static MailAddress getSoleRecipient(Mail aMail) throws MessagingException {
         if (aMail.getRecipients() == null) {
@@ -53,7 +49,7 @@ public class ActionUtils {
                     + ". Exactly 1 recipient is expected.");
         } else if (1 != aMail.getRecipients().size()) {
             throw new MessagingException("Invalid number of recipients - "
-                + Integer.toString(aMail.getRecipients().size())
+                + aMail.getRecipients().size()
                 + ". Exactly 1 recipient is expected.");
         }
         return aMail.getRecipients().iterator().next();
@@ -62,18 +58,14 @@ public class ActionUtils {
     /**
      * Detect and handle locally looping mail. External loop detection is left
      * to the MTA.
-     * 
-     * @param aMail
-     * @param anAttributeSuffix
-     * @throws MessagingException
      */
     public static void detectAndHandleLocalLooping(Mail aMail, String anAttributeSuffix)
             throws MessagingException {
         MailAddress thisRecipient = getSoleRecipient(aMail);
         AttributeName attributeName = AttributeName.of(ATTRIBUTE_PREFIX + anAttributeSuffix);
         AttributeUtils
-            .getValueAndCastFromMail(aMail, attributeName, MailAddress.class)
-            .filter(lastRecipient -> lastRecipient.equals(thisRecipient))
+            .getValueAndCastFromMail(aMail, attributeName, String.class)
+            .filter(Throwing.predicate(lastRecipient -> new MailAddress(lastRecipient).equals(thisRecipient)))
             .ifPresent(Throwing.consumer(any -> {
                 MessagingException ex = new MessagingException(
                         "This message is looping! Message ID: "
@@ -81,6 +73,6 @@ public class ActionUtils {
                 LOGGER.warn(ex.getMessage(), ex);
                 throw ex;
             }).sneakyThrow());
-        aMail.setAttribute(new Attribute(attributeName, AttributeValue.ofSerializable(thisRecipient)));
+        aMail.setAttribute(new Attribute(attributeName, AttributeValue.of(thisRecipient.asString())));
     }
 }

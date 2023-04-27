@@ -22,6 +22,7 @@
 package org.apache.james.transport.mailets;
 
 import java.io.IOException;
+import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,16 +108,9 @@ public class SMIMECheckSignature extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(SMIMECheckSignature.class);
 
     private KeyStoreHolder trustedCertificateStore;
-    
     private boolean stripSignature = false;
     private boolean onlyTrusted = true;
-    
     private AttributeName mailAttribute = AttributeName.of("org.apache.james.SMIMECheckSignature");
-    
-    public SMIMECheckSignature() {
-        super();
-
-    }
 
     @Override
     public void init() throws MessagingException {
@@ -168,18 +162,8 @@ public class SMIMECheckSignature extends GenericMailet {
         List<SMIMESignerInfo> signers = null;
         
         try {
-            Object obj = message.getContent();
-            SMIMESigned signed;
-            if (obj instanceof MimeMultipart) {
-                signed = new SMIMESigned((MimeMultipart) message.getContent());
-            } else if (obj instanceof SMIMESigned) {
-                signed = (SMIMESigned) obj;
-            } else if (obj instanceof byte[]) {
-                signed = new SMIMESigned(message);
-            } else {
-                signed = null;
-            }
-            
+            SMIMESigned signed = asSMIMESigned(message);
+
             if (signed != null) {
                 signers = trustedCertificateStore.verifySignatures(signed);
                 strippedMessage = signed.getContent();
@@ -187,10 +171,8 @@ public class SMIMECheckSignature extends GenericMailet {
                 LOGGER.info("Content not identified as signed");
             }
             
-            // These errors are logged but they don't cause the 
-            // message to change its state. The message 
-            // is considered as not signed and the process will
-            // go on.
+            // These errors are logged but they don't cause the message to change its state. The message
+            // is considered as not signed and the process will go on.
         } catch (CMSException | SMIMEException e) {
             LOGGER.error("Error during the analysis of the signed message", e);
             signers = null;
@@ -205,16 +187,9 @@ public class SMIMECheckSignature extends GenericMailet {
         // If at least one mail signer is found 
         // the mail attributes are set.
         if (signers != null) {
-            ArrayList<AttributeValue<?>> signerinfolist = new ArrayList<>();
+            ArrayList<AttributeValue<?>> signerinfolist = signerInfoList(signers);
 
-            for (SMIMESignerInfo info : signers) {
-                if (info.isSignValid()
-                        && (!onlyTrusted || info.getCertPath() != null)) {
-                    signerinfolist.add(AttributeValue.ofSerializable(info.getSignerCertificate()));
-                }
-            }
-
-            if (signerinfolist.size() > 0) {
+            if (!signerinfolist.isEmpty()) {
                 mail.setAttribute(new Attribute(mailAttribute, AttributeValue.of(signerinfolist)));
             } else {
                 // if no valid signers are found the message is not modified.
@@ -223,21 +198,53 @@ public class SMIMECheckSignature extends GenericMailet {
         }
 
         if (stripSignature && strippedMessage != null) {
-            try {
-                Object obj = strippedMessage.getContent();
-                if (obj instanceof Multipart) {
-                    message.setContent((Multipart) obj);
-                } else {
-                    message.setContent(obj, strippedMessage.getContentType());
-                }
-                message.saveChanges();
-                mail.setMessage(message);
-            } catch (Exception e) {
-                throw new MessagingException(
-                        "Error during the extraction of the signed content from the message.",
-                        e);
-            }
+            stripSignature(mail, message, strippedMessage);
         }
     }
 
+    private ArrayList<AttributeValue<?>> signerInfoList(List<SMIMESignerInfo> signers) {
+        ArrayList<AttributeValue<?>> signerinfolist = new ArrayList<>();
+
+        for (SMIMESignerInfo info : signers) {
+            if (info.isSignValid()
+                    && (!onlyTrusted || info.getCertPath() != null)) {
+                try {
+                    signerinfolist.add(AttributeValue.of(info.getSignerCertificate().getEncoded()));
+                } catch (CertificateEncodingException e) {
+                    LOGGER.warn("Failed to encode certificate", e);
+                }
+            }
+        }
+        return signerinfolist;
+    }
+
+    private void stripSignature(Mail mail, MimeMessage message, MimeBodyPart strippedMessage) throws MessagingException {
+        try {
+            Object obj = strippedMessage.getContent();
+            if (obj instanceof Multipart) {
+                message.setContent((Multipart) obj);
+            } else {
+                message.setContent(obj, strippedMessage.getContentType());
+            }
+            message.saveChanges();
+            mail.setMessage(message);
+        } catch (Exception e) {
+            throw new MessagingException("Error during the extraction of the signed content from the message.", e);
+        }
+    }
+
+    private SMIMESigned asSMIMESigned(MimeMessage message) throws IOException, MessagingException, CMSException, SMIMEException {
+        Object obj = message.getContent();
+        SMIMESigned signed;
+        if (obj instanceof MimeMultipart) {
+            signed = new SMIMESigned((MimeMultipart) message.getContent());
+        } else if (obj instanceof SMIMESigned) {
+            signed = (SMIMESigned) obj;
+        } else if (obj instanceof byte[]) {
+            signed = new SMIMESigned(message);
+        } else {
+            signed = null;
+        }
+        return signed;
+    }
 }
