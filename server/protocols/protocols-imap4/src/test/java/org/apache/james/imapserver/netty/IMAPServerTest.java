@@ -2216,6 +2216,27 @@ class IMAPServerTest {
         }
 
         @Test
+        void storeShouldSucceedWhenUnchangedSinceIsNotExceededAndNotSilent() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            clientConnection.write(ByteBuffer.wrap(("A142 SELECT INBOX (CONDSTORE)\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed."));
+
+            inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(35)), mailboxSession);
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+
+            clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
+
+            clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE %d) +FLAGS (\\Seen)\r\n", highestModSeq.asLong()).getBytes(StandardCharsets.UTF_8))));
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK STORE completed.")))
+                .filteredOn(s -> s.contains("* 35 FETCH (MODSEQ (40) FLAGS (\\Answered \\Recent \\Seen) UID 35)"))
+                .hasSize(1);
+        }
+
+        @Test
         void storeShouldFailWhenUnchangedSinceIsExceeded() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2236,6 +2257,66 @@ class IMAPServerTest {
         }
 
         @Test
+        void storeShouldFailWhenUnchangedSinceIsZero() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            clientConnection.write(ByteBuffer.wrap(("A142 SELECT INBOX (CONDSTORE)\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed."));
+
+            inbox.setFlags(new Flags("dcustom"), REPLACE, MessageRange.one(MessageUid.of(35)), mailboxSession);
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+
+            clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
+
+            clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (dcustom)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
+                .isNotNull();
+        }
+
+        @Test
+        void storeShouldFailWhenUnchangedSinceIsZeroAndMsn() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            clientConnection.write(ByteBuffer.wrap(("A142 SELECT INBOX (CONDSTORE)\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed."));
+
+            inbox.setFlags(new Flags("dcustom"), REPLACE, MessageRange.one(MessageUid.of(35)), mailboxSession);
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+
+            clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
+
+            clientConnection.write(ByteBuffer.wrap((String.format("a103 STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (dcustom)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
+                .isNotNull();
+        }
+
+        @Test
+        void storeShouldFailWhenUnchangedSinceIsZeroAndSystemFlagsUpdate() throws Exception {
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            clientConnection.write(ByteBuffer.wrap(("A142 SELECT INBOX (CONDSTORE)\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            readStringUntil(clientConnection, s -> s.contains("A142 OK [READ-WRITE] SELECT completed."));
+
+            inbox.setFlags(new Flags("dcustom"), REPLACE, MessageRange.one(MessageUid.of(35)), mailboxSession);
+            ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
+
+            clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
+            readStringUntil(clientConnection, s -> s.contains("a2 OK NOOP completed."));
+
+            clientConnection.write(ByteBuffer.wrap((String.format("a103 UID STORE 35 (UNCHANGEDSINCE 0) +FLAGS.SILENT (\\Answered)\r\n", highestModSeq.asLong() - 1).getBytes(StandardCharsets.UTF_8))));
+            assertThat(readStringUntil(clientConnection, s -> s.contains("a103 OK [MODIFIED 0 35] STORE failed.")))
+                .isNotNull();
+        }
+
+        @Test
         void storeShouldFailWhenSomeMessagesDoNotMatch() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2246,7 +2327,7 @@ class IMAPServerTest {
 
             ModSeq highestModSeq = inbox.getMetaData(IGNORE, mailboxSession, NO_COUNT).getHighestModSeq();
 
-            inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(7)), mailboxSession);
+            inbox.setFlags(new Flags("custom"), REPLACE, MessageRange.one(MessageUid.of(7)), mailboxSession);
             inbox.setFlags(new Flags(ANSWERED), REPLACE, MessageRange.one(MessageUid.of(9)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(("a2 NOOP\r\n").getBytes(StandardCharsets.UTF_8)));
