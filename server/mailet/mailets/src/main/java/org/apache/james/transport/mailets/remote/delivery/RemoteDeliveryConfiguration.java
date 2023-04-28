@@ -202,7 +202,7 @@ public class RemoteDeliveryConfiguration {
     }
 
     private List<String> computeGatewayServers(String gatewayPort, String gateway) {
-        if (gateway != null) {
+        if (gateway != null && !gateway.isBlank()) {
             ImmutableList.Builder<String> builder = ImmutableList.builder();
             Iterable<String> gatewayParts = Splitter.on(',').split(gateway);
             for (String gatewayPart : gatewayParts) {
