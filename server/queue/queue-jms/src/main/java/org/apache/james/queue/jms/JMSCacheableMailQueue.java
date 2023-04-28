@@ -78,6 +78,7 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -363,9 +364,8 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
         String sender = mail.getMaybeSender().asString("");
 
         props.putAll(mail.attributes()
-            .collect(ImmutableMap.toImmutableMap(
-                attribute -> attribute.getName().asString(),
-                attribute -> attribute.getValue().toJson().toString())));
+            .flatMap(attribute -> attribute.getValue().toJson().map(JsonNode::toString).map(s -> Pair.of(attribute.getName().asString(), s)).stream())
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
 
         ImmutableList<String> attributeNames = mail.attributeNames()
             .map(AttributeName::asString)

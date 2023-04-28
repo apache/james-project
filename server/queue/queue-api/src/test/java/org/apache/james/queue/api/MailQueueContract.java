@@ -336,24 +336,6 @@ public interface MailQueueContract {
     }
 
     @Test
-    default void queueShouldPreserveNonStringMailAttribute() throws Exception {
-        Attribute attribute = Attribute.convertToAttribute("any", new SerializableAttribute("value"));
-        enQueue(defaultMail()
-                .name("mail")
-                .attribute(attribute)
-                .build());
-
-        MailQueue.MailQueueItem mailQueueItem = Flux.from(getMailQueue().deQueue()).blockFirst();
-        assertThat(mailQueueItem.getMail().getAttribute(attribute.getName()))
-            .hasValueSatisfying(item -> {
-                assertThat(item)
-                        .isEqualTo(attribute);
-                assertThat(item.getValue().value())
-                        .isInstanceOf(SerializableAttribute.class);
-            });
-    }
-
-    @Test
     default void dequeueShouldBeFifo() throws Exception {
         String firstExpectedName = "name1";
         enQueue(defaultMail()

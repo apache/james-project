@@ -177,7 +177,7 @@ public class AttributeValue<T> {
         if (value instanceof Optional) {
             return of((Optional) value);
         }
-        throw new IllegalArgumentException(value.getClass().toString() + " should at least be Serializable");
+        throw new IllegalArgumentException(value.getClass().toString() + " is not a managed attibute");
     }
 
     public static AttributeValue<?> fromJsonString(String json) throws IOException {
