@@ -19,37 +19,24 @@
 
 package org.apache.james.jmap.draft;
 
-import java.io.FileNotFoundException;
-
 import javax.inject.Inject;
 
-import org.apache.james.RunArguments;
-import org.apache.james.RunArguments.Argument;
 import org.apache.james.jmap.draft.crypto.SecurityKeyLoader;
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.apache.james.utils.KeystoreCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JMAPConfigurationStartUpCheck implements StartUpCheck {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(JMAPConfigurationStartUpCheck.class);
     public static final String CHECK_NAME = "JMAPConfigurationStartUpCheck";
 
     private final SecurityKeyLoader securityKeyLoader;
     private final JMAPDraftConfiguration jmapConfiguration;
-    private final RunArguments runArguments;
-    private final KeystoreCreator keystoreCreator;
 
     @Inject
-    JMAPConfigurationStartUpCheck(SecurityKeyLoader securityKeyLoader,
-                                  JMAPDraftConfiguration jmapConfiguration,
-                                  RunArguments runArguments,
-                                  KeystoreCreator keystoreCreator) {
+    JMAPConfigurationStartUpCheck(SecurityKeyLoader securityKeyLoader, JMAPDraftConfiguration jmapConfiguration) {
         this.securityKeyLoader = securityKeyLoader;
         this.jmapConfiguration = jmapConfiguration;
-        this.runArguments = runArguments;
-        this.keystoreCreator = keystoreCreator;
     }
 
     @Override
@@ -66,7 +53,7 @@ public class JMAPConfigurationStartUpCheck implements StartUpCheck {
 
     private CheckResult checkSecurityKey() {
         try {
-            loadSecurityKey();
+            securityKeyLoader.load();
             return CheckResult.builder()
                 .checkName(checkName())
                 .resultType(ResultType.GOOD)
@@ -81,31 +68,8 @@ public class JMAPConfigurationStartUpCheck implements StartUpCheck {
         }
     }
 
-    private void loadSecurityKey() throws Exception {
-        try {
-            securityKeyLoader.load();
-        } catch (FileNotFoundException e) {
-            if (runArguments.contain(Argument.GENERATE_KEYSTORE)) {
-                LOGGER.warn("Can not load asymmetric key from configuration file", e);
-                LOGGER.warn("James will auto-generate an asymmetric key.");
-
-                keystoreCreator.generateKeystore(
-                    jmapConfiguration.getKeystore()
-                        .orElseThrow(() -> new IllegalArgumentException("Can not auto-generate keystore as the keystore location is missing from the configuration")),
-                    jmapConfiguration.getSecret()
-                        .orElseThrow(() -> new IllegalArgumentException("Can not auto-generate keystore as the keystore secret is missing from the configuration")),
-                    jmapConfiguration.getKeystoreType());
-
-                securityKeyLoader.load();
-            } else {
-                throw e;
-            }
-        }
-    }
-
     @Override
     public String checkName() {
         return CHECK_NAME;
     }
-
 }

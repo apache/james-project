@@ -17,19 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james;
+
+import java.util.Set;
+
+import javax.inject.Inject;
 
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
-import org.apache.james.lifecycle.api.StartUpCheck;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import com.github.fge.lambdas.Throwing;
 
-public class StartUpChecksModule extends AbstractModule {
+public class ConfigurationSanitizingPerformer {
+    private final Set<ConfigurationSanitizer> sanitizers;
 
-    @Override
-    protected void configure() {
-        Multibinder.newSetBinder(binder(), StartUpCheck.class);
-        Multibinder.newSetBinder(binder(), ConfigurationSanitizer.class);
+    @Inject
+    public ConfigurationSanitizingPerformer(Set<ConfigurationSanitizer> sanitizers) {
+        this.sanitizers = sanitizers;
+    }
+
+    public void sanitize() throws Exception {
+        sanitizers.forEach(Throwing.consumer(ConfigurationSanitizer::sanitize));
     }
 }

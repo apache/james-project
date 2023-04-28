@@ -38,6 +38,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
+import javax.inject.Inject;
+
 import org.apache.james.filesystem.api.FileSystem;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.X509CertificateHolder;
@@ -52,6 +54,7 @@ public class KeystoreCreator {
 
     private final FileSystem fileSystem;
 
+    @Inject
     public KeystoreCreator(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }

@@ -88,8 +88,8 @@ public class GuiceJamesServer {
             guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
             preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {
             }));
-            injector.getInstance(StartUpChecksPerformer.class)
-                .performCheck();
+            injector.getInstance(ConfigurationSanitizingPerformer.class).sanitize();
+            injector.getInstance(StartUpChecksPerformer.class).performCheck();
             injector.getInstance(InitializationOperations.class).initModules();
             isStartedProbe.notifyStarted();
             LOGGER.info("JAMES server started");
