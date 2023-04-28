@@ -21,7 +21,7 @@ package org.apache.james;
 
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithCacheMutableTest implements MailsShouldBeWellReceived {
+class WithCacheMutableTest implements MailsShouldBeWellReceivedConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = WithCacheImmutableTest.baseExtensionBuilder()
         .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)

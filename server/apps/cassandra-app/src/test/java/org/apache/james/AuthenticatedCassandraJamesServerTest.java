@@ -38,7 +38,7 @@ class AuthenticatedCassandraJamesServerTest {
     private final CassandraExtension cassandraExtension = new CassandraExtension();
 
     @Nested
-    class AuthenticationTest implements JamesServerContract {
+    class AuthenticationTest implements JamesServerConcreteContract {
         @RegisterExtension
         JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
             .extension(new DockerOpenSearchExtension())

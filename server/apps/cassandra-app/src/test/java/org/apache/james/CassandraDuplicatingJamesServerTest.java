@@ -26,7 +26,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraDuplicatingJamesServerTest implements JamesServerContract, JmapJamesServerContract {
+class CassandraDuplicatingJamesServerTest implements JamesServerConcreteContract, JmapJamesServerContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
         CassandraJamesServerConfiguration.builder()

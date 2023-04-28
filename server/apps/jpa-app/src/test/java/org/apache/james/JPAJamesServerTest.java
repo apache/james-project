@@ -39,8 +39,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-class JPAJamesServerTest implements JamesServerContract {
-
+class JPAJamesServerTest implements JamesServerConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<JPAJamesConfiguration>(tmpDir ->
         JPAJamesConfiguration.builder()

@@ -19,14 +19,17 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 
-public class WithDefaultAwsS3ImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
-        .extension(new AwsS3BlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
+public interface MailsShouldBeWellReceivedConcreteContract extends MailsShouldBeWellReceived {
+    @Override
+    default int imapPort(GuiceJamesServer server) {
+        return server.getProbe(ImapGuiceProbe.class).getImapPort();
+    }
+
+    @Override
+    default int smtpPort(GuiceJamesServer server) {
+        return server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue();
+    }
 }
