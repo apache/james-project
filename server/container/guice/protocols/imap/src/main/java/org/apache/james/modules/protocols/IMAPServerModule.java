@@ -27,6 +27,8 @@ import javax.inject.Provider;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.ProtocolConfigurationSanitizer;
+import org.apache.james.RunArguments;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.imap.api.display.Localizer;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -55,6 +57,7 @@ import org.apache.james.imap.processor.SelectProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.imapserver.netty.IMAPServerFactory;
+import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -63,6 +66,7 @@ import org.apache.james.utils.GuiceGenericLoader;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.utils.KeystoreCreator;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -209,5 +213,11 @@ public class IMAPServerModule extends AbstractModule {
                 Function.identity()));
 
         return new ImapParserFactory(decoders);
+    }
+
+    @ProvidesIntoSet
+    ConfigurationSanitizer configurationSanitizer(ConfigurationProvider configurationProvider, KeystoreCreator keystoreCreator,
+                                                      FileSystem fileSystem, RunArguments runArguments) {
+        return new ProtocolConfigurationSanitizer(configurationProvider, keystoreCreator, fileSystem, runArguments, "imapserver");
     }
 }

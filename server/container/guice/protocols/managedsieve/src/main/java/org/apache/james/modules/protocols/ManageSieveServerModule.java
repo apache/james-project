@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.modules.protocols;
 
+import org.apache.james.ProtocolConfigurationSanitizer;
+import org.apache.james.RunArguments;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
@@ -26,6 +30,7 @@ import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.utils.KeystoreCreator;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -48,5 +53,11 @@ public class ManageSieveServerModule extends AbstractModule {
                 manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver", LoggingLevel.INFO));
                 manageSieveServerFactory.init();
             });
+    }
+
+    @ProvidesIntoSet
+    ConfigurationSanitizer configurationSanitizer(ConfigurationProvider configurationProvider, KeystoreCreator keystoreCreator,
+                                                      FileSystem fileSystem, RunArguments runArguments) {
+        return new ProtocolConfigurationSanitizer(configurationProvider, keystoreCreator, fileSystem, runArguments, "managesieveserver");
     }
 }

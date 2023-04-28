@@ -19,12 +19,17 @@
 
 package org.apache.james.modules.protocols;
 
+import org.apache.james.ProtocolConfigurationSanitizer;
+import org.apache.james.RunArguments;
+import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.utils.KeystoreCreator;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -47,5 +52,11 @@ public class LMTPServerModule extends AbstractModule {
                 lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver", LoggingLevel.INFO));
                 lmtpServerFactory.init();
             });
+    }
+
+    @ProvidesIntoSet
+    ConfigurationSanitizer configurationSanitizer(ConfigurationProvider configurationProvider, KeystoreCreator keystoreCreator,
+                                                      FileSystem fileSystem, RunArguments runArguments) {
+        return new ProtocolConfigurationSanitizer(configurationProvider, keystoreCreator, fileSystem, runArguments, "lmtpserver");
     }
 }
