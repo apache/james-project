@@ -58,6 +58,7 @@ import reactor.core.publisher.Mono;
 public class ReIndexerPerformer {
     public static final int MAILBOX_CONCURRENCY = 1;
     public static final int ONE = 1;
+    public static final Duration IDEXING_TIMEOUT = Duration.ofMinutes(1);
 
     private static class ReIndexingEntry {
         private final Mailbox mailbox;
@@ -308,9 +309,11 @@ public class ReIndexerPerformer {
 
     private Mono<Either<Failure, Result>> reIndex(ReIndexingEntry entry, RunningOptions runningOptions) {
         if (runningOptions.getMode() == RunningOptions.Mode.FIX_OUTDATED) {
-            return correctIfNeeded(entry);
+            return correctIfNeeded(entry)
+                .timeout(IDEXING_TIMEOUT);
         }
-        return index(entry);
+        return index(entry)
+            .timeout(IDEXING_TIMEOUT);
     }
 
     private Mono<Either<Failure, Result>> index(ReIndexingEntry entry) {
