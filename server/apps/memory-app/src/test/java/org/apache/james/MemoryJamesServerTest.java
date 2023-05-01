@@ -22,9 +22,38 @@ package org.apache.james;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.LmtpGuiceProbe;
+import org.apache.james.modules.protocols.Pop3GuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryJamesServerTest implements JamesServerContract {
+    @Override
+    public int imapPort(GuiceJamesServer server) {
+        return server.getProbe(ImapGuiceProbe.class).getImapPort();
+    }
+
+    @Override
+    public int imapsPort(GuiceJamesServer server) {
+        return server.getProbe(ImapGuiceProbe.class).getImapsPort();
+    }
+
+    @Override
+    public int smtpPort(GuiceJamesServer server) {
+        return server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue();
+    }
+
+    @Override
+    public int lmtpPort(GuiceJamesServer server) {
+        return server.getProbe(LmtpGuiceProbe.class).getLmtpPort();
+    }
+
+    @Override
+    public int pop3Port(GuiceJamesServer server) {
+        return server.getProbe(Pop3GuiceProbe.class).getPop3Port();
+    }
+
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<MemoryJamesConfiguration>(tmpDir ->
         MemoryJamesConfiguration.builder()

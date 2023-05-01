@@ -19,6 +19,7 @@
 
 package org.apache.james.modules;
 
+import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.lifecycle.api.StartUpCheck;
 
 import com.google.inject.AbstractModule;
@@ -29,5 +30,6 @@ public class StartUpChecksModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder.newSetBinder(binder(), StartUpCheck.class);
+        Multibinder.newSetBinder(binder(), ConfigurationSanitizer.class);
     }
 }

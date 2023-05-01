@@ -48,7 +48,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
-public class WithCassandraDeduplicationBlobStoreMutableTest implements MailsShouldBeWellReceived {
+public class WithCassandraDeduplicationBlobStoreMutableTest implements MailsShouldBeWellReceivedConcreteContract {
     private static final String JAMES_SERVER_HOST = "127.0.0.1";
     private static final String YET_ANOTHER_USER = "yet-another-user@" + DOMAIN;
 

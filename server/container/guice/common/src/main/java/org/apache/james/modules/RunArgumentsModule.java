@@ -17,16 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.apache.james.RunArguments;
 
-public class WithDefaultAwsS3ImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
-        .extension(new AwsS3BlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
+import com.google.inject.AbstractModule;
+
+public class RunArgumentsModule extends AbstractModule {
+    public static final RunArgumentsModule EMPTY = new RunArgumentsModule(new String[0]);
+
+    public final String[] args;
+
+    public RunArgumentsModule(String[] args) {
+        this.args = args;
+    }
+
+    @Override
+    protected void configure() {
+        bind(RunArguments.class).toInstance(RunArguments.from(args));
+    }
 }

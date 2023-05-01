@@ -38,6 +38,7 @@ import org.apache.james.jmap.draft.model.message.view.MessageHeaderViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageMetadataViewFactory;
 import org.apache.james.jmap.draft.send.MailSpool;
 import org.apache.james.jmap.event.ComputeMessageFastViewProjectionListener;
+import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
@@ -86,6 +87,9 @@ public class JMAPCommonModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding().to(JMAPConfigurationStartUpCheck.class);
+
+        Multibinder.newSetBinder(binder(), ConfigurationSanitizer.class)
+            .addBinding().to(JmapConfigurationSanitizer.class);
     }
 
     @ProvidesIntoSet

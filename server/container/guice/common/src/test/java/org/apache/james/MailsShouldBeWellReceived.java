@@ -40,8 +40,6 @@ import javax.mail.search.FlagTerm;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
-import org.apache.james.modules.protocols.ImapGuiceProbe;
-import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
@@ -62,6 +60,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public interface MailsShouldBeWellReceived {
+    int imapPort(GuiceJamesServer server);
+
+    int smtpPort(GuiceJamesServer server);
 
     String JAMES_SERVER_HOST = "127.0.0.1";
     String DOMAIN = "apache.org";
@@ -93,7 +94,7 @@ public interface MailsShouldBeWellReceived {
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
 
-        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        Port smtpPort = Port.of(smtpPort(server));
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
             sender.connect(JAMES_SERVER_HOST, smtpPort);
             MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
@@ -111,7 +112,7 @@ public interface MailsShouldBeWellReceived {
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
-            int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
+            int imapPort = imapPort(server);
             reader.connect(JAMES_SERVER_HOST, imapPort)
                 .login(JAMES_USER, PASSWORD)
                 .select(TestIMAPClient.INBOX)
@@ -132,7 +133,7 @@ public interface MailsShouldBeWellReceived {
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
 
-        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
@@ -143,7 +144,7 @@ public interface MailsShouldBeWellReceived {
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
-            reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            reader.connect(JAMES_SERVER_HOST, imapPort(server))
                 .login(JAMES_USER, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
@@ -163,7 +164,7 @@ public interface MailsShouldBeWellReceived {
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
         mailboxProbe.createMailbox("#private", OTHER_USER, DefaultMailboxes.INBOX);
 
-        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
@@ -174,11 +175,11 @@ public interface MailsShouldBeWellReceived {
         CALMLY_AWAIT.untilAsserted(() -> assertThat(server.getProbe(SpoolerProbe.class).processingFinished()).isTrue());
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
-            reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            reader.connect(JAMES_SERVER_HOST, imapPort(server))
                 .login(JAMES_USER, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
-            reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            reader.connect(JAMES_SERVER_HOST, imapPort(server))
                 .login(OTHER_USER, PASSWORD_OTHER)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
@@ -205,7 +206,7 @@ public interface MailsShouldBeWellReceived {
                         mailboxProbe.createMailbox("#private", user, DefaultMailboxes.INBOX));
 
 
-        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
@@ -222,7 +223,7 @@ public interface MailsShouldBeWellReceived {
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
             users.forEach((ThrowingConsumer<String>) user -> reader
-                .connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+                .connect(JAMES_SERVER_HOST, imapPort(server))
                 .login(user, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1));
@@ -241,7 +242,7 @@ public interface MailsShouldBeWellReceived {
 
         int messageCount = 100;
 
-        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        Port smtpPort = Port.of(smtpPort(server));
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
@@ -258,7 +259,7 @@ public interface MailsShouldBeWellReceived {
         CALMLY_AWAIT_FIVE_MINUTE.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
         try (TestIMAPClient reader = new TestIMAPClient()) {
-            reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+            reader.connect(JAMES_SERVER_HOST, imapPort(server))
                 .login(JAMES_USER, PASSWORD)
                 .select(TestIMAPClient.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, messageCount);

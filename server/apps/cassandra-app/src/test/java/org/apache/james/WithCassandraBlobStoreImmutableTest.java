@@ -23,7 +23,7 @@ import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithCassandraBlobStoreImmutableTest implements JmapJamesServerContract, JamesServerContract {
+class WithCassandraBlobStoreImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = baseExtensionBuilder()
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)

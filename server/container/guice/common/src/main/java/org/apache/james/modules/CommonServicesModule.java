@@ -62,6 +62,7 @@ public class CommonServicesModule extends AbstractModule {
         install(new ClockModule());
         install(new PeriodicalHealthChecksModule());
         install(new ErrorMailRepositoryEmptyHealthCheckModule());
+        install(RunArgumentsModule.EMPTY);
 
         bind(FileSystem.class).toInstance(fileSystem);
         bind(Configuration.class).toInstance(configuration);

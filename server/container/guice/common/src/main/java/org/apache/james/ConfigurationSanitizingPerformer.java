@@ -19,14 +19,23 @@
 
 package org.apache.james;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import java.util.Set;
 
-public class WithDefaultAwsS3ImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
-        .extension(new AwsS3BlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
+import javax.inject.Inject;
+
+import org.apache.james.lifecycle.api.ConfigurationSanitizer;
+
+import com.github.fge.lambdas.Throwing;
+
+public class ConfigurationSanitizingPerformer {
+    private final Set<ConfigurationSanitizer> sanitizers;
+
+    @Inject
+    public ConfigurationSanitizingPerformer(Set<ConfigurationSanitizer> sanitizers) {
+        this.sanitizers = sanitizers;
+    }
+
+    public void sanitize() throws Exception {
+        sanitizers.forEach(Throwing.consumer(ConfigurationSanitizer::sanitize));
+    }
 }

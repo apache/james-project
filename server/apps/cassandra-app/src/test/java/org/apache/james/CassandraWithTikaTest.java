@@ -22,7 +22,7 @@ package org.apache.james;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraWithTikaTest implements JamesServerContract {
+class CassandraWithTikaTest implements JamesServerConcreteContract {
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
         .extension(new CassandraExtension())

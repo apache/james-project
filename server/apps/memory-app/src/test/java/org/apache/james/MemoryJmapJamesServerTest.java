@@ -27,6 +27,8 @@ import org.apache.james.jmap.draft.JMAPConfigurationStartUpCheck;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,6 +48,16 @@ class MemoryJmapJamesServerTest {
 
     @Nested
     class JmapJamesServerTest implements JmapJamesServerContract, MailsShouldBeWellReceived {
+        @Override
+        public int imapPort(GuiceJamesServer server) {
+            return server.getProbe(ImapGuiceProbe.class).getImapPort();
+        }
+
+        @Override
+        public int smtpPort(GuiceJamesServer server) {
+            return server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue();
+        }
+
         @RegisterExtension
         JamesServerExtension jamesServerExtension = extensionBuilder().build();
     }

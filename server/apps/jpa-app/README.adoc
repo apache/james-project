@@ -66,6 +66,14 @@ keytool -genkey -alias james -keyalg RSA -keystore keystore
 docker run -v $PWD/keystore:/root/conf/keystore apache/james:jpa-latest
 ----
 
+In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `--generate-keystore` when running,
+James will auto-generate keystore file with the default setting that is declared in `jmap.properties` (tls.keystoreURL, tls.secret)
+
+[source]
+----
+docker run --network james apache/james:jpa-latest --generate-keystore
+----
+
 [Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
 Disabled by default, its java agent can easily be enabled:
 

@@ -43,7 +43,7 @@ import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraLdapJamesServerTest implements JamesServerContract {
+class CassandraLdapJamesServerTest implements JamesServerConcreteContract {
     private static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     private static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)

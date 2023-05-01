@@ -27,7 +27,6 @@ import java.io.IOException;
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.data.LdapTestExtension;
 import org.apache.james.data.UsersRepositoryModuleChooser;
-import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -51,7 +50,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
         }
     }
 
-    interface ContractSuite extends JmapJamesServerContract, UserFromLdapShouldLogin, JamesServerContract {}
+    interface ContractSuite extends JamesServerConcreteContract, UserFromLdapShouldLogin, JamesServerContract {}
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)

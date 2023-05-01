@@ -27,7 +27,7 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class WithoutMailQueueViewImmutableTest implements JmapJamesServerContract, JamesServerContract {
+class WithoutMailQueueViewImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
     static JamesServerBuilder<CassandraRabbitMQJamesConfiguration> baseExtension() {
         return new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
             CassandraRabbitMQJamesConfiguration.builder()

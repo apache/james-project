@@ -25,7 +25,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class WithCassandraDeduplicationBlobStoreImmutableTest implements JmapJamesServerContract, JamesServerContract {
+public class WithCassandraDeduplicationBlobStoreImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()

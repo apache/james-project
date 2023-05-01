@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JMAPConfigurationStartUpCheck implements StartUpCheck {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(JMAPConfigurationStartUpCheck.class);
     public static final String CHECK_NAME = "JMAPConfigurationStartUpCheck";
 

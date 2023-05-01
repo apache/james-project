@@ -27,7 +27,7 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 
-class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerContract {
+class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = baseExtensionBuilder()
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
