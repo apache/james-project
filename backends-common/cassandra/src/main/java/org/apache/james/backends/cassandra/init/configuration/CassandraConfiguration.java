@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import org.apache.commons.configuration2.Configuration;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -36,9 +37,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class CassandraConfiguration {
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CassandraConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraConfiguration.class);
 
-    public static final int DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ = 100;
     public static final float DEFAULT_MAILBOX_READ_REPAIR = 0.1f;
     public static final float DEFAULT_MAX_MAILBOX_COUNTERS_READ_REPAIR_CHANCE = 0.1f;
     public static final float DEFAULT_ONE_HUNDRED_MAILBOX_COUNTERS_READ_REPAIR_CHANCE = 0.01f;
