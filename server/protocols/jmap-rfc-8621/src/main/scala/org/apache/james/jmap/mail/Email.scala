@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mail
 
+import java.io.InputStream
 import java.nio.charset.StandardCharsets.US_ASCII
 import java.time.ZoneId
 import java.util.Date
@@ -69,17 +70,54 @@ object Email {
     "preview", "hasAttachment", "keywords")
   val idProperty: Properties = Properties("id")
 
+  def validateProperties(properties: Option[Properties]): Either[IllegalArgumentException, Properties] =
+    properties match {
+      case None => scala.Right(Email.defaultProperties)
+      case Some(properties) =>
+        val invalidProperties: Set[NonEmptyString] = properties.value
+          .flatMap(property => SpecificHeaderRequest.from(property)
+            .fold(
+              invalidProperty => Some(invalidProperty),
+              _ => None
+            )) -- Email.allowedProperties.value
+
+        if (invalidProperties.nonEmpty) {
+          Left(new IllegalArgumentException(s"The following properties [${invalidProperties.map(p => p.value).mkString(", ")}] do not exist."))
+        } else {
+          scala.Right(properties ++ Email.idProperty)
+        }
+    }
+
+  def validateBodyProperties(bodyProperties: Option[Properties]): Either[IllegalArgumentException, Properties] =
+    bodyProperties match {
+      case None => scala.Right(EmailBodyPart.defaultProperties)
+      case Some(properties) =>
+        val invalidProperties: Set[NonEmptyString] = properties.value
+          .flatMap(property => SpecificHeaderRequest.from(property)
+            .fold(
+              invalidProperty => Some(invalidProperty),
+              _ => None
+            )) -- EmailBodyPart.allowedProperties.value
+
+        if (invalidProperties.nonEmpty) {
+          Left(new IllegalArgumentException(s"The following bodyProperties [${invalidProperties.map(p => p.value).mkString(", ")}] do not exist."))
+        } else {
+          scala.Right(properties)
+        }
+    }
+
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
     refined.refineV[IdConstraint](messageId.serialize()) match {
       case Left(e) => Failure(new IllegalArgumentException(e))
       case scala.Right(value) => Success(UnparsedEmailId(value))
     }
 
-  private[mail] def parseAsMime4JMessage(firstMessage: MessageResult): Try[Message] = {
+  private[mail] def parseAsMime4JMessage(messageResult: MessageResult): Try[Message] = parseStreamAsMime4JMessage(messageResult.getFullContent.getInputStream)
+
+  def parseStreamAsMime4JMessage(inputStream: => InputStream): Try[Message] = {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
-    val inputStream = firstMessage.getFullContent.getInputStream
     val resultMessage = Try(defaultMessageBuilder.parseMessage(inputStream))
     resultMessage.fold(e => {
       Try(inputStream.close())
@@ -253,10 +291,12 @@ case class EmailMetadata(id: MessageId,
                          size: Size,
                          receivedAt: UTCDate)
 
+case class EmailParseMetadata(blobId: BlobId, size: Size)
+
 object EmailHeaders {
   val SPECIFIC_HEADER_PREFIX = "header:"
 
-  private[mail] def from(zoneId: ZoneId)(mime4JMessage: Message): EmailHeaders = {
+  def from(zoneId: ZoneId)(mime4JMessage: Message): EmailHeaders = {
     EmailHeaders(
       headers = asEmailHeaders(mime4JMessage.getHeader),
       messageId = extractMessageId(mime4JMessage, "Message-Id"),
@@ -356,6 +396,13 @@ sealed trait EmailView {
 }
 
 case class EmailMetadataView(metadata: EmailMetadata) extends EmailView
+
+case class EmailParseView(metadata: EmailParseMetadata,
+                          header: EmailHeaders,
+                         // TODO support parsing BODY...
+                         // body: EmailBody,
+                         // bodyMetadata: EmailBodyMetadata,
+                          specificHeaders: Map[String, Option[EmailHeaderValue]])
 
 case class EmailHeaderView(metadata: EmailMetadata,
                            header: EmailHeaders,
