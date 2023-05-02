@@ -20,7 +20,6 @@ package org.apache.james.jmap.draft;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.events.EventListener;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
@@ -37,7 +36,6 @@ import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageHeaderViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageMetadataViewFactory;
 import org.apache.james.jmap.draft.send.MailSpool;
-import org.apache.james.jmap.event.ComputeMessageFastViewProjectionListener;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
@@ -81,9 +79,7 @@ public class JMAPCommonModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
 
-        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
-            .addBinding()
-            .to(ComputeMessageFastViewProjectionListener.class);
+
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding().to(JMAPConfigurationStartUpCheck.class);

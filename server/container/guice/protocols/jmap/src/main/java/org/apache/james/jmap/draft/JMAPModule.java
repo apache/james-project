@@ -31,12 +31,10 @@ import javax.inject.Named;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
-import org.apache.james.events.EventListener;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.Version;
-import org.apache.james.jmap.change.MailboxChangeListener;
 import org.apache.james.jmap.core.CapabilityFactory;
 import org.apache.james.jmap.core.CoreCapabilityFactory;
 import org.apache.james.jmap.core.DelegationCapabilityFactory$;
@@ -53,7 +51,6 @@ import org.apache.james.jmap.core.WebSocketCapabilityFactory$;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
-import org.apache.james.jmap.event.PropagateLookupRightListener;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
 import org.apache.james.jwt.JwtConfiguration;
@@ -137,9 +134,6 @@ public class JMAPModule extends AbstractModule {
 
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class).addBinding().to(PropagateLookupRightListener.class);
-        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class).addBinding().to(MailboxChangeListener.class);
-
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
         supportedVersions.addBinding().toInstance(Version.DRAFT);
         supportedVersions.addBinding().toInstance(Version.RFC8621);
@@ -190,24 +184,28 @@ public class JMAPModule extends AbstractModule {
     @Singleton
     JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration("jmap");
-            return JMAPConfiguration.builder()
-                .enabled(configuration.getBoolean("enabled", true))
-                .port(Port.of(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT)))
-                .enableEmailQueryView(Optional.ofNullable(configuration.getBoolean("view.email.query.enabled", null)))
-                .userProvisioningEnabled(Optional.ofNullable(configuration.getBoolean("user.provisioning.enabled", null)))
-                .defaultVersion(Optional.ofNullable(configuration.getString("jmap.version.default", null))
-                    .map(Version::of))
-                .maximumSendSize(Optional.ofNullable(configuration.getString("email.send.max.size", null))
-                    .map(Throwing.function(Size::parse))
-                    .map(Size::asBytes))
-                .build();
+            return parseConfiguration(propertiesProvider);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
             return JMAPConfiguration.builder()
                 .disable()
                 .build();
         }
+    }
+
+    public static JMAPConfiguration parseConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
+        Configuration configuration = propertiesProvider.getConfiguration("jmap");
+        return JMAPConfiguration.builder()
+            .enabled(configuration.getBoolean("enabled", true))
+            .port(Port.of(configuration.getInt("jmap.port", DEFAULT_JMAP_PORT)))
+            .enableEmailQueryView(Optional.ofNullable(configuration.getBoolean("view.email.query.enabled", null)))
+            .userProvisioningEnabled(Optional.ofNullable(configuration.getBoolean("user.provisioning.enabled", null)))
+            .defaultVersion(Optional.ofNullable(configuration.getString("jmap.version.default", null))
+                .map(Version::of))
+            .maximumSendSize(Optional.ofNullable(configuration.getString("email.send.max.size", null))
+                .map(Throwing.function(Size::parse))
+                .map(Size::asBytes))
+            .build();
     }
 
     @Provides

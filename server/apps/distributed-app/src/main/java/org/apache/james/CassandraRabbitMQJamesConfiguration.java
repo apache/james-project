@@ -20,12 +20,14 @@
 package org.apache.james;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
 import org.apache.james.server.core.JamesServerResourceLoader;
@@ -47,6 +49,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         private Optional<MailQueueViewChoice> mailQueueViewChoice;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<VaultConfiguration> vaultConfiguration;
+        private Optional<Boolean> jmapEnabled;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -56,6 +59,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             usersRepositoryImplementation = Optional.empty();
             mailQueueViewChoice = Optional.empty();
             vaultConfiguration = Optional.empty();
+            jmapEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -142,13 +146,24 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean jmapEnabled = this.jmapEnabled.orElseGet(() -> {
+                try {
+                    return JMAPModule.parseConfiguration(propertiesProvider).isEnabled();
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             return new CassandraRabbitMQJamesConfiguration(
                 configurationPath,
                 directories,
                 blobStoreConfiguration,
                 searchConfiguration,
                 usersRepositoryChoice,
-                mailQueueViewChoice, vaultConfiguration);
+                mailQueueViewChoice, vaultConfiguration,
+                jmapEnabled);
         }
     }
 
@@ -163,8 +178,9 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final MailQueueViewChoice mailQueueViewChoice;
     private final VaultConfiguration vaultConfiguration;
+    private final boolean jmapEnabled;
 
-    public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration) {
+    public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration, boolean jmapEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
@@ -172,6 +188,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.mailQueueViewChoice = mailQueueViewChoice;
         this.vaultConfiguration = vaultConfiguration;
+        this.jmapEnabled = jmapEnabled;
     }
 
     public MailQueueViewChoice getMailQueueViewChoice() {
@@ -202,5 +219,9 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
 
     public VaultConfiguration getVaultConfiguration() {
         return vaultConfiguration;
+    }
+
+    public boolean isJmapEnabled() {
+        return jmapEnabled;
     }
 }
