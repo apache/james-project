@@ -59,8 +59,7 @@ class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSi
         givenUnlimitedQuota();
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 

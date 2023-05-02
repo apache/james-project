@@ -54,7 +54,7 @@ public class StatementRecorder {
 
     private final ConcurrentLinkedDeque statements;
 
-    public StatementRecorder() {
+    StatementRecorder() {
         statements = new ConcurrentLinkedDeque();
     }
 

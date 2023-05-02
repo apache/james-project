@@ -139,8 +139,7 @@ class CassandraIndexTableHandlerTest {
                 .times(1)
                 .whenQueryStartsWith("UPDATE mailboxcounters SET count=count+1, unseen=unseen+1 WHERE mailboxid=:mailboxid"));
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             testee.updateIndexOnAdd(message, MAILBOX_ID)
                 .block();

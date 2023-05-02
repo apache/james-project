@@ -84,8 +84,10 @@ public class TestingSession implements CqlSession {
         this.scenario = Scenario.combine(hooks);
     }
 
-    public void recordStatements(StatementRecorder statementRecorder) {
+    public StatementRecorder recordStatements() {
+        StatementRecorder statementRecorder = new StatementRecorder();
         this.statementRecorder = Optional.of(statementRecorder);
+        return statementRecorder;
     }
 
     public void stopRecordingStatements() {
