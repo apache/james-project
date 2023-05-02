@@ -145,5 +145,11 @@ by turning it off. Reads performed as part of write transaction are also perform
 
 | mailrepository.strong.consistency
 | Optional. Boolean, defaults to true. Allows not to use lightweight transactions in CassandraMailRepository.
-| If disabled we implement an idempotent behaviour (duplicates are overridden, missing entries upon deletes are ignored).
+ If disabled we implement an idempotent behaviour (duplicates are overridden, missing entries upon deletes are ignored).
+
+| acl.enabled
+| Optional. Boolean, defaults to true. Allows disabling ACLs: if set to false, delegation will fail and users will only
+have access to the mailboxes they own. ACLs can represent a high volume of requests. If you do not propose mailbox sharing
+features to your users, you can consider disabling them in order to improve performance.
+
 |===

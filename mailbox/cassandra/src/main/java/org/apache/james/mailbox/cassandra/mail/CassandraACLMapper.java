@@ -23,6 +23,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.eventsourcing.Command;
@@ -47,6 +49,7 @@ import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Mono;
 
 public class CassandraACLMapper implements ACLMapper {
+
     public interface Store {
         Mono<MailboxACL> getACL(CassandraId cassandraId);
 
@@ -145,20 +148,50 @@ public class CassandraACLMapper implements ACLMapper {
         }
     }
 
+    public static class NaiveStore implements Store {
+        @Override
+        public Mono<MailboxACL> getACL(CassandraId cassandraId) {
+            return Mono.just(MailboxACL.EMPTY);
+        }
+
+        @Override
+        public Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
+            return Mono.error(new NotImplementedException());
+        }
+
+        @Override
+        public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
+            return Mono.error(new NotImplementedException());
+        }
+
+        @Override
+        public Mono<Void> delete(CassandraId cassandraId) {
+            // DOn't fail as the ACL never existed: this is a NOOP
+            return Mono.empty();
+        }
+    }
+
     public static final SchemaVersion ACL_V2_SCHEME_VERSION = new SchemaVersion(10);
     private final StoreV1 storeV1;
     private final StoreV2 storeV2;
+    private final NaiveStore naiveStore;
     private final CassandraSchemaVersionManager versionManager;
+    private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
-    public CassandraACLMapper(StoreV1 storeV1, StoreV2 storeV2, CassandraSchemaVersionManager versionManager) {
+    public CassandraACLMapper(StoreV1 storeV1, StoreV2 storeV2, CassandraSchemaVersionManager versionManager, CassandraConfiguration cassandraConfiguration) {
         this.storeV1 = storeV1;
         this.storeV2 = storeV2;
+        naiveStore = new NaiveStore();
 
         this.versionManager = versionManager;
+        this.cassandraConfiguration = cassandraConfiguration;
     }
 
     private Mono<Store> store() {
+        if (!cassandraConfiguration.isAclEnabled()) {
+            return Mono.just(naiveStore);
+        }
         return versionManager.isBefore(ACL_V2_SCHEME_VERSION)
             .map(isBefore -> {
                 if (isBefore) {
