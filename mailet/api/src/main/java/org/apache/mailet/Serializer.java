@@ -723,7 +723,7 @@ public interface Serializer<T> {
 
         @Override
         public Object duplicate(Object value) {
-            throw new NotImplementedException();
+            return value;
         }
     }
 
