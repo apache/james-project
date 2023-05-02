@@ -20,27 +20,33 @@
 package org.apache.james;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
+import org.apache.james.utils.PropertiesProvider;
 
 public class MemoryJamesConfiguration implements Configuration {
     public static class Builder {
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
+        private Optional<Boolean> jmapEnabled;
 
         private Builder() {
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
+            jmapEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -90,10 +96,21 @@ public class MemoryJamesConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
+            boolean jmapEnabled = this.jmapEnabled.orElseGet(() -> {
+                PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
+                try {
+                    return JMAPModule.parseConfiguration(propertiesProvider).isEnabled();
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             return new MemoryJamesConfiguration(
                 configurationPath,
                 directories,
-                usersRepositoryChoice);
+                usersRepositoryChoice, jmapEnabled);
         }
     }
 
@@ -104,11 +121,13 @@ public class MemoryJamesConfiguration implements Configuration {
     private final ConfigurationPath configurationPath;
     private final JamesDirectoriesProvider directories;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
+    private final boolean jmapEnabled;
 
-    public MemoryJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    public MemoryJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, boolean jmapEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
+        this.jmapEnabled = jmapEnabled;
     }
 
     @Override
@@ -123,5 +142,9 @@ public class MemoryJamesConfiguration implements Configuration {
 
     public UsersRepositoryModuleChooser.Implementation getUsersRepositoryImplementation() {
         return usersRepositoryImplementation;
+    }
+
+    public boolean isJmapEnabled() {
+        return jmapEnabled;
     }
 }

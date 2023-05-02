@@ -20,12 +20,14 @@
 package org.apache.james;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
@@ -52,6 +54,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
         private Optional<BlobStoreConfiguration> blobStoreConfiguration;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<VaultConfiguration> vaultConfiguration;
+        private Optional<Boolean> jmapEnabled;
 
         private Builder() {
             rootDirectory = Optional.empty();
@@ -60,6 +63,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
             usersRepositoryImplementation = Optional.empty();
             blobStoreConfiguration = Optional.empty();
             vaultConfiguration = Optional.empty();
+            jmapEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -138,7 +142,17 @@ public class CassandraJamesServerConfiguration implements Configuration {
                 }
             });
 
-            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, blobStoreConfiguration, usersRepositoryChoice, vaultConfiguration);
+            boolean jmapEnabled = this.jmapEnabled.orElseGet(() -> {
+                try {
+                    return JMAPModule.parseConfiguration(propertiesProvider).isEnabled();
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, blobStoreConfiguration, usersRepositoryChoice, vaultConfiguration, jmapEnabled);
         }
     }
 
@@ -152,14 +166,19 @@ public class CassandraJamesServerConfiguration implements Configuration {
     private final BlobStoreConfiguration blobStoreConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final VaultConfiguration vaultConfiguration;
+    private final boolean jmapEnabled;
 
-    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, SearchConfiguration searchConfiguration, BlobStoreConfiguration blobStoreConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, VaultConfiguration vaultConfiguration) {
+    private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
+                                              SearchConfiguration searchConfiguration, BlobStoreConfiguration blobStoreConfiguration,
+                                              UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
+                                              VaultConfiguration vaultConfiguration, boolean jmapEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
         this.blobStoreConfiguration = blobStoreConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.vaultConfiguration = vaultConfiguration;
+        this.jmapEnabled = jmapEnabled;
     }
 
     @Override
@@ -186,5 +205,9 @@ public class CassandraJamesServerConfiguration implements Configuration {
 
     public BlobStoreConfiguration getBlobStoreConfiguration() {
         return blobStoreConfiguration;
+    }
+
+    public boolean isJmapEnabled() {
+        return jmapEnabled;
     }
 }

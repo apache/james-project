@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
+import org.apache.james.jmap.draft.JMAPListenerModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -200,7 +201,8 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
             .combineWith(new UsersRepositoryModuleChooser(new CassandraUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
-            .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()));
+            .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
+            .combineWith(chooseJmapModule(configuration));
     }
 
     private static Module chooseDeletedMessageVault(VaultConfiguration vaultConfiguration) {
@@ -208,6 +210,15 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             return Modules.combine(
                 new CassandraDeletedMessageVaultModule(),
                 new DeletedMessageVaultRoutesModule());
+        }
+        return binder -> {
+
+        };
+    }
+
+    private static Module chooseJmapModule(CassandraRabbitMQJamesConfiguration configuration) {
+        if (configuration.isJmapEnabled()) {
+            return new JMAPListenerModule();
         }
         return binder -> {
 

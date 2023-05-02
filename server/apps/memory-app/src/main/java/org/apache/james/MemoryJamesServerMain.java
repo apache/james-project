@@ -22,6 +22,7 @@ package org.apache.james;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
+import org.apache.james.jmap.draft.JMAPListenerModule;
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
 import org.apache.james.jwt.JwtConfiguration;
@@ -168,7 +169,17 @@ public class MemoryJamesServerMain implements JamesServerMain {
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
-                .chooseModules(configuration.getUsersRepositoryImplementation()));
+                .chooseModules(configuration.getUsersRepositoryImplementation()))
+            .combineWith(chooseJmapModule(configuration));
+    }
+
+    private static Module chooseJmapModule(MemoryJamesConfiguration configuration) {
+        if (configuration.isJmapEnabled()) {
+            return new JMAPListenerModule();
+        }
+        return binder -> {
+
+        };
     }
 
 }
