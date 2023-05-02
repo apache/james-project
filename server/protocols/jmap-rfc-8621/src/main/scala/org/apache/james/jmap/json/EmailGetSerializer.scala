@@ -186,9 +186,19 @@ object EmailGetSerializer {
     case view: EmailFastViewWithAttachments => emailFastViewWithAttachmentsWrites.writes(view)
     case view: EmailFullView => emailFullViewWrites.writes(view)
   }
+  private implicit val emailParseNotFoundWrites: Writes[EmailParseNotFound] = Json.valueWrites[EmailParseNotFound]
+  private implicit val emailNotParsableWrites: Writes[EmailParseNotParsable] = Json.valueWrites[EmailParseNotParsable]
+  private implicit val emailParseMetadata: Writes[EmailParseMetadata] = Json.writes[EmailParseMetadata]
+
+  private implicit val emailParseViewWrites: OWrites[EmailParseView] = (JsPath.write[EmailParseMetadata] and
+    JsPath.write[EmailHeaders] and
+    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailParseView.unapply))
+
+  private implicit val parsedMapWrites: Writes[Map[BlobId, EmailParseView]] = mapWrites[BlobId, EmailParseView](s => s.value.value, emailParseViewWrites)
 
   private implicit val stateWrites: Writes[UuidState] = Json.valueWrites[UuidState]
   private implicit val emailGetResponseWrites: Writes[EmailGetResponse] = Json.writes[EmailGetResponse]
+  private implicit val emailParseResponseWrites: Writes[EmailParseResponse] = Json.writes[EmailParseResponse]
   private implicit val changesResponseWrites: OWrites[EmailChangesResponse] = Json.writes[EmailChangesResponse]
 
   def serializeChanges(changesResponse: EmailChangesResponse): JsObject = Json.toJson(changesResponse).as[JsObject]
@@ -258,4 +268,19 @@ object EmailGetSerializer {
   def deserializeEmailGetRequest(input: JsValue): JsResult[EmailGetRequest] = Json.fromJson[EmailGetRequest](input)
 
   def deserializeEmailChangesRequest(input: JsValue): JsResult[EmailChangesRequest] = Json.fromJson[EmailChangesRequest](input)
+
+  private implicit val blobIdsWrites: Format[BlobIds] = Json.valueFormat[BlobIds]
+  private implicit val emailParseRequestReads: Reads[EmailParseRequest] = Json.reads[EmailParseRequest]
+
+  def deserializeEmailParseRequest(input: JsValue): JsResult[EmailParseRequest] = Json.fromJson[EmailParseRequest](input)
+
+  def serializeEmailParseResponse(emailGetResponse: EmailParseResponse, properties: Properties, bodyProperties: Properties): JsValue =
+    JsObject(Json.toJson(emailGetResponse)
+      .asInstanceOf[JsObject].fields.map {
+            case ("parsed", parsed) => ("parsed", JsObject(parsed.asInstanceOf[JsObject].fields.map {
+                  // todo also filter with properties
+              case (key, value) => (key, properties.filter(value.asInstanceOf[JsObject]))
+            }))
+            case any => any
+          })
 }

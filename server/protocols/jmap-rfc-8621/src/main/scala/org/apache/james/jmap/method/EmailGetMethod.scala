@@ -21,22 +21,21 @@ package org.apache.james.jmap.method
 import java.time.ZoneId
 
 import eu.timepit.refined.auto._
-import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.{EmailChangeRepository, State => JavaState}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
-import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
-import org.apache.james.jmap.mail.{Email, EmailBodyPart, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, SpecificHeaderRequest, UnparsedEmailId}
+import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, UnparsedEmailId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.metrics.api.MetricFactory
 import org.slf4j.{Logger, LoggerFactory}
-import play.api.libs.json.{JsError, JsObject, JsSuccess}
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object EmailGetResults {
@@ -97,8 +96,8 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
       .asEither.left.map(ResponseSerializer.asException)
 
   private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
-    validateProperties(request)
-      .flatMap(properties => validateBodyProperties(request).map((properties, _)))
+    Email.validateProperties(request.properties)
+      .flatMap(properties => Email.validateBodyProperties(request.bodyProperties).map((properties, _)))
       .fold(
         e => SMono.error(e), {
           case (properties, bodyProperties) => getEmails(capabilities, request, mailboxSession)
@@ -107,42 +106,6 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
               arguments = Arguments(EmailGetSerializer.serialize(response, properties, bodyProperties).as[JsObject]),
               methodCallId = invocation.methodCallId))
         })
-
-  private def validateProperties(request: EmailGetRequest): Either[IllegalArgumentException, Properties] =
-    request.properties match {
-      case None => Right(Email.defaultProperties)
-      case Some(properties) =>
-        val invalidProperties: Set[NonEmptyString] = properties.value
-          .flatMap(property => SpecificHeaderRequest.from(property)
-            .fold(
-              invalidProperty => Some(invalidProperty),
-              _ => None
-            )) -- Email.allowedProperties.value
-
-        if (invalidProperties.nonEmpty) {
-          Left(new IllegalArgumentException(s"The following properties [${invalidProperties.map(p => p.value).mkString(", ")}] do not exist."))
-        } else {
-          Right(properties ++ Email.idProperty)
-        }
-    }
-
-  private def validateBodyProperties(request: EmailGetRequest): Either[IllegalArgumentException, Properties] =
-    request.bodyProperties match {
-      case None => Right(EmailBodyPart.defaultProperties)
-      case Some(properties) =>
-        val invalidProperties: Set[NonEmptyString] = properties.value
-          .flatMap(property => SpecificHeaderRequest.from(property)
-            .fold(
-              invalidProperty => Some(invalidProperty),
-              _ => None
-            )) -- EmailBodyPart.allowedProperties.value
-
-        if (invalidProperties.nonEmpty) {
-          Left(new IllegalArgumentException(s"The following bodyProperties [${invalidProperties.map(p => p.value).mkString(", ")}] do not exist."))
-        } else {
-          Right(properties)
-        }
-    }
 
   private def getEmails(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
     request.ids match {
