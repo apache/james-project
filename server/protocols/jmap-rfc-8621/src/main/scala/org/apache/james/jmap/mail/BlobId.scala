@@ -31,7 +31,7 @@ object BlobId {
       case Left(e) => Failure(new IllegalArgumentException(e))
     }
   def of(messageId: MessageId): Try[BlobId] = of(messageId.serialize())
-  def of(messageId: MessageId, partId: PartId): Try[BlobId] = of(s"${messageId.serialize()}_${partId.serialize}")
+  def of(messageId: BlobId, partId: PartId): Try[BlobId] = of(s"${messageId.value.value}_${partId.serialize}")
 }
 
 case class BlobId(value: Id)

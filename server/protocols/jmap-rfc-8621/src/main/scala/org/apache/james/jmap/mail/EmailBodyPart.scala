@@ -34,7 +34,7 @@ import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
 import org.apache.james.jmap.mail.PartId.PartIdValue
-import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageId, MessageResult}
+import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageResult}
 import org.apache.james.mime4j.Charsets.DEFAULT_CHARSET
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
@@ -75,13 +75,13 @@ object EmailBodyPart {
   val defaultProperties: Properties = Properties("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location")
   val allowedProperties: Properties = defaultProperties ++ Properties("subParts", "headers")
 
-  def of(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId, message: MessageResult): Try[EmailBodyPart] = {
+  def of(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId, message: MessageResult): Try[EmailBodyPart] = {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
 
     val mime4JMessage = Try(defaultMessageBuilder.parseMessage(message.getFullContent.getInputStream))
-    mime4JMessage.flatMap(of(properties, zoneId, messageId, _))
+    mime4JMessage.flatMap(of(properties, zoneId, blobId, _))
   }
 
   def fromAttachment(properties: Option[Properties], zoneId: ZoneId, attachment: MessageAttachmentMetadata, entity: Message): EmailBodyPart = {
@@ -111,15 +111,15 @@ object EmailBodyPart {
       specificHeaders = EmailHeaders.extractSpecificHeaders(properties)(zoneId, entity.getHeader))
   }
 
-  def of(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId, message: Message): Try[EmailBodyPart] =
-    of(properties, zoneId, messageId, PartId(1), message).map(_._1)
+  def of(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId, message: Message): Try[EmailBodyPart] =
+    of(properties, zoneId, blobId, PartId(1), message).map(_._1)
 
-  private def of(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId, partId: PartId, entity: Entity): Try[(EmailBodyPart, PartId)] =
+  private def of(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId, partId: PartId, entity: Entity): Try[(EmailBodyPart, PartId)] =
     entity.getBody match {
       case multipart: Multipart =>
         val scanResults: Try[List[(Option[EmailBodyPart], PartId)]] = multipart.getBodyParts
           .asScala.toList
-          .scanLeft[Try[(Option[EmailBodyPart], PartId)]](Success((None, partId)))(traverse(properties, zoneId, messageId))
+          .scanLeft[Try[(Option[EmailBodyPart], PartId)]](Success((None, partId)))(traverse(properties, zoneId, blobId))
           .sequence
         val highestPartIdValidation: Try[PartId] = scanResults.map(list => list.map(_._2).reverse.headOption.getOrElse(partId))
         val childrenValidation: Try[List[EmailBodyPart]] = scanResults.map(list => list.flatMap(_._1))
@@ -129,17 +129,17 @@ object EmailBodyPart {
               case (children, highestPartId) => of(properties, zoneId, None, partId, entity, Some(children))
                 .map(part => (part, highestPartId))
             }
-      case _ => BlobId.of(messageId, partId)
+      case _ => BlobId.of(blobId, partId)
           .flatMap(blobId => of(properties, zoneId, Some(blobId), partId, entity, None))
           .map(part => (part, partId))
     }
 
-  private def traverse(properties: Option[Properties], zoneId: ZoneId, messageId: MessageId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
+  private def traverse(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId)(acc: Try[(Option[EmailBodyPart], PartId)], entity: Entity): Try[(Option[EmailBodyPart], PartId)] = {
     acc.flatMap {
       case (_, previousPartId) =>
         val partId = previousPartId.next
 
-        of(properties, zoneId, messageId, partId, entity)
+        of(properties, zoneId, blobId, partId, entity)
           .map({
             case (part, partId) => (Some(part), partId)
           })

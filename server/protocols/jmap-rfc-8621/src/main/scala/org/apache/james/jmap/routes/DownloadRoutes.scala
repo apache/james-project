@@ -209,7 +209,7 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
         Applicable(SMono.fromPublisher(
           messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
           .handle[EmailBodyPart] {
-            case (message, sink) => EmailBodyPart.of(None, zoneIdSupplier.get(), messageId, message)
+            case (message, sink) => EmailBodyPart.of(None, zoneIdSupplier.get(), BlobId.of(messageId).get, message)
               .fold(sink.error, sink.next)
           }
           .handle[EmailBodyPart] {
