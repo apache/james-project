@@ -1,0 +1,52 @@
+Return-Path: <me@linagora.com>
+Delivered-To: me@linagora.com
+Content-Type: multipart/mixed; boundary="------------8Z6SfsfcYTjrhgeuagphvHB4"
+Message-ID: <bb76dd1c-044f-316f-c4aa-12d143256e0f@linagora.com>
+Date: Wed, 3 May 2023 07:37:27 +0700
+MIME-Version: 1.0
+References: <ed24d4ad-53c0-48c7-2fc9-39f762e4d98d@linagora.com>
+Subject: Fwd: test subject
+To: Me ME <me@linagora.com>
+From: Me ME <me@linagora.com>
+In-Reply-To: <ed24d4ad-53c0-48c7-2fc9-39f762e4d98d@linagora.com>
+X-Forwarded-Message-Id: <ed24d4ad-53c0-48c7-2fc9-39f762e4d98d@linagora.com>
+
+This is a multi-part message in MIME format.
+--------------8Z6SfsfcYTjrhgeuagphvHB4
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+CF the attachment
+
+--------------8Z6SfsfcYTjrhgeuagphvHB4
+Content-Type: message/rfc822; name="test subject.eml"
+Content-Disposition: attachment; filename="test subject.eml"
+Content-Transfer-Encoding: 7bit
+
+Return-Path: <me@linagora.com>
+Delivered-To: me@linagora.com
+Content-Type: multipart/mixed; boundary="------------F6Ykx4Sf21a3Ovh9U5C4q1Qb"
+Message-ID: <ed24d4ad-53c0-48c7-2fc9-39f762e4d98d@linagora.com>
+Date: Wed, 3 May 2023 07:36:49 +0700
+MIME-Version: 1.0
+To: Me ME <me@linagora.com>
+From: Me ME <me@linagora.com>
+Subject: test subject
+
+This is a multi-part message in MIME format.
+--------------F6Ykx4Sf21a3Ovh9U5C4q1Qb
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+test body
+
+--------------F6Ykx4Sf21a3Ovh9U5C4q1Qb
+Content-Type: text/plain; charset=UTF-8; name="whatever.txt"
+Content-Disposition: attachment; filename="whatever.txt"
+Content-Transfer-Encoding: base64
+
+dGVzdCBhdHRhY2htZW50Cg==
+
+--------------F6Ykx4Sf21a3Ovh9U5C4q1Qb--
+
+--------------8Z6SfsfcYTjrhgeuagphvHB4--

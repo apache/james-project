@@ -191,8 +191,10 @@ object EmailGetSerializer {
   private implicit val emailParseMetadata: Writes[EmailParseMetadata] = Json.writes[EmailParseMetadata]
 
   private implicit val emailParseViewWrites: OWrites[EmailParseView] = (JsPath.write[EmailParseMetadata] and
-    JsPath.write[EmailHeaders] and
-    JsPath.write[Map[String, Option[EmailHeaderValue]]]) (unlift(EmailParseView.unapply))
+    JsPath.write[EmailHeaders]and
+    JsPath.write[EmailBody] and
+    JsPath.write[EmailBodyMetadata] and
+    JsPath.write[Map[String, Option[EmailHeaderValue]]] ) (unlift(EmailParseView.unapply))
 
   private implicit val parsedMapWrites: Writes[Map[BlobId, EmailParseView]] = mapWrites[BlobId, EmailParseView](s => s.value.value, emailParseViewWrites)
 
@@ -232,22 +234,36 @@ object EmailGetSerializer {
       properties.contains("htmlBody")
 
   private def bodyPropertiesFilteringTransformation(bodyProperties: Properties): Reads[JsValue] = {
-    case serializedBody: JsObject =>
-      val bodyPropertiesToRemove = EmailBodyPart.allowedProperties -- bodyProperties
-      val noop: JsValue => JsValue = o => o
-
-      JsSuccess(Seq(
-          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "attachments"),
-          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "bodyStructure"),
-          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "textBody"),
-          bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "htmlBody"))
-        .reduceLeftOption(_ compose _)
-        .getOrElse(noop)
-        .apply(serializedBody))
+    case serializedBody: JsObject => JsSuccess(bodyPropertiesFilteringTransformationJsObject(bodyProperties).apply(serializedBody))
     case js => JsSuccess(js)
   }
 
+  private def bodyPropertiesFilteringTransformationJsObject(bodyProperties: Properties): JsObject => JsObject =
+    serializedBody => {
+      val bodyPropertiesToRemove = EmailBodyPart.allowedProperties -- bodyProperties
+      val noop: JsValue => JsValue = o => o
+
+      Seq(
+        bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "attachments"),
+        bodyPropertiesFilteringTransformationWithRecursion(bodyPropertiesToRemove, "bodyStructure"),
+        bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "textBody"),
+        bodyPropertiesFilteringTransformation(bodyPropertiesToRemove, "htmlBody"))
+        .reduceLeftOption(_ compose _)
+        .getOrElse(noop)
+        .apply(serializedBody)
+        .asInstanceOf[JsObject]
+    }
+
   private def bodyPropertiesFilteringTransformation(properties: Properties, field: String): JsValue => JsValue =
+  {
+    case JsObject(underlying) => JsObject(underlying.map {
+      case (key, jsValue) if key.equals(field) => (field, removeFields(properties).apply(jsValue))
+      case (key, jsValue) => (key, jsValue)
+    })
+    case jsValue => jsValue
+  }
+
+  private def bodyPropertiesFilteringTransformationWithRecursion(properties: Properties, field: String): JsValue => JsValue =
   {
     case JsObject(underlying) => JsObject(underlying.map {
       case (key, jsValue) if key.equals(field) => (field, removeFieldsRecursively(properties).apply(jsValue))
@@ -260,6 +276,15 @@ object EmailGetSerializer {
     case JsObject(underlying) => JsObject(underlying.flatMap {
       case (key, _) if properties.containsString(key) => None
       case (key, value) => Some((key, removeFieldsRecursively(properties).apply(value)))
+    })
+    case JsArray(others) => JsArray(others.map(removeFieldsRecursively(properties)))
+    case o: JsValue => o
+  }
+
+  private def removeFields(properties: Properties): JsValue => JsValue = {
+    case JsObject(underlying) => JsObject(underlying.flatMap {
+      case (key, _) if properties.containsString(key) => None
+      case (key, value) => Some((key, value))
     })
     case JsArray(others) => JsArray(others.map(removeFieldsRecursively(properties)))
     case o: JsValue => o
@@ -278,8 +303,8 @@ object EmailGetSerializer {
     JsObject(Json.toJson(emailGetResponse)
       .asInstanceOf[JsObject].fields.map {
             case ("parsed", parsed) => ("parsed", JsObject(parsed.asInstanceOf[JsObject].fields.map {
-                  // todo also filter with properties
-              case (key, value) => (key, properties.filter(value.asInstanceOf[JsObject]))
+              case (key, value) => (key, bodyPropertiesFilteringTransformationJsObject(bodyProperties)
+                .apply(properties.filter(value.asInstanceOf[JsObject])))
             }))
             case any => any
           })

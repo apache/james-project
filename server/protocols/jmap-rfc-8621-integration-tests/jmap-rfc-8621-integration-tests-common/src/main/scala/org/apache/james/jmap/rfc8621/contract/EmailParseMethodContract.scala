@@ -90,33 +90,232 @@ trait EmailParseMethodContract {
     assertThatJson(response)
       .isEqualTo(
         s"""{
-           |    "sessionState": "${SESSION_STATE.value}",
+           |    "sessionState": "${SESSION_STATE.serialize}",
            |    "methodResponses": [
-           |      [ "Email/parse", {
-           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |         "parsed": {
-           |           "${messageId.serialize()}": {
-           |             "size": 2725,
-           |             "blobId": "1",
-           |             "references": null,
-           |             "subject": "MultiAttachment",
-           |             "inReplyTo": null,
-           |             "messageId": [ "13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com"],
-           |             "from": [
-           |               {
-           |                 "name": "Lina",
-           |                  "email": "from@linagora.com"
-           |               }
-           |             ],
-           |             "sentAt": "2017-02-27T04:24:48Z",
-           |             "to": [
-           |               {
-           |                  "email": "to@linagora.com"
-           |               }
-           |             ]
-           |           }
-           |         }
-           |      }, "c1" ]]
+           |        [
+           |            "Email/parse",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "parsed": {
+           |                    "${messageId.serialize()}": {
+           |                        "inReplyTo": null,
+           |                        "to": [
+           |                            {
+           |                                "email": "to@linagora.com"
+           |                            }
+           |                        ],
+           |                        "references": null,
+           |                        "textBody": [
+           |                            {
+           |                                "charset": "utf-8",
+           |                                "size": 39,
+           |                                "partId": "2",
+           |                                "blobId": "${messageId.serialize()}_2",
+           |                                "type": "text/html"
+           |                            }
+           |                        ],
+           |                        "sentAt": "2017-02-27T04:24:48Z",
+           |                        "hasAttachment": true,
+           |                        "attachments": [
+           |                            {
+           |                                "charset": "UTF-8",
+           |                                "disposition": "attachment",
+           |                                "size": 271,
+           |                                "partId": "3",
+           |                                "blobId": "${messageId.serialize()}_3",
+           |                                "name": "text1",
+           |                                "type": "text/plain"
+           |                            },
+           |                            {
+           |                                "charset": "us-ascii",
+           |                                "disposition": "attachment",
+           |                                "size": 398,
+           |                                "partId": "4",
+           |                                "blobId": "${messageId.serialize()}_4",
+           |                                "name": "text2",
+           |                                "type": "application/vnd.ms-publisher"
+           |                            },
+           |                            {
+           |                                "charset": "UTF-8",
+           |                                "disposition": "attachment",
+           |                                "size": 412,
+           |                                "partId": "5",
+           |                                "blobId": "${messageId.serialize()}_5",
+           |                                "name": "text3",
+           |                                "type": "text/plain"
+           |                            }
+           |                        ],
+           |                        "subject": "MultiAttachment",
+           |                        "size": 2725,
+           |                        "blobId": "${messageId.serialize()}",
+           |                        "preview": "Send concerted from html",
+           |                        "htmlBody": [
+           |                            {
+           |                                "charset": "utf-8",
+           |                                "size": 39,
+           |                                "partId": "2",
+           |                                "blobId": "${messageId.serialize()}_2",
+           |                                "type": "text/html"
+           |                            }
+           |                        ],
+           |                        "bodyValues": {
+           |
+           |                        },
+           |                        "messageId": [
+           |                            "13d4375e-a4a9-f613-06a1-7e8cb1e0ea93@linagora.com"
+           |                        ],
+           |                        "from": [
+           |                            {
+           |                                "name": "Lina",
+           |                                "email": "from@linagora.com"
+           |                            }
+           |                        ]
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def parseShouldSuccessWhenAttachment(guiceJamesServer: GuiceJamesServer): Unit = {
+    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString(), path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nested.eml")))
+      .getMessageId
+
+    val request: String =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/parse",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "blobIds": [ "${messageId.serialize()}_3" ],
+         |      "properties":["bodyValues", "preview", "hasAttachment", "attachments", "blobId", "size", "headers", "references", "subject", "inReplyTo", "messageId", "from", "to", "sentAt"],
+         |      "fetchTextBodyValues": true,
+         |      "fetchHTMLBodyValues": true,
+         |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.serialize}",
+           |    "methodResponses": [
+           |        [
+           |            "Email/parse",
+           |            {
+           |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |                "parsed": {
+           |                    "${messageId.serialize()}_3": {
+           |                        "inReplyTo": null,
+           |                        "to": [
+           |                            {
+           |                                "name": "Me ME",
+           |                                "email": "me@linagora.com"
+           |                            }
+           |                        ],
+           |                        "references": null,
+           |                        "bodyValues": {
+           |                            "2": {
+           |                                "value": "test body\\n",
+           |                                "isEncodingProblem": false,
+           |                                "isTruncated": false
+           |                            }
+           |                        },
+           |                        "sentAt": "2023-05-03T00:36:49Z",
+           |                        "headers": [
+           |                            {
+           |                                "name": "Return-Path",
+           |                                "value": " <me@linagora.com>"
+           |                            },
+           |                            {
+           |                                "name": "Delivered-To",
+           |                                "value": " me@linagora.com"
+           |                            },
+           |                            {
+           |                                "name": "Content-Type",
+           |                                "value": " multipart/mixed; boundary=\\"------------F6Ykx4Sf21a3Ovh9U5C4q1Qb\\""
+           |                            },
+           |                            {
+           |                                "name": "Message-ID",
+           |                                "value": " <ed24d4ad-53c0-48c7-2fc9-39f762e4d98d@linagora.com>"
+           |                            },
+           |                            {
+           |                                "name": "Date",
+           |                                "value": " Wed, 3 May 2023 07:36:49 +0700"
+           |                            },
+           |                            {
+           |                                "name": "MIME-Version",
+           |                                "value": " 1.0"
+           |                            },
+           |                            {
+           |                                "name": "To",
+           |                                "value": " Me ME <me@linagora.com>"
+           |                            },
+           |                            {
+           |                                "name": "From",
+           |                                "value": " Me ME <me@linagora.com>"
+           |                            },
+           |                            {
+           |                                "name": "Subject",
+           |                                "value": " test subject"
+           |                            }
+           |                        ],
+           |                        "hasAttachment": true,
+           |                        "attachments": [
+           |                            {
+           |                                "partId": "3",
+           |                                "blobId": "${messageId.serialize()}_3_3",
+           |                                "size": 16,
+           |                                "name": "whatever.txt",
+           |                                "type": "text/plain",
+           |                                "charset": "UTF-8",
+           |                                "disposition": "attachment"
+           |                            }
+           |                        ],
+           |                        "subject": "test subject",
+           |                        "size": 807,
+           |                        "blobId": "${messageId.serialize()}_3",
+           |                        "preview": "test body",
+           |                        "messageId": [
+           |                            "ed24d4ad-53c0-48c7-2fc9-39f762e4d98d@linagora.com"
+           |                        ],
+           |                        "from": [
+           |                            {
+           |                                "name": "Me ME",
+           |                                "email": "me@linagora.com"
+           |                            }
+           |                        ]
+           |                    }
+           |                }
+           |            },
+           |            "c1"
+           |        ]
+           |    ]
            |}""".stripMargin)
   }
 
@@ -169,7 +368,7 @@ trait EmailParseMethodContract {
            |         "parsed": {
            |           "${messageId.serialize()}": {
            |             "size": 2725,
-           |             "blobId": "1",
+           |             "blobId": "${messageId.serialize()}",
            |             "headers": [
            |               {
            |                 "name": "Return-Path",
@@ -277,9 +476,237 @@ trait EmailParseMethodContract {
            |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
            |         "parsed": {
            |           "${messageId.serialize()}": {
-           |             "blobId": "1"
+           |             "blobId": "${messageId.serialize()}"
            |           }
            |         }
+           |      }, "c1" ]]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def parseShouldAllowRetrievingBody(guiceJamesServer: GuiceJamesServer): Unit = {
+    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString(), path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
+      .getMessageId
+
+    val request: String =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/parse",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "blobIds": [ "${messageId.serialize()}" ],
+         |      "properties":["bodyValues", "preview", "hasAttachment", "attachments"],
+         |      "fetchTextBodyValues": true,
+         |      "fetchHTMLBodyValues": true,
+         |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location", "subParts", "headers"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |      [ "Email/parse", {
+           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "parsed":{
+           |         "${messageId.serialize()}": {
+           |           "preview": "Send concerted from html",
+           |           "bodyValues": {
+           |             "2": {
+           |               "value": "Send\\nconcerted from html\\n\\n\\r\\n\\r\\n",
+           |               "isEncodingProblem": false,
+           |               "isTruncated": false
+           |             }
+           |           },
+           |           "hasAttachment": true,
+           |                        "attachments": [
+           |                            {
+           |                                "partId": "3",
+           |                                "blobId": "${messageId.serialize()}_3",
+           |                                "headers": [
+           |                                    {
+           |                                        "name": "Content-Type",
+           |                                        "value": " text/plain; charset=UTF-8;\\r\\n name=\\"text1\\""
+           |                                    },
+           |                                    {
+           |                                        "name": "Content-Transfer-Encoding",
+           |                                        "value": " base64"
+           |                                    },
+           |                                    {
+           |                                        "name": "Content-Disposition",
+           |                                        "value": " attachment;\\r\\n filename=\\"text1\\""
+           |                                    }
+           |                                ],
+           |                                "size": 271,
+           |                                "name": "text1",
+           |                                "type": "text/plain",
+           |                                "charset": "UTF-8",
+           |                                "disposition": "attachment"
+           |                            },
+           |                            {
+           |                                "partId": "4",
+           |                                "blobId": "${messageId.serialize()}_4",
+           |                                "headers": [
+           |                                    {
+           |                                        "name": "Content-Type",
+           |                                        "value": " application/vnd.ms-publisher;\\r\\n name=\\"text2\\""
+           |                                    },
+           |                                    {
+           |                                        "name": "Content-Transfer-Encoding",
+           |                                        "value": " base64"
+           |                                    },
+           |                                    {
+           |                                        "name": "Content-Disposition",
+           |                                        "value": " attachment;\\r\\n filename=\\"text2\\""
+           |                                    }
+           |                                ],
+           |                                "size": 398,
+           |                                "name": "text2",
+           |                                "type": "application/vnd.ms-publisher",
+           |                                "charset": "us-ascii",
+           |                                "disposition": "attachment"
+           |                            },
+           |                            {
+           |                                "partId": "5",
+           |                                "blobId": "${messageId.serialize()}_5",
+           |                                "headers": [
+           |                                    {
+           |                                        "name": "Content-Type",
+           |                                        "value": " text/plain; charset=UTF-8;\\r\\n name=\\"text3\\""
+           |                                    },
+           |                                    {
+           |                                        "name": "Content-Transfer-Encoding",
+           |                                        "value": " base64"
+           |                                    },
+           |                                    {
+           |                                        "name": "Content-Disposition",
+           |                                        "value": " attachment;\\r\\n filename=\\"text3\\""
+           |                                    }
+           |                                ],
+           |                                "size": 412,
+           |                                "name": "text3",
+           |                                "type": "text/plain",
+           |                                "charset": "UTF-8",
+           |                                "disposition": "attachment"
+           |                            }
+           |                        ]
+           |         }}
+           |      }, "c1" ]]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def parseShouldApplyBodyFiltering(guiceJamesServer: GuiceJamesServer): Unit = {
+    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString(), path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/html.eml")))
+      .getMessageId
+
+    val request: String =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/parse",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "blobIds": [ "${messageId.serialize()}" ],
+         |      "properties":["bodyValues", "preview", "hasAttachment", "attachments"],
+         |      "fetchTextBodyValues": true,
+         |      "fetchHTMLBodyValues": true,
+         |      "bodyProperties":["partId", "blobId", "size", "name", "type", "charset", "disposition", "cid"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |    "sessionState": "${SESSION_STATE.value}",
+           |    "methodResponses": [
+           |      [ "Email/parse", {
+           |         "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |         "parsed":{
+           |         "${messageId.serialize()}": {
+           |           "preview": "Send concerted from html",
+           |           "bodyValues": {
+           |             "2": {
+           |               "value": "Send\\nconcerted from html\\n\\n\\r\\n\\r\\n",
+           |               "isEncodingProblem": false,
+           |               "isTruncated": false
+           |             }
+           |           },
+           |           "hasAttachment": true,
+           |                        "attachments": [
+           |                            {
+           |                                "partId": "3",
+           |                                "blobId": "${messageId.serialize()}_3",
+           |                                "size": 271,
+           |                                "name": "text1",
+           |                                "type": "text/plain",
+           |                                "charset": "UTF-8",
+           |                                "disposition": "attachment"
+           |                            },
+           |                            {
+           |                                "partId": "4",
+           |                                "blobId": "${messageId.serialize()}_4",
+           |                                "size": 398,
+           |                                "name": "text2",
+           |                                "type": "application/vnd.ms-publisher",
+           |                                "charset": "us-ascii",
+           |                                "disposition": "attachment"
+           |                            },
+           |                            {
+           |                                "partId": "5",
+           |                                "blobId": "${messageId.serialize()}_5",
+           |                                "size": 412,
+           |                                "name": "text3",
+           |                                "type": "text/plain",
+           |                                "charset": "UTF-8",
+           |                                "disposition": "attachment"
+           |                            }
+           |                        ]
+           |         }}
            |      }, "c1" ]]
            |}""".stripMargin)
   }
