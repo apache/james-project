@@ -18,18 +18,17 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.mail;
 
-import static org.apache.james.backends.cassandra.Scenario.Builder.awaitOn;
+import static org.apache.james.mailbox.cassandra.mail.CassandraACLMapperContract.MAILBOX_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.Optional;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.Scenario.Barrier;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
@@ -47,7 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraACLMapperV2Test extends CassandraACLMapperContract {
+class CassandraACLMapperNoACLTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
         CassandraModule.aggregateModules(CassandraAclModule.MODULE, CassandraSchemaVersionModule.MODULE, CassandraEventStoreModule.MODULE()));
@@ -58,7 +57,7 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
     void setUp(CassandraCluster cassandra) {
         CassandraSchemaVersionDAO schemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         schemaVersionDAO.truncateVersion().block();
-        schemaVersionDAO.updateVersion(new SchemaVersion(10)).block();
+        schemaVersionDAO.updateVersion(new SchemaVersion(9)).block();
         CassandraSchemaVersionManager versionManager = new CassandraSchemaVersionManager(schemaVersionDAO);
         CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandra.getConf());
@@ -70,77 +69,42 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
         cassandraACLMapper = new CassandraACLMapper(
             new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
             new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOv2, eventStore),
-            versionManager, CassandraConfiguration.DEFAULT_CONFIGURATION);
-    }
-
-    @Override
-    CassandraACLMapper cassandraACLMapper() {
-        return cassandraACLMapper;
+            versionManager, CassandraConfiguration.builder()
+                .aclEnabled(Optional.of(false))
+                .build());
     }
 
     @Test
-    void twoConcurrentUpdatesWhenNoACLStoredShouldReturnACLWithTwoEntries(CassandraCluster cassandra) throws Exception {
-        Barrier barrier = new Barrier(2);
-        cassandra.getConf()
-            .registerScenario(awaitOn(barrier)
-                .thenExecuteNormally()
-                .times(2)
-                .whenQueryStartsWith("SELECT event FROM eventstore WHERE aggregateid=:aggregateid"));
-
-        MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
-        MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
-        MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights);
-        Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights);
-
-        barrier.awaitCaller();
-        barrier.releaseCaller();
-
-        awaitAll(future1, future2);
-
-        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block())
-            .isEqualTo(new MailboxACL().union(keyBob, rights).union(keyAlice, rights));
+    void getACLShouldReturnEmpty() {
+        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block()).isEqualTo(MailboxACL.EMPTY);
     }
 
     @Test
-    void twoConcurrentUpdatesWhenStoredShouldReturnACLWithTwoEntries(CassandraCluster cassandra) throws Exception {
+    void getACLShouldNotIssueCassandraQueries(CassandraCluster cassandra) {
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
+
+        cassandraACLMapper.getACL(MAILBOX_ID).block();
+
+        assertThat(statementRecorder.listExecutedStatements()).isEmpty();
+    }
+
+    @Test
+    void deleteShouldBeSupported() {
+        assertThatCode(() -> cassandraACLMapper.delete(MAILBOX_ID).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void setACLShouldNotBeSupported() {
+        assertThatThrownBy(() -> cassandraACLMapper.setACL(MAILBOX_ID, MailboxACL.EMPTY).block())
+            .isInstanceOf(NotImplementedException.class);
+    }
+
+    @Test
+    void updateACLShouldNotBeSupported() {
         MailboxACL.EntryKey keyBenwa = new MailboxACL.EntryKey("benwa", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
-        cassandraACLMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(keyBenwa).rights(rights).asAddition()).block();
-
-        Barrier barrier = new Barrier(2);
-        cassandra.getConf()
-            .registerScenario(awaitOn(barrier)
-                .thenExecuteNormally()
-                .times(2)
-                .whenQueryStartsWith("SELECT event FROM eventstore WHERE aggregateid=:aggregateid"));
-
-        MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
-        MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights);
-        Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights);
-
-        barrier.awaitCaller();
-        barrier.releaseCaller();
-
-        awaitAll(future1, future2);
-
-        assertThat(cassandraACLMapper.getACL(MAILBOX_ID).block())
-            .isEqualTo(new MailboxACL().union(keyBob, rights).union(keyAlice, rights).union(keyBenwa, rights));
+        assertThatThrownBy(() -> cassandraACLMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(keyBenwa).rights(rights).asAddition()).block())
+            .isInstanceOf(NotImplementedException.class);
     }
-
-    private void awaitAll(Future<?>... futures) 
-            throws InterruptedException, ExecutionException, TimeoutException {
-        for (Future<?> future : futures) {
-            future.get(10L, TimeUnit.SECONDS);
-        }
-    }
-
-    private Future<Boolean> performACLUpdateInExecutor(ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights) {
-        return executor.submit(() -> {
-            cassandraACLMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(key).rights(rights).asAddition()).block();
-            return true;
-        });
-    }
-
 }

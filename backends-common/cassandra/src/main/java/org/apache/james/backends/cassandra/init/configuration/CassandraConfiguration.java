@@ -82,6 +82,7 @@ public class CassandraConfiguration {
     private static final String CONSISTENCY_LEVEL_LIGHTWEIGHT_TRANSACTION = "cassandra.consistency_level.lightweight_transaction";
     private static final String OPTIMISTIC_CONSISTENCY_LEVEL = "optimistic.consistency.level.enabled";
     private static final String MAIL_REPOSITORY_STRONG_CONSISTENCY = "mailrepository.strong.consistency";
+    private static final String ACL_ENABLED = "acl.enabled";
 
     public static final CassandraConfiguration DEFAULT_CONFIGURATION = builder().build();
 
@@ -108,6 +109,7 @@ public class CassandraConfiguration {
         private Optional<Boolean> modseqReadStrongConsistency = Optional.empty();
         private Optional<Boolean> optimisticConsistencyLevel = Optional.empty();
         private Optional<Boolean> mailRepositoryStrongConsistency = Optional.empty();
+        private Optional<Boolean> aclEnabled = Optional.empty();
 
         public Builder mailboxReadStrongConsistency(boolean value) {
             this.mailboxReadStrongConsistency = Optional.of(value);
@@ -116,6 +118,11 @@ public class CassandraConfiguration {
 
         public Builder mailboxReadStrongConsistency(Optional<Boolean> value) {
             this.mailboxReadStrongConsistency = value;
+            return this;
+        }
+
+        public Builder aclEnabled(Optional<Boolean> value) {
+            this.aclEnabled = value;
             return this;
         }
 
@@ -364,7 +371,8 @@ public class CassandraConfiguration {
                 optimisticConsistencyLevel.orElse(DEFAULT_OPTIMISTIC_CONSISTENCY_LEVEL),
                 mailRepositoryStrongConsistency.orElse(DEFAULT_MAIL_REPOSITORY_STRONG_CONSISTENCY),
                 uidReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY),
-                modseqReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY));
+                modseqReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY),
+                aclEnabled.orElse(true));
         }
     }
 
@@ -418,6 +426,7 @@ public class CassandraConfiguration {
                 propertiesConfiguration.getBoolean(OPTIMISTIC_CONSISTENCY_LEVEL, null)))
             .mailRepositoryStrongConsistency(Optional.ofNullable(
                 propertiesConfiguration.getBoolean(MAIL_REPOSITORY_STRONG_CONSISTENCY, null)))
+            .aclEnabled(Optional.ofNullable(propertiesConfiguration.getBoolean(ACL_ENABLED, null)))
             .build();
     }
 
@@ -443,6 +452,7 @@ public class CassandraConfiguration {
     private final boolean mailRepositoryStrongConsistency;
     private final boolean uidReadStrongConsistency;
     private final boolean modseqReadStrongConsistency;
+    private final boolean aclEnabled;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int expungeChunkSize,
@@ -454,7 +464,7 @@ public class CassandraConfiguration {
                            float mailboxCountersReadRepairChanceOneHundred, boolean mailboxReadStrongConsistency,
                            boolean messageReadStrongConsistency, boolean messageWriteStrongConsistency,
                            boolean optimisticConsistencyLevel, boolean mailRepositoryStrongConsistency,
-                           boolean uidReadStrongConsistency, boolean modseqReadStrongConsistency) {
+                           boolean uidReadStrongConsistency, boolean modseqReadStrongConsistency, boolean aclEnabled) {
         this.aclMaxRetry = aclMaxRetry;
         this.expungeChunkSize = expungeChunkSize;
         this.flagsUpdateMessageIdMaxRetry = flagsUpdateMessageIdMaxRetry;
@@ -477,6 +487,7 @@ public class CassandraConfiguration {
         this.mailRepositoryStrongConsistency = mailRepositoryStrongConsistency;
         this.uidReadStrongConsistency = uidReadStrongConsistency;
         this.modseqReadStrongConsistency = modseqReadStrongConsistency;
+        this.aclEnabled = aclEnabled;
     }
 
     public boolean isUidReadStrongConsistency() {
@@ -567,6 +578,10 @@ public class CassandraConfiguration {
         return mailRepositoryStrongConsistency;
     }
 
+    public boolean isAclEnabled() {
+        return aclEnabled;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof CassandraConfiguration) {
@@ -593,8 +608,8 @@ public class CassandraConfiguration {
                 && Objects.equals(this.optimisticConsistencyLevel, that.optimisticConsistencyLevel)
                 && Objects.equals(this.uidReadStrongConsistency, that.uidReadStrongConsistency)
                 && Objects.equals(this.modseqReadStrongConsistency, that.modseqReadStrongConsistency)
-                && Objects.equals(this.mailRepositoryStrongConsistency, that.mailRepositoryStrongConsistency);
-
+                && Objects.equals(this.mailRepositoryStrongConsistency, that.mailRepositoryStrongConsistency)
+                && Objects.equals(this.aclEnabled, that.aclEnabled);
         }
         return false;
     }
@@ -608,7 +623,7 @@ public class CassandraConfiguration {
             consistencyLevelRegular, consistencyLevelLightweightTransaction, mailboxReadRepair,
             messageReadStrongConsistency, mailboxReadStrongConsistency, messageWriteStrongConsistency,
             optimisticConsistencyLevel, mailRepositoryStrongConsistency, uidReadStrongConsistency,
-            modseqReadStrongConsistency);
+            modseqReadStrongConsistency, aclEnabled);
     }
 
     @Override
@@ -636,6 +651,7 @@ public class CassandraConfiguration {
             .add("mailRepositoryStrongConsistency", mailRepositoryStrongConsistency)
             .add("modseqReadStrongConsistency", modseqReadStrongConsistency)
             .add("uidReadStrongConsistency", uidReadStrongConsistency)
+            .add("aclEnabled", aclEnabled)
             .toString();
     }
 }

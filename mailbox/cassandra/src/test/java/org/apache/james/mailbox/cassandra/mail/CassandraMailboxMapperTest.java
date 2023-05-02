@@ -124,7 +124,7 @@ class CassandraMailboxMapperTest {
         CassandraACLMapper aclMapper = new CassandraACLMapper(
             new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
             new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOv2, eventStore),
-            versionManager);
+            versionManager, CassandraConfiguration.DEFAULT_CONFIGURATION);
         testee = new CassandraMailboxMapper(
             mailboxDAO,
             mailboxPathV3DAO,
