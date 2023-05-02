@@ -31,7 +31,7 @@ import org.apache.james.mpt.imapmailbox.suite.Listing;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraListingTest extends Listing {
+class CassandraListingTest extends Listing {
     @RegisterExtension
     static CassandraHostSystemExtension hostSystemExtension = new CassandraHostSystemExtension();
 
@@ -41,12 +41,11 @@ public class CassandraListingTest extends Listing {
     }
 
     @Test
-    public void listShouldNotReadCounters() throws Exception {
+    void listShouldNotReadCounters() throws Exception {
         CassandraHostSystem cassandraHostSystem = (CassandraHostSystem) this.system;
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandraHostSystem.getCassandra()
+        StatementRecorder statementRecorder = cassandraHostSystem.getCassandra()
             .getConf()
-            .recordStatements(statementRecorder);
+            .recordStatements();
 
         simpleScriptedTestProtocol
             .withLocale(Locale.US)

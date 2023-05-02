@@ -370,8 +370,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
             .save(message)
             .block();
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         mimeMessageStore.read(partsId).block();
 

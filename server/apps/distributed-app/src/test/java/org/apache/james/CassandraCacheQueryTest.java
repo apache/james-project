@@ -117,7 +117,6 @@ class CassandraCacheQueryTest {
 
     @BeforeAll
     static void beforeEach(GuiceJamesServer server) throws Exception {
-        statementRecorder = new StatementRecorder();
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
             .addUser(JAMES_USER, PASSWORD);
@@ -125,7 +124,7 @@ class CassandraCacheQueryTest {
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
 
-        server.getProbe(TestingSessionProbe.class).getTestingSession().recordStatements(statementRecorder);
+        statementRecorder = server.getProbe(TestingSessionProbe.class).getTestingSession().recordStatements();
 
         sendAMail(server);
         readAMail(server);

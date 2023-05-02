@@ -129,8 +129,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
 
         saveMessages();
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         mapperFactory.getMessageIdMapper(MAILBOX_SESSION).setFlags(message1.getMessageId(),
             ImmutableList.of(message1.getMailboxId()),

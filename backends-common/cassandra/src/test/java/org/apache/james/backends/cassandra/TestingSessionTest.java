@@ -94,8 +94,7 @@ class TestingSessionTest {
 
     @Test
     void recordStatementsShouldKeepTraceOfExecutedStatement(CassandraCluster cassandra) {
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         dao.getCurrentSchemaVersion().block();
 
@@ -106,8 +105,7 @@ class TestingSessionTest {
 
     @Test
     void recordStatementsShouldKeepTraceOfExecutedStatements(CassandraCluster cassandra) {
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         dao.updateVersion(new SchemaVersion(36)).block();
         dao.getCurrentSchemaVersion().block();
@@ -123,8 +121,7 @@ class TestingSessionTest {
     void recordStatementsShouldNotKeepTraceOfExecutedStatementsBeforeRecording(CassandraCluster cassandra) {
         dao.getCurrentSchemaVersion().block();
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         assertThat(statementRecorder.listExecutedStatements())
             .isEmpty();

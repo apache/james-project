@@ -27,6 +27,7 @@ import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.events.EventListener;
@@ -257,11 +258,12 @@ public class CassandraMailboxModule extends AbstractModule {
                                  CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                  CassandraACLDAOV2 cassandraACLDAOV2,
                                  CqlSession session,
-                                 CassandraSchemaVersionManager cassandraSchemaVersionManager) {
+                                 CassandraSchemaVersionManager cassandraSchemaVersionManager,
+                                 CassandraConfiguration cassandraConfiguration) {
         return new CassandraACLMapper(storeV1,
             new CassandraACLMapper.StoreV2(userMailboxRightsDAO, cassandraACLDAOV2,
                 new CassandraEventStore(new EventStoreDao(session, JsonEventSerializer.forModules(ACLModule.ACL_UPDATE).withoutNestedType()))),
-            cassandraSchemaVersionManager);
+            cassandraSchemaVersionManager, cassandraConfiguration);
     }
     
     @Singleton

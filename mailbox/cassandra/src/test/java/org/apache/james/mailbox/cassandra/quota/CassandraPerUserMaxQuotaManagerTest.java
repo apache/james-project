@@ -48,8 +48,7 @@ class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
 
     @Test
     void quotaDetailsShouldGroupStatements(CassandraCluster cassandra) {
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         maxQuotaManager.quotaDetails(QUOTA_ROOT);
 

@@ -107,8 +107,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
                 // expected
             }
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             FlagsUpdateCalculator markAsRead = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
             messageMapper.updateFlags(benwaInboxMailbox, markAsRead, MessageRange.all());
@@ -122,8 +121,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void deleteMessagesShouldGroupMessageReads(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -136,8 +134,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void deleteMessagesShouldGroupCounterUpdates(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -150,8 +147,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void deleteMessagesShouldNotDeleteMessageNotMarkedAsDeletedInDeletedProjection(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -164,8 +160,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void deleteMessagesShouldNotDeleteMessageNotMarkedAsRecentInRecentProjection(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -180,8 +175,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
             FlagsUpdateCalculator markAsRead = new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.ADD);
             messageMapper.updateFlags(benwaInboxMailbox, markAsRead, MessageRange.all());
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             messageMapper.deleteMessages(benwaInboxMailbox, ImmutableList.of(message1.getUid(), message2.getUid(), message3.getUid()));
 
@@ -194,8 +188,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void updateFlagsShouldUpdateMailboxCountersOnce(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
 
@@ -209,8 +202,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void findInMailboxLimitShouldLimitProjectionReadCassandraQueries(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             int limit = 2;
             consume(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.all(), FetchType.FULL, limit));
@@ -225,8 +217,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         void updateFlagsShouldLimitModSeqAllocation(CassandraCluster cassandra) throws MailboxException {
             saveMessages();
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandra.getConf().recordStatements(statementRecorder);
+            StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
             messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.ANSWERED), MessageManager.FlagsUpdateMode.REPLACE), MessageRange.all());
 

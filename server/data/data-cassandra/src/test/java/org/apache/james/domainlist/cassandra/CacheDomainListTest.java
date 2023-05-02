@@ -66,8 +66,7 @@ class CacheDomainListTest {
     void containsShouldBeCached(CassandraCluster cassandra) throws DomainListException {
         domainList.addDomain(DOMAIN_1);
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         Flux.range(0, 10)
             .doOnNext(Throwing.consumer(i -> domainList.containsDomain(DOMAIN_1)))
@@ -82,8 +81,7 @@ class CacheDomainListTest {
     void cacheShouldBeRefreshedPeriodicallyUnderReadLoad(CassandraCluster cassandra) throws DomainListException {
         domainList.addDomain(DOMAIN_1);
 
-        StatementRecorder statementRecorder = new StatementRecorder();
-        cassandra.getConf().recordStatements(statementRecorder);
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         Flux.range(0, 6)
             .delayElements(Duration.ofMillis(500))
