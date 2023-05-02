@@ -20,7 +20,7 @@ The xref:operate/metrics.adoc[metrics] allows to build latency and throughput
 graphs, that can be visualized, for instance in *Grafana*.
 
 We did put together a xref:operate/guide.adoc[detailed guide] for
-distributed James operators.
+distributed James operators. We also propose a xref:operate/performanceChecklist.adoc[performance checklist].
 
 We also included a guide for xref:operate/migrating.adoc[migrating existing data] into the distributed server.
 

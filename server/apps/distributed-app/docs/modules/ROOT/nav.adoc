@@ -52,6 +52,7 @@
 **** xref:configure/dsn.adoc[ESMTP DSN support]
 ** xref:operate/index.adoc[Operate]
 *** xref:operate/guide.adoc[]
+*** xref:operate/performanceChecklist.adoc[]
 *** xref:operate/logging.adoc[]
 *** xref:operate/webadmin.adoc[]
 *** xref:operate/metrics.adoc[]
