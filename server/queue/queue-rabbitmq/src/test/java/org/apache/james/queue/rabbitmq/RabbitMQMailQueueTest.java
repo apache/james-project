@@ -24,6 +24,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.backends.cassandra.Scenario.Builder.executeNormally;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
 import static org.apache.james.backends.cassandra.Scenario.Builder.returnEmpty;
+import static org.apache.james.backends.cassandra.StatementRecorder.Selector.preparedStatementStartingWith;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.apache.james.queue.api.Mails.defaultMailNoRecipient;
@@ -51,6 +52,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
@@ -87,6 +89,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
@@ -104,7 +107,7 @@ import reactor.rabbitmq.Sender;
 class RabbitMQMailQueueTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;
-    private static final int UPDATE_BROWSE_START_PACE = 2;
+    private static final int UPDATE_BROWSE_START_PACE = 10;
     private static final Duration ONE_HOUR_SLICE_WINDOW = Duration.ofHours(1);
     private static final org.apache.james.queue.api.MailQueueName SPOOL = org.apache.james.queue.api.MailQueueName.of("spool");
     private static final Instant IN_SLICE_1 = Instant.parse("2007-12-03T10:15:30.00Z");
@@ -191,6 +194,30 @@ class RabbitMQMailQueueTest {
                 "2-1", "2-2", "2-3", "2-4", "2-5",
                 "3-1", "3-2", "3-3", "3-4", "3-5",
                 "5-1", "5-2", "5-3", "5-4", "5-5");
+        }
+
+        @Test
+        void browseStartShouldBeUpdated(CassandraCluster cassandraCluster) {
+            int emailCount = 100;
+
+            StatementRecorder statementRecorder = new StatementRecorder();
+            cassandraCluster.getConf().recordStatements(statementRecorder);
+
+            clock.setInstant(IN_SLICE_1);
+            enqueueSomeMails(namePatternForSlice(1), emailCount);
+            dequeueMails(emailCount);
+
+            clock.setInstant(IN_SLICE_2);
+            enqueueSomeMails(namePatternForSlice(2), emailCount);
+            dequeueMails(emailCount);
+
+            clock.setInstant(IN_SLICE_3);
+            enqueueSomeMails(namePatternForSlice(3), emailCount);
+            dequeueMails(emailCount);
+
+            // The actual rate of update should actually be lower than the update probability.
+            assertThat(statementRecorder.listExecutedStatements(preparedStatementStartingWith("UPDATE browsestart")))
+                .hasSizeBetween(2, 5);
         }
 
         @Test
