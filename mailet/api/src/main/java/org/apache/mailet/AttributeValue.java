@@ -20,7 +20,6 @@
 package org.apache.mailet;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -128,9 +127,9 @@ public class AttributeValue<T> {
         return new AttributeValue<>(value, new Serializer.MapSerializer());
     }
 
-    public static AttributeValue<Serializable> ofSerializable(Serializable value) {
-        Preconditions.checkNotNull(value, "value should not be null");
-        return new AttributeValue<>(value, new Serializer.FSTSerializer());
+    public static AttributeValue<Object> ofUnserializable(Object any) {
+        Preconditions.checkNotNull(any, "value should not be null");
+        return new AttributeValue<>(any, new Serializer.NoSerializer());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -178,10 +177,7 @@ public class AttributeValue<T> {
         if (value instanceof Optional) {
             return of((Optional) value);
         }
-        if (value instanceof Serializable) {
-            return ofSerializable((Serializable) value);
-        }
-        throw new IllegalArgumentException(value.getClass().toString() + " should at least be Serializable");
+        throw new IllegalArgumentException(value.getClass().toString() + " is not a managed attibute");
     }
 
     public static AttributeValue<?> fromJsonString(String json) throws IOException {
@@ -253,11 +249,14 @@ public class AttributeValue<T> {
         return new AttributeValue<>(serializer.duplicate(value), serializer);
     }
 
-    public JsonNode toJson() {
-        ObjectNode serialized = JsonNodeFactory.instance.objectNode();
-        serialized.put("serializer", serializer.getName());
-        serialized.replace("value", serializer.serialize(value));
-        return serialized;
+    public Optional<JsonNode> toJson() {
+        return serializer.serialize(value)
+            .map(value -> {
+                ObjectNode serialized = JsonNodeFactory.instance.objectNode();
+                serialized.put("serializer", serializer.getName());
+                serialized.replace("value", value);
+                return serialized;
+            });
     }
 
     public T getValue() {

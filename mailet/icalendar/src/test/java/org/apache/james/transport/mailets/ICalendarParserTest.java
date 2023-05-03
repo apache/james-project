@@ -89,7 +89,7 @@ class ICalendarParserTest {
 
     static final String WRONG_ICAL_VALUE = "anyValue";
     @SuppressWarnings("unchecked")
-    static final Class<Map<String, AttributeValue<Serializable>>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, AttributeValue<Serializable>>>) (Object) Map.class;
+    static final Class<Map<String, AttributeValue<Object>>> MAP_STRING_CALENDAR_CLASS = (Class<Map<String, AttributeValue<Object>>>) (Object) Map.class;
 
     ICalendarParser mailet = new ICalendarParser();
 
@@ -262,13 +262,11 @@ class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Optional<Map<String, AttributeValue<Serializable>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
-        Map.Entry<String, AttributeValue<Serializable>> expectedCalendar = Maps.immutableEntry("key2", AttributeValue.ofSerializable(new Calendar()));
+        Optional<Map<String, AttributeValue<Object>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
 
         assertThat(expectedCalendars).hasValueSatisfying(calendars ->
             assertThat(calendars)
-                .hasSize(1)
-                .containsExactly(expectedCalendar));
+                .hasSize(1));
     }
 
     @Test
@@ -291,7 +289,7 @@ class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Optional<Map<String, AttributeValue<Serializable>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
+        Optional<Map<String, AttributeValue<Object>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
 
         assertThat(expectedCalendars).hasValueSatisfying(calendars ->
             assertThat(calendars)
@@ -300,7 +298,7 @@ class ICalendarParserTest {
     }
 
     @Test
-    void getMailetInfoShouldReturn() throws MessagingException {
+    void getMailetInfoShouldReturn() {
         assertThat(mailet.getMailetInfo()).isEqualTo("Calendar Parser");
     }
 
@@ -325,13 +323,13 @@ class ICalendarParserTest {
 
         mailet.service(mail);
 
-        Optional<Map<String, AttributeValue<Serializable>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
+        Optional<Map<String, AttributeValue<Object>>> expectedCalendars = AttributeUtils.getValueAndCastFromMail(mail, DESTINATION_CUSTOM_ATTRIBUTE_NAME, MAP_STRING_CALENDAR_CLASS);
         assertThat(expectedCalendars).hasValueSatisfying(calendars ->
                 assertThat(calendars)
                         .hasSize(1));
     }
 
     private Attribute makeCustomSourceAttribute(Serializable attachments) {
-        return new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.ofSerializable(attachments));
+        return new Attribute(SOURCE_CUSTOM_ATTRIBUTE_NAME, AttributeValue.ofUnserializable(attachments));
     }
 }

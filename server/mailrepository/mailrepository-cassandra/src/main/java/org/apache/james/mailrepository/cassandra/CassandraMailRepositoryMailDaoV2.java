@@ -76,6 +76,7 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.TupleValue;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.core.type.TupleType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -277,7 +278,7 @@ public class CassandraMailRepositoryMailDaoV2 {
 
     private ImmutableMap<String, String> toRawAttributeMap(Mail mail) {
         return mail.attributes()
-            .map(attribute -> Pair.of(attribute.getName().asString(), toJson(attribute.getValue())))
+            .flatMap(attribute -> attribute.getValue().toJson().map(JsonNode::toString).map(value -> Pair.of(attribute.getName().asString(), value)).stream())
             .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
@@ -300,10 +301,6 @@ public class CassandraMailRepositoryMailDaoV2 {
                         .build(),
                     toMailAddress(tuple.getString(USER_INDEX))));
         return result;
-    }
-
-    private String toJson(AttributeValue<?> attributeValue) {
-        return attributeValue.toJson().toString();
     }
 
     private MailAddress toMailAddress(String rawValue) {

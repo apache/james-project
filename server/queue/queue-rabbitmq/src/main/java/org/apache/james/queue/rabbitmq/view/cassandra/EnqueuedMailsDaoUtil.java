@@ -72,6 +72,7 @@ import org.apache.mailet.PerRecipientHeaders;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.TupleValue;
 import com.datastax.oss.driver.api.core.type.TupleType;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -185,12 +186,15 @@ public class EnqueuedMailsDaoUtil {
 
     static ImmutableMap<String, ByteBuffer> toRawAttributeMap(Mail mail) {
         return mail.attributes()
-            .map(attribute -> Pair.of(attribute.getName().asString(), toByteBuffer(attribute.getValue())))
+            .flatMap(attribute -> toByteBuffer(attribute.getValue()).map(buffer -> Pair.of(attribute.getName().asString(), buffer)).stream())
             .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
-    private static ByteBuffer toByteBuffer(AttributeValue<?> attributeValue) {
-        return ByteBuffer.wrap(attributeValue.toJson().toString().getBytes(StandardCharsets.UTF_8));
+    private static Optional<ByteBuffer> toByteBuffer(AttributeValue<?> attributeValue) {
+        return attributeValue.toJson()
+            .map(JsonNode::toString)
+            .map(s -> s.getBytes(StandardCharsets.UTF_8))
+            .map(ByteBuffer::wrap);
     }
 
     static ImmutableList<TupleValue> toTupleList(TupleType userHeaderNameHeaderValueTriple, PerRecipientHeaders perRecipientHeaders) {

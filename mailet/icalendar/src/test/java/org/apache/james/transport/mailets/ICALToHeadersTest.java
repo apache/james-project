@@ -134,7 +134,7 @@ class ICALToHeadersTest {
     void serviceShouldWriteSingleICalendarToHeaders() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
         Map<String, AttributeValue<?>> icals = ImmutableMap.<String, AttributeValue<?>>builder()
-            .put("key", AttributeValue.ofSerializable(calendar))
+            .put("key", AttributeValue.ofUnserializable(calendar))
             .build();
 
         testee.init(FakeMailetConfig.builder().build());
@@ -161,7 +161,7 @@ class ICALToHeadersTest {
     void serviceShouldNotWriteHeaderWhenPropertyIsAbsent() throws Exception {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting_without_dtstamp.ics"));
         Map<String, AttributeValue<?>> icals = ImmutableMap.<String, AttributeValue<?>>builder()
-            .put("key", AttributeValue.ofSerializable(calendar))
+            .put("key", AttributeValue.ofUnserializable(calendar))
             .build();
 
         testee.init(FakeMailetConfig.builder().build());
@@ -188,8 +188,8 @@ class ICALToHeadersTest {
         Calendar calendar = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting.ics"));
         Calendar calendar2 = new CalendarBuilder().build(ClassLoader.getSystemResourceAsStream("ics/meeting_2.ics"));
         Map<String, AttributeValue<?>> icals = ImmutableMap.<String, AttributeValue<?>>builder()
-            .put("key", AttributeValue.ofSerializable(calendar))
-            .put("key2", AttributeValue.ofSerializable(calendar2))
+            .put("key", AttributeValue.ofUnserializable(calendar))
+            .put("key2", AttributeValue.ofUnserializable(calendar2))
             .build();
 
         testee.init(FakeMailetConfig.builder().build());

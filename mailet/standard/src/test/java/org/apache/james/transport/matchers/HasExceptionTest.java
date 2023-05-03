@@ -36,8 +36,7 @@ import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class HasExceptionTest {
-
+class HasExceptionTest {
     private FakeMail mockedMail;
     private Matcher testee;
 
@@ -49,8 +48,8 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void matchShouldReturnAddressesWhenSpecifiedExceptionHasOccurred() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new AddressException())));
+    void matchShouldReturnAddressesWhenSpecifiedExceptionHasOccurred() throws MessagingException {
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(new AddressException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
@@ -63,8 +62,8 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void matchShouldReturnAddressesWhenSubclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new AddressException())));
+    void matchShouldReturnAddressesWhenSubclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(new AddressException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
@@ -77,8 +76,8 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyWhenOtherExceptionHasOccurred() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new java.lang.RuntimeException())));
+    void matchShouldReturnEmptyWhenOtherExceptionHasOccurred() throws MessagingException {
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(new java.lang.RuntimeException())));
 
         testee.init(FakeMatcherConfig.builder()
                 .matcherName("HasException")
@@ -89,8 +88,8 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyWhenSuperclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new javax.mail.MessagingException())));
+    void matchShouldReturnEmptyWhenSuperclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(new javax.mail.MessagingException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
@@ -103,7 +102,7 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyWhenNoExceptionHasOccurred() throws MessagingException {
+    void matchShouldReturnEmptyWhenNoExceptionHasOccurred() throws MessagingException {
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
                 .condition("java.lang.Exception")
@@ -115,8 +114,8 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void matchShouldReturnEmptyWhenNonExceptionIsAttached() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.of(new java.lang.String())));
+    void matchShouldReturnEmptyWhenNonExceptionIsAttached() throws MessagingException {
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.of("")));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
@@ -129,7 +128,7 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void initShouldRaiseMessagingExceptionWhenInvalidClassName() throws MessagingException {
+    void initShouldRaiseMessagingExceptionWhenInvalidClassName() {
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
                 .condition("java.lang.InvalidClassName")
@@ -139,7 +138,7 @@ public class HasExceptionTest {
     }
 
     @Test
-    public void initShouldRaiseMessagingExceptionWhenClassNameIsNotException() throws MessagingException {
+    void initShouldRaiseMessagingExceptionWhenClassNameIsNotException() {
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
                 .condition("java.lang.String")
@@ -149,8 +148,8 @@ public class HasExceptionTest {
     }
     
     @Test
-    public void initShouldRaiseMessagingExceptionWhenClassNameIsNotFullyQualified() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new javax.mail.MessagingException())));
+    void initShouldRaiseMessagingExceptionWhenClassNameIsNotFullyQualified() {
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(new javax.mail.MessagingException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")

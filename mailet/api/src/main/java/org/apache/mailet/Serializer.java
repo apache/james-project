@@ -21,9 +21,7 @@ package org.apache.mailet;
 
 import static java.time.format.DateTimeFormatter.ISO_DATE_TIME;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZonedDateTime;
@@ -31,22 +29,19 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.MessageIdDto;
 import org.apache.james.util.streams.Iterators;
-import org.nustaq.serialization.FSTConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
@@ -67,7 +62,7 @@ import com.google.common.collect.ImmutableMap;
  */
 @SuppressWarnings("EqualsHashCode")
 public interface Serializer<T> {
-    JsonNode serialize(T object);
+    Optional<JsonNode> serialize(T object);
 
     Optional<T> deserialize(JsonNode json);
 
@@ -95,6 +90,7 @@ public interface Serializer<T> {
                     URL_SERIALIZER,
                     new CollectionSerializer<>(),
                     new MapSerializer<>(),
+                    // To be dropped in 3.9.0
                     new FSTSerializer(),
                     new OptionalSerializer<>())
                 .collect(ImmutableMap.toImmutableMap(Serializer::getName, Function.identity()));
@@ -107,8 +103,8 @@ public interface Serializer<T> {
 
     class BooleanSerializer implements Serializer<Boolean> {
         @Override
-        public JsonNode serialize(Boolean object) {
-            return BooleanNode.valueOf(object);
+        public Optional<JsonNode> serialize(Boolean object) {
+            return Optional.of(BooleanNode.valueOf(object));
         }
 
         @Override
@@ -145,8 +141,8 @@ public interface Serializer<T> {
 
     class StringSerializer implements Serializer<String> {
         @Override
-        public JsonNode serialize(String object) {
-            return TextNode.valueOf(object);
+        public Optional<JsonNode> serialize(String object) {
+            return Optional.of(TextNode.valueOf(object));
         }
 
         @Override
@@ -183,8 +179,8 @@ public interface Serializer<T> {
 
     class IntSerializer implements Serializer<Integer> {
         @Override
-        public JsonNode serialize(Integer object) {
-            return IntNode.valueOf(object);
+        public Optional<JsonNode> serialize(Integer object) {
+            return Optional.of(IntNode.valueOf(object));
         }
 
         @Override
@@ -221,8 +217,8 @@ public interface Serializer<T> {
 
     class LongSerializer implements Serializer<Long> {
         @Override
-        public JsonNode serialize(Long object) {
-            return LongNode.valueOf(object);
+        public Optional<JsonNode> serialize(Long object) {
+            return Optional.of(LongNode.valueOf(object));
         }
 
         @Override
@@ -261,8 +257,8 @@ public interface Serializer<T> {
 
     class FloatSerializer implements Serializer<Float> {
         @Override
-        public JsonNode serialize(Float object) {
-            return FloatNode.valueOf(object);
+        public Optional<JsonNode> serialize(Float object) {
+            return Optional.of(FloatNode.valueOf(object));
         }
 
         @Override
@@ -301,8 +297,8 @@ public interface Serializer<T> {
 
     class DoubleSerializer implements Serializer<Double> {
         @Override
-        public JsonNode serialize(Double object) {
-            return DoubleNode.valueOf(object);
+        public Optional<JsonNode> serialize(Double object) {
+            return Optional.of(DoubleNode.valueOf(object));
         }
 
         @Override
@@ -339,9 +335,9 @@ public interface Serializer<T> {
 
     class DateSerializer implements Serializer<ZonedDateTime> {
         @Override
-        public JsonNode serialize(ZonedDateTime object) {
+        public Optional<JsonNode> serialize(ZonedDateTime object) {
             String serialized = object.format(ISO_DATE_TIME);
-            return TextNode.valueOf(serialized);
+            return Optional.of(TextNode.valueOf(serialized));
         }
 
         @Override
@@ -380,7 +376,7 @@ public interface Serializer<T> {
     class MessageIdDtoSerializer implements Serializer<MessageIdDto> {
 
         @Override
-        public JsonNode serialize(MessageIdDto serializable) {
+        public Optional<JsonNode> serialize(MessageIdDto serializable) {
             return STRING_SERIALIZER
                     .serialize(serializable.asString());
         }
@@ -419,12 +415,12 @@ public interface Serializer<T> {
         private static final Logger LOGGER = LoggerFactory.getLogger(ArbitrarySerializableSerializer.class);
 
         @Override
-        public JsonNode serialize(T serializable) {
+        public Optional<JsonNode> serialize(T serializable) {
             ArbitrarySerializable.Serializable<T> serialized = serializable.serialize();
             ObjectNode serializedJson = JsonNodeFactory.instance.objectNode();
             serializedJson.put("deserializer", serialized.getDeserializer().getName());
-            serializedJson.replace("value", serialized.getValue().toJson());
-            return serializedJson;
+            serializedJson.replace("value", serialized.getValue().toJson().get());
+            return Optional.of(serializedJson);
         }
 
         @Override
@@ -474,13 +470,13 @@ public interface Serializer<T> {
 
         @Override
         public T duplicate(T value) {
-            return deserialize(serialize(value)).get();
+            return deserialize(serialize(value).get()).get();
         }
     }
 
     class UrlSerializer implements Serializer<URL> {
         @Override
-        public JsonNode serialize(URL object) {
+        public Optional<JsonNode> serialize(URL object) {
             return STRING_SERIALIZER.serialize(object.toString());
         }
 
@@ -520,11 +516,12 @@ public interface Serializer<T> {
 
     class CollectionSerializer<U> implements Serializer<Collection<AttributeValue<U>>> {
         @Override
-        public JsonNode serialize(Collection<AttributeValue<U>> object) {
+        public Optional<JsonNode> serialize(Collection<AttributeValue<U>> object) {
             List<JsonNode> jsons = object.stream()
                 .map(AttributeValue::toJson)
+                .flatMap(Optional::stream)
                 .collect(ImmutableList.toImmutableList());
-            return new ArrayNode(JsonNodeFactory.instance, jsons);
+            return Optional.of(new ArrayNode(JsonNodeFactory.instance, jsons));
         }
 
         @SuppressWarnings("unchecked")
@@ -564,10 +561,11 @@ public interface Serializer<T> {
 
     class MapSerializer<U> implements Serializer<Map<String, AttributeValue<U>>> {
         @Override
-        public JsonNode serialize(Map<String, AttributeValue<U>> object) {
+        public Optional<JsonNode> serialize(Map<String, AttributeValue<U>> object) {
             Map<String, JsonNode> jsonMap = object.entrySet().stream()
-                .collect(ImmutableMap.toImmutableMap(Entry::getKey, entry -> entry.getValue().toJson()));
-            return new ObjectNode(JsonNodeFactory.instance, jsonMap);
+                .flatMap(entry -> entry.getValue().toJson().map(value -> Pair.of(entry.getKey(), value)).stream())
+                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+            return Optional.of(new ObjectNode(JsonNodeFactory.instance, jsonMap));
         }
 
         @SuppressWarnings("unchecked")
@@ -610,9 +608,9 @@ public interface Serializer<T> {
 
     class OptionalSerializer<U> implements Serializer<Optional<AttributeValue<U>>> {
         @Override
-        public JsonNode serialize(Optional<AttributeValue<U>> object) {
+        public Optional<JsonNode> serialize(Optional<AttributeValue<U>> object) {
             return object.map(AttributeValue::toJson)
-                .orElse(NullNode.getInstance());
+                .orElse(Optional.of(NullNode.getInstance()));
         }
 
         @SuppressWarnings("unchecked")
@@ -650,45 +648,24 @@ public interface Serializer<T> {
     }
 
     class FSTSerializer implements Serializer<Serializable> {
-        static final FSTConfiguration CONFIGURATION = FSTConfiguration.createJsonConfiguration();
-
         @Override
-        public JsonNode serialize(Serializable object) {
-            String json = CONFIGURATION.asJsonString(object);
-            try {
-                return new ObjectMapper().reader().readTree(json);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+        public Optional<JsonNode> serialize(Serializable object) {
+            return Optional.empty();
         }
 
         @Override
         public Optional<Serializable> deserialize(JsonNode json) {
-            try {
-                return Optional.of((Serializable) CONFIGURATION.asObject(new ObjectMapper().writer().writeValueAsBytes(json)));
-            } catch (JsonProcessingException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-
-        @Override
-        public Serializable duplicate(Serializable value) {
-            return deserialize(serialize(value)).get();
+            return Optional.empty();
         }
 
         @Override
         public String getName() {
-            return "FSTSerializer";
+            return "NoSerializer";
         }
 
         @Override
-        public boolean equals(Object other) {
-            return this.getClass() == other.getClass();
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getClass());
+        public Serializable duplicate(Serializable value) {
+            throw new NotImplementedException();
         }
     }
 
@@ -697,7 +674,7 @@ public interface Serializer<T> {
     class BytesSerializer implements Serializer<byte[]> {
 
         @Override
-        public JsonNode serialize(byte[] object) {
+        public Optional<JsonNode> serialize(byte[] object) {
             return STRING_SERIALIZER.serialize(Base64.getEncoder().encodeToString(object));
         }
 
@@ -725,6 +702,28 @@ public interface Serializer<T> {
         @Override
         public int hashCode() {
             return Objects.hash(getClass());
+        }
+    }
+
+    class NoSerializer implements Serializer<Object> {
+        @Override
+        public Optional<JsonNode> serialize(Object object) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Object> deserialize(JsonNode json) {
+            return Optional.empty();
+        }
+
+        @Override
+        public String getName() {
+            return "NoSerializer";
+        }
+
+        @Override
+        public Object duplicate(Object value) {
+            return value;
         }
     }
 

@@ -54,7 +54,7 @@ private[blob] object MailMetadata {
 
   private def serializedAttributes(mail: Mail): Map[String, String] =
     mail.attributes().toScala(LazyList)
-      .map(attribute => attribute.getName.asString() -> attribute.getValue.toJson.toString)
+      .flatMap(attribute => attribute.getValue.toJson.toScala.map(value => attribute.getName.asString() -> value.toString))
       .toMap
 
   private def fromPerRecipientHeaders(mail: Mail): Map[String, Iterable[Header]] = {
