@@ -93,12 +93,13 @@ public class CassandraMailQueueMailDelete {
     }
 
     private Mono<Instant> findNewBrowseStart(MailQueueName mailQueueName) {
-        Slice currentSlice = Slice.of(clock.instant());
+        Instant now= clock.instant();
         return browseStartDao.findBrowseStart(mailQueueName)
-            .filter(browseStart -> browseStart.isBefore(currentSlice.getStartSliceInstant()))
-            .flatMapMany(browseStart -> cassandraMailQueueBrowser.browseReferences(mailQueueName, browseStart))
-            .map(enqueuedItem -> enqueuedItem.getSlicingContext().getTimeRangeStart())
-            .next();
+            .filter(browseStart -> browseStart.isBefore(now.minus(configuration.getSliceWindow())))
+            .flatMap(browseStart -> cassandraMailQueueBrowser.browseReferences(mailQueueName, browseStart)
+                .map(enqueuedItem -> enqueuedItem.getSlicingContext().getTimeRangeStart())
+                .next()
+                .filter(newBrowseStart -> newBrowseStart.isAfter(browseStart)));
     }
 
     private Mono<Void> updateNewBrowseStart(MailQueueName mailQueueName, Instant newBrowseStartInstant) {
@@ -128,6 +129,6 @@ public class CassandraMailQueueMailDelete {
 
     private boolean shouldUpdateBrowseStart() {
         int threshold = configuration.getUpdateBrowseStartPace();
-        return Math.abs(ThreadLocalRandom.current().nextInt()) % threshold == 0;
+        return ThreadLocalRandom.current().nextInt(threshold) % threshold == 0;
     }
 }
