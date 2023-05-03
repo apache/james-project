@@ -19,20 +19,26 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
+import org.apache.commons.io.IOUtils
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.http.UserCredential
+import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.{MailboxPath, MessageId}
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
 
 trait EmailParseMethodContract {
@@ -177,6 +183,33 @@ trait EmailParseMethodContract {
            |        ]
            |    ]
            |}""".stripMargin)
+  }
+
+  @Test
+  def attachmentsOfNestedMessagesShouldBeDownloadable(guiceJamesServer: GuiceJamesServer): Unit = {
+    val path: MailboxPath = MailboxPath.inbox(BOB)
+    val mailboxProbe: MailboxProbeImpl = guiceJamesServer.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(path)
+
+    val messageId: MessageId = mailboxProbe
+      .appendMessage(BOB.asString(), path, AppendCommand.from(
+        ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nested.eml")))
+      .getMessageId
+
+    val response = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/${messageId.serialize()}_3_3")
+    .`then`
+      .statusCode(SC_OK)
+      .contentType("text/plain")
+      .extract
+      .body
+      .asString
+
+    assertThat(response)
+      .isEqualTo("test attachment\n")
   }
 
   @Test

@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.mail
 
-import java.io.OutputStream
+import java.io.{InputStream, OutputStream}
 import java.time.ZoneId
 
 import cats.implicits._
@@ -32,7 +32,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.james.jmap.api.model.Size
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
-import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN}
+import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN, of}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageResult}
 import org.apache.james.mime4j.Charsets.DEFAULT_CHARSET
@@ -75,7 +75,7 @@ object EmailBodyPart {
   val defaultProperties: Properties = Properties("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location")
   val allowedProperties: Properties = defaultProperties ++ Properties("subParts", "headers")
 
-  def of(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId, message: MessageResult): Try[EmailBodyPart] = {
+  def ofMessage(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId, message: MessageResult): Try[EmailBodyPart] = {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
@@ -272,6 +272,13 @@ case class EmailBodyPart(partId: PartId,
                          subParts: Option[List[EmailBodyPart]],
                          entity: Entity,
                          specificHeaders: Map[String, Option[EmailHeaderValue]]) {
+
+  def partWithBlobId(blobId: BlobId): Option[EmailBodyPart] = flatten.find(_.blobId.contains(blobId))
+
+  def nested(zoneId: ZoneId): Option[EmailBodyPart] = entity.getBody match {
+      case message: Message => of(None, zoneId, blobId.get, message).toOption
+      case _ => None
+    }
 
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>

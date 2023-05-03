@@ -190,32 +190,38 @@ class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager)
 class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
                                         val messageIdManager: MessageIdManager,
                                         val zoneIdSupplier: ZoneIdProvider) extends BlobResolver {
-  private def asMessageAndPartId(blobId: BlobId): Try[(MessageId, PartId)] = {
+  private def asMessageAndPartIds(blobId: BlobId): Try[(MessageId, List[BlobId])] = {
     blobId.value.value.split('_').toList match {
-      case List(messageIdString, partIdString) => for {
+      case messageIdString :: tail => for {
         messageId <- Try(messageIdFactory.fromString(messageIdString))
-        partId <- PartId.parse(partIdString)
       } yield {
-        (messageId, partId)
+        (messageId, partsToListOfBlobIds(messageIdString, tail))
       }
       case _ => Failure(BlobNotFoundException(blobId))
     }
   }
 
+  private def partsToListOfBlobIds(messageIdString: String, parts: List[String]): List[BlobId] = parts.foldLeft[List[String]](List(messageIdString)) {
+    case (acc, idPart) => acc.headOption.map(prefix => prefix + "_" + idPart).getOrElse(idPart) :: acc
+  }.flatMap(s => BlobId.of(s).toOption).take(parts.size).reverse
+
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
-    asMessageAndPartId(blobId) match {
+    asMessageAndPartIds(blobId) match {
       case Failure(_) => NonApplicable
-      case Success((messageId, partId)) =>
+      case Success((messageId, blobIds)) =>
         Applicable(SMono.fromPublisher(
           messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
           .handle[EmailBodyPart] {
-            case (message, sink) => EmailBodyPart.of(None, zoneIdSupplier.get(), BlobId.of(messageId).get, message)
+            case (message, sink) => EmailBodyPart.ofMessage(None, zoneIdSupplier.get(), BlobId.of(messageId).get, message)
               .fold(sink.error, sink.next)
           }
           .handle[EmailBodyPart] {
             case (bodyStructure, sink) =>
-              bodyStructure.flatten
-                .find(_.blobId.contains(blobId))
+              blobIds.foldLeft[Option[EmailBodyPart]](Some(bodyStructure)) {
+                case (None, _) => None
+                case (Some(nestedBodyStructure), blobId) => nestedBodyStructure.partWithBlobId(blobId)
+                    .orElse(nestedBodyStructure.nested(zoneIdSupplier.get()).flatMap(_.partWithBlobId(blobId)))
+              }
                 .fold(sink.error(BlobNotFoundException(blobId)))(part => sink.next(part))
           }
           .map[Blob](EmailBodyPartBlob(blobId, _))
