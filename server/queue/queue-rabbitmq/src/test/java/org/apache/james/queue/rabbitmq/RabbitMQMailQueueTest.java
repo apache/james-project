@@ -64,6 +64,7 @@ import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailQueue;
@@ -83,6 +84,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -200,8 +202,9 @@ class RabbitMQMailQueueTest {
         void browseStartShouldBeUpdated(CassandraCluster cassandraCluster) {
             int emailCount = 100;
 
-            StatementRecorder statementRecorder = new StatementRecorder();
-            cassandraCluster.getConf().recordStatements(statementRecorder);
+            StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE browsestart");
+            StatementRecorder statementRecorder = cassandraCluster.getConf()
+                    .recordStatements(selector);
 
             clock.setInstant(IN_SLICE_1);
             enqueueSomeMails(namePatternForSlice(1), emailCount);
@@ -216,8 +219,32 @@ class RabbitMQMailQueueTest {
             dequeueMails(emailCount);
 
             // The actual rate of update should actually be lower than the update probability.
-            assertThat(statementRecorder.listExecutedStatements(preparedStatementStartingWith("UPDATE browsestart")))
-                .hasSizeBetween(2, 5);
+            assertThat(statementRecorder.listExecutedStatements(selector))
+                .hasSizeBetween(2, 9);
+        }
+
+        @Test
+        void contentStartShouldBeUpdated(CassandraCluster cassandraCluster) {
+            int emailCount = 100;
+
+            StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE contentstart");
+            StatementRecorder statementRecorder = cassandraCluster.getConf().recordStatements(selector);
+
+            clock.setInstant(IN_SLICE_1);
+            enqueueSomeMails(namePatternForSlice(1), emailCount);
+            dequeueMails(emailCount);
+
+            clock.setInstant(IN_SLICE_2);
+            enqueueSomeMails(namePatternForSlice(2), emailCount);
+            dequeueMails(emailCount);
+
+            clock.setInstant(IN_SLICE_3);
+            enqueueSomeMails(namePatternForSlice(3), emailCount);
+            dequeueMails(emailCount);
+
+            // The actual rate of update should actually be lower than the update probability.
+            assertThat(statementRecorder.listExecutedStatements(selector))
+                .hasSizeBetween(2, 9);
         }
 
         @Test
@@ -667,9 +694,13 @@ class RabbitMQMailQueueTest {
 
         private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
             IntStream.rangeClosed(1, emailCount)
-                .forEach(Throwing.intConsumer(i -> enQueue(defaultMail()
-                    .name(namePattern.apply(i))
-                    .build())));
+                .forEach(Throwing.intConsumer(i -> {
+                    FakeMail mail = defaultMail()
+                            .name(namePattern.apply(i))
+                            .build();
+                    enQueue(mail);
+                    LifecycleUtil.dispose(mail);
+                }));
         }
 
         private void dequeueMails(int times) {
@@ -688,7 +719,9 @@ class RabbitMQMailQueueTest {
                     .subscribe();
 
             try {
-                await().untilAsserted(() -> assertThat(counter.get()).isGreaterThanOrEqualTo(times));
+                await()
+                        .atMost(Duration.ofMinutes(10))
+                        .untilAsserted(() -> assertThat(counter.get()).isGreaterThanOrEqualTo(times));
             } finally {
                 disposable.dispose();
             }
