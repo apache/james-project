@@ -68,6 +68,6 @@ public abstract class AbstractServerFactory implements Configurable {
         for (AbstractConfigurableAsyncServer server: servers) {
             server.destroy();
         }
+        servers.clear();
     }
- 
 }

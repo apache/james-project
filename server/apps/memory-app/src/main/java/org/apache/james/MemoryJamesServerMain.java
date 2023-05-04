@@ -64,6 +64,7 @@ import org.apache.james.modules.server.VacationRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
+import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
@@ -71,6 +72,7 @@ import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.util.Modules;
 
 public class MemoryJamesServerMain implements JamesServerMain {
@@ -78,6 +80,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
     public static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
+        binder -> Multibinder.newSetBinder(binder, Routes.class).addBinding().to(ImapRoutes.class),
         new VacationRoutesModule(),
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),

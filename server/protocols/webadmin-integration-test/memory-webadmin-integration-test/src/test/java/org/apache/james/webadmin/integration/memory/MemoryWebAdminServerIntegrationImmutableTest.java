@@ -19,7 +19,9 @@
 
 package org.apache.james.webadmin.integration.memory;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.JamesServerExtension.Lifecycle.PER_CLASS;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,5 +64,27 @@ class MemoryWebAdminServerIntegrationImmutableTest extends WebAdminServerIntegra
 
         assertThat(listComponentNames).containsOnly("Guice application lifecycle", "MailReceptionCheck",
             "EventDeadLettersHealthCheck", "EmptyErrorMailRepository", "MessageFastViewProjection");
+    }
+
+    @Test
+    void testImapRestart() {
+        given()
+            .queryParam("restart")
+            .post("imap")
+        .then()
+            .statusCode(200);
+    }
+
+    @Test
+    void testImapRestartShouldBeIndempotent() {
+        with()
+            .queryParam("restart")
+            .post("imap");
+
+        given()
+            .queryParam("restart")
+            .post("imap")
+        .then()
+            .statusCode(200);
     }
 }
