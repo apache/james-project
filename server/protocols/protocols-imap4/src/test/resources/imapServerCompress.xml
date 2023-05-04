@@ -11,4 +11,5 @@
     <enableIdle>true</enableIdle>
     <inMemorySizeLimit>65536</inMemorySizeLimit> <!-- 64 KB -->
     <plainAuthDisallowed>false</plainAuthDisallowed>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>

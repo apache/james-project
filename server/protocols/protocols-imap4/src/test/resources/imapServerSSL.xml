@@ -17,4 +17,5 @@
     <inMemorySizeLimit>64K</inMemorySizeLimit>
     <literalSizeLimit>128K</literalSizeLimit>
     <plainAuthDisallowed>false</plainAuthDisallowed>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>
