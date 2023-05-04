@@ -69,24 +69,21 @@ public class JMAPFiltering extends GenericMailet {
     @Override
     public void service(Mail mail) {
         mail.getRecipients()
-            .forEach(recipient -> filteringForRecipient(mail, recipient));
+            .forEach(recipient -> applyFirstApplicableRule(recipient, mail));
     }
 
-    private void filteringForRecipient(Mail mail, MailAddress recipient) {
-        Optional<Username> maybeUser = retrieveUser(recipient);
-        maybeUser
-            .ifPresent(user -> findFirstApplicableRule(user, mail));
-    }
+    private void applyFirstApplicableRule(MailAddress recipient, Mail mail) {
+        retrieveUser(recipient)
+            .ifPresent(username -> {
+                Rules filteringRules = Mono.from(filteringManagement.listRulesForUser(username))
+                    .block();
+                RuleMatcher ruleMatcher = new RuleMatcher(filteringRules.getRules());
+                Stream<Rule> matchingRules = ruleMatcher.findApplicableRules(mail);
 
-    private void findFirstApplicableRule(Username username, Mail mail) {
-        Rules filteringRules = Mono.from(filteringManagement.listRulesForUser(username))
-            .block();
-        RuleMatcher ruleMatcher = new RuleMatcher(filteringRules.getRules());
-        Stream<Rule> matchingRules = ruleMatcher.findApplicableRules(mail);
-
-        actionApplierFactory.forMail(mail)
-            .forUser(username)
-            .apply(matchingRules.map(Rule::getAction));
+                actionApplierFactory.forMail(mail)
+                    .forRecipient(recipient, username)
+                    .apply(matchingRules.map(Rule::getAction));
+            });
     }
 
     private Optional<Username> retrieveUser(MailAddress recipient) {
