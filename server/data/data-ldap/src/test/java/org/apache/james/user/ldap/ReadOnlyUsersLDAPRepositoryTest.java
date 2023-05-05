@@ -46,10 +46,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.google.common.collect.ImmutableList;
 import com.unboundid.ldap.sdk.LDAPException;
@@ -445,12 +447,14 @@ class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@ldapHost]", ldapContainer.getLdapsBadHost());
         configuration.addProperty("[@trustAllCerts]", "true");
 
-        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
-        usersLDAPRepository.configure(configuration);
+        Awaitility.await().untilAsserted(() -> {
+            ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository.configure(configuration);
 
-        assertThatThrownBy(usersLDAPRepository::init)
-            .isInstanceOf(LDAPException.class)
-            .hasMessageContaining("SSLHandshakeException");
+            assertThatThrownBy(usersLDAPRepository::init)
+                .isInstanceOf(LDAPException.class)
+                .hasMessageContaining("SSLHandshakeException");
+        });
     }
 
     private static ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration,
