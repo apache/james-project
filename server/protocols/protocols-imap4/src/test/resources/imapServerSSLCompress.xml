@@ -17,4 +17,5 @@
     <literalSizeLimit>128K</literalSizeLimit>
     <plainAuthDisallowed>false</plainAuthDisallowed>
     <compress>true</compress>
+    <gracefulShutdown>false</gracefulShutdown>
 </imapserver>
