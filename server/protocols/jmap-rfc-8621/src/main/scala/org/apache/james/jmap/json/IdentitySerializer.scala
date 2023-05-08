@@ -67,6 +67,8 @@ object IdentitySerializer {
   private implicit val mapIdentitySetUpdateResponseWrites: Writes[Map[IdentityId, IdentitySetUpdateResponse]] =
     mapWrites[IdentityId, IdentitySetUpdateResponse](_.id.toString, identitySetUpdateResponseWrites)
   private implicit val identitySetResponseWrites: OWrites[IdentitySetResponse] = Json.writes[IdentitySetResponse]
+  private implicit val changesResponseWrites: OWrites[IdentityChangesResponse] = Json.writes[IdentityChangesResponse]
+  private implicit val identityChangesReads: Reads[IdentityChangesRequest] = Json.reads[IdentityChangesRequest]
 
   private implicit val mapCreationRequestByIdentityCreationId: Reads[Map[IdentityCreationId, JsObject]] =
     Reads.mapReads[IdentityCreationId, JsObject] {string => refineV[IdConstraint](string)
@@ -117,9 +119,11 @@ object IdentitySerializer {
   }
 
   def serialize(response: IdentitySetResponse): JsObject = Json.toJsObject(response)
+  def serializeChanges(identityChangesResponse: IdentityChangesResponse): JsObject = Json.toJson(identityChangesResponse).as[JsObject]
 
   def deserialize(input: JsValue): JsResult[IdentityGetRequest] = Json.fromJson[IdentityGetRequest](input)
   def deserializeIdentitySetRequest(input: JsValue): JsResult[IdentitySetRequest] = Json.fromJson[IdentitySetRequest](input)
   def deserializeIdentityCreationRequest(input: JsValue): JsResult[IdentityCreationRequest] = Json.fromJson[IdentityCreationRequest](input)
   def deserializeIdentityUpdateRequest(input: JsValue): JsResult[IdentityUpdateRequest] = Json.fromJson[IdentityUpdateRequest](input)
+  def deserializeChanges(input: JsValue): JsResult[IdentityChangesRequest] = Json.fromJson[IdentityChangesRequest](input)
 }
