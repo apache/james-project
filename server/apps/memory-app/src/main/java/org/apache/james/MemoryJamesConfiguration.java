@@ -82,6 +82,11 @@ public class MemoryJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableJMAP() {
+            this.jmapEnabled = Optional.of(true);
+            return this;
+        }
+
         public MemoryJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory

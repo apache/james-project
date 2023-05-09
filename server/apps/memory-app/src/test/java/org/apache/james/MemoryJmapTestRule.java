@@ -37,6 +37,7 @@ public class MemoryJmapTestRule implements TestRule {
 
     public GuiceJamesServer jmapServer(Module... modules) throws IOException {
         MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
+            .enableJMAP()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
