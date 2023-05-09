@@ -74,6 +74,7 @@ public class RabbitMQAwsS3Stepdefs {
         temporaryFolder.create();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
         CassandraRabbitMQJamesConfiguration configuration = CassandraRabbitMQJamesConfiguration.builder()
+            .enableJMAP()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()

@@ -105,6 +105,7 @@ class ReadLevelTest {
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
+            .enableJMAP()
             .blobStore(BlobStoreConfiguration.builder()
                 .cassandra()
                 .disableCache()

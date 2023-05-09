@@ -55,6 +55,7 @@ public class MemoryStepdefs {
     public void init() throws Exception {
         temporaryFolder.create();
         MemoryJamesConfiguration configuration = MemoryJamesConfiguration.builder()
+            .enableJMAP()
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
