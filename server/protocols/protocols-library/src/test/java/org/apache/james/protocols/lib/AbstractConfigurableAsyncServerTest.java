@@ -84,6 +84,11 @@ class AbstractConfigurableAsyncServerTest {
     }
 
     private static class TestableConfigurableAsyncServer extends AbstractConfigurableAsyncServer {
+
+        protected TestableConfigurableAsyncServer(FileSystem filesystem) {
+            super(filesystem);
+        }
+
         @Override
         public String getServiceType () {
             return "Test Service";
@@ -132,8 +137,7 @@ class AbstractConfigurableAsyncServerTest {
     }
 
     private void initTestServer(String configFile) throws Exception {
-        testServer = new TestableConfigurableAsyncServer();
-        testServer.setFileSystem(memoryFileSystem);
+        testServer = new TestableConfigurableAsyncServer(memoryFileSystem);
         testServer.configure(ConfigLoader.getConfig(ClassLoader.getSystemResourceAsStream(configFile)));
     }
 

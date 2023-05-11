@@ -87,7 +87,7 @@ public abstract class AbstractConfigurableAsyncServer
 
     public static final int DEFAULT_MAX_EXECUTOR_COUNT = 16;
 
-    private FileSystem fileSystem;
+    private final FileSystem fileSystem;
 
     private boolean enabled;
 
@@ -110,8 +110,7 @@ public abstract class AbstractConfigurableAsyncServer
 
     private int port;
 
-    @Inject
-    public final void setFileSystem(FileSystem filesystem) {
+    protected AbstractConfigurableAsyncServer(FileSystem filesystem) {
         this.fileSystem = filesystem;
     }
 

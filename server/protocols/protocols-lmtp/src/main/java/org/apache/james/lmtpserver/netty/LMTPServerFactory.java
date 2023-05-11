@@ -44,19 +44,13 @@ public class LMTPServerFactory extends AbstractServerFactory {
         this.lmtpMetrics = new LMTPMetricsImpl(metricFactory);
     }
 
-    protected LMTPServer createServer() {
-       return new LMTPServer(lmtpMetrics);
-    }
-    
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("lmtpserver");
         
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
-            LMTPServer server = createServer();
-            server.setFileSystem(fileSystem);
-            server.setProtocolHandlerLoader(loader);
+            LMTPServer server = new LMTPServer(lmtpMetrics, loader, fileSystem);
             server.configure(serverConfig);
             servers.add(server);
         }

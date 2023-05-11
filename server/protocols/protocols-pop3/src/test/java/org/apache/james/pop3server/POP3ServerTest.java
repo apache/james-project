@@ -910,19 +910,13 @@ public class POP3ServerTest {
 
     }
 
-    protected POP3Server createPOP3Server() {
-        return new POP3Server();
-    }
-
     protected void initPOP3Server(XMLConfiguration configuration) throws Exception {
         pop3Server.configure(configuration);
         pop3Server.init();
     }
 
     protected void setUpPOP3Server() {
-        pop3Server = createPOP3Server();
-        pop3Server.setFileSystem(fileSystem);
-        pop3Server.setProtocolHandlerLoader(protocolHandlerChain);
+        pop3Server = new POP3Server(protocolHandlerChain, fileSystem);
     }
 
     protected void finishSetUp(XMLConfiguration pop3Configuration) throws Exception {

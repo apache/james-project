@@ -248,18 +248,11 @@ public class SMTPServerTest {
         mailRepositoryStore.init();
     }
 
-    protected SMTPServer createSMTPServer(SmtpMetricsImpl smtpMetrics) {
-        return new SMTPServer(smtpMetrics);
-    }
-
     protected void setUpSMTPServer() {
         SmtpMetricsImpl smtpMetrics = mock(SmtpMetricsImpl.class);
         when(smtpMetrics.getCommandsMetric()).thenReturn(mock(Metric.class));
         when(smtpMetrics.getConnectionMetric()).thenReturn(mock(Metric.class));
-        smtpServer = createSMTPServer(smtpMetrics);
-        smtpServer.setDnsService(dnsServer);
-        smtpServer.setFileSystem(fileSystem);
-        smtpServer.setProtocolHandlerLoader(chain);
+        smtpServer = new SMTPServer(smtpMetrics, dnsServer, chain, fileSystem);
         smtpServer.setGracefulShutdown(false);
     }
 

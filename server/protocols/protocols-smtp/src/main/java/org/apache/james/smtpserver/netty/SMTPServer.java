@@ -32,10 +32,12 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
@@ -188,15 +190,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     private DNSService dns;
     private String authorizedAddresses;
 
-    public SMTPServer(SmtpMetrics smtpMetrics) {
+    public SMTPServer(SmtpMetrics smtpMetrics, DNSService dns, ProtocolHandlerLoader protocolHandlerLoader, FileSystem fileSystem) {
+        super(protocolHandlerLoader, fileSystem);
         this.smtpMetrics = smtpMetrics;
     }
 
-    @Inject
-    public void setDnsService(DNSService dns) {
-        this.dns = dns;
-    }
-    
     @Override
     protected void preInit() throws Exception {
         super.preInit();

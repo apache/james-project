@@ -49,9 +49,6 @@ public class SMTPServerFactory extends AbstractServerFactory {
         this.smtpMetrics = new SmtpMetricsImpl(metricFactory);
     }
 
-    protected SMTPServer createServer() {
-       return new SMTPServer(smtpMetrics);
-    }
     
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
@@ -60,10 +57,7 @@ public class SMTPServerFactory extends AbstractServerFactory {
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("smtpserver");
         
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
-            SMTPServer server = createServer();
-            server.setDnsService(dns);
-            server.setProtocolHandlerLoader(loader);
-            server.setFileSystem(fileSystem);
+            var server = new SMTPServer(smtpMetrics, dns, loader, fileSystem);
             server.configure(serverConfig);
             servers.add(server);
         }

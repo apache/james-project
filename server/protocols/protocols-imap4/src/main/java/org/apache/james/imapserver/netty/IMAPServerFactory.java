@@ -62,19 +62,14 @@ public class IMAPServerFactory extends AbstractServerFactory {
         this.gaugeRegistry = gaugeRegistry;
     }
 
-    protected IMAPServer createServer(HierarchicalConfiguration<ImmutableNode> config) {
-        ImapSuite imapSuite = imapSuiteProvider.apply(config);
-        return new IMAPServer(imapSuite.getDecoder(), imapSuite.getEncoder(), imapSuite.getProcessor(), imapMetrics, gaugeRegistry);
-    }
-    
     @Override
     protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("imapserver");
-        
+        ImapSuite imapSuite = imapSuiteProvider.apply(config);
+
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
-            IMAPServer server = createServer(serverConfig);
-            server.setFileSystem(fileSystem);
+            IMAPServer server = new IMAPServer(imapSuite.getDecoder(), imapSuite.getEncoder(), imapSuite.getProcessor(), imapMetrics, gaugeRegistry, fileSystem);
             server.configure(serverConfig);
             servers.add(server);
         }
