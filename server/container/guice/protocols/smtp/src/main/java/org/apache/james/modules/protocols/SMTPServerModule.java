@@ -26,10 +26,12 @@ import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
+import org.apache.james.smtpserver.webadmin.SmtpRoutes;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.KeystoreCreator;
+import org.apache.james.webadmin.Routes;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -43,6 +45,8 @@ public class SMTPServerModule extends AbstractModule {
         bind(SMTPServerFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SmtpGuiceProbe.class);
+
+        Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(SmtpRoutes.class);
     }
 
     @ProvidesIntoSet

@@ -61,7 +61,10 @@ import io.netty.util.concurrent.EventExecutorGroup;
 /**
  * Abstract base class for Servers for all James Servers
  */
-public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServer implements Configurable, ServerMBean {
+public abstract class AbstractConfigurableAsyncServer
+        extends AbstractAsyncServer
+        implements CertificateReloadable, Configurable, ServerMBean {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractConfigurableAsyncServer.class);
 
     /** The default value for the connection backlog. */
@@ -358,6 +361,10 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
             encryption = new LegacyJavaEncryptionFactory(fileSystem, sslConfig)
                 .create();
         }
+    }
+
+    public void reloadSSLCertificate() throws Exception {
+        buildSSLContext();
     }
 
     /**
