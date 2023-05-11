@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -31,6 +32,7 @@ import org.apache.james.lifecycle.api.Configurable;
 /**
  * Abstract base class for Factories that need to create {@link AbstractConfigurableAsyncServer}'s via configuration files
  */
+@Singleton
 public abstract class AbstractServerFactory implements Configurable {
 
     private List<AbstractConfigurableAsyncServer> servers;
