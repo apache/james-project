@@ -10,7 +10,7 @@ Implemented.
 
 ## Context
 
-Regulation like European RGDP involves being able to delete all user data upon requests. Currently there exist some APIs
+Regulation like European GDPR involves being able to delete all user data upon requests. Currently there exist some APIs
 for deleting some data relative for the users but the overall process is complex, requires a good knowlege of James data structures.
 
 The data is scattered across the database and some sensible items might not be deletable.
@@ -29,9 +29,9 @@ James servers can implement their own steps as well.
 Today, implemented deletion steps are:
 
 - `RecipientRewriteTableUserDeletionTaskStep`: deletes all rewriting rules related to this user.
-- `FiltereUserDeletionTaskStep`: deletes all filters belonging to the user.
-- `DelegationeUserDeletionTaskStep`: deletes all delegations from / to the user.
-- `MailboxeUserDeletionTaskStep`: deletes mailboxes of this user, all ACLs of this user, as well as his subscriptions.
+- `FilterUserDeletionTaskStep`: deletes all filters belonging to the user.
+- `DelegationUserDeletionTaskStep`: deletes all delegations from / to the user.
+- `MailboxUserDeletionTaskStep`: deletes mailboxes of this user, all ACLs of this user, as well as his subscriptions.
 - `WebPushUserDeletionTaskStep`: deletes push data registered for this user.
 - `IdentityUserDeletionTaskStep`: deletes identities registered for this user.
 - `VacationUserDeletionTaskStep`: deletes vacations registered for this user.
@@ -42,7 +42,7 @@ This option could ease operators in case the data migration fails in the middle.
 
 ## Consequences
 
-- Makes it easier to claim RGDP compliance on top of James.
+- Makes it easier to claim GDPR compliance on top of James.
 - Modular design for deleting users is extension friendly for tailor James servers.
 
 ## Alternatives
