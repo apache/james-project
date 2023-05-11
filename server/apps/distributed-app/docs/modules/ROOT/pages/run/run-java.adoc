@@ -45,14 +45,6 @@ configuration from
 https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/[server/apps/distributed-app/sample-configuration/].
 You might need to adapt it to your needs.
 
-You also need to generate a keystore in your conf folder with the
-following command:
-
-[source,bash]
-----
-$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
-----
-
 You need to have a Cassandra, OpenSearch, S3 and RabbitMQ instance
 running. You can either install the servers or launch them via docker:
 
@@ -68,7 +60,15 @@ Once everything is set up, you just have to run the jar with:
 
 [source,bash]
 ----
-$ java -Dworking.directory=. -jar target/james-server-distributed-app.jar
+$ java -Dworking.directory=. -jar target/james-server-distributed-app.jar --generate-keystore
+----
+
+Alternatively, you can also generate a keystore in your conf folder with the
+following command, and drop `--generate-keystore` option:
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 ----
 
 ==== Using AWS S3 of Zenko Cloudserver

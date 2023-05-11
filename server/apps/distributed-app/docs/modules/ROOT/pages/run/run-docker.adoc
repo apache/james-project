@@ -73,16 +73,10 @@ If you want to use all the JMAP search capabilities, you may also need to start 
 
 You can find more explanation on the need of Tika in this xref:configure/tika.adoc[page].
 
-We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
-
-Copy your TLS keys to the current folder or generate it using the following command. The password must be `james72laBalle` to match default configuration.
-
-    $ keytool -genkey -alias james -keyalg RSA -keystore keystore
-
 To run this container :
 
     $ docker run --network james --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --name james_run
-        -v $PWD/keystore:/root/conf/keystore -t apache/james:distributed-3.7.4
+        -v $PWD/keystore:/root/conf/keystore -t apache/james:distributed-3.7.4 --generate-keystore
 
 Where :
 
@@ -96,6 +90,18 @@ If you want to pass additional options to the underlying java command, you can c
     --env "JAVA_TOOL_OPTIONS=-Xms256m -Xmx2048m"
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
+=== Specific keystore
+
+
+Alternatively, you can also generate a keystore in your conf folder with the
+following command, and drop `--generate-keystore` option:
+
+
+[source,bash]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
 
 === Instrumentation
 You can use link:https://glowroot.org/[Glowroot] to instrumentalize James. It is packaged as part of the docker distribution to easily enable valuable performances insights.
