@@ -35,6 +35,7 @@ import org.apache.james.utils.KeystoreCreator;
 import org.apache.james.webadmin.Routes;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
@@ -43,6 +44,7 @@ public class ManageSieveServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new SieveModule());
+        bind(ManageSieveServerFactory.class).in(Scopes.SINGLETON);
         bind(CoreCommands.class).to(CoreProcessor.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SieveProbeImpl.class);
 
