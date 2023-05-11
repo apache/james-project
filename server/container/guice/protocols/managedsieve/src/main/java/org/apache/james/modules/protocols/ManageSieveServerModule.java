@@ -25,12 +25,14 @@ import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
+import org.apache.james.managesieveserver.webadmin.ManageSieveRoutes;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.KeystoreCreator;
+import org.apache.james.webadmin.Routes;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
@@ -43,6 +45,8 @@ public class ManageSieveServerModule extends AbstractModule {
         install(new SieveModule());
         bind(CoreCommands.class).to(CoreProcessor.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SieveProbeImpl.class);
+
+        Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(ManageSieveRoutes.class);
     }
 
     @ProvidesIntoSet

@@ -24,12 +24,14 @@ import org.apache.james.RunArguments;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
+import org.apache.james.lmtpserver.webadmin.LMTPRoutes;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.KeystoreCreator;
+import org.apache.james.webadmin.Routes;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -42,6 +44,8 @@ public class LMTPServerModule extends AbstractModule {
         bind(LMTPServerFactory.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(LmtpGuiceProbe.class);
+
+        Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(LMTPRoutes.class);
     }
 
     @ProvidesIntoSet
