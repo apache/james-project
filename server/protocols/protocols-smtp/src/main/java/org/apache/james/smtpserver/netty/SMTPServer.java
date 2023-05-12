@@ -25,8 +25,6 @@ import java.net.MalformedURLException;
 import java.util.Locale;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
