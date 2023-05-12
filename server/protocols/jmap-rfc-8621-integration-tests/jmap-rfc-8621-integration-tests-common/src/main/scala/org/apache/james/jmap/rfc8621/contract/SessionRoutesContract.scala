@@ -38,6 +38,7 @@ import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
+
 object SessionRoutesContract {
   private val expected_session_object: String = """{
                          |  "capabilities" : {

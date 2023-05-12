@@ -38,6 +38,7 @@ object JmapConfigProperties {
   val WEB_PUSH_MAX_CONNECTIONS_PROPERTY: String = "webpush.maxConnections"
   val WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY: String = "webpush.prevent.server.side.request.forgery"
   val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
+  val DELAY_SENDS_ENABLED: String = "delay.sends.enabled"
   val AUTHENTICATION_STRATEGIES: String = "authentication.strategy.rfc8621"
 }
 
@@ -58,6 +59,7 @@ object JmapRfc8621Configuration {
       urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTY)).getOrElse(URL_PREFIX_DEFAULT),
       websocketPrefixString = Option(configuration.getString(WEBSOCKET_URL_PREFIX_PROPERTY)).getOrElse(WEBSOCKET_URL_PREFIX_DEFAULT),
       dynamicJmapPrefixResolutionEnabled = configuration.getBoolean(DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY, false),
+      supportsDelaySends = configuration.getBoolean(DELAY_SENDS_ENABLED, false),
       maxUploadSize = Option(configuration.getString(UPLOAD_LIMIT_PROPERTY, null))
         .map(Size.parse)
         .map(MaxSizeUpload.of(_).get)
@@ -75,6 +77,7 @@ object JmapRfc8621Configuration {
 case class JmapRfc8621Configuration(urlPrefixString: String,
                                     websocketPrefixString: String,
                                     dynamicJmapPrefixResolutionEnabled: Boolean = false,
+                                    supportsDelaySends: Boolean = false,
                                     maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,
                                     maxSizeAttachmentsPerEmail: MaxSizeAttachmentsPerEmail = MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT,
                                     maxTimeoutSeconds: Option[Int] = None,

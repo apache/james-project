@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.core
 
+import java.time.Clock
+
 import com.google.common.annotations.VisibleForTesting
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 
@@ -33,7 +35,7 @@ object DefaultCapabilities {
     SharesCapabilityFactory,
     VacationResponseCapabilityFactory,
     SharesCapabilityFactory,
-    SubmissionCapabilityFactory,
+    SubmissionCapabilityFactory(Clock.systemUTC(), configuration.supportsDelaySends),
     WebSocketCapabilityFactory)
 }
 

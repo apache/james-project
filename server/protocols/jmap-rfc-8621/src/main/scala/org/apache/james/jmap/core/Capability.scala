@@ -20,6 +20,8 @@
 package org.apache.james.jmap.core
 
 import java.net.{URI, URL}
+import java.time.format.DateTimeFormatter
+import java.time.{Clock, Duration, ZoneId}
 
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
@@ -29,6 +31,7 @@ import eu.timepit.refined.string.Uri
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JAMES_DELEGATION, JAMES_IDENTITY_SORTORDER, JAMES_QUOTA, JAMES_SHARES, JMAP_CORE, JMAP_MAIL, JMAP_MDN, JMAP_QUOTA, JMAP_VACATION_RESPONSE, JMAP_WEBSOCKET}
 import org.apache.james.jmap.core.CoreCapabilityProperties.CollationAlgorithm
 import org.apache.james.jmap.core.MailCapability.EmailQuerySortOption
+import org.apache.james.jmap.core.SubmissionCapabilityFactory.maximumDelays
 import org.apache.james.jmap.core.UnsignedInt.{UnsignedInt, UnsignedIntConstraint}
 import org.apache.james.jmap.json.ResponseSerializer
 import org.apache.james.util.Size
@@ -161,16 +164,41 @@ final case class EhloArg(value: String) extends AnyVal
 final case class EhloArgs(values: List[EhloArg]) extends AnyVal
 
 final case class SubmissionCapability(identifier: CapabilityIdentifier = EMAIL_SUBMISSION,
-                                      properties: SubmissionProperties = SubmissionProperties()) extends Capability
+                                      properties: SubmissionProperties) extends Capability
 
-case object SubmissionCapabilityFactory extends CapabilityFactory {
-  override def id(): CapabilityIdentifier = EMAIL_SUBMISSION
-
-  override def create(urlPrefixes: UrlPrefixes): Capability = SubmissionCapability()
+case object SubmissionCapabilityFactory {
+  val maximumDelays = Duration.ofDays(1)
 }
 
-final case class SubmissionProperties(maxDelayedSend: MaxDelayedSend = MaxDelayedSend(0),
-                                      submissionExtensions: Map[EhloName, EhloArgs] = Map()) extends CapabilityProperties {
+final case class SubmissionCapabilityFactory(clock: Clock, supportsDelaySends: Boolean) extends CapabilityFactory {
+  override def id(): CapabilityIdentifier = EMAIL_SUBMISSION
+
+  override def create(urlPrefixes: UrlPrefixes): Capability =
+    if (supportsDelaySends) {
+      advertiseDelaySendSupport
+    } else {
+      advertiseNoDelaySendSupport
+    }
+
+  private def advertiseDelaySendSupport = {
+    val dateAsString = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("UTC")).format(clock.instant().plus(maximumDelays))
+
+    SubmissionCapability(EMAIL_SUBMISSION,
+      SubmissionProperties(MaxDelayedSend(maximumDelays.toSeconds.toInt),
+        Map(EhloName("FUTURERELEASE") -> EhloArgs(List(EhloArg(maximumDelays.toSeconds.toString()), EhloArg(dateAsString))))))
+  }
+
+  private def advertiseNoDelaySendSupport =
+    SubmissionCapability(EMAIL_SUBMISSION,
+      SubmissionProperties(MaxDelayedSend(0),
+        Map()))
+
+  def create(maxDelayedSend: MaxDelayedSend, submissionExtensions: Map[EhloName, EhloArgs]): Capability =
+    SubmissionCapability(EMAIL_SUBMISSION, SubmissionProperties(maxDelayedSend, submissionExtensions))
+}
+
+final case class SubmissionProperties(maxDelayedSend: MaxDelayedSend = MaxDelayedSend(maximumDelays.toSeconds.toInt),
+                                      submissionExtensions: Map[EhloName, EhloArgs]) extends CapabilityProperties {
   override def jsonify(): JsObject = ResponseSerializer.submissionPropertiesWrites.writes(this)
 }
 
