@@ -33,6 +33,7 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.ExtensionModule;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -83,5 +84,10 @@ public class CommonServicesModule extends AbstractModule {
     public JamesDirectoriesProvider directories() {
         return configuration.directories();
     }
-    
+
+    @Provides
+    @Singleton
+    public PropertiesProvider providePropertiesProvider(FileSystem fileSystem, Configuration.ConfigurationPath configurationPrefix) {
+        return new PropertiesProvider(fileSystem, configurationPrefix);
+    }
 }

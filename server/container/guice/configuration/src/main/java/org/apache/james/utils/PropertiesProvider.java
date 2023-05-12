@@ -21,10 +21,9 @@ package org.apache.james.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Optional;
-
-import javax.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.FileBasedConfiguration;
@@ -39,10 +38,14 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 public class PropertiesProvider {
     public static class MissingConfigurationFile extends RuntimeException {
@@ -71,11 +74,20 @@ public class PropertiesProvider {
 
     private final FileSystem fileSystem;
     private final ConfigurationPath configurationPrefix;
+    private final LoadingCache<String, Optional<File>> fileCacheLoader;
 
-    @Inject
     public PropertiesProvider(FileSystem fileSystem, ConfigurationPath configurationPrefix) {
         this.fileSystem = fileSystem;
         this.configurationPrefix = configurationPrefix;
+
+        this.fileCacheLoader = CacheBuilder.newBuilder()
+            .expireAfterWrite(Duration.ofMinutes(10))
+            .build(new CacheLoader<>() {
+                @Override
+                public Optional<File> load(final String fileName) {
+                    return getConfigurationFileFromFileSystem(fileName);
+                }
+            });
     }
 
     public Configuration getConfigurations(String... filenames) throws FileNotFoundException, ConfigurationException {
@@ -115,6 +127,10 @@ public class PropertiesProvider {
     }
 
     private Optional<File> getConfigurationFile(String fileName) {
+        return Throwing.supplier(() -> fileCacheLoader.get(fileName)).get();
+    }
+
+    private Optional<File> getConfigurationFileFromFileSystem(String fileName) {
         try {
             File file = fileSystem.getFile(configurationPrefix.asString() + fileName + ".properties");
             LOGGER.info("Load configuration file {}", file.getAbsolutePath());

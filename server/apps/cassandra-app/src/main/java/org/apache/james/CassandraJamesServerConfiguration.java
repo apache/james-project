@@ -116,12 +116,12 @@ public class CassandraJamesServerConfiguration implements Configuration {
                 .orElseThrow(() -> new MissingArgumentException("Server needs a working.directory env entry")));
 
             FileSystemImpl fileSystem = new FileSystemImpl(directories);
+            PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
-                () -> SearchConfiguration.parse(new PropertiesProvider(fileSystem, configurationPath))));
+                () -> SearchConfiguration.parse(propertiesProvider)));
 
             BlobStoreConfiguration blobStoreConfiguration = this.blobStoreConfiguration.orElseGet(Throwing.supplier(
-                () -> BlobStoreConfiguration.parse(
-                    new PropertiesProvider(fileSystem, configurationPath))));
+                () -> BlobStoreConfiguration.parse(propertiesProvider)));
 
             FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()
                 .configurationPath(configurationPath)

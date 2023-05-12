@@ -117,13 +117,12 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 .orElseThrow(() -> new MissingArgumentException("Server needs a working.directory env entry")));
 
             FileSystemImpl fileSystem = new FileSystemImpl(directories);
+            PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
             BlobStoreConfiguration blobStoreConfiguration = this.blobStoreConfiguration.orElseGet(Throwing.supplier(
-                () -> BlobStoreConfiguration.parse(
-                    new PropertiesProvider(fileSystem, configurationPath))));
+                () -> BlobStoreConfiguration.parse(propertiesProvider)));
 
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
-                () -> SearchConfiguration.parse(
-                    new PropertiesProvider(fileSystem, configurationPath))));
+                () -> SearchConfiguration.parse(propertiesProvider)));
 
             FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()
                 .configurationPath(configurationPath)
@@ -133,8 +132,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
             MailQueueViewChoice mailQueueViewChoice = this.mailQueueViewChoice.orElseGet(Throwing.supplier(
-                () -> MailQueueViewChoice.parse(
-                    new PropertiesProvider(fileSystem, configurationPath))));
+                () -> MailQueueViewChoice.parse(propertiesProvider)));
 
             VaultConfiguration vaultConfiguration = this.vaultConfiguration.orElseGet(() -> {
                 try {
