@@ -29,6 +29,10 @@ import org.apache.mailet.Mail;
 import org.reactivestreams.Publisher;
 import org.threeten.extra.Temporals;
 
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Mono;
+
 /**
  * <p>
  * A Queue/Spool for Mails. How the Queue handles the ordering of the dequeuing
@@ -59,6 +63,7 @@ import org.threeten.extra.Temporals;
  * </ul>
  * </p>
  */
+
 public interface MailQueue extends Closeable {
 
     String ENQUEUED_METRIC_NAME_PREFIX = "enqueuedMail:";
@@ -106,6 +111,10 @@ public interface MailQueue extends Closeable {
     void enQueue(Mail mail) throws MailQueueException;
 
     Publisher<Void> enqueueReactive(Mail mail);
+
+    default Publisher<Void> enqueueReactive(Mail mail, Duration delay) {
+        return Mono.fromRunnable(Throwing.runnable(() -> enQueue(mail, delay)).sneakyThrow());
+    }
 
     /**
      * Dequeue the next ready-to-process Mail of the queue. This method will

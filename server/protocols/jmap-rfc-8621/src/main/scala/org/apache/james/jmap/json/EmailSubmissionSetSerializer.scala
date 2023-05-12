@@ -25,9 +25,9 @@ import javax.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{SetError, UuidState}
-import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, UnparsedMessageId}
+import org.apache.james.jmap.mail.{DestroyIds, EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue, UnparsedMessageId}
 import org.apache.james.mailbox.model.MessageId
-import play.api.libs.json.{JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
+import play.api.libs.json.{JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, Reads, Writes}
 
 import scala.util.Try
 
@@ -69,7 +69,20 @@ class EmailSubmissionSetSerializer @Inject()(messageIdFactory: MessageId.Factory
 
   private implicit val emailSubmissionIdWrites: Writes[EmailSubmissionId] = Json.valueWrites[EmailSubmissionId]
 
-  private implicit val emailSubmissionAddresReads: Reads[EmailSubmissionAddress] = Json.reads[EmailSubmissionAddress]
+  private implicit val parameterNameReads: Reads[ParameterName] = Json.valueReads[ParameterName]
+  private implicit val parameterValueReads: Reads[ParameterValue] = Json.valueReads[ParameterValue]
+  private implicit val parameterValueOptionReads: Reads[Option[ParameterValue]] = {
+    case JsString(value) => JsSuccess(Some(ParameterValue(value)))
+    case JsNull => JsSuccess(None)
+    case _ => JsError("JsonPath objects are represented by JsonString")
+  }
+
+  private implicit val parametersReads: Reads[Map[ParameterName, Option[ParameterValue]]] =
+    Reads.mapReads[ParameterName, Option[ParameterValue]](k => JsSuccess(ParameterName(k)))(parameterValueOptionReads)
+
+  private implicit val emailSubmissionAddressReads: Reads[EmailSubmissionAddress] = {
+    Json.reads[EmailSubmissionAddress]
+  }
   private implicit val envelopeReads: Reads[Envelope] = Json.reads[Envelope]
 
   implicit val emailSubmissionCreationRequestReads: Reads[EmailSubmissionCreationRequest] = Json.reads[EmailSubmissionCreationRequest]

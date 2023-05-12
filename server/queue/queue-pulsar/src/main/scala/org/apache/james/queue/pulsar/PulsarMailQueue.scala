@@ -666,5 +666,4 @@ class PulsarMailQueue(
 
     Source.fromPublisher(doDelete())
   }
-
 }

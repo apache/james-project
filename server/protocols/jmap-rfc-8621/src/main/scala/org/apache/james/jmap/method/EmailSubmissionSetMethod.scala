@@ -20,8 +20,10 @@
 package org.apache.james.jmap.method
 
 import java.io.InputStream
+import java.time.format.{DateTimeFormatter, DateTimeParseException}
+import java.time.{Clock, Duration, LocalDateTime, ZoneId, ZonedDateTime}
 
-import cats.implicits._
+import cats.implicits.toTraverseOps
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import javax.annotation.PreDestroy
@@ -34,10 +36,10 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EM
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.{ClientId, Invocation, Properties, ServerId, SessionTranslator, SetError, UuidState}
+import org.apache.james.jmap.core.{ClientId, Invocation, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
-import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
-import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
+import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue}
+import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
 import org.apache.james.mailbox.model.{FetchGroup, MessageId, MessageResult}
@@ -55,6 +57,7 @@ import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 
 import scala.jdk.CollectionConverters._
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 object EmailSubmissionSetMethod {
@@ -63,6 +66,9 @@ object EmailSubmissionSetMethod {
   val noRecipients: SetErrorType = "noRecipients"
   val forbiddenFrom: SetErrorType = "forbiddenFrom"
   val forbiddenMailFrom: SetErrorType = "forbiddenMailFrom"
+  val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.of("Z"))
+  val VALID_PARAMETER_NAME_SET: Set[ParameterName] = Set(ParameterName.holdFor, ParameterName.holdUntil)
+  val NO_DELAY: Duration = Duration.ZERO
 
   sealed trait CreationResult {
     def emailSubmissionCreationId: EmailSubmissionCreationId
@@ -83,6 +89,8 @@ object EmailSubmissionSetMethod {
       case _: MessageNotFoundException => SetError(SetError.invalidArgumentValue,
         SetErrorDescription("The email to be sent cannot be found"),
         Some(Properties("emailId")))
+      case e: DateTimeParseException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: Exception =>
         e.printStackTrace()
         SetError.serverFail(SetErrorDescription(exception.getMessage))
@@ -148,13 +156,13 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
                                          mailQueueFactory: MailQueueFactory[_ <: MailQueue],
                                          canSendFrom: CanSendFrom,
                                          emailSetMethod: EmailSetMethod,
+                                         clock: Clock,
                                          val metricFactory: MetricFactory,
                                          val sessionSupplier: SessionSupplier,
                                          val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[EmailSubmissionSetRequest] with Startable {
   override val methodName: MethodName = MethodName("EmailSubmission/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
   var queue: MailQueue = _
-
   def init: Unit = queue = mailQueueFactory.createQueue(SPOOL)
 
   @PreDestroy def dispose: Unit =
@@ -175,7 +183,6 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
               .as[JsObject]),
             methodCallId = invocation.invocation.methodCallId),
           processingContext = createdResults._2)
-
         val emailSetCall: SMono[InvocationWithContext] = request.implicitEmailSetRequest(createdResults._1.resolveMessageId)
           .fold(e => SMono.error(e),
             maybeEmailSetRequest => maybeEmailSetRequest.map(emailSetRequest =>
@@ -241,7 +248,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
 
   private def sendEmail(mailboxSession: MailboxSession,
                         request: EmailSubmissionCreationRequest): SMono[(EmailSubmissionCreationResponse, MessageId)] =
-   for {
+    for {
       message <- SFlux(messageIdManager.getMessagesReactive(List(request.emailId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
         .next
         .switchIfEmpty(SMono.error(MessageNotFoundException(request.emailId)))
@@ -249,6 +256,11 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       message <- SMono.fromTry(toMimeMessage(submissionId.value, message))
       envelope <- SMono.fromTry(resolveEnvelope(message, request.envelope))
       _ <- validate(mailboxSession)(message, envelope)
+      _ <- SMono.fromTry(validateFromParameters(envelope.mailFrom.parameters))
+      delay <- SMono.fromTry(retrieveDelay(envelope.mailFrom.parameters))
+      _ <- SMono.fromTry(validateDelay(delay))
+      _ <- validateRcptTo(envelope.rcptTo)
+
       mail = {
         val mailImpl = MailImpl.builder()
           .name(submissionId.value)
@@ -259,12 +271,71 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         mailImpl.setMessageNoCopy(message)
         mailImpl
       }
-      _ <- SMono(queue.enqueueReactive(mail))
+
+      _ <- SMono(queue.enqueueReactive(mail, delay))
         .`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()))
         .`then`(SMono.just(submissionId))
+      sendAt = UTCDate(ZonedDateTime.now(clock).plus(delay))
     } yield {
-      EmailSubmissionCreationResponse(submissionId) -> request.emailId
+      EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
+
+  private def retrieveDelay(mailParameters: Option[Map[ParameterName, Option[ParameterValue]]]): Try[Duration] =
+    mailParameters match {
+      case None => Success(NO_DELAY)
+      case Some(aMap) if aMap.contains(ParameterName.holdFor) =>
+        aMap(ParameterName.holdFor).map(paramValue => Try(Duration.ofSeconds(paramValue.value.toLong)))
+          .getOrElse(Success(NO_DELAY))
+      case Some(aMap) if aMap.contains(ParameterName.holdUntil) =>
+        aMap(ParameterName.holdUntil).map(paramValue => Try(Duration.between(LocalDateTime.now(clock), LocalDateTime.parse(paramValue.value, formatter))))
+          .getOrElse(Success(NO_DELAY))
+      case _ => Success(NO_DELAY)
+    }
+
+
+  def validateDelay(delay: Duration): Try[Duration] =
+    if (delay.getSeconds >= 0 && delay.getSeconds <= SubmissionCapabilityFactory.maximumDelays.getSeconds) {
+      Success(delay)
+    } else {
+      Failure(new IllegalArgumentException("Invalid delayed time!"))
+    }
+
+  def validateRcptTo(recipients: List[EmailSubmissionAddress]): SMono[List[EmailSubmissionAddress]] =
+    SFlux.fromIterable(recipients)
+      .filter(validateRecipient)
+      .collectSeq()
+      .flatMap(recipientsList => {
+        if (recipientsList.length != recipients.length) {
+          SMono.just(Failure(new IllegalArgumentException("Some recipients have invalid delay parameters")))
+        } else {
+          SMono.just(Success(recipientsList.toList))
+        }
+      }).handle[List[EmailSubmissionAddress]]((aTry, sink) => {
+        aTry match {
+          case Success(recipient) => sink.next(recipient)
+          case Failure(ex) => sink.error(ex)
+        }
+      })
+
+  private def validateRecipient(recipient: EmailSubmissionAddress): Boolean =
+    recipient.parameters.isEmpty || !(recipient.parameters.get.contains(ParameterName.holdFor) || recipient.parameters.get.contains(ParameterName.holdUntil))
+
+  def validateFromParameters(mailParameters: Option[Map[ParameterName, Option[ParameterValue]]]): Try[Option[Map[ParameterName, Option[ParameterValue]]]] = {
+    val keySet: Set[ParameterName] = mailParameters.getOrElse(Map()).keySet
+    val invalidEntries = keySet -- VALID_PARAMETER_NAME_SET
+    if (invalidEntries.isEmpty) {
+      if (invalidFutureReleaseParameter(keySet)) {
+        Failure(new IllegalArgumentException("Can't specify holdFor and holdUntil simultaneously"))
+      } else {
+        Success(mailParameters)
+      }
+    } else {
+      Failure(new IllegalArgumentException("Unsupported parameterName"))
+    }
+  }
+
+  private def invalidFutureReleaseParameter(keySet: Set[ParameterName]) =
+    keySet.contains(ParameterName.holdFor) && keySet.contains(ParameterName.holdUntil)
 
   private def toMimeMessage(name: String, message: MessageResult): Try[MimeMessageWrapper] = {
     val source = MessageMimeMessageSource(name, message)
@@ -315,18 +386,18 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         .map(_.asInstanceOf[InternetAddress].getAddress)
         .map(s => Try(new MailAddress(s)))
         .getOrElse(Failure(new IllegalArgumentException("Implicit envelope detection requires a from field")))
-        .map(EmailSubmissionAddress)
+        .map(EmailSubmissionAddress(_))
       rcptTo <- (to ++ cc ++ bcc)
         .map(_.asInstanceOf[InternetAddress].getAddress)
         .map(s => Try(new MailAddress(s)))
         .sequence
     } yield {
-      Envelope(mailFrom, rcptTo.map(EmailSubmissionAddress))
+      Envelope(mailFrom, rcptTo.map(EmailSubmissionAddress(_)))
     }
   }
 
   private def recordCreationIdInProcessingContext(emailSubmissionCreationId: EmailSubmissionCreationId,
                                                   processingContext: ProcessingContext,
                                                   emailSubmissionId: EmailSubmissionId): ProcessingContext =
-      processingContext.recordCreatedId(ClientId(emailSubmissionCreationId.id), ServerId(emailSubmissionId.value))
+    processingContext.recordCreatedId(ClientId(emailSubmissionCreationId.id), ServerId(emailSubmissionId.value))
 }
