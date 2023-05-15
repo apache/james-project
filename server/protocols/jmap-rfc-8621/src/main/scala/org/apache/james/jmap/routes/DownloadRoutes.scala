@@ -192,7 +192,7 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
                                         val zoneIdSupplier: ZoneIdProvider) extends BlobResolver {
   private def asMessageAndPartIds(blobId: BlobId): Try[(MessageId, List[BlobId])] = {
     blobId.value.value.split('_').toList match {
-      case messageIdString :: tail => for {
+      case messageIdString :: tail if tail.nonEmpty => for {
         messageId <- Try(messageIdFactory.fromString(messageIdString))
       } yield {
         (messageId, partsToListOfBlobIds(messageIdString, tail))
