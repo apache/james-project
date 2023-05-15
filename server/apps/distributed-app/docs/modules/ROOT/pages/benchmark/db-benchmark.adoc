@@ -118,43 +118,46 @@ https://www.datastax.com/blog/improved-cassandra-21-stress-tool-benchmark-any-sc
 
 https://www.instaclustr.com/deep-diving-cassandra-stress-part-3-using-yaml-profiles/[Deep Diving cassandra-stress – Part 3 (Using YAML Profiles)]
 
-=== Benchmark Elasticsearch
+=== Benchmark OpenSearch
 
 ==== Benchmark methodology
 
 ===== Benchmark tool
-We use https://github.com/elastic/rally[EsRally] - an official Elasticsearch benchmarking tool. EsRally provides the following features:
+We use https://github.com/opensearch-project/opensearch-benchmark[opensearch-benchmark] - an official OpenSearch benchmarking tool.
+It provides the following features:
 
-- Automatically create Elasticsearch clusters, stress tests them, and delete them.
-- Manage stress testing data and solutions by Elasticsearch version.
-- Present stress testing data in a comprehensive way, allowing you to compare and analyze the data of different stress tests and store the data on a particular Elasticsearch instance for secondary analysis.
+- Automatically create OpenSearch clusters, stress tests them, and delete them.
+- Manage stress testing data and solutions by OpenSearch version.
+- Present stress testing data in a comprehensive way, allowing you to compare and analyze the data of different stress tests and store the data on a particular OpenSearch instance for secondary analysis.
 - Collect Java Virtual Machine (JVM) details, such as memory and garbage collection (GC) data, to locate performance problems.
 
-You can have a look at https://elasticsearch-benchmarks.elastic.co/  where Elasticsearch also officially uses esrally to test its performance and publishes the results in real-time.
-
 ===== How to benchmark
-Please follow https://esrally.readthedocs.io/en/latest/quickstart.html?spm=a2c65.11461447.0.0.e26a498c3KJZNe[Esrally quickstart documentation]
-to set up it first.
+To install the `opensearch-benchmark` tool, you need Python 3.8+ including pip3 first, then run:
+```
+python3 -m pip install opensearch-benchmark
+```
 
-Let's see which tracks (simulation profiles) that EsRally provides: ```esrally list tracks```.
-For our James use case, we are interested in ```pmc``` track: ```Full-text benchmark with academic papers from PMC```.
+If you have any trouble or need more detailed instructions, please look in the https://github.com/opensearch-project/OpenSearch-Benchmark/blob/main/DEVELOPER_GUIDE.md[detailed installation guide].
 
-Run the below script to benchmark against your Elasticsearch cluster:
+Let's see which workloads (simulation profiles) that `opensearch-benchmark` provides: ```opensearch-benchmark list worloads```.
+For our James use case, we are interested in ```pmc``` workload: ```Full-text benchmark with academic papers from PMC```.
+
+Run the below script to benchmark against your OpenSearch cluster:
 
 [source,bash]
 ----
-esrally race --pipeline=benchmark-only --track=[track-name] --target-host=[ip_node1:port_node1],[ip_node2:port_node2],[ip_node3:port_node3] --client-options="use_ssl:false,verify_certs:false,basic_auth_user:'[user]',basic_auth_password:'[password]'"
+opensearch-benchmark execute_test --pipeline=benchmark-only --workload=[workload-name] --target-host=[ip_node1:port_node1],[ip_node2:port_node2],[ip_node3:port_node3] --client-options="use_ssl:false,verify_certs:false,basic_auth_user:'[user]',basic_auth_password:'[password]'"
 ----
 
 In there:
 
 * --pipeline=benchmark-only: benchmark against a running cluster
-* track-name: track you want to benchmark
-* ip:port: Elasticsearch Node' socket
-* --client-options: change to your Elasticsearch authentication credentials
+* workload-name: the workload you want to benchmark
+* ip:port: OpenSearch Node' socket
+* user/password: OpenSearch authentication credentials
 
 ==== Sample benchmark result
-===== PMC track
+===== PMC worload
 
 [source]
 ----
@@ -218,17 +221,20 @@ In there:
 ----------------------------------
 ----
 
-===== PMC custom track
-We customized the PMC track by increasing search throughput target to figure out our Elasticsearch cluster limit.
+===== PMC custom workload
+We customized the PMC workload by increasing search throughput target to figure out our OpenSearch cluster limit.
 
 The result is that with 25-30 request/s we have a 99th percentile latency of 1s.
 
 ==== References
-https://www.alibabacloud.com/blog/esrally-official-stress-testing-tool-for-elasticsearch_597102[esrally: Official Stress Testing Tool for Elasticsearch]
+The `opensearch-benchmark` tool seems to be a fork of the official benchmark tool https://github.com/elastic/rally[EsRally] of Elasticsearch.
+The `opensearch-benchmark` tool is not adopted widely yet, so we believe some EsRally references could help as well:
 
-https://esrally.readthedocs.io/en/latest/adding_tracks.html[Create a custom EsRally track]
+- https://www.alibabacloud.com/blog/esrally-official-stress-testing-tool-for-elasticsearch_597102[esrally: Official Stress Testing Tool for Elasticsearch]
 
-https://discuss.elastic.co/t/why-the-percentile-latency-is-several-times-more-than-service-time/69630[Why the percentile latency is several times more than service time]
+- https://esrally.readthedocs.io/en/latest/adding_tracks.html[Create a custom EsRally track]
+
+- https://discuss.elastic.co/t/why-the-percentile-latency-is-several-times-more-than-service-time/69630[Why the percentile latency is several times more than service time]
 
 === Benchmark RabbitMQ
 
