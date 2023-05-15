@@ -32,10 +32,12 @@ import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HE
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
 import org.apache.james.mailbox.model.{MailboxACL, MailboxPath, MessageId}
+import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.{containsString, equalTo}
 import org.junit.jupiter.api.{BeforeEach, Test}
 
@@ -619,5 +621,32 @@ trait DownloadContract {
         |""".stripMargin
     assertThat(new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8)))
       .hasContent(expectedResponse)
+  }
+
+  @Test
+  def downloadShouldFailWhenEmailPartInvalid(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+
+    val messageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString(), path, AppendCommand.from(message))
+      .getMessageId.serialize()
+
+    val messageAndInvalidPart: String = messageId + "_"
+
+    `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+    .when
+      .get(s"/download/$accountId/$messageAndInvalidPart")
+    .`then`
+      .statusCode(404)
+      .body(Matchers.containsString("The resource could not be found"))
   }
 }
