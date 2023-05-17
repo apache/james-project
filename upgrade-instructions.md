@@ -10,9 +10,13 @@ software documentation. Do not follow this guide blindly!
 
 ## Unreleased
 
+No changes yet.
+
+## 3.8.0 version
+
 Note: this section is in progress. It will be updated during all the development process until the release.
 
-Changes to apply between 3.7.x and 3.8.x will be reported here.
+Changes to apply between 3.7.x and 3.8.0 will be reported here.
 
 Change list:
 
