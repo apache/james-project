@@ -3,7 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
-## [Unreleased]
+## [unreleased]
+
+No changes yet.
+
+## [3.8.0] - 2023-05-17
 
 This release brings the following significant changes:
 
@@ -79,6 +83,14 @@ This release brings the following significant changes:
  - JAMES-3880 MailRepositories: add a way to count retries (#1411)
  - JAMES-3756 JMAP APIs to manage delegation
  - JAMES-3867 Allow IMAP extensions configuration
+ - JAMES-3533 JMAP: Email/parse
+ - JAMES-3822 RFC-4865 Implement delayed sends in SMTP
+ - Support `--generate-keystore` when running Guice James server (#1525)
+ - [FIX] Improve code coverage for IMAP
+ - JAMES-3905 LDAP should allow per user base DN (#1540)
+ - JAMES-3904 Support LDAPS (#1536)
+ - JAMES-3292 More filters for listing webadmin tasks (#1520)
+ - JAMES-3899 WithStorageDirective: Support flag storage directives
 
 ### Changes
 
@@ -122,6 +134,7 @@ This release brings the following significant changes:
  - JAMES-3694 RabbitMQ: Apply queue expiracy only for per-node queues
  - JAMES-3876 Load-balancing flag for Remote Delivery Gateways (#1403)
  - JAMES-3878 - Remove icu4j dependency (#1406)
+ - JAMES-3829 Drop FST (#1545)
  
 ### Fixed
 
@@ -183,6 +196,10 @@ This release brings the following significant changes:
  - [FIX] Misleeading error log in Host class (#1441)
  - [FIX] JMAP urn:ietf:params:jmap:submission submissionExtensions shoul… (#1424)
  - [FIX] OidcJwtTokenVerifier: be resilient upon missing kid
+ - Don't add gateway if no gateway is configured (empty value)
+ - JAMES-2791 Avoid incoherent mail repository count (#1537)
+ - JAMES-3901 OpenSearch indexing should tolerate bad URL encoding for C… (#1527)
+ - JAMES-3900 Ignore errors upon task manager polling updates (#1523)
  
 ### Documentation
 
@@ -268,6 +285,13 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - [PERF] Avoid converting mailbox list to map for all mailboxes (#1383)
  - JAMES-3872 Add a FetchType that support getting the attachments' metadata without fetching the body content
  - JAMES-3870 Group IMAP response line within TCP packets (#1364)
+ - [PERF] Disable JMAP related listeners if JMAP is disabled
+ - [PERF] Allow to disable ACLs
+ - [PERF] Optimize IMAP ESEARCH options
+ - JAMES-3777 Event sourcing snapshot, projection and incremental changes for JMAP filters
+ - JAMES-3900 Snapshots for polled updates (#1533)
+ - JAMES-3440 RFC-8621 support for emailQueryView before + inMailbox sorted by receivedAt
+ - JAMES-2080 Allow turning off header indexing in OpenSearch (#1516)
 
 ## [3.7.4] - 2023-03-20
 
