@@ -34,25 +34,22 @@ This section sums up and links upgrade instructions for people willing to upgrad
 |===
 | Upgrade from | Recommended upgrade path to 3.7.4
 
-| 3.7.0 - 3.7.3
-| Rolling upgrade to 3.7.3. No specific upgrade instructions to perform.
+| 3.7.0 - 3.7.4
+| Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#380-version[3.8.0 upgrade instructions]
 
-| 3.6.2
-| Rolling upgrade to 3.7.4. No specific upgrade instructions to perform.
+| 3.6.0 - 3.6.2
+| 1. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#370-version[3.7.0 upgrade instructions]
 
-| 3.6.1
-| Rolling upgrade to 3.7.4. No specific upgrade instructions to perform.
-
-| 3.6.0
-| Rolling upgrade to 3.7.4. No specific upgrade instructions to perform.
+2. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#380-version[3.8.0 upgrade instructions]
 
 | 3.5.0
 | 1. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#360-version[3.6.0 upgrade instructions]
 
 Note: Because of ElasticSearch upgrade (6.3 -> 7.10) this migration cannot be done in a rolling fashion manner.
 
-2. Rolling upgrade to 3.7.4. No specific upgrade instructions to perform.
+2. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#370-version[3.7.0 upgrade instructions]
 
+3. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#380-version[3.8.0 upgrade instructions]
 
 | 3.4.0
 | 1. Rolling upgrade to 3.5.0, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#350-version[3.5.0 upgrade instructions]
@@ -61,7 +58,10 @@ Note: Because of ElasticSearch upgrade (6.3 -> 7.10) this migration cannot be do
 
 Note: Because of ElasticSearch upgrade (6.3 -> 7.10) this migration cannot be done in a rolling fashion manner.
 
-3. Rolling upgrade to 3.7.4. No specific upgrade instructions to perform.
+3. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#370-version[3.7.0 upgrade instructions]
+
+4. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#380-version[3.8.0 upgrade instructions]
+
 
 | 3.3.0
 | 1. upgrade to 3.4.0, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#340-version[3.4.0 upgrade instructions]
@@ -74,6 +74,8 @@ Note: Because of ElasticSearch upgrade (2.2 ->  6.3) this migration cannot be do
 
 Note: Because of ElasticSearch upgrade (6.3 -> 7.10) this migration cannot be done in a rolling fashion manner.
 
-4. Rolling upgrade to 3.7.4. No specific upgrade instructions to perform.
+4. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#370-version[3.7.0 upgrade instructions]
+
+5. Upgrade, and apply link:https://github.com/apache/james-project/blob/master/upgrade-instructions.md#380-version[3.8.0 upgrade instructions]
 
 |===

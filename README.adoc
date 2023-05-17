@@ -120,7 +120,7 @@ link:docs/modules/development/pages/deployment-tests.adoc[This page] details how
 James comes with a https://james.apache.org/documentation.html[Documentation] and https://github.com/linagora/james-project/tree/master/src/adr[Architectural Decision Records].
 
 A more precise description of the *Distributed Server* architecture can be found
-link:https://james.staged.apache.org/james-distributed-app/3.7.4/architecture/index.html[here].
+link:https://james.staged.apache.org/james-distributed-app/3.8.0/architecture/index.html[here].
 
 == Articles for James community
 
