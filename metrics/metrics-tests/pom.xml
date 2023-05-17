@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>metrics</artifactId>
-        <version>3.8.0</version>
+        <version>3.9.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>metrics-tests</artifactId>

@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-backends-common</artifactId>
-        <version>3.8.0</version>
+        <version>3.9.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-backends-rabbitmq</artifactId>
