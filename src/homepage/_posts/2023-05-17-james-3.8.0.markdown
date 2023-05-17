@@ -1,0 +1,32 @@
+---
+layout: post
+title:  "Apache James Server 3.8.0"
+date:   2023-05-17  01:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce James server 3.8.0 release.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+The Apache James PMC would like to thank all contributors who made this release possible!
+
+## Announcement
+
+This release brings the following significant changes:
+
+ - Upgrade TCP protocols to Netty 4
+ - Migrate IMAP protocol as reactive
+ - Multiple additional IMAP extensions are implemented
+ - Upgrade to Cassandra driver 4
+ - Migrate to OpenSearch
+ - Review our threading model to cap threads performing blocking tasks
+ - Implement official JMAP quotas specification
+
+## Release changelog
+
+The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
+
+[CHANGELOG]: https://github.com/apache/james-project/blob/master/CHANGELOG.md#380---2023-05-17
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
