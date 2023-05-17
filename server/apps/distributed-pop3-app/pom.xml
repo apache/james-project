@@ -173,10 +173,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-es-resporter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-imap</artifactId>
         </dependency>
         <dependency>
@@ -290,11 +286,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-webadmin-rabbitmq</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>metrics-es-reporter-v7</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
