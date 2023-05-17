@@ -105,7 +105,7 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-configuration</artifactId>
-            <version>${james.baseVersion}</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
