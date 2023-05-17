@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>event-bus</artifactId>
-        <version>3.8.0-SNAPSHOT</version>
+        <version>3.8.0</version>
     </parent>
 
     <artifactId>event-bus-api</artifactId>

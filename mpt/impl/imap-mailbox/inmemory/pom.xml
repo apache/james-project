@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt-imapmailbox</artifactId>
-        <version>3.8.0-SNAPSHOT</version>
+        <version>3.8.0</version>
     </parent>
 
     <artifactId>apache-james-mpt-imapmailbox-inmemory</artifactId>
