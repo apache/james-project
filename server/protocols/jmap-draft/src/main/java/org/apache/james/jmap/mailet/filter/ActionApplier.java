@@ -19,10 +19,12 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.mailbox.MailboxManager;
@@ -36,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 public class ActionApplier {
     static final String DELIVERY_PATH_PREFIX = "DeliveryPath_";
@@ -63,8 +66,8 @@ public class ActionApplier {
                 this.mail = mail;
             }
 
-            public ActionApplier forUser(Username username) {
-                return new ActionApplier(mailboxManager, mailboxIdFactory, mail, username);
+            public ActionApplier forRecipient(MailAddress mailAddress, Username username) {
+                return new ActionApplier(mailboxManager, mailboxIdFactory, mail, mailAddress, username);
             }
         }
     }
@@ -72,6 +75,7 @@ public class ActionApplier {
     private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
     private final Mail mail;
+    private final MailAddress mailAddress;
     private final Username username;
 
     @VisibleForTesting
@@ -79,35 +83,55 @@ public class ActionApplier {
         return new Factory(mailboxManager, mailboxIdFactory);
     }
 
-    private ActionApplier(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, Mail mail, Username username) {
+    private ActionApplier(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, Mail mail, MailAddress mailAddress, Username username) {
         this.mailboxManager = mailboxManager;
         this.mailboxIdFactory = mailboxIdFactory;
         this.mail = mail;
+        this.mailAddress = mailAddress;
         this.username = username;
     }
 
     public void apply(Stream<Rule.Action> actions) {
-        actions.flatMap(action -> action.getAppendInMailboxes().getMailboxIds().stream())
-            .map(mailboxIdFactory::fromString)
-            .forEach(this::addStorageDirective);
+        actions.forEach(this::addStorageDirective);
     }
 
-    private void addStorageDirective(MailboxId mailboxId) {
+    private void addStorageDirective(Rule.Action action) {
+        if (action.isReject()) {
+            mail.setRecipients(mail.getRecipients().stream()
+                .filter(recipient -> !recipient.equals(mailAddress))
+                .collect(ImmutableList.toImmutableList()));
+            return;
+        }
+        Optional<String> targetMailbox = action.getAppendInMailboxes().getMailboxIds()
+            .stream()
+            .flatMap(this::asMailboxName)
+            .reduce((first, second) -> second);
+
+        StorageDirective.Builder storageDirective = StorageDirective.builder();
+        targetMailbox.ifPresent(storageDirective::targetFolder);
+        storageDirective
+            .seen(Optional.of(action.isMarkAsSeen()).filter(seen -> seen))
+            .important(Optional.of(action.isMarkAsImportant()).filter(seen -> seen))
+            .keywords(Optional.of(action.getWithKeywords()).filter(c -> !c.isEmpty()))
+            .buildOptional()
+            .map(a -> a.encodeAsAttributes(username))
+            .orElse(Stream.of())
+            .forEach(mail::setAttribute);
+    }
+
+    private Stream<String> asMailboxName(String mailboxIdString) {
         try {
+            MailboxId mailboxId = mailboxIdFactory.fromString(mailboxIdString);
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
 
-            String mailboxName = messageManager.getMailboxPath().getName();
-
-            StorageDirective.builder()
-                .targetFolder(mailboxName)
-                .build()
-                .encodeAsAttributes(username)
-                .forEach(mail::setAttribute);
+            return Stream.of(messageManager.getMailboxPath().getName());
         } catch (MailboxNotFoundException e) {
-            LOGGER.info("Mailbox {} does not exist, but it was mentioned in a JMAP filtering rule", mailboxId, e);
+            LOGGER.info("Mailbox {} does not exist, but it was mentioned in a JMAP filtering rule", mailboxIdString, e);
+            return Stream.empty();
         } catch (Exception e) {
-            LOGGER.error("Unexpected failure while resolving mailbox name for {}", mailboxId, e);
+            LOGGER.error("Unexpected failure while resolving mailbox name for {}", mailboxIdString, e);
+            return Stream.empty();
         }
     }
 }

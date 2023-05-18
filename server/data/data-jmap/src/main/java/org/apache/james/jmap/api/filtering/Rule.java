@@ -20,6 +20,7 @@
 package org.apache.james.jmap.api.filtering;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -230,37 +231,73 @@ public class Rule {
         }
 
         public static Action of(AppendInMailboxes appendInMailboxes) {
-            return new Action(appendInMailboxes);
+            return new Action(appendInMailboxes, false, false, false, ImmutableList.of());
+        }
+
+        public static Action of(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant, boolean reject, List<String> withKeywords) {
+            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords);
         }
 
         private final AppendInMailboxes appendInMailboxes;
+        private final boolean markAsSeen;
+        private final boolean markAsImportant;
+        private final boolean reject;
+        private final List<String> withKeywords;
 
-        private Action(AppendInMailboxes appendInMailboxes) {
+        private Action(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant, boolean reject, List<String> withKeywords) {
             this.appendInMailboxes = appendInMailboxes;
+            this.markAsSeen = markAsSeen;
+            this.markAsImportant = markAsImportant;
+            this.reject = reject;
+            this.withKeywords = withKeywords;
         }
         
         public AppendInMailboxes getAppendInMailboxes() {
             return appendInMailboxes;
         }
 
+        public boolean isMarkAsSeen() {
+            return markAsSeen;
+        }
+
+        public boolean isMarkAsImportant() {
+            return markAsImportant;
+        }
+
+        public boolean isReject() {
+            return reject;
+        }
+
+        public Collection<String> getWithKeywords() {
+            return withKeywords;
+        }
+
         @Override
         public final boolean equals(Object o) {
             if (o instanceof Action) {
                 Action action = (Action) o;
-                return Objects.equals(appendInMailboxes, action.appendInMailboxes);
+                return Objects.equals(appendInMailboxes, action.appendInMailboxes)
+                    && Objects.equals(markAsSeen, action.markAsSeen)
+                    && Objects.equals(markAsImportant, action.markAsImportant)
+                    && Objects.equals(reject, action.reject)
+                    && Objects.equals(withKeywords, action.withKeywords);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(appendInMailboxes);
+            return Objects.hash(appendInMailboxes, markAsImportant, markAsSeen, reject, withKeywords);
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("appendInMailboxes", appendInMailboxes)
+                .add("markAsImportant", markAsImportant)
+                .add("markAsSeen", markAsSeen)
+                .add("reject", reject)
+                .add("withKeywords", withKeywords)
                 .toString();
         }
     }

@@ -35,6 +35,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.EMPTY;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULLNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULL_SCRAMBLED_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.GA_BOU_ZO_MEU_FULL_ADDRESS;
+import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_MAILBOX_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.SCRAMBLED_SUBJECT;
@@ -57,6 +58,9 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import javax.mail.Flags;
+
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rule.Condition.Field;
@@ -66,6 +70,7 @@ import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
+import org.apache.mailet.StorageDirective;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Nested;
@@ -914,5 +919,118 @@ class JMAPFilteringTest {
             assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
                 .contains(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
         }
+    }
+
+    @Test
+    void actionShouldSupportReject(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
+                    false, false, true, ImmutableList.of()))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getRecipients()).isEmpty();
+    }
+
+    @Test
+    void actionShouldSupportSeen(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
+                    true, false, false, ImmutableList.of()))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(StorageDirective.fromMail(Username.of("recipient1"), mail))
+            .isEqualTo(StorageDirective.builder()
+                .seen(Optional.of(true))
+                .build());
+    }
+
+    @Test
+    void actionShouldSupportImportant(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
+                    false, true, false, ImmutableList.of()))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(StorageDirective.fromMail(Username.of("recipient1"), mail))
+            .isEqualTo(StorageDirective.builder()
+                .important(Optional.of(true))
+                .build());
+    }
+
+    @Test
+    void actionShouldSupportKeywords(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
+                    false, false, false, ImmutableList.of("abc", "def")))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(StorageDirective.fromMail(Username.of("recipient1"), mail).getFlags().get().getUserFlags())
+            .containsOnly("abc", "def");
+    }
+
+    @Test
+    void actionShouldCombineFlags(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
+                    true, true, false, ImmutableList.of("abc", "def")))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+            .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        Flags expectedFlags = new Flags();
+        expectedFlags.add("abc");
+        expectedFlags.add("def");
+        expectedFlags.add(Flags.Flag.SEEN);
+        expectedFlags.add(Flags.Flag.FLAGGED);
+        assertThat(StorageDirective.fromMail(Username.of("recipient1"), mail).getFlags().get())
+            .isEqualTo(expectedFlags);
     }
 }

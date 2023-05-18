@@ -1,0 +1,43 @@
+{
+  "type":"filtering-rule-set-defined",
+  "eventId":0,
+  "aggregateId":"FilteringRule/bart",
+  "rules":[
+    {
+      "id":"1",
+      "name":"a name",
+      "condition": {
+        "field": "cc",
+        "comparator": "contains",
+        "value": "something"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["id-01"]
+        },
+        "important":false,
+        "keyworkds":[],
+        "reject":false,
+        "seen":false
+      }
+    },
+    {
+      "id":"2",
+      "name":"a name",
+      "condition": {
+        "field": "cc",
+        "comparator": "contains",
+        "value": "something"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["id-01"]
+        },
+        "important":false,
+        "keyworkds":[],
+        "reject":false,
+        "seen":false
+      }
+    }
+  ]
+}

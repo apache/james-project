@@ -19,6 +19,7 @@
 package org.apache.mailet;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -84,15 +85,25 @@ public class StorageDirective {
         }
 
         public StorageDirective build() {
-            Preconditions.checkState(
-                Booleans.countTrue(
-                    seen.isPresent(),
-                    important.isPresent(),
-                    targetFolder.isPresent(),
-                    keywords.isPresent()) > 0,
+            Preconditions.checkState(hasChanges(),
                 "Expecting one of the storage directives to be specified: [targetFolder, seen, important, keywords]");
 
             return new StorageDirective(targetFolder, seen, important, keywords);
+        }
+
+        private boolean hasChanges() {
+            return Booleans.countTrue(
+                seen.isPresent(),
+                important.isPresent(),
+                targetFolder.isPresent(),
+                keywords.isPresent()) > 0;
+        }
+
+        public Optional<StorageDirective> buildOptional() {
+            if (!hasChanges()) {
+                return Optional.empty();
+            }
+            return Optional.of(build());
         }
     }
 
@@ -208,5 +219,22 @@ public class StorageDirective {
 
     public Optional<String> getTargetFolder() {
         return targetFolder;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof StorageDirective) {
+            StorageDirective other = (StorageDirective) o;
+            return Objects.equals(targetFolder, other.targetFolder)
+                && Objects.equals(seen, other.seen)
+                && Objects.equals(important, other.important)
+                && Objects.equals(keywords, other.keywords);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(targetFolder, seen, important, keywords);
     }
 }

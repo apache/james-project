@@ -131,18 +131,47 @@ public class RuleDTO {
         }
 
         public static ActionDTO from(Rule.Action action) {
-            return new ActionDTO(AppendInMailboxesDTO.from(action.getAppendInMailboxes()));
+            return new ActionDTO(AppendInMailboxesDTO.from(action.getAppendInMailboxes()),
+                action.isMarkAsSeen(), action.isMarkAsImportant(), action.isReject(), ImmutableList.copyOf(action.getWithKeywords()));
         }
 
         @JsonCreator
-        public ActionDTO(@JsonProperty("appendIn") AppendInMailboxesDTO appendIn) {
+        public ActionDTO(@JsonProperty("appendIn") AppendInMailboxesDTO appendIn,
+                         @JsonProperty("seen") boolean seen,
+                         @JsonProperty("important") boolean important,
+                         @JsonProperty("reject") boolean reject,
+                         @JsonProperty("keywords") List<String> keyworkds) {
             this.appendIn = appendIn;
+            this.keyworkds = keyworkds;
+            this.seen = seen;
+            this.important = important;
+            this.reject = reject;
         }
 
         private final AppendInMailboxesDTO appendIn;
+        private final boolean seen;
+        private final boolean important;
+        private final boolean reject;
+        private final List<String> keyworkds;
 
         public AppendInMailboxesDTO getAppendIn() {
             return appendIn;
+        }
+
+        public boolean isSeen() {
+            return seen;
+        }
+
+        public boolean isImportant() {
+            return important;
+        }
+
+        public boolean isReject() {
+            return reject;
+        }
+
+        public List<String> getKeyworkds() {
+            return keyworkds;
         }
 
         public Rule.Action toAction() {
@@ -154,14 +183,18 @@ public class RuleDTO {
             if (o instanceof ActionDTO) {
                 ActionDTO actionDTO = (ActionDTO) o;
 
-                return Objects.equals(this.appendIn, actionDTO.appendIn);
+                return Objects.equals(this.appendIn, actionDTO.appendIn)
+                    && Objects.equals(this.seen, actionDTO.seen)
+                    && Objects.equals(this.important, actionDTO.important)
+                    && Objects.equals(this.reject, actionDTO.reject)
+                    && Objects.equals(this.keyworkds, actionDTO.keyworkds);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(appendIn);
+            return Objects.hash(appendIn, reject, seen, important, keyworkds);
         }
     }
 
