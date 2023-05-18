@@ -169,7 +169,6 @@ public class ClientProvider implements Provider<ReactorOpenSearchClient> {
         }
 
         private void configureAuthentication(HttpAsyncClientBuilder builder) {
-            builder.disableAuthCaching();
             configuration.getCredential()
                 .ifPresent(credential -> {
                     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
