@@ -118,6 +118,11 @@ public class MemoryPushSubscriptionRepository implements PushSubscriptionReposit
     }
 
     @Override
+    public Publisher<Void> delete(Username username) {
+        return Mono.fromCallable(() -> table.rowMap().remove(username)).then();
+    }
+
+    @Override
     public Publisher<PushSubscription> get(Username username, Set<PushSubscriptionId> ids) {
         return Flux.fromStream(table.row(username).entrySet().stream())
             .filter(entry -> ids.contains(entry.getKey()))

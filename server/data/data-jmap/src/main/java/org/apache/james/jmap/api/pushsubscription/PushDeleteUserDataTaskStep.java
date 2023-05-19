@@ -19,31 +19,32 @@
 
 package org.apache.james.jmap.api.pushsubscription;
 
-import java.time.ZonedDateTime;
-import java.util.Set;
+import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.api.model.PushSubscription;
-import org.apache.james.jmap.api.model.PushSubscriptionCreationRequest;
-import org.apache.james.jmap.api.model.PushSubscriptionExpiredTime;
-import org.apache.james.jmap.api.model.PushSubscriptionId;
-import org.apache.james.jmap.api.model.TypeName;
+import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.reactivestreams.Publisher;
 
-public interface PushSubscriptionRepository {
-    Publisher<PushSubscription> save(Username username, PushSubscriptionCreationRequest pushSubscriptionCreationRequest);
+public class PushDeleteUserDataTaskStep implements DeleteUserDataTaskStep {
+    private final PushSubscriptionRepository pushSubscriptionRepository;
 
-    Publisher<PushSubscriptionExpiredTime> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire);
+    @Inject
+    public PushDeleteUserDataTaskStep(PushSubscriptionRepository pushSubscriptionRepository) {
+        this.pushSubscriptionRepository = pushSubscriptionRepository;
+    }
 
-    Publisher<Void> updateTypes(Username username, PushSubscriptionId id, Set<TypeName> types);
+    @Override
+    public StepName name() {
+        return new StepName("PushDeleteUserDataTaskStep");
+    }
 
-    Publisher<Void> validateVerificationCode(Username username, PushSubscriptionId id);
+    @Override
+    public int priority() {
+        return 3;
+    }
 
-    Publisher<Void> revoke(Username username, PushSubscriptionId id);
-
-    Publisher<Void> delete(Username username);
-
-    Publisher<PushSubscription> get(Username username, Set<PushSubscriptionId> ids);
-
-    Publisher<PushSubscription> list(Username username);
+    @Override
+    public Publisher<Void> deleteUserData(Username username) {
+        return pushSubscriptionRepository.delete(username);
+    }
 }

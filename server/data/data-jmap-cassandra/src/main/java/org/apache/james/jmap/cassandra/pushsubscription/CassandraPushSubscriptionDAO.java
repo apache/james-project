@@ -73,6 +73,7 @@ public class CassandraPushSubscriptionDAO {
     private final PreparedStatement insert;
     private final PreparedStatement selectAll;
     private final PreparedStatement deleteOne;
+    private final PreparedStatement deleteAll;
 
     @Inject
     public CassandraPushSubscriptionDAO(CqlSession session, TypeStateFactory typeStateFactory) {
@@ -98,6 +99,10 @@ public class CassandraPushSubscriptionDAO {
         deleteOne = session.prepare(deleteFrom(TABLE_NAME)
             .whereColumn(USER).isEqualTo(bindMarker(USER))
             .whereColumn(DEVICE_CLIENT_ID).isEqualTo(bindMarker(DEVICE_CLIENT_ID))
+            .build());
+
+        deleteAll = session.prepare(deleteFrom(TABLE_NAME)
+            .whereColumn(USER).isEqualTo(bindMarker(USER))
             .build());
 
         this.typeStateFactory = typeStateFactory;
@@ -136,6 +141,11 @@ public class CassandraPushSubscriptionDAO {
         return executor.executeVoid(deleteOne.bind()
             .setString(USER, username.asString())
             .setString(DEVICE_CLIENT_ID, deviceClientId));
+    }
+
+    public Mono<Void> deleteAll(Username username) {
+        return executor.executeVoid(deleteAll.bind()
+            .setString(USER, username.asString()));
     }
 
     private PushSubscription toPushSubscription(Row row) {
