@@ -248,9 +248,32 @@ trait PushSubscriptionRepositoryContract {
   }
 
   @Test
+  def deleteStoredSubscriptionShouldSucceed(): Unit = {
+    val validRequest = PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("1"),
+      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      types = Seq(CustomTypeName1))
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+    val singleRecordSaved = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).count().block()
+    assertThat(singleRecordSaved).isEqualTo(1)
+
+    SMono.fromPublisher(testee.delete(ALICE)).block()
+    val remaining = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).collectSeq().block().asJava
+
+    assertThat(remaining).isEmpty()
+  }
+
+  @Test
   def revokeNotFoundShouldNotFail(): Unit = {
     val pushSubscriptionId = PushSubscriptionId.generate()
     assertThatCode(() => SMono.fromPublisher(testee.revoke(ALICE, pushSubscriptionId)).block())
+      .doesNotThrowAnyException()
+  }
+
+  @Test
+  def deleteNotFoundShouldNotFail(): Unit = {
+    val pushSubscriptionId = PushSubscriptionId.generate()
+    assertThatCode(() => SMono.fromPublisher(testee.delete(ALICE)).block())
       .doesNotThrowAnyException()
   }
 

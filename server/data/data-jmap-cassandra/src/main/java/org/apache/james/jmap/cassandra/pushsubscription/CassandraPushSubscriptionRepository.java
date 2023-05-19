@@ -123,6 +123,11 @@ public class CassandraPushSubscriptionRepository implements PushSubscriptionRepo
     }
 
     @Override
+    public Publisher<Void> delete(Username username) {
+        return dao.deleteAll(username);
+    }
+
+    @Override
     public Publisher<PushSubscription> get(Username username, Set<PushSubscriptionId> ids) {
         return dao.selectAll(username)
             .filter(subscription -> ids.contains(subscription.id()))
