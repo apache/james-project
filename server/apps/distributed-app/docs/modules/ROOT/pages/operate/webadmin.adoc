@@ -682,6 +682,57 @@ Valid status includes:
  - `FAILED`: Error encountered while executing this step. Check the logs.
  - `ABORTED`: Won't be executed because of previous step failures.
 
+=== Delete data of a user
+
+....
+curl -XPOST http://ip:port/users/usernameToBeUsed?action=deleteData
+....
+
+Would create a task that deletes data of the user.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning a task].
+
+Implemented deletion steps are:
+
+ - `RecipientRewriteTableUserDeletionTaskStep`: deletes all rewriting rules related to this user.
+ - `FilterUserDeletionTaskStep`: deletes all filters belonging to the user.
+ - `DelegationUserDeletionTaskStep`: deletes all delegations from / to the user.
+ - `MailboxUserDeletionTaskStep`: deletes mailboxes of this user, all ACLs of this user, as well as his subscriptions.
+ - `WebPushUserDeletionTaskStep`: deletes push data registered for this user.
+ - `IdentityUserDeletionTaskStep`: deletes identities registered for this user.
+ - `VacationUserDeletionTaskStep`: deletes vacations registered for this user.
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
+The `fromStep` query parameter allows skipping previous steps, allowing to resume the user data deletion from a failed step.
+
+The scheduled task will have the following type `DeleteUserDataTask` and the following `additionalInformation`:
+
+....
+{
+        "type": "DeleteUserDataTask",
+        "username": "jessy.jones@domain.tld",
+        "status": {
+            "A": "DONE",
+            "B": "FAILED",
+            "C": "ABORTED"
+        },
+        "fromStep": null,
+        "timestamp": "2023-02-17T02:54:01.246477Z"
+}
+....
+
+Valid status includes:
+
+ - `SKIPPED`: bypassed via `fromStep` setting
+ - `WAITING`: Awaits execution
+ - `IN_PROGRESS`: Currently executed
+ - `FAILED`: Error encountered while executing this step. Check the logs.
+ - `ABORTED`: Won't be executed because of previous step failures.
+
 === Retrieving the user identities
 
 ....
