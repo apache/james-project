@@ -143,4 +143,8 @@ public class DeleteUserDataService {
     public Performer performer(Optional<StepName> fromStep) {
         return new Performer(steps, new DeleteUserDataStatus(steps), fromStep);
     }
+
+    public Performer performer() {
+        return new Performer(steps, new DeleteUserDataStatus(steps), Optional.empty());
+    }
 }
