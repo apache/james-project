@@ -25,6 +25,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.rrt.ForwardUsernameChangeTaskStep;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 
 import com.google.inject.AbstractModule;
@@ -39,6 +40,7 @@ public class CoreDataModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(RecipientRewriteTableUserEntityValidator.class);
 
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class).addBinding().to(ForwardUsernameChangeTaskStep.class);
+        Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
     }
 
     @Provides
