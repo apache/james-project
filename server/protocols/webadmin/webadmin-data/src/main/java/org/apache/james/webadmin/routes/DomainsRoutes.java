@@ -34,9 +34,15 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
+import org.apache.james.task.TaskManager;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DomainAliasResponse;
+import org.apache.james.webadmin.service.DeleteUserDataService;
+import org.apache.james.webadmin.service.DeleteUsersDataOfDomainTask;
 import org.apache.james.webadmin.service.DomainAliasService;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -45,11 +51,13 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
+import spark.Route;
 import spark.Service;
 
 public class DomainsRoutes implements Routes {
@@ -62,18 +70,26 @@ public class DomainsRoutes implements Routes {
     private static final String SPECIFIC_DOMAIN = DOMAINS + SEPARATOR + DOMAIN_NAME;
     private static final String ALIASES = "aliases";
     private static final String DOMAIN_ALIASES = SPECIFIC_DOMAIN + SEPARATOR + ALIASES;
+    private static final String DELETE_ALL_USERS_DATA_OF_A_DOMAIN_PATH = "/domains/:domainName";
     private static final String SPECIFIC_ALIAS = DOMAINS + SEPARATOR + DESTINATION_DOMAIN + SEPARATOR + ALIASES + SEPARATOR + SOURCE_DOMAIN;
+    private static final TaskRegistrationKey DELETE_USERS_DATA = TaskRegistrationKey.of("deleteData");
 
     private final DomainList domainList;
     private final DomainAliasService domainAliasService;
     private final JsonTransformer jsonTransformer;
+    private final DeleteUserDataService deleteUserDataService;
+    private final UsersRepository usersRepository;
+    private final TaskManager taskManager;
     private Service service;
 
     @Inject
-    DomainsRoutes(DomainList domainList, DomainAliasService domainAliasService, JsonTransformer jsonTransformer) {
+    DomainsRoutes(DomainList domainList, DomainAliasService domainAliasService, JsonTransformer jsonTransformer, DeleteUserDataService deleteUserDataService, UsersRepository usersRepository, TaskManager taskManager) {
         this.domainList = domainList;
         this.domainAliasService = domainAliasService;
         this.jsonTransformer = jsonTransformer;
+        this.deleteUserDataService = deleteUserDataService;
+        this.usersRepository = usersRepository;
+        this.taskManager = taskManager;
     }
 
     @Override
@@ -95,6 +111,21 @@ public class DomainsRoutes implements Routes {
         defineListAliases(service);
         defineAddAlias(service);
         defineRemoveAlias(service);
+
+        // delete data of all users of a domain
+        service.post(DELETE_ALL_USERS_DATA_OF_A_DOMAIN_PATH, deleteAllUsersData(), jsonTransformer);
+    }
+
+    public Route deleteAllUsersData() {
+        return TaskFromRequestRegistry.builder()
+            .parameterName("action")
+            .register(DELETE_USERS_DATA, request -> {
+                Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
+                Preconditions.checkArgument(domainList.containsDomain(domain), "'domainName' parameter should be an existing domain");
+
+                return new DeleteUsersDataOfDomainTask(deleteUserDataService, domain, usersRepository);
+            })
+            .buildAsRoute(taskManager);
     }
 
     public void defineDeleteDomain() {

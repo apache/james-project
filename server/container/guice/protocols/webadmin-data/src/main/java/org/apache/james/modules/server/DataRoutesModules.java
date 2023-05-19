@@ -25,6 +25,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 import org.apache.james.webadmin.dto.MappingSourceModule;
@@ -44,6 +45,8 @@ import org.apache.james.webadmin.routes.UsernameChangeRoutes;
 import org.apache.james.webadmin.service.DeleteUserDataService;
 import org.apache.james.webadmin.service.DeleteUserDataTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.DeleteUserDataTaskDTO;
+import org.apache.james.webadmin.service.DeleteUsersDataOfDomainTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.DeleteUsersDataOfDomainTaskDTO;
 import org.apache.james.webadmin.service.UsernameChangeService;
 import org.apache.james.webadmin.service.UsernameChangeTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.UsernameChangeTaskDTO;
@@ -107,5 +110,22 @@ public class DataRoutesModules extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminDeleteUserDataTaskAdditionalInformationDTO() {
         return DeleteUserDataTaskAdditionalInformationDTO.module();
+    }
+
+    // delete all users data of a domain DTO modules
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> deleteUsersDataOfDomainTaskDTO(DeleteUserDataService service, UsersRepository usersRepository) {
+        return DeleteUsersDataOfDomainTaskDTO.module(service, usersRepository);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> deleteUsersDataOfDomainTaskAdditionalInformationDTO() {
+        return DeleteUsersDataOfDomainTaskAdditionalInformationDTO.module();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminDeleteUsersDataOfDomainTaskAdditionalInformationDTO() {
+        return DeleteUsersDataOfDomainTaskAdditionalInformationDTO.module();
     }
 }

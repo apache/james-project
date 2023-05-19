@@ -178,6 +178,7 @@ Response codes:
    - [Get the list of aliases for a domain](#Get_the_list_of_aliases_for_a_domain)
    - [Create an alias for a domain](#Create_an_alias_for_a_domain)
    - [Delete an alias for a domain](#Delete_an_alias_for_a_domain)
+   - [Delete all users data of a domain](#delete-all-users-data-of-a-domain)
 
 ### Create a domain
 
@@ -301,6 +302,33 @@ Response codes:
  - 400: `source.domain.tld` or destination.domain.tld have an invalid syntax
  - 400: source, domain and destination domain are the same
  - 404: `source.domain.tld` are not part of handled domains.
+
+### Delete all users data of a domain
+
+```
+curl -XPOST http://ip:port/domains/{domainToBeUsed}?action=deleteData
+```
+
+Would create a task that deletes data of all users of the domain.
+
+[More details about endpoints returning a task](#_endpoints_returning_a_task).
+
+Response codes:
+
+* 201: Success. Corresponding task id is returned.
+* 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `DeleteUsersDataOfDomainTask` and the following `additionalInformation`:
+
+```
+{
+        "type": "DeleteUsersDataOfDomainTask",
+        "domain": "domain.tld",
+        "successfulUsersCount": 2,
+        "failedUsersCount": 1,
+        "timestamp": "2023-05-22T08:52:47.076261Z"
+}
+```
 
 ## Administrating users
 
