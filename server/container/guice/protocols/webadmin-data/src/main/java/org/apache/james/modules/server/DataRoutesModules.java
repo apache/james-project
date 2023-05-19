@@ -31,6 +31,7 @@ import org.apache.james.webadmin.dto.MappingSourceModule;
 import org.apache.james.webadmin.mdc.RequestLogger;
 import org.apache.james.webadmin.routes.AddressMappingRoutes;
 import org.apache.james.webadmin.routes.AliasRoutes;
+import org.apache.james.webadmin.routes.DeleteUserDataRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
@@ -40,6 +41,9 @@ import org.apache.james.webadmin.routes.RegexMappingRoutes;
 import org.apache.james.webadmin.routes.UserCreationRequestLogger;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.routes.UsernameChangeRoutes;
+import org.apache.james.webadmin.service.DeleteUserDataService;
+import org.apache.james.webadmin.service.DeleteUserDataTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.DeleteUserDataTaskDTO;
 import org.apache.james.webadmin.service.UsernameChangeService;
 import org.apache.james.webadmin.service.UsernameChangeTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.UsernameChangeTaskDTO;
@@ -65,6 +69,7 @@ public class DataRoutesModules extends AbstractModule {
         routesMultibinder.addBinding().to(RegexMappingRoutes.class);
         routesMultibinder.addBinding().to(UserRoutes.class);
         routesMultibinder.addBinding().to(UsernameChangeRoutes.class);
+        routesMultibinder.addBinding().to(DeleteUserDataRoutes.class);
 
         Multibinder<JsonTransformerModule> jsonTransformerModuleMultibinder = Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
         jsonTransformerModuleMultibinder.addBinding().to(MappingSourceModule.class);
@@ -86,5 +91,21 @@ public class DataRoutesModules extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> webAdminUsernameChangeTaskAdditionalInformationDTO() {
         return UsernameChangeTaskAdditionalInformationDTO.module();
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> deleteUserDataTaskDTO(DeleteUserDataService service) {
+        return DeleteUserDataTaskDTO.module(service);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> deleteUserDataTaskAdditionalInformationDTO() {
+        return DeleteUserDataTaskAdditionalInformationDTO.module();
+    }
+
+    @Named(DTOModuleInjections.WEBADMIN_DTO)
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO> webAdminDeleteUserDataTaskAdditionalInformationDTO() {
+        return DeleteUserDataTaskAdditionalInformationDTO.module();
     }
 }
