@@ -56,4 +56,6 @@ class MemoryCustomIdentityDAO extends CustomIdentityDAO {
   override def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = SFlux.fromIterable(ids)
     .doOnNext(id => table.remove(username, id))
     .`then`()
+
+  override def delete(username: Username): Publisher[Unit] = SMono.fromCallable(() => table.rowMap().remove(username))
 }

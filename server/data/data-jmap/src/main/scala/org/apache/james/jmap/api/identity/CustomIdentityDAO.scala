@@ -147,6 +147,8 @@ trait CustomIdentityDAO {
   def upsert(user: Username, patch: Identity): SMono[Unit]
 
   def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit]
+
+  def delete(username: Username): Publisher[Unit]
 }
 
 class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepository: UsersRepository) {

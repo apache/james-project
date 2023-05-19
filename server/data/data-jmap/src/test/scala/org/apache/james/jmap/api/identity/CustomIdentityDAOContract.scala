@@ -30,8 +30,8 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.jdk.OptionConverters._
 
 object CustomIdentityDAOContract {
-  private val bob: Username = Username.of("bob@localhost")
-  private val CREATION_REQUEST: IdentityCreationRequest = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
+  val bob: Username = Username.of("bob@localhost")
+  val CREATION_REQUEST: IdentityCreationRequest = IdentityCreationRequest(name = Some(IdentityName("Bob (custom address)")),
     email = bob.asMailAddress(),
     replyTo = Some(List(EmailAddress(Some(EmailerName("My Boss")), new MailAddress("boss@domain.tld")))),
     bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2")), new MailAddress("boss2@domain.tld")))),
@@ -125,6 +125,17 @@ trait CustomIdentityDAOContract {
   }
 
   @Test
+  def saveShouldNotReturnDeletedAllValues(): Unit = {
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
+      .block()
+
+    SMono(testee().delete(bob)).block()
+
+    assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
+      .isEmpty()
+  }
+
+  @Test
   def saveShouldDefineDefaultValuesInCaseSomePropertiesEmpty(): Unit = {
     val identity: Identity = SMono(testee().save(bob,
       IdentityCreationRequest(name = None,
@@ -153,6 +164,18 @@ trait CustomIdentityDAOContract {
 
     SMono(testee().delete(bob, Seq(identity.id))).block()
     SMono(testee().delete(bob, Seq(identity.id))).block()
+
+    assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
+      .isEmpty()
+  }
+
+  @Test
+  def deleteAllShouldBeIdempotent(): Unit = {
+    val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
+      .block()
+
+    SMono(testee().delete(bob)).block()
+    SMono(testee().delete(bob)).block()
 
     assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
       .isEmpty()

@@ -71,6 +71,10 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
     .whereColumn(ID).isEqualTo(bindMarker(ID))
     .build())
 
+  val deleteAllStatement: PreparedStatement = session.prepare(deleteFrom(TABLE_NAME)
+    .whereColumn(USER).isEqualTo(bindMarker(USER))
+    .build())
+
   override def save(user: Username, creationRequest: IdentityCreationRequest): SMono[Identity] =
     save(user, IdentityId.generate, creationRequest)
 
@@ -104,6 +108,11 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
       .flatMap(id => executor.executeVoid(deleteOneStatement.bind()
         .setString(USER, username.asString())
         .setUuid(ID, id.id)))
+      .`then`()
+
+  override def delete(username: Username): SMono[Unit] =
+    SMono(executor.executeVoid(deleteOneStatement.bind()
+        .setString(USER, username.asString())))
       .`then`()
 
   private def insert(username: Username, identity: Identity): SMono[Identity] = {
