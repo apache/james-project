@@ -1,0 +1,8 @@
+deployment:
+  role: data_plane
+  role_data_plane:
+    config_provider: yaml
+
+ext-plugin:
+  path_for_test: /tmp/runner.sock
+  cmd: ['java', '-jar', '-DREDIS_PASSWORD=secret1', '-DREDIS_URL=redis.example.com:6379','-DAPP_REWRITE_XUSER_USERINFO_FIELD=email', '-Xmx1g', '-Xms1g', '/usr/local/apisix/token_revoker_plugin.jar']

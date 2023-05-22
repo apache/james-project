@@ -1,0 +1,76 @@
+version: "3"
+
+services:
+  apisix:
+    container_name: apisix.example.com
+    image: linagora/apisix:3.2.0-debian-javaplugin
+    volumes:
+      - ./apisix/conf/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
+      - ./apisix/conf/config.yaml:/usr/local/apisix/conf/config.yaml
+    networks:
+      - james
+    ports:
+      - "9080:9080/tcp"
+
+  james:
+    depends_on:
+      - ldap
+    networks:
+      - james
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    volumes:
+      - ./james/usersrepository.xml:/root/conf/usersrepository.xml
+      - ./james/jmap.properties:/root/conf/jmap.properties
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://james:8000/domains"]
+
+  sso.example.com:
+    depends_on:
+      - ldap
+    image: quay.io/keycloak/keycloak:16.1.0
+    container_name: sso.example.com
+    volumes:
+      - ./keycloak/realm-oidc.json:/tmp/realm-oidc.json
+    ports:
+      - "8080:8080"
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - KEYCLOAK_IMPORT=/tmp/realm-oidc.json
+    networks:
+      james:
+        aliases:
+          - keycloak
+
+  ldap:
+    container_name: ldap
+    image: osixia/openldap:1.5.0
+    ports:
+      - "389:389"
+      - "636:636"
+    command: [--copy-service]
+    volumes:
+      - ./ldap/populate.ldif:/container/service/slapd/assets/config/bootstrap/ldif/data.ldif
+    environment:
+      - LDAP_DOMAIN=localhost
+    networks:
+      - james
+
+  redis:
+    container_name: redis.example.com
+    image: bitnami/redis:7.0.4-debian-11-r25
+    environment:
+      - REDIS_PASSWORD=secret1
+    networks:
+      - james
+    ports:
+      - "6379:6379"
+
+networks:
+  james:

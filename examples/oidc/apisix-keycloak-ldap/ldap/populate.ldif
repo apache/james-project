@@ -1,0 +1,16 @@
+dn: ou=people, dc=localhost
+ou: people
+objectClass: organizationalUnit
+
+dn: ou=empty, dc=localhost
+ou: empty
+objectClass: organizationalUnit
+
+dn: uid=james-user@localhost, ou=people, dc=localhost
+objectClass: inetOrgPerson
+uid: james-user@localhost
+cn: james-user
+sn: james-user
+mail: james-user@localhost
+userPassword: secret
+description: James user
