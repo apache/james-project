@@ -50,6 +50,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import reactor.core.publisher.Flux;
+
 public interface UsersRepositoryContract {
 
     class UserRepositoryExtension implements BeforeEachCallback, ParameterResolver {
@@ -549,6 +551,20 @@ public interface UsersRepositoryContract {
             boolean actual = testee().test(Username.of(username + "@domain.org"), password);
 
             assertThat(actual).isTrue();
+        }
+
+        @Test
+        default void listUsersOfADomainShouldNotListOtherDomainUsers(TestSystem testSystem) throws Exception {
+            testSystem.domainList.addDomain(Domain.of("domain1.tld"));
+            testee().addUser(Username.of("user1@domain1.tld"), "password");
+
+            testSystem.domainList.addDomain(Domain.of("domain2.tld"));
+            testee().addUser(Username.of("user2@domain2.tld"), "password");
+
+            assertThat(Flux.from(testee().listUsersOfADomainReactive(Domain.of("domain1.tld")))
+                .collectList()
+                .block())
+                .containsOnly(Username.of("user1@domain1.tld"));
         }
 
         @Test
