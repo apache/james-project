@@ -1,0 +1,237 @@
+routes:
+  #  OIDC authentication endpoints
+  -
+    id: jmap
+    uri: /oidc/jmap
+    service_id: jmap_service_oidc
+    methods:
+      - POST
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        uri: /jmap
+  -
+    id: jmap_websocket
+    uri: /oidc/jmap/ws
+    service_id: jmap_service_oidc
+    enable_websocket: true
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        uri: /jmap/ws
+  -
+    id: jmap_session_oidc
+    uri: /oidc/jmap/session
+    service_id: jmap_service_oidc
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        uri: /jmap/session
+  -
+    id: download
+    uri: /oidc/download/*
+    service_id: jmap_service_oidc
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        regex_uri:
+          - "^/oidc/download/(.*)/(.*)"
+          - "/download/$1/$2"
+  -
+    id: upload
+    uri: /oidc/upload/*
+    service_id: jmap_service_oidc
+    methods:
+      - POST
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        regex_uri:
+          - "^/oidc/upload/(.*)"
+          - "/upload/$1"
+  -
+    id: web_known_finger
+    uris:
+      - /oidc/.well-known/webfinger
+      - /.well-known/webfinger
+    service_id: jmap_service_basic_auth
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        uri: /.well-known/webfinger
+  -
+    id: web_known_linagora_ecosystem
+    uri: /oidc/.well-known/linagora-ecosystem
+    service_id: jmap_service_oidc
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        uri: /.well-known/linagora-ecosystem
+  -
+    id: web_known_jmap
+    uri: /oidc/.well-known/jmap
+    service_id: jmap_service_oidc
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        uri: /.well-known/jmap
+      response-rewrite:
+        _meta:
+          filter:
+            - - request_method
+              - "~="
+              - OPTIONS
+        headers:
+          set:
+            Location: "/oidc/jmap/session"
+
+  #  Basic authentication endpoints
+  - id: jmap_session_basic_auth
+    uri: /jmap/session
+    service_id: jmap_service_basic_auth
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+    plugins:
+      proxy-rewrite:
+        headers:
+          set:
+            X-JMAP-PREFIX: 'http://apisix.example.com:9080'
+            X-JMAP-WEBSOCKET-PREFIX: 'ws://apisix.example.com:9080'
+  - id: jmap_basic_auth
+    uri: /jmap
+    service_id: jmap_service_basic_auth
+    methods:
+      - POST
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+  - id: download_basic_auth
+    uri: /download/*
+    service_id: jmap_service_basic_auth
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+  - id: upload_basic_auth
+    uri: /upload/*
+    service_id: jmap_service_basic_auth
+    methods:
+      - POST
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+  - id: web_known_linagora_ecosystem_basic_auth
+    uri: /.well-known/linagora-ecosystem
+    service_id: jmap_service_basic_auth
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+  - id: web_known_jmap_basic_auth
+    uri: /.well-known/jmap
+    service_id: jmap_service_basic_auth
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+  - id: jmap_websocket_basic_auth
+    uri: /jmap/ws
+    service_id: jmap_service_basic_auth
+    enable_websocket: true
+    methods:
+      - GET
+      - OPTIONS
+    plugin_config_id: jmap-plugin
+
+services:
+  -
+    id: jmap_service_oidc
+    upstream_id: jmap_upstream
+    plugins:
+      openid-connect:
+        _meta:
+          filter:
+            - - request_method
+              - "~="
+              - OPTIONS
+        client_id: "james-thunderbird"
+        client_secret: "Xw9ht1veTu0Tk5sMMy03PdzY3AiFvssw"
+        discovery: "http://sso.example.com:8080/auth/realms/oidc/.well-known/openid-configuration"
+        scope: "openid profile email"
+        bearer_only: true
+        use_jwks: true
+
+  -
+    id: jmap_service_basic_auth
+    upstream_id: jmap_upstream
+    plugins:
+      proxy-rewrite:
+        headers:
+          remove:
+            - X-Userinfo
+            - X-User
+
+upstreams:
+  -
+    id: jmap_upstream
+    nodes:
+      "james:80": 1
+    type: roundrobin
+
+plugin_configs:
+  -
+    id: jmap-plugin
+    plugins:
+      limit-req:
+        rate: 100
+        burst: 50 # number of requests above 100 and below 150 per seconds will be delayed. Above 150 will be rejected
+        key: "server_addr"
+      api-breaker:
+        break_response_code: 503
+        max_breaker_sec: 300 # should be var: JMAP_CIRCUIT_BREAKER_TIMEOUT
+        unhealthy:
+          http_statuses:
+            - 500
+            - 501
+            - 502
+            - 503
+            - 504
+          failures: 3  # should be var: JMAP_CIRCUIT_BREAKER_MAXERRORS
+        healthy:
+          successes: 1
+      ext-plugin-pre-req:
+        _meta:
+          filter:
+            - - request_method
+              - "~="
+              - OPTIONS
+        conf:
+          - name: TokenRevokedFilter
+            value: ''
+          - name: RewriteXUserFilter
+            value: 'pre'
+      ext-plugin-post-req:
+        conf:
+          - name: RewriteXUserFilter
+            value: 'post'
+#END
