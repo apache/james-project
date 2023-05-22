@@ -21,10 +21,13 @@ package org.apache.james.user.api;
 
 import java.util.Iterator;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
 import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Flux;
 
 /**
  * Interface for a repository of users. A repository represents a logical
@@ -169,5 +172,12 @@ public interface UsersRepository {
         if (username.getDomainPart().isPresent() != supportVirtualHosting()) {
             throw new UsersRepositoryException(username.asString() + " username candidate do not match the virtualHosting strategy");
         }
+    }
+
+    default Publisher<Username> listUsersOfADomainReactive(Domain domain) {
+        return Flux.from(listReactive())
+            .filter(username -> username.getDomainPart()
+                .map(domain::equals)
+                .orElse(false));
     }
 }
