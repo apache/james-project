@@ -147,6 +147,8 @@ class DeleteUsersDataOfDomainTaskTest {
             softly.assertThat(result).isEqualTo(Task.Result.PARTIAL);
             softly.assertThat(task.getContext().getSuccessfulUsersCount()).isEqualTo(0L);
             softly.assertThat(task.getContext().getFailedUsersCount()).isEqualTo(2L);
+            softly.assertThat(task.getContext().getFailedUsers())
+                .containsExactlyInAnyOrder(Username.of("user1@domain1.tld"), Username.of("user2@domain1.tld"));
         });
     }
 
@@ -168,6 +170,8 @@ class DeleteUsersDataOfDomainTaskTest {
             softly.assertThat(result).isEqualTo(Task.Result.PARTIAL);
             softly.assertThat(task.getContext().getSuccessfulUsersCount()).isEqualTo(0L);
             softly.assertThat(task.getContext().getFailedUsersCount()).isEqualTo(2L);
+            softly.assertThat(task.getContext().getFailedUsers())
+                .containsExactlyInAnyOrder(Username.of("user1@domain1.tld"), Username.of("user2@domain1.tld"));
         });
     }
 
@@ -189,6 +193,7 @@ class DeleteUsersDataOfDomainTaskTest {
             softly.assertThat(result).isEqualTo(Task.Result.PARTIAL);
             softly.assertThat(task.getContext().getSuccessfulUsersCount()).isEqualTo(2L);
             softly.assertThat(task.getContext().getFailedUsersCount()).isEqualTo(1L);
+            softly.assertThat(task.getContext().getFailedUsers()).containsExactly(Username.of("user1@domain1.tld"));
         });
     }
 }
