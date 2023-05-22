@@ -326,9 +326,12 @@ The scheduled task will have the following type `DeleteUsersDataOfDomainTask` an
         "domain": "domain.tld",
         "successfulUsersCount": 2,
         "failedUsersCount": 1,
+        "failedUsers": ["faileduser@domain.tld"],
         "timestamp": "2023-05-22T08:52:47.076261Z"
 }
 ```
+
+Notes: `failedUsers` only lists maximum 100 failed users.
 
 ## Administrating users
 

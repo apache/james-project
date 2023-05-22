@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -184,7 +185,8 @@ class DomainsRoutesTest {
                 .body("additionalInformation.type", is("DeleteUsersDataOfDomainTask"))
                 .body("additionalInformation.domain", is("localhost"))
                 .body("additionalInformation.successfulUsersCount", is(2))
-                .body("additionalInformation.failedUsersCount", is(0));
+                .body("additionalInformation.failedUsersCount", is(0))
+                .body("additionalInformation.failedUsers", empty());
 
             // then should delete data of the 2 users
             assertThat(recordProcessedUsersStep.processedUsers)
@@ -244,7 +246,8 @@ class DomainsRoutesTest {
                 .body("additionalInformation.type", is("DeleteUsersDataOfDomainTask"))
                 .body("additionalInformation.domain", is("localhost"))
                 .body("additionalInformation.successfulUsersCount", is(2))
-                .body("additionalInformation.failedUsersCount", is(0));
+                .body("additionalInformation.failedUsersCount", is(0))
+                .body("additionalInformation.failedUsers", empty());
 
             // THEN users data of domain.tld should not be clear
             assertThat(recordProcessedUsersStep.processedUsers)

@@ -22,6 +22,7 @@ package org.apache.james.webadmin.service;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
+import java.util.Set;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Domain;
@@ -40,6 +41,7 @@ class DeleteUsersDataOfDomainTaskSerializationTest {
     private static final Domain DOMAIN = Domain.of("domain");
     private static final long SUCCESSFUL_USERS_COUNT = 99L;
     private static final long FAILED_USERS_COUNT = 1L;
+    private static final Set<Username> FAILED_USERS = Set.of(Username.of("faileduser@domain"));
     private static final DeleteUserDataTaskStep.StepName STEP_A = new DeleteUserDataTaskStep.StepName("A");
     private static final DeleteUserDataTaskStep.StepName STEP_B = new DeleteUserDataTaskStep.StepName("B");
     private static final DeleteUserDataTaskStep.StepName STEP_C = new DeleteUserDataTaskStep.StepName("C");
@@ -69,7 +71,14 @@ class DeleteUsersDataOfDomainTaskSerializationTest {
     }
 
     private static final String SERIALIZED_TASK = "{\"type\":\"DeleteUsersDataOfDomainTask\",\"domain\":\"domain\"}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\":\"DeleteUsersDataOfDomainTask\",\"domain\":\"domain\",\"successfulUsersCount\":99,\"failedUsersCount\":1,\"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\n" +
+        "  \"type\": \"DeleteUsersDataOfDomainTask\",\n" +
+        "  \"domain\": \"domain\",\n" +
+        "  \"successfulUsersCount\": 99,\n" +
+        "  \"failedUsersCount\": 1,\n" +
+        "  \"failedUsers\": [\"faileduser@domain\"],\n" +
+        "  \"timestamp\": \"2018-11-13T12:00:55Z\"\n" +
+        "}";
 
     private static final DeleteUserDataService SERVICE = new DeleteUserDataService(ImmutableSet.of(A, B, C, D));
 
@@ -86,7 +95,7 @@ class DeleteUsersDataOfDomainTaskSerializationTest {
     void additionalInformationShouldBeSerializable() throws Exception {
         JsonSerializationVerifier.dtoModule(DeleteUsersDataOfDomainTaskAdditionalInformationDTO.module())
             .bean(new DeleteUsersDataOfDomainTask.AdditionalInformation(
-                TIMESTAMP, DOMAIN, SUCCESSFUL_USERS_COUNT, FAILED_USERS_COUNT))
+                TIMESTAMP, DOMAIN, SUCCESSFUL_USERS_COUNT, FAILED_USERS_COUNT, FAILED_USERS))
             .json(SERIALIZED_ADDITIONAL_INFORMATION)
             .verify();
     }

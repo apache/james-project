@@ -23,6 +23,8 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -42,18 +44,21 @@ import reactor.core.publisher.Mono;
 public class DeleteUsersDataOfDomainTask implements Task {
     static final TaskType TYPE = TaskType.of("DeleteUsersDataOfDomainTask");
     private static final int LOW_CONCURRENCY = 2;
+    private static final int MAX_STORED_FAILED_USERS = 100;
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final Instant timestamp;
         private final Domain domain;
         private final long successfulUsersCount;
         private final long failedUsersCount;
+        private final Set<Username> failedUsers;
 
-        public AdditionalInformation(Instant timestamp, Domain domain, long successfulUsersCount, long failedUsersCount) {
+        public AdditionalInformation(Instant timestamp, Domain domain, long successfulUsersCount, long failedUsersCount, Set<Username> failedUsers) {
             this.timestamp = timestamp;
             this.domain = domain;
             this.successfulUsersCount = successfulUsersCount;
             this.failedUsersCount = failedUsersCount;
+            this.failedUsers = failedUsers;
         }
 
         public Domain getDomain() {
@@ -66,6 +71,10 @@ public class DeleteUsersDataOfDomainTask implements Task {
 
         public long getFailedUsersCount() {
             return failedUsersCount;
+        }
+
+        public Set<Username> getFailedUsers() {
+            return failedUsers;
         }
 
         @Override
@@ -95,10 +104,12 @@ public class DeleteUsersDataOfDomainTask implements Task {
     static class Context {
         private final AtomicLong successfulUsersCount;
         private final AtomicLong failedUsersCount;
+        private final Set<Username> failedUsers;
 
         public Context() {
             this.successfulUsersCount = new AtomicLong();
             this.failedUsersCount = new AtomicLong();
+            this.failedUsers = ConcurrentHashMap.newKeySet();
         }
 
         private void increaseSuccessfulUsers() {
@@ -109,12 +120,20 @@ public class DeleteUsersDataOfDomainTask implements Task {
             failedUsersCount.incrementAndGet();
         }
 
+        private void addFailedUser(Username username) {
+            failedUsers.add(username);
+        }
+
         public long getSuccessfulUsersCount() {
             return successfulUsersCount.get();
         }
 
         public long getFailedUsersCount() {
             return failedUsersCount.get();
+        }
+
+        public Set<Username> getFailedUsers() {
+            return failedUsers;
         }
     }
 
@@ -148,6 +167,9 @@ public class DeleteUsersDataOfDomainTask implements Task {
             .onErrorResume(error -> {
                 LOGGER.error("Error when deleting data of user {}", username.asString(), error);
                 context.increaseFailedUsers();
+                if (context.failedUsers.size() < MAX_STORED_FAILED_USERS) {
+                    context.addFailedUser(username);
+                }
                 return Mono.just(Result.PARTIAL);
             });
     }
@@ -159,7 +181,8 @@ public class DeleteUsersDataOfDomainTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(Clock.systemUTC().instant(), domain, context.getSuccessfulUsersCount(), context.getFailedUsersCount()));
+        return Optional.of(new AdditionalInformation(Clock.systemUTC().instant(), domain, context.getSuccessfulUsersCount(),
+            context.getFailedUsersCount(), context.getFailedUsers()));
     }
 
     public Domain getDomain() {
