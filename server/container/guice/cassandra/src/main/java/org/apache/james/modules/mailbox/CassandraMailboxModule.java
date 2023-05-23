@@ -23,6 +23,7 @@ import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
+import org.apache.james.adapter.mailbox.MailboxUserDeletionTaskStep;
 import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
@@ -117,6 +118,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
+import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
@@ -250,6 +252,9 @@ public class CassandraMailboxModule extends AbstractModule {
         usernameChangeTaskStepMultibinder.addBinding().to(MailboxUsernameChangeTaskStep.class);
         usernameChangeTaskStepMultibinder.addBinding().to(ACLUsernameChangeTaskStep.class);
         usernameChangeTaskStepMultibinder.addBinding().to(QuotaUsernameChangeTaskStep.class);
+
+        Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskStepMultibinder = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
+        deleteUserDataTaskStepMultibinder.addBinding().to(MailboxUserDeletionTaskStep.class);
     }
 
     @Provides
