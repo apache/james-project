@@ -39,7 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class DeletedMessagesVaultRestoreTask implements Task {
 
-    static final TaskType TYPE = TaskType.of("deleted-messages-restore");
+    public static final TaskType TYPE = TaskType.of("deleted-messages-restore");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final Username username;
@@ -81,7 +81,7 @@ public class DeletedMessagesVaultRestoreTask implements Task {
     @VisibleForTesting
     final Query query;
 
-    DeletedMessagesVaultRestoreTask(RestoreService vaultRestore, Username userToRestore, Query query) {
+    public DeletedMessagesVaultRestoreTask(RestoreService vaultRestore, Username userToRestore, Query query) {
         this.query = query;
         this.userToRestore = userToRestore;
         this.vaultRestore = vaultRestore;
