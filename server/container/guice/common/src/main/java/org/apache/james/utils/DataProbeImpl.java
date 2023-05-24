@@ -19,6 +19,7 @@
 
 package org.apache.james.utils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +40,7 @@ import org.apache.james.util.streams.Iterators;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class DataProbeImpl implements GuiceProbe, DataProbe {
@@ -48,11 +50,8 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     private final DelegationStore delegationStore;
 
     @Inject
-    private DataProbeImpl(
-        DomainList domainList,
-        UsersRepository usersRepository,
-        RecipientRewriteTable recipientRewriteTable,
-        DelegationStore delegationStore) {
+    private DataProbeImpl(DomainList domainList, UsersRepository usersRepository,
+                          RecipientRewriteTable recipientRewriteTable, DelegationStore delegationStore) {
         this.domainList = domainList;
         this.usersRepository = usersRepository;
         this.recipientRewriteTable = recipientRewriteTable;
@@ -143,6 +142,13 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     @Override
     public void addAuthorizedUser(Username baseUser, Username userWithAccess) {
         Mono.from(delegationStore.addAuthorizedUser(baseUser, userWithAccess))
+            .block();
+    }
+
+    @Override
+    public Collection<Username> listAuthorizedUsers(Username baseUser) {
+        return Flux.from(delegationStore.authorizedUsers(baseUser))
+            .collectList()
             .block();
     }
 }

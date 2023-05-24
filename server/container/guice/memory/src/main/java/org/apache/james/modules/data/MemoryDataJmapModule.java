@@ -22,12 +22,15 @@ package org.apache.james.modules.data;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
+import org.apache.james.jmap.api.filtering.FiltersDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.FilterUsernameChangeTaskStep;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
+import org.apache.james.jmap.api.identity.IdentityUserDeletionTaskStep;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
+import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
@@ -37,6 +40,7 @@ import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
+import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 
 import com.google.inject.AbstractModule;
@@ -76,5 +80,10 @@ public class MemoryDataJmapModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
             .addBinding()
             .to(FilterUsernameChangeTaskStep.class);
+
+        Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskSteps = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(FiltersDeleteUserDataTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(IdentityUserDeletionTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(PushDeleteUserDataTaskStep.class);
     }
 }

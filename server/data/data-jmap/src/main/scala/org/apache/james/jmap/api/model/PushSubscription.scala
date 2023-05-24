@@ -88,6 +88,10 @@ case class PushSubscriptionKeys(p256dh: String, auth: String) {
   private def asECPublicKey(): ECPublicKey = EllipticCurves.getEcPublicKey(Base64.getUrlDecoder.decode(p256dh))
 }
 
+object PushSubscriptionCreationRequest {
+  val noTypes: Seq[TypeName] = Seq()
+}
+
 case class PushSubscriptionCreationRequest(deviceClientId: DeviceClientId,
                                            url: PushSubscriptionServerURL,
                                            keys: Option[PushSubscriptionKeys] = None,

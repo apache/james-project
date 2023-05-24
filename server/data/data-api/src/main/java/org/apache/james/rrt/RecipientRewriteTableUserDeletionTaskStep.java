@@ -19,6 +19,8 @@
 
 package org.apache.james.rrt;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
@@ -35,6 +37,7 @@ import reactor.core.publisher.Mono;
 public class RecipientRewriteTableUserDeletionTaskStep implements DeleteUserDataTaskStep {
     private final RecipientRewriteTable rrt;
 
+    @Inject
     public RecipientRewriteTableUserDeletionTaskStep(RecipientRewriteTable rrt) {
         this.rrt = rrt;
     }

@@ -111,7 +111,7 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
       .`then`()
 
   override def delete(username: Username): SMono[Unit] =
-    SMono(executor.executeVoid(deleteOneStatement.bind()
+    SMono(executor.executeVoid(deleteAllStatement.bind()
         .setString(USER, username.asString())))
       .`then`()
 

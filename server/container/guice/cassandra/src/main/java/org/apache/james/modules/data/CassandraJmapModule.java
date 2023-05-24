@@ -30,12 +30,15 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
+import org.apache.james.jmap.api.filtering.FiltersDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.FilterUsernameChangeTaskStep;
 import org.apache.james.jmap.api.identity.CustomIdentityDAO;
+import org.apache.james.jmap.api.identity.IdentityUserDeletionTaskStep;
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
+import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
@@ -57,6 +60,7 @@ import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.jmap.cassandra.upload.UploadConfiguration;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadModule;
+import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.PropertiesProvider;
 
@@ -116,6 +120,11 @@ public class CassandraJmapModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class)
             .addBinding()
             .to(FilterUsernameChangeTaskStep.class);
+
+        Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskSteps = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(FiltersDeleteUserDataTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(IdentityUserDeletionTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(PushDeleteUserDataTaskStep.class);
     }
 
     @Singleton
