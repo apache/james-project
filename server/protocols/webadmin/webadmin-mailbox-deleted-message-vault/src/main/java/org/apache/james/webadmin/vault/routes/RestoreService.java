@@ -51,7 +51,7 @@ import com.github.fge.lambdas.Throwing;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-class RestoreService {
+public class RestoreService {
 
     enum RestoreResult {
         RESTORE_SUCCEED,
@@ -74,7 +74,7 @@ class RestoreService {
         this.vaultConfiguration = vaultConfiguration;
     }
 
-    Flux<RestoreResult> restore(Username usernameToRestore, Query searchQuery) throws MailboxException {
+    public Flux<RestoreResult> restore(Username usernameToRestore, Query searchQuery) throws MailboxException {
         MailboxSession session = mailboxManager.createSystemSession(usernameToRestore);
         MessageManager restoreMessageManager = restoreMailboxManager(session);
 
