@@ -37,7 +37,7 @@ Today, implemented deletion steps are:
 - `VacationUserDeletionTaskStep`: deletes vacations registered for this user.
 
 
-We introduce `fromStep` query parameter that allows skipping previous steps, allowing the operator to resume the username change from a failed step.
+We introduce `fromStep` query parameter that allows skipping previous steps, allowing the operator to resume the user deletion from a failed step.
 This option could ease operators in case the data migration fails in the middle.
 
 ## Consequences
