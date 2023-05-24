@@ -4183,6 +4183,15 @@ Messages in the Deleted Messages Vault of a specified user that are matched with
   "criteria": []
 }
 ```
+- For limiting the number of restored messages, you can use the `limit` query property:
+
+```
+{
+  "combinator": "and",
+  "limit": 99
+  "criteria": []
+}
+```
 
 **Warning**: Current web-admin uses `US` locale as the default. Therefore, there might be some conflicts when using String `containsIgnoreCase` comparators to apply 
 on the String data of other special locales stored in the Vault. More details at [JIRA](https://issues.apache.org/jira/browse/MAILBOX-384) 

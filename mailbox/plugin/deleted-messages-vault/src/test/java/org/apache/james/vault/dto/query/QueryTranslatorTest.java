@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -48,7 +50,7 @@ class QueryTranslatorTest {
 
     @Test
     void translateShouldThrowWhenPassingNotAndOperator() {
-        assertThatThrownBy(() -> queryTranslator.translate(new QueryDTO("or", ImmutableList.of())))
+        assertThatThrownBy(() -> queryTranslator.translate(new QueryDTO("or", ImmutableList.of(), Optional.empty())))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("combinator 'or' is not yet handled");
     }
@@ -56,7 +58,7 @@ class QueryTranslatorTest {
     @Test
     void translateShouldNotThrowWhenPassingNullOperator() {
         String nullOperator = null;
-        assertThatCode(() -> queryTranslator.translate(new QueryDTO(nullOperator, ImmutableList.of())))
+        assertThatCode(() -> queryTranslator.translate(new QueryDTO(nullOperator, ImmutableList.of(), Optional.empty())))
             .doesNotThrowAnyException();
     }
 
@@ -215,5 +217,18 @@ class QueryTranslatorTest {
             new CriterionDTO(FieldName.SENDER.getValue(), Operator.EQUALS.getValue(), "user@james.org"),
             new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "true")
         ));
+    }
+
+    @Test
+    void toDTOShouldSuccessWhenHasLimitQuery() throws Exception {
+        Query query = Query.of(11,
+            List.of(CriterionFactory.subject().contains("james"),
+                CriterionFactory.hasSender(new MailAddress("user@james.org")),
+                CriterionFactory.hasAttachment(true)));
+
+        assertThat(queryTranslator.toDTO(query)).isEqualTo(QueryDTO.and(11L,
+            new CriterionDTO(FieldName.SUBJECT.getValue(), Operator.CONTAINS.getValue(), "james"),
+            new CriterionDTO(FieldName.SENDER.getValue(), Operator.EQUALS.getValue(), "user@james.org"),
+            new CriterionDTO(FieldName.HAS_ATTACHMENT.getValue(), Operator.EQUALS.getValue(), "true")));
     }
 }

@@ -20,10 +20,12 @@
 package org.apache.james.vault.search;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.apache.james.vault.DeletedMessage;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class Query {
@@ -34,14 +36,31 @@ public class Query {
         return new Query(criteria);
     }
 
+    public static Query and(List<Criterion<?>> criteria, Optional<Long> limit) {
+        return new Query(criteria, limit.orElse(null));
+    }
+
     public static Query of(Criterion<?>... criteria) {
         return new Query(ImmutableList.copyOf(criteria));
     }
 
+    public static Query of(long limit, List<Criterion<?>> criteria) {
+        return new Query(criteria, limit);
+    }
+
     private final List<Criterion<?>> criteria;
+
+    private final Optional<Long> limit;
 
     private Query(List<Criterion<?>> criteria) {
         this.criteria = criteria;
+        this.limit = Optional.empty();
+    }
+
+    public Query(List<Criterion<?>> criteria, Long limit) {
+        Preconditions.checkArgument(limit == null || limit > 0, "Limit should be strictly positive");
+        this.criteria = criteria;
+        this.limit = Optional.ofNullable(limit);
     }
 
     public Predicate<DeletedMessage> toPredicate() {
@@ -53,5 +72,9 @@ public class Query {
 
     public List<Criterion<?>> getCriteria() {
         return criteria;
+    }
+
+    public Optional<Long> getLimit() {
+        return limit;
     }
 }

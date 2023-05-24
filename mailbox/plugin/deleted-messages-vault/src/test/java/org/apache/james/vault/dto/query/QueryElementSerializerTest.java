@@ -22,6 +22,7 @@ package org.apache.james.vault.dto.query;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.apache.james.vault.search.FieldName;
 import org.apache.james.vault.search.Operator;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,7 @@ class QueryElementSerializerTest {
     @BeforeEach
     void beforeEach() {
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new Jdk8Module());
         queryElementSerializer = new QueryElementSerializer(objectMapper);
     }
 
@@ -54,9 +56,11 @@ class QueryElementSerializerTest {
         JsonAssertions.assertThatJson(queryElementSerializer.serialize(queryDTO))
             .isEqualTo("{  " +
                 "  \"combinator\": \"and\",  " +
+                "  \"limit\": null,  " +
                 "  \"criteria\": [  " +
                 "    {  " +
                 "      \"combinator\": \"and\",  " +
+                "      \"limit\": null,  " +
                 "      \"criteria\": [  " +
                 "        {\"fieldName\": \"subject\", \"operator\": \"contains\", \"value\": \"" + SUBJECT + "\"}," +
                 "        {\"fieldName\": \"sender\", \"operator\": \"equals\", \"value\": \"" + SENDER.asString() + "\"}" +
@@ -70,7 +74,7 @@ class QueryElementSerializerTest {
     @Test
     void shouldSerializeFlattenStructure() throws Exception {
 
-        QueryDTO queryDTO = QueryDTO.and(
+        QueryDTO queryDTO = QueryDTO.and(1L,
             CriterionDTO.from(FieldName.SUBJECT, Operator.CONTAINS, SUBJECT),
             CriterionDTO.from(FieldName.SENDER, Operator.EQUALS, SENDER.asString()),
             CriterionDTO.from(FieldName.HAS_ATTACHMENT, Operator.EQUALS, "true")
@@ -79,6 +83,7 @@ class QueryElementSerializerTest {
         JsonAssertions.assertThatJson(queryElementSerializer.serialize(queryDTO))
             .isEqualTo("{  " +
                 "  \"combinator\": \"and\",  " +
+                "  \"limit\": 1,  " +
                 "  \"criteria\": [  " +
                 "    {\"fieldName\": \"subject\", \"operator\": \"contains\", \"value\": \"" + SUBJECT + "\"}," +
                 "    {\"fieldName\": \"sender\", \"operator\": \"equals\", \"value\": \"" + SENDER.asString() + "\"}," +

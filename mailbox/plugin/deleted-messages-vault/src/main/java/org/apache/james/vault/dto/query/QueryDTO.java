@@ -21,6 +21,7 @@ package org.apache.james.vault.dto.query;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.vault.search.Combinator;
 
@@ -35,16 +36,25 @@ public class QueryDTO implements QueryElement {
 
     @VisibleForTesting
     static QueryDTO and(QueryElement... queryElements) {
-        return new QueryDTO(Combinator.AND.getValue(), ImmutableList.copyOf(queryElements));
+        return new QueryDTO(Combinator.AND.getValue(), ImmutableList.copyOf(queryElements), Optional.empty());
+    }
+
+    @VisibleForTesting
+    static QueryDTO and(Long limit, QueryElement... queryElements) {
+        return new QueryDTO(Combinator.AND.getValue(), ImmutableList.copyOf(queryElements), Optional.ofNullable(limit));
     }
 
     private final String combinator;
     private final List<QueryElement> criteria;
+    private final Optional<Long> limit;
 
     @JsonCreator
-    public QueryDTO(@JsonProperty("combinator") String combinator, @JsonProperty("criteria") List<QueryElement> criteria) {
+    public QueryDTO(@JsonProperty("combinator") String combinator,
+                    @JsonProperty("criteria") List<QueryElement> criteria,
+                    @JsonProperty("limit") Optional<Long> limit) {
         this.combinator = combinator;
         this.criteria = criteria;
+        this.limit = Optional.ofNullable(limit).orElse(Optional.empty());
     }
 
     public String getCombinator() {
@@ -55,19 +65,24 @@ public class QueryDTO implements QueryElement {
         return criteria;
     }
 
+    public Optional<Long> getLimit() {
+        return limit;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof QueryDTO) {
             QueryDTO queryDTO = (QueryDTO) o;
 
             return Objects.equals(this.combinator, queryDTO.getCombinator())
-                && Objects.equals(this.criteria, queryDTO.getCriteria());
+                && Objects.equals(this.criteria, queryDTO.getCriteria())
+                && Objects.equals(this.limit, queryDTO.getLimit());
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(combinator, criteria);
+        return Objects.hash(combinator, criteria, limit);
     }
 }

@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.vault.DeletedMessageFixture.CONTENT;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_2;
+import static org.apache.james.vault.DeletedMessageFixture.DELETED_MESSAGE_GENERATOR;
 import static org.apache.james.vault.DeletedMessageFixture.DELETION_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.DELIVERY_DATE;
 import static org.apache.james.vault.DeletedMessageFixture.FINAL_STAGE;
@@ -1791,6 +1792,49 @@ class DeletedMessagesVaultRoutesTest {
 
             assertThat(hasAnyMail(USERNAME_2))
                 .isFalse();
+        }
+
+        @Test
+        void restoreShouldSupportLimitQuery() throws Exception {
+            Mono.from(vault.append(FINAL_STAGE.get()
+                .subject("subject contains should match")
+                .build(), new ByteArrayInputStream(CONTENT))).block();
+
+            DeletedMessage deletedMessage2 = DELETED_MESSAGE_GENERATOR.apply(InMemoryMessageId.of(22).getRawId());
+
+            Mono.from(vault.append(deletedMessage2, new ByteArrayInputStream(CONTENT))).block();
+
+            String query = "{" +
+                "  \"combinator\": \"and\"," +
+                "  \"limit\": 1," +
+                "  \"criteria\": [" +
+                "    {" +
+                "      \"fieldName\": \"sender\"," +
+                "      \"operator\": \"equals\"," +
+                "      \"value\": \"" + SENDER.asString() + "\"" +
+                "    }" +
+                "  ]" +
+                "}";
+
+            String taskId =
+                given()
+                    .queryParam("action", "restore")
+                    .body(query)
+                .when()
+                    .post(BOB_PATH)
+                    .jsonPath()
+                    .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("status", is("completed"))
+                .body("additionalInformation.successfulRestoreCount", is(1));
+
+            assertThat(restoreMessageContents(USERNAME))
+                .hasSize(1);
         }
 
     }

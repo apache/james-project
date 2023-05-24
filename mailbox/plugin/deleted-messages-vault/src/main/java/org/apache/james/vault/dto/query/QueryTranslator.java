@@ -198,7 +198,7 @@ public class QueryTranslator {
         List<QueryElement> queryElements = query.getCriteria().stream()
             .map(this::toDTO)
             .collect(ImmutableList.toImmutableList());
-        return new QueryDTO(Combinator.AND.getValue(), queryElements);
+        return new QueryDTO(Combinator.AND.getValue(), queryElements, query.getLimit());
     }
 
     private CriterionDTO toDTO(Criterion<?> criterion) {
@@ -224,7 +224,7 @@ public class QueryTranslator {
         return Query.and(queryDTO.getCriteria().stream()
             .map(queryElement -> (CriterionDTO) queryElement)
             .map(Throwing.function(this::translate))
-            .collect(ImmutableList.toImmutableList()));
+            .collect(ImmutableList.toImmutableList()), queryDTO.getLimit());
     }
 
     private boolean combinatorIsValid(String combinator) {
