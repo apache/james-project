@@ -351,6 +351,32 @@ public abstract class DeletedMessageVaultIntegrationTest {
     }
 
     @Test
+    void postShouldRestoreMatchingMessagesWhenQueryLimit() {
+        bartSendMessageToHomerWithSubject("aaaa");
+        bartSendMessageToHomerWithSubject("aaaa");
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerAccessToken)).hasSize(2));
+
+        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
+
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerAccessToken)).hasSize(0));
+
+        String query = "{" +
+            "  \"combinator\": \"and\"," +
+            "  \"limit\": 1," +
+            "  \"criteria\": [" +
+            "    {" +
+            "      \"fieldName\": \"subject\"," +
+            "      \"operator\": \"equals\"," +
+            "      \"value\": \"aaaa\"" +
+            "    }" +
+            "  ]" +
+            "}";
+        restoreMessagesForUserWithQuery(webAdminApi, HOMER, query);
+
+        WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerAccessToken)).hasSize(1));
+    }
+
+    @Test
     void imapMovedMessageShouldNotEndUpInTheVault(GuiceJamesServer jmapServer) throws Exception {
         bartSendMessageToHomer();
         WAIT_TWO_MINUTES.untilAsserted(() -> assertThat(listMessageIdsForAccount(homerAccessToken)).hasSize(1));

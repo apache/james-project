@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.ByteArrayInputStream;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.List;
 
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.task.Task;
@@ -125,6 +126,21 @@ public interface DeletedMessageVaultContract {
 
         assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
+    }
+
+    @Test
+    default void searchAllShouldSupportLimitQuery() {
+        Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
+        Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
+        DeletedMessage deletedMessage3 = DELETED_MESSAGE_GENERATOR.apply(InMemoryMessageId.of(33).getRawId());
+        Mono.from(getVault().append(deletedMessage3, new ByteArrayInputStream(CONTENT))).block();
+
+        assertThat(Flux.from(getVault().search(USERNAME, Query.of(1, List.of()))).collectList().block())
+            .hasSize(1);
+        assertThat(Flux.from(getVault().search(USERNAME, Query.of(3, List.of()))).collectList().block())
+            .containsExactlyInAnyOrder(DELETED_MESSAGE, DELETED_MESSAGE_2, deletedMessage3);
+        assertThat(Flux.from(getVault().search(USERNAME, Query.of(4, List.of()))).collectList().block())
+            .containsExactlyInAnyOrder(DELETED_MESSAGE, DELETED_MESSAGE_2, deletedMessage3);
     }
 
     @Test
