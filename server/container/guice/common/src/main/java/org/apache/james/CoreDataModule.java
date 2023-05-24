@@ -24,7 +24,9 @@ import java.util.Set;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.rrt.ForwardUsernameChangeTaskStep;
+import org.apache.james.rrt.RecipientRewriteTableUserDeletionTaskStep;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.user.api.DelegationUserDeletionTaskStep;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 
@@ -40,7 +42,10 @@ public class CoreDataModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), UserEntityValidator.class).addBinding().to(RecipientRewriteTableUserEntityValidator.class);
 
         Multibinder.newSetBinder(binder(), UsernameChangeTaskStep.class).addBinding().to(ForwardUsernameChangeTaskStep.class);
-        Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
+
+        Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskSteps = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(RecipientRewriteTableUserDeletionTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(DelegationUserDeletionTaskStep.class);
     }
 
     @Provides

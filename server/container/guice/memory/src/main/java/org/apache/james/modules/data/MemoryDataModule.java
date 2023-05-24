@@ -41,11 +41,13 @@ import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.vacation.api.NotificationRegistry;
+import org.apache.james.vacation.api.VacationDeleteUserTaskStep;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationService;
 import org.apache.james.vacation.memory.MemoryNotificationRegistry;
@@ -105,6 +107,9 @@ public class MemoryDataModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), MailRepositoryFactory.class)
                 .addBinding().to(MemoryMailRepositoryFactory.class);
+
+        Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskSteps = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
+        deleteUserDataTaskSteps.addBinding().to(VacationDeleteUserTaskStep.class);
     }
 
     @ProvidesIntoSet
