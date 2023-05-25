@@ -463,7 +463,7 @@ public abstract class AbstractConfigurableAsyncServer
     protected AbstractChannelPipelineFactory createPipelineFactory() {
         return new AbstractSSLAwareChannelPipelineFactory<>(getTimeout(), connectionLimit, connPerIP,
             proxyRequired,
-            getEncryption(), getFrameHandlerFactory(), getExecutorGroup()) {
+            this::getEncryption, getFrameHandlerFactory(), getExecutorGroup()) {
 
             @Override
             protected ChannelInboundHandlerAdapter createHandler() {

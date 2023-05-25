@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.protocols.netty;
 
+import java.util.function.Supplier;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -30,7 +32,7 @@ import io.netty.util.concurrent.EventExecutorGroup;
 @ChannelHandler.Sharable
 public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketChannel> extends AbstractChannelPipelineFactory<C> {
     private final boolean proxyRequired;
-    private Encryption secure;
+    private Supplier<Encryption> secure;
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
                                                   int maxConnections, int maxConnectsPerIp,
@@ -42,7 +44,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
     }
 
     public AbstractSSLAwareChannelPipelineFactory(int timeout,
-            int maxConnections, int maxConnectsPerIp, boolean proxyRequired, Encryption secure,
+            int maxConnections, int maxConnectsPerIp, boolean proxyRequired, Supplier<Encryption> secure,
             ChannelHandlerFactory frameHandlerFactory, EventExecutorGroup eventExecutorGroup) {
         this(timeout, maxConnections, maxConnectsPerIp, proxyRequired, frameHandlerFactory, eventExecutorGroup);
 
@@ -55,9 +57,9 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
 
         if (isSSLSocket()) {
             if (proxyRequired) {
-                channel.pipeline().addAfter("proxyInformationHandler", HandlerConstants.SSL_HANDLER, secure.sslHandler());
+                channel.pipeline().addAfter("proxyInformationHandler", HandlerConstants.SSL_HANDLER, secure.get().sslHandler());
             } else {
-                channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, secure.sslHandler());
+                channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, secure.get().sslHandler());
             }
         }
     }
@@ -66,6 +68,6 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
      * Return if the socket is using SSL/TLS
      */
     protected boolean isSSLSocket() {
-        return secure != null && secure.supportsEncryption() && !secure.isStartTLS();
+        return secure != null && secure.get().supportsEncryption() && !secure.get().isStartTLS();
     }
 }
