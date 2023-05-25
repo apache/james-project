@@ -68,7 +68,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -79,8 +78,8 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class WebAdminServerModule extends AbstractModule {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(WebAdminServerModule.class);
+
     private static final boolean DEFAULT_JWT_DISABLED = false;
     private static final boolean DEFAULT_DISABLED = false;
     private static final String DEFAULT_NO_CORS_ORIGIN = null;
@@ -90,14 +89,12 @@ public class WebAdminServerModule extends AbstractModule {
     private static final String DEFAULT_NO_PASSWORD = null;
     private static final String DEFAULT_NO_TRUST_KEYSTORE = null;
     private static final String DEFAULT_NO_TRUST_PASSWORD = null;
-    private static final Splitter SPLITTER = Splitter.on(',')
-        .trimResults()
-        .omitEmptyStrings();
 
     @Override
     protected void configure() {
         install(new TaskRoutesModule());
         install(new HealthCheckRoutesModule());
+        install(new ServerRouteModule());
 
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);

@@ -57,10 +57,10 @@ import org.apache.james.imap.processor.SelectProcessor;
 import org.apache.james.imap.processor.base.AbstractProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
 import org.apache.james.imapserver.netty.IMAPServerFactory;
-import org.apache.james.imapserver.webadmin.ImapRoutes;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
@@ -68,7 +68,6 @@ import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.KeystoreCreator;
-import org.apache.james.webadmin.Routes;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -102,7 +101,7 @@ public class IMAPServerModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(ImapGuiceProbe.class);
 
-        Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(ImapRoutes.class);
+        Multibinder.newSetBinder(binder(), AbstractServerFactory.class).addBinding().to(IMAPServerFactory.class);
     }
 
     @Provides

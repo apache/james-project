@@ -16,25 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.imapserver.webadmin;
 
-import javax.inject.Inject;
+package org.apache.james.modules.server;
 
-import org.apache.james.imapserver.netty.IMAPServerFactory;
-import org.apache.james.protocols.lib.webadmin.AbstractServerRoutes;
+import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.webadmin.ProtocolServerRoutes;
+import org.apache.james.webadmin.Routes;
 
-public class ImapRoutes
-        extends AbstractServerRoutes {
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-    public static final String BASE_PATH = "/imap";
-
-    @Inject
-    public ImapRoutes(IMAPServerFactory imapServerFactory) {
-        this.serverFactory = imapServerFactory;
-    }
-
+public class ServerRouteModule extends AbstractModule {
     @Override
-    public String getBasePath() {
-        return BASE_PATH;
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), AbstractServerFactory.class);
+
+        Multibinder.newSetBinder(binder(), Routes.class)
+            .addBinding()
+            .to(ProtocolServerRoutes.class);
     }
 }
