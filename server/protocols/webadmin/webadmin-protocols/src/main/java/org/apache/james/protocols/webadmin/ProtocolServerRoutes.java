@@ -19,12 +19,14 @@
 
 package org.apache.james.protocols.webadmin;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.util.Port;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.Responses;
@@ -32,7 +34,9 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 
+import spark.Request;
 import spark.Service;
 
 public class ProtocolServerRoutes implements Routes {
@@ -67,10 +71,17 @@ public class ProtocolServerRoutes implements Routes {
             servers.stream()
                 .flatMap(serverFactory -> serverFactory.getServers().stream())
                 .filter(AbstractConfigurableAsyncServer::isEnabled)
+                .filter(filters(request))
                 .forEach(Throwing.consumer(AbstractConfigurableAsyncServer::reloadSSLCertificate));
 
             return Responses.returnNoContent(response);
         });
+    }
+
+    private Predicate<AbstractConfigurableAsyncServer> filters(Request request) {
+        Optional<Port> port = Optional.ofNullable(request.queryParams("port")).map(Integer::parseUnsignedInt).map(Port::of);
+
+        return server -> port.map(p -> server.getPort() == p.getValue()).orElse(true);
     }
 
     private boolean noServerEnabled() {
