@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
+import org.apache.james.adapter.mailbox.MailboxUserDeletionTaskStep;
 import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
@@ -75,6 +76,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
+import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.james.vault.memory.metadata.MemoryDeletedMessageMetadataVault;
@@ -162,6 +164,9 @@ public class MemoryMailboxModule extends AbstractModule {
         usernameChangeTaskStepMultibinder.addBinding().to(MailboxUsernameChangeTaskStep.class);
         usernameChangeTaskStepMultibinder.addBinding().to(ACLUsernameChangeTaskStep.class);
         usernameChangeTaskStepMultibinder.addBinding().to(QuotaUsernameChangeTaskStep.class);
+
+        Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskStepMultibinder = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
+        deleteUserDataTaskStepMultibinder.addBinding().to(MailboxUserDeletionTaskStep.class);
     }
 
     @Singleton
