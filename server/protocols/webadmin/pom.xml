@@ -46,6 +46,7 @@
         <module>webadmin-mailqueue</module>
         <module>webadmin-mailrepository</module>
         <module>webadmin-pop3</module>
+        <module>webadmin-protocols</module>
         <module>webadmin-rabbitmq</module>
     </modules>
 
