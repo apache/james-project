@@ -26,13 +26,12 @@ import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.pop3server.mailbox.DefaultMailboxAdapterFactory;
 import org.apache.james.pop3server.mailbox.MailboxAdapterFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
-import org.apache.james.pop3server.webadmin.POP3Routes;
+import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.KeystoreCreator;
-import org.apache.james.webadmin.Routes;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -49,7 +48,7 @@ public class POP3ServerModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(Pop3GuiceProbe.class);
 
-        Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(POP3Routes.class);
+        Multibinder.newSetBinder(binder(), AbstractServerFactory.class).addBinding().to(POP3ServerFactory.class);
     }
 
     @ProvidesIntoSet
