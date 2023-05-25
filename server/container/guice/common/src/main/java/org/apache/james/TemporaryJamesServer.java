@@ -25,12 +25,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.common.collect.ImmutableList;
@@ -77,19 +75,17 @@ public class TemporaryJamesServer {
         return jamesServer;
     }
 
-    public void appendConfigurationFile(String configurationData, String configurationFileName) throws IOException {
-        try (OutputStream outputStream = new FileOutputStream(Paths.get(configurationFolder.getAbsolutePath(), configurationFileName).toFile())) {
-            IOUtils.write(configurationData, outputStream, StandardCharsets.UTF_8);
-        }
-    }
-
     private void copyResources(Path resourcesFolder) {
         configurationFileNames
-            .forEach(resourceName -> copyResource(resourcesFolder, resourceName));
+            .forEach(resourceName -> copyResource(resourcesFolder, resourceName, resourceName));
     }
 
-    public static void copyResource(Path resourcesFolder, String resourceName) {
-        var resolvedResource = resourcesFolder.resolve(resourceName);
+    public void copyResources(String resourceName, String targetName) {
+        copyResource(Paths.get(configurationFolder.getAbsolutePath()), resourceName, targetName);
+    }
+
+    public static void copyResource(Path resourcesFolder, String resourceName, String targetName) {
+        var resolvedResource = resourcesFolder.resolve(targetName);
         try (OutputStream outputStream = new FileOutputStream(resolvedResource.toFile())) {
             URL resource = ClassLoader.getSystemClassLoader().getResource(resourceName);
             if (resource != null) {
