@@ -36,7 +36,7 @@ class MemoryJamesServerTest implements JamesServerContract {
 
     @Override
     public int imapsPort(GuiceJamesServer server) {
-        return server.getProbe(ImapGuiceProbe.class).getImapsPort();
+        return server.getProbe(ImapGuiceProbe.class).getImapStartTLSPort();
     }
 
     @Override

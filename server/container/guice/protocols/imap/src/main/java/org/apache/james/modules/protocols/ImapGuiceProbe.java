@@ -49,8 +49,13 @@ public class ImapGuiceProbe implements GuiceProbe {
             .orElseThrow(() -> new IllegalStateException("IMAP server not defined"));
     }
 
-    public int getImapsPort() {
+    public int getImapStartTLSPort() {
         return getPort(AbstractConfigurableAsyncServer::getStartTLSSupported)
+            .orElseThrow(() -> new IllegalStateException("IMAPS server not defined"));
+    }
+
+    public int getImapSSLPort() {
+        return getPort(server -> server.getSocketType().equals("secure"))
             .orElseThrow(() -> new IllegalStateException("IMAPS server not defined"));
     }
 

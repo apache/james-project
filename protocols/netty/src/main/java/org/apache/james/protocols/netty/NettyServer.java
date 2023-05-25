@@ -126,7 +126,7 @@ public class NettyServer extends AbstractAsyncServer {
             maxCurConnections,
             maxCurConnectionsPerIP,
             proxyRequired,
-            secure,
+            () -> secure,
             getFrameHandlerFactory(),
             new DefaultEventLoopGroup(16)) {
 
