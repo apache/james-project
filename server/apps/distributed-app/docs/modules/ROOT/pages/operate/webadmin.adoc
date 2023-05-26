@@ -4819,3 +4819,26 @@ This is an example of returned body.
   "targetsContent": false
 }
 ....
+
+== Reloading server certificates
+
+Certificates for TCP based protocols (IMAP, SMTP, POP3, LMTP and ManageSieve) can be updated at
+runtime, without service interuption and without closing existing connections.
+
+In order to do so:
+
+ - Generate / retrieve your cryptographic materials and replace the ones specified in James configuration.
+ - Then call the following endpoint:
+
+....
+curl -XPOST http://ip:port/servers?reload-certificate
+....
+
+Optional query parameters:
+
+ - `port`: positive integer (valid port number). Only reload certificates for the specific port.
+
+Return code:
+
+ - 204: the certificate is reloaded
+ - 400: Invalid request.
