@@ -68,6 +68,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
      * Return if the socket is using SSL/TLS
      */
     protected boolean isSSLSocket() {
-        return secure != null && secure.get().supportsEncryption() && !secure.get().isStartTLS();
+        Encryption encryption = secure.get();
+        return encryption != null && encryption.supportsEncryption() && !encryption.isStartTLS();
     }
 }
