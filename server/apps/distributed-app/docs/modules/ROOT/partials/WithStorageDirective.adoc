@@ -6,12 +6,30 @@ These directives are used by <strong>LocalDelivery</strong> mailet when adding t
 
 The following storage directives can be set:
 
-* targetFolderName: the folder to append the email in. (compulsory)
+* targetFolderNames: the folders to append the email in. Defaults to none (INBOX). Coma separated list of folder names. Fallback to targetFolderName.
+* targetFolderName: the folder to append the email in. Defaults to none (INBOX).
+* seen: boolean, whether the message should be automatically marked as seen. Defaults to false.
+* important: boolean, whether the message should be automatically marked as important. Defaults to false.
+* keywords: set of string, encoded as a string (value are coma separated). IMAP user flags to set for the message. Defaults to none
 
 Example:
 
 ....
 <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
-  <targetFolderName>Spam</targetFolderName>
+    <targetFolderName>Spam</targetFolderName>
+    <seen>true</seen>
+    <important>true</important>
+    <keywords>keyword1,keyword2</targetFolderName>
+</mailet>
+....
+
+Alternatively, several target folders can be specified:
+
+....
+<mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+  <targetFolderNames>Important, INBOX</targetFolderNames>
+  <seen>true</seen>
+  <important>true</important>
+  <keywords>keyword1,keyword2</targetFolderName>
 </mailet>
 ....

@@ -78,6 +78,28 @@ class WithStorageDirectiveIntegrationTest {
     }
 
     @Test
+    void targetFolderNamesShouldWork(@TempDir File temporaryFolder) throws Exception {
+        setUp(temporaryFolder, MailetConfiguration.builder()
+            .matcher(SenderIsLocal.class)
+            .mailet(WithStorageDirective.class)
+            .addProperty("targetFolderNames", "target1, target2"));
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .create("target1")
+            .create("target2");
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT);
+
+        testIMAPClient.select("target1")
+            .awaitMessage(awaitAtMostOneMinute);
+        testIMAPClient.select("target2")
+            .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
     void seenShouldWork(@TempDir File temporaryFolder) throws Exception {
         setUp(temporaryFolder, MailetConfiguration.builder()
             .matcher(SenderIsLocal.class)

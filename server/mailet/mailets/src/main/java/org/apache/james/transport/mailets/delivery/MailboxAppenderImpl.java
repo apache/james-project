@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.delivery;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -38,15 +39,18 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.server.core.MimeMessageUtil;
 import org.apache.mailet.StorageDirective;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MailboxAppenderImpl implements MailboxAppender {
@@ -59,11 +63,35 @@ public class MailboxAppenderImpl implements MailboxAppender {
     }
 
     public Mono<ComposedMessageId> append(MimeMessage mail, Username user, StorageDirective storageDirective) throws MessagingException {
-        Preconditions.checkArgument(storageDirective.getTargetFolder().isPresent(), "'targetFolder' field is needed");
+        Preconditions.checkArgument(storageDirective.getTargetFolders().isPresent(), "'targetFolders' field is needed");
 
         MailboxSession session = createMailboxSession(user);
-        return append(mail, user, useSlashAsSeparator(storageDirective.getTargetFolder().get(), session), storageDirective.getFlags(), session)
-            .map(AppendResult::getId);
+        String urlPath = storageDirective.getTargetFolders().flatMap(collection -> collection.stream().findFirst()).get();
+        String targetFolder = useSlashAsSeparator(urlPath, session);
+
+        return append(mail, user, targetFolder, storageDirective.getFlags(), session)
+            .map(AppendResult::getId)
+            .flatMap(id -> copyToExtraMailboxes(storageDirective, session, targetFolder, id));
+    }
+
+    // Avoids using the MessageIdManager for JPA compatibility
+    private Mono<ComposedMessageId> copyToExtraMailboxes(StorageDirective storageDirective, MailboxSession session, String targetFolder, ComposedMessageId id) {
+        Collection<String> folders = storageDirective.getTargetFolders().get();
+
+        if (folders.size() > 1) {
+            return Flux.fromIterable(folders)
+                .skip(1)
+                .flatMap(Throwing.function(extraTargetFolder -> {
+                    MailboxPath targetMailboxPath = MailboxPath.forUser(session.getUser(), targetFolder);
+                    MailboxPath destinationMailboxPath = MailboxPath.forUser(session.getUser(), useSlashAsSeparator(extraTargetFolder, session));
+
+                    return mailboxManager.copyMessagesReactive(MessageRange.one(id.getUid()),
+                        targetMailboxPath, destinationMailboxPath, session);
+                }))
+                .then(Mono.fromRunnable(() -> LOGGER.info("{} copied to {} extra mailboxes", id.getMessageId(), folders)))
+                .thenReturn(id);
+        }
+        return Mono.just(id);
     }
 
     private String useSlashAsSeparator(String urlPath, MailboxSession session) throws MessagingException {

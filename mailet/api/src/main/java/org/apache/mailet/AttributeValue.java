@@ -29,8 +29,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.MessageIdDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,7 +44,6 @@ import com.google.common.collect.ImmutableMap;
  * @since Mailet API v3.2
  */
 public class AttributeValue<T> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AttributeValue.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static AttributeValue<Boolean> of(Boolean value) {
