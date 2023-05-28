@@ -55,37 +55,28 @@ public class JpaCurrentQuotaManager implements CurrentQuotaManager {
     public Mono<QuotaCountUsage> getCurrentMessageCount(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        try {
-            return Mono.fromCallable(() -> Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
-                .map(JpaCurrentQuota::getMessageCount)
-                .orElse(QuotaCountUsage.count(NO_STORED_BYTES)));
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
-        }
+        return Mono.fromCallable(() -> Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
+            .map(JpaCurrentQuota::getMessageCount)
+            .orElse(QuotaCountUsage.count(NO_STORED_BYTES)))
+            .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
     @Override
     public Mono<QuotaSizeUsage> getCurrentStorage(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        try {
-            return Mono.fromCallable(() -> Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
-                .map(JpaCurrentQuota::getSize)
-                .orElse(QuotaSizeUsage.size(NO_STORED_BYTES)));
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
-        }
+        return Mono.fromCallable(() -> Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
+            .map(JpaCurrentQuota::getSize)
+            .orElse(QuotaSizeUsage.size(NO_STORED_BYTES)))
+            .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            return Mono.fromCallable(() ->  Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
-                .map(jpaCurrentQuota -> new CurrentQuotas(jpaCurrentQuota.getMessageCount(), jpaCurrentQuota.getSize()))
-                .orElse(CurrentQuotas.emptyQuotas()));
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
-        }
+        return Mono.fromCallable(() ->  Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
+            .map(jpaCurrentQuota -> new CurrentQuotas(jpaCurrentQuota.getMessageCount(), jpaCurrentQuota.getSize()))
+            .orElse(CurrentQuotas.emptyQuotas()))
+            .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
     @Override
