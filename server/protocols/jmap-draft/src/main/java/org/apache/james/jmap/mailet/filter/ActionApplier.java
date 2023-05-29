@@ -41,7 +41,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public class ActionApplier {
-    static final String DELIVERY_PATH_PREFIX = "DeliveryPath_";
     public static final Logger LOGGER = LoggerFactory.getLogger(ActionApplier.class);
 
     @VisibleForTesting
