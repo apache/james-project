@@ -23,7 +23,7 @@ import org.apache.james.ProtocolConfigurationSanitizer;
 import org.apache.james.RunArguments;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
-import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
@@ -45,7 +45,7 @@ public class SMTPServerModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SmtpGuiceProbe.class);
 
-        Multibinder.newSetBinder(binder(), AbstractServerFactory.class).addBinding().to(SMTPServerFactory.class);
+        Multibinder.newSetBinder(binder(), CertificateReloadable.Factory.class).addBinding().to(SMTPServerFactory.class);
     }
 
     @ProvidesIntoSet

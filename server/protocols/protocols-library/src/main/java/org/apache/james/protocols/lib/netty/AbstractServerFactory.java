@@ -20,6 +20,7 @@
 package org.apache.james.protocols.lib.netty;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -31,7 +32,7 @@ import org.apache.james.lifecycle.api.Configurable;
 /**
  * Abstract base class for Factories that need to create {@link AbstractConfigurableAsyncServer}'s via configuration files
  */
-public abstract class AbstractServerFactory implements Configurable {
+public abstract class AbstractServerFactory implements Configurable, CertificateReloadable.Factory {
 
     private List<AbstractConfigurableAsyncServer> servers;
     private HierarchicalConfiguration<ImmutableNode> config;
@@ -69,5 +70,10 @@ public abstract class AbstractServerFactory implements Configurable {
             server.destroy();
         }
     }
- 
+
+    @Override
+    public Stream<AbstractConfigurableAsyncServer> certificatesReloadable() {
+        return getServers().stream()
+            .filter(AbstractConfigurableAsyncServer::isEnabled);
+    }
 }

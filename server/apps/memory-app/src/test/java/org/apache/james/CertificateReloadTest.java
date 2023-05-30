@@ -203,7 +203,7 @@ class CertificateReloadTest {
         .then()
             .statusCode(204);
 
-        System.out.println(readBytes(channel));
+        readBytes(channel);
         channel.getOutputStream().write("EHLO toto.com\r\n".getBytes(StandardCharsets.UTF_8));
         assertThat(readBytes(channel))
             .contains("250 8BITMIME");
