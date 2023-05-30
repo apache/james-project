@@ -18,7 +18,14 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.netty;
 
+import java.util.stream.Stream;
+
 public interface CertificateReloadable {
+    interface Factory {
+        Stream<? extends CertificateReloadable> certificatesReloadable();
+    }
 
     void reloadSSLCertificate() throws Exception;
+
+    int getPort();
 }

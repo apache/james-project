@@ -24,8 +24,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
-import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -42,10 +41,10 @@ import spark.Service;
 public class ProtocolServerRoutes implements Routes {
     public static final String SERVERS = "servers";
 
-    private final Set<AbstractServerFactory> servers;
+    private final Set<CertificateReloadable.Factory> servers;
 
     @Inject
-    public ProtocolServerRoutes(Set<AbstractServerFactory> servers) {
+    public ProtocolServerRoutes(Set<CertificateReloadable.Factory> servers) {
         this.servers = servers;
     }
 
@@ -69,16 +68,15 @@ public class ProtocolServerRoutes implements Routes {
             }
 
             servers.stream()
-                .flatMap(serverFactory -> serverFactory.getServers().stream())
-                .filter(AbstractConfigurableAsyncServer::isEnabled)
+                .flatMap(CertificateReloadable.Factory::certificatesReloadable)
                 .filter(filters(request))
-                .forEach(Throwing.consumer(AbstractConfigurableAsyncServer::reloadSSLCertificate));
+                .forEach(Throwing.consumer(CertificateReloadable::reloadSSLCertificate));
 
             return Responses.returnNoContent(response);
         });
     }
 
-    private Predicate<AbstractConfigurableAsyncServer> filters(Request request) {
+    private Predicate<CertificateReloadable> filters(Request request) {
         Optional<Port> port = Optional.ofNullable(request.queryParams("port")).map(Integer::parseUnsignedInt).map(Port::of);
 
         return server -> port.map(p -> server.getPort() == p.getValue()).orElse(true);
@@ -86,7 +84,8 @@ public class ProtocolServerRoutes implements Routes {
 
     private boolean noServerEnabled() {
         return servers.stream()
-            .flatMap(serverFactory -> serverFactory.getServers().stream())
-            .filter(AbstractConfigurableAsyncServer::isEnabled).findFirst().isEmpty();
+            .flatMap(CertificateReloadable.Factory::certificatesReloadable)
+            .findFirst()
+            .isEmpty();
     }
 }

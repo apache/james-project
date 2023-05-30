@@ -65,10 +65,7 @@ public class SmtpGuiceProbe implements GuiceProbe {
     }
 
     public Port getSmtpSslPort() {
-        return getPort(server -> {
-            System.out.println(server.getServiceType());
-            return server.getSocketType().equals("secure");
-        });
+        return getPort(server -> server.getSocketType().equals("secure"));
     }
 
     public Port getSmtpAuthRequiredPort() {

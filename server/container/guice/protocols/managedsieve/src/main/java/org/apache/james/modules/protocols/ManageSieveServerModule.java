@@ -25,7 +25,7 @@ import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
-import org.apache.james.protocols.lib.netty.AbstractServerFactory;
+import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
@@ -47,7 +47,7 @@ public class ManageSieveServerModule extends AbstractModule {
         bind(CoreCommands.class).to(CoreProcessor.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SieveProbeImpl.class);
 
-        Multibinder.newSetBinder(binder(), AbstractServerFactory.class).addBinding().to(ManageSieveServerFactory.class);
+        Multibinder.newSetBinder(binder(), CertificateReloadable.Factory.class).addBinding().to(ManageSieveServerFactory.class);
     }
 
     @ProvidesIntoSet
