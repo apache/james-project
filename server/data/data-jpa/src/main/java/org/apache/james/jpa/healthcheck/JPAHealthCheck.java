@@ -22,14 +22,15 @@ import static org.apache.james.core.healthcheck.Result.healthy;
 import static org.apache.james.core.healthcheck.Result.unhealthy;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class JPAHealthCheck implements HealthCheck {
 
@@ -47,15 +48,15 @@ public class JPAHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        return Mono.fromCallable(entityManagerFactory::createEntityManager)
-            .map(EntityManager::isOpen)
-            .map(open -> {
-                if (open) {
-                    return healthy(componentName());
+        return Mono.usingWhen(Mono.fromCallable(entityManagerFactory::createEntityManager).subscribeOn(Schedulers.boundedElastic()),
+            entityManager -> {
+                if (entityManager.isOpen()) {
+                    return Mono.just(healthy(componentName()));
                 } else {
-                    return unhealthy(componentName(), "entityManager is not open");
+                    return Mono.just(unhealthy(componentName(), "entityManager is not open"));
                 }
-            })
+            },
+            entityManager -> Mono.fromRunnable(() -> EntityManagerUtils.safelyClose(entityManager)).subscribeOn(Schedulers.boundedElastic()))
             .onErrorResume(IllegalStateException.class,
                 e -> Mono.just(unhealthy(componentName(), "EntityManagerFactory or EntityManager thrown an IllegalStateException, the connection is unhealthy", e)))
             .onErrorResume(e -> Mono.just(unhealthy(componentName(), "Unexpected exception upon checking JPA driver", e)));
