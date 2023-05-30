@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
@@ -56,7 +57,8 @@ public class JpaCurrentQuotaManager implements CurrentQuotaManager {
 
         return Mono.fromCallable(() -> Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
             .map(JpaCurrentQuota::getMessageCount)
-            .orElse(QuotaCountUsage.count(NO_STORED_BYTES)));
+            .orElse(QuotaCountUsage.count(NO_STORED_BYTES)))
+            .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
     @Override
@@ -65,14 +67,16 @@ public class JpaCurrentQuotaManager implements CurrentQuotaManager {
 
         return Mono.fromCallable(() -> Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
             .map(JpaCurrentQuota::getSize)
-            .orElse(QuotaSizeUsage.size(NO_STORED_BYTES)));
+            .orElse(QuotaSizeUsage.size(NO_STORED_BYTES)))
+            .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         return Mono.fromCallable(() ->  Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
             .map(jpaCurrentQuota -> new CurrentQuotas(jpaCurrentQuota.getMessageCount(), jpaCurrentQuota.getSize()))
-            .orElse(CurrentQuotas.emptyQuotas()));
+            .orElse(CurrentQuotas.emptyQuotas()))
+            .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
     @Override
