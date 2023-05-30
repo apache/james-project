@@ -29,13 +29,11 @@ import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.FROM;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.RECIPIENT;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.SUBJECT;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.TO;
-import static org.apache.james.jmap.mailet.filter.ActionApplier.DELIVERY_PATH_PREFIX;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.BOU;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.EMPTY;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULLNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULL_SCRAMBLED_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.GA_BOU_ZO_MEU_FULL_ADDRESS;
-import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_MAILBOX_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.SCRAMBLED_SUBJECT;
@@ -54,12 +52,14 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_4_FU
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -83,14 +83,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
 @ExtendWith(JMAPFilteringExtension.class)
 class JMAPFilteringTest {
 
-    private static final AttributeName RECIPIENT_1_USERNAME_ATTRIBUTE_NAME = AttributeName.of(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME.asString());
-    private static final Attribute RECIPIENT_1_MAILBOX_1_ATTRIBUTE = new Attribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME, RECIPIENT_1_MAILBOX_1);
+    private static final AttributeName RECIPIENT_1_USERNAME_ATTRIBUTE_NAME = AttributeName.of("DeliveryPaths_" + RECIPIENT_1_USERNAME.asString());
+    private static final Attribute RECIPIENT_1_MAILBOX_1_ATTRIBUTE = new Attribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME, AttributeValue.of(ImmutableList.of(RECIPIENT_1_MAILBOX_1)));
 
     static class FilteringArgumentBuilder {
         private Optional<String> description;
@@ -219,6 +220,27 @@ class JMAPFilteringTest {
             this.field = field;
             this.headerName = headerName;
         }
+    }
+
+    @FunctionalInterface
+    interface AttributeEquals {
+        void isEqualTo(Attribute other);
+    }
+
+    public static AttributeEquals assertThatAttribute(Attribute attribute) {
+        return other -> {
+            assertThat(attribute.getName()).isEqualTo(other.getName());
+            assertThat(unbox(attribute)).isEqualTo(unbox(other));
+        };
+    }
+
+    public static AttributeEquals assertThatAttribute(Optional<Attribute> attribute) {
+        return assertThatAttribute(attribute.get());
+    }
+
+    static Pair<AttributeName, String> unbox(Attribute attribute) {
+        Collection<AttributeValue> collection = (Collection<AttributeValue>) attribute.getValue().getValue();
+        return Pair.of(attribute.getName(), (String) collection.stream().findFirst().get().getValue());
     }
 
     public static final ImmutableList<FieldAndHeader> ADDRESS_TESTING_COMBINATION = ImmutableList.of(
@@ -576,8 +598,8 @@ class JMAPFilteringTest {
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
 
-        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .contains(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+                .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
     }
 
     @ParameterizedTest(name = "CONTAINS should not match for field {1}: {0}")
@@ -607,8 +629,8 @@ class JMAPFilteringTest {
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
 
-        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-            .contains(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
     }
 
 
@@ -640,8 +662,8 @@ class JMAPFilteringTest {
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
 
-        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-            .contains(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
     }
 
     @ParameterizedTest(name = "EXACTLY-EQUALS should not match for field {1}: {0}")
@@ -671,8 +693,8 @@ class JMAPFilteringTest {
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
 
-        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-            .contains(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
     }
 
     @ParameterizedTest(name = "NOT_EXACTLY_EQUALS should not match for field {1}: {0}")
@@ -726,8 +748,8 @@ class JMAPFilteringTest {
 
             testSystem.getJmapFiltering().service(mail);
 
-            assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .contains(new Attribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME, AttributeValue.of("RECIPIENT_1_MAILBOX_3")));
+            assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+                .isEqualTo(new Attribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME, AttributeValue.of(ImmutableList.of(AttributeValue.of("RECIPIENT_1_MAILBOX_3")))));
         }
 
         @Test
@@ -753,8 +775,10 @@ class JMAPFilteringTest {
 
             testSystem.getJmapFiltering().service(mail);
 
-            assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .contains(new Attribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME, AttributeValue.of("RECIPIENT_1_MAILBOX_1")));
+            assertThat((ImmutableSet) mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME).get().getValue().value())
+                .containsOnly(AttributeValue.of("RECIPIENT_1_MAILBOX_3"),
+                    AttributeValue.of("RECIPIENT_1_MAILBOX_2"),
+                    AttributeValue.of("RECIPIENT_1_MAILBOX_1"));
         }
 
         @Test
@@ -782,8 +806,8 @@ class JMAPFilteringTest {
 
             testSystem.getJmapFiltering().service(mail);
 
-            assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .contains(new Attribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME, AttributeValue.of("RECIPIENT_1_MAILBOX_1")));
+            assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+                .isEqualTo(new Attribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME, AttributeValue.of(ImmutableList.of(AttributeValue.of("RECIPIENT_1_MAILBOX_1")))));
         }
 
         @Test
@@ -892,8 +916,8 @@ class JMAPFilteringTest {
 
             testSystem.getJmapFiltering().service(mail);
 
-            assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .contains(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+            assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+                .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
         }
 
         @Test
@@ -916,8 +940,8 @@ class JMAPFilteringTest {
 
             testSystem.getJmapFiltering().service(mail);
 
-            assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .contains(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+            assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+                .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
         }
     }
 

@@ -101,7 +101,7 @@ public class SimpleMailStore implements MailStore {
                 .doOnSuccess(ids -> {
                     metric.increment();
                     LOGGER.info("Local delivered mail {} with messageId {} successfully from {} to {} in folder {} with composedMessageId {}",
-                        mail.getName(), getMessageId(mail), mail.getMaybeSender().asString(), recipient.asPrettyString(), storageDirective.getTargetFolder().get(), ids);
+                        mail.getName(), getMessageId(mail), mail.getMaybeSender().asString(), recipient.asPrettyString(), storageDirective.getTargetFolders().get(), ids);
                 })
                 .then();
         } catch (MessagingException e) {

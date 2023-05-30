@@ -25,10 +25,13 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -51,6 +54,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableList;
+
 class SieveIntegrationTest {
 
     private static final String LOCAL_PART = "receiver";
@@ -66,18 +71,39 @@ class SieveIntegrationTest {
     private static final MailboxPath INBOX = MailboxPath.inbox(LOCAL_USER);
     private static final MailboxPath INBOX_ANY = MailboxPath.forUser(LOCAL_USER, "INBOX.any");
 
-    private static final AttributeName ATTRIBUTE_NAME = AttributeName.of("DeliveryPath_" + LOCAL_PART);
-    private static final Attribute ATTRIBUTE_INBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
-    private static final Attribute ATTRIBUTE_INBOX_ANY = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX_ANY.getName())));
-    private static final Attribute ATTRIBUTE_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(SELECTED_MAILBOX.getName())));
-    private static final Attribute ATTRIBUTE_NOT_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(NOT_SELECTED_MAILBOX.getName())));
-    private static final AttributeName ATTRIBUTE_NAME_DOMAIN = AttributeName.of("DeliveryPath_" + RECEIVER_DOMAIN_COM);
-    private static final Attribute ATTRIBUTE_INBOX_DOMAIN = new Attribute(ATTRIBUTE_NAME_DOMAIN, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
+    private static final AttributeName ATTRIBUTE_NAME = AttributeName.of("DeliveryPaths_" + LOCAL_PART);
+    private static final Attribute ATTRIBUTE_INBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(ImmutableList.of(AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())))));
+    private static final Attribute ATTRIBUTE_INBOX_ANY = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(ImmutableList.of(AttributeValue.of(expressMailboxNameWithSlash(INBOX_ANY.getName())))));
+    private static final Attribute ATTRIBUTE_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(ImmutableList.of(AttributeValue.of(expressMailboxNameWithSlash(SELECTED_MAILBOX.getName())))));
+    private static final Attribute ATTRIBUTE_NOT_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(ImmutableList.of(AttributeValue.of(expressMailboxNameWithSlash(NOT_SELECTED_MAILBOX.getName())))));
+    private static final AttributeName ATTRIBUTE_NAME_DOMAIN = AttributeName.of("DeliveryPaths_" + RECEIVER_DOMAIN_COM);
+    private static final Attribute ATTRIBUTE_INBOX_DOMAIN = new Attribute(ATTRIBUTE_NAME_DOMAIN, AttributeValue.of(ImmutableList.of(AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())))));
 
     private Sieve testee;
     private UsersRepository usersRepository;
     private ResourceLocator resourceLocator;
     private FakeMailContext fakeMailContext;
+
+    @FunctionalInterface
+    interface AttributeEquals {
+        void isEqualTo(Attribute other);
+    }
+
+    public static AttributeEquals assertThatAttribute(Attribute attribute) {
+        return other -> {
+            assertThat(attribute.getName()).isEqualTo(other.getName());
+            assertThat(unbox(attribute)).isEqualTo(unbox(other));
+        };
+    }
+
+    public static AttributeEquals assertThatAttribute(Optional<Attribute> attribute) {
+        return assertThatAttribute(attribute.get());
+    }
+
+    static Pair<AttributeName, String> unbox(Attribute attribute) {
+        Collection<AttributeValue> collection = (Collection<AttributeValue>) attribute.getValue().getValue();
+        return Pair.of(attribute.getName(), (String) collection.stream().findFirst().get().getValue());
+    }
 
     @BeforeEach
     void setUp() throws Exception {
@@ -111,7 +137,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME_DOMAIN)).contains(ATTRIBUTE_INBOX_DOMAIN);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME_DOMAIN)).isEqualTo(ATTRIBUTE_INBOX_DOMAIN);
     }
 
     @Test
@@ -123,7 +149,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
     }
 
     @Test
@@ -133,7 +159,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
     }
 
     @Test
@@ -153,7 +179,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX_ANY);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX_ANY);
     }
 
     @Test
@@ -163,7 +189,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -173,7 +199,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -183,7 +209,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -193,7 +219,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -203,7 +229,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -213,7 +239,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -223,7 +249,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -233,7 +259,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -243,7 +269,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -253,7 +279,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -263,7 +289,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
     }
 
     @Test
@@ -273,7 +299,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -290,8 +316,8 @@ class SieveIntegrationTest {
             .build();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME))
-            .contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME))
+            .isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
 
@@ -302,7 +328,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubject("JAMES-1620 revolution");
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -313,7 +339,7 @@ class SieveIntegrationTest {
         mail.setMessageSize(100);
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -324,7 +350,7 @@ class SieveIntegrationTest {
         mail.setMessageSize(100);
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -335,7 +361,7 @@ class SieveIntegrationTest {
         mail.setMessageSize(1000);
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -346,7 +372,7 @@ class SieveIntegrationTest {
         mail.setMessageSize(1000);
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -356,7 +382,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@any.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
 
@@ -367,7 +393,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source1@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
 
@@ -378,7 +404,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source1@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -388,7 +414,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -398,7 +424,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -408,7 +434,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -418,7 +444,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source2@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -428,7 +454,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Bcc", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -455,7 +481,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -465,7 +491,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -475,7 +501,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source2@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -485,7 +511,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -495,7 +521,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Cc", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -505,7 +531,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -515,7 +541,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source2@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -525,7 +551,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -535,7 +561,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resent-To", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -545,7 +571,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -555,7 +581,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source2@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -565,7 +591,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -575,7 +601,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -585,7 +611,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -595,7 +621,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source2@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -605,7 +631,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Sender", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -615,7 +641,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -625,7 +651,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -635,7 +661,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source2@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -645,7 +671,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-From", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -655,7 +681,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("To", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -665,7 +691,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -675,7 +701,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source2@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -685,7 +711,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("Resend-To", "source@domain.org"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -695,7 +721,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMailWithSubjectAndHeaders("Default", new Header("From", "source@domain.com"));
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -705,7 +731,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -715,7 +741,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -725,7 +751,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -735,7 +761,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -745,7 +771,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -755,7 +781,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -765,7 +791,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -775,7 +801,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -785,7 +811,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_NOT_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_NOT_SELECTED_MAILBOX);
     }
 
     @Test
@@ -795,7 +821,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
     }
 
     @Test
@@ -823,7 +849,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
 
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
@@ -841,7 +867,7 @@ class SieveIntegrationTest {
 
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         assertThat(fakeMailContext.getSentMails()).isEmpty();
     }
 
@@ -852,7 +878,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         assertThat(fakeMailContext.getSentMails()).isEmpty();
     }
 
@@ -863,7 +889,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
         assertThat(fakeMailContext.getSentMails()).isEmpty();
     }
 
@@ -874,7 +900,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         assertThat(fakeMailContext.getSentMails()).isEmpty();
     }
 
@@ -885,7 +911,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
             .recipient(new MailAddress("sender@any.com"))
@@ -901,7 +927,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_SELECTED_MAILBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_SELECTED_MAILBOX);
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
             .recipient(new MailAddress("sender@any.com"))
@@ -917,7 +943,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress("benwa@apache.org"))
             .recipient(new MailAddress("sender@any.com"))
@@ -933,7 +959,7 @@ class SieveIntegrationTest {
         FakeMail mail = createMail();
         testee.service(mail);
 
-        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
             .recipient(new MailAddress("sender@any.com"))

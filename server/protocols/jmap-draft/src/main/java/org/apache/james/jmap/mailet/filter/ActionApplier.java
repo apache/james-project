@@ -41,7 +41,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public class ActionApplier {
-    static final String DELIVERY_PATH_PREFIX = "DeliveryPath_";
     public static final Logger LOGGER = LoggerFactory.getLogger(ActionApplier.class);
 
     @VisibleForTesting
@@ -102,13 +101,14 @@ public class ActionApplier {
                 .collect(ImmutableList.toImmutableList()));
             return;
         }
-        Optional<String> targetMailbox = action.getAppendInMailboxes().getMailboxIds()
+        Optional<ImmutableList<String>> targetMailboxes = Optional.of(action.getAppendInMailboxes().getMailboxIds()
             .stream()
             .flatMap(this::asMailboxName)
-            .reduce((first, second) -> second);
+            .collect(ImmutableList.toImmutableList()))
+            .filter(mailboxes -> !mailboxes.isEmpty());
 
         StorageDirective.Builder storageDirective = StorageDirective.builder();
-        targetMailbox.ifPresent(storageDirective::targetFolder);
+        targetMailboxes.ifPresent(storageDirective::targetFolders);
         storageDirective
             .seen(Optional.of(action.isMarkAsSeen()).filter(seen -> seen))
             .important(Optional.of(action.isMarkAsImportant()).filter(seen -> seen))

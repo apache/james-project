@@ -22,6 +22,9 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Collection;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Attribute;
@@ -30,9 +33,9 @@ import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 class WithStorageDirectiveTest {
@@ -74,12 +77,18 @@ class WithStorageDirectiveTest {
 
         testee.service(mail);
 
-        AttributeName recipient1 = AttributeName.of("DeliveryPath_recipient1@localhost");
-        AttributeName recipient2 = AttributeName.of("DeliveryPath_recipient2@localhost");
-        assertThat(mail.attributes())
+        AttributeName recipient1 = AttributeName.of("DeliveryPaths_recipient1@localhost");
+        AttributeName recipient2 = AttributeName.of("DeliveryPaths_recipient2@localhost");
+
+        assertThat(mail.attributes().map(this::unbox))
             .containsOnly(
-                new Attribute(recipient1, AttributeValue.of(targetFolderName)),
-                new Attribute(recipient2, AttributeValue.of(targetFolderName)));
+                Pair.of(recipient1, targetFolderName),
+                Pair.of(recipient2, targetFolderName));
+    }
+
+    Pair<AttributeName, String> unbox(Attribute attribute) {
+        Collection<AttributeValue> collection = (Collection<AttributeValue>) attribute.getValue().getValue();
+        return Pair.of(attribute.getName(), (String) collection.stream().findFirst().get().getValue());
     }
 
     @Test
@@ -198,13 +207,13 @@ class WithStorageDirectiveTest {
 
     @Test
     void serviceShouldOverridePreviousStorageDirectives() throws Exception {
-        AttributeName name1 = AttributeName.of("DeliveryPath_recipient1@localhost");
-        AttributeName name2 = AttributeName.of("DeliveryPath_recipient2@localhost");
-        AttributeValue<String> targetFolderName = AttributeValue.of("Spam");
+        AttributeName name1 = AttributeName.of("DeliveryPaths_recipient1@localhost");
+        AttributeName name2 = AttributeName.of("DeliveryPaths_recipient2@localhost");
+        AttributeValue<Collection<AttributeValue<?>>> targetFolderName = AttributeValue.of(ImmutableList.of(AttributeValue.of("Spam")));
         Attribute attribute1 = new Attribute(name1, targetFolderName);
         Attribute attribute2 = new Attribute(name2, targetFolderName);
         testee.init(FakeMailetConfig.builder()
-            .setProperty(WithStorageDirective.TARGET_FOLDER_NAME, targetFolderName.value())
+            .setProperty(WithStorageDirective.TARGET_FOLDER_NAMES, "Spam")
             .build());
 
         FakeMail mail = FakeMail.builder()
@@ -215,12 +224,8 @@ class WithStorageDirectiveTest {
 
         testee.service(mail);
 
-        SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(mail.attributes())
-                .containsExactlyInAnyOrder(attribute1, attribute2);
-            softly.assertThat(mail.getAttribute(name1)).contains(attribute1);
-            softly.assertThat(mail.getAttribute(name2)).contains(attribute2);
-        });
+        assertThat(mail.attributes().map(this::unbox))
+            .containsExactlyInAnyOrder(Pair.of(name1, "Spam"), Pair.of(name2, "Spam"));
     }
 
 }

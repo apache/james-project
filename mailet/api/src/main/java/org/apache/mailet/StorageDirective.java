@@ -19,6 +19,7 @@
 package org.apache.mailet;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -28,6 +29,7 @@ import javax.mail.Flags;
 import org.apache.james.core.Username;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Booleans;
 
@@ -54,7 +56,7 @@ import com.google.common.primitives.Booleans;
  */
 public class StorageDirective {
     public static class Builder {
-        private Optional<String> targetFolder = Optional.empty();
+        private ImmutableList.Builder<String> targetFolders = ImmutableList.builder();
         private Optional<Boolean> seen = Optional.empty();
         private Optional<Boolean> important = Optional.empty();
         private Optional<Collection<String>> keywords = Optional.empty();
@@ -70,12 +72,22 @@ public class StorageDirective {
         }
 
         public Builder targetFolder(Optional<String> value) {
-            this.targetFolder = value;
+            value.ifPresent(targetFolders::add);
             return this;
         }
 
         public Builder targetFolder(String value) {
-            this.targetFolder = Optional.of(value);
+            targetFolders.add(value);
+            return this;
+        }
+
+        public Builder targetFolders(Collection<String> values) {
+            targetFolders.addAll(values);
+            return this;
+        }
+
+        public Builder targetFolders(Optional<List<String>> values) {
+            values.ifPresent(this::targetFolders);
             return this;
         }
 
@@ -88,14 +100,15 @@ public class StorageDirective {
             Preconditions.checkState(hasChanges(),
                 "Expecting one of the storage directives to be specified: [targetFolder, seen, important, keywords]");
 
-            return new StorageDirective(targetFolder, seen, important, keywords);
+            Optional<Collection<String>> targetFolders = Optional.of(this.targetFolders.build()).filter(c -> !c.isEmpty()).map(c -> (Collection<String>) c);
+            return new StorageDirective(targetFolders, seen, important, keywords);
         }
 
         private boolean hasChanges() {
             return Booleans.countTrue(
                 seen.isPresent(),
                 important.isPresent(),
-                targetFolder.isPresent(),
+                !targetFolders.build().isEmpty(),
                 keywords.isPresent()) > 0;
         }
 
@@ -108,6 +121,7 @@ public class StorageDirective {
     }
 
     private static final String DELIVERY_PATH_PREFIX = "DeliveryPath_";
+    private static final String DELIVERY_PATHS_PREFIX = "DeliveryPaths_";
     private static final String SEEN_PREFIX = "Seen_";
     private static final String IMPORTANT_PREFIX = "Important_";
     private static final String KEYWORDS_PREFIX = "Keywords_";
@@ -155,17 +169,27 @@ public class StorageDirective {
             .map(Boolean.class::cast);
     }
 
-    private static Optional<String> locateFolder(Username username, Mail mail) {
+    private static Optional<Collection<String>> locateFolder(Username username, Mail mail) {
+        AttributeName foldersAttribute = AttributeName.of(DELIVERY_PATHS_PREFIX + username.asString());
+        if (mail.getAttribute(foldersAttribute).isPresent()) {
+            return AttributeUtils.getValueAndCastFromMail(mail, foldersAttribute, Collection.class)
+                .map(collection -> (Collection<AttributeValue>) collection)
+                .map(collection -> collection.stream()
+                    .map(AttributeValue::getValue)
+                    .map(String.class::cast)
+                    .collect(ImmutableList.toImmutableList()));
+        }
         return AttributeUtils
-            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username.asString()), String.class);
+            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username.asString()), String.class)
+            .map(ImmutableList::of);
     }
 
-    private final Optional<String> targetFolder;
+    private final Optional<Collection<String>> targetFolder;
     private final Optional<Boolean> seen;
     private final Optional<Boolean> important;
     private final Optional<Collection<String>> keywords;
 
-    private StorageDirective(Optional<String> targetFolder,
+    private StorageDirective(Optional<Collection<String>> targetFolder,
                             Optional<Boolean> seen,
                             Optional<Boolean> important,
                             Optional<Collection<String>> keywords) {
@@ -197,7 +221,7 @@ public class StorageDirective {
 
     public Stream<Attribute> encodeAsAttributes(Username username) {
         return Stream.of(
-            targetFolder.map(value -> new Attribute(AttributeName.of(DELIVERY_PATH_PREFIX + username.asString()), AttributeValue.of(value))),
+            targetFolder.map(value -> new Attribute(AttributeName.of(DELIVERY_PATHS_PREFIX + username.asString()), asAttributeValue(value))),
             seen.map(value -> new Attribute(AttributeName.of(SEEN_PREFIX + username.asString()), AttributeValue.of(value))),
             important.map(value -> new Attribute(AttributeName.of(IMPORTANT_PREFIX + username.asString()), AttributeValue.of(value))),
             keywords.map(value -> new Attribute(AttributeName.of(KEYWORDS_PREFIX + username.asString()), asAttributeValue(value))))
@@ -212,12 +236,12 @@ public class StorageDirective {
 
     public StorageDirective withDefaultFolder(String folder) {
         if (targetFolder.isEmpty()) {
-            return new StorageDirective(Optional.of(folder), seen, important, keywords);
+            return new StorageDirective(Optional.of(ImmutableList.of(folder)), seen, important, keywords);
         }
         return this;
     }
 
-    public Optional<String> getTargetFolder() {
+    public Optional<Collection<String>> getTargetFolders() {
         return targetFolder;
     }
 
