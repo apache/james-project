@@ -2314,7 +2314,7 @@
             <dependency>
                 <groupId>eu.timepit</groupId>
                 <artifactId>refined_${scala.base}</artifactId>
-                <version>0.10.1</version>
+                <version>0.10.3</version>
             </dependency>
             <dependency>
                 <groupId>io.cucumber</groupId>
