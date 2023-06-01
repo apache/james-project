@@ -8,6 +8,6 @@ wait-for-it.sh --host=localhost --port=9999 --strict --timeout=0 -- ./initialdat
 
 java -Djdk.tls.ephemeralDHKeySize=2048 \
      -classpath '/root/resources:/root/classes:/root/libs/*' \
-     -javaagent:/root/libs/openjpa-3.1.2.jar \
+     -javaagent:/root/libs/openjpa-3.2.0.jar \
      -Dlogback.configurationFile=/root/conf/logback.xml \
       -Dworking.directory=/root/ org.apache.james.JPAJamesServerMain
