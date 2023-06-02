@@ -231,6 +231,11 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         return cassandraSubscriptionMapper;
     }
 
+    @Override
+    public void endProcessingRequest(MailboxSession session) {
+
+    }
+
     public DeleteMessageListener deleteMessageListener() {
         return new DeleteMessageListener(threadDAO, threadLookupDAO, imapUidDAO, messageIdDAO, messageDAO, messageDAOV3, attachmentDAOV2,
             attachmentMessageIdDAO, aclMapper, userMailboxRightsDAO, applicableFlagDAO, firstUnseenDAO, deletedMessageDAO,

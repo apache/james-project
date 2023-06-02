@@ -121,7 +121,8 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
         return factory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
             .map(Mailbox::generateAssociatedPath)
-            .flatMap(path -> Mono.from(getQuotaRootReactive(path)));
+            .flatMap(path -> Mono.from(getQuotaRootReactive(path)))
+            .doFinally(any -> factory.endProcessingRequest(session));
     }
 
     @Override
@@ -138,7 +139,8 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
             .flatMap(this::getQuotaRootReactive, ReactorUtils.DEFAULT_CONCURRENCY)
             .distinct();
 
-        return Flux.concat(quotaRootListFromDelegatedMailboxes, Flux.just(forUser(username)));
+        return Flux.concat(quotaRootListFromDelegatedMailboxes, Flux.just(forUser(username)))
+            .doFinally(any -> factory.endProcessingRequest(session));
     }
 
     @Override

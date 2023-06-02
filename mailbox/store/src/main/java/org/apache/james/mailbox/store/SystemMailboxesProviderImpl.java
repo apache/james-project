@@ -57,7 +57,8 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
 
         return Mono.from(mailboxManager.getMailboxReactive(mailboxPath, session))
             .flux()
-            .onErrorResume(MailboxNotFoundException.class, e -> searchMessageManagerByMailboxRole(aRole, username));
+            .onErrorResume(MailboxNotFoundException.class, e -> searchMessageManagerByMailboxRole(aRole, username))
+            .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 
     private boolean hasRole(Role aRole, MailboxPath mailBoxPath) {

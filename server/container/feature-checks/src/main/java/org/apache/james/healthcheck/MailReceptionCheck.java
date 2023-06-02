@@ -223,7 +223,8 @@ public class MailReceptionCheck implements HealthCheck {
             .onErrorResume(e -> {
                 LOGGER.error("Mail reception check failed", e);
                 return Mono.just(Result.unhealthy(componentName(), e.getMessage()));
-            });
+            })
+            .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 
     private Mono<MessageManager> retrieveInbox(Username username, MailboxSession session) {
