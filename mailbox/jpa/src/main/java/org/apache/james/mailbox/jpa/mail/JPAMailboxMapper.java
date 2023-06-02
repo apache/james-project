@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.NoSuchElementException;
+
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
@@ -48,6 +50,7 @@ import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Data access management for mailbox.
@@ -92,7 +95,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
                 getEntityManager().persist(persistedMailbox);
 
                 return new Mailbox(mailboxPath, uidValidity, persistedMailbox.getMailboxId());
-            }))
+            }).subscribeOn(Schedulers.boundedElastic()))
             .onErrorMap(PersistenceException.class, e -> new MailboxException("Save of mailbox " + mailboxPath.getName() + " failed", e));
     }
 
@@ -107,7 +110,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
 
                 getEntityManager().persist(persistedMailbox);
                 return (MailboxId) persistedMailbox.getMailboxId();
-            }))
+            }).subscribeOn(Schedulers.boundedElastic()))
             .onErrorMap(PersistenceException.class, e -> new MailboxException("Save of mailbox " + mailbox.getName() + " failed", e));
     }
 
@@ -133,12 +136,15 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             .getSingleResult()
             .toMailbox())
             .onErrorResume(NoResultException.class, e -> Mono.empty())
-            .onErrorResume(PersistenceException.class, e -> Mono.error(new MailboxException("Exception upon JPA execution", e)));
+            .onErrorResume(NoSuchElementException.class, e -> Mono.empty())
+            .onErrorResume(PersistenceException.class, e -> Mono.error(new MailboxException("Exception upon JPA execution", e)))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<Mailbox> findMailboxById(MailboxId id) {
         return Mono.fromCallable(() -> loadJpaMailbox(id).toMailbox())
+            .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(PersistenceException.class, e -> new MailboxException("Search of mailbox " + id.serialize() + " failed", e));
     }
 
@@ -161,6 +167,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             JPAMailbox jpaMailbox = getEntityManager().find(JPAMailbox.class, mailboxId.getRawId());
             getEntityManager().remove(jpaMailbox);
         })
+        .subscribeOn(Schedulers.boundedElastic())
         .onErrorMap(PersistenceException.class, e -> new MailboxException("Delete of mailbox " + mailbox + " failed", e))
         .then();
     }
@@ -169,6 +176,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
         String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
         return Mono.fromCallable(() -> findMailboxWithPathLikeTypedQuery(query.getFixedNamespace(), query.getFixedUser(), pathLike))
+            .subscribeOn(Schedulers.boundedElastic())
             .flatMapIterable(TypedQuery::getResultList)
             .map(JPAMailbox::toMailbox)
             .filter(query::matches)
@@ -192,6 +200,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
                 .setParameter("namespaceParam", mailbox.getNamespace())
                 .setParameter("userParam", mailbox.getUser().asString())
                 .getSingleResult()))
+            .subscribeOn(Schedulers.boundedElastic())
             .filter(numberOfChildMailboxes -> numberOfChildMailboxes > 0)
             .hasElement();
     }
@@ -199,6 +208,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     @Override
     public Flux<Mailbox> list() {
         return Mono.fromCallable(() -> getEntityManager().createNamedQuery("listMailboxes", JPAMailbox.class))
+            .subscribeOn(Schedulers.boundedElastic())
             .flatMapIterable(TypedQuery::getResultList)
             .onErrorMap(PersistenceException.class, e -> new MailboxException("Delete of mailboxes failed", e))
             .map(JPAMailbox::toMailbox);
@@ -211,7 +221,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
             mailbox.setACL(newACL);
             return ACLDiff.computeDiff(oldACL, newACL);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -220,7 +230,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             MailboxACL oldMailboxAcl = mailbox.getACL();
             mailbox.setACL(mailboxACL);
             return ACLDiff.computeDiff(oldMailboxAcl, mailboxACL);
-        });
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
