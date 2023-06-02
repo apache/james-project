@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Take care of provide uids for a given {@link Mailbox}. Be aware that implementations
@@ -50,13 +51,15 @@ public interface UidProvider {
     Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException;
 
     default Mono<Optional<MessageUid>> lastUidReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> lastUid(mailbox));
+        return Mono.fromCallable(() -> lastUid(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     MessageUid nextUid(MailboxId mailboxId) throws MailboxException;
 
     default Mono<MessageUid> nextUidReactive(MailboxId mailboxId) {
-        return Mono.fromCallable(() -> nextUid(mailboxId));
+        return Mono.fromCallable(() -> nextUid(mailboxId))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     default Mono<List<MessageUid>> nextUids(MailboxId mailboxId, int count) {

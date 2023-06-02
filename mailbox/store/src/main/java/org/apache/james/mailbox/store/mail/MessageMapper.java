@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Maps {@link MailboxMessage} in a {@link org.apache.james.mailbox.MessageManager}. A {@link MessageMapper} has a lifecycle from the start of a request
@@ -97,11 +98,8 @@ public interface MessageMapper extends Mapper {
     List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException;
 
     default Flux<MessageUid> retrieveMessagesMarkedForDeletionReactive(Mailbox mailbox, MessageRange messageRange) {
-        try {
-            return Flux.fromIterable(retrieveMessagesMarkedForDeletion(mailbox, messageRange));
-        } catch (MailboxException e) {
-            return Flux.error(e);
-        }
+        return Flux.defer(Throwing.supplier(() -> Flux.fromIterable(retrieveMessagesMarkedForDeletion(mailbox, messageRange))).sneakyThrow())
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -113,7 +111,8 @@ public interface MessageMapper extends Mapper {
     MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException;
 
     default Mono<MailboxCounters> getMailboxCountersReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> getMailboxCounters(mailbox));
+        return Mono.fromCallable(() -> getMailboxCounters(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -128,7 +127,8 @@ public interface MessageMapper extends Mapper {
     Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException;
 
     default Mono<Map<MessageUid, MessageMetaData>> deleteMessagesReactive(Mailbox mailbox, List<MessageUid> uids) {
-        return Mono.fromCallable(() -> deleteMessages(mailbox, uids));
+        return Mono.fromCallable(() -> deleteMessages(mailbox, uids))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -137,7 +137,8 @@ public interface MessageMapper extends Mapper {
     MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException;
 
     default Mono<Optional<MessageUid>> findFirstUnseenMessageUidReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> Optional.ofNullable(findFirstUnseenMessageUid(mailbox)));
+        return Mono.fromCallable(() -> Optional.ofNullable(findFirstUnseenMessageUid(mailbox)))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -147,7 +148,8 @@ public interface MessageMapper extends Mapper {
     List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException;
 
     default Mono<List<MessageUid>> findRecentMessageUidsInMailboxReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> findRecentMessageUidsInMailbox(mailbox));
+        return Mono.fromCallable(() -> findRecentMessageUidsInMailbox(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
 
@@ -171,7 +173,8 @@ public interface MessageMapper extends Mapper {
             final MessageRange set) throws MailboxException;
 
     default Mono<List<UpdatedFlags>> updateFlagsReactive(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) {
-        return Mono.fromCallable(() -> ImmutableList.copyOf(updateFlags(mailbox, flagsUpdateCalculator, set)));
+        return Mono.fromCallable(() -> (List<UpdatedFlags>) ImmutableList.copyOf(updateFlags(mailbox, flagsUpdateCalculator, set)))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     default Optional<UpdatedFlags> updateFlags(Mailbox mailbox, MessageUid uid, FlagsUpdateCalculator flagsUpdateCalculator) throws MailboxException {
@@ -193,7 +196,8 @@ public interface MessageMapper extends Mapper {
     }
 
     default Mono<List<UpdatedFlags>> resetRecentReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> resetRecent(mailbox));
+        return Mono.fromCallable(() -> resetRecent(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     
@@ -213,11 +217,13 @@ public interface MessageMapper extends Mapper {
     }
 
     default Mono<MessageMetaData> copyReactive(Mailbox mailbox, MailboxMessage original) {
-        return Mono.fromCallable(() -> copy(mailbox, original));
+        return Mono.fromCallable(() -> copy(mailbox, original))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     default Mono<List<MessageMetaData>> copyReactive(Mailbox mailbox, List<MailboxMessage> original) {
-        return Mono.fromCallable(() -> copy(mailbox, original));
+        return Mono.fromCallable(() -> copy(mailbox, original))
+            .subscribeOn(Schedulers.boundedElastic());
     }
     
     /**
@@ -236,12 +242,13 @@ public interface MessageMapper extends Mapper {
     }
 
     default Mono<MessageMetaData> moveReactive(Mailbox mailbox, MailboxMessage original) {
-        return Mono.fromCallable(() -> move(mailbox, original));
+        return Mono.fromCallable(() -> move(mailbox, original))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     default Mono<List<MessageMetaData>> moveReactive(Mailbox mailbox, List<MailboxMessage> original) {
         return Flux.fromIterable(original)
-            .flatMap(message -> moveReactive(mailbox, message), ReactorUtils.DEFAULT_CONCURRENCY)
+            .concatMap(message -> moveReactive(mailbox, message), ReactorUtils.DEFAULT_CONCURRENCY)
             .collectList();
     }
 
@@ -252,7 +259,8 @@ public interface MessageMapper extends Mapper {
     Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException;
 
     default Mono<Optional<MessageUid>> getLastUidReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> getLastUid(mailbox));
+        return Mono.fromCallable(() -> getLastUid(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -261,13 +269,15 @@ public interface MessageMapper extends Mapper {
     ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException;
 
     default Mono<ModSeq> getHighestModSeqReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> getHighestModSeq(mailbox));
+        return Mono.fromCallable(() -> getHighestModSeq(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     Flags getApplicableFlag(Mailbox mailbox) throws MailboxException;
 
     default Mono<Flags> getApplicableFlagReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> getApplicableFlag(mailbox));
+        return Mono.fromCallable(() -> getApplicableFlag(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**

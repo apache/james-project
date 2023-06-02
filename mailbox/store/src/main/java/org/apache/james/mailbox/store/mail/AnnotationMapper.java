@@ -30,6 +30,7 @@ import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface AnnotationMapper extends Mapper {
     /**
@@ -42,7 +43,8 @@ public interface AnnotationMapper extends Mapper {
     List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId);
 
     default Publisher<MailboxAnnotation> getAllAnnotationsReactive(MailboxId mailboxId) {
-        return Flux.fromIterable(getAllAnnotations(mailboxId));
+        return Flux.fromIterable(getAllAnnotations(mailboxId))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -56,7 +58,8 @@ public interface AnnotationMapper extends Mapper {
     List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
     default Publisher<MailboxAnnotation> getAnnotationsByKeysReactive(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
-        return Flux.fromIterable(getAnnotationsByKeys(mailboxId, keys));
+        return Flux.fromIterable(getAnnotationsByKeys(mailboxId, keys))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -70,7 +73,8 @@ public interface AnnotationMapper extends Mapper {
     List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
     default Publisher<MailboxAnnotation> getAnnotationsByKeysWithOneDepthReactive(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
-        return Flux.fromIterable(getAnnotationsByKeysWithOneDepth(mailboxId, keys));
+        return Flux.fromIterable(getAnnotationsByKeysWithOneDepth(mailboxId, keys))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -84,7 +88,8 @@ public interface AnnotationMapper extends Mapper {
     List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys);
 
     default Publisher<MailboxAnnotation> getAnnotationsByKeysWithAllDepthReactive(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
-        return Flux.fromIterable(getAnnotationsByKeysWithAllDepth(mailboxId, keys));
+        return Flux.fromIterable(getAnnotationsByKeysWithAllDepth(mailboxId, keys))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -96,7 +101,9 @@ public interface AnnotationMapper extends Mapper {
     void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key);
 
     default Publisher<Void> deleteAnnotationReactive(MailboxId mailboxId, MailboxAnnotationKey key) {
-        return Mono.fromRunnable(() -> deleteAnnotation(mailboxId, key));
+        return Mono.fromRunnable(() -> deleteAnnotation(mailboxId, key))
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
     }
 
     /**
@@ -109,7 +116,9 @@ public interface AnnotationMapper extends Mapper {
     void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation);
 
     default Publisher<Void> insertAnnotationReactive(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
-        return Mono.fromRunnable(() -> insertAnnotation(mailboxId, mailboxAnnotation));
+        return Mono.fromRunnable(() -> insertAnnotation(mailboxId, mailboxAnnotation))
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
     }
 
     /**
@@ -122,7 +131,8 @@ public interface AnnotationMapper extends Mapper {
     boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation);
 
     default Publisher<Boolean> existReactive(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
-        return Mono.fromCallable(() -> exist(mailboxId, mailboxAnnotation));
+        return Mono.fromCallable(() -> exist(mailboxId, mailboxAnnotation))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -132,6 +142,7 @@ public interface AnnotationMapper extends Mapper {
     int countAnnotations(MailboxId mailboxId);
 
     default Publisher<Integer> countAnnotationsReactive(MailboxId mailboxId) {
-        return Mono.fromCallable(() -> countAnnotations(mailboxId));
+        return Mono.fromCallable(() -> countAnnotations(mailboxId))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 }

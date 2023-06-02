@@ -578,7 +578,7 @@ public class StoreMailboxManager implements MailboxManager {
             return subscriptionMapper.findSubscriptionsForUserReactive(fromSession.getUser())
                 .collectList()
                 .flatMap(subscriptions -> Flux.fromIterable(renamedResults)
-                    .flatMap(renamedResult -> {
+                    .concatMap(renamedResult -> {
                         Function<Subscription, Mono<Void>> renameFunction = subscription -> subscriptionMapper.deleteReactive(subscription)
                             .then(subscriptionMapper.saveReactive(new Subscription(toSession.getUser(), renamedResult.getDestinationPath().asEscapedString())));
                         Subscription legacySubscription = new Subscription(fromSession.getUser(), renamedResult.getOriginPath().getName());

@@ -30,6 +30,7 @@ import com.google.common.base.Functions;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Mapper for {@link Subscription}
@@ -43,7 +44,9 @@ public interface SubscriptionMapper extends Mapper {
     void save(Subscription subscription) throws SubscriptionException;
 
     default Mono<Void> saveReactive(Subscription subscription) {
-        return Mono.fromRunnable(Throwing.runnable(() -> save(subscription)));
+        return Mono.fromRunnable(Throwing.runnable(() -> save(subscription)))
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
     }
 
     /**
@@ -55,7 +58,8 @@ public interface SubscriptionMapper extends Mapper {
 
     default Flux<Subscription> findSubscriptionsForUserReactive(Username user) {
         return Mono.fromCallable(() -> findSubscriptionsForUser(user))
-            .flatMapIterable(Functions.identity());
+            .flatMapIterable(Functions.identity())
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -65,6 +69,8 @@ public interface SubscriptionMapper extends Mapper {
     void delete(Subscription subscription) throws SubscriptionException;
 
     default Mono<Void> deleteReactive(Subscription subscription) {
-        return Mono.fromRunnable(Throwing.runnable(() -> delete(subscription)));
+        return Mono.fromRunnable(Throwing.runnable(() -> delete(subscription)))
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
     }
 }

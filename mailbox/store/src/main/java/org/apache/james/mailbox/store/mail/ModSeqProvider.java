@@ -24,6 +24,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Take care of provide mod-seqences for a given {@link Mailbox}. Be aware that implementations
@@ -55,7 +56,8 @@ public interface ModSeqProvider {
     ModSeq highestModSeq(Mailbox mailbox) throws MailboxException;
 
     default Mono<ModSeq> highestModSeqReactive(Mailbox mailbox) {
-        return Mono.fromCallable(() -> highestModSeq(mailbox));
+        return Mono.fromCallable(() -> highestModSeq(mailbox))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -64,6 +66,7 @@ public interface ModSeqProvider {
     ModSeq highestModSeq(MailboxId mailboxId) throws MailboxException;
 
     default Mono<ModSeq> nextModSeqReactive(MailboxId mailboxId) {
-        return Mono.fromCallable(() -> nextModSeq(mailboxId));
+        return Mono.fromCallable(() -> nextModSeq(mailboxId))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 }
