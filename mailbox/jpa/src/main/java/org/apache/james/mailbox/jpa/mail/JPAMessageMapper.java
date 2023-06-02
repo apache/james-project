@@ -103,6 +103,12 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     @Override
+    public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int limitAsInt) {
+        return Flux.defer(Throwing.supplier(() -> Flux.fromIterable(findAsList(mailbox.getMailboxId(), messageRange, limitAsInt))).sneakyThrow())
+            .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType fType, int max)
             throws MailboxException {
 
