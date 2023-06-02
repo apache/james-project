@@ -58,6 +58,7 @@ public class ZipMailArchiveRestorer implements MailArchiveRestorer {
     public void restore(Username username, InputStream source) throws MailboxException, IOException {
         MailboxSession session = mailboxManager.createSystemSession(username);
         restoreEntries(source, session);
+        mailboxManager.endProcessingRequest(session);
     }
 
     private void restoreEntries(InputStream source, MailboxSession session) throws IOException {

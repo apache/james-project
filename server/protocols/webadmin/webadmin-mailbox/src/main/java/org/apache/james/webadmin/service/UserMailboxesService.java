@@ -74,6 +74,7 @@ public class UserMailboxesService {
             MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
                 .assertAcceptable(mailboxSession.getPathDelimiter());
             mailboxManager.createMailbox(mailboxPath, mailboxSession);
+            mailboxManager.endProcessingRequest(mailboxSession);
         } catch (MailboxExistsException e) {
             LOGGER.info("Attempt to create mailbox {} for user {} that already exists", mailboxName, username);
         }
@@ -85,14 +86,19 @@ public class UserMailboxesService {
         listUserMailboxes(mailboxSession)
             .map(MailboxMetaData::getPath)
             .forEach(Throwing.consumer(mailboxPath -> deleteMailbox(mailboxSession, mailboxPath)));
+        mailboxManager.endProcessingRequest(mailboxSession);
     }
 
     public List<MailboxResponse> listMailboxes(Username username) throws UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        return listUserMailboxes(mailboxSession)
-            .map(mailboxMetaData -> new MailboxResponse(mailboxMetaData.getPath().getName(), mailboxMetaData.getId()))
-            .collect(ImmutableList.toImmutableList());
+        try {
+            return listUserMailboxes(mailboxSession)
+                .map(mailboxMetaData -> new MailboxResponse(mailboxMetaData.getPath().getName(), mailboxMetaData.getId()))
+                .collect(ImmutableList.toImmutableList());
+        } finally {
+            mailboxManager.endProcessingRequest(mailboxSession);
+        }
     }
 
     public boolean testMailboxExists(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
@@ -100,8 +106,12 @@ public class UserMailboxesService {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
             .assertAcceptable(mailboxSession.getPathDelimiter());
-        return Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession))
-            .block();
+        try {
+            return Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession))
+                .block();
+        } finally {
+            mailboxManager.endProcessingRequest(mailboxSession);
+        }
     }
 
 
@@ -118,7 +128,8 @@ public class UserMailboxesService {
                 return Mono.just(Result.PARTIAL);
             })
             .reduce(Task::combine)
-            .switchIfEmpty(Mono.just(Result.COMPLETED));
+            .switchIfEmpty(Mono.just(Result.COMPLETED))
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     private Mono<Result> deleteMessage(MessageManager messageManager, MessageUid messageUid, MailboxSession mailboxSession, ClearMailboxContentTask.Context context) {
@@ -138,20 +149,29 @@ public class UserMailboxesService {
             .assertAcceptable(mailboxSession.getPathDelimiter());
         listChildren(mailboxPath, mailboxSession)
             .forEach(Throwing.consumer(path -> deleteMailbox(mailboxSession, path)));
+        mailboxManager.endProcessingRequest(mailboxSession);
     }
 
     public long messageCount(Username username, MailboxName mailboxName) throws UsersRepositoryException, MailboxException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        return mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession).getMessageCount(mailboxSession);
+        try {
+            return mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession).getMessageCount(mailboxSession);
+        } finally {
+            mailboxManager.endProcessingRequest(mailboxSession);
+        }
     }
 
     public long unseenMessageCount(Username username, MailboxName mailboxName) throws UsersRepositoryException, MailboxException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        return mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession)
-            .getMailboxCounters(mailboxSession)
-            .getUnseen();
+        try {
+            return mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession)
+                .getMailboxCounters(mailboxSession)
+                .getUnseen();
+        } finally {
+            mailboxManager.endProcessingRequest(mailboxSession);
+        }
     }
 
     private Stream<MailboxPath> listChildren(MailboxPath mailboxPath, MailboxSession mailboxSession) {
@@ -178,6 +198,7 @@ public class UserMailboxesService {
             .assertAcceptable(mailboxSession.getPathDelimiter());
         Preconditions.checkState(Boolean.TRUE.equals(Mono.from(mailboxManager.mailboxExists(mailboxPath, mailboxSession)).block()),
             "Mailbox does not exist. " + mailboxPath.asString());
+        mailboxManager.endProcessingRequest(mailboxSession);
     }
 
     private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) {

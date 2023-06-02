@@ -95,9 +95,9 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      */
     @Override
     public Mono<Void> reactiveEvent(Event event) {
-        return handleMailboxEvent(event,
-            sessionProvider.createSystemSession(event.getUsername()),
-            (MailboxEvent) event);
+        MailboxSession systemSession = sessionProvider.createSystemSession(event.getUsername());
+        return handleMailboxEvent(event, systemSession, (MailboxEvent) event)
+            .then(Mono.fromRunnable(() -> factory.endProcessingRequest(systemSession)));
     }
 
     private Mono<Void> handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) {

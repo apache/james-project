@@ -125,6 +125,7 @@ class MailboxAnnotationListenerTest {
         listener.event(deleteEvent);
 
         verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
+        verify(mailboxSessionMapperFactory).endProcessingRequest(eq(mailboxSession));
         verify(annotationMapper).getAllAnnotationsReactive(eq(mailboxId));
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);
@@ -140,6 +141,7 @@ class MailboxAnnotationListenerTest {
         listener.event(deleteEvent);
 
         verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
+        verify(mailboxSessionMapperFactory).endProcessingRequest(eq(mailboxSession));
         verify(annotationMapper).getAllAnnotationsReactive(eq(mailboxId));
         verify(annotationMapper).deleteAnnotationReactive(eq(mailboxId), eq(PRIVATE_KEY));
         verify(annotationMapper).deleteAnnotationReactive(eq(mailboxId), eq(SHARED_KEY));
@@ -158,6 +160,7 @@ class MailboxAnnotationListenerTest {
         assertThatThrownBy(() -> listener.event(deleteEvent)).isInstanceOf(RuntimeException.class);
 
         verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
+        verify(mailboxSessionMapperFactory).endProcessingRequest(eq(mailboxSession));
         verify(annotationMapper).getAllAnnotationsReactive(eq(mailboxId));
         verify(annotationMapper).deleteAnnotationReactive(eq(mailboxId), eq(PRIVATE_KEY));
 

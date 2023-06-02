@@ -101,10 +101,12 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
     }
 
     private Mono<Void> handleMessageAdded(MailboxEvents.Added addedEvent) {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(getClass().getCanonicalName()));
         return isAppendedToInbox(addedEvent)
             .filter(FunctionalUtils.identityPredicate())
             .doOnNext(isHam -> LOGGER.debug("Ham event detected, EventId = {}", addedEvent.getEventId().getId()))
-            .flatMap(any -> reportHamWhenAdded(addedEvent, mailboxManager.createSystemSession(Username.of(getClass().getCanonicalName()))));
+            .flatMap(any -> reportHamWhenAdded(addedEvent, mailboxSession))
+            .then(Mono.fromRunnable(() -> mailboxManager.endProcessingRequest(mailboxSession)));
     }
 
     private Mono<Void> handleMessageMoved(MessageMoveEvent messageMoveEvent) {
@@ -123,9 +125,11 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
     }
 
     private Flux<ByteBuffer> mailboxMessagePublisher(MessageMoveEvent messageMoveEvent) {
-        return Mono.fromCallable(() -> mapperFactory.getMessageIdMapper(mailboxManager.createSystemSession(Username.of(getClass().getCanonicalName()))))
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(getClass().getCanonicalName()));
+        return Mono.fromCallable(() -> mapperFactory.getMessageIdMapper(mailboxSession))
             .flatMapMany(messageIdMapper -> messageIdMapper.findReactive(messageMoveEvent.getMessageIds(), MessageMapper.FetchType.FULL))
-            .flatMap(MailboxMessage::getFullContentReactive);
+            .flatMap(MailboxMessage::getFullContentReactive)
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     private Mono<Void> handleMessageMoved(Flux<ByteBuffer> mailboxMessagesPublisher, MessageMoveEvent messageMoveEvent) {

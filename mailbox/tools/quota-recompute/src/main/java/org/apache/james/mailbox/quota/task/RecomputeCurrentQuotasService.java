@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.model.QuotaOperation;
@@ -147,18 +148,21 @@ public class RecomputeCurrentQuotasService {
     private final CurrentQuotaCalculator currentQuotaCalculator;
     private final UserQuotaRootResolver userQuotaRootResolver;
     private final SessionProvider sessionProvider;
+    private final MailboxManager mailboxManager;
 
     @Inject
     public RecomputeCurrentQuotasService(UsersRepository usersRepository,
                                          CurrentQuotaManager storeCurrentQuotaManager,
                                          CurrentQuotaCalculator currentQuotaCalculator,
                                          UserQuotaRootResolver userQuotaRootResolver,
-                                         SessionProvider sessionProvider) {
+                                         SessionProvider sessionProvider,
+                                         MailboxManager mailboxManager) {
         this.usersRepository = usersRepository;
         this.storeCurrentQuotaManager = storeCurrentQuotaManager;
         this.currentQuotaCalculator = currentQuotaCalculator;
         this.userQuotaRootResolver = userQuotaRootResolver;
         this.sessionProvider = sessionProvider;
+        this.mailboxManager = mailboxManager;
     }
 
     public Mono<Task.Result> recomputeCurrentQuotas(Context context, RunningOptions runningOptions) {
@@ -190,6 +194,7 @@ public class RecomputeCurrentQuotasService {
                 LOGGER.error("Error while recomputing current quotas for {}", quotaRoot, e);
                 context.addToFailedMailboxes(quotaRoot);
                 return Mono.just(Task.Result.PARTIAL);
-            });
+            })
+            .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 }

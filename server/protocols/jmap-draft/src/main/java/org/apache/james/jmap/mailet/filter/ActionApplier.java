@@ -96,6 +96,7 @@ public class ActionApplier {
         try {
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
+            mailboxManager.endProcessingRequest(mailboxSession);
 
             String mailboxName = messageManager.getMailboxPath().getName();
 
