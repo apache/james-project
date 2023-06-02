@@ -67,7 +67,9 @@ public class ACLUsernameChangeTaskStep implements UsernameChangeTaskStep {
         return mailboxManager.search(MailboxQuery.builder().matchesAllMailboxNames().build(), oldSession)
             .filter(mailbox -> !mailbox.getPath().getUser().equals(oldUsername))
             .concatMap(mailbox -> migrateACLs(oldUsername, newUsername, mailbox))
-            .then(updateSubscriptionsOnDeletedMailboxes(oldUsername, oldSession, newSession));
+            .then(updateSubscriptionsOnDeletedMailboxes(oldUsername, oldSession, newSession))
+            .doFinally(any -> mailboxManager.endProcessingRequest(oldSession))
+            .doFinally(any -> mailboxManager.endProcessingRequest(newSession));
     }
 
     private Mono<Void> updateSubscriptionsOnDeletedMailboxes(Username oldUsername, MailboxSession oldSession, MailboxSession newSession) {
@@ -90,6 +92,7 @@ public class ACLUsernameChangeTaskStep implements UsernameChangeTaskStep {
         return Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getId(), MailboxACL.command().rights(rights).forUser(newUsername).asAddition(), ownerSession)))
             .then(Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getId(), MailboxACL.command().rights(rights).forUser(oldUsername).asRemoval(), ownerSession))))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .then();
+            .then()
+            .doFinally(any -> mailboxManager.endProcessingRequest(ownerSession));
     }
 }

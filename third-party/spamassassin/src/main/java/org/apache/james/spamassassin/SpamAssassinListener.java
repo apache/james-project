@@ -97,10 +97,12 @@ public class SpamAssassinListener implements SpamEventListener {
         if (event instanceof MessageMoveEvent) {
             MailboxSession session = mailboxManager.createSystemSession(username);
             handleMessageMove(event, session, (MessageMoveEvent) event);
+            mailboxManager.endProcessingRequest(session);
         }
         if (event instanceof Added) {
             MailboxSession session = mailboxManager.createSystemSession(username);
             handleAdded(event, session, (Added) event);
+            mailboxManager.endProcessingRequest(session);
         }
     }
 

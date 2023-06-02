@@ -86,7 +86,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         userQuotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
         CurrentQuotaCalculator currentQuotaCalculator = new CurrentQuotaCalculator(mapperFactory, userQuotaRootResolver);
 
-        testee = new RecomputeCurrentQuotasService(usersRepository, currentQuotaManager, currentQuotaCalculator, userQuotaRootResolver, sessionProvider);
+        testee = new RecomputeCurrentQuotasService(usersRepository, currentQuotaManager, currentQuotaCalculator, userQuotaRootResolver, sessionProvider, mailboxManager);
     }
 
     @Override

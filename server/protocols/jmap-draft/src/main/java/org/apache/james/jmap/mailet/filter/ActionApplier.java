@@ -124,6 +124,7 @@ public class ActionApplier {
             MailboxId mailboxId = mailboxIdFactory.fromString(mailboxIdString);
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
+            mailboxManager.endProcessingRequest(mailboxSession);
 
             return Stream.of(messageManager.getMailboxPath().getName());
         } catch (MailboxNotFoundException e) {

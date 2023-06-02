@@ -102,7 +102,8 @@ public class GetMailboxMessagesService {
             .doOnNext(mailboxMessageMetaData -> context.incrementSpamMessageCount())
             .filter(message -> randomBooleanWithProbability(runningOptions))
             .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)
-            .filter(runningOptions.correspondingClassificationFilter());
+            .filter(runningOptions.correspondingClassificationFilter())
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     private Flux<MessageResult> getMailboxMessagesOfAUser(Username username, MailboxMetaData mailboxMetaData, Optional<Date> afterDate,
@@ -119,7 +120,8 @@ public class GetMailboxMessagesService {
             .doOnNext(mailboxMessageMetaData -> context.incrementHamMessageCount())
             .filter(message -> randomBooleanWithProbability(runningOptions))
             .flatMap(message -> messageIdManager.getMessagesReactive(List.of(message.getMessageId()), FetchGroup.FULL_CONTENT, mailboxSession), ReactorUtils.DEFAULT_CONCURRENCY)
-            .filter(runningOptions.correspondingClassificationFilter());
+            .filter(runningOptions.correspondingClassificationFilter())
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     public static boolean randomBooleanWithProbability(RunningOptions runningOptions) {

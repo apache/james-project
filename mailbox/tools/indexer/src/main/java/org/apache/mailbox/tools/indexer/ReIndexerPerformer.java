@@ -155,7 +155,8 @@ public class ReIndexerPerformer {
             .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession, runningOptions), MAILBOX_CONCURRENCY);
 
         return reIndexMessages(entriesToIndex, runningOptions, reIndexingContext)
-            .doFinally(any -> LOGGER.info("Full reindex finished"));
+            .doFinally(any -> LOGGER.info("Full reindex finished"))
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     Mono<Result> reIndexSingleMailbox(MailboxId mailboxId, ReIndexingContext reIndexingContext, RunningOptions runningOptions) {
@@ -165,7 +166,8 @@ public class ReIndexerPerformer {
             .findMailboxById(mailboxId)
             .flatMapMany(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession, runningOptions));
 
-        return reIndexMessages(entriesToIndex, runningOptions, reIndexingContext);
+        return reIndexMessages(entriesToIndex, runningOptions, reIndexingContext)
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     Mono<Result> reIndexUserMailboxes(Username username, ReIndexingContext reIndexingContext, RunningOptions runningOptions) {
@@ -180,7 +182,8 @@ public class ReIndexerPerformer {
                 .flatMap(mailbox -> reIndexingEntriesForMailbox(mailbox, mailboxSession, runningOptions), MAILBOX_CONCURRENCY);
 
             return reIndexMessages(entriesToIndex, runningOptions, reIndexingContext)
-                .doFinally(any -> LOGGER.info("User {} reindex finished", username.asString()));
+                .doFinally(any -> LOGGER.info("User {} reindex finished", username.asString()))
+                .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
         } catch (Exception e) {
             LOGGER.error("Error fetching mailboxes for user: {}", username.asString());
             return Mono.just(Result.PARTIAL);
@@ -195,7 +198,8 @@ public class ReIndexerPerformer {
             .map(mailbox -> new ReIndexingEntry(mailbox, mailboxSession, uid))
             .flatMap(this::fullyReadMessage)
             .flatMap(message -> reIndex(message, mailboxSession))
-            .switchIfEmpty(Mono.just(Result.COMPLETED));
+            .switchIfEmpty(Mono.just(Result.COMPLETED))
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     Mono<Result> reIndexMessageId(MessageId messageId) {
@@ -209,7 +213,8 @@ public class ReIndexerPerformer {
             .onErrorResume(e -> {
                 LOGGER.warn("Failed to re-index {}", messageId, e);
                 return Mono.just(Result.PARTIAL);
-            });
+            })
+            .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 
     Mono<Result> reIndexErrors(ReIndexingContext reIndexingContext, ReIndexingExecutionFailures previousReIndexingFailures, RunningOptions runningOptions) {
@@ -227,7 +232,8 @@ public class ReIndexerPerformer {
                         return Mono.just(Either.left(new MailboxFailure(mailboxId)));
                     }), MAILBOX_CONCURRENCY));
 
-        return reIndexMessages(entriesToIndex, runningOptions, reIndexingContext);
+        return reIndexMessages(entriesToIndex, runningOptions, reIndexingContext)
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     private Mono<Result> reIndex(MailboxMessage mailboxMessage, MailboxSession session) {

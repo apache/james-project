@@ -72,7 +72,9 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
         return mailboxManager.search(queryUser, MailboxManager.MailboxSearchFetchType.Minimal, fromSession)
             // Only keep top level, rename takes care of sub mailboxes
             .filter(mailbox -> mailbox.getPath().getHierarchyLevels(fromSession.getPathDelimiter()).size() == 1)
-            .concatMap(mailbox -> migrateMailbox(fromSession, toSession, mailbox));
+            .concatMap(mailbox -> migrateMailbox(fromSession, toSession, mailbox))
+            .doFinally(any -> mailboxManager.endProcessingRequest(fromSession))
+            .doFinally(any -> mailboxManager.endProcessingRequest(toSession));
     }
 
     private Mono<Void> migrateMailbox(MailboxSession fromSession, MailboxSession toSession, org.apache.james.mailbox.model.MailboxMetaData mailbox) {
@@ -115,16 +117,20 @@ public class MailboxUsernameChangeTaskStep implements UsernameChangeTaskStep {
         return Flux.fromIterable(mailbox.getResolvedAcls().getEntries().entrySet())
             .filter(entry -> entry.getKey().getNameType() == MailboxACL.NameType.user && !entry.getKey().isNegative())
             .map(entry -> Username.of(entry.getKey().getName()))
-            .concatMap(Throwing.function(userWithAccess ->
-                Flux.from(subscriptionManager.subscriptionsReactive(mailboxManager.createSystemSession(userWithAccess)))
+            .concatMap(Throwing.function(userWithAccess -> {
+                MailboxSession session = mailboxManager.createSystemSession(userWithAccess);
+                return Flux.from(subscriptionManager.subscriptionsReactive(session))
                     .filter(subscribedMailbox -> subscribedMailbox.equals(mailbox.getPath()))
-                    .concatMap(any -> renameSubscription(mailbox, renamedPath, userWithAccess))))
+                    .concatMap(any -> renameSubscription(mailbox, renamedPath, userWithAccess))
+                    .doFinally(any -> mailboxManager.endProcessingRequest(session));
+            }))
             .then();
     }
 
     private Mono<Void> renameSubscription(MailboxMetaData mailbox, MailboxPath renamedPath, Username user) {
         MailboxSession session = mailboxManager.createSystemSession(user);
         return Mono.from(subscriptionManager.subscribeReactive(renamedPath, session))
-            .then(Mono.from(subscriptionManager.unsubscribeReactive(mailbox.getPath(), session)));
+            .then(Mono.from(subscriptionManager.unsubscribeReactive(mailbox.getPath(), session)))
+            .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 }

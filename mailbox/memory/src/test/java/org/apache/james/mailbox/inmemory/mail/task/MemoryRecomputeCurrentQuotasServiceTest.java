@@ -26,6 +26,7 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
@@ -52,7 +53,8 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(memoryDomainList);
 
         resources = InMemoryIntegrationResources.defaultResources();
-        testee = new RecomputeCurrentQuotasService(usersRepository, resources.getCurrentQuotaManager(), resources.getCurrentQuotaCalculator(), resources.getDefaultUserQuotaRootResolver(), resources.getMailboxManager().getSessionProvider());
+        InMemoryMailboxManager mailboxManager = resources.getMailboxManager();
+        testee = new RecomputeCurrentQuotasService(usersRepository, resources.getCurrentQuotaManager(), resources.getCurrentQuotaCalculator(), resources.getDefaultUserQuotaRootResolver(), mailboxManager.getSessionProvider(), mailboxManager);
     }
 
     @Override

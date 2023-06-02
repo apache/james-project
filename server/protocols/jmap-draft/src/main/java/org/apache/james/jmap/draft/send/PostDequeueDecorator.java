@@ -88,6 +88,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
                     MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username.get()));
                     moveFromOutboxToSentWithSeenFlag(messageId, mailboxSession);
                     getMail().setAttribute(IS_DELIVERED);
+                    mailboxManager.endProcessingRequest(mailboxSession);
                 } catch (MailShouldBeInOutboxException e) {
                     LOG.info("Message does not exist on Outbox anymore, it could have already been sent", e);
                 }
