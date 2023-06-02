@@ -69,7 +69,8 @@ public class MailboxAnnotationListener implements EventListener.ReactiveGroupEve
 
             return Flux.from(annotationMapper.getAllAnnotationsReactive(mailboxId))
                 .flatMap(annotation -> Mono.from(annotationMapper.deleteAnnotationReactive(mailboxId, annotation.getKey())))
-                .then();
+                .then()
+                .doFinally(any -> mailboxSessionMapperFactory.endProcessingRequest(mailboxSession));
         }
         return Mono.empty();
     }

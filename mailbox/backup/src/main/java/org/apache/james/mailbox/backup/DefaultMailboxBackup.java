@@ -32,7 +32,6 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
@@ -98,14 +97,19 @@ public class DefaultMailboxBackup implements MailboxBackup {
 
         Stream<MessageResult> messages = allMessagesForUser(accountContents);
         archive(mailboxes, messages, destination);
+        mailboxManager.endProcessingRequest(session);
     }
 
-    private boolean isAccountNonEmpty(Username username) throws BadCredentialsException, MailboxException, IOException {
+    private boolean isAccountNonEmpty(Username username) throws MailboxException {
         MailboxSession session = mailboxManager.createSystemSession(username);
-        return getAccountContentForUser(session)
-            .stream()
-            .findFirst()
-            .isPresent();
+        try {
+            return getAccountContentForUser(session)
+                .stream()
+                .findFirst()
+                .isPresent();
+        } finally {
+            mailboxManager.endProcessingRequest(session);
+        }
     }
 
     @Override

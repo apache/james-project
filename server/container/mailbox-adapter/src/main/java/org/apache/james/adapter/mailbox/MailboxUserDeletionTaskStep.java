@@ -71,7 +71,8 @@ public class MailboxUserDeletionTaskStep implements DeleteUserDataTaskStep {
             .then(getSharedMailboxesOfUser(mailboxSession)
                 .flatMap(sharedMailbox -> revokeACLs(username, sharedMailbox)
                     .then(deleteSubscription(mailboxSession, sharedMailbox)))
-                .then());
+                .then())
+            .doFinally(any -> mailboxManager.endProcessingRequest(mailboxSession));
     }
 
     private Flux<MailboxMetaData> getAllMailboxesOfUser(MailboxSession mailboxSession) {
@@ -103,7 +104,8 @@ public class MailboxUserDeletionTaskStep implements DeleteUserDataTaskStep {
 
         return Mono.fromRunnable(Throwing.runnable(() -> mailboxManager.applyRightsCommand(mailbox.getId(), MailboxACL.command().rights(rights).forUser(username).asRemoval(), ownerSession)))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
-            .then();
+            .then()
+            .doFinally(any -> mailboxManager.endProcessingRequest(ownerSession));
     }
 
 }

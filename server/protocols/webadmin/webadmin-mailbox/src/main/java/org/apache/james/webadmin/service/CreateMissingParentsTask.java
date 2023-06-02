@@ -153,6 +153,8 @@ public class CreateMissingParentsTask implements Task {
         } catch (MailboxException e) {
             LOGGER.error("Error fetching mailbox paths", e);
             return Result.PARTIAL;
+        } finally {
+            mailboxManager.endProcessingRequest(session);
         }
     }
 
@@ -160,12 +162,13 @@ public class CreateMissingParentsTask implements Task {
         MailboxSession ownerSession = mailboxManager.createSystemSession(path.getUser());
         return Mono.from(mailboxManager.createMailboxReactive(path, ownerSession))
             .doOnNext(this::recordSuccess)
-        .then(Mono.just(Result.COMPLETED))
-        .onErrorResume(e -> {
-            LOGGER.error("Error creating missing parent mailbox: {}", path.getName(), e);
-            recordFailure(path);
-            return Mono.just(Result.PARTIAL);
-        });
+            .then(Mono.just(Result.COMPLETED))
+            .onErrorResume(e -> {
+                LOGGER.error("Error creating missing parent mailbox: {}", path.getName(), e);
+                recordFailure(path);
+                return Mono.just(Result.PARTIAL);
+            })
+            .doFinally(any -> mailboxManager.endProcessingRequest(ownerSession));
     }
 
     @Override

@@ -217,7 +217,8 @@ public class ExpireMailboxService {
                 context.incrementFailedCount();
                 context.incrementProcessedCount();
                 return Mono.just(Task.Result.PARTIAL);
-            });
+            })
+            .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 
     private Mono<List<MessageUid>> searchMessagesReactive(MessageManager mgr, MailboxSession session, SearchQuery expiration) {
