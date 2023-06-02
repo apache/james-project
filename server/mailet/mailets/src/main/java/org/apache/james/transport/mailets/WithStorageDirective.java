@@ -58,7 +58,7 @@ import com.google.common.collect.ImmutableList;
  *      <targetFolderName>Spam</targetFolderName>
  *      <seen>true</seen>
  *      <important>true</important>
- *      <keywords>keyword1,keyword2</targetFolderName>
+ *      <keywords>keyword1,keyword2</keywords>
  *  </mailet>
  *
  *  Alternatively, several target folders can be specified:
@@ -67,7 +67,7 @@ import com.google.common.collect.ImmutableList;
  *    <targetFolderNames>Important, INBOX</targetFolderNames>
  *    <seen>true</seen>
  *    <important>true</important>
- *    <keywords>keyword1,keyword2</targetFolderName>
+ *    <keywords>keyword1,keyword2</keywords>
  *  </mailet>
  *
  */

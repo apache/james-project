@@ -19,7 +19,7 @@ Example:
     <targetFolderName>Spam</targetFolderName>
     <seen>true</seen>
     <important>true</important>
-    <keywords>keyword1,keyword2</targetFolderName>
+    <keywords>keyword1,keyword2</keywords>
 </mailet>
 ....
 
@@ -30,6 +30,6 @@ Alternatively, several target folders can be specified:
   <targetFolderNames>Important, INBOX</targetFolderNames>
   <seen>true</seen>
   <important>true</important>
-  <keywords>keyword1,keyword2</targetFolderName>
+  <keywords>keyword1,keyword2</keywords>
 </mailet>
 ....
