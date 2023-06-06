@@ -25,8 +25,11 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -39,13 +42,15 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
-
+    private final EntityManagerFactory entityManagerFactory;
     private final JPAPerUserMaxQuotaDAO dao;
 
     @Inject
-    public JPAPerUserMaxQuotaManager(JPAPerUserMaxQuotaDAO dao) {
+    public JPAPerUserMaxQuotaManager(EntityManagerFactory entityManagerFactory, JPAPerUserMaxQuotaDAO dao) {
+        this.entityManagerFactory = entityManagerFactory;
         this.dao = dao;
     }
 
@@ -111,7 +116,12 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
-        return dao.getDomainMaxMessage(domain);
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            return dao.getDomainMaxMessage(entityManager, domain);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
     }
 
     @Override
@@ -122,7 +132,12 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
-        return dao.getDomainMaxStorage(domain);
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            return dao.getDomainMaxStorage(entityManager, domain);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
     }
 
     @Override
@@ -173,7 +188,12 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
-        return dao.getGlobalMaxStorage();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            return dao.getGlobalMaxStorage(entityManager);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
     }
 
     @Override
@@ -184,7 +204,12 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Optional<QuotaCountLimit> getGlobalMaxMessage() {
-        return dao.getGlobalMaxMessage();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            return dao.getGlobalMaxMessage(entityManager);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
     }
 
     @Override
@@ -194,25 +219,57 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
+    public Publisher<QuotaDetails> quotaDetailsReactive(QuotaRoot quotaRoot) {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            return Mono.zip(
+                    Mono.fromCallable(() -> listMaxMessagesDetails(quotaRoot, entityManager)),
+                    Mono.fromCallable(() -> listMaxStorageDetails(quotaRoot, entityManager)))
+                .map(tuple -> new QuotaDetails(tuple.getT1(), tuple.getT2()))
+                .subscribeOn(Schedulers.boundedElastic());
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
+    }
+
+    @Override
     public Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaCountLimit>> domainQuotaFunction = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            return listMaxMessagesDetails(quotaRoot, entityManager);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
+    }
+
+    private ImmutableMap<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot, EntityManager entityManager) {
+        Function<Domain, Optional<QuotaCountLimit>> domainQuotaFunction = Throwing.function(domain -> dao.getDomainMaxMessage(entityManager, domain));
         return Stream.of(
-            Pair.of(Quota.Scope.User, dao.getMaxMessage(quotaRoot)),
-            Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
-            Pair.of(Quota.Scope.Global, dao.getGlobalMaxMessage()))
-        .filter(pair -> pair.getValue().isPresent())
-        .collect(ImmutableMap.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+                Pair.of(Quota.Scope.User, dao.getMaxMessage(entityManager, quotaRoot)),
+                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
+                Pair.of(Quota.Scope.Global, dao.getGlobalMaxMessage(entityManager)))
+            .filter(pair -> pair.getValue().isPresent())
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
 
     @Override
     public Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaSizeLimit>> domainQuotaFunction = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        try {
+            return listMaxStorageDetails(quotaRoot, entityManager);
+        } finally {
+            EntityManagerUtils.safelyClose(entityManager);
+        }
+    }
+
+    private ImmutableMap<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot, EntityManager entityManager) {
+        Function<Domain, Optional<QuotaSizeLimit>> domainQuotaFunction = Throwing.function(domain -> dao.getDomainMaxStorage(entityManager, domain));
         return Stream.of(
-            Pair.of(Quota.Scope.User, dao.getMaxStorage(quotaRoot)),
-            Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
-            Pair.of(Quota.Scope.Global, dao.getGlobalMaxStorage()))
-        .filter(pair -> pair.getValue().isPresent())
-        .collect(ImmutableMap.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
+                Pair.of(Quota.Scope.User, dao.getMaxStorage(entityManager, quotaRoot)),
+                Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
+                Pair.of(Quota.Scope.Global, dao.getGlobalMaxStorage(entityManager)))
+            .filter(pair -> pair.getValue().isPresent())
+            .collect(ImmutableMap.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
 
     @Override

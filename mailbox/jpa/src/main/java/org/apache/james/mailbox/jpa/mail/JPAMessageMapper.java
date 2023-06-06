@@ -49,8 +49,6 @@ import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.ModSeqProvider;
-import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
@@ -68,10 +66,10 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private static final int UNLIMITED = -1;
 
     private final MessageUtils messageMetadataMapper;
-    private final UidProvider uidProvider;
-    private final ModSeqProvider modSeqProvider;
+    private final JPAUidProvider uidProvider;
+    private final JPAModSeqProvider modSeqProvider;
 
-    public JPAMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
+    public JPAMessageMapper(JPAUidProvider uidProvider, JPAModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
         this.messageMetadataMapper = new MessageUtils(uidProvider, modSeqProvider);
         this.uidProvider = uidProvider;
@@ -313,12 +311,12 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.lastUid(mailbox);
+        return uidProvider.lastUid(mailbox, getEntityManager());
     }
 
     @Override
     public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
-        return modSeqProvider.highestModSeq(mailbox);
+        return modSeqProvider.highestModSeq(mailbox.getMailboxId(), getEntityManager());
     }
 
     @Override
@@ -343,9 +341,6 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
         return save(mailbox, copy);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.AbstractMessageMapper#save(Mailbox, MailboxMessage)
-     */
     protected MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         try {
             // We need to reload a "JPA attached" mailbox, because the provide
