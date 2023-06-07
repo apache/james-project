@@ -34,7 +34,4 @@ public class DockerLdapSingleton {
         .password(ADMIN_PASSWORD)
         .build();
 
-    static {
-        ldapContainer.start();
-    }
 }

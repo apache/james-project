@@ -39,10 +39,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 
 class ReadOnlyUsersLDAPRepositoryEmptyListTest {
-    static LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
-        .domain(DOMAIN)
-        .password(ADMIN_PASSWORD)
-        .build();
+    static LdapGenericContainer ldapContainer = DockerLdapSingleton.ldapContainer;
 
     DomainList domainList;
     private ReadOnlyUsersLDAPRepository ldapRepository;
