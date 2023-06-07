@@ -98,7 +98,8 @@
     </bean>
 
     <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager">
-        <constructor-arg index="0" ref="jpa-per-user-max-quota-dao"/>
+        <constructor-arg index="0" ref="entityManagerFactory"/>
+        <constructor-arg index="1" ref="jpa-per-user-max-quota-dao"/>
     </bean>
     <bean id="jpaCurrentQuotaManager" class="org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager">
         <constructor-arg index="0" ref="entityManagerFactory"/>
