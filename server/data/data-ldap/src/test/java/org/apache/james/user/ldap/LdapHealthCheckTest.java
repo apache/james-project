@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
-import static org.apache.james.user.ldap.DockerLdapSingleton.ADMIN_PASSWORD;
-import static org.apache.james.user.ldap.DockerLdapSingleton.DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.healthcheck.Result;
@@ -30,13 +28,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class LdapHealthCheckTest {
-    static LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
-        .domain(DOMAIN)
-        .password(ADMIN_PASSWORD)
-        .build();
 
-    LdapHealthCheck ldapHealthCheck;
-
+    static LdapGenericContainer ldapContainer = DockerLdapSingleton.ldapContainer;
+    private LdapHealthCheck ldapHealthCheck;
     @BeforeAll
     static void setUpAll() {
         ldapContainer.start();

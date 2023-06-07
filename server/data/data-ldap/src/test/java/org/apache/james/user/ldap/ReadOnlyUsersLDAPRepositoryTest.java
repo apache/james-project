@@ -26,7 +26,6 @@ import static org.apache.james.user.ldap.DockerLdapSingleton.DOMAIN;
 import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
 import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
@@ -63,10 +62,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
     static final String BAD_PASSWORD = "badpassword";
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
 
-    static LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
-        .domain(DOMAIN)
-        .password(ADMIN_PASSWORD)
-        .build();
+    static LdapGenericContainer ldapContainer = DockerLdapSingleton.ldapContainer;
 
     @BeforeAll
     static void setUpAll() {
@@ -245,13 +241,13 @@ class ReadOnlyUsersLDAPRepositoryTest {
         void testShouldStillWorkAfterRestartingLDAP() throws Exception {
             usersRepository.test(JAMES_USER_MAIL, PASSWORD);
 
-            DockerLdapSingleton.ldapContainer.pause();
+            ldapContainer.pause();
             try {
                 usersRepository.test(JAMES_USER_MAIL, PASSWORD);
             } catch (Exception e) {
                 LOGGER.info("This exception is expected as we shut down the LDAP and forced its use", e);
             }
-            DockerLdapSingleton.ldapContainer.unpause();
+            ldapContainer.unpause();
 
             assertThat(usersRepository.test(JAMES_USER_MAIL, PASSWORD)).isTrue();
         }
