@@ -28,4 +28,5 @@ public interface Images {
     String OPENSEARCH = "opensearchproject/opensearch:2.4.0";
     String TIKA = "apache/tika:1.28.2";
     String MOCK_SMTP_SERVER = "linagora/mock-smtp-server:0.6";
+    String OPEN_LDAP = "osixia/openldap:1.5.0";
 }

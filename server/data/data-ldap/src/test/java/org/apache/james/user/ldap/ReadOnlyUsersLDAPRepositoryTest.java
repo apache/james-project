@@ -490,8 +490,8 @@ class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
         configuration.addProperty("[@userBase]", "ou=people,dc=james,dc=org");
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
-        configuration.addProperty("[@connectionTimeout]", "100");
-        configuration.addProperty("[@readTimeout]", "100");
+        configuration.addProperty("[@connectionTimeout]", "2000");
+        configuration.addProperty("[@readTimeout]", "2000");
         return configuration;
     }
 }
