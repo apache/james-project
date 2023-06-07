@@ -18,16 +18,21 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import org.apache.james.util.docker.DockerContainer;
-import org.apache.james.util.docker.RateLimiters;
-import org.junit.rules.ExternalResource;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
-import org.testcontainers.images.builder.ImageFromDockerfile;
-
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.james.util.docker.DockerContainer;
+import org.apache.james.util.docker.Images;
+import org.junit.rules.ExternalResource;
+import org.testcontainers.containers.BindMode;
+import org.testcontainers.containers.startupcheck.MinimumDurationRunningStartupCheckStrategy;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public class LdapGenericContainer extends ExternalResource {
 
@@ -67,17 +72,19 @@ public class LdapGenericContainer extends ExternalResource {
         }
 
         private DockerContainer createContainer() {
-            return DockerContainer.fromDockerfile(
-                new ImageFromDockerfile("openldap_" + UUID.randomUUID())
-                    .withFileFromClasspath("populate.ldif", dockerFilePrefix.orElse("") + "ldif-files/populate.ldif")
-                    .withFileFromClasspath("Dockerfile", dockerFilePrefix.orElse("") + "ldif-files/Dockerfile"))
+            return DockerContainer.fromName(Images.OPEN_LDAP)
+                .withClasspathResourceMapping(dockerFilePrefix.orElse("") + "ldif-files/populate.ldif",
+                    "/container/service/slapd/assets/config/bootstrap/ldif/data.ldif", BindMode.READ_ONLY)
                 .withAffinityToContainer()
-                .withEnv("SLAPD_DOMAIN", domain)
-                .withEnv("SLAPD_PASSWORD", password)
-                .withEnv("SLAPD_CONFIG_PASSWORD", password)
-                .withExposedPorts(LdapGenericContainer.DEFAULT_LDAP_PORT)
+                .withEnv("LDAP_DOMAIN", domain)
+                .withEnv("LDAP_ADMIN_PASSWORD", password)
+                .withEnv("LDAP_CONFIG_PASSWORD", password)
+                .withExposedPorts(DEFAULT_LDAP_PORT)
+                .withCommands("--copy-service", "--loglevel", "debug")
                 .withName("james-testing-openldap-" + UUID.randomUUID())
-                .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
+                .waitingFor(new LogMessageWaitStrategy().withRegEx(".*slapd starting\\n").withTimes(1)
+                    .withStartupTimeout(Duration.ofMinutes(3)))
+                .withStartupCheckStrategy(new MinimumDurationRunningStartupCheckStrategy(Duration.ofSeconds(10)));
         }
     }
 
@@ -116,10 +123,11 @@ public class LdapGenericContainer extends ExternalResource {
     }
 
     public String getLdapHost() {
-        return "ldap://" +
-                container.getContainerIp() +
-                ":" +
-                LdapGenericContainer.DEFAULT_LDAP_PORT;
+        return Throwing.supplier(() -> new URIBuilder()
+            .setScheme("ldap")
+            .setHost(container.getContainer().getHost())
+            .setPort(container.getMappedPort(DEFAULT_LDAP_PORT))
+            .build()).get().toString();
     }
 
     /**

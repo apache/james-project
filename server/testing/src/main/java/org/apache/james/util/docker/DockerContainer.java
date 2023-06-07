@@ -35,10 +35,12 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.startupcheck.StartupCheckStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
@@ -83,6 +85,16 @@ public class DockerContainer implements TestRule, BeforeAllCallback, AfterAllCal
         List<String> envVariables = container.getEnv();
         envVariables.add("affinity:container==" + container);
         container.setEnv(envVariables);
+        return this;
+    }
+
+    public DockerContainer withClasspathResourceMapping(String resourcePath, String containerPath, BindMode mode) {
+        container.withClasspathResourceMapping(resourcePath, containerPath, mode);
+        return this;
+    }
+
+    public DockerContainer withStartupCheckStrategy(StartupCheckStrategy strategy) {
+        container.withStartupCheckStrategy(strategy);
         return this;
     }
 
@@ -137,7 +149,7 @@ public class DockerContainer implements TestRule, BeforeAllCallback, AfterAllCal
     }
 
     public Container.ExecResult exec(String... command) throws IOException, InterruptedException {
-       return container.execInContainer(command);
+        return container.execInContainer(command);
     }
 
     public void start() {
@@ -162,6 +174,10 @@ public class DockerContainer implements TestRule, BeforeAllCallback, AfterAllCal
 
     public Integer getMappedPort(int originalPort) {
         return container.getMappedPort(originalPort);
+    }
+
+    public GenericContainer<?> getContainer() {
+        return container;
     }
 
     @SuppressWarnings("deprecation")
