@@ -221,15 +221,12 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     @Override
     public Publisher<QuotaDetails> quotaDetailsReactive(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            return Mono.zip(
-                    Mono.fromCallable(() -> listMaxMessagesDetails(quotaRoot, entityManager)),
-                    Mono.fromCallable(() -> listMaxStorageDetails(quotaRoot, entityManager)))
-                .map(tuple -> new QuotaDetails(tuple.getT1(), tuple.getT2()))
-                .subscribeOn(Schedulers.boundedElastic());
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
-        }
+        return Mono.zip(
+                Mono.fromCallable(() -> listMaxMessagesDetails(quotaRoot, entityManager)),
+                Mono.fromCallable(() -> listMaxStorageDetails(quotaRoot, entityManager)))
+            .map(tuple -> new QuotaDetails(tuple.getT1(), tuple.getT2()))
+            .subscribeOn(Schedulers.boundedElastic())
+            .doFinally(any -> EntityManagerUtils.safelyClose(entityManager));
     }
 
     @Override
