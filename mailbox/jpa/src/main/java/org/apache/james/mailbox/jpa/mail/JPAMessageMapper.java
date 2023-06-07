@@ -59,6 +59,8 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * JPA implementation of a {@link MessageMapper}. This class is not thread-safe!
@@ -89,8 +91,17 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
-        return findInMailboxReactive(mailbox, MessageRange.all(), FetchType.METADATA, UNLIMITED)
-            .map(MailboxMessage::getUid);
+        return Mono.fromCallable(() -> {
+            try {
+                JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+                Query query = getEntityManager().createNamedQuery("listUidsInMailbox")
+                    .setParameter("idParam", mailboxId.getRawId());
+                return query.getResultStream().map(result -> MessageUid.of((Long) result));
+            } catch (PersistenceException e) {
+                throw new MailboxException("Search of recent messages failed in mailbox " + mailbox, e);
+            }
+        }).flatMapMany(Flux::fromStream)
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -207,6 +218,8 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             throw new MailboxException("Search of recent messages failed in mailbox " + mailbox, e);
         }
     }
+
+
 
     @Override
     public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
