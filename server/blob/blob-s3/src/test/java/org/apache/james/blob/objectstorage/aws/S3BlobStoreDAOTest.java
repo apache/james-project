@@ -82,7 +82,8 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
 
         final int count = 1500;
         Flux.range(0, count)
-            .flatMap(i -> store.save(TEST_BUCKET_NAME, new TestBlobId("test-blob-id-" + i), ByteSource.wrap(ELEVEN_KILOBYTES)))
+            .concatMap(i -> store.save(TEST_BUCKET_NAME, new TestBlobId("test-blob-id-" + i),
+                ByteSource.wrap(ELEVEN_KILOBYTES)))
             .blockLast();
 
         assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).count().block())
