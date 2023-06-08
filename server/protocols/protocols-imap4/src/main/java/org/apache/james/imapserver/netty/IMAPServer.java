@@ -20,6 +20,7 @@ package org.apache.james.imapserver.netty;
 
 import java.net.MalformedURLException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +54,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
-
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * NIO IMAP Server which use Netty.
@@ -119,6 +121,25 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         }
     }
 
+    enum SchedulerChoice {
+        IMMEDIATE("immediate", Schedulers.immediate()),
+        BOUNDED_ELASTIC("boundedElastic", Schedulers.boundedElastic());
+
+        static Optional<SchedulerChoice> parse(String value) {
+            return Arrays.stream(SchedulerChoice.values())
+                .filter(v -> v.value.equals(value))
+                .findFirst();
+        }
+
+        private final String value;
+        private final Scheduler scheduler;
+
+        SchedulerChoice(String value, Scheduler scheduler) {
+            this.value = value;
+            this.scheduler = scheduler;
+        }
+    }
+
     private static final String SOFTWARE_TYPE = "JAMES " + VERSION + " Server ";
     private static final String DEFAULT_TIME_UNIT = "SECONDS";
     private static final String CAPABILITY_SEPARATOR = "|";
@@ -145,6 +166,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     private boolean ignoreIDLEUponProcessing;
     private Duration heartbeatInterval;
     private ReactiveThrottler reactiveThrottler;
+    private Scheduler scheduler;
 
 
     public IMAPServer(ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor, ImapMetrics imapMetrics, GaugeRegistry gaugeRegistry) {
@@ -180,6 +202,10 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         ImapConfiguration imapConfiguration = getImapConfiguration(configuration);
         heartbeatInterval = imapConfiguration.idleTimeIntervalAsDuration();
         reactiveThrottler = new ReactiveThrottler(gaugeRegistry, imapConfiguration.getConcurrentRequests(), imapConfiguration.getMaxQueueSize());
+        scheduler = Optional.ofNullable(configuration.getString("scheduler", null))
+                .flatMap(SchedulerChoice::parse)
+                .orElse(SchedulerChoice.IMMEDIATE)
+                .scheduler;
         processor.configure(imapConfiguration);
     }
 
@@ -294,6 +320,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             .imapMetrics(imapMetrics)
             .heartbeatInterval(heartbeatInterval)
             .ignoreIDLEUponProcessing(ignoreIDLEUponProcessing)
+            .scheduler(scheduler)
             .build();
     }
 

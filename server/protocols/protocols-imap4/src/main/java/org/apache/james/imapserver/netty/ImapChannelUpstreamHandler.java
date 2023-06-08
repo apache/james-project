@@ -59,6 +59,7 @@ import io.netty.handler.codec.TooLongFrameException;
 import io.netty.util.Attribute;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 
 /**
  * {@link ChannelInboundHandlerAdapter} which handles IMAP
@@ -79,6 +80,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         private boolean ignoreIDLEUponProcessing;
         private Duration heartbeatInterval;
         private ReactiveThrottler reactiveThrottler;
+        private Scheduler scheduler;
 
         public ImapChannelUpstreamHandlerBuilder reactiveThrottler(ReactiveThrottler reactiveThrottler) {
             this.reactiveThrottler = reactiveThrottler;
@@ -130,8 +132,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             return this;
         }
 
+        public ImapChannelUpstreamHandlerBuilder scheduler(Scheduler scheduler) {
+            this.scheduler = scheduler;
+            return this;
+        }
+
         public ImapChannelUpstreamHandler build() {
-            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration, ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler);
+            return new ImapChannelUpstreamHandler(hello, processor, encoder, compress, secure, imapMetrics, authenticationConfiguration,
+                    ignoreIDLEUponProcessing, (int) heartbeatInterval.toSeconds(), reactiveThrottler, scheduler);
         }
     }
 
@@ -151,9 +159,12 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     private final boolean ignoreIDLEUponProcessing;
     private final ReactiveThrottler reactiveThrottler;
 
+    private final Scheduler scheduler;
+
     public ImapChannelUpstreamHandler(String hello, ImapProcessor processor, ImapEncoder encoder, boolean compress,
                                       Encryption secure, ImapMetrics imapMetrics, AuthenticationConfiguration authenticationConfiguration,
-                                      boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds, ReactiveThrottler reactiveThrottler) {
+                                      boolean ignoreIDLEUponProcessing, int heartbeatIntervalSeconds, ReactiveThrottler reactiveThrottler,
+                                      Scheduler scheduler) {
         this.hello = hello;
         this.processor = processor;
         this.encoder = encoder;
@@ -165,6 +176,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         this.ignoreIDLEUponProcessing = ignoreIDLEUponProcessing;
         this.heartbeatHandler = new ImapHeartbeatHandler(heartbeatIntervalSeconds, heartbeatIntervalSeconds, heartbeatIntervalSeconds);
         this.reactiveThrottler = reactiveThrottler;
+        this.scheduler = scheduler;
     }
 
     @Override
@@ -364,6 +376,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 .contextWrite(ReactorUtils.context("imap", mdc(session))), message)
             // Manage throttling errors
             .doOnError(ctx::fireExceptionCaught)
+            .subscribeOn(scheduler)
             .subscribe();
         disposableAttribute.set(disposable);
     }

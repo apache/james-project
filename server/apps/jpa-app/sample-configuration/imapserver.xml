@@ -51,6 +51,7 @@ under the License.
         <auth>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
+        <scheduler>boundedElastic</scheduler>
     </imapserver>
     <imapserver enabled="true">
         <jmxName>imapserver-ssl</jmxName>
@@ -79,5 +80,6 @@ under the License.
         <auth>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
+        <scheduler>boundedElastic</scheduler>
     </imapserver>
 </imapservers>

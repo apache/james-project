@@ -123,6 +123,10 @@
 
         <dt><strong>ignoreIDLEUponProcessing</strong></dt>
         <dd>true or false - Allow disabling the heartbeat handler. Defaults to true.</dd>
+
+        <dt><strong>scheduler</strong></dt>
+        <dd>String. Possible value : immediate (default) and boundedElastic. Allows choosing the reactor scheduler. Use immediate
+        with async mailbox implementation (cassandra) and avoid it with blocking imlementations (like JPA).</dd>
       </dl>
 
     <subsection name="OIDC set up">

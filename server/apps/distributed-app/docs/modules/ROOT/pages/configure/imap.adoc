@@ -133,6 +133,10 @@ Optional integer, defaults to 2 times the count of CPUs.
 
 | ignoreIDLEUponProcessing
 | true or false - Allow disabling the heartbeat handler. Defaults to true.
+
+| scheduler
+| String. Possible value : immediate (default) and boundedElastic. Allows choosing the reactor scheduler. Use immediate
+with async mailbox implementation (cassandra) and avoid it with blocking imlementations (like JPA).
 |===
 
 == OIDC setup
