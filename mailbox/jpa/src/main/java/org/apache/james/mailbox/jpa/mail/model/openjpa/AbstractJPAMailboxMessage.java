@@ -80,6 +80,7 @@ import com.google.common.collect.ImmutableList;
 @IdClass(AbstractJPAMailboxMessage.MailboxIdUidKey.class)
 @NamedQueries({
         @NamedQuery(name = "findRecentMessageUidsInMailbox", query = "SELECT message.uid FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.recent = TRUE ORDER BY message.uid ASC"),
+        @NamedQuery(name = "listUidsInMailbox", query = "SELECT message.uid FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.uid ASC"),
         @NamedQuery(name = "findUnseenMessagesInMailboxOrderByUid", query = "SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.seen = FALSE ORDER BY message.uid ASC"),
         @NamedQuery(name = "findMessagesInMailbox", query = "SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.uid ASC"),
         @NamedQuery(name = "findMessagesInMailboxBetweenUIDs", query = "SELECT message FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam AND message.uid BETWEEN :fromParam AND :toParam ORDER BY message.uid ASC"),
