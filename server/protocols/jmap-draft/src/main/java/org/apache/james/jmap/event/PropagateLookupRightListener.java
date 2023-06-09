@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.event;
 
+import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -28,19 +30,23 @@ import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PropagateLookupRightListener implements EventListener.GroupEventListener {
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public class PropagateLookupRightListener implements EventListener.ReactiveGroupEventListener {
     public static class PropagateLookupRightListenerGroup extends Group {
 
     }
@@ -63,75 +69,71 @@ public class PropagateLookupRightListener implements EventListener.GroupEventLis
     }
 
     @Override
-    public void event(Event event) throws MailboxException {
-        MailboxSession mailboxSession = createMailboxSession(event);
-
-        if (event instanceof MailboxACLUpdated) {
-            MailboxACLUpdated aclUpdateEvent = (MailboxACLUpdated) event;
-            MailboxPath mailboxPath = mailboxManager.getMailbox(aclUpdateEvent.getMailboxId(), mailboxSession).getMailboxPath();
-
-            updateLookupRightOnParent(mailboxSession, mailboxPath, aclUpdateEvent.getAclDiff());
-        } else if (event instanceof MailboxRenamed) {
-            MailboxRenamed renamedEvent = (MailboxRenamed) event;
-            updateLookupRightOnParent(mailboxSession, renamedEvent.getNewPath());
-        }
+    public boolean isHandling(Event event) {
+        return event instanceof MailboxACLUpdated || event instanceof MailboxRenamed;
     }
 
     @Override
-    public boolean isHandling(Event event) {
-        return event instanceof MailboxACLUpdated || event instanceof MailboxRenamed;
+    public Publisher<Void> reactiveEvent(Event event) {
+        if (event instanceof MailboxACLUpdated) {
+            return updateLookupRightOnParent((MailboxACLUpdated) event);
+        } else if (event instanceof MailboxRenamed) {
+            return updateLookupRightOnParent((MailboxRenamed) event);
+        }
+        return Mono.empty();
+    }
+
+    private Mono<Void> updateLookupRightOnParent(MailboxACLUpdated aclUpdateEvent) {
+        MailboxSession mailboxSession = createMailboxSession(aclUpdateEvent);
+        return Mono.from(mailboxManager.getMailboxReactive(aclUpdateEvent.getMailboxId(), mailboxSession))
+            .map(MessageManager::getMailboxPath)
+            .flatMapIterable(mailboxPath -> mailboxPath.getParents(mailboxSession.getPathDelimiter()))
+            .flatMap(parentPath -> updateLookupRight(mailboxSession, parentPath, aclUpdateEvent.getAclDiff()))
+            .then();
+    }
+
+    private Mono<Void> updateLookupRightOnParent(MailboxRenamed mailboxRenamed) {
+        MailboxSession mailboxSession = createMailboxSession(mailboxRenamed);
+        return Mono.from(rightManager.listRightsReactive(mailboxRenamed.getNewPath(), mailboxSession))
+            .flatMapIterable(acl -> acl.getEntries().entrySet())
+            .map(mapEntry -> new Entry(mapEntry.getKey(), mapEntry.getValue()))
+            .filter(updateLookupRightPredicate())
+            .collectList()
+            .flatMap(entries -> Flux.fromIterable(mailboxRenamed.getNewPath().getParents(mailboxSession.getPathDelimiter()))
+                .flatMap(parentPath -> updateLookupRight(mailboxSession, parentPath, entries))
+                .then());
+    }
+
+    private Mono<Void> updateLookupRight(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff) {
+        return updateLookupRight(session, mailboxPath, Stream.concat(aclDiff.addedEntries(), aclDiff.changedEntries()));
+    }
+
+    private Mono<Void> updateLookupRight(MailboxSession session, MailboxPath mailboxPath, Stream<Entry> entryStream) {
+        return Flux.fromStream(entryStream)
+            .filter(updateLookupRightPredicate())
+            .flatMap(entry -> applyLookupRight(session, mailboxPath, entry.getKey()))
+            .then();
+    }
+
+    private Predicate<Entry> updateLookupRightPredicate() {
+        return entry -> !entry.getKey().isNegative() && entry.getValue().contains(Right.Lookup);
+    }
+
+    private Mono<Void> updateLookupRight(MailboxSession session, MailboxPath mailboxPath, List<Entry> entries) {
+        return Flux.fromIterable(entries)
+            .flatMap(entry -> applyLookupRight(session, mailboxPath, entry.getKey()))
+            .then();
     }
 
     private MailboxSession createMailboxSession(Event event) {
         return mailboxManager.createSystemSession(event.getUsername());
     }
 
-    private void updateLookupRightOnParent(MailboxSession session, MailboxPath path) throws MailboxException {
-        MailboxACL acl = rightManager.listRights(path, session);
-        listAncestors(session, path)
-            .forEach(parentMailboxPath ->
-                updateLookupRight(
-                    session,
-                    parentMailboxPath,
-                    acl.getEntries()
-                        .entrySet()
-                        .stream()
-                        .map(entry -> new Entry(entry.getKey(), entry.getValue()))));
-    }
-
-    private void updateLookupRightOnParent(MailboxSession mailboxSession, MailboxPath mailboxPath, ACLDiff aclDiff) {
-        listAncestors(mailboxSession, mailboxPath)
-            .forEach(path ->
-                updateLookupRight(
-                    mailboxSession, path,
-                    Stream.concat(aclDiff.addedEntries(), aclDiff.changedEntries())
-                ));
-    }
-
-    private void updateLookupRight(MailboxSession session, MailboxPath mailboxPath, Stream<Entry> entries) {
-        entries
-            .filter(entry -> !entry.getKey().isNegative())
-            .filter(entry -> entry.getValue().contains(Right.Lookup))
-            .forEach(entry -> applyLookupRight(session, mailboxPath, entry));
-    }
-
-    private Stream<MailboxPath> listAncestors(MailboxSession mailboxSession, MailboxPath mailboxPath) {
-        return mailboxPath.getParents(mailboxSession.getPathDelimiter())
-            .stream();
-    }
-
-    private void applyLookupRight(MailboxSession session, MailboxPath mailboxPath, Entry entry) {
-        try {
-            rightManager.applyRightsCommand(mailboxPath,
-                MailboxACL.command()
-                    .rights(Right.Lookup)
-                    .key(entry.getKey())
-                    .asAddition(),
-                session);
-        } catch (MailboxException e) {
-            LOGGER.error(String.format("Mailbox '%s' does not exist, user '%s' cannot share mailbox",
-                mailboxPath,
-                session.getUser().asString()), e);
-        }
+    private Mono<Void> applyLookupRight(MailboxSession session, MailboxPath mailboxPath, MailboxACL.EntryKey entryKey) {
+        return Mono.fromCallable(() -> MailboxACL.command()
+                .rights(Right.Lookup)
+                .key(entryKey)
+                .asAddition())
+            .flatMap(aclCommand -> Mono.from(rightManager.applyRightsCommandReactive(mailboxPath, aclCommand, session)));
     }
 }
