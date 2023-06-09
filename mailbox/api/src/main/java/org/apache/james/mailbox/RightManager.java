@@ -91,7 +91,11 @@ public interface RightManager {
 
     MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
+    Publisher<MailboxACL> listRightsReactive(MailboxPath mailboxPath, MailboxSession session);
+
     MailboxACL listRights(MailboxId mailboxId, MailboxSession session) throws MailboxException;
+
+    Publisher<MailboxACL> listRightsReactive(MailboxId mailboxId, MailboxSession session);
 
     /**
      * Returns the rights applicable to the user who has sent the current
