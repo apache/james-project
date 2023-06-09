@@ -658,7 +658,7 @@ public class StoreMailboxManager implements MailboxManager {
                 return mailboxId;
             })
             .then(Mono.from(locker.executeReactiveWithLockReactive(from, mapper.findMailboxWithPathLike(query)
-                    .flatMap(sub -> {
+                    .concatMap(sub -> {
                         String subOriginalName = sub.getName();
                         String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
                         MailboxPath fromPath = new MailboxPath(from, subOriginalName);
