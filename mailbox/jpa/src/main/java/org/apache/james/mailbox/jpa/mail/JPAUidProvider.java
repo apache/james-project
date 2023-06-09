@@ -45,9 +45,16 @@ public class JPAUidProvider implements UidProvider {
 
     @Override
     public Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException {
-        EntityManager manager = null;
+        EntityManager manager = factory.createEntityManager();
         try {
-            manager = factory.createEntityManager();
+            return lastUid(mailbox, manager);
+        } finally {
+            EntityManagerUtils.safelyClose(manager);
+        }
+    }
+
+    public Optional<MessageUid> lastUid(Mailbox mailbox, EntityManager manager) throws MailboxException {
+        try {
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
             long uid = (Long) manager.createNamedQuery("findLastUid").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
             if (uid == 0) {
@@ -56,8 +63,6 @@ public class JPAUidProvider implements UidProvider {
             return Optional.of(MessageUid.of(uid));
         } catch (PersistenceException e) {
             throw new MailboxException("Unable to get last uid for mailbox " + mailbox, e);
-        } finally {
-            EntityManagerUtils.safelyClose(manager);
         }
     }
 
