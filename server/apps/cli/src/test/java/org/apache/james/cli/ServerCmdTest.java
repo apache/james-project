@@ -19,34 +19,14 @@
 
 package org.apache.james.cli;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
-
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
-import org.apache.james.cli.probe.impl.JmxConnection;
-import org.apache.james.cli.probe.impl.JmxDataProbe;
-import org.apache.james.cli.probe.impl.JmxMailboxProbe;
-import org.apache.james.cli.probe.impl.JmxQuotaProbe;
-import org.apache.james.cli.probe.impl.JmxSieveProbe;
+import org.apache.james.cli.probe.impl.*;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -59,8 +39,22 @@ import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import com.google.common.collect.ImmutableList;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
 class ServerCmdTest {
 
@@ -121,6 +115,41 @@ class ServerCmdTest {
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         when(dataProbe.listDomains()).thenReturn(ImmutableList.of());
+
+        testee.executeCommandLine(commandLine);
+    }
+
+    @Test
+    void addDomainMappingCommandShouldWork() throws Exception {
+        String domain = "example.com";
+        String targetDomain = "other.example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAINMAPPING.getCommand(), domain, targetDomain};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        testee.executeCommandLine(commandLine);
+
+        verify(dataProbe).addDomainMapping(domain, targetDomain);
+    }
+
+    @Test
+    void removeDomainMappingCommandShouldWork() throws Exception {
+        String domain = "example.com";
+        String targetDomain = "other.example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAINMAPPING.getCommand(), domain, targetDomain};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        testee.executeCommandLine(commandLine);
+
+        verify(dataProbe).removeDomainMapping(domain, targetDomain);
+    }
+
+    @Test
+    void listDomainMappingsCommandShouldWork() throws Exception {
+        String domain = "example.com";
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINMAPPINGS.getCommand(), domain};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        when(dataProbe.listDomainMappings(domain)).thenReturn(MappingsImpl.empty());
 
         testee.executeCommandLine(commandLine);
     }
@@ -633,6 +662,33 @@ class ServerCmdTest {
 
         assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
             .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
+    void addDomainMappingCommandShouldThrowOnMissingArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAINMAPPING.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+                .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
+    void removeDomainMappingCommandShouldThrowOnMissingArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAINMAPPING.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+                .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
+    void listDomainMappingsCommandShouldThrowOnMissingArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINMAPPINGS.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+                .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
     @Test
@@ -1184,31 +1240,14 @@ class ServerCmdTest {
         assertThat(ServerCmd.getPort(commandLine)).isEqualTo(9999);
     }
 
-    @Test
-    void getPortShouldThrowOnNullPortValueOption() throws Exception {
-        String[] arguments = { "-h", "127.0.0.1", "-p", "0", "command", "arg1", "arg2", "arg3" };
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "-1", "99999"})
+    void getPortShouldThrowOnInvalidPortValueOption(String arg) throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", arg, "command", "arg1", "arg2", "arg3" };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void getPortShouldThrowOnNegativePortValueOption() throws Exception {
-        String[] arguments = { "-h", "127.0.0.1", "-p", "-1", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
-
-        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void getPortShouldThrowOnTooHighPortValueOption() throws Exception {
-        String[] arguments = { "-h", "127.0.0.1", "-p", "99999", "command", "arg1", "arg2", "arg3" };
-        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
-
-        assertThatThrownBy(() -> ServerCmd.getPort(commandLine))
-            .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

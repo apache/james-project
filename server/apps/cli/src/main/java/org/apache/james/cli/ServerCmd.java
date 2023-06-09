@@ -18,41 +18,19 @@
  ****************************************************************/
 package org.apache.james.cli;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.StringTokenizer;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Strings;
+import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.JamesCliException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
-import org.apache.james.cli.probe.impl.JmxConnection;
-import org.apache.james.cli.probe.impl.JmxDataProbe;
-import org.apache.james.cli.probe.impl.JmxMailboxProbe;
-import org.apache.james.cli.probe.impl.JmxQuotaProbe;
-import org.apache.james.cli.probe.impl.JmxSieveProbe;
+import org.apache.james.cli.probe.impl.*;
 import org.apache.james.cli.type.CmdType;
-import org.apache.james.core.quota.QuotaCountLimit;
-import org.apache.james.core.quota.QuotaCountUsage;
-import org.apache.james.core.quota.QuotaLimitValue;
-import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.core.quota.*;
 import org.apache.james.mailbox.model.SerializableQuota;
 import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.rrt.lib.Mappings;
@@ -62,10 +40,14 @@ import org.apache.james.util.SizeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Strings;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+import java.util.function.LongFunction;
 
 /**
  * Command line utility for managing various aspect of the James server.
@@ -117,7 +99,7 @@ public class ServerCmd {
         PrintStream printStream = System.out;
         executeAndOutputToStream(args, printStream);
     }
-    
+
     public static void executeAndOutputToStream(String[] args, PrintStream printStream) throws Exception {
         Stopwatch stopWatch = Stopwatch.createStarted();
         CommandLine cmd = parseCommandLine(args);
@@ -146,7 +128,7 @@ public class ServerCmd {
         this.quotaProbe = quotaProbe;
         this.sieveProbe = sieveProbe;
     }
-    
+
     @VisibleForTesting
     static CommandLine parseCommandLine(String[] args) throws ParseException {
         CommandLineParser parser = new DefaultParser();
@@ -258,6 +240,16 @@ public class ServerCmd {
             break;
         case LISTDOMAINS:
             print(probe.listDomains(), printStream);
+            break;
+        case ADDDOMAINMAPPING:
+            probe.addDomainMapping(arguments[1], arguments[2]);
+            break;
+        case REMOVEDOMAINMAPPING:
+            probe.removeDomainMapping(arguments[1], arguments[2]);
+            break;
+        case LISTDOMAINMAPPINGS:
+            Mappings domainMappings = probe.listDomainMappings(arguments[1]);
+            print(domainMappings.asStrings(), printStream);
             break;
         case LISTMAPPINGS:
             print(probe.listMappings(), printStream);
@@ -372,7 +364,7 @@ public class ServerCmd {
         }
     }
 
-    private SerializableQuotaLimitValue<QuotaSizeLimit> parseQuotaSize(String argument) throws Exception {
+    private SerializableQuotaLimitValue<QuotaSizeLimit> parseQuotaSize(String argument) {
         long convertedValue = Size.parse(argument).asBytes();
         return longToSerializableQuotaValue(convertedValue, QuotaSizeLimit.unlimited(), QuotaSizeLimit::size);
     }
@@ -382,11 +374,11 @@ public class ServerCmd {
         return longToSerializableQuotaValue(value, QuotaCountLimit.unlimited(), QuotaCountLimit::count);
     }
 
-    private <T extends QuotaLimitValue<T>> SerializableQuotaLimitValue<T> longToSerializableQuotaValue(long value, T unlimited, Function<Long, T> factory) {
+    private <T extends QuotaLimitValue<T>> SerializableQuotaLimitValue<T> longToSerializableQuotaValue(long value, T unlimited, LongFunction<T> factory) {
         return SerializableQuotaLimitValue.valueOf(Optional.of(longToQuotaValue(value, unlimited, factory)));
     }
 
-    private <T extends QuotaLimitValue<T>> T longToQuotaValue(long value, T unlimited, Function<Long, T> factory) {
+    private <T extends QuotaLimitValue<T>> T longToQuotaValue(long value, T unlimited, LongFunction<T> factory) {
         if (value == -1) {
             return unlimited;
         }
@@ -419,17 +411,17 @@ public class ServerCmd {
     }
 
     private void printStorageQuota(String quotaRootString, SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> quota, PrintStream printStream) {
-        printStream.println(String.format("Storage quota for %s is: %s / %s",
+        printStream.printf("Storage quota for %s is: %s / %s%n",
             quotaRootString,
             formatStorageValue(quota.getUsed()),
-            formatStorageValue(quota.encodeAsLong())));
+            formatStorageValue(quota.encodeAsLong()));
     }
 
     private void printMessageQuota(String quotaRootString, SerializableQuota<QuotaCountLimit, QuotaCountUsage> quota, PrintStream printStream) {
-        printStream.println(String.format("MailboxMessage count quota for %s is: %s / %s",
+        printStream.printf("MailboxMessage count quota for %s is: %s / %s%n",
             quotaRootString,
             formatMessageValue(quota.getUsed()),
-            formatMessageValue(quota.encodeAsLong())));
+            formatMessageValue(quota.encodeAsLong()));
     }
 
     private String formatStorageValue(Long value) {

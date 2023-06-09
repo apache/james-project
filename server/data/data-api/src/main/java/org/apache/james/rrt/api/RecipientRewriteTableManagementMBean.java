@@ -137,6 +137,17 @@ public interface RecipientRewriteTableManagementMBean {
     void removeDomainMapping(String domain, String targetDomain) throws Exception;
 
     /**
+     * Return a Map which holds domain redirections
+     *
+     * @param domain
+     *            the domain. Null if no domain should be used
+     *
+     * @throws Exception
+     *            If an error occurred
+     */
+    Mappings getDomainMappings(String domain) throws Exception;
+
+    /**
      * Return the explicit mapping stored for the given user and domain. Return
      * null if no mapping was found
      * 
