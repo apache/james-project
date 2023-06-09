@@ -594,14 +594,14 @@ public class StoreMessageManager implements MessageManager {
                 t5.getT4().getUnseen(), t5.getT3().orElse(null), isWriteable(mailboxSession), resolvedAcl)));
     }
 
-    private Mono<ModSeq> highestModSeq(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
+    protected Mono<ModSeq> highestModSeq(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
         if (items.contains(MailboxMetaData.Item.HighestModSeq)) {
             return messageMapper.getHighestModSeqReactive(mailbox);
         }
         return Mono.just(ModSeq.first());
     }
 
-    private Mono<MessageUid> nextUid(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
+    protected Mono<MessageUid> nextUid(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
         if (items.contains(MailboxMetaData.Item.NextUid)) {
             return messageMapper.getLastUidReactive(mailbox)
                 .map(optional -> optional
@@ -611,14 +611,14 @@ public class StoreMessageManager implements MessageManager {
         return Mono.just(MessageUid.MIN_VALUE);
     }
 
-    private Mono<Optional<MessageUid>> firstUnseen(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
+    protected Mono<Optional<MessageUid>> firstUnseen(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
         if (items.contains(MailboxMetaData.Item.FirstUnseen)) {
             return messageMapper.findFirstUnseenMessageUidReactive(getMailboxEntity());
         }
         return Mono.just(Optional.empty());
     }
 
-    private Mono<MailboxCounters> mailboxCounters(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
+    protected Mono<MailboxCounters> mailboxCounters(MessageMapper messageMapper, EnumSet<MailboxMetaData.Item> items) {
         if (items.contains(MailboxMetaData.Item.MailboxCounters)) {
             return messageMapper.getMailboxCountersReactive(getMailboxEntity());
         }
@@ -777,7 +777,7 @@ public class StoreMessageManager implements MessageManager {
      * Return a List which holds all uids of recent messages and optional reset
      * the recent flag on the messages for the uids
      */
-    private Mono<List<MessageUid>> recent(RecentMode recentMode, MailboxSession mailboxSession) throws MailboxException {
+    protected Mono<List<MessageUid>> recent(RecentMode recentMode, MailboxSession mailboxSession) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
         switch (recentMode) {
