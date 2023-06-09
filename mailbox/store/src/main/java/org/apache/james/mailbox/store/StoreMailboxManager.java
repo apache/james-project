@@ -988,8 +988,18 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
+    public Publisher<MailboxACL> listRightsReactive(MailboxPath mailboxPath, MailboxSession session) {
+        return storeRightManager.listRightsReactive(mailboxPath, session);
+    }
+
+    @Override
     public MailboxACL listRights(MailboxId mailboxId, MailboxSession session) throws MailboxException {
         return storeRightManager.listRights(mailboxId, session);
+    }
+
+    @Override
+    public Publisher<MailboxACL> listRightsReactive(MailboxId mailboxId, MailboxSession session) {
+        return storeRightManager.listRightsReactive(mailboxId, session);
     }
 
     @Override

@@ -153,18 +153,28 @@ public class StoreRightManager implements RightManager {
 
     @Override
     public MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = blockOptional(mapper.findMailboxByPath(mailboxPath))
-            .orElseThrow(() -> new MailboxNotFoundException(mailboxPath));
-        return mailbox.getACL();
+        return MailboxReactorUtils.block(listRightsReactive(mailboxPath,  session));
+    }
+
+    @Override
+    public Mono<MailboxACL> listRightsReactive(MailboxPath mailboxPath, MailboxSession session) {
+        return Mono.fromCallable(() -> mailboxSessionMapperFactory.getMailboxMapper(session))
+            .flatMap(mapper -> mapper.findMailboxByPath(mailboxPath))
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxPath)))
+            .map(Mailbox::getACL);
     }
 
     @Override
     public MailboxACL listRights(MailboxId mailboxId, MailboxSession session) throws MailboxException {
-        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        Mailbox mailbox = blockOptional(mapper.findMailboxById(mailboxId))
-            .orElseThrow(() -> new MailboxNotFoundException(mailboxId));
-        return mailbox.getACL();
+         return MailboxReactorUtils.block(listRightsReactive(mailboxId,  session));
+    }
+
+    @Override
+    public Mono<MailboxACL> listRightsReactive(MailboxId mailboxId, MailboxSession session) {
+        return Mono.fromCallable(() -> mailboxSessionMapperFactory.getMailboxMapper(session))
+            .flatMap(mapper -> mapper.findMailboxById(mailboxId))
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailboxId)))
+            .map(Mailbox::getACL);
     }
 
     @Override
