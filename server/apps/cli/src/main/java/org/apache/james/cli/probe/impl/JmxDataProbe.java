@@ -19,17 +19,19 @@
 
 package org.apache.james.cli.probe.impl;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+import javax.management.MalformedObjectNameException;
+
 import org.apache.james.domainlist.api.DomainListManagementMBean;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.util.MDCBuilder;
 
-import javax.management.MalformedObjectNameException;
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class JmxDataProbe implements JmxProbe {
 
