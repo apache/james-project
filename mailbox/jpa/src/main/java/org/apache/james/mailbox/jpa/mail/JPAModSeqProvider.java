@@ -83,17 +83,23 @@ public class JPAModSeqProvider implements ModSeqProvider {
     }
 
     private ModSeq highestModSeq(JPAId mailboxId) throws MailboxException {
-        EntityManager manager = null;
+        EntityManager manager = factory.createEntityManager();
         try {
-            manager = factory.createEntityManager();
+            return highestModSeq(mailboxId, manager);
+        } finally {
+            EntityManagerUtils.safelyClose(manager);
+        }
+    }
+
+    public ModSeq highestModSeq(MailboxId mailboxId, EntityManager manager) throws MailboxException {
+        JPAId jpaId = (JPAId) mailboxId;
+        try {
             long highest = (Long) manager.createNamedQuery("findHighestModSeq")
-                .setParameter("idParam", mailboxId.getRawId())
+                .setParameter("idParam", jpaId.getRawId())
                 .getSingleResult();
             return ModSeq.of(highest);
         } catch (PersistenceException e) {
             throw new MailboxException("Unable to get highest mod-sequence for mailbox " + mailboxId.serialize(), e);
-        } finally {
-            EntityManagerUtils.safelyClose(manager);
         }
     }
 }
