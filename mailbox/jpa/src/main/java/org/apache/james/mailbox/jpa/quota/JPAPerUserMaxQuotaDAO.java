@@ -26,7 +26,6 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -43,12 +42,10 @@ import org.apache.james.mailbox.model.QuotaRoot;
 public class JPAPerUserMaxQuotaDAO {
 
     private static final long INFINITE = -1;
-    private final EntityManagerFactory entityManagerFactory;
     private final TransactionRunner transactionRunner;
 
     @Inject
     public JPAPerUserMaxQuotaDAO(EntityManagerFactory entityManagerFactory) {
-        this.entityManagerFactory = entityManagerFactory;
         this.transactionRunner = new TransactionRunner(entityManagerFactory);
     }
 
@@ -162,82 +159,52 @@ public class JPAPerUserMaxQuotaDAO {
         return storedValue;
     }
 
-    public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            MaxGlobalStorage storedValue = entityManager.find(MaxGlobalStorage.class, MaxGlobalStorage.DEFAULT_KEY);
-            if (storedValue == null) {
-                return Optional.empty();
-            }
-            return longToQuotaSize(storedValue.getValue());
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
+    public Optional<QuotaSizeLimit> getGlobalMaxStorage(EntityManager entityManager) {
+        MaxGlobalStorage storedValue = entityManager.find(MaxGlobalStorage.class, MaxGlobalStorage.DEFAULT_KEY);
+        if (storedValue == null) {
+            return Optional.empty();
         }
+        return longToQuotaSize(storedValue.getValue());
     }
 
-    public Optional<QuotaCountLimit> getGlobalMaxMessage() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            MaxGlobalMessageCount storedValue = entityManager.find(MaxGlobalMessageCount.class, MaxGlobalMessageCount.DEFAULT_KEY);
-            if (storedValue == null) {
-                return Optional.empty();
-            }
-            return longToQuotaCount(storedValue.getValue());
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
+    public Optional<QuotaCountLimit> getGlobalMaxMessage(EntityManager entityManager) {
+        MaxGlobalMessageCount storedValue = entityManager.find(MaxGlobalMessageCount.class, MaxGlobalMessageCount.DEFAULT_KEY);
+        if (storedValue == null) {
+            return Optional.empty();
         }
+        return longToQuotaCount(storedValue.getValue());
     }
 
-    public Optional<QuotaSizeLimit> getMaxStorage(QuotaRoot quotaRoot) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            MaxUserStorage storedValue = entityManager.find(MaxUserStorage.class, quotaRoot.getValue());
-            if (storedValue == null) {
-                return Optional.empty();
-            }
-            return longToQuotaSize(storedValue.getValue());
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
+    public Optional<QuotaSizeLimit> getMaxStorage(EntityManager entityManager, QuotaRoot quotaRoot) {
+        MaxUserStorage storedValue = entityManager.find(MaxUserStorage.class, quotaRoot.getValue());
+        if (storedValue == null) {
+            return Optional.empty();
         }
+        return longToQuotaSize(storedValue.getValue());
     }
 
-    public Optional<QuotaCountLimit> getMaxMessage(QuotaRoot quotaRoot) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            MaxUserMessageCount storedValue = entityManager.find(MaxUserMessageCount.class, quotaRoot.getValue());
-            if (storedValue == null) {
-                return Optional.empty();
-            }
-            return longToQuotaCount(storedValue.getValue());
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
+    public Optional<QuotaCountLimit> getMaxMessage(EntityManager entityManager, QuotaRoot quotaRoot) {
+        MaxUserMessageCount storedValue = entityManager.find(MaxUserMessageCount.class, quotaRoot.getValue());
+        if (storedValue == null) {
+            return Optional.empty();
         }
+        return longToQuotaCount(storedValue.getValue());
     }
 
-    public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
+    public Optional<QuotaCountLimit> getDomainMaxMessage(EntityManager entityManager, Domain domain) {
             MaxDomainMessageCount storedValue = entityManager.find(MaxDomainMessageCount.class, domain.asString());
             if (storedValue == null) {
                 return Optional.empty();
             }
             return longToQuotaCount(storedValue.getValue());
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
-        }
     }
 
-    public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            MaxDomainStorage storedValue = entityManager.find(MaxDomainStorage.class, domain.asString());
-            if (storedValue == null) {
-                return Optional.empty();
-            }
-            return longToQuotaSize(storedValue.getValue());
-        } finally {
-            EntityManagerUtils.safelyClose(entityManager);
+    public Optional<QuotaSizeLimit> getDomainMaxStorage(EntityManager entityManager, Domain domain) {
+        MaxDomainStorage storedValue = entityManager.find(MaxDomainStorage.class, domain.asString());
+        if (storedValue == null) {
+            return Optional.empty();
         }
+        return longToQuotaSize(storedValue.getValue());
     }
 
 
