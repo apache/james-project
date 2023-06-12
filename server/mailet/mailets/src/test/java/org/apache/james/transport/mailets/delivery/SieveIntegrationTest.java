@@ -157,6 +157,19 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void shouldSupportSeveralRecipientsWhenFileInto() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/fileinto.script");
+        when(usersRepository.getUsername(new MailAddress("other@domain.tld"))).thenReturn(Username.of("other@domain.tld"));
+        when(resourceLocator.get(new MailAddress("other@domain.tld"))).thenThrow(new ScriptNotFoundException());
+
+        FakeMail mail = createMail();
+        mail.setRecipients(ImmutableList.of(new MailAddress(RECEIVER_DOMAIN_COM), new MailAddress("other@domain.tld")));
+        testee.service(mail);
+
+        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX_ANY);
+    }
+
+    @Test
     void allOfAllFalseScriptShouldWork() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/allofAllFalse.script");
 
