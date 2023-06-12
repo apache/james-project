@@ -41,21 +41,6 @@ public class ActionUtils {
     private static final String ATTRIBUTE_PREFIX = ActionUtils.class.getPackage().getName() + ".";
 
     /**
-     * Answers the sole intended recipient for aMail.
-     */
-    public static MailAddress getSoleRecipient(Mail aMail) throws MessagingException {
-        if (aMail.getRecipients() == null) {
-            throw new MessagingException("Invalid number of recipients - 0"
-                    + ". Exactly 1 recipient is expected.");
-        } else if (1 != aMail.getRecipients().size()) {
-            throw new MessagingException("Invalid number of recipients - "
-                + aMail.getRecipients().size()
-                + ". Exactly 1 recipient is expected.");
-        }
-        return aMail.getRecipients().iterator().next();
-    }
-
-    /**
      * Detect and handle locally looping mail. External loop detection is left
      * to the MTA.
      */
