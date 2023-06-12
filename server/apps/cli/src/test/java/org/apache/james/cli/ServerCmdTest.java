@@ -19,14 +19,33 @@
 
 package org.apache.james.cli;
 
-import com.google.common.collect.ImmutableList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Optional;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
-import org.apache.james.cli.probe.impl.*;
+import org.apache.james.cli.probe.impl.JmxConnection;
+import org.apache.james.cli.probe.impl.JmxDataProbe;
+import org.apache.james.cli.probe.impl.JmxMailboxProbe;
+import org.apache.james.cli.probe.impl.JmxQuotaProbe;
+import org.apache.james.cli.probe.impl.JmxSieveProbe;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -42,19 +61,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import com.google.common.collect.ImmutableList;
 
 class ServerCmdTest {
 
