@@ -59,9 +59,8 @@ public class ActionUtils {
      * Detect and handle locally looping mail. External loop detection is left
      * to the MTA.
      */
-    public static void detectAndHandleLocalLooping(Mail aMail, String anAttributeSuffix)
-            throws MessagingException {
-        MailAddress thisRecipient = getSoleRecipient(aMail);
+    public static void detectAndHandleLocalLooping(Mail aMail, ActionContext context, String anAttributeSuffix) {
+        MailAddress thisRecipient = context.getRecipient();
         AttributeName attributeName = AttributeName.of(ATTRIBUTE_PREFIX + anAttributeSuffix);
         AttributeUtils
             .getValueAndCastFromMail(aMail, attributeName, String.class)

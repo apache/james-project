@@ -56,7 +56,7 @@ public class RedirectAction implements MailAction {
      * @throws MessagingException
      */
     public void execute(ActionRedirect anAction, Mail aMail, ActionContext context) throws MessagingException {
-        ActionUtils.detectAndHandleLocalLooping(aMail, "redirect");
+        ActionUtils.detectAndHandleLocalLooping(aMail, context, "redirect");
 
         MailImpl redirectedMail = MailImpl.builder()
             .name("redirect-" + aMail.getName())
