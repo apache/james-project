@@ -506,6 +506,25 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void rejectShouldWorkWhenMultipleRecipients() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/reject.script");
+        when(usersRepository.getUsername(new MailAddress("other@domain.tld"))).thenReturn(Username.of("other@domain.tld"));
+        when(resourceLocator.get(new MailAddress("other@domain.tld"))).thenThrow(new ScriptNotFoundException());
+
+        FakeMail mail = createMail();
+        mail.setRecipients(ImmutableList.of(new MailAddress(RECEIVER_DOMAIN_COM), new MailAddress("other@domain.tld")));
+        testee.service(mail);
+
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
+            .recipient("sender@any.com")
+            .fromMailet()
+            .build();
+        assertThat(fakeMailContext.getSentMails())
+            .containsExactly(expectedSentMail);
+        assertThat(mail.getRecipients()).containsOnly(new MailAddress("other@domain.tld"));
+    }
+
+    @Test
     void redirectShouldWorkWhenSeveralRecipients() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/redirect.script");
         when(usersRepository.getUsername(new MailAddress("other@domain.tld"))).thenReturn(Username.of("other@domain.tld"));
