@@ -62,8 +62,8 @@ public class RejectAction implements MailAction {
         if (action instanceof ActionReject) {
             final ActionReject actionReject = (ActionReject) action;
             execute(actionReject, mail, context);
+            DiscardAction.removeRecipient(mail, context);
         }
-
     }
 
     /**
