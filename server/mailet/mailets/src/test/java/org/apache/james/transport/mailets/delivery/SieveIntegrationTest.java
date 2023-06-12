@@ -490,6 +490,26 @@ class SieveIntegrationTest {
     }
 
     @Test
+    void redirectShouldWorkWhenSeveralRecipients() throws Exception {
+        prepareTestUsingScript("org/apache/james/transport/mailets/delivery/redirect.script");
+        when(usersRepository.getUsername(new MailAddress("other@domain.tld"))).thenReturn(Username.of("other@domain.tld"));
+        when(resourceLocator.get(new MailAddress("other@domain.tld"))).thenThrow(new ScriptNotFoundException());
+
+        FakeMail mail = createMail();
+        mail.setRecipients(ImmutableList.of(new MailAddress(RECEIVER_DOMAIN_COM), new MailAddress("other@domain.tld")));
+        testee.service(mail);
+
+        assertThat(mail.getRecipients()).containsOnly(new MailAddress("other@domain.tld"));
+        FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
+            .sender("sender@any.com")
+            .recipient(new MailAddress("redirect@apache.org"))
+            .fromMailet()
+            .build();
+        assertThat(fakeMailContext.getSentMails())
+            .containsExactly(expectedSentMail);
+    }
+
+    @Test
     void addressCcAllShouldNotMatchOtherHeaders() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/addressAllCc.script");
 
