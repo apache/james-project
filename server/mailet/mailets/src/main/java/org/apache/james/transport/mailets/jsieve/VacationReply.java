@@ -81,7 +81,7 @@ public class VacationReply {
 
         public VacationReply build() throws MessagingException {
             Preconditions.checkState(eitherReasonOrMime());
-            ActionUtils.detectAndHandleLocalLooping(originalMail, "vacation");
+            ActionUtils.detectAndHandleLocalLooping(originalMail,  context, "vacation");
 
             MimeMessage reply = (MimeMessage) originalMail.getMessage().reply(false);
             reply.setSubject(generateNotificationSubject());
