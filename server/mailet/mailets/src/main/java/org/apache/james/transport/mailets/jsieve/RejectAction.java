@@ -81,7 +81,7 @@ public class RejectAction implements MailAction {
      * @throws MessagingException
      */
     public void execute(ActionReject anAction, Mail aMail, ActionContext context) throws MessagingException {
-        ActionUtils.detectAndHandleLocalLooping(aMail, "reject");
+        ActionUtils.detectAndHandleLocalLooping(aMail, context, "reject");
 
         // Create the MDN part
         StringBuilder humanText = new StringBuilder(128);
