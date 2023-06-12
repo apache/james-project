@@ -88,14 +88,19 @@
                     <dd>true or false - Use streaming for Blobs. This is only supported on a limited set of databases atm. You
                         should check if its supported by your DB before enable it. See <a href="http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html">http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html</a> (#7.11. LOB Streaming).</dd>
                 </dl>
-                <p>The JPA datasource handling is delegated to commons-dbcp, some of dbcp properties can be configured through james-database.properties. The corresponding definitions and default values can be found in the <a href="https://commons.apache.org/proper/commons-dbcp/configuration.html">dbcp documentation</a></p>
+
+                <p>NOTE: all<code>openjpa.*</code> properties will be passed to OpenJPA library as configuration See <a href="https://openjpa.apache.org/builds/3.2.2/apache-openjpa/docs/ref_guide_conf_openjpa.html">https://openjpa.apache.org/builds/3.2.2/apache-openjpa/docs/ref_guide_conf_openjpa.html</a> for a complete list </p>
+
+                <p>The JPA datasource and connection pooling can be delegated to commons-dbcp2 - the library dependency has to be present in classpath for it to be enabled. dbcp2 properties can be configured through james-database.properties - all properties prefixed with <code>datasource.*</code> will be passed to DBCP2 library via <code>openjpa.ConnectionProperties</code> OpenJPA property. The corresponding definitions and default values can be found in the <a href="https://commons.apache.org/proper/commons-dbcp/configuration.html">dbcp documentation</a>, some of the properties (but not limited to)</p>
                 <ul>
                     <li>datasource.testOnBorrow</li>
                     <li>datasource.validationQueryTimeoutSec</li>
                     <li>datasource.validationQuery</li>
+                    <li>datasource.initialSize</li>
+                    <li>datasource.minIdle</li>
                     <li>datasource.maxTotal</li>
-
                 </ul>
+                <p>NOTE: Connection poolling requires that <code>openjpa.Multithreaded</code> property is set to <code>true</code> (default)</p>
                 <p>Note for postgresql databases: Add <code>standard_conforming_strings=off</code> to your postgresql.xml, otherwise you
                     will get <code>""Invalid escape string Hint: Escape string must be empty or one character. {prepstmnt 174928937
                     SELECT t0.mailbox_id, t0.mailbox_highest_modseq, t0.mailbox_last_uid, t0.mailbox_name, t0.mailbox_namespace,
