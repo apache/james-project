@@ -20,7 +20,6 @@ package org.apache.james.transport.mailets.jsieve;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.core.MailAddress;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionFileInto;
 import org.apache.mailet.Mail;
@@ -64,26 +63,22 @@ public class FileIntoAction implements MailAction {
      * When IMAP support is added to James, it will be possible to support
      * sub-folders of <code>INBOX</code> fully.
      * </p>
-     * 
-     * @param anAction
-     * @param aMail
+     *
      * @param context not null
-     * @throws MessagingException
      */
     public void execute(ActionFileInto anAction, Mail aMail, final ActionContext context) throws MessagingException {
-        String destinationMailbox = anAction.getDestination();
-        MailAddress recipient;
-        recipient = ActionUtils.getSoleRecipient(aMail);
-
-        if (!(destinationMailbox.length() > 0
-            && destinationMailbox.charAt(0) == HIERARCHY_DELIMITER)) {
-            destinationMailbox =  HIERARCHY_DELIMITER + destinationMailbox;
-        }
-
+        String destinationMailbox = getDestinationMailbox(anAction);
         String mailbox = destinationMailbox.replace(HIERARCHY_DELIMITER, '/');
-        String url = "mailbox://" + recipient.asString() + mailbox;
+        String url = "mailbox://" + context.getRecipient().asString() + mailbox;
 
         context.post(url, aMail);
         LOGGER.debug("Filed Message ID: {} into destination: \"{}\"", aMail.getMessage().getMessageID(), destinationMailbox);
+    }
+
+    private String getDestinationMailbox(ActionFileInto anAction) {
+        if (!(anAction.getDestination().length() > 0 && anAction.getDestination().charAt(0) == HIERARCHY_DELIMITER)) {
+            return HIERARCHY_DELIMITER + anAction.getDestination();
+        }
+        return anAction.getDestination();
     }
 }
