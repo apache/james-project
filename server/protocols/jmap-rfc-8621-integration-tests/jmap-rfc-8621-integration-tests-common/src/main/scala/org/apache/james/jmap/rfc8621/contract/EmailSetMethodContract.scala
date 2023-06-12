@@ -2632,7 +2632,6 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    println(response)
     assertThatJson(response)
       .inPath("methodResponses[0][1].notCreated.aaaaaa")
       .isEqualTo(
@@ -2693,7 +2692,6 @@ trait EmailSetMethodContract {
       .body
       .asString
 
-    println(response)
     assertThatJson(response)
       .inPath("methodResponses[0][1].notCreated.aaaaaa")
       .isEqualTo(
