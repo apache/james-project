@@ -19,9 +19,6 @@
 
 package org.apache.james.transport.mailets.jsieve;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import javax.mail.MessagingException;
 
 import org.apache.jsieve.mail.Action;
@@ -32,6 +29,8 @@ import org.apache.jsieve.mail.ActionRedirect;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Dynamically dispatches an Action depending on the type of Action received at runtime.
@@ -44,17 +43,13 @@ public class ActionDispatcher {
      * handle the Action.
      * <Action, MailAction>
      */
-    private ConcurrentMap<Class<?>, MailAction> fieldMailActionMap;
-
-    /**
-     * Constructor for ActionDispatcher.
-     *
-     * @throws NoSuchMethodException
-     */
-    public ActionDispatcher() {
-        super();
-        setMethodMap(defaultMethodMap());
-    }
+    private static final ImmutableMap<Class<?>, MailAction> MAIL_ACTIONS = ImmutableMap.of(
+            ActionFileInto.class, new FileIntoAction(),
+            ActionKeep.class, new KeepAction(),
+            ActionRedirect.class, new RedirectAction(),
+            ActionReject.class, new RejectAction(),
+            ActionVacation.class, new VacationAction(),
+            ActionDiscard.class, new DiscardAction());
 
     /**
      * Method execute executes the passed Action by invoking the method mapped by the
@@ -66,41 +61,7 @@ public class ActionDispatcher {
      * @throws MessagingException
      */
     public void execute(final Action anAction, final Mail aMail, final ActionContext context) throws MessagingException {
-        final MailAction mailAction = getMethodMap().get(anAction.getClass());
-        mailAction.execute(anAction, aMail, context);
-    }
-
-    /**
-     * Returns the methodMap.
-     *
-     * @return Map
-     */
-    public ConcurrentMap<Class<?>, MailAction> getMethodMap() {
-        return fieldMailActionMap;
-    }
-
-    /**
-     * Returns a new methodMap.
-     *
-     * @return Map
-     */
-    private ConcurrentMap<Class<?>, MailAction> defaultMethodMap() {
-        final ConcurrentMap<Class<?>, MailAction> actionMap = new ConcurrentHashMap<>(4);
-        actionMap.put(ActionFileInto.class, new FileIntoAction());
-        actionMap.put(ActionKeep.class, new KeepAction());
-        actionMap.put(ActionRedirect.class, new RedirectAction());
-        actionMap.put(ActionReject.class, new RejectAction());
-        actionMap.put(ActionVacation.class, new VacationAction());
-        actionMap.put(ActionDiscard.class, new DiscardAction());
-        return actionMap;
-    }
-
-    /**
-     * Sets the mail action mail.
-     *
-     * @param mailActionMap <Action, MailAction> not null
-     */
-    protected void setMethodMap(ConcurrentMap<Class<?>, MailAction> mailActionMap) {
-        fieldMailActionMap = mailActionMap;
+        MAIL_ACTIONS.get(anAction.getClass())
+                .execute(anAction, aMail, context);
     }
 }
