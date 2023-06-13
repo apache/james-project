@@ -18,14 +18,14 @@
  ****************************************************************/
 package org.apache.james.cli.type;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Test class for the CmdType enum.
  */
-public class CmdTypeTest {
+class CmdTypeTest {
 
     @Test
     void hasCorrectArgumentShouldBeFalseOnNegativeInput() {
@@ -76,6 +76,21 @@ public class CmdTypeTest {
     @Test 
     void lookupListDomainsShouldReturnEnumValue() {
         assertThat(CmdType.lookup("listdomains")).isEqualTo(CmdType.LISTDOMAINS);
+    }
+
+    @Test
+    void lookupAddDomainMappingShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("adddomainmapping")).isEqualTo(CmdType.ADDDOMAINMAPPING);
+    }
+
+    @Test
+    void lookupRemoveDomainMappingShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("removedomainmapping")).isEqualTo(CmdType.REMOVEDOMAINMAPPING);
+    }
+
+    @Test
+    void lookupListDomainMappingShouldReturnEnumValue() {
+        assertThat(CmdType.lookup("listdomainmappings")).isEqualTo(CmdType.LISTDOMAINMAPPINGS);
     }
     
     @Test 

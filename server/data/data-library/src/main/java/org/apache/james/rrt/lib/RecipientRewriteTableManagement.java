@@ -93,6 +93,12 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
     }
 
     @Override
+    public Mappings getDomainMappings(String domain) throws RecipientRewriteTableException {
+        MappingSource source = MappingSource.fromDomain(Domain.of(domain));
+        return rrt.getStoredMappings(source);
+    }
+
+    @Override
     public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
         MappingSource source = MappingSource.fromUser(user, domain);
         return rrt.getStoredMappings(source);

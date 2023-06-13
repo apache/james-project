@@ -174,9 +174,10 @@ in the INBOX.subFolder mailbox belonging to user user@domain.tld.
 
 ## Managing mappings
 
-A mapping is a recipient rewritting rule. There is several kind of rewritting rules:
+A mapping is a recipient rewriting rule. There is several kind of rewriting rules:
 
- - address mapping: rewrite a given mail address into an other one.
+ - address mapping: rewrite a given mail address into another one.
+ - domain mapping: rewrite a given domain into an alternate one.
  - regex mapping.
 
 You can manage address mapping like (redirects email from fromUser@fromDomain.tld to redirected@domain.new, then deletes the mapping):
@@ -184,6 +185,19 @@ You can manage address mapping like (redirects email from fromUser@fromDomain.tl
 ```
 {cli} AddAddressMapping fromUser fromDomain.tld redirected@domain.new
 {cli} RemoveAddressMapping fromUser fromDomain.tld redirected@domain.new
+```
+
+You can manage domain mapping like (redirects a domain, which means any@domain.tld will be rewritten as any@domain.new, then deletes the mapping):
+
+```
+{cli} AddDomainMapping domain.tld domain.new
+{cli} RemoveDomainMapping domain.tld domain.new
+```
+
+You can view mapping for a domain:
+
+```
+{cli} ListDomainMappings domain.tld
 ```
 
 You can manage regex mapping like this:
