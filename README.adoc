@@ -1,11 +1,13 @@
 Apache James Project
 ====================
 
+:latest_james_version: 3.8.0
+
 image:https://img.shields.io/badge/Join%20us-Mailing%20lists-purple.svg[link="https://james.apache.org/mail.html"]
 link:https://gitter.im/apache/james-project[image:https://badges.gitter.im/apache/james-project.svg[Join the chat at link:https://gitter.im/apache/james-project]]
 image:https://img.shields.io/badge/CI-Jenkins-blue.svg[link="https://ci-builds.apache.org/job/james/job/ApacheJames/"]
 image:https://img.shields.io/badge/Documentation-green.svg[link="https://james.apache.org/documentation.html"]
-image:https://img.shields.io/badge/Downloads-3.7.1-yellow.svg[link="https://james.apache.org/download.cgi"]
+image:https://img.shields.io/badge/Downloads-{latest_james_version}-yellow.svg[link="https://james.apache.org/download.cgi"]
 image:https://img.shields.io/badge/Images-docker-blue.svg[link="https://hub.docker.com/r/apache/james"]
 image:https://img.shields.io/badge/License-ApacheV2-orange.svg[link="https://www.apache.org/licenses/"]
 image:https://img.shields.io/badge/Latests-news-red.svg[link="https://james.apache.org/index.html#posts"]
@@ -22,7 +24,7 @@ of Control mail platform offered and  go further customizing filtering and routi
 
 Supported protocols are: IMAP, SMTP, link:https://jmap.io[JMAP], POP3 and more...
 
-The link:https://james.staged.apache.org/james-project/3.7.1/servers/distributed.html[*Distributed server*] focuses on delivering an easy-to-operate scalable mail server based on modern technologies
+The link:https://james.staged.apache.org/james-distributed-app/{latest_james_version}/index.html[*Distributed server*] focuses on delivering an easy-to-operate scalable mail server based on modern technologies
 (Cassandra, S3, OpenSearch and RabbitMQ).
 
 Read more on https://james.apache.org/[our website].
@@ -56,7 +58,7 @@ There is many other ways one can help us: packaging, communication, etc ...
 ====
 Requirements: `docker` installed.
 
-Here you will try James server version 3.7.1 thanks to a docker image. This James image has a default configuration using JPA
+Here you will try James server version {latest_james_version} thanks to a docker image. This James image has a default configuration using JPA
 (hsqldb) and Lucene. It also includes a default domain named james.local and three default users: user01@james.local,
 user02@james.local, user03@james.local, with their default password being 1234.
 
@@ -64,14 +66,17 @@ Note: this James server will respond to IMAPS port 993 and SMTPS port 465.
 
 Pull and run the James image with the following single command:
 
-    $ docker run -p "465:465" -p "993:993" apache/james:demo-3.7.1
+[subs="attributes"]
+----
+    $ docker run -p "465:465" -p "993:993" apache/james:demo-{latest_james_version}
+----
 
 Then, connect this image with for instance, Thunderbird.
 link:https://james.apache.org/howTo/imap-server.html[This tutorial] covers more in depth user and domain creation, as well as Thunderbird setup.
 
 Instructions that do not imply `docker` are also available link:https://james.apache.org/server/install.html[here].
 
-Instructions for the distributed server can be found link:docs/modules/servers/pages/distributed/run-docker.adoc[here].
+Instructions for the distributed server can be found link:server/apps/distributed-app/docs/modules/ROOT/pages/run/run-docker.adoc[here].
 ====
 
 == How to check the compilation
@@ -120,7 +125,7 @@ link:docs/modules/development/pages/deployment-tests.adoc[This page] details how
 James comes with a https://james.apache.org/documentation.html[Documentation] and https://github.com/linagora/james-project/tree/master/src/adr[Architectural Decision Records].
 
 A more precise description of the *Distributed Server* architecture can be found
-link:https://james.staged.apache.org/james-distributed-app/3.8.0/architecture/index.html[here].
+link:https://james.staged.apache.org/james-distributed-app/{latest_james_version}/architecture/index.html[here].
 
 == Articles for James community
 
