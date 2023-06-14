@@ -65,7 +65,6 @@
         <module>data/data-api</module>
         <module>data/data-cassandra</module>
         <module>data/data-file</module>
-        <module>data/data-jdbc</module>
         <module>data/data-jmap</module>
         <module>data/data-jmap-cassandra</module>
         <module>data/data-jpa</module>
