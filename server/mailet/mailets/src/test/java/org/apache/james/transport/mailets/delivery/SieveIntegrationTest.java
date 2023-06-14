@@ -51,6 +51,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableList;
+
 class SieveIntegrationTest {
 
     private static final String LOCAL_PART = "receiver";
@@ -168,7 +170,7 @@ class SieveIntegrationTest {
         mail.setRecipients(ImmutableList.of(new MailAddress(RECEIVER_DOMAIN_COM), new MailAddress("other@domain.tld")));
         testee.service(mail);
 
-        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX_ANY);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX_ANY);
     }
 
     @Test
@@ -913,7 +915,7 @@ class SieveIntegrationTest {
         mail.setRecipients(ImmutableList.of(new MailAddress(RECEIVER_DOMAIN_COM), new MailAddress("other@domain.tld")));
         testee.service(mail);
 
-        assertThatAttribute(mail.getAttribute(ATTRIBUTE_NAME)).isEqualTo(ATTRIBUTE_INBOX);
+        assertThat(mail.getAttribute(ATTRIBUTE_NAME)).contains(ATTRIBUTE_INBOX);
 
         FakeMailContext.SentMail expectedSentMail = FakeMailContext.sentMailBuilder()
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
