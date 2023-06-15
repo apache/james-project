@@ -57,7 +57,7 @@ public abstract class AbstractSSLAwareChannelPipelineFactory<C extends SocketCha
 
         if (isSSLSocket()) {
             if (proxyRequired) {
-                channel.pipeline().addAfter("proxyInformationHandler", HandlerConstants.SSL_HANDLER, secure.get().sslHandler());
+                channel.pipeline().addAfter(HandlerConstants.PROXY_HANDLER, HandlerConstants.SSL_HANDLER, secure.get().sslHandler());
             } else {
                 channel.pipeline().addFirst(HandlerConstants.SSL_HANDLER, secure.get().sslHandler());
             }
