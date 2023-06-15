@@ -29,6 +29,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 
+import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -50,7 +51,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
 import com.github.fge.lambdas.Throwing;
@@ -340,9 +340,13 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
-        int maxBatchSize = -1;
-        return new ApplicableFlagCalculator(findMessagesInMailbox((JPAId) mailbox.getMailboxId(), maxBatchSize))
-            .computeApplicableFlags();
+        JPAId jpaId = (JPAId) mailbox.getMailboxId();
+        ApplicableFlagBuilder builder = ApplicableFlagBuilder.builder();
+        List<String> flags = getEntityManager().createNativeQuery("SELECT DISTINCT USERFLAG_NAME FROM JAMES_MAIL_USERFLAG WHERE MAILBOX_ID=?")
+                .setParameter(1, jpaId.getRawId())
+                .getResultList();
+        flags.forEach(builder::add);
+        return builder.build();
     }
 
     private MessageMetaData copy(Mailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage original)
