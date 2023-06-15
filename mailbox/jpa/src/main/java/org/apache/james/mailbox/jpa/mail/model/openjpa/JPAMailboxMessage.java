@@ -28,6 +28,7 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
@@ -45,20 +46,26 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import com.google.common.annotations.VisibleForTesting;
 
 @Entity(name = "MailboxMessage")
-@Table(name = "JAMES_MAIL")
+@Table(name = "JAMES_MAIL",
+indexes = {
+        @Index(name = "MAIL_IS_SEEN_INDEX", columnList = "MAILBOX_ID, MAIL_IS_SEEN"),
+        @Index(name = "MAIL_IS_RECENT_INDEX", columnList = "MAILBOX_ID, MAIL_IS_RECENT"),
+        @Index(name = "MAIL_IS_DELETED_INDEX", columnList = "MAILBOX_ID, MAIL_IS_DELETED"),
+        @Index(name = "MAIL_MODSEQ_INDEX", columnList = "MAILBOX_ID, MAIL_MODSEQ")
+})
 public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
 
     private static final byte[] EMPTY_BODY = new byte[] {};
 
-    /** The value for the body field. Lazy loaded */
-    /** We use a max length to represent 1gb data. Thats prolly overkill, but who knows */
+    /** The value for the body field. Lazy loaded
+     *  We use a max length to represent 1gb data. Thats prolly overkill, but who knows */
     @Basic(optional = false, fetch = FetchType.LAZY)
     @Column(name = "MAIL_BYTES", length = 1048576000, nullable = false)
     @Lob private byte[] body;
 
 
-    /** The value for the header field. Lazy loaded */
-    /** We use a max length to represent 10mb data. Thats prolly overkill, but who knows */
+    /** The value for the header field. Lazy loaded
+     *  We use a max length to represent 10mb data. Thats prolly overkill, but who knows */
     @Basic(optional = false, fetch = FetchType.LAZY)
     @Column(name = "HEADER_BYTES", length = 10485760, nullable = false)
     @Lob private byte[] header;
