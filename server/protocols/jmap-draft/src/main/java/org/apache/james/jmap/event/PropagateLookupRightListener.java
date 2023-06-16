@@ -35,6 +35,7 @@ import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxACLUpdated;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxRenamed;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -95,6 +96,10 @@ public class PropagateLookupRightListener implements EventListener.ReactiveGroup
     private Mono<Void> updateLookupRightOnParent(MailboxRenamed mailboxRenamed) {
         MailboxSession mailboxSession = createMailboxSession(mailboxRenamed);
         return Mono.from(rightManager.listRightsReactive(mailboxRenamed.getNewPath(), mailboxSession))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.info("Mailbox {} not found, skip lookup right update", mailboxRenamed.getNewPath());
+                return Mono.empty();
+            })
             .flatMapIterable(acl -> acl.getEntries().entrySet())
             .map(mapEntry -> new Entry(mapEntry.getKey(), mapEntry.getValue()))
             .filter(updateLookupRightPredicate())
