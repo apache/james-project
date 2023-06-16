@@ -20,18 +20,18 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, SessionTranslator, UuidState}
 import org.apache.james.jmap.delegation.{DelegatedAccountSetRequest, DelegatedAccountSetResponse, ForbiddenAccountManagementException}
-import org.apache.james.jmap.json.{DelegationSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.DelegationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.MailboxSession.isPrimaryAccount
 import org.apache.james.metrics.api.MetricFactory
-import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
+
+import javax.inject.Inject
 
 class DelegatedAccountSetMethod @Inject()(deletePerformer: DelegatedAccountDeletePerformer,
                                           val metricFactory: MetricFactory,
@@ -41,10 +41,7 @@ class DelegatedAccountSetMethod @Inject()(deletePerformer: DelegatedAccountDelet
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JAMES_DELEGATION)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, DelegatedAccountSetRequest] =
-    DelegationSerializer.deserializeDelegatedAccountSetRequest(invocation.arguments.value) match {
-      case JsSuccess(delegatedAccountSetRequest, _) => Right(delegatedAccountSetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    DelegationSerializer.deserializeDelegatedAccountSetRequest(invocation.arguments.value).asEitherRequest
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegatedAccountSetRequest): SMono[InvocationWithContext] =
     if (isPrimaryAccount(mailboxSession)) {

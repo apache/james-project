@@ -24,7 +24,7 @@ import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Properties, SetError, UuidState}
 import org.apache.james.jmap.method.IdentitySetUpdatePerformer.IdentitySetUpdateResponse
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{WithAccountId, standardError}
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
 
 object IdentitySet {
@@ -76,14 +76,5 @@ case class IdentitySetResponse(accountId: AccountId,
 case class IdentitySetParseException(setError: SetError) extends IllegalArgumentException
 
 object IdentitySetParseException {
-  def from(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): IdentitySetParseException = {
-    val setError: SetError = errors.head match {
-      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Identity object is not valid"))
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) =>
-        SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in Identity object"))
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Identity object is not valid: $message"))
-      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
-    }
-    IdentitySetParseException(setError)
-  }
+  def from(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): IdentitySetParseException = IdentitySetParseException(standardError(errors))
 }

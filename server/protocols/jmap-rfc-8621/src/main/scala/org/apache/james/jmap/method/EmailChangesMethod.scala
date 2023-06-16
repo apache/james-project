@@ -25,14 +25,14 @@ import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, SessionTranslator, UuidState}
-import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.EmailGetSerializer
 import org.apache.james.jmap.mail.{EmailChangesRequest, EmailChangesResponse, HasMoreChanges}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
-import javax.inject.Inject
 
+import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
@@ -74,6 +74,5 @@ class EmailChangesMethod @Inject()(val metricFactory: MetricFactory,
     }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailChangesRequest] =
-    EmailGetSerializer.deserializeEmailChangesRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    EmailGetSerializer.deserializeEmailChangesRequest(invocation.arguments.value).asEitherRequest
 }

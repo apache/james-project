@@ -663,7 +663,7 @@ trait IdentitySetContract {
            |	"notCreated": {
            |		"4f29": {
            |			"type": "invalidArguments",
-           |			"description": "Missing '/email' property in Identity object"
+           |			"description": "Missing '/email' property"
            |		}
            |	}
            |}""".stripMargin)
@@ -721,7 +721,7 @@ trait IdentitySetContract {
            |	"notCreated": {
            |		"4f29": {
            |			"type": "invalidArguments",
-           |			"description": "'/email' property in Identity object is not valid: mail address needs to be represented with a JsString"
+           |			"description": "'/email' property is not valid: mail address needs to be represented with a JsString"
            |		}
            |	}
            |}""".stripMargin)

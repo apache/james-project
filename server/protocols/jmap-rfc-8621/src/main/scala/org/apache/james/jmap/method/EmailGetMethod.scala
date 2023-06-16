@@ -18,17 +18,14 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
-import java.time.ZoneId
-
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.api.change.{EmailChangeRepository, State => JavaState}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, SessionTranslator, UuidState}
-import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.EmailGetSerializer
 import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, UnparsedEmailId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
@@ -37,6 +34,9 @@ import org.apache.james.metrics.api.MetricFactory
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import java.time.ZoneId
+import javax.inject.Inject
 
 object EmailGetResults {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailGetResults])
@@ -92,8 +92,7 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailGetRequest] =
-    EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value).asEitherRequest
 
   private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     Email.validateProperties(request.properties)

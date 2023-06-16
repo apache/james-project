@@ -19,23 +19,16 @@
 
 package org.apache.james.jmap.method
 
-import java.io.InputStream
-
 import cats.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
-import javax.annotation.PreDestroy
-import javax.inject.Inject
-import javax.mail.Address
-import javax.mail.Message.RecipientType
-import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
 import org.apache.james.jmap.core.{ClientId, Invocation, Properties, ServerId, SessionTranslator, SetError, UuidState}
-import org.apache.james.jmap.json.{EmailSubmissionSetSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.EmailSubmissionSetSerializer
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
@@ -47,7 +40,6 @@ import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
-import org.apache.james.util.ReactorUtils
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
@@ -55,6 +47,12 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 
+import java.io.InputStream
+import javax.annotation.PreDestroy
+import javax.inject.Inject
+import javax.mail.Address
+import javax.mail.Message.RecipientType
+import javax.mail.internet.{InternetAddress, MimeMessage}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
@@ -190,13 +188,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
       })
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] = {
-    val maybeRequestRequest = serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value) match {
-      case JsSuccess(emailSubmissionSetRequest, _) => Right(emailSubmissionSetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
-    maybeRequestRequest.flatMap(_.validate)
-  }
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] =
+    serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value)
+      .asEitherRequest
+      .flatMap(_.validate)
 
   private def create(request: EmailSubmissionSetRequest,
                      session: MailboxSession,
@@ -241,12 +236,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       })
 
   private def emailSubmissionSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError =
-    errors.head match {
-      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in EmailSubmission object is not valid"))
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in EmailSubmission object"))
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in EmailSubmission object is not valid: $message"))
-      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
-    }
+    standardError(errors)
 
   private def sendEmail(mailboxSession: MailboxSession,
                         request: EmailSubmissionCreationRequest): SMono[(EmailSubmissionCreationResponse, MessageId)] =

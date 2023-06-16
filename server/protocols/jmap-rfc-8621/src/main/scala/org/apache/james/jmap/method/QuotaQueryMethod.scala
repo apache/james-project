@@ -23,15 +23,15 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_QUOTA}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{CanCalculateChanges, ErrorCode, Invocation, Limit, Position, QueryState, SessionTranslator}
-import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.QuotaSerializer
 import org.apache.james.jmap.mail.{JmapQuota, QuotaQueryFilter, QuotaQueryRequest, QuotaQueryResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.quota.{QuotaManager, UserQuotaRootResolver}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
-import play.api.libs.json.JsError
 import reactor.core.scala.publisher.SMono
+
 import javax.inject.Inject
 
 class QuotaQueryMethod @Inject()(val metricFactory: MetricFactory,
@@ -58,9 +58,7 @@ class QuotaQueryMethod @Inject()(val metricFactory: MetricFactory,
       .map(invocationResult => InvocationWithContext(invocationResult, invocation.processingContext))
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, QuotaQueryRequest] =
-    QuotaSerializer.deserializeQuotaQueryRequest(invocation.arguments.value)
-      .asEither
-      .left.map(errors => new IllegalArgumentException(ResponseSerializer.serialize(JsError(errors)).toString))
+    QuotaSerializer.deserializeQuotaQueryRequest(invocation.arguments.value).asEitherRequest
 
   private def processRequest(mailboxSession: MailboxSession, invocation: Invocation, request: QuotaQueryRequest, capabilities: Set[CapabilityIdentifier]): SMono[Invocation] =
     jmapQuotaManagerWrapper.list(mailboxSession.getUser, capabilities)

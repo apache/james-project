@@ -24,7 +24,7 @@ import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_QUOTA}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, Properties, SessionTranslator}
-import org.apache.james.jmap.json.{QuotaSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.QuotaSerializer
 import org.apache.james.jmap.mail.{CountResourceType, JmapQuota, OctetsResourceType, QuotaGetRequest, QuotaIdFactory, QuotaResponseGetResult}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
@@ -68,8 +68,7 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, QuotaGetRequest] =
-    QuotaSerializer.deserializeQuotaGetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    QuotaSerializer.deserializeQuotaGetRequest(invocation.arguments.value).asEitherRequest
 
   private def getQuotaGetResponse(request: QuotaGetRequest, username: Username, capabilities: Set[CapabilityIdentifier]): SMono[QuotaResponseGetResult] =
     jmapQuotaManagerWrapper.list(username, capabilities)

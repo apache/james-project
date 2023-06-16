@@ -477,7 +477,7 @@ trait PushSubscriptionSetMethodContract {
            |                "notCreated": {
            |                    "4f29": {
            |                        "type": "invalidArguments",
-           |                        "description": "Missing '/types' property in PushSubscription object"
+           |                        "description": "Missing '/types' property"
            |                    }
            |                }
            |            },
@@ -937,7 +937,7 @@ trait PushSubscriptionSetMethodContract {
            |                "notCreated": {
            |                    "4f29": {
            |                        "type": "invalidArguments",
-           |                        "description": "'/url' property in PushSubscription object is not valid"
+           |                        "description": "'/url' property is not valid"
            |                    }
            |                }
            |            },
@@ -1164,7 +1164,7 @@ trait PushSubscriptionSetMethodContract {
            |                "notCreated": {
            |                    "4f29": {
            |                        "type": "invalidArguments",
-           |                        "description": "'/types(0)' property in PushSubscription object is not valid: Unknown typeName invalid"
+           |                        "description": "'/types(0)' property is not valid: Unknown typeName invalid"
            |                    }
            |                }
            |            },
@@ -1462,7 +1462,7 @@ trait PushSubscriptionSetMethodContract {
            |                "notCreated": {
            |                    "4f29": {
            |                        "type": "invalidArguments",
-           |                        "description": "'/types(0)' property in PushSubscription object is not valid: Unknown typeName invalid"
+           |                        "description": "'/types(0)' property is not valid: Unknown typeName invalid"
            |                    }
            |                }
            |            },

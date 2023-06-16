@@ -340,7 +340,7 @@ trait MailboxQueryMethodContract {
            |            "error",
            |            {
            |                "type": "invalidArguments",
-           |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.role\\",\\"messages\\":[\\"Invalid is not a valid role\\"]}]}"
+           |                "description": "'/filter/role' property is not valid: Invalid is not a valid role"
            |            },
            |            "c1"
            |        ]
@@ -385,7 +385,7 @@ trait MailboxQueryMethodContract {
            |            "error",
            |            {
            |                "type": "invalidArguments",
-           |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.role\\",\\"messages\\":[\\"Expecting a JsString to be representing a role\\"]}]}"
+           |                "description": "'/filter/role' property is not valid: Expecting a JsString to be representing a role"
            |            },
            |            "c1"
            |        ]
@@ -431,7 +431,7 @@ trait MailboxQueryMethodContract {
            |            "error",
            |            {
            |                "type": "invalidArguments",
-           |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.role\\",\\"messages\\":[\\"error.path.missing\\"]}]}"
+           |                "description": "Missing '/filter/role' property"
            |            },
            |            "c1"
            |        ]
@@ -479,7 +479,7 @@ trait MailboxQueryMethodContract {
            |            "error",
            |            {
            |                "type": "invalidArguments",
-           |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"These '[unsupported_option]' was unsupported filter options\\"]}]}"
+           |                "description": "'/filter' property is not valid: These '[unsupported_option]' was unsupported filter options"
            |            },
            |            "c1"
            |        ]
@@ -523,7 +523,7 @@ trait MailboxQueryMethodContract {
            |            "error",
            |            {
            |                "type": "invalidArguments",
-           |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"error.path.missing\\"]}]}"
+           |                "description": "Missing '/filter' property"
            |            },
            |            "c1"
            |        ]

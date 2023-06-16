@@ -226,7 +226,7 @@ trait DelegateSetContract {
            |				"notCreated": {
            |					"4f29": {
            |						"type": "invalidArguments",
-           |						"description": "Missing '/username' property in Delegate object"
+           |						"description": "Missing '/username' property"
            |					}
            |				}
            |			},
@@ -280,7 +280,7 @@ trait DelegateSetContract {
            |				"notCreated": {
            |					"4f29": {
            |						"type": "invalidArguments",
-           |						"description": "'/username' property in Delegate object is not valid: username needs to be represented by a JsString"
+           |						"description": "'/username' property is not valid: username needs to be represented by a JsString"
            |					}
            |				}
            |			},

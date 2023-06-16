@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.model.{Identity, IdentityId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core._
-import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
+import org.apache.james.jmap.json.IdentitySerializer
 import org.apache.james.jmap.mail.{IdentityGet, IdentityGetRequest, IdentityGetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
@@ -60,8 +60,7 @@ class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, IdentityGetRequest] =
-    IdentitySerializer.deserialize(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    IdentitySerializer.deserialize(invocation.arguments.value).asEitherRequest
 
   private def getIdentities(request: IdentityGetRequest,
                             mailboxSession: MailboxSession): SMono[IdentityGetResponse] =

@@ -21,9 +21,8 @@ package org.apache.james.jmap.delegation
 
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Id, SetError, UuidState}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{WithAccountId, standardError}
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
 
 case class DelegateCreationId(id: Id) {
@@ -52,14 +51,6 @@ case class DelegateSetParseException(setError: SetError) extends IllegalArgument
 case class ForbiddenAccountManagementException() extends RuntimeException()
 
 object DelegateSetParseException {
-  def from(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): DelegateSetParseException = {
-    val setError: SetError = errors.head match {
-      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Delegate object is not valid"))
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) =>
-        SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in Delegate object"))
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in Delegate object is not valid: $message"))
-      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
-    }
-    DelegateSetParseException(setError)
-  }
+  def from(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): DelegateSetParseException =
+    DelegateSetParseException(standardError(errors))
 }
