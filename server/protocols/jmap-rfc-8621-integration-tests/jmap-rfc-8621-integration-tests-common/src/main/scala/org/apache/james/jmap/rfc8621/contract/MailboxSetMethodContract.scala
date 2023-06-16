@@ -786,7 +786,7 @@ trait MailboxSetMethodContract {
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "Missing '/name' property in mailbox object"
+         |          "description": "Missing '/name' property"
          |        }
          |      }
          |    },
@@ -843,7 +843,7 @@ trait MailboxSetMethodContract {
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "'/name' property in mailbox object is not valid: Predicate isEmpty() did not fail."
+         |          "description": "'/name' property is not valid: Predicate isEmpty() did not fail."
          |        }
          |      }
          |    },
@@ -1077,7 +1077,7 @@ trait MailboxSetMethodContract {
          |      "notCreated": {
          |        "C42": {
          |          "type": "invalidArguments",
-         |          "description": "'/parentId' property in mailbox object is not valid: mailboxId does not match Id constraints: Predicate failed: '' contains some invalid characters. Should be [#a-zA-Z0-9-_] and no longer than 255 chars."
+         |          "description": "'/parentId' property is not valid: mailboxId does not match Id constraints: Predicate failed: '' contains some invalid characters. Should be [#a-zA-Z0-9-_] and no longer than 255 chars."
          |        }
          |      }
          |    },
@@ -1471,7 +1471,7 @@ trait MailboxSetMethodContract {
          |			"notCreated": {
          |				"C42": {
          |					"type": "invalidArguments",
-         |					"description": "'/rights/andre@domain.tld(0)' property in mailbox object is not valid: Rights must have size 1"
+         |					"description": "'/rights/andre@domain.tld(0)' property is not valid: Rights must have size 1"
          |				}
          |			}
          |		}, "c1"]
@@ -1529,7 +1529,7 @@ trait MailboxSetMethodContract {
          |			"notCreated": {
          |				"C42": {
          |					"type": "invalidArguments",
-         |					"description": "'/rights/andre@domain.tld(0)' property in mailbox object is not valid: Unknown right 'z'"
+         |					"description": "'/rights/andre@domain.tld(0)' property is not valid: Unknown right 'z'"
          |				}
          |			}
          |		}, "c1"]
@@ -1808,7 +1808,7 @@ trait MailboxSetMethodContract {
          |      "notCreated": {
          |        "C43": {
          |          "type": "invalidArguments",
-         |          "description": "Missing '/name' property in mailbox object"
+         |          "description": "Missing '/name' property"
          |        }
          |      }
          |    },

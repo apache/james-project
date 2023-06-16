@@ -87,13 +87,7 @@ class PushSubscriptionSetCreatePerformer @Inject()(pushSubscriptionRepository: P
     case _ => Some(expires)
   }
 
-  private def pushSubscriptionSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError =
-    errors.head match {
-      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in PushSubscription object is not valid"))
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in PushSubscription object"))
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in PushSubscription object is not valid: $message"))
-      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
-    }
+  private def pushSubscriptionSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError = standardError(errors)
 }
 
 class PushSubscriptionSetCreateProcessor @Inject()(webPushClient: WebPushClient) {

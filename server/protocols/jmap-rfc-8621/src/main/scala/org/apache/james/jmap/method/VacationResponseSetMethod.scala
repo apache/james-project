@@ -29,7 +29,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JM
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Invocation, SessionTranslator, UuidState}
-import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
+import org.apache.james.jmap.json.VacationSerializer
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationResponseSetRequest, VacationResponseSetResponse, VacationResponseUpdateResponse}
@@ -38,6 +38,7 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.vacation.api.{VacationPatch, VacationService, AccountId => VacationAccountId}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
+
 import javax.inject.{Inject, Named}
 
 object VacationResponseUpdateResults {
@@ -97,8 +98,7 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseSetRequest] =
-    VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value).asEitherRequest
 
   private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] = {
     SFlux.fromIterable(vacationResponseSetRequest.parsePatch()

@@ -19,15 +19,15 @@
 
 package org.apache.james.jmap.mail
 
-import java.util.UUID
-
 import cats.implicits.toTraverseOps
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{WithAccountId, standardError}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
+
+import java.util.UUID
 
 object MDNSend {
   val MDN_ALREADY_SENT_FLAG: String = "$mdnsent"
@@ -42,15 +42,8 @@ case class MDNSendCreationId(id: Id)
 case class MDNId(value: Id)
 
 object MDNSendRequestInvalidException {
-  def parse(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): MDNSendRequestInvalidException = {
-    val setError: SetError = errors.head match {
-      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in MDNSend object is not valid"))
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in MDNSend object"))
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in MDNSend object is not valid: $message"))
-      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
-    }
-    MDNSendRequestInvalidException(setError)
-  }
+  def parse(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): MDNSendRequestInvalidException =
+    MDNSendRequestInvalidException(standardError(errors))
 }
 
 case class MDNSendRequestInvalidException(error: SetError) extends Exception

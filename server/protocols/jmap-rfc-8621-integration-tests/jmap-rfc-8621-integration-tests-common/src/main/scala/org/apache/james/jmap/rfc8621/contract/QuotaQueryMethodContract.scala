@@ -254,7 +254,7 @@ trait QuotaQueryMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.resourceTypes[0]\\",\\"messages\\":[\\"Unexpected value invalid, only 'count' and 'octets' are managed\\"]}]}"
+         |                "description": "'/filter/resourceTypes(0)' property is not valid: Unexpected value invalid, only 'count' and 'octets' are managed"
          |            },
          |            "c1"
          |        ]
@@ -357,7 +357,7 @@ trait QuotaQueryMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.dataTypes[0]\\",\\"messages\\":[\\"Unexpected value invalid, only 'Mail' are managed\\"]}]}"
+         |                "description": "'/filter/dataTypes(0)' property is not valid: Unexpected value invalid, only 'Mail' are managed"
          |            },
          |            "c1"
          |        ]
@@ -460,7 +460,7 @@ trait QuotaQueryMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.scope[0]\\",\\"messages\\":[\\"Unexpected value invalidScope, only \'account\' is managed\\"]}]}"
+         |                "description": "'/filter/scope(0)' property is not valid: Unexpected value invalidScope, only 'account' is managed"
          |            },
          |            "c1"
          |        ]
@@ -724,7 +724,7 @@ trait QuotaQueryMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"These '[filterName1]' was unsupported filter options\\"]}]}"
+         |                "description": "'/filter' property is not valid: These '[filterName1]' was unsupported filter options"
          |            },
          |            "c1"
          |        ]

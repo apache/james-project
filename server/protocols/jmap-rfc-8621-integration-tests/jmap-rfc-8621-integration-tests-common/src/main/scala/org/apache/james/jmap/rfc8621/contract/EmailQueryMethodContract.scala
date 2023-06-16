@@ -1951,7 +1951,7 @@ trait EmailQueryMethodContract {
                       |            "error",
                       |            {
                       |                "type": "invalidArguments",
-                      |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.header\\",\\"messages\\":[\\"header filter needs to be an array of one or two strings\\"]}]}"
+                      |                "description": "'/filter/header' property is not valid: header filter needs to be an array of one or two strings"
                       |            },
                       |            "c1"
                       |        ]
@@ -3454,7 +3454,7 @@ trait EmailQueryMethodContract {
         .isEqualTo("""
          {
             "type": "invalidArguments",
-            "description": "{\"errors\":[{\"path\":\"obj.sort[0].property\",\"messages\":[\"error.path.missing\"]}]}"
+            "description": "Missing '/sort(0)/property' property"
           }
          """)
     }
@@ -3551,7 +3551,7 @@ trait EmailQueryMethodContract {
         .isEqualTo("""
          {
             "type": "invalidArguments",
-            "description": "{\"errors\":[{\"path\":\"obj.sort[0].property\",\"messages\":[\"'unsupported' is not a supported sort property\"]}]}"
+            "description": "'/sort(0)/property' property is not valid: 'unsupported' is not a supported sort property"
           }
          """)
     }
@@ -3994,7 +3994,7 @@ trait EmailQueryMethodContract {
              |            "error",
              |            {
              |                "type": "invalidArguments",
-             |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.maxSize\\",\\"messages\\":[\\"Predicate (-1 < 0) did not fail.\\"]}]}"
+             |                "description": "'/filter/maxSize' property is not valid: Predicate (-1 < 0) did not fail."
              |            },
              |            "c1"
              |        ]
@@ -4043,7 +4043,7 @@ trait EmailQueryMethodContract {
              |            "error",
              |            {
              |                "type": "invalidArguments",
-             |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter.minSize\\",\\"messages\\":[\\"Predicate (-1 < 0) did not fail.\\"]}]}"
+             |                "description": "'/filter/minSize' property is not valid: Predicate (-1 < 0) did not fail."
              |            },
              |            "c1"
              |        ]
@@ -6936,7 +6936,7 @@ trait EmailQueryMethodContract {
                     |            "error",
                     |            {
                     |                "type": "invalidArguments",
-                    |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"Expecting filterOperator to contain only operator and conditions\\"]}]}"
+                    |                "description": "'/filter' property is not valid: Expecting filterOperator to contain only operator and conditions"
                     |            },
                     |            "c1"
                     |        ]
@@ -6982,7 +6982,7 @@ trait EmailQueryMethodContract {
                     |            "error",
                     |            {
                     |                "type": "invalidArguments",
-                    |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.filter\\",\\"messages\\":[\\"Expecting filterOperator to contain only operator and conditions\\"]}]}"
+                    |                "description": "'/filter' property is not valid: Expecting filterOperator to contain only operator and conditions"
                     |            },
                     |            "c1"
                     |        ]
@@ -7404,7 +7404,7 @@ trait EmailQueryMethodContract {
         .isEqualTo(
         """{
           |  "type": "invalidArguments",
-          |  "description": "{\"errors\":[{\"path\":\"obj.filter\",\"messages\":[\"These '[unsupported_option, role]' was unsupported filter options\"]}]}"
+          |  "description": "'/filter' property is not valid: These '[unsupported_option, role]' was unsupported filter options"
           |}
           |""".stripMargin)
   }

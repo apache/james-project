@@ -154,13 +154,7 @@ class MailboxSetCreatePerformer @Inject()(serializer: MailboxSerializer,
       processingContext.recordCreatedId(ClientId(mailboxCreationId.id), ServerId(serverAssignedId))
     }
 
-  private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError =
-    errors.head match {
-      case (path, Seq()) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in mailbox object is not valid"))
-      case (path, Seq(JsonValidationError(Seq("error.path.missing")))) => SetError.invalidArguments(SetErrorDescription(s"Missing '$path' property in mailbox object"))
-      case (path, Seq(JsonValidationError(Seq(message)))) => SetError.invalidArguments(SetErrorDescription(s"'$path' property in mailbox object is not valid: $message"))
-      case (path, _) => SetError.invalidArguments(SetErrorDescription(s"Unknown error on property '$path'"))
-    }
+  private def mailboxSetError(errors: collection.Seq[(JsPath, collection.Seq[JsonValidationError])]): SetError = standardError(errors)
 
   private def createMailbox(mailboxSession: MailboxSession,
                             path: MailboxPath,

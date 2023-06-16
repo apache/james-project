@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, SessionTranslator, SetError, UuidState}
-import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{MailboxSetRequest, MailboxSetResponse}
 import org.apache.james.jmap.method.MailboxSetCreatePerformer.MailboxCreationResults
 import org.apache.james.jmap.method.MailboxSetDeletePerformer.MailboxDeletionResults
@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MailboxId
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.SMono
+
 import javax.inject.Inject
 
 case class MailboxHasMailException(mailboxId: MailboxId) extends Exception
@@ -65,8 +66,7 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
   } yield InvocationWithContext(response, creationResults._2)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxSetRequest] =
-    serializer.deserializeMailboxSetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    serializer.deserializeMailboxSetRequest(invocation.arguments.value).asEitherRequest
 
   private def createResponse(capabilities: Set[CapabilityIdentifier],
                              invocation: Invocation,

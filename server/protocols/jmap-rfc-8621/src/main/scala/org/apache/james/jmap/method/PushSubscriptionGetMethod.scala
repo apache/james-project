@@ -25,15 +25,15 @@ import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Ids, Invocation, PushSubscriptionDTO, PushSubscriptionGetRequest, PushSubscriptionGetResponse, SessionTranslator, UnparsedPushSubscriptionId}
-import org.apache.james.jmap.json.{PushSubscriptionSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.PushSubscriptionSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-import javax.inject.Inject
 
+import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 
 case class PushSubscriptionGetResults(results: Seq[PushSubscriptionDTO], notFound: Set[UnparsedPushSubscriptionId]) {
@@ -54,8 +54,7 @@ class PushSubscriptionGetMethod @Inject()(pushSubscriptionSerializer: PushSubscr
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
 
   override def getRequest(invocation: Invocation): Either[Exception, PushSubscriptionGetRequest] =
-    pushSubscriptionSerializer.deserializePushSubscriptionGetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    pushSubscriptionSerializer.deserializePushSubscriptionGetRequest(invocation.arguments.value).asEitherRequest
 
   override def doProcess(invocation: InvocationWithContext, session: MailboxSession, request: PushSubscriptionGetRequest): SMono[InvocationWithContext] =
     request.validateProperties

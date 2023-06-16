@@ -23,12 +23,13 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SessionTranslator}
-import org.apache.james.jmap.json.{PushSubscriptionSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.PushSubscriptionSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
+
 import javax.inject.Inject
 
 class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCreatePerformer,
@@ -42,8 +43,7 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE)
 
   override def getRequest(invocation: Invocation): Either[Exception, PushSubscriptionSetRequest] =
-    pushSubscriptionSerializer.deserializePushSubscriptionSetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    pushSubscriptionSerializer.deserializePushSubscriptionSetRequest(invocation.arguments.value).asEitherRequest
 
   override def doProcess(invocation: InvocationWithContext, mailboxSession: MailboxSession, request: PushSubscriptionSetRequest): SMono[InvocationWithContext] =
     for {

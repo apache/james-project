@@ -24,7 +24,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JM
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, SessionTranslator}
-import org.apache.james.jmap.json.{ResponseSerializer, VacationSerializer}
+import org.apache.james.jmap.json.VacationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.VacationResponse.UNPARSED_SINGLETON
 import org.apache.james.jmap.vacation.{UnparsedVacationResponseId, VacationResponse, VacationResponseGetRequest, VacationResponseGetResponse, VacationResponseNotFound}
@@ -83,9 +83,7 @@ class VacationResponseGetMethod @Inject()(vacationService: VacationService,
   }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseGetRequest] =
-    VacationSerializer.deserializeVacationResponseGetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
-
+    VacationSerializer.deserializeVacationResponseGetRequest(invocation.arguments.value).asEitherRequest
   private def getVacationResponse(vacationResponseGetRequest: VacationResponseGetRequest,
                                   mailboxSession: MailboxSession): SFlux[VacationResponseGetResult] =
     vacationResponseGetRequest.ids match {

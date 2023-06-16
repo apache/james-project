@@ -19,24 +19,23 @@
 
 package org.apache.james.jmap.method
 
-import java.io.InputStream
-
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation._
 import org.apache.james.jmap.core.{Invocation, SessionTranslator}
-import org.apache.james.jmap.json.{EmailGetSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.EmailGetSerializer
 import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, Email, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailFullViewFactory, EmailHeaders, EmailParseMetadata, EmailParseRequest, EmailParseResponse, EmailParseResults, EmailParseView, HasAttachment}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.html.HtmlTextExtractor
-import play.api.libs.json.{JsError, JsObject, JsSuccess, Json}
+import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import java.io.InputStream
+import javax.inject.Inject
 import scala.util.Try
 
 class EmailParseMethod @Inject()(val blobResolvers: BlobResolvers,
@@ -57,10 +56,7 @@ class EmailParseMethod @Inject()(val blobResolvers: BlobResolvers,
       .map(InvocationWithContext(_, invocation.processingContext))
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailParseRequest] =
-    EmailGetSerializer.deserializeEmailParseRequest(invocation.arguments.value) match {
-      case JsSuccess(parseRequest, _) => Right(parseRequest)
-      case errors: JsError => Left(new IllegalArgumentException(Json.stringify(ResponseSerializer.serialize(errors))))
-    }
+    EmailGetSerializer.deserializeEmailParseRequest(invocation.arguments.value).asEitherRequest
 
   def computeResponseInvocation(request: EmailParseRequest,
                                 invocation: Invocation,
@@ -104,25 +100,25 @@ class EmailParseMethod @Inject()(val blobResolvers: BlobResolvers,
       }
 
   private def parse(request: EmailParseRequest, blobId: BlobId, blobContent: => InputStream, size: Size): SMono[EmailParseResults] = {
-     val result: SMono[EmailParseView] = for {
-       mime4JMessage <- SMono.fromTry(Email.parseStreamAsMime4JMessage(blobContent))
-       bodyStructure <- SMono.fromTry(EmailBodyPart.of(request.bodyProperties, zoneIdProvider.get(), blobId, mime4JMessage))
-       bodyValues <- SMono.fromTry(EmailFullViewFactory.extractBodyValuesForParse(htmlTextExtractor)(bodyStructure, request))
-       preview <- SMono.fromTry(Try(previewFactory.fromMime4JMessage(mime4JMessage)))
-     } yield {
-       EmailParseView(
-         metadata = EmailParseMetadata(blobId = blobId, size = size),
-         header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
-         specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader),
-         bodyMetadata = EmailBodyMetadata(hasAttachment = HasAttachment(bodyStructure.attachments.nonEmpty),
-           preview = preview),
-         body = EmailBody(
-           bodyStructure = bodyStructure,
-           textBody = bodyStructure.textBody,
-           htmlBody = bodyStructure.htmlBody,
-           attachments = bodyStructure.attachments,
-           bodyValues = bodyValues))
-     }
-     result.map(EmailParseResults.parsed(blobId, _))
+    val result: SMono[EmailParseView] = for {
+      mime4JMessage <- SMono.fromTry(Email.parseStreamAsMime4JMessage(blobContent))
+      bodyStructure <- SMono.fromTry(EmailBodyPart.of(request.bodyProperties, zoneIdProvider.get(), blobId, mime4JMessage))
+      bodyValues <- SMono.fromTry(EmailFullViewFactory.extractBodyValuesForParse(htmlTextExtractor)(bodyStructure, request))
+      preview <- SMono.fromTry(Try(previewFactory.fromMime4JMessage(mime4JMessage)))
+    } yield {
+      EmailParseView(
+        metadata = EmailParseMetadata(blobId = blobId, size = size),
+        header = EmailHeaders.from(zoneIdProvider.get())(mime4JMessage),
+        specificHeaders = EmailHeaders.extractSpecificHeaders(request.properties)(zoneIdProvider.get(), mime4JMessage.getHeader),
+        bodyMetadata = EmailBodyMetadata(hasAttachment = HasAttachment(bodyStructure.attachments.nonEmpty),
+          preview = preview),
+        body = EmailBody(
+          bodyStructure = bodyStructure,
+          textBody = bodyStructure.textBody,
+          htmlBody = bodyStructure.htmlBody,
+          attachments = bodyStructure.attachments,
+          bodyValues = bodyValues))
+    }
+    result.map(EmailParseResults.parsed(blobId, _))
   }
 }

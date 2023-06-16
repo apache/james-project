@@ -24,12 +24,11 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JA
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
 import org.apache.james.jmap.delegation.{DelegateSetRequest, DelegateSetResponse, ForbiddenAccountManagementException}
-import org.apache.james.jmap.json.{DelegationSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.DelegationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.MailboxSession.isPrimaryAccount
 import org.apache.james.metrics.api.MetricFactory
-import play.api.libs.json.{JsError, JsSuccess}
 import reactor.core.scala.publisher.SMono
 
 import javax.inject.Inject
@@ -43,10 +42,7 @@ class DelegateSetMethod @Inject()(createPerformer: DelegateSetCreatePerformer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JAMES_DELEGATION)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, DelegateSetRequest] =
-    DelegationSerializer.deserializeDelegateSetRequest(invocation.arguments.value) match {
-      case JsSuccess(delegateSetRequest, _) => Right(delegateSetRequest)
-      case errors: JsError => Left(new IllegalArgumentException(ResponseSerializer.serialize(errors).toString))
-    }
+    DelegationSerializer.deserializeDelegateSetRequest(invocation.arguments.value).asEitherRequest
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegateSetRequest): SMono[InvocationWithContext] =
     if (isPrimaryAccount(mailboxSession)) {

@@ -26,7 +26,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JA
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, SessionTranslator, UuidState}
 import org.apache.james.jmap.http.MailboxesProvisioner
-import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{Ids, Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions, UnparsedMailboxId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.utils.quotas.{QuotaLoaderWithPreloadedDefault, QuotaLoaderWithPreloadedDefaultFactory}
@@ -37,8 +37,8 @@ import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionMan
 import org.apache.james.metrics.api.MetricFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-import javax.inject.Inject
 
+import javax.inject.Inject
 import scala.util.Try
 
 object MailboxGetResults {
@@ -102,9 +102,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
     }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxGetRequest] =
-    serializer.deserializeMailboxGetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
-
+    serializer.deserializeMailboxGetRequest(invocation.arguments.value).asEitherRequest
   private def getMailboxes(capabilities: Set[CapabilityIdentifier],
                            mailboxGetRequest: MailboxGetRequest,
                            mailboxSession: MailboxSession): SFlux[MailboxGetResults] =

@@ -20,14 +20,12 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, Properties, SessionTranslator}
-import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult, ForbiddenAccountManagementException}
-import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult, DelegationId}
-import org.apache.james.jmap.json.{DelegationSerializer, ResponseSerializer}
+import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult, DelegationId, ForbiddenAccountManagementException}
+import org.apache.james.jmap.json.DelegationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -36,6 +34,7 @@ import org.reactivestreams.Publisher
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import javax.inject.Inject
 import scala.jdk.OptionConverters._
 
 class DelegatedAccountGetMethod @Inject()(val metricFactory: MetricFactory,
@@ -47,8 +46,7 @@ class DelegatedAccountGetMethod @Inject()(val metricFactory: MetricFactory,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JAMES_DELEGATION)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, DelegatedAccountGetRequest] =
-    DelegationSerializer.deserializeDelegatedAccountGetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    DelegationSerializer.deserializeDelegatedAccountGetRequest(invocation.arguments.value).asEitherRequest
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegatedAccountGetRequest): Publisher[InvocationWithContext] = {
     val requestedProperties: Properties = request.properties.getOrElse(DelegatedAccountGet.allProperties)

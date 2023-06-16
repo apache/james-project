@@ -25,15 +25,15 @@ import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{CapabilityIdentifier, ErrorCode, Invocation, Properties, SessionTranslator, UuidState}
-import org.apache.james.jmap.json.{MailboxSerializer, ResponseSerializer}
+import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{HasMoreChanges, MailboxChangesRequest, MailboxChangesResponse}
 import org.apache.james.jmap.method.MailboxChangesMethod.updatedProperties
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
-import javax.inject.Inject
 
+import javax.inject.Inject
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
@@ -83,9 +83,7 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
     })
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxChangesRequest] =
-    mailboxSerializer.deserializeMailboxChangesRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
-
+    mailboxSerializer.deserializeMailboxChangesRequest(invocation.arguments.value).asEitherRequest
   private def updateProperties(mailboxChanges: MailboxChanges): Option[Properties] =
     if (mailboxChanges.isCountChangesOnly) {
       Some(updatedProperties)

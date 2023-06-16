@@ -22,9 +22,9 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
-import org.apache.james.jmap.core.{Invocation, SessionTranslator}
 import org.apache.james.jmap.core.Invocation._
-import org.apache.james.jmap.json.{MDNSerializer, ResponseSerializer}
+import org.apache.james.jmap.core.{Invocation, SessionTranslator}
+import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.MDN._
 import org.apache.james.jmap.mail.MDNSend.MDN_ALREADY_SENT_FLAG
 import org.apache.james.jmap.mail._
@@ -47,10 +47,10 @@ import org.apache.james.server.core.MailImpl
 import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
+
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.mail.internet.MimeMessage
-
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.util.Try
@@ -106,7 +106,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MDNSendRequest] =
     serializer.deserializeMDNSendRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+      .asEitherRequest
       .flatMap(_.validate)
 
   private def create(identity: Identity,

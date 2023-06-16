@@ -341,7 +341,7 @@ trait QuotaChangesMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.sinceState\\",\\"messages\\":[\\"error.path.missing\\"]}]}"
+         |                "description": "Missing '/sinceState' property"
          |            },
          |            "c1"
          |        ]
@@ -382,7 +382,7 @@ trait QuotaChangesMethodContract {
          |            "error",
          |            {
          |                "type": "invalidArguments",
-         |                "description": "{\\"errors\\":[{\\"path\\":\\"obj.sinceState\\",\\"messages\\":[\\"error.expected.uuid\\"]}]}"
+         |                "description": "'/sinceState' property is not valid: error.expected.uuid"
          |            },
          |            "c1"
          |        ]

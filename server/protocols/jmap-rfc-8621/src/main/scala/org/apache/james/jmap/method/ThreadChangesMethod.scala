@@ -23,12 +23,13 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, SessionTranslator, UuidState}
-import org.apache.james.jmap.json.{ResponseSerializer, ThreadSerializer}
+import org.apache.james.jmap.json.ThreadSerializer
 import org.apache.james.jmap.mail.{HasMoreChanges, ThreadChangesRequest, ThreadChangesResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
+
 import javax.inject.Inject
 
 class ThreadChangesMethod @Inject()(val metricFactory: MetricFactory,
@@ -60,6 +61,5 @@ class ThreadChangesMethod @Inject()(val metricFactory: MetricFactory,
     }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, ThreadChangesRequest] =
-    ThreadSerializer.deserializeChanges(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    ThreadSerializer.deserializeChanges(invocation.arguments.value).asEitherRequest
 }

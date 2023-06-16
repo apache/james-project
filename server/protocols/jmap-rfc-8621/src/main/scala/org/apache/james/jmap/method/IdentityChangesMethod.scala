@@ -20,17 +20,18 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, SessionTranslator, UuidState}
-import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
+import org.apache.james.jmap.json.IdentitySerializer
 import org.apache.james.jmap.mail.{HasMoreChanges, IdentityChangesRequest, IdentityChangesResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
+
+import javax.inject.Inject
 
 class IdentityChangesMethod @Inject()(val metricFactory: MetricFactory,
                                       val sessionSupplier: SessionSupplier,
@@ -61,6 +62,5 @@ class IdentityChangesMethod @Inject()(val metricFactory: MetricFactory,
     }
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, IdentityChangesRequest] =
-    IdentitySerializer.deserializeChanges(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+    IdentitySerializer.deserializeChanges(invocation.arguments.value).asEitherRequest
 }

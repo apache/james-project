@@ -21,9 +21,9 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
-import org.apache.james.jmap.core.{Invocation, SessionTranslator}
 import org.apache.james.jmap.core.Invocation._
-import org.apache.james.jmap.json.{MDNSerializer, ResponseSerializer}
+import org.apache.james.jmap.core.{Invocation, SessionTranslator}
+import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, MDNParseRequest, MDNParseResponse, MDNParseResults, MDNParsed}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
 import org.apache.james.mailbox.model.{MessageId, MultimailboxesSearchQuery, SearchQuery}
@@ -35,10 +35,9 @@ import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
+
 import java.io.InputStream
-
 import javax.inject.Inject
-
 import scala.jdk.OptionConverters._
 import scala.util.{Try, Using}
 
@@ -60,7 +59,7 @@ class MDNParseMethod @Inject()(serializer: MDNSerializer,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MDNParseRequest] =
     serializer.deserializeMDNParseRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
+      .asEitherRequest
       .flatMap(_.validate)
 
   def computeResponseInvocation(request: MDNParseRequest,

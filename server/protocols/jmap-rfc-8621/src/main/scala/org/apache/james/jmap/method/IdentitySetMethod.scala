@@ -23,12 +23,13 @@ import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
-import org.apache.james.jmap.json.{IdentitySerializer, ResponseSerializer}
+import org.apache.james.jmap.json.IdentitySerializer
 import org.apache.james.jmap.mail.{IdentitySetRequest, IdentitySetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
+
 import javax.inject.Inject
 
 class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
@@ -41,9 +42,7 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, EMAIL_SUBMISSION)
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, IdentitySetRequest] =
-    IdentitySerializer.deserializeIdentitySetRequest(invocation.arguments.value)
-      .asEither.left.map(ResponseSerializer.asException)
-
+    IdentitySerializer.deserializeIdentitySetRequest(invocation.arguments.value).asEitherRequest
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: IdentitySetRequest): SMono[InvocationWithContext] =
     for {
       creationResults <- createPerformer.create(request, mailboxSession)
