@@ -32,6 +32,7 @@ import java.util.List;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
+import org.apache.james.domainlist.api.DomainListException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -65,7 +66,10 @@ class AbstractDomainListPrivateMethodsTest {
         }
 
         @Override
-        public void addDomain(Domain domain) {
+        public void addDomain(Domain domain) throws DomainListException {
+            if (domains.contains(domain)) {
+                throw new DomainListException("Domain already exists!");
+            }
             domains.add(domain);
         }
 
@@ -342,6 +346,20 @@ class AbstractDomainListPrivateMethodsTest {
     @Test
     void envDomainShouldBeAddedUponConfiguration() throws Exception {
         String envDomain = "env.tld";
+        when(envDetector.getEnv(AbstractDomainList.ENV_DOMAIN)).thenReturn(envDomain);
+
+
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(false));
+
+        assertThat(domainList.containsDomain(Domain.of(envDomain))).isTrue();
+    }
+
+    @Test
+    void envDomainShouldNotFailWhenDomainExists() throws Exception {
+        String envDomain = "env.tld";
+        domainList.addDomain(Domain.of(envDomain));
         when(envDetector.getEnv(AbstractDomainList.ENV_DOMAIN)).thenReturn(envDomain);
 
 
