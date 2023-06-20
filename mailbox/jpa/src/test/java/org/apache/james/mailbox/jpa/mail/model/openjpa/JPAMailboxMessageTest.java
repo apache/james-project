@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 class JPAMailboxMessageTest {
 
+    private static final byte[] EMPTY = new byte[] {};
     /**
      * Even though there should never be a null body, it does happen. See JAMES-2384
      */
@@ -40,6 +41,16 @@ class JPAMailboxMessageTest {
         // Get and check
         assertThat(IOUtils.toByteArray(message.getFullContent())).containsExactly(content);
 
+    }
+
+    @Test
+    void getAnyMessagePartThatIsNullShouldYieldEmptyArray() throws Exception {
+
+        // Prepare the message
+        JPAMailboxMessage message = new JPAMailboxMessage(null, null);
+        assertThat(IOUtils.toByteArray(message.getHeaderContent())).containsExactly(EMPTY);
+        assertThat(IOUtils.toByteArray(message.getBodyContent())).containsExactly(EMPTY);
+        assertThat(IOUtils.toByteArray(message.getFullContent())).containsExactly(EMPTY);
     }
 
 }

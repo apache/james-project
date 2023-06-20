@@ -49,6 +49,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
 
     private static final byte[] EMPTY_BODY = new byte[] {};
+    private static final byte[] EMPTY_HEADER = new byte[] {};
 
     /** The value for the body field. Lazy loaded */
     /** We use a max length to represent 1gb data. Thats prolly overkill, but who knows */
@@ -113,6 +114,9 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
 
     @Override
     public InputStream getHeaderContent() throws IOException {
+        if (header == null) {
+            return new ByteArrayInputStream(EMPTY_HEADER);
+        }
         return new ByteArrayInputStream(header);
     }
 
