@@ -1,0 +1,357 @@
+---
+layout: post
+title:  "Guest post: James and fail2ban"
+date:   2023-05-17  01:16:30 +0200
+categories: james update
+---
+
+Credits: Paul Gunter
+
+[Original][Original] version.
+
+# Repel brute force attackes with Linux firewall (iptables) and fail2ban
+
+## Introduction
+
+Servers on the Internet are constantly under attack. Mail servers are also attacked to gain control of
+a server that can be used to send bulk spam emails. This often leads to these servers ending up on
+various black lists and can no longer be used as mail servers. A safe basic configuration of James is
+required at this point.
+
+Nevertheless, attacks can mean that the server can practically no longer be operated. These are often
+DoS or DDoS attacks (Denial-of-Service or Distributed Denial-of-Service), which smaller servers
+in particular are difficult to defend against. However, basic protection via the firewall is relatively
+easy to reach.
+
+But even after that, attacks can be seen, especially those that try to spy out access data. These
+attacks can be detected by monitoring the log files. So the attack patterns are known and can be
+repelled with fail2ban.
+
+All examples refer to a Linux operating system, Windows is not covered. The examples are shown
+using Ubuntu and can be transferred to other Linux variants. “iptables” is used as the firewall front
+end.
+
+## Setting
+
+The following assumes a small mail server on which only an SSH service can be accessed from
+outside in addition to Apache James. In the example, the SSH service uses the standard port 22,
+James uses the standard ports 25 (smtp), 110 (pop3) and/or 143 (imap).
+
+The examples refer to Apache James 3.8.0 (Spring App).
+
+The operating system is Ubuntu 22.04.
+
+The configuration should be carried out beforehand on a test system and not during operation. One
+thing to note about James is that changes to log4j2's configuration usually take effect immediately.
+
+## (D)DoS - Attacks
+An attempt is made to load the server with so many requests that it no longer works. In the case of
+DDos, this is carried out in parallel by a large number of servers, which also means a corresponding
+amount of effort. A firewall can at least be used to ward off simple attacks.
+
+Rules are defined for the open ports and ping, which minimize the number of accesses. It must be
+ensured that the number of accesses is not restricted to such an extent that regular accesses are also
+affected.
+
+A normal check per ping usually has one access per second, so that 60 accesses per minute and IP
+address are normal. 
+
+The firewall rule can be (increase hitcount by one access so that there is no
+crash during regular operation):
+
+```
+sudo iptables -A INPUT -p icmp -m recent --set --name DDOS-PING
+sudo iptables -A INPUT -p icmp -m recent --update --seconds 5 --hitcount 6 --name DDOS-PING -j DROP
+```
+
+A permanent ping query with one server is possible, if the same server tries to work in parallel, it is
+over after a total of 5 attempts.
+
+Similarly, this can be set for other open ports:
+
+```
+sudo iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --set --name DDOS-SSH
+sudo iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m recent --update --seconds 60 --hitcount 6 --name DDOS-SSH -j DROP
+sudo iptables -A INPUT -p tcp --dport 25 -m state --state NEW -m recent --set --name DDOS-SMTP
+sudo iptables -A INPUT -p tcp --dport 25 -m state --state NEW -m recent --update --seconds 60 --hitcount 4 --name DDOS-SMTP -j DROP
+sudo iptables -A INPUT -p tcp --dport 110 -m state --state NEW -m recent --set --name DDOS-POP
+sudo iptables -A INPUT -p tcp --dport 110 -m state --state NEW -m recent --update --seconds 60 --hitcount 4 --name DDOS-POP -j DROP
+sudo iptables -A INPUT -p tcp --dport 143 -m state --state NEW -m recent --set --name DDOS-IMAP
+sudo iptables -A INPUT -p tcp --dport 143 -m state --state NEW -m recent --update --seconds 60 --hitcount 4 --name DDOS-IMAP -j DROP
+```
+There are many examples on the Internet how a firewall can be set up for a small server. It is
+definitely worth looking into this further and setting up a suitable firewall.
+
+## Fail2Ban
+
+Fail2ban analyzes log files and can trigger actions via rules. If an attack is detected, the firewall can
+be expanded so that the attacker is blocked for a certain period of time.
+
+A typical example is an attacker trying to guess a password. Unfortunately, the firewall from above
+does not work here. The reason is that the attacker first connects to the mail server via the SMTP
+port. Within this connection he is now constantly trying to log in with his name and password. Since
+the connection is not closed, the rules above do not apply. The failed login attempts are noted in
+James log file and look something like this:
+
+`org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler.reject:61`
+
+- Rejected message. Unknown user: dar...@domaine.de
+
+Here, an e-mail is rejected in the name of an unknown sender. “domaine.de” is your own domain,
+which is being attacked. Unfortunately, the log line does not show which IP address the attack came
+from, more on that later.
+
+Another example:
+
+`org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler.doAuthTest:397 - AUTH method LOGIN failed from Username{localPart=root, domainPart=Optional[Domain :domaine.de]}@45.133.235.202`
+
+An attempt is made to log in as root user, the password is incorrect and the login is rejected. At least
+the attacker's IP address is visible here at the end of the line.
+
+The following shows how these two attacks can be repelled with fail2ban. This can serve as a
+template for similar attack attempts.
+
+## Installing fail2ban
+
+Information about fail2ban is available here: https://www.fail2ban.org/. There are many instructions
+and good examples on the Internet. Therefore, here is only a brief explanation of how the
+installation and initial setup works with Ubuntu. Other Linux distributions may vary.
+
+Fail2ban is set up with the following commands:
+
+```
+supo apt update
+sudo apt install fail2ban
+sudo systemctl start fail2ban
+sudo systemctl enable fail2ban
+```
+
+Ubuntu installs the software. After start fail3ban manually. Finally the service is set to start
+automatically after boot. The status of the service can be checked as follows:
+
+`service fail2ban status`
+
+Depending on the Linux variant, the setup may differ.
+
+The configuration files are located in "/etc/fail2ban/". Changes should not be made to the original
+files, as these will be overwritten during an update. Therefore, the "jail.conf" and "fail2ban.conf"
+files should be copied to "jail.local" and "fail2ban.local". (We will not make any adjustments to
+these files here, so there is no need to copy them.)
+
+## How fail2ban works
+
+As already written, fail2ban is based on the evaluation of log files. We will later adapt James
+accordingly, we will use Log4j2.
+
+The log file contains a timestamp at the beginning of the line. As a rule, fail2ban recognizes the
+format automatically, as it did in our case. The attacker's IP address must also be in the line. Regular
+expressions will be used to recognize these and also to filter the relevant lines. We will not go into
+more detail here, for our own adaptations we refer to tutorials and examples from the Internet.
+Filters are used to evaluate the log files. These are stored in the "./filter.d/" folder. Examples for
+many services are already predefined there.
+
+Additional configurations are stored in the "./jail.d/" folder. With Ubuntu, the file "defaultsdebian.conf" is available there. Only the SSH service is activated there by default. All other services
+are therefore not in operation and must be activated if necessary. With SSH, the standard values can
+generally be accepted.
+
+The status of the evaluation of ssh can be tested as follows:
+
+`sudo fail2ban-client status sshd`
+
+For computers on the Internet, blocked IP addresses can be displayed here after a short time.
+
+For our purposes, we will set up the following files:
+
+ - A James log file
+ - A filter file „./filter.d/james.conf“
+ - A jail file „../jail.d/james.conf“
+
+## Adaptation to SSHD
+
+To get started, we'll briefly deal with the customization for SSH access. It is best not to use ssh to
+access our server with a password, but only with an SSH key. This makes incorrect passwords
+rather unlikely. This means that the attacker can be blocked after just a few failed attempts. The
+time after which access from a blocked IP address is allowed again can be set quite high here.
+
+The specifications come from the file "/etc/fail2ban/jail.conf" or from "/etc/fail2ban/jail.local".
+
+These values are as follows:
+
+```
+# "bantime" is the number of seconds that a host is banned.
+bantime = 10m
+# A host is banned if it has generated "maxretry" during the last "findtime"
+# seconds.
+findtime = 10m
+# "maxretry" is the number of failures before a host get banned.
+maxretry = 5
+In our case we change the values only for the SSHD service in the „/etc/fail2ban/jail.d/defaultsdebian.conf“ file. After the file looks like this:
+[sshd]
+enabled = true
+bantime = 120m
+findtime = 60m
+maxretry = 2
+```
+
+If there are 2 failed attempts within 1 hour from an IP address, we block the address for 2 hours.
+
+After changes to configuration files, fail2ban must be restarted:
+
+`sudo systemctl restart fail2ban`
+
+## Setup Apache James
+
+The following explains how James can be secured via fail2ban. Since there is no standard here, we
+have to build the filter ourselves. Before that we will set up a log file.
+
+### Generating a log file
+
+The log files for James are in the installation logs folder. In the following we assume that this is the
+folder: "/opt/james/log/". In the Spring version of James there are quite a few log files. In our case,
+we assume that there is only the "wrapper.log" file and that all relevant log outputs are logged there.
+James Spring variant uses apache-log4j2 to log events. The "./conf/log4j2.xml" file is used as the
+configuration file for this.
+
+We build a layout that outputs the following information:
+
+ - The timestamp (%d)
+ - The Java class from which the entry is generated (%C)
+ - The attacker's IP address (%X)
+ - The log message (%msg)
+ - A line break (%n)
+ - 
+The IP address is a variable that James provides himself. This is very useful as there are log entries
+that do not report this IP address (see above). In order to be able to evaluate this better, the entry is
+as follows: "[ip=%X{ip}]". Unfortunately, this variable is not always filled. This is the case in our
+other example, fortunately we can see the IP address from the log entry there.
+
+So that the wrapper.conf file is also filled further, there is also the console layout, which adopts
+Tomcat layout.
+
+Our log file gets the name "james.log", we use the "RollingFile" format.
+
+We only post log messages of classes whose packages start with "org.apache.james.protocols.smtp".
+
+The complete configuration looks like this (/opt/james/conf/log4j2.xml):
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" monitorInterval="30" >
+ <Properties>
+ <Property name="logDir">../log</Property>
+ <Property name="logLayoutTomcat">%d{dd-MMM-yyyy HH:mm:ss.SSS} %level
+[%t] %C.%M:%L - %msg%n</Property>
+ <Property name="logLayoutJames">%d{yyyy-MM-dd HH:mm:ss.SSS Z} - %C [ip=
+%X{ip}] - %msg%n</Property>
+ </Properties>
+ <Appenders>
+ <Console name="Console" target="SYSTEM_OUT">
+ <PatternLayout pattern="${logLayoutTomcat}" />
+ </Console>
+ <RollingFile name="James" fileName="${logDir}/james.log" filePattern="$
+{logDir}/james.%d{yyyy-MM-dd}-%i.log.gz" ignoreExceptions="false">
+ <PatternLayout pattern="${logLayoutJames}" charset="UTF-8" />
+ <Policies>
+ <SizeBasedTriggeringPolicy size="10 MB" />
+ </Policies>
+ <DefaultRolloverStrategy min="1" max="9" />
+ </RollingFile>
+ </Appenders>
+ <Loggers>
+ <Logger name="org.apache.james.protocols.smtp" level="info" >
+ <AppenderRef ref="James" level="info" />
+ </Logger>
+ <Root level="info" >
+ <AppenderRef ref="Console" level="info" />
+ </Root>
+ </Loggers>
+</Configuration>
+```
+
+To test the log output, we first fill the file (/opt/james/log/james.log) with the following content:
+
+```
+2023-06-17 11:11:50.206 +0200 -
+org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
+[ip=45.129.14.30] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:51.206 +0200 -
+org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
+[ip=45.129.14.31] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:50.206 +0200 -
+org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
+LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
+domaine.de]}@45.129.14.40
+2023-06-17 11:11:50.206 +0200 -
+org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
+LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
+domaine.de]}@45.129.14.41
+2023-06-17 11:11:52.206 +0200 -
+org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
+[ip=45.129.14.30] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:53.206 +0200 -
+org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
+[ip=45.129.14.31] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:50.206 +0200 -
+org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
+LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
+domaine.de]}@45.129.14.40
+2023-06-17 11:11:50.206 +0200 -
+org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
+LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
+domaine.de]}@45.129.14.41
+```
+
+## Setting up filters
+
+We create the file "/etc/fail2ban/filter.d/james.conf" with the following content:
+
+```
+[Definition]
+failregex =
+^.-.org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler.\
+[ip=<HOST>\].-.Rejected message. Unknown user.*$
+ ^.-.org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler.\[ip=\].-.AUTH
+method LOGIN failed from Username.*\@<HOST>$
+ignoreregex =
+We see 2 regular expressions there. The first looks at the „AbstractValidRcptHandler“ class. The IP
+address is filled via the James variable. The IP address is recognized with the placeholder <HOST>.
+The second looks at the "AuthCmdHandler" class, the IP address is at the end of the line.
+Setup Jail
+We create the file "/etc/fail2ban/jail.d/james.conf" with the following content:
+[james]
+enabled = true
+filter = james
+logpath = /opt/james/log/james.log
+bantime = 120m
+findtime = 20m
+maxretry = 2
+```
+
+This completes the setup. The service must be restarted for the changes to take effect:
+
+`sudo systemctl restart fail2ban`
+
+## Testing the settings
+
+The "fail2ban-regex" program can be used for testing. It is called with the information about the log
+and filter files:
+
+`fail2ban-regex /opt/james/log/james.log /etc/fail2ban/filter.d/james.conf`
+
+All lines should be recognized and evaluated, the result should look like this at the end:
+
+`Lines: 8 lines, 0 ignored, 8 matched, 0 missed`
+
+Lines that are not evaluated are displayed. In this case check your filter file.
+At the end restart James with the new log configuration, after restart fail2ban. If you use your own
+firewall script, this should be started beforehand. James condition can be checked as follows:
+
+`sudo fail2ban-client status james`
+
+## Conclusion
+
+Fail2ban is a very powerful program and can help keep James running more safely. But it is only
+one element of security. A coordinated firewall and constant monitoring of the server must continue
+to be guaranteed.
+
+[Original]: https://www.fentool.de/daten/aYg_h2p-hpw/JamesAttacks_v0.1.pdf
