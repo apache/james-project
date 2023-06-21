@@ -9,7 +9,7 @@ Credits: Paul Gunter
 
 [Original][Original] version.
 
-# Repel brute force attackes with Linux firewall (iptables) and fail2ban
+# Repel brute force attacks with Linux firewall (iptables) and fail2ban
 
 ## Introduction
 
@@ -126,7 +126,7 @@ sudo systemctl start fail2ban
 sudo systemctl enable fail2ban
 ```
 
-Ubuntu installs the software. After start fail3ban manually. Finally the service is set to start
+Ubuntu installs the software. After start fail2ban manually. Finally the service is set to start
 automatically after boot. The status of the service can be checked as follows:
 
 `service fail2ban status`
@@ -219,7 +219,6 @@ We build a layout that outputs the following information:
  - The attacker's IP address (%X)
  - The log message (%msg)
  - A line break (%n)
- - 
 The IP address is a variable that James provides himself. This is very useful as there are log entries
 that do not report this IP address (see above). In order to be able to evaluate this better, the entry is
 as follows: "[ip=%X{ip}]". Unfortunately, this variable is not always filled. This is the case in our
