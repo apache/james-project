@@ -87,7 +87,7 @@
   </section>
 
   <section name='Apache James IMAP in Server and as component'>
-    <p><a href='http://james.apache.org/server'>Apache James Server 3.7.3</a> supports IMAP
+    <p><a href='http://james.apache.org/server'>Apache James Server 3.8.0</a> supports IMAP
        (using this library).</p>
     <p>The <a href="source-code.html">source code</a> page contains information on how 
        to develop on James IMAP.</p>
