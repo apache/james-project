@@ -185,7 +185,11 @@ bantime = 10m
 findtime = 10m
 # "maxretry" is the number of failures before a host get banned.
 maxretry = 5
+```
+
 In our case we change the values only for the SSHD service in the „/etc/fail2ban/jail.d/defaultsdebian.conf“ file. After the file looks like this:
+
+```
 [sshd]
 enabled = true
 bantime = 120m
@@ -312,11 +316,16 @@ failregex =
  ^.-.org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler.\[ip=\].-.AUTH
 method LOGIN failed from Username.*\@<HOST>$
 ignoreregex =
+```
 We see 2 regular expressions there. The first looks at the „AbstractValidRcptHandler“ class. The IP
 address is filled via the James variable. The IP address is recognized with the placeholder <HOST>.
+
 The second looks at the "AuthCmdHandler" class, the IP address is at the end of the line.
-Setup Jail
+
+## Setup Jail
+
 We create the file "/etc/fail2ban/jail.d/james.conf" with the following content:
+```
 [james]
 enabled = true
 filter = james
