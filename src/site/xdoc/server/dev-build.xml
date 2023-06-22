@@ -125,6 +125,48 @@
             <img src="./images/intellij-idea/intellij-james-zip.png"/>
             <p>Note that tests can be long and can be skept by toggling <i>skip test</i></p>
         </subsection>
+
+        <subsection name="IntelliJ IDEA plugins suggestion">
+            <p>We suggest you install these plugins for a better developing Apache James process:
+                <ul>
+                    <li><a href="https://plugins.jetbrains.com/plugin/1347-scala">Scala</a>: Some parts of the project are written in Scala.</li>
+                    <li><a href="https://plugins.jetbrains.com/plugin/1065-checkstyle-idea">CheckStyle-IDEA</a>: Better engage the project' check style constraints.</li>
+                    <li><a href="https://plugins.jetbrains.com/plugin/7391-asciidoc">AsciiDoc</a>: Better manage our Antora documentations.</li>
+                </ul>
+            </p>
+        </subsection>
+
+        <subsection name="Import layout suggestion">
+            <p>We suggest you apply the import layout which is being used by the main contributors of the project so that
+                you can reduce import conflicts while developing the project.<br/></p>
+            <ul>
+                <li>Java import layout:<br/><br/>
+                    <code>import static all other imports <br/>
+                        blank line <br/>
+                        import java.* <br/>
+                        blank line <br/>
+                        import javax.* <br/>
+                        blank line <br/>
+                        import org.* <br/>
+                        blank line <br/>
+                        import com.* <br/>
+                        blank line <br/>
+                        import all other imports <br/>
+                        blank line <br/><br/>
+                    </code>
+                </li>
+                <li>Scala import layout:<br/><br/>
+                    <code>base package imports <br/>
+                        blank line <br/>
+                        java <br/>
+                        blank line <br/>
+                        all other imports <br/>
+                        blank line <br/>
+                        scala <br/><br/>
+                    </code>
+                </li>
+            </ul>
+        </subsection>
     </section>
 
   <section name="Build James Source from Eclipse">
