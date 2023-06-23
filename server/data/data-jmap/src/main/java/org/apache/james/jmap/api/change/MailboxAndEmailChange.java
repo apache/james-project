@@ -70,7 +70,7 @@ public class MailboxAndEmailChange implements JmapChange {
                 .state(state)
                 .date(now)
                 .isCountChange(true)
-                .delegated(false)
+                .shared(false)
                 .updated(ImmutableList.of(messageAdded.getMailboxId()))
                 .build();
 
@@ -91,7 +91,7 @@ public class MailboxAndEmailChange implements JmapChange {
                             .state(state)
                             .date(now)
                             .isCountChange(true)
-                            .delegated(true)
+                            .shared(true)
                             .updated(ImmutableList.of(messageAdded.getMailboxId()))
                             .build()));
 
@@ -136,9 +136,9 @@ public class MailboxAndEmailChange implements JmapChange {
                             .state(stateFactory.generate())
                             .date(now)
                             .isCountChange(true)
-                            .delegated(true)
+                            .shared(true)
                             .updated(ImmutableList.of(messageFlagUpdated.getMailboxId()))
-                            .delegated()
+                            .shared()
                             .build()));
 
                 return Stream.concat(Stream.of(ownerChange), shareeChanges)
@@ -175,7 +175,7 @@ public class MailboxAndEmailChange implements JmapChange {
                 .state(state)
                 .date(now)
                 .isCountChange(true)
-                .delegated(delegated)
+                .shared(delegated)
                 .updated(ImmutableList.of(expunged.getMailboxId()))
                 .build();
 

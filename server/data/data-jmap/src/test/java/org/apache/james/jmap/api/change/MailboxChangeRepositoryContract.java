@@ -100,7 +100,7 @@ public interface MailboxChangeRepositoryContract {
             .date(DATE)
             .isCountChange(false)
             .created(ImmutableList.of(id3))
-            .delegated()
+            .shared()
             .build();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -153,7 +153,7 @@ public interface MailboxChangeRepositoryContract {
             .date(DATE)
             .isCountChange(false)
             .created(ImmutableList.of(id3))
-            .delegated()
+            .shared()
             .build();
         repository.save(change1).block();
         repository.save(change2).block();
@@ -294,8 +294,8 @@ public interface MailboxChangeRepositoryContract {
 
         MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
         MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2)).build();
-        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).delegated(true).created(ImmutableList.of(id3)).build();
-        MailboxChange change4 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).delegated(true).created(ImmutableList.of(id4)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).shared(true).created(ImmutableList.of(id3)).build();
+        MailboxChange change4 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).shared(true).created(ImmutableList.of(id4)).build();
         repository.save(change1).block();
         repository.save(change2).block();
         repository.save(change3).block();
@@ -318,8 +318,8 @@ public interface MailboxChangeRepositoryContract {
 
         MailboxChange change1 = MailboxChange.builder().accountId(ACCOUNT_ID).state(referenceState).date(DATE.minusHours(3)).isCountChange(false).created(ImmutableList.of(id1)).build();
         MailboxChange change2 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(2)).isCountChange(false).created(ImmutableList.of(id2)).build();
-        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).delegated(true).created(ImmutableList.of(id3)).build();
-        MailboxChange change4 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).delegated(true).created(ImmutableList.of(id4)).build();
+        MailboxChange change3 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE.minusHours(1)).isCountChange(false).shared(true).created(ImmutableList.of(id3)).build();
+        MailboxChange change4 = MailboxChange.builder().accountId(ACCOUNT_ID).state(stateFactory.generate()).date(DATE).isCountChange(false).shared(true).created(ImmutableList.of(id4)).build();
         repository.save(change1).block();
         repository.save(change2).block();
         repository.save(change3).block();
@@ -549,7 +549,7 @@ public interface MailboxChangeRepositoryContract {
             .date(DATE.minusHours(1))
             .isCountChange(false)
             .updated(ImmutableList.of(id1))
-            .delegated()
+            .shared()
             .build();
 
         repository.save(oldState).block();
