@@ -62,7 +62,7 @@ public class ListMessageAssert {
     }
 
     public void containOnly(MailboxMessage... expecteds) {
-        assertThat(messageToInnerMessage(actual)).containsOnlyElementsOf(messageToInnerMessage(Lists.newArrayList(expecteds)));
+        assertThat(messageToInnerMessage(actual)).containsOnly(messageToInnerMessage(Lists.newArrayList(expecteds)).toArray(new InnerMessage[0]));
     }
 
     private final class InnerMessage {

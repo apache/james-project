@@ -93,8 +93,7 @@ class TosUtilsTest {
 
         List<MailAddress> to = testee.getTo(fakeMail);
 
-        ImmutableList<MailAddress> expectedTo = ImmutableList.of(mailAddress, mailAddress2);
-        assertThat(to).containsOnlyElementsOf(expectedTo);
+        assertThat(to).containsOnly(mailAddress, mailAddress2);
     }
 
     @Test
@@ -115,7 +114,6 @@ class TosUtilsTest {
 
         List<MailAddress> to = testee.getTo(fakeMail);
 
-        ImmutableList<MailAddress> expectedTo = ImmutableList.of(from, toMailAddress, toMailAddress2);
-        assertThat(to).containsOnlyElementsOf(expectedTo);
+        assertThat(to).containsOnly(from, toMailAddress, toMailAddress2);
     }
 }

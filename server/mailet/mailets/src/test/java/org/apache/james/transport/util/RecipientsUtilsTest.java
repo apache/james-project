@@ -90,7 +90,7 @@ class RecipientsUtilsTest {
 
         List<MailAddress> recipients = testee.getRecipients(fakeMail);
 
-        assertThat(recipients).containsOnlyElementsOf(expectedRecipients);
+        assertThat(recipients).containsOnly(expectedRecipients.toArray(new MailAddress[0]));
     }
 
     @Test
@@ -113,7 +113,6 @@ class RecipientsUtilsTest {
 
         List<MailAddress> recipients = testee.getRecipients(fakeMail);
 
-        ImmutableList<MailAddress> expectedRecipients = ImmutableList.of(from, to, to2);
-        assertThat(recipients).containsOnlyElementsOf(expectedRecipients);
+        assertThat(recipients).containsOnly(from, to, to2);
     }
 }

@@ -669,17 +669,15 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(MessageFullView.class)
             .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getKeywords)
-            .containsOnlyElementsOf(
-                ImmutableList.of(
-                    ImmutableMap.of(
-                        "$Answered", true,
-                        "$Draft", true),
-                    ImmutableMap.of(
-                        "$Answered", true,
-                        "$Draft", true),
-                    ImmutableMap.of(
-                        "$Answered", true,
-                        "$Draft", true)));
+            .containsOnly( ImmutableMap.of(
+                    "$Answered", true,
+                    "$Draft", true),
+                ImmutableMap.of(
+                    "$Answered", true,
+                    "$Draft", true),
+                ImmutableMap.of(
+                    "$Answered", true,
+                    "$Draft", true));
 
     }
 
@@ -728,17 +726,15 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(MessageFullView.class)
             .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getKeywords)
-            .containsOnlyElementsOf(
-                ImmutableList.of(
-                    ImmutableMap.of(
-                        "$Answered", true,
-                        "$Draft", true),
-                    ImmutableMap.of(
-                        "$Answered", true,
-                        "$Draft", true),
-                    ImmutableMap.of(
-                        "$Answered", true,
-                        "$Draft", true)));
+            .containsOnly(ImmutableMap.of(
+                    "$Answered", true,
+                    "$Draft", true),
+                ImmutableMap.of(
+                    "$Answered", true,
+                    "$Draft", true),
+                ImmutableMap.of(
+                    "$Answered", true,
+                    "$Draft", true));
 
     }
 
@@ -770,11 +766,9 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(MessageFullView.class)
             .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getKeywords)
-            .containsOnlyElementsOf(
-                ImmutableList.of(
-                    ImmutableMap.of(
-                        "$Answered", true,
-                        FORWARDED, true)));
+            .containsOnly(ImmutableMap.of(
+                "$Answered", true,
+                FORWARDED, true));
     }
 
 }

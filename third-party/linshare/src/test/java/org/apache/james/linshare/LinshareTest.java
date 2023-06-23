@@ -78,7 +78,7 @@ class LinshareTest {
 
         assertThat(technicalAccounts).anySatisfy(account -> SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(account.getName()).isEqualTo(TECHNICAL_ACCOUNT.getUsername());
-            softly.assertThat(account.getPermissions()).containsOnlyElementsOf(TECHNICAL_PERMISSIONS);
+            softly.assertThat(account.getPermissions()).containsOnly(TECHNICAL_PERMISSIONS.toArray(new String[0]));
             softly.assertThat(account.isEnabled()).isEqualTo(ACCOUNT_ENABLED);
         }));
     }

@@ -61,7 +61,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.rabbitmq.client.AMQP;
@@ -264,11 +263,11 @@ class RabbitMQTest {
                 awaitAtMostOneMinute.until(
                     () -> countReceivedMessages(consumer2, consumer3, consumer4) == 30);
 
-                ImmutableList<Integer> expectedResult = IntStream.range(0, 10).boxed().collect(ImmutableList.toImmutableList());
-                // Check every subscriber have receive all the messages.
-                assertThat(consumer2.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
-                assertThat(consumer3.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
-                assertThat(consumer4.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+                Integer[] expectedResult = IntStream.range(0, 10).boxed().toArray(Integer[]::new);
+                // Check every subscriber have received all the messages.
+                assertThat(consumer2.getConsumedMessages()).containsOnly(expectedResult);
+                assertThat(consumer3.getConsumedMessages()).containsOnly(expectedResult);
+                assertThat(consumer4.getConsumedMessages()).containsOnly(expectedResult);
             }
         }
 
@@ -304,14 +303,14 @@ class RabbitMQTest {
                 awaitAtMostOneMinute.until(
                     () -> countReceivedMessages(consumer2, consumer3, consumer4) == nbMessages);
 
-                ImmutableList<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(ImmutableList.toImmutableList());
+                Integer[] expectedResult = IntStream.range(0, nbMessages).boxed().toArray(Integer[]::new);
 
                 assertThat(
                     Iterables.concat(
                         consumer2.getConsumedMessages(),
                         consumer3.getConsumedMessages(),
                         consumer4.getConsumedMessages()))
-                    .containsOnlyElementsOf(expectedResult);
+                    .containsOnly(expectedResult);
             }
 
             @Test

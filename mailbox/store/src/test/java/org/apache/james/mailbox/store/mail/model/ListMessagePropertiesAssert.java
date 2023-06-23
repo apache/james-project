@@ -50,7 +50,7 @@ public class ListMessagePropertiesAssert {
     }
 
     public void containsOnly(List<Property> expected) {
-        assertThat(propertiesToInnerProperties(actual)).containsOnlyElementsOf(propertiesToInnerProperties(expected));
+        assertThat(propertiesToInnerProperties(actual)).containsOnly(propertiesToInnerProperties(expected).toArray(new InnerProperty[0]));
     }
     
     private final class InnerProperty {
