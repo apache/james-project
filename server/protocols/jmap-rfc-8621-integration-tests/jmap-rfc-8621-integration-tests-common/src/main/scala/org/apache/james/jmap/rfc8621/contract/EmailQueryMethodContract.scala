@@ -7487,9 +7487,8 @@ trait EmailQueryMethodContract {
       .getMessageId
   }
 
-  private def generateQueryState(messages: MessageId*): String = {
-    Hashing.murmur3_32()
+  private def generateQueryState(messages: MessageId*): String =
+    Hashing.murmur3_32_fixed()
       .hashUnencodedChars(messages.toList.map(_.serialize).mkString(" "))
       .toString
-  }
 }

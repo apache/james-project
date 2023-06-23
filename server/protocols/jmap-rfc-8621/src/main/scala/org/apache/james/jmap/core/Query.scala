@@ -72,7 +72,7 @@ object QueryState {
     forStrings(ids.map(_.value))
 
   def forStrings(strings: Seq[String]): QueryState = QueryState(
-    Hashing.murmur3_32()
+    Hashing.murmur3_32_fixed()
       .hashUnencodedChars(strings.mkString(" "))
       .toString)
 }

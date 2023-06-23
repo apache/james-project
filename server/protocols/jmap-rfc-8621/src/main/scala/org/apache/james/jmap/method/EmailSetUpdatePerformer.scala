@@ -110,7 +110,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
   }
 
   private def doUpdate(validUpdates: List[(MessageId, ValidatedEmailSetUpdate)],
-                       metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                       metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]],
                        session: MailboxSession): SMono[Seq[EmailUpdateResult]] = {
     val sameUpdate: Boolean = validUpdates.map(_._2).distinctBy(_.update).size == 1
     val singleMailbox: Boolean = metaData.values.flatten.map(_.getComposedMessageId.getMailboxId).toSet.size == 1
@@ -134,7 +134,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
     }
   }
 
-  private def asRanges(metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]]) =
+  private def asRanges(metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]]) =
     MessageRange.toRanges(metaData.values
       .flatten.map(_.getComposedMessageId.getUid)
       .toList.distinct.asJava)
@@ -143,7 +143,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
   private def updateFlagsByRange(mailboxId: MailboxId,
                                  flags: Flags,
                                  ranges: List[MessageRange],
-                                 metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                                 metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]],
                                  updateMode: FlagsUpdateMode,
                                  session: MailboxSession): SMono[Seq[EmailUpdateResult]] = {
     val mailboxMono: SMono[MessageManager] = SMono(mailboxManager.getMailboxReactive(mailboxId, session))
@@ -156,7 +156,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
   private def moveByRange(mailboxId: MailboxId,
                           update: ValidatedEmailSetUpdate,
                           ranges: List[MessageRange],
-                          metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                          metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]],
                           session: MailboxSession): SMono[Seq[EmailUpdateResult]] = {
     val targetId: MailboxId = update.update.mailboxIds.get.value.headOption.get
 
@@ -165,7 +165,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
   }
 
   private def updateByRange(ranges: List[MessageRange],
-                            metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                            metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]],
                             operation: MessageRange => SMono[Unit]): SMono[Seq[EmailUpdateResult]] =
     SFlux.fromIterable(ranges)
       .concatMap(range => {
@@ -179,7 +179,7 @@ class EmailSetUpdatePerformer @Inject() (serializer: EmailSetSerializer,
       .reduce(Seq[EmailUpdateResult]())( _ ++ _)
 
   private def updateEachMessage(validUpdates: List[(MessageId, ValidatedEmailSetUpdate)],
-                                metaData: Map[MessageId, Traversable[ComposedMessageIdWithMetaData]],
+                                metaData: Map[MessageId, Iterable[ComposedMessageIdWithMetaData]],
                                 session: MailboxSession): SMono[Seq[EmailUpdateResult]] =
     SFlux.fromIterable(validUpdates)
       .concatMap[EmailUpdateResult]({

@@ -533,7 +533,7 @@ trait MailboxQueryMethodContract {
   }
 
   private def generateQueryState(ids: MailboxId*): String =
-    Hashing.murmur3_32()
+    Hashing.murmur3_32_fixed()
       .hashUnencodedChars(ids.toList.map(_.serialize()).mkString(" "))
       .toString
 }
