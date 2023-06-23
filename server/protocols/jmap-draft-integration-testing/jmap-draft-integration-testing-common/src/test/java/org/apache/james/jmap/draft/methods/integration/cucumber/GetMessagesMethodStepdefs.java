@@ -712,7 +712,7 @@ public class GetMessagesMethodStepdefs {
     @Then("^the keywords of the message is (.*)$")
     public void assertKeywordsOfMessageShouldDisplay(List<String> keywords) {
         assertThat(httpClient.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
-            .containsOnlyElementsOf(keywords);
+            .containsOnly(keywords.toArray(new String[0]));
     }
 
     @Then("^the message has no keyword$")
@@ -726,7 +726,7 @@ public class GetMessagesMethodStepdefs {
         userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
 
         assertThat(httpClient.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
-            .containsOnlyElementsOf(keywords);
+            .containsOnly(keywords.toArray(new String[0]));
     }
 
     @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" without keywords$")

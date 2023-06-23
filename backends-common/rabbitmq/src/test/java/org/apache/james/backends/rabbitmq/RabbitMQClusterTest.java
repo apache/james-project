@@ -33,7 +33,6 @@ import static org.awaitility.Durations.ONE_SECOND;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -136,8 +135,8 @@ class RabbitMQClusterTest {
 
             awaitAtMostOneMinute.until(() -> consumer2.getConsumedMessages().size() == nbMessages);
 
-            List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(ImmutableList.toImmutableList());
-            assertThat(consumer2.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+            Integer[] expectedResult = IntStream.range(0, nbMessages).boxed().toArray(Integer[]::new);
+            assertThat(consumer2.getConsumedMessages()).containsOnly(expectedResult);
         }
 
         @Test
@@ -157,8 +156,8 @@ class RabbitMQClusterTest {
 
             awaitAtMostOneMinute.until(() -> consumer2.getConsumedMessages().size() == nbMessages);
 
-            List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(ImmutableList.toImmutableList());
-            assertThat(consumer2.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+            Integer[] expectedResult = IntStream.range(0, nbMessages).boxed().toArray(Integer[]::new);
+            assertThat(consumer2.getConsumedMessages()).containsOnly(expectedResult);
         }
 
     }
@@ -214,8 +213,8 @@ class RabbitMQClusterTest {
 
             awaitAtMostOneMinute.until(() -> consumer.getConsumedMessages().size() == nbMessages);
 
-            List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(ImmutableList.toImmutableList());
-            assertThat(consumer.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+            Integer[] expectedResult = IntStream.range(0, nbMessages).boxed().toArray(Integer[]::new);
+            assertThat(consumer.getConsumedMessages()).containsOnly(expectedResult);
         }
 
         private void tryPublishWithRetry(byte[] bytes) {
@@ -256,8 +255,8 @@ class RabbitMQClusterTest {
 
                 awaitAtMostOneMinute.until(() -> consumer.getConsumedMessages().size() == nbMessages);
 
-                List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(ImmutableList.toImmutableList());
-                assertThat(consumer.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+                Integer[] expectedResult = IntStream.range(0, nbMessages).boxed().toArray(Integer[]::new);
+                assertThat(consumer.getConsumedMessages()).containsOnly(expectedResult);
             }
         }
 
@@ -283,8 +282,8 @@ class RabbitMQClusterTest {
 
             awaitAtMostOneMinute.until(() -> consumer.getConsumedMessages().size() == nbMessages);
 
-            List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(ImmutableList.toImmutableList());
-            assertThat(consumer.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+            Integer[] expectedResult = IntStream.range(0, nbMessages).boxed().toArray(Integer[]::new);
+            assertThat(consumer.getConsumedMessages()).containsOnly(expectedResult);
         }
 
         private void stopWhenHalfProcessed(DockerRabbitMQCluster cluster, int nbMessages, AtomicInteger counter) {

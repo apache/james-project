@@ -51,7 +51,8 @@ public class ListMailboxAssert {
     }
 
     public void containOnly(Mailbox... expecteds) {
-        assertThat(mailboxtoInnerMailbox(actual)).containsOnlyElementsOf(mailboxtoInnerMailbox(Lists.newArrayList(expecteds)));
+        InnerMailbox[] innerMailboxes = mailboxtoInnerMailbox(Lists.newArrayList(expecteds)).toArray(new InnerMailbox[0]);
+        assertThat(mailboxtoInnerMailbox(actual)).containsOnly(innerMailboxes);
     }
 
     private final class InnerMailbox {

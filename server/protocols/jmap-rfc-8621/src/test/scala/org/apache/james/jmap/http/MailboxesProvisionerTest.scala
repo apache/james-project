@@ -23,7 +23,6 @@ import java.time.Duration
 import java.util.function.Predicate
 
 import com.github.fge.lambdas.Throwing
-import com.google.common.collect.ImmutableList
 import org.apache.james.core.Username
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources
@@ -34,6 +33,8 @@ import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.apache.james.util.concurrency.ConcurrentTestRunner
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{BeforeEach, Test}
+
+import scala.jdk.CollectionConverters._
 
 object MailboxesProvisionerTest {
   private val USERNAME: Username = Username.of("username")
@@ -60,10 +61,10 @@ class MailboxesProvisionerTest {
     testee.createMailboxesIfNeeded(session).block()
 
     assertThat(mailboxManager.list(session))
-      .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES
-        .stream
+      .containsOnly(DefaultMailboxes.DEFAULT_MAILBOXES
+        .asScala
         .map((mailboxName: String) => MailboxPath.forUser(USERNAME, mailboxName))
-        .collect(ImmutableList.toImmutableList()))
+        .toArray: _*)
   }
 
   @Test
@@ -84,7 +85,7 @@ class MailboxesProvisionerTest {
     testee.createMailboxesIfNeeded(session).block()
 
     assertThat(subscriptionManager.subscriptions(session))
-      .containsOnlyElementsOf(DefaultMailboxes.defaultMailboxesAsPath(USERNAME))
+      .containsOnly(DefaultMailboxes.defaultMailboxesAsPath(USERNAME).asScala.toArray: _*)
   }
 
   @Test
@@ -95,6 +96,6 @@ class MailboxesProvisionerTest {
       .runSuccessfullyWithin(Duration.ofSeconds(10))
 
     assertThat(mailboxManager.list(session))
-      .containsOnlyElementsOf(DefaultMailboxes.defaultMailboxesAsPath(USERNAME))
+      .containsOnly(DefaultMailboxes.defaultMailboxesAsPath(USERNAME).asScala.toArray: _*)
   }
 }
