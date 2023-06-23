@@ -60,7 +60,7 @@ public class MailboxAndEmailChange implements JmapChange {
                 .accountId(accountId)
                 .state(state)
                 .date(now)
-                .isDelegated(false)
+                .isShared(false)
                 .isDelivery(messageAdded.isDelivery())
                 .created(messageAdded.getMessageIds())
                 .build();
@@ -82,7 +82,7 @@ public class MailboxAndEmailChange implements JmapChange {
                             .accountId(shareeId)
                             .state(state)
                             .date(now)
-                            .isDelegated(true)
+                            .isShared(true)
                             .isDelivery(messageAdded.isDelivery())
                             .created(messageAdded.getMessageIds())
                             .build(),
@@ -108,7 +108,7 @@ public class MailboxAndEmailChange implements JmapChange {
                 .accountId(accountId)
                 .state(stateFactory.generate())
                 .date(now)
-                .isDelegated(false)
+                .isShared(false)
                 .updated(messageFlagUpdated.getMessageIds())
                 .build();
 
@@ -128,7 +128,7 @@ public class MailboxAndEmailChange implements JmapChange {
                             .accountId(shareeId)
                             .state(stateFactory.generate())
                             .date(now)
-                            .isDelegated(true)
+                            .isShared(true)
                             .updated(messageFlagUpdated.getMessageIds())
                             .build(),
                         MailboxChange.builder()
@@ -149,7 +149,7 @@ public class MailboxAndEmailChange implements JmapChange {
                     .accountId(shareeId)
                     .state(stateFactory.generate())
                     .date(now)
-                    .isDelegated(true)
+                    .isShared(true)
                     .updated(messageFlagUpdated.getMessageIds())
                     .build());
 
@@ -185,7 +185,7 @@ public class MailboxAndEmailChange implements JmapChange {
                         .accountId(AccountId.fromUsername(username))
                         .state(state)
                         .date(now)
-                        .isDelegated(delegated)
+                        .isShared(delegated)
                         .updated(Sets.intersection(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
                         .destroyed(Sets.difference(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
                         .build(), mailboxChange))

@@ -47,7 +47,7 @@ class EmailChangeTest {
                 .accountId(null)
                 .state(State.of(UUID.randomUUID()))
                 .date(DATE.minusHours(2))
-                .isDelegated(false))
+                .isShared(false))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -58,7 +58,7 @@ class EmailChangeTest {
                 .accountId(ACCOUNT_ID)
                 .state(null)
                 .date(DATE.minusHours(2))
-                .isDelegated(false))
+                .isShared(false))
             .isInstanceOf(NullPointerException.class);;
     }
 
@@ -69,7 +69,7 @@ class EmailChangeTest {
                 .accountId(ACCOUNT_ID)
                 .state(State.of(UUID.randomUUID()))
                 .date(null)
-                .isDelegated(false))
+                .isShared(false))
             .isInstanceOf(NullPointerException.class);;
     }
 }
