@@ -99,7 +99,7 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseSetRequest] =
     VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value).asEitherRequest
 
-  private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] = {
+  private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] =
     SFlux.fromIterable(vacationResponseSetRequest.parsePatch()
       .map[SMono[VacationResponseUpdateResult]]({
         case (id, Right(patch)) =>
@@ -111,8 +111,7 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
       }))
       .flatMap[VacationResponseUpdateResult](updateResultMono => updateResultMono)
       .map(updateResult => updateResult.asVacationResponseUpdateResults)
-      .reduceWith(() => VacationResponseUpdateResults.empty(), VacationResponseUpdateResults.merge)
-  }
+      .reduce[VacationResponseUpdateResults](VacationResponseUpdateResults.empty())(VacationResponseUpdateResults.merge)
 
   private def update(validatedPatch: VacationPatch, mailboxSession: MailboxSession): SMono[VacationResponseUpdateResult] =
     SMono.fromPublisher(

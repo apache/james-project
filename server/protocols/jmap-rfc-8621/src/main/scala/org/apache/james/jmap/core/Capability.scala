@@ -116,7 +116,7 @@ case object WebSocketCapabilityFactory extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_WEBSOCKET
 
   override def create(urlPrefixes: UrlPrefixes): Capability = WebSocketCapability(
-    WebSocketCapabilityProperties(SupportsPush(true), new URI(urlPrefixes.webSocketURLPrefix + "/jmap/ws")))
+    WebSocketCapabilityProperties(SupportsPush(true), new URI(urlPrefixes.webSocketURLPrefix.toString + "/jmap/ws")))
 }
 
 object MaxSizeUpload {
