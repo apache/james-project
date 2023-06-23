@@ -3009,6 +3009,13 @@
                         <config>${basedir}/.scalafix.conf</config>
                         <mode>CHECK</mode>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.nequissimus</groupId>
+                            <artifactId>sort-imports_${scala.base}</artifactId>
+                            <version>0.6.1</version>
+                        </dependency>
+                    </dependencies>
                     <executions>
                         <execution>
                             <id>scala-check-style</id>
