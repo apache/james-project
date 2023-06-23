@@ -67,7 +67,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
 
         if (state.equals(State.INITIAL)) {
             return Flux.fromIterable(mailboxChangeMap.get(accountId))
-                .filter(Predicate.not(MailboxChange::isDelegated))
+                .filter(Predicate.not(MailboxChange::isShared))
                 .sort(Comparator.comparing(MailboxChange::getDate))
                 .collect(new MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
         }
@@ -75,7 +75,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
         return findByState(accountId, state)
             .flatMapMany(currentState -> Flux.fromIterable(mailboxChangeMap.get(accountId))
                 .filter(change -> change.getDate().isAfter(currentState.getDate()))
-                .filter(Predicate.not(MailboxChange::isDelegated))
+                .filter(Predicate.not(MailboxChange::isShared))
                 .sort(Comparator.comparing(MailboxChange::getDate)))
             .collect(new MailboxChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
@@ -108,7 +108,7 @@ public class MemoryMailboxChangeRepository implements MailboxChangeRepository {
     @Override
     public Mono<State> getLatestState(AccountId accountId) {
         return Flux.fromIterable(mailboxChangeMap.get(accountId))
-            .filter(change -> !change.isDelegated())
+            .filter(change -> !change.isShared())
             .sort(Comparator.comparing(MailboxChange::getDate))
             .map(MailboxChange::getState)
             .last(State.INITIAL);

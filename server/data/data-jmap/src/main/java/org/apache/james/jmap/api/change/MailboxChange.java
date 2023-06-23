@@ -65,7 +65,7 @@ public class MailboxChange implements JmapChange {
         private final AccountId accountId;
         private final State state;
         private final ZonedDateTime date;
-        private boolean delegated;
+        private boolean shared;
         private final boolean isCountChange;
         private Optional<List<MailboxId>> created;
         private Optional<List<MailboxId>> updated;
@@ -85,12 +85,12 @@ public class MailboxChange implements JmapChange {
             this.destroyed = Optional.empty();
         }
 
-        public Builder delegated() {
-            return delegated(true);
+        public Builder shared() {
+            return shared(true);
         }
 
-        public Builder delegated(boolean delegated) {
-            this.delegated = delegated;
+        public Builder shared(boolean shared) {
+            this.shared = shared;
             return this;
         }
 
@@ -110,7 +110,7 @@ public class MailboxChange implements JmapChange {
         }
 
         public MailboxChange build() {
-            return new MailboxChange(accountId, state, date, delegated, isCountChange, created.orElse(ImmutableList.of()), updated.orElse(ImmutableList.of()), destroyed.orElse(ImmutableList.of()));
+            return new MailboxChange(accountId, state, date, shared, isCountChange, created.orElse(ImmutableList.of()), updated.orElse(ImmutableList.of()), destroyed.orElse(ImmutableList.of()));
         }
     }
 
@@ -152,7 +152,7 @@ public class MailboxChange implements JmapChange {
                     .date(now)
                     .isCountChange(false)
                     .updated(ImmutableList.of(mailboxRenamed.getMailboxId()))
-                    .delegated()
+                    .shared()
                     .build());
 
             return Stream.concat(Stream.of(ownerChange), shareeChanges)
@@ -195,7 +195,7 @@ public class MailboxChange implements JmapChange {
                     .date(now)
                     .isCountChange(false)
                     .updated(ImmutableList.of(mailboxACLUpdated.getMailboxId()))
-                    .delegated()
+                    .shared()
                     .build());
 
             Stream<MailboxChange> deletionChanges = mailboxACLUpdated.getAclDiff()
@@ -208,7 +208,7 @@ public class MailboxChange implements JmapChange {
                     .date(now)
                     .isCountChange(false)
                     .updated(ImmutableList.of(mailboxACLUpdated.getMailboxId()))
-                    .delegated()
+                    .shared()
                     .build());
 
             return Stream.of(Stream.of(ownerChange), shareeChanges, deletionChanges)
@@ -237,7 +237,7 @@ public class MailboxChange implements JmapChange {
                     .date(now)
                     .isCountChange(false)
                     .destroyed(ImmutableList.of(mailboxDeletion.getMailboxId()))
-                    .delegated()
+                    .shared()
                     .build());
 
             return Stream.concat(Stream.of(ownerChange), shareeChanges)
@@ -248,17 +248,17 @@ public class MailboxChange implements JmapChange {
     private final AccountId accountId;
     private final State state;
     private final ZonedDateTime date;
-    private final boolean delegated;
+    private final boolean shared;
     private final boolean isCountChange;
     private final List<MailboxId> created;
     private final List<MailboxId> updated;
     private final List<MailboxId> destroyed;
 
-    private MailboxChange(AccountId accountId, State state, ZonedDateTime date, boolean delegated, boolean isCountChange, List<MailboxId> created, List<MailboxId> updated, List<MailboxId> destroyed) {
+    private MailboxChange(AccountId accountId, State state, ZonedDateTime date, boolean shared, boolean isCountChange, List<MailboxId> created, List<MailboxId> updated, List<MailboxId> destroyed) {
         this.accountId = accountId;
         this.state = state;
         this.date = date;
-        this.delegated = delegated;
+        this.shared = shared;
         this.isCountChange = isCountChange;
         this.created = created;
         this.updated = updated;
@@ -277,8 +277,8 @@ public class MailboxChange implements JmapChange {
         return date;
     }
 
-    public boolean isDelegated() {
-        return delegated;
+    public boolean isShared() {
+        return shared;
     }
 
     public boolean isCountChange() {
@@ -305,7 +305,7 @@ public class MailboxChange implements JmapChange {
                 && Objects.equals(state, that.state)
                 && Objects.equals(date, that.date)
                 && Objects.equals(isCountChange, that.isCountChange)
-                && Objects.equals(delegated, that.delegated)
+                && Objects.equals(shared, that.shared)
                 && Objects.equals(created, that.created)
                 && Objects.equals(updated, that.updated)
                 && Objects.equals(destroyed, that.destroyed);
@@ -315,7 +315,7 @@ public class MailboxChange implements JmapChange {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(accountId, state, date, isCountChange, delegated, created, updated, destroyed);
+        return Objects.hash(accountId, state, date, isCountChange, shared, created, updated, destroyed);
     }
 
     @Override
@@ -325,7 +325,7 @@ public class MailboxChange implements JmapChange {
             .add("state", state)
             .add("date", date)
             .add("isCountChange", isCountChange)
-            .add("isDelegated", delegated)
+            .add("isShared", shared)
             .add("created", created)
             .add("updated", updated)
             .add("destroyed", destroyed)
