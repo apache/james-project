@@ -22,13 +22,14 @@
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 /**
- * Matches mail where the number of recipiants is exactly one.
+ * Matches mail where the number of recipients is exactly one.
  * @version 1.0.0, 04/12/2000
  */
 public class IsSingleRecipient extends GenericMatcher {
@@ -38,7 +39,7 @@ public class IsSingleRecipient extends GenericMatcher {
         if (mail.getRecipients().size() == 1) {
             return mail.getRecipients();
         } else {
-            return null;
+            return Collections.emptyList();
         }
     }
 }

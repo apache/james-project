@@ -32,7 +32,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class IsSingleRecipientTest {
+class IsSingleRecipientTest {
 
     private Matcher matcher;
 
@@ -46,24 +46,24 @@ public class IsSingleRecipientTest {
     }
 
     @Test
-    public void matchShouldMatchOneRecipientsEmails() throws MessagingException {
+    void matchShouldMatchOneRecipientsEmail() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder().name("mail").recipient(ANY_AT_JAMES).build();
 
         assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
-    public void matchShouldNotMatchMultiRecipientsEMail() throws MessagingException {
+    void matchShouldNotMatchMultiRecipientsEmail() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder().name("mail").recipients(ANY_AT_JAMES, OTHER_AT_JAMES).build();
 
-        assertThat(matcher.match(fakeMail)).isNull();
+        assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
     @Test
-    public void matchShouldNotMatchMailWithNotRecipients() throws MessagingException {
+    void matchShouldNotMatchMailWithNotRecipients() throws MessagingException {
         FakeMail fakeMail = FakeMail.defaultFakeMail();
 
-        assertThat(matcher.match(fakeMail)).isNull();
+        assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
 }
