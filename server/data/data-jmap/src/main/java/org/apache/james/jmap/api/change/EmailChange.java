@@ -46,24 +46,24 @@ public class EmailChange implements JmapChange {
 
         @FunctionalInterface
         public interface RequireDate {
-            RequireIsDelegated date(ZonedDateTime date);
+            RequireIsShared date(ZonedDateTime date);
         }
 
         @FunctionalInterface
-        public interface RequireIsDelegated {
-            Builder isDelegated(boolean isDelegated);
+        public interface RequireIsShared {
+            Builder isShared(boolean isShared);
         }
 
         private final AccountId accountId;
         private final State state;
         private final ZonedDateTime date;
-        private final boolean isDelegated;
+        private final boolean shared;
         private final ImmutableList.Builder<MessageId> created;
         private final ImmutableList.Builder<MessageId> updated;
         private final ImmutableList.Builder<MessageId> destroyed;
         private Optional<Boolean> isDelivery;
 
-        private Builder(AccountId accountId, State state, ZonedDateTime date, boolean isDelegated) {
+        private Builder(AccountId accountId, State state, ZonedDateTime date, boolean shared) {
             Preconditions.checkNotNull(accountId, "'accountId' should not be null");
             Preconditions.checkNotNull(state, "'state' should not be null");
             Preconditions.checkNotNull(date, "'date' should not be null");
@@ -71,7 +71,7 @@ public class EmailChange implements JmapChange {
             this.accountId = accountId;
             this.state = state;
             this.date = date;
-            this.isDelegated = isDelegated;
+            this.shared = shared;
             this.destroyed = ImmutableList.builder();
             this.updated = ImmutableList.builder();
             this.created = ImmutableList.builder();
@@ -114,28 +114,28 @@ public class EmailChange implements JmapChange {
         }
 
         public EmailChange build() {
-            return new EmailChange(accountId, state, date, isDelegated, created.build(), updated.build(), destroyed.build(), isDelivery.orElse(false));
+            return new EmailChange(accountId, state, date, shared, created.build(), updated.build(), destroyed.build(), isDelivery.orElse(false));
         }
     }
 
     public static Builder.RequireAccountId builder() {
-        return accountId -> state -> date -> isDelegated -> new Builder(accountId, state, date, isDelegated);
+        return accountId -> state -> date -> isShared -> new Builder(accountId, state, date, isShared);
     }
 
     private final AccountId accountId;
     private final State state;
     private final ZonedDateTime date;
-    private final boolean isDelegated;
+    private final boolean shared;
     private final ImmutableList<MessageId> created;
     private final ImmutableList<MessageId> updated;
     private final ImmutableList<MessageId> destroyed;
     private final boolean isDelivery;
 
-    private EmailChange(AccountId accountId, State state, ZonedDateTime date, boolean isDelegated, ImmutableList<MessageId> created, ImmutableList<MessageId> updated, ImmutableList<MessageId> destroyed, boolean isDelivery) {
+    private EmailChange(AccountId accountId, State state, ZonedDateTime date, boolean shared, ImmutableList<MessageId> created, ImmutableList<MessageId> updated, ImmutableList<MessageId> destroyed, boolean isDelivery) {
         this.accountId = accountId;
         this.state = state;
         this.date = date;
-        this.isDelegated = isDelegated;
+        this.shared = shared;
         this.created = created;
         this.updated = updated;
         this.destroyed = destroyed;
@@ -166,8 +166,8 @@ public class EmailChange implements JmapChange {
         return destroyed;
     }
 
-    public boolean isDelegated() {
-        return isDelegated;
+    public boolean isShared() {
+        return shared;
     }
 
     public boolean isDelivery() {
@@ -181,7 +181,7 @@ public class EmailChange implements JmapChange {
             return Objects.equals(accountId, that.accountId)
                 && Objects.equals(state, that.state)
                 && Objects.equals(date, that.date)
-                && Objects.equals(isDelegated, that.isDelegated)
+                && Objects.equals(shared, that.shared)
                 && Objects.equals(created, that.created)
                 && Objects.equals(updated, that.updated)
                 && Objects.equals(destroyed, that.destroyed)
@@ -192,7 +192,7 @@ public class EmailChange implements JmapChange {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(accountId, state, date, isDelegated, created, updated, destroyed, isDelivery);
+        return Objects.hash(accountId, state, date, shared, created, updated, destroyed, isDelivery);
     }
 
     @Override
@@ -201,7 +201,7 @@ public class EmailChange implements JmapChange {
             .add("accountId", accountId)
             .add("state", state)
             .add("date", date)
-            .add("isDelegated", isDelegated)
+            .add("isShared", shared)
             .add("created", created)
             .add("updated", updated)
             .add("destroyed", destroyed)

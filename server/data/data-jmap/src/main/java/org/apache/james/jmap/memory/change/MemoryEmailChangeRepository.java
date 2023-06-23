@@ -66,7 +66,7 @@ public class MemoryEmailChangeRepository implements EmailChangeRepository {
     @Override
     public Mono<State> getLatestState(AccountId accountId) {
         return allChanges(accountId)
-            .filter(change -> !change.isDelegated())
+            .filter(change -> !change.isShared())
             .map(EmailChange::getState)
             .last(State.INITIAL);
     }
@@ -78,7 +78,7 @@ public class MemoryEmailChangeRepository implements EmailChangeRepository {
         maxChanges.ifPresent(limit -> Preconditions.checkArgument(limit.getValue() > 0, "maxChanges must be a positive integer"));
 
         return resolveAllChanges(accountId, state)
-            .filter(change -> !change.isDelegated())
+            .filter(change -> !change.isShared())
             .collect(new EmailChangeCollector(state, maxChanges.orElse(defaultLimit)));
     }
 
