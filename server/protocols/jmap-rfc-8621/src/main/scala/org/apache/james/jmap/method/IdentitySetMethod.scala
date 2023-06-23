@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
@@ -29,8 +30,6 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
-
-import javax.inject.Inject
 
 class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
                                   updatePerformer: IdentitySetUpdatePerformer,

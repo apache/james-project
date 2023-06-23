@@ -20,6 +20,7 @@
 package org.apache.james.jmap.change
 
 import java.time.{Clock, ZonedDateTime}
+
 import javax.inject.{Inject, Named}
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId

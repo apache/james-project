@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{Invocation, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SessionTranslator}
@@ -29,8 +30,6 @@ import org.apache.james.lifecycle.api.Startable
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
-
-import javax.inject.Inject
 
 class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCreatePerformer,
                                           updatePerformer: PushSubscriptionUpdatePerformer,

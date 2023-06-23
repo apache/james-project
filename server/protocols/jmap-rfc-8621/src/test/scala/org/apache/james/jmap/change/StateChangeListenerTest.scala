@@ -26,8 +26,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Sinks
 import reactor.core.publisher.Sinks.EmitFailureHandler
-import reactor.core.scala.publisher.SMono
-import reactor.core.scheduler.Schedulers
 
 class StateChangeListenerTest {
   private val mailboxState = UuidState.fromStringUnchecked("2f9f1b12-b35a-43e6-9af2-0106fb53a943")

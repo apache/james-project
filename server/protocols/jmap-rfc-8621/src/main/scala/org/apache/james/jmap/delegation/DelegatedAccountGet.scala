@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.delegation
 
-import org.apache.james.jmap.core.{AccountId, Properties}
-import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.method.WithAccountId
 import eu.timepit.refined.auto._
+import org.apache.james.jmap.core.Id.Id
+import org.apache.james.jmap.core.{AccountId, Properties}
+import org.apache.james.jmap.method.WithAccountId
 
 object DelegatedAccountGet {
   val allProperties: Properties = Properties("id", "username")

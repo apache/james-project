@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.time.Duration
+import java.util.concurrent.TimeUnit
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -35,9 +38,6 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
-
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 trait QuotaQueryMethodContract {
 

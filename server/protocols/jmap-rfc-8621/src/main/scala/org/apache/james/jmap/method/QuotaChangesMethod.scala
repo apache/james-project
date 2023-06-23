@@ -21,6 +21,7 @@ package org.apache.james.jmap.method
 
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.api.change.CanNotCalculateChangesException
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_QUOTA}
@@ -35,8 +36,6 @@ import org.apache.james.mailbox.quota.{QuotaManager, UserQuotaRootResolver}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
-
-import javax.inject.Inject
 
 class QuotaChangesMethod @Inject()(val metricFactory: MetricFactory,
                                    val sessionSupplier: SessionSupplier,

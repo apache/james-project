@@ -19,11 +19,18 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.net.URL
+import java.security.KeyPair
+import java.security.interfaces.ECPublicKey
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.{Base64, UUID}
+
 import com.google.common.collect.ImmutableSet
-import com.google.inject.AbstractModule
-import com.google.inject.multibindings.Multibinder
 import com.google.crypto.tink.subtle.EllipticCurves.CurveType
 import com.google.crypto.tink.subtle.{EllipticCurves, Random}
+import com.google.inject.AbstractModule
+import com.google.inject.multibindings.Multibinder
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -44,7 +51,6 @@ import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Test}
-import reactor.core.scala.publisher.SMono
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
@@ -53,14 +59,7 @@ import org.mockserver.model.Not.not
 import org.mockserver.model.NottableString.string
 import org.mockserver.model.{HttpRequest, HttpResponse}
 import org.mockserver.verify.VerificationTimes
-
-import java.net.URL
-import java.security.KeyPair
-import java.security.interfaces.ECPublicKey
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Base64
-import java.util.UUID
+import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
 

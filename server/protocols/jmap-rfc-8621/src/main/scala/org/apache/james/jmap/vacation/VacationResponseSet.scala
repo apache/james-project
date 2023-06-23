@@ -21,11 +21,12 @@ package org.apache.james.jmap.vacation
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import org.apache.james.vacation.api.Vacation.ID
+
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType, invalidArgumentValue, serverFailValue}
 import org.apache.james.jmap.core.{AccountId, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.util.ValuePatch
+import org.apache.james.vacation.api.Vacation.ID
 import org.apache.james.vacation.api.VacationPatch
 import play.api.libs.json.{JsBoolean, JsNull, JsObject, JsString, JsValue}
 

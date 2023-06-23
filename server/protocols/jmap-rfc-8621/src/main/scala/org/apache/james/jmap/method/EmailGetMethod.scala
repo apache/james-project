@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import java.time.ZoneId
+
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.api.change.{EmailChangeRepository, State => JavaState}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
@@ -34,9 +37,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import java.time.ZoneId
-import javax.inject.Inject
 
 object EmailGetResults {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailGetResults])

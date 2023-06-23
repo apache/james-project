@@ -20,6 +20,7 @@
 package org.apache.james.jmap.routes
 
 import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder

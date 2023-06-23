@@ -19,7 +19,10 @@
 
 package org.apache.james.jmap.method
 
+import java.util.Date
+
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
@@ -43,8 +46,6 @@ import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import java.util.Date
-import javax.inject.Inject
 import scala.util.{Try, Using}
 
 object EmailImportMethod {

@@ -30,7 +30,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Account, Invocation, Session, _}
+import org.apache.james.jmap.core._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 

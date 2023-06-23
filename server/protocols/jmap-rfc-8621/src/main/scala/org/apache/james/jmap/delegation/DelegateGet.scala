@@ -20,15 +20,13 @@
 package org.apache.james.jmap.delegation
 
 import java.util.UUID
+
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, Properties}
 import org.apache.james.jmap.method.WithAccountId
 
-import scala.util.Try
-
-import java.util.UUID
 import scala.util.Try
 
 object DelegateGet {

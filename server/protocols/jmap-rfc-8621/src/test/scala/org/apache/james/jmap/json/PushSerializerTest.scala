@@ -19,13 +19,13 @@
 
 package org.apache.james.jmap.json
 
+import java.util.UUID
+
 import org.apache.james.jmap.api.model.{PushSubscriptionId, VerificationCode}
 import org.apache.james.jmap.method.PushVerification
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsValue, Json}
-
-import java.util.UUID
 
 class PushSerializerTest extends AnyWordSpec with Matchers {
 

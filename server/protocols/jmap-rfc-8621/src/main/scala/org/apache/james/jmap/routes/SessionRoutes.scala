@@ -19,9 +19,13 @@
 
 package org.apache.james.jmap.routes
 
+import java.nio.charset.StandardCharsets
+import java.util.stream.Stream
+
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
+import javax.inject.{Inject, Named}
 import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.core.Username
 import org.apache.james.jmap.HttpConstants.{JSON_CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8}
@@ -41,9 +45,6 @@ import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.netty.http.server.HttpServerResponse
 
-import java.nio.charset.StandardCharsets
-import java.util.stream.Stream
-import javax.inject.{Inject, Named}
 import scala.jdk.OptionConverters._
 
 object SessionRoutes {

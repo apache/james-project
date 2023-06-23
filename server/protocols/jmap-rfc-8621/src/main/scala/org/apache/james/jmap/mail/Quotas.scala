@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.mail
 
+import java.nio.charset.StandardCharsets
+import java.util.UUID
+
 import com.google.common.hash.Hashing
 import eu.timepit.refined.auto._
 import org.apache.james.core.Domain
@@ -31,8 +34,6 @@ import org.apache.james.jmap.core.{AccountId, CanCalculateChanges, Id, Propertie
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.{Quota => ModelQuota, QuotaRoot => ModelQuotaRoot}
 
-import java.nio.charset.StandardCharsets
-import java.util.UUID
 import scala.compat.java8.OptionConverters._
 
 object QuotaRoot {

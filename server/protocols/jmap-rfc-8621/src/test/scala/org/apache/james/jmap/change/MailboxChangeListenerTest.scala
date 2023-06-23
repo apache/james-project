@@ -19,6 +19,10 @@
 
 package org.apache.james.jmap.change
 
+import java.time.{Clock, ZonedDateTime}
+import java.util
+
+import javax.mail.Flags
 import org.apache.james.events.delivery.InVmEventDelivery
 import org.apache.james.events.{Event, EventBus, EventBusName, EventListener, Group, InVMEventBus, MemoryEventDeadLetters, Registration, RegistrationKey, RetryBackoffConfiguration}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, Limit, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository, State}
@@ -37,9 +41,6 @@ import org.junit.jupiter.api.{BeforeEach, Nested, Test}
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Mono
 
-import java.time.{Clock, ZonedDateTime}
-import java.util
-import javax.mail.Flags
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 

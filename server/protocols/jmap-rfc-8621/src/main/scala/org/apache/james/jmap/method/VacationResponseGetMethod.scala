@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
@@ -33,8 +34,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.vacation.api.{VacationService, AccountId => JavaAccountId}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import javax.inject.Inject
 
 object VacationResponseGetResult {
   def empty: VacationResponseGetResult = VacationResponseGetResult(Set.empty, VacationResponseNotFound(Set.empty))

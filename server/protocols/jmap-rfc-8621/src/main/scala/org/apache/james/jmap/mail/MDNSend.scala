@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mail
 
+import java.util.UUID
+
 import cats.implicits.toTraverseOps
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
@@ -26,8 +28,6 @@ import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError}
 import org.apache.james.jmap.method.{WithAccountId, standardError}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
-
-import java.util.UUID
 
 object MDNSend {
   val MDN_ALREADY_SENT_FLAG: String = "$mdnsent"

@@ -21,6 +21,7 @@ package org.apache.james.jmap.rfc8621.contract
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import org.apache.commons.io.IOUtils

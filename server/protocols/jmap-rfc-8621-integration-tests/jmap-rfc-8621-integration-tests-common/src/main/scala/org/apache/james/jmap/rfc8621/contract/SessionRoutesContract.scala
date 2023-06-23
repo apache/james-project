@@ -18,6 +18,8 @@
  * ***************************************************************/
 package org.apache.james.jmap.rfc8621.contract
 
+import java.nio.charset.StandardCharsets
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.builder.RequestSpecBuilder
@@ -35,11 +37,7 @@ import org.apache.james.jmap.rfc8621.contract.SessionRoutesContract.{EXPECTED_BA
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags
 import org.apache.james.utils.DataProbeImpl
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.empty
-import org.hamcrest.collection.IsIterableContainingInAnyOrder
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
-
-import java.nio.charset.StandardCharsets
 object SessionRoutesContract {
   private val expected_session_object: String = """{
                          |  "capabilities" : {

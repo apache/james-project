@@ -19,6 +19,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{CanCalculateChanges, ErrorCode, Invocation, Limit, Position, QueryState, SessionTranslator}
@@ -28,8 +29,6 @@ import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.{MailboxSession, SystemMailboxesProvider}
 import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import javax.inject.Inject
 
 class MailboxQueryMethod @Inject()(systemMailboxesProvider: SystemMailboxesProvider,
                                    val metricFactory: MetricFactory,

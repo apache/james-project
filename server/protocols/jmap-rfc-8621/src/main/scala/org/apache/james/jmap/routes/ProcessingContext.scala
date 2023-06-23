@@ -27,10 +27,10 @@ import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId}
 import org.apache.james.jmap.json.BackReferenceDeserializer
 import play.api.libs.json.{JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Reads}
 
-import scala.util.Try
 import scala.collection.IndexedSeq
 import scala.collection.Map
 import scala.collection.immutable.{Map => ImmutableMap}
+import scala.util.Try
 
 sealed trait JsonPathPart
 

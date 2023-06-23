@@ -19,7 +19,10 @@
 
 package org.apache.james.jmap.method
 
+import java.io.InputStream
+
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation._
 import org.apache.james.jmap.core.{Invocation, SessionTranslator}
@@ -36,8 +39,6 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import java.io.InputStream
-import javax.inject.Inject
 import scala.jdk.OptionConverters._
 import scala.util.{Try, Using}
 

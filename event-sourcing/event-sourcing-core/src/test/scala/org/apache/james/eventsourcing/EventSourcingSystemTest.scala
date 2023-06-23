@@ -20,6 +20,7 @@ package org.apache.james.eventsourcing
 
 import java.util.{List => JavaList}
 
+import com.google.common.base.Splitter
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.Test
@@ -28,8 +29,6 @@ import org.mockito.Mockito.{doThrow, mock, when}
 import org.mockito.internal.matchers.InstanceOf
 import org.mockito.internal.progress.ThreadSafeMockingProgress
 import org.reactivestreams.Publisher
-
-import com.google.common.base.Splitter
 import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 

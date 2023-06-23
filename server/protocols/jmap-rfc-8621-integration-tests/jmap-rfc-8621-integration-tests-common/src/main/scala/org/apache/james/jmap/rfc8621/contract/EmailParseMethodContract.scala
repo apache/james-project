@@ -19,14 +19,10 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
-
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.commons.io.IOUtils
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
