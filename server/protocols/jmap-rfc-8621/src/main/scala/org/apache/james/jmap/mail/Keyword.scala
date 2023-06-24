@@ -81,7 +81,7 @@ final case class Keyword(flagName: String) extends AnyVal {
   def isForbiddenImapKeyword: Boolean = Keyword.NON_EXPOSED_IMAP_KEYWORDS.contains(this)
 
   def asSystemFlag: Option[Flags.Flag] = Keyword.IMAP_SYSTEM_FLAGS
-    .filter(entry => entry._2.equals(this))
+    .filter(entry => entry._2 == this)
     .keys
     .collectFirst(flag => flag)
 

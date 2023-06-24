@@ -103,6 +103,7 @@ object IdentitySerializer {
         case jsonObject: JsObject => propertiesFiltered(properties, capabilities).filter(jsonObject)
         case jsValue => jsValue
       }))
+      case jsValue => JsError(s"expected JsArray, got $jsValue")
     }).get
 
 

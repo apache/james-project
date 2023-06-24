@@ -259,6 +259,7 @@ class PulsarMailQueue(
             .fromPublisher(readMimeMessage(partsId))
             .collect { case Some(message) => message }
             .map(message => (readMail(metadata, message), partsId, committableMessage))
+        case _ => throw new NotImplementedError()
       }
   }
 

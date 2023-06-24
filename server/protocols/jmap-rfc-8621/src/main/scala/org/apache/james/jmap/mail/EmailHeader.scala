@@ -88,7 +88,7 @@ object MessageIdsHeaderValue {
         if(body.startsWith("<") && body.endsWith(">") && body.contains("@")) {
           scala.Right(HeaderMessageId.from(body))
         } else {
-          Left()
+          Left((): Unit)
         }
       }.toOption)
       .toList
@@ -113,7 +113,7 @@ object URLsHeaderValue {
           if(url.startsWith("<") && url.endsWith(">")) {
             scala.Right(HeaderURL.from(url))
           } else {
-            Left()
+            Left((): Unit)
           }
         }.toOption))
 

@@ -45,6 +45,7 @@ object DecisionProjection {
     taskEvent match {
       case _: Created => DecisionProjection(Status.WAITING, None)
       case updated: AdditionalInformationUpdated => DecisionProjection(Status.IN_PROGRESS, Some(updated.additionalInformation.timestamp))
+      case _ => throw new NotImplementedError()
     }
   }
 }

@@ -89,7 +89,6 @@ object EmailGetSerializer {
   private implicit val hasAttachmentWrites: Writes[HasAttachment] = Json.valueWrites[HasAttachment]
   private implicit val headerNameWrites: Writes[EmailHeaderName] = Json.valueWrites[EmailHeaderName]
   private implicit val rawHeaderWrites: Writes[RawHeaderValue] = Json.valueWrites[RawHeaderValue]
-  private implicit val allHeaderWrites: Writes[AllHeaderValues] = Json.valueWrites[AllHeaderValues]
   private implicit val textHeaderWrites: Writes[TextHeaderValue] = Json.valueWrites[TextHeaderValue]
   private implicit val addressesHeaderWrites: Writes[AddressesHeaderValue] = Json.valueWrites[AddressesHeaderValue]
   private implicit val GroupNameWrites: Writes[GroupName] = Json.valueWrites[GroupName]
@@ -103,7 +102,7 @@ object EmailGetSerializer {
   private implicit val headerURLWrites: Writes[HeaderURL] = Json.valueWrites[HeaderURL]
   private implicit val urlsHeaderWrites: Writes[URLsHeaderValue] = Json.valueWrites[URLsHeaderValue]
   private implicit val emailHeaderWrites: Writes[EmailHeaderValue] = {
-    case headerValue: AllHeaderValues => JsArray(headerValue.values.map(h =>  Json.toJson[EmailHeaderValue](h)))
+    case headerValue: AllHeaderValues => JsArray(headerValue.values.map(h =>  Json.toJson[EmailHeaderValue](h)(emailHeaderWrites)))
     case headerValue: RawHeaderValue => Json.toJson[RawHeaderValue](headerValue)
     case headerValue: TextHeaderValue => Json.toJson[TextHeaderValue](headerValue)
     case headerValue: AddressesHeaderValue => Json.toJson[AddressesHeaderValue](headerValue)
@@ -112,6 +111,7 @@ object EmailGetSerializer {
     case headerValue: DateHeaderValue => Json.toJson[DateHeaderValue](headerValue)
     case headerValue: URLsHeaderValue => Json.toJson[URLsHeaderValue](headerValue)
   }
+  private implicit val allHeaderWrites: Writes[AllHeaderValues] = Json.valueWrites[AllHeaderValues]
   private implicit val headersWrites: Writes[EmailHeader] = Json.writes[EmailHeader]
   private implicit val bodyValueWrites: Writes[EmailBodyValue] = Json.writes[EmailBodyValue]
   private implicit val unparsedMessageIdWrites: Writes[UnparsedEmailId] = Json.valueWrites[UnparsedEmailId]
@@ -149,7 +149,7 @@ object EmailGetSerializer {
       (__ \ "cid").writeNullable[Cid] and
       (__ \ "language").writeNullable[Languages] and
       (__ \ "location").writeNullable[Location] and
-      (__ \ "subParts").lazyWriteNullable(implicitly[Writes[List[EmailBodyPartToSerialize]]]) and
+      (__ \ "subParts").lazyWriteNullable(implicitly[Writes[List[EmailBodyPartToSerialize]]](list => new JsArray(list.map(bodyPartWritesToSerializeWrites.writes).toIndexedSeq) )) and
         JsPath.write[Map[String, Option[EmailHeaderValue]]]
     )(unlift(EmailBodyPartToSerialize.unapply))
 

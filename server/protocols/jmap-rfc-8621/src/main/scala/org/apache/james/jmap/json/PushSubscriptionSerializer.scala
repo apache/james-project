@@ -116,5 +116,6 @@ class PushSubscriptionSerializer @Inject()(typeStateFactory: TypeStateFactory) {
             properties.filter(jsonObject)
           case jsValue => jsValue
         }))
+        case jsValue => JsError(s"expected JsArray, got $jsValue")
       }).get
 }

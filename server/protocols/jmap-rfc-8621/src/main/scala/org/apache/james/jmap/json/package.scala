@@ -30,6 +30,7 @@ import org.apache.james.jmap.core.{AccountId, Properties, SetError, UTCDate, Uui
 import org.apache.james.jmap.mail.HasMoreChanges
 import play.api.libs.json._
 
+import scala.annotation.nowarn
 import scala.util.{Failure, Success, Try}
 
 package object json {
@@ -44,6 +45,7 @@ package object json {
     case _ => JsError("Expecting mailboxId value to be a boolean")
   }
 
+  @nowarn
   def mapWrites[K, V](keyWriter: K => String, valueWriter: Writes[V]): OWrites[Map[K, V]] =
     (ids: Map[K, V]) => {
       ids.foldLeft(JsObject.empty)((jsObject, kv) => {

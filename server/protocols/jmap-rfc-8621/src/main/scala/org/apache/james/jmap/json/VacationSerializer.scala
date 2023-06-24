@@ -91,6 +91,7 @@ object VacationSerializer {
               .filter(jsonObject)
           case jsValue => jsValue
         }))
+        case jsValue => JsError(s"expected JsArray, got $jsValue")
       }).get
 
 

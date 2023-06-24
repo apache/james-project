@@ -85,7 +85,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
 
   def post(request: HttpServerRequest, response: HttpServerResponse): Mono[Void] = {
     request.requestHeaders.get(CONTENT_TYPE) match {
-      case contentType => SMono.fromPublisher(
+      case contentType: String if contentType.nonEmpty => SMono.fromPublisher(
           authenticator.authenticate(request))
         .flatMap(session => post(request, response, ContentType.of(contentType), session))
         .onErrorResume {

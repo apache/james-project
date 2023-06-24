@@ -52,8 +52,6 @@ import sttp.client3.okhttp.OkHttpSyncBackend
 import sttp.client3.{Identity, RequestT, SttpBackend, asWebSocket, basicRequest}
 import sttp.model.Uri
 import sttp.monad.MonadError
-import sttp.monad.syntax.MonadErrorOps
-import sttp.ws.WebSocketFrame.Text
 import sttp.ws.{WebSocket, WebSocketFrame}
 
 import scala.jdk.CollectionConverters._
@@ -102,8 +100,7 @@ trait WebSocketContract {
                 |  ]
                 |}""".stripMargin))
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -148,10 +145,7 @@ trait WebSocketContract {
                   |    ]
                   |  ]
                   |}""".stripMargin))
-              ws.receive()
-                .map {
-                  case t: Text => t.payload
-                }
+              ws.receive().asPayload
             }, {
               Thread.sleep(200)
 
@@ -172,10 +166,7 @@ trait WebSocketContract {
                   |  ]
                   |}""".stripMargin))
 
-              ws.receive()
-                .map {
-                  case t: Text => t.payload
-                }
+              ws.receive().asPayload
             })
         })
         .send(backend)
@@ -194,8 +185,7 @@ trait WebSocketContract {
           ws =>
             ws.send(WebSocketFrame.text("The quick brown fox"))
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -219,8 +209,7 @@ trait WebSocketContract {
           ws =>
             ws.send(WebSocketFrame.text("The quick brown fox"))
 
-          ws.receive()
-            .map { case t: Text => t.toString }
+          ws.receive().asPayload
       })
       .send(backend)
       .body)
@@ -250,8 +239,7 @@ trait WebSocketContract {
                 |  ]
                 |}""".stripMargin))
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -290,8 +278,7 @@ trait WebSocketContract {
                 |  ]
                 |}""".stripMargin))
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -330,8 +317,7 @@ trait WebSocketContract {
                 |  ]
                 |}""".stripMargin))
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -370,8 +356,7 @@ trait WebSocketContract {
                 |  ]
                 |}""".stripMargin))
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -408,8 +393,7 @@ trait WebSocketContract {
                 |      "c1"]]
                 |}""".stripMargin))
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -463,14 +447,8 @@ trait WebSocketContract {
                  |}""".stripMargin))
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload,
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -516,10 +494,7 @@ trait WebSocketContract {
             sendEmailTo(server, DAVID)
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -561,10 +536,7 @@ trait WebSocketContract {
             sendEmailTo(server, BOB)
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -608,22 +580,10 @@ trait WebSocketContract {
             sendEmailTo(server, BOB)
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload,
+              ws.receive().asPayload,
+              ws.receive().asPayload,
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -686,10 +646,7 @@ trait WebSocketContract {
             createEmail(ws)
 
             List.range(0, 10)
-              .map(i => ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              .map(i => ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -735,14 +692,8 @@ trait WebSocketContract {
                  |}""".stripMargin))
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload,
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -794,14 +745,8 @@ trait WebSocketContract {
                  |}""".stripMargin))
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload,
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -851,10 +796,7 @@ trait WebSocketContract {
                  |    }, "c1"]]
                  |}""".stripMargin))
 
-            val responseAsJson = Json.parse(ws.receive()
-              .map { case t: Text =>
-                t.payload
-              })
+            val responseAsJson = Json.parse(ws.receive().asPayload)
               .\("methodResponses")
               .\(0).\(1)
               .\("created")
@@ -891,15 +833,8 @@ trait WebSocketContract {
                  |    }, "c1"]]
                  |}""".stripMargin))
 
-            val stateChange1 = ws.receive()
-              .map { case t: Text =>
-                t.payload
-              }
-            val response1 =
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                }
+            val stateChange1 = ws.receive().asPayload
+            val response1 = ws.receive().asPayload
 
             Thread.sleep(100)
 
@@ -916,15 +851,8 @@ trait WebSocketContract {
 
             Thread.sleep(100)
 
-            val stateChange2 = ws.receive()
-              .map { case t: Text =>
-                t.payload
-              }
-            val response2 =
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                }
+            val stateChange2 = ws.receive().asPayload
+            val response2 = ws.receive().asPayload
 
             List(response1, response2, stateChange1, stateChange2)
         })
@@ -978,14 +906,8 @@ trait WebSocketContract {
                  |}""".stripMargin))
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload,
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -1025,10 +947,7 @@ trait WebSocketContract {
             sendEmailTo(server, BOB)
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -1075,14 +994,8 @@ trait WebSocketContract {
                  |}""".stripMargin))
 
             List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                },
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+              ws.receive().asPayload,
+              ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -1138,14 +1051,8 @@ trait WebSocketContract {
                  |    }, "c1"]]
                  |}""".stripMargin))
 
-            List(ws.receive()
-              .map { case t: Text =>
-                t.payload
-            },
-            ws.receive()
-              .map { case t: Text =>
-                t.payload
-              })
+            List(ws.receive().asPayload,
+            ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -1196,11 +1103,7 @@ trait WebSocketContract {
 
             Thread.sleep(100)
 
-            List(
-              ws.receive()
-                .map { case t: Text =>
-                  t.payload
-                })
+            List(ws.receive().asPayload)
         })
         .send(backend)
         .body
@@ -1266,16 +1169,10 @@ trait WebSocketContract {
                  |    }, "c1"]]
                  |}""".stripMargin))
 
-            val response = ws.receive()
-              .map { case t: Text =>
-                t.payload
-              }
+            val response = ws.receive().asPayload
 
             val maybeNotification: String = Try(SMono.fromCallable(() =>
-            ws.receive()
-              .map { case t: Text =>
-                t.payload
-              })
+            ws.receive().asPayload)
               .subscribeOn(Schedulers.newSingle("test"))
               .block(scala.concurrent.duration.Duration.fromNanos(100000000)))
               .fold(e => "No notification received", s => s)
@@ -1342,11 +1239,7 @@ trait WebSocketContract {
 
             Thread.sleep(100)
 
-            ws.receive()
-              .map { case t: Text =>
-                t.payload
-              }
-        })
+            ws.receive().asPayload})
         .send(backend)
         .body
 
