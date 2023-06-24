@@ -56,6 +56,7 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.{equalTo, not}
 import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
@@ -1511,7 +1512,7 @@ trait EmailSetMethodContract {
          |  ]
          |}""".stripMargin
 
-    val response = `given`
+    `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
     .when
@@ -1519,26 +1520,10 @@ trait EmailSetMethodContract {
     .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
-      .extract
-      .body
-      .asString
-
-    assertThatJson(response)
-      .whenIgnoringPaths("methodResponses[0][1].notCreated.aaaaaa.description")
-      .inPath("methodResponses[0][1].notCreated.aaaaaa")
-      .isEqualTo(
-        s"""{
-           |    "type": "tooLarge"
-           |}""".stripMargin)
-
-    // Message size is date-time and matchine (Message-Id) dependant
-    val description = assertThatJson(response)
-      .withIgnorePlaceholder("@")
-      .inPath("methodResponses[0][1].notCreated.aaaaaa.description")
-      .asString()
-    description.endsWith(" bytes while the maximum allowed is 10485760")
-    description.startsWith("Attempt to create a message of ")
-
+      .body("methodResponses[0][1].notCreated.aaaaaa.type", equalTo("tooLarge"))
+      .body("methodResponses[0][1].notCreated.aaaaaa.description",
+        Matchers.allOf(Matchers.startsWith("Attempt to create a message of "),
+          Matchers.endsWith(" bytes while the maximum allowed is 10485760")))
   }
 
   @Test

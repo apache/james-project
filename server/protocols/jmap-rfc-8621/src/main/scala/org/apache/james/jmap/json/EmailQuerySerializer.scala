@@ -120,6 +120,7 @@ class EmailQuerySerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
   }
   private implicit val sortPropertyWrites: Writes[SortProperty] = {
     case ReceivedAtSortProperty => JsString("receivedAt")
+    case _ => throw new NotImplementedError()
   }
 
   private implicit val isAscendingFormat: Format[IsAscending] = Json.valueFormat[IsAscending]

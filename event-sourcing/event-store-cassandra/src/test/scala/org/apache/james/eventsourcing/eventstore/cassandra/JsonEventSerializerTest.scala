@@ -43,7 +43,7 @@ class JsonEventSerializerTest {
       .isEqualTo(JsonEventSerializerTest.TEST_EVENT)
 
   @Test
-  def shouldThrowWhenDeserializeUnknownEvent() =
+  def shouldThrowWhenDeserializeUnknownEvent(): Unit =
     assertThatThrownBy(() =>
       JsonEventSerializer
         .forModules()

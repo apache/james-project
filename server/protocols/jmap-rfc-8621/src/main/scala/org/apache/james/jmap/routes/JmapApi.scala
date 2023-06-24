@@ -95,7 +95,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
     if (missingCapabilities.nonEmpty) {
       Left(MissingCapabilityException(s"Missing capability(ies): ${missingCapabilities.mkString(", ")}"))
     } else {
-      Right()
+      Right((): Unit)
     }
   }
 }

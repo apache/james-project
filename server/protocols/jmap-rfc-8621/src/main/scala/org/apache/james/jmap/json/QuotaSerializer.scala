@@ -124,6 +124,7 @@ object QuotaSerializer {
               .filter(jsonObject)
           case jsValue => jsValue
         }))
+        case jsValue => JsError(s"expected JsArray, got $jsValue")
       }).get
 
   def serialize(response: QuotaGetResponse): JsValue = Json.toJson(response)

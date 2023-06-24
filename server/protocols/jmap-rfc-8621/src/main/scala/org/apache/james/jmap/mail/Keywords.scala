@@ -51,11 +51,11 @@ object KeywordsValidator {
     if (exposedKeywords.isEmpty || exposedKeywords.size != keywords.size) {
       Failure(new IllegalArgumentException("Does not allow to update 'Deleted' or 'Recent' flag"))
     } else {
-      Success()
+      Success((): Unit)
     }
   }
 
-  val IGNORE_NON_EXPOSED_IMAP_KEYWORDS: KeywordsValidator = _ => Success()
+  val IGNORE_NON_EXPOSED_IMAP_KEYWORDS: KeywordsValidator = _ => Success((): Unit)
 }
 
 object KeywordFilter {

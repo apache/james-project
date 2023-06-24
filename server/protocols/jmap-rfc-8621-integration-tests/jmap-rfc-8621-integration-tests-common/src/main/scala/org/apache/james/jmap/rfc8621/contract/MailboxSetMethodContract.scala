@@ -8041,10 +8041,7 @@ trait MailboxSetMethodContract {
                  |    }, "c1"]]
                  |}""".stripMargin))
 
-            List(ws.receive()
-              .map { case t: Text =>
-                t.payload
-              })
+            List(ws.receive().asPayload)
         })
         .send(backend)
         .body

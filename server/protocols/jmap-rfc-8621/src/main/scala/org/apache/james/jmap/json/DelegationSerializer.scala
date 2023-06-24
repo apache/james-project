@@ -88,6 +88,7 @@ object DelegationSerializer {
               .filter(jsonObject)
           case jsValue => jsValue
         }))
+        case jsValue => JsError(s"expected JsArray, got $jsValue")
       }).get
 
   def serialize(response: DelegatedAccountGetResponse, properties: Properties): JsValue =
@@ -99,5 +100,6 @@ object DelegationSerializer {
               .filter(jsonObject)
           case jsValue => jsValue
         }))
+        case jsValue => JsError(s"expected JsArray, got $jsValue")
       }).get
 }

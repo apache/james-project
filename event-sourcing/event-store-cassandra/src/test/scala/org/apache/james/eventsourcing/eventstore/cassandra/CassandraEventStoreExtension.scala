@@ -27,9 +27,7 @@ class CassandraEventStoreExtension(var cassandra: CassandraClusterExtension, val
 
   private var eventStoreDao : Option[EventStoreDao] = None
 
-  def this(eventSerializer: JsonEventSerializer) {
-    this(new CassandraClusterExtension(CassandraEventStoreModule.MODULE), eventSerializer)
-  }
+  def this(eventSerializer: JsonEventSerializer) = this(new CassandraClusterExtension(CassandraEventStoreModule.MODULE), eventSerializer)
 
   override def beforeAll(context: ExtensionContext): Unit = cassandra.beforeAll(context)
 

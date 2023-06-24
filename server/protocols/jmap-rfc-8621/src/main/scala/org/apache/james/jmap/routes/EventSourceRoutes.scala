@@ -216,6 +216,7 @@ class EventSourceRoutes@Inject() (@Named(InjectionKeys.RFC_8621) val authenticat
     val event: String = outboundMessage match {
       case _: PingMessage => "ping"
       case _: StateChange => "state"
+      case _ => throw new NotImplementedError()
     }
     s"event: $event\ndata: ${Json.stringify(pushSerializer.serializeSSE(outboundMessage))}\n\n"
   }

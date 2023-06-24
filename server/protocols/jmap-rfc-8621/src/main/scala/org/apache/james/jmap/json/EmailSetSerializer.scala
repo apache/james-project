@@ -251,6 +251,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       .sequence
       .fold(e => JsError(e),
         ids => JsSuccess(MessageIdsHeaderValue(Some(ids).filter(_.nonEmpty))))
+    case jsValue => JsError(s"expected JsArray, got $jsValue")
   }
 
   private implicit val isTruncatedReads: Reads[IsTruncated] = Json.valueReads[IsTruncated]

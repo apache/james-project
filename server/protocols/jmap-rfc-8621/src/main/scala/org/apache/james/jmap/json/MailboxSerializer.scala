@@ -180,6 +180,7 @@ class MailboxSerializer @Inject()(mailboxIdFactory: MailboxId.Factory) {
           case jsonObject: JsObject => mailboxTransformation.filter(jsonObject)
           case jsValue => jsValue
         }))
+        case jsValue => JsError(s"expected JsArray, got $jsValue")
       }).get
   }
 

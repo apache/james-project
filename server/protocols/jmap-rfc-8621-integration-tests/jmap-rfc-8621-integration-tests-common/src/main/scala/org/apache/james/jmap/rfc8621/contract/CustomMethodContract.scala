@@ -307,8 +307,7 @@ trait CustomMethodContract {
             server.getProbe(classOf[JmapEventBusProbe])
               .emitStateChange(stateChangeEvent, accountId)
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
@@ -348,8 +347,7 @@ trait CustomMethodContract {
             server.getProbe(classOf[JmapEventBusProbe])
               .emitStateChange(stateChangeEvent, accountId)
 
-            ws.receive()
-              .map { case t: Text => t.payload }
+            ws.receive().asPayload
         })
         .send(backend)
         .body
