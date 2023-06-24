@@ -3056,7 +3056,6 @@
                             <arg>-unchecked</arg>
                             <arg>-deprecation</arg>
                             <arg>-explaintypes</arg>
-                            <arg>-Ywarn-unused</arg>
                         </args>
                         <jvmArgs>
                             <jvmArg>-Xss128m</jvmArg>
