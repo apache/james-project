@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.mail
 
-import java.io.{InputStream, OutputStream}
+import java.io.OutputStream
 import java.time.ZoneId
 
 import cats.implicits._

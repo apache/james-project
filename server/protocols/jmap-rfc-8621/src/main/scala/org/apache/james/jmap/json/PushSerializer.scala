@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.json
 
+import javax.inject.Inject
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{State, TypeName}
 import org.apache.james.jmap.change.TypeState
@@ -26,7 +27,6 @@ import org.apache.james.jmap.core.{AccountId, OutboundMessage, PingMessage, Push
 import org.apache.james.jmap.method.PushVerification
 import play.api.libs.json.{Format, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
-import javax.inject.Inject
 import scala.util.Try
 
 object PushSerializer {

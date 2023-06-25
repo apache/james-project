@@ -31,7 +31,6 @@ import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.MessageId
-import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.stream.Field
 
 import scala.jdk.CollectionConverters._

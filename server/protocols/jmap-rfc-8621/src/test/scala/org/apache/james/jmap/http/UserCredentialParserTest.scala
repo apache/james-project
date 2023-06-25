@@ -19,14 +19,14 @@
 
 package org.apache.james.jmap.http
 
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+
 import org.apache.james.core.Username
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-
-import java.nio.charset.StandardCharsets
-import java.util.Base64
 
 class UserCredentialParserTest {
   @Test

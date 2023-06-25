@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.{Inject, Named}
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
 import org.apache.james.jmap.InjectionKeys
@@ -38,8 +39,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.vacation.api.{VacationPatch, VacationService, AccountId => VacationAccountId}
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import javax.inject.{Inject, Named}
 
 object VacationResponseUpdateResults {
   def empty(): VacationResponseUpdateResults = VacationResponseUpdateResults(Map(), Map())

@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.method
 
+import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
@@ -28,8 +29,6 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.user.api.DelegationStore
 import org.apache.james.util.ReactorUtils
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import javax.inject.Inject
 
 object DelegateSetDeletePerformer {
   sealed trait DelegateDeletionResult

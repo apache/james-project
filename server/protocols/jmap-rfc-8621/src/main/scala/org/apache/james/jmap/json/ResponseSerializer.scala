@@ -30,7 +30,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Account, Invocation, Session, _}
+import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, ClientId, CoreCapabilityProperties, CreatedIds, EhloArg, EhloArgs, EhloName, Invocation, IsPersonal, IsReadOnly, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxDelayedSend, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, ProblemDetails, Properties, RequestObject, ResponseObject, ServerId, Session, SetError, SubmissionProperties, SupportsPush, UuidState, WebSocketCapabilityProperties}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 

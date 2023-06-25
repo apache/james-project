@@ -19,7 +19,10 @@
 
 package org.apache.james.jmap.method
 
+import java.io.InputStream
+
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
@@ -34,8 +37,6 @@ import org.apache.james.util.html.HtmlTextExtractor
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import java.io.InputStream
-import javax.inject.Inject
 import scala.util.Try
 
 class EmailParseMethod @Inject()(val blobResolvers: BlobResolvers,

@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mail
 
+import java.util.Locale
+
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{Properties, SetError}
@@ -29,7 +31,6 @@ import org.apache.james.mdn.action.mode.DispositionActionMode
 import org.apache.james.mdn.fields.{FinalRecipient, ReportingUserAgent, Disposition => JavaDisposition}
 import org.apache.james.mdn.sending.mode.DispositionSendingMode
 
-import java.util.Locale
 import scala.util.{Failure, Success, Try}
 
 object MDN {

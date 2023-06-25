@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.api.identity.IdentityRepository
 import org.apache.james.jmap.api.model.{Identity, IdentityId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
@@ -33,8 +34,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.ReactorUtils
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
-
-import javax.inject.Inject
 
 class IdentityGetMethod @Inject() (identityRepository: IdentityRepository,
                                    val metricFactory: MetricFactory,

@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_QUOTA}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{CanCalculateChanges, ErrorCode, Invocation, Limit, Position, QueryState, SessionTranslator}
@@ -31,8 +32,6 @@ import org.apache.james.mailbox.quota.{QuotaManager, UserQuotaRootResolver}
 import org.apache.james.metrics.api.MetricFactory
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
-
-import javax.inject.Inject
 
 class QuotaQueryMethod @Inject()(val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier,

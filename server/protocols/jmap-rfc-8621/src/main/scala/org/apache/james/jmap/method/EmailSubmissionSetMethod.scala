@@ -19,9 +19,16 @@
 
 package org.apache.james.jmap.method
 
+import java.io.InputStream
+
 import cats.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
+import javax.annotation.PreDestroy
+import javax.inject.Inject
+import javax.mail.Address
+import javax.mail.Message.RecipientType
+import javax.mail.internet.{InternetAddress, MimeMessage}
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
@@ -47,12 +54,6 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 
-import java.io.InputStream
-import javax.annotation.PreDestroy
-import javax.inject.Inject
-import javax.mail.Address
-import javax.mail.Message.RecipientType
-import javax.mail.internet.{InternetAddress, MimeMessage}
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 

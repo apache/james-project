@@ -21,7 +21,6 @@ package org.apache.james.eventsourcing
 import java.util
 
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableList
 import javax.inject.Inject
 import org.apache.james.eventsourcing.eventstore.EventStoreFailedException
 import org.reactivestreams.Publisher

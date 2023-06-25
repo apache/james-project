@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured.{`given`, requestSpecification}
 import io.restassured.http.ContentType.JSON
@@ -37,8 +40,6 @@ import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.{BeforeEach, Test}
 
-import java.util.UUID
-import java.util.concurrent.TimeUnit
 import scala.jdk.CollectionConverters._
 
 object DelegateSetContract {

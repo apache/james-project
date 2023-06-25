@@ -20,6 +20,9 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+import javax.annotation.PreDestroy
+import javax.inject.Inject
+import javax.mail.internet.MimeMessage
 import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation._
@@ -48,9 +51,6 @@ import org.apache.james.util.ReactorUtils
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import javax.annotation.PreDestroy
-import javax.inject.Inject
-import javax.mail.internet.MimeMessage
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.util.Try

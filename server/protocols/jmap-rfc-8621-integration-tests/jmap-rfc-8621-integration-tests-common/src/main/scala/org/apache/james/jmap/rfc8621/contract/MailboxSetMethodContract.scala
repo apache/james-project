@@ -19,6 +19,10 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.time.Duration
+
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
@@ -58,9 +62,6 @@ import sttp.monad.syntax.MonadErrorOps
 import sttp.ws.WebSocketFrame
 import sttp.ws.WebSocketFrame.Text
 
-import java.net.URI
-import java.nio.charset.StandardCharsets
-import java.time.Duration
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 

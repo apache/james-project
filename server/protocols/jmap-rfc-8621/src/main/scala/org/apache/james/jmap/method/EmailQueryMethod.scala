@@ -18,8 +18,12 @@
  ****************************************************************/
 package org.apache.james.jmap.method
 
+import java.time.ZonedDateTime
+
 import cats.implicits._
 import eu.timepit.refined.auto._
+import javax.inject.Inject
+import javax.mail.Flags.Flag.DELETED
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.EmailQueryView
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
@@ -40,9 +44,6 @@ import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.streams.{Limit => JavaLimit}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import java.time.ZonedDateTime
-import javax.inject.Inject
-import javax.mail.Flags.Flag.DELETED
 import scala.jdk.CollectionConverters._
 
 class EmailQueryMethod @Inject() (serializer: EmailQuerySerializer,
