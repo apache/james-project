@@ -19,15 +19,16 @@
 
 package org.apache.james.transport.matchers;
 
+import java.util.Collection;
+import java.util.Collections;
+
+import javax.inject.Inject;
+import javax.mail.MessagingException;
+
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMatcher;
-
-import javax.inject.Inject;
-import javax.mail.MessagingException;
-import java.util.Collection;
-import java.util.Collections;
 
 /**
  * <p>Matches if mail is from a mailing list.</p>
