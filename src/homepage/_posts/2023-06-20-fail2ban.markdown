@@ -45,6 +45,7 @@ The configuration should be carried out beforehand on a test system and not duri
 thing to note about James is that changes to log4j2's configuration usually take effect immediately.
 
 ## (D)DoS - Attacks
+
 An attempt is made to load the server with so many requests that it no longer works. In the case of
 DDos, this is carried out in parallel by a large number of servers, which also means a corresponding
 amount of effort. A firewall can at least be used to ward off simple attacks.
@@ -223,6 +224,7 @@ We build a layout that outputs the following information:
  - The attacker's IP address (%X)
  - The log message (%msg)
  - A line break (%n)
+
 The IP address is a variable that James provides himself. This is very useful as there are log entries
 that do not report this IP address (see above). In order to be able to evaluate this better, the entry is
 as follows: "[ip=%X{ip}]". Unfortunately, this variable is not always filled. This is the case in our
@@ -274,34 +276,14 @@ The complete configuration looks like this (/opt/james/conf/log4j2.xml):
 To test the log output, we first fill the file (/opt/james/log/james.log) with the following content:
 
 ```
-2023-06-17 11:11:50.206 +0200 -
-org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
-[ip=45.129.14.30] - Rejected message. Unknown user: dar...@domaine.de
-2023-06-17 11:11:51.206 +0200 -
-org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
-[ip=45.129.14.31] - Rejected message. Unknown user: dar...@domaine.de
-2023-06-17 11:11:50.206 +0200 -
-org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
-LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
-domaine.de]}@45.129.14.40
-2023-06-17 11:11:50.206 +0200 -
-org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
-LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
-domaine.de]}@45.129.14.41
-2023-06-17 11:11:52.206 +0200 -
-org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
-[ip=45.129.14.30] - Rejected message. Unknown user: dar...@domaine.de
-2023-06-17 11:11:53.206 +0200 -
-org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
-[ip=45.129.14.31] - Rejected message. Unknown user: dar...@domaine.de
-2023-06-17 11:11:50.206 +0200 -
-org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
-LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
-domaine.de]}@45.129.14.40
-2023-06-17 11:11:50.206 +0200 -
-org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method
-LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :
-domaine.de]}@45.129.14.41
+2023-06-17 11:11:50.206 +0200 - org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler [ip=45.129.14.30] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:51.206 +0200 - org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler [ip=45.129.14.31] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:50.206 +0200 - org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :domaine.de]}@45.129.14.40
+2023-06-17 11:11:50.206 +0200 - org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :domaine.de]}@45.129.14.41
+2023-06-17 11:11:52.206 +0200 - org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler [ip=45.129.14.30] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:53.206 +0200 - org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler [ip=45.129.14.31] - Rejected message. Unknown user: dar...@domaine.de
+2023-06-17 11:11:50.206 +0200 - org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :domaine.de]}@45.129.14.40
+2023-06-17 11:11:50.206 +0200 - org.apache.james.protocols.smtp.core.esmtp.AuthCmdHandler [ip=] - AUTH method LOGIN failed from Username{localPart=monitor, domainPart=Optional[Domain :domaine.de]}@45.129.14.41
 ```
 
 ## Setting up filters
