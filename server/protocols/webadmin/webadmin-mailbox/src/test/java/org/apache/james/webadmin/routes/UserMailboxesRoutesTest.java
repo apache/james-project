@@ -364,7 +364,7 @@ class UserMailboxesRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", NOT_FOUND_404)
                 .containsEntry("type", ERROR_TYPE_NOTFOUND)
-                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("message", "Invalid delete on user mailboxes")
                 .containsEntry("details", "User does not exist");
         }
 
