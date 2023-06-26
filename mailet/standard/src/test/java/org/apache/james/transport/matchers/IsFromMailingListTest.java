@@ -17,51 +17,51 @@
  * under the License.                                           *
  ****************************************************************/
 
-
 package org.apache.james.transport.matchers;
 
-import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
-import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import javax.mail.MessagingException;
-
 import org.apache.mailet.Matcher;
+import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class IsSingleRecipientTest {
+import javax.mail.MessagingException;
+
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class IsFromMailingListTest {
 
     private Matcher matcher;
+    private AutomaticallySentMailDetector automaticallySentMailDetector;
 
     @BeforeEach
     public void setUp() throws MessagingException {
-        matcher = new IsSingleRecipient();
+        automaticallySentMailDetector = mock(AutomaticallySentMailDetector.class);
+        matcher = new IsFromMailingList(automaticallySentMailDetector);
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
-                .matcherName("IsSingleRecipient")
+                .matcherName("IsFromMailingList")
                 .build();
         matcher.init(matcherConfig);
     }
 
     @Test
-    void matchShouldMatchOneRecipientsEmail() throws MessagingException {
+    void matchShouldMatchFromMailingListEmails() throws MessagingException {
         FakeMail fakeMail = FakeMail.builder().name("mail").recipient(ANY_AT_JAMES).build();
+
+        when(automaticallySentMailDetector.isMailingList(fakeMail)).thenReturn(true);
 
         assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);
     }
 
     @Test
-    void matchShouldNotMatchMultiRecipientsEmail() throws MessagingException {
-        FakeMail fakeMail = FakeMail.builder().name("mail").recipients(ANY_AT_JAMES, OTHER_AT_JAMES).build();
+    void matchShouldNotMatchIfNotFromMailingListEmails() throws MessagingException {
+        FakeMail fakeMail = FakeMail.builder().name("mail").recipient(ANY_AT_JAMES).build();
 
-        assertThat(matcher.match(fakeMail)).isEmpty();
-    }
-
-    @Test
-    void matchShouldNotMatchMailWithNotRecipients() throws MessagingException {
-        FakeMail fakeMail = FakeMail.defaultFakeMail();
+        when(automaticallySentMailDetector.isMailingList(fakeMail)).thenReturn(false);
 
         assertThat(matcher.match(fakeMail)).isEmpty();
     }
