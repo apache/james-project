@@ -10,13 +10,24 @@ software documentation. Do not follow this guide blindly!
 
 ## Unreleased
 
+Note: this section is in progress. It will be updated during all the development process until the release.
 No changes yet.
+
+Changes to apply between 3.8.x and 3.9.0 will be reported here.
+
+Change list:
+
+ - [Imap Packages](#imap-packages)
+
+### Imap Packages
+
+Date: 27/06/2023
+
+`imapserver.xml` needs to be modified to relocate `imapPackages` from imapServers tag into `imapServer` tags.
 
 ## 3.8.0 version
 
-Note: this section is in progress. It will be updated during all the development process until the release.
-
-Changes to apply between 3.7.x and 3.8.0 will be reported here.
+Changes to apply between 3.7.x and 3.8.0 are reported here.
 
 Change list:
 
