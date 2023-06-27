@@ -85,6 +85,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         if (authType.equalsIgnoreCase(AUTH_TYPE_PLAIN)) {
             // See if AUTH=PLAIN is allowed. See IMAP-304
             if (session.isPlainAuthDisallowed()) {
+                LOGGER.warn("Login attempt over clear channel rejected");
                 no(request, responder, HumanReadableText.DISABLED_LOGIN);
             } else {
                 if (request instanceof IRAuthenticateRequest) {
