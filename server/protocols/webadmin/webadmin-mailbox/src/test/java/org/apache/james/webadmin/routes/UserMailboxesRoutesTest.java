@@ -270,7 +270,7 @@ class UserMailboxesRoutesTest {
         }
 
         @Test
-        void putShouldThrowWhenMailboxNameWithDots() throws Exception {
+        void putShouldThrowWhenMailboxNameWithDots() {
             Map<String, Object> errors = when()
                 .put(MAILBOX_NAME_WITH_DOTS)
             .then()
@@ -352,7 +352,7 @@ class UserMailboxesRoutesTest {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
-                .put(MAILBOX_NAME)
+                .delete(MAILBOX_NAME)
             .then()
                 .statusCode(NOT_FOUND_404)
                 .contentType(JSON)
@@ -364,12 +364,36 @@ class UserMailboxesRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", NOT_FOUND_404)
                 .containsEntry("type", ERROR_TYPE_NOTFOUND)
-                .containsEntry("message", "Invalid get on user mailboxes")
+                .containsEntry("message", "Invalid delete on user mailboxes")
                 .containsEntry("details", "User does not exist");
         }
 
         @Test
-        void getShouldReturnUserErrorWithInvalidWildcardMailboxName() throws Exception {
+        void putShouldReturn204WhenForceNonExistingUser() throws Exception {
+            when(usersRepository.contains(USERNAME)).thenReturn(false);
+
+            given()
+                .queryParam("force")
+            .when()
+                .put(MAILBOX_NAME)
+            .then()
+                .statusCode(NO_CONTENT_204);
+        }
+
+        @Test
+        void deleteShouldReturn204WhenForceNonExistingUser() throws Exception {
+            when(usersRepository.contains(USERNAME)).thenReturn(false);
+
+            given()
+                .queryParam("force")
+            .when()
+                .delete(MAILBOX_NAME)
+            .then()
+                .statusCode(NO_CONTENT_204);
+        }
+
+        @Test
+        void getShouldReturnUserErrorWithInvalidWildcardMailboxName() {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME + "*")
             .then()
@@ -603,6 +627,18 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", NOT_FOUND_404)
                 .containsEntry("type", ERROR_TYPE_NOTFOUND)
                 .containsEntry("message", "Invalid delete on user mailboxes");
+        }
+
+        @Test
+        void deleteMailboxesShouldReturn204UserErrorWithNonExistingUser() throws Exception {
+            when(usersRepository.contains(USERNAME)).thenReturn(false);
+
+            given()
+                .queryParam("force")
+            .when()
+                .delete()
+            .then()
+                .statusCode(NO_CONTENT_204);
         }
 
         @Test
