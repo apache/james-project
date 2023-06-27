@@ -36,6 +36,8 @@ under the License.
         <customProperties>pong.response=customImapParameter</customProperties>
         <customProperties>prop.b=anotherValue</customProperties>
         <gracefulShutdown>false</gracefulShutdown>
+        <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
+        <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
     </imapserver>
     <imapserver enabled="true">
         <jmxName>imapservers</jmxName>
@@ -53,7 +55,7 @@ under the License.
         <customProperties>pong.response=bad</customProperties>
         <customProperties>prop.b=baad</customProperties>
         <gracefulShutdown>false</gracefulShutdown>
+        <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
+        <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
     </imapserver>
-    <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
-    <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
 </imapservers>

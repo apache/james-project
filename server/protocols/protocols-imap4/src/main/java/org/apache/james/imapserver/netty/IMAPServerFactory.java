@@ -74,7 +74,7 @@ public class IMAPServerFactory extends AbstractServerFactory {
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("imapserver");
         
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
-            IMAPServer server = createServer(config);
+            IMAPServer server = createServer(serverConfig);
             server.setFileSystem(fileSystem);
             server.configure(serverConfig);
             servers.add(server);
