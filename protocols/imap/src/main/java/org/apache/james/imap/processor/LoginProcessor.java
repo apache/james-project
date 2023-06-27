@@ -32,6 +32,8 @@ import org.apache.james.imap.message.request.LoginRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -40,6 +42,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implements CapabilityImplementingProcessor {
     private static final List<Capability> LOGINDISABLED_CAPS = ImmutableList.of(Capability.of("LOGINDISABLED"));
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoginProcessor.class);
 
     @Inject
     public LoginProcessor(MailboxManager mailboxManager, StatusResponseFactory factory, MetricFactory metricFactory) {
@@ -50,6 +53,7 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
     protected void processRequest(LoginRequest request, ImapSession session, Responder responder) {
         // check if the login is allowed with LOGIN command. See IMAP-304
         if (session.isPlainAuthDisallowed()) {
+            LOGGER.warn("Login attempt over clear channel rejected");
             no(request, responder, HumanReadableText.DISABLED_LOGIN);
         } else {
             doAuth(noDelegation(request.getUserid(), request.getPassword()),
