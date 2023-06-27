@@ -33,7 +33,7 @@ under the License.
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <plainAuthDisallowed>false</plainAuthDisallowed>
         <gracefulShutdown>false</gracefulShutdown>
+        <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
+        <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
     </imapserver>
-    <imapPackages>org.apache.james.modules.protocols.DefaultImapPackage</imapPackages>
-    <imapPackages>org.apache.james.examples.imap.PingImapPackages</imapPackages>
 </imapservers>

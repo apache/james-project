@@ -126,4 +126,11 @@ public class ImapParserFactory implements ImapCommandParserFactory {
     public ImapCommandParser getParser(String commandName) {
         return imapCommands.get(commandName.toUpperCase(Locale.US));
     }
+
+    public ImapParserFactory union(ImapParserFactory other) {
+        return new ImapParserFactory(ImmutableMap.<String, ImapCommandParser>builder()
+            .putAll(this.imapCommands)
+            .putAll(other.imapCommands)
+            .build());
+    }
 }
