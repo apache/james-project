@@ -56,6 +56,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class UserMailboxesService {
+    public enum Options {
+        Force,
+        Check
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesService.class);
 
     private final MailboxManager mailboxManager;
@@ -67,8 +72,8 @@ public class UserMailboxesService {
         this.usersRepository = usersRepository;
     }
 
-    public void createMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
-        usernamePreconditions(username);
+    public void createMailbox(Username username, MailboxName mailboxName, Options options) throws MailboxException, UsersRepositoryException {
+        usernamePreconditions(username, options);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
             MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
@@ -80,8 +85,8 @@ public class UserMailboxesService {
         }
     }
 
-    public void deleteMailboxes(Username username) throws UsersRepositoryException {
-        usernamePreconditions(username);
+    public void deleteMailboxes(Username username, Options options) throws UsersRepositoryException {
+        usernamePreconditions(username, options);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         listUserMailboxes(mailboxSession)
             .map(MailboxMetaData::getPath)
@@ -89,8 +94,8 @@ public class UserMailboxesService {
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 
-    public List<MailboxResponse> listMailboxes(Username username) throws UsersRepositoryException {
-        usernamePreconditions(username);
+    public List<MailboxResponse> listMailboxes(Username username, Options options) throws UsersRepositoryException {
+        usernamePreconditions(username, options);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
             return listUserMailboxes(mailboxSession)
@@ -101,8 +106,8 @@ public class UserMailboxesService {
         }
     }
 
-    public boolean testMailboxExists(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
-        usernamePreconditions(username);
+    public boolean testMailboxExists(Username username, MailboxName mailboxName, Options options) throws MailboxException, UsersRepositoryException {
+        usernamePreconditions(username, options);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
             .assertAcceptable(mailboxSession.getPathDelimiter());
@@ -142,8 +147,8 @@ public class UserMailboxesService {
             });
     }
 
-    public void deleteMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {
-        usernamePreconditions(username);
+    public void deleteMailbox(Username username, MailboxName mailboxName, Options options) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {
+        usernamePreconditions(username, options);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString())
             .assertAcceptable(mailboxSession.getPathDelimiter());
@@ -152,8 +157,8 @@ public class UserMailboxesService {
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 
-    public long messageCount(Username username, MailboxName mailboxName) throws UsersRepositoryException, MailboxException {
-        usernamePreconditions(username);
+    public long messageCount(Username username, MailboxName mailboxName, Options options) throws UsersRepositoryException, MailboxException {
+        usernamePreconditions(username, options);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
             return mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession).getMessageCount(mailboxSession);
@@ -162,8 +167,8 @@ public class UserMailboxesService {
         }
     }
 
-    public long unseenMessageCount(Username username, MailboxName mailboxName) throws UsersRepositoryException, MailboxException {
-        usernamePreconditions(username);
+    public long unseenMessageCount(Username username, MailboxName mailboxName, Options options) throws UsersRepositoryException, MailboxException {
+        usernamePreconditions(username, options);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
             return mailboxManager.getMailbox(MailboxPath.forUser(username, mailboxName.asString()), mailboxSession)
@@ -188,8 +193,8 @@ public class UserMailboxesService {
         }
     }
 
-    public void usernamePreconditions(Username username) throws UsersRepositoryException {
-        Preconditions.checkState(usersRepository.contains(username), "User does not exist");
+    public void usernamePreconditions(Username username, Options options) throws UsersRepositoryException {
+        Preconditions.checkState(options == Options.Force || usersRepository.contains(username), "User does not exist");
     }
 
     public void mailboxExistPreconditions(Username username, MailboxName mailboxName) throws MailboxException {
