@@ -1272,7 +1272,8 @@ by an admin to ensure Cassandra message consistency.
  - [Recomputing User JMAP fast message view projection](#Recomputing_User_JMAP_fast_message_view_projection)
  - [Counting emails](#Counting_emails)
  - [Counting unseen emails](#Couting_unseen_emails)
- - [Clearing mailbox content][#Clearing_mailbox_content]   
+ - [Clearing mailbox content][#Clearing_mailbox_content]
+
 ### Creating a mailbox
 
 ```
@@ -1286,7 +1287,7 @@ Response codes:
 
  - 204: The mailbox now exists on the server
  - 400: Invalid mailbox name
- - 404: The user name does not exist
+ - 404: The user name does not exist. Note that this check can be bypassed by specifying the `force` query parameter.
 
  To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is:
 
@@ -1307,7 +1308,7 @@ Response codes:
 
  - 204: The mailbox now does not exist on the server
  - 400: Invalid mailbox name
- - 404: The user name does not exist
+ - 404: The user name does not exist. Note that this check can be bypassed by specifying the `force` query parameter.
 
 ### Testing existence of a mailbox
 
@@ -1341,7 +1342,7 @@ Resource name `usernameToBeUsed` should be an existing user
 Response codes:
 
  - 200: The mailboxes list was successfully retrieved
- - 404: The user name does not exist
+ - 404: The user name does not exist. Note that this check can be bypassed by specifying the `force` query parameter.
 
 ### Deleting user mailboxes
 
@@ -1354,7 +1355,7 @@ Resource name `usernameToBeUsed` should be an existing user
 Response codes:
 
  - 204: The user do not have mailboxes anymore
- - 404: The user name does not exist
+ - 404: The user name does not exist. Note that this check can be bypassed by specifying the `force` query parameter.
 
 ### Exporting user mailboxes
 

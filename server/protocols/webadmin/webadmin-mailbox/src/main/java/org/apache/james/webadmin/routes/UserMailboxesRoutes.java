@@ -73,6 +73,13 @@ public class UserMailboxesRoutes implements Routes {
         return Username.of(request.params(USER_NAME));
     }
 
+    private static UserMailboxesService.Options getOptions(Request request) {
+        if (request.queryParams().contains("force")) {
+            return UserMailboxesService.Options.Force;
+        }
+        return UserMailboxesService.Options.Check;
+    }
+
     public static final String MAILBOX_NAME = ":mailboxName";
     public static final String MAILBOXES = "mailboxes";
     private static final String USER_NAME = ":userName";
@@ -134,7 +141,7 @@ public class UserMailboxesRoutes implements Routes {
         service.get(USER_MAILBOXES_BASE, (request, response) -> {
             response.status(HttpStatus.OK_200);
             try {
-                return userMailboxesService.listMailboxes(getUsernameParam(request));
+                return userMailboxesService.listMailboxes(getUsernameParam(request), getOptions(request));
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailboxes", e);
                 throw ErrorResponder.builder()
@@ -157,7 +164,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineDeleteUserMailbox() {
         service.delete(SPECIFIC_MAILBOX, (request, response) -> {
             try {
-                userMailboxesService.deleteMailbox(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
+                userMailboxesService.deleteMailbox(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)), getOptions(request));
                 return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailbox", e);
@@ -190,7 +197,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineDeleteUserMailboxes() {
         service.delete(USER_MAILBOXES_BASE, (request, response) -> {
             try {
-                userMailboxesService.deleteMailboxes(getUsernameParam(request));
+                userMailboxesService.deleteMailboxes(getUsernameParam(request), getOptions(request));
                 return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailboxes", e);
@@ -207,7 +214,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineMailboxExists() {
         service.get(SPECIFIC_MAILBOX, (request, response) -> {
             try {
-                if (userMailboxesService.testMailboxExists(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)))) {
+                if (userMailboxesService.testMailboxExists(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)), getOptions(request))) {
                     return Responses.returnNoContent(response);
                 } else {
                     throw ErrorResponder.builder()
@@ -239,7 +246,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineCreateUserMailbox() {
         service.put(SPECIFIC_MAILBOX, (request, response) -> {
             try {
-                userMailboxesService.createMailbox(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
+                userMailboxesService.createMailbox(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)), getOptions(request));
                 return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid put on user mailbox", e);
@@ -264,7 +271,7 @@ public class UserMailboxesRoutes implements Routes {
     public void messageCount() {
         service.get(MESSAGE_COUNT_PATH, (request, response) -> {
             try {
-                return userMailboxesService.messageCount(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
+                return userMailboxesService.messageCount(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)), getOptions(request));
             } catch (IllegalStateException | MailboxNotFoundException e) {
                 LOGGER.info("Invalid get on user mailbox", e);
                 throw ErrorResponder.builder()
@@ -288,7 +295,7 @@ public class UserMailboxesRoutes implements Routes {
     public void unseenMessageCount() {
         service.get(UNSEEN_MESSAGE_COUNT_PATH, (request, response) -> {
             try {
-                return userMailboxesService.unseenMessageCount(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
+                return userMailboxesService.unseenMessageCount(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)), getOptions(request));
             } catch (IllegalStateException | MailboxNotFoundException e) {
                 LOGGER.info("Invalid get on user mailbox", e);
                 throw ErrorResponder.builder()
@@ -313,7 +320,7 @@ public class UserMailboxesRoutes implements Routes {
         Username username = getUsernameParam(request);
         MailboxName mailboxName = new MailboxName(request.params(MAILBOX_NAME));
         try {
-            userMailboxesService.usernamePreconditions(username);
+            userMailboxesService.usernamePreconditions(username, getOptions(request));
             userMailboxesService.mailboxExistPreconditions(username, mailboxName);
         } catch (IllegalStateException e) {
             LOGGER.info("Invalid put on user mailbox", e);
