@@ -454,6 +454,9 @@ public interface RabbitMQManagementAPI {
     @RequestLine(value = "DELETE /api/queues/{vhost}/{name}", decodeSlash = false)
     void deleteQueue(@Param("vhost") String vhost, @Param("name") String name);
 
+    @RequestLine(value = "DELETE /api/queues/{vhost}/{name}/contents", decodeSlash = false)
+    void purgeQueue(@Param("vhost") String vhost, @Param("name") String name);
+
     @RequestLine(value = "GET /api/exchanges/{vhost}/{name}/bindings/source", decodeSlash = false)
     List<BindingSource> listBindings(@Param("vhost") String vhost, @Param("name") String name);
 
