@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.imap.ImapSuite;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
@@ -35,12 +35,12 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
+import com.github.fge.lambdas.functions.ThrowingFunction;
+
 public class IMAPServerFactory extends AbstractServerFactory {
 
     protected final FileSystem fileSystem;
-    protected final Provider<ImapDecoder> decoder;
-    protected final Provider<ImapEncoder> encoder;
-    protected final Provider<ImapProcessor> processor;
+    protected final ThrowingFunction<HierarchicalConfiguration<ImmutableNode>, ImapSuite> imapSuiteProvider;
     protected final ImapMetrics imapMetrics;
     protected final GaugeRegistry gaugeRegistry;
 
@@ -49,25 +49,22 @@ public class IMAPServerFactory extends AbstractServerFactory {
     public IMAPServerFactory(FileSystem fileSystem, ImapDecoder decoder, ImapEncoder encoder, ImapProcessor processor,
                              MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         this.fileSystem = fileSystem;
-        this.decoder = () -> decoder;
-        this.encoder = () -> encoder;
-        this.processor = () -> processor;
+        this.imapSuiteProvider = any -> new ImapSuite(decoder, encoder, processor);
         this.imapMetrics = new ImapMetrics(metricFactory);
         this.gaugeRegistry = gaugeRegistry;
     }
 
-    public IMAPServerFactory(FileSystem fileSystem, Provider<ImapDecoder> decoder, Provider<ImapEncoder> encoder, Provider<ImapProcessor> processor,
+    public IMAPServerFactory(FileSystem fileSystem, ThrowingFunction<HierarchicalConfiguration<ImmutableNode>, ImapSuite> imapSuiteProvider,
                              MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         this.fileSystem = fileSystem;
-        this.decoder = decoder;
-        this.encoder = encoder;
-        this.processor = processor;
+        this.imapSuiteProvider = imapSuiteProvider;
         this.imapMetrics = new ImapMetrics(metricFactory);
         this.gaugeRegistry = gaugeRegistry;
     }
 
-    protected IMAPServer createServer() {
-       return new IMAPServer(decoder.get(), encoder.get(), processor.get(), imapMetrics, gaugeRegistry);
+    protected IMAPServer createServer(HierarchicalConfiguration<ImmutableNode> config) {
+        ImapSuite imapSuite = imapSuiteProvider.apply(config);
+        return new IMAPServer(imapSuite.getDecoder(), imapSuite.getEncoder(), imapSuite.getProcessor(), imapMetrics, gaugeRegistry);
     }
     
     @Override
@@ -76,7 +73,7 @@ public class IMAPServerFactory extends AbstractServerFactory {
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("imapserver");
         
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
-            IMAPServer server = createServer();
+            IMAPServer server = createServer(serverConfig);
             server.setFileSystem(fileSystem);
             server.configure(serverConfig);
             servers.add(server);
