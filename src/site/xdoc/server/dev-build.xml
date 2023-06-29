@@ -165,6 +165,20 @@
                     </code>
                 </li>
             </ul>
+
+            <p>To import Java layout, you can go to <strong>Settings > Editor > Code Style > Java</strong>. Then click to `Imports` tab, and
+            edit layout rule in `Import layout` section.</p>
+            <img src="./images/intellij-idea/intellij-import-layout-java.png"/>
+            <p>To import Scala layout, you can go to <strong>Settings > Editor > Code Style > Scala</strong>. Then click to `Imports` tab, and
+                edit layout rule in `Import layout` section.</p>
+            <img src="./images/intellij-idea/intellij-import-layout-scala.png"/>
+            <p>To use CheckStyle plugin, you can go to <strong>Settings > Tools > Checkstyle</strong>. Then click "+" button on Configuration File
+            section. The new window will be opened, and you need to input Description and file path to "checkstyle.xml"</p>
+            <img src="./images/intellij-idea/intellij-checkstyle-setting.png"/>
+            <p>After declaring the CheckStyle rule, you can scan the source code to verify whether the current import layout is correct or not
+                by opening the CheckStyle plugin, and select James rule, then clicking on <strong>Check Current File</strong> or <strong>Check Module</strong>
+                or <strong>Check Project</strong></p>
+            <img src="./images/intellij-idea/intellij-checkstyle-scan.png"/>
         </subsection>
     </section>
 
