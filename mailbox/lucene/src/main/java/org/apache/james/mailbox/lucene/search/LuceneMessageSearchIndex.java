@@ -74,6 +74,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Header;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
@@ -81,6 +82,7 @@ import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.dom.datetime.DateTime;
 import org.apache.james.mime4j.dom.field.DateTimeField;
+import org.apache.james.mime4j.field.LenientFieldParser;
 import org.apache.james.mime4j.field.address.AddressFormatter;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
@@ -607,7 +609,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         doc.add(new NumericField(SIZE_FIELD,Store.YES, true).setLongValue(membership.getFullContentOctets()));
 
         // content handler which will index the headers and the body of the message
-        SimpleContentHandler handler = new SimpleContentHandler() {
+        SimpleContentHandler handler = new SimpleContentHandler(LenientFieldParser.getParser(), DecodeMonitor.SILENT) {
             
 
             @Override
@@ -636,7 +638,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                             sentDate = cal.getTime();
 
                         } catch (org.apache.james.mime4j.field.datetime.parser.ParseException e) {
-                            LOGGER.debug("Unable to parse Date header for proper indexing", e);
+                            LOGGER.debug("Unable to parse Date header for proper indexing: '" + f.getBody() + "', falling back to already parsed: " + ((DateTimeField) f).getDate(), e);
                             // This should never happen anyway fallback to the already parsed field
                             sentDate = ((DateTimeField) f).getDate();
                         }
