@@ -22,6 +22,8 @@ import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 
+import reactor.util.annotation.NonNull;
+
 /**
  * <p>Values a namespaced property.</p>
  * <p>
@@ -51,11 +53,11 @@ public class Property {
      * @param localName not null
      * @param value not null
      */
-    public Property(String namespace, String localName, String value) {
+    public Property(@NonNull String namespace, @NonNull String localName, @NonNull String value) {
         super();
-        this.namespace = namespace;
-        this.localName = localName;
-        this.value = value;
+        this.namespace = Objects.requireNonNull(namespace);
+        this.localName = Objects.requireNonNull(localName);
+        this.value = Objects.requireNonNull(value);
     }
 
     public Property(Property property) {

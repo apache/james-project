@@ -111,7 +111,9 @@ public class PropertyBuilder {
         properties.removeIf(property -> property.isNamed(namespace, localName));
         if (values != null) {
             for (String value:values) {
-                properties.add(new Property(namespace, localName, value));
+                if (value != null) {
+                    properties.add(new Property(namespace, localName, value));
+                }
             }
         }
     }
@@ -126,7 +128,9 @@ public class PropertyBuilder {
     private void setProperties(String namespace, Map<String,String> valuesByLocalName) {
         properties.removeIf(property -> property.isInSpace(namespace));
         for (Map.Entry<String, String> valueByLocalName:valuesByLocalName.entrySet()) {
-            properties.add(new Property(namespace, valueByLocalName.getKey().toLowerCase(Locale.US), valueByLocalName.getValue()));
+            if (valueByLocalName.getValue() != null) {
+                properties.add(new Property(namespace, valueByLocalName.getKey().toLowerCase(Locale.US), valueByLocalName.getValue()));
+            }
         }
     }
     
