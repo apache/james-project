@@ -85,7 +85,11 @@ public class TestingSession implements CqlSession {
     }
 
     public StatementRecorder recordStatements() {
-        StatementRecorder statementRecorder = new StatementRecorder();
+        return recordStatements(StatementRecorder.Selector.ALL);
+    }
+
+    public StatementRecorder recordStatements(StatementRecorder.Selector selector) {
+        StatementRecorder statementRecorder = new StatementRecorder(selector);
         this.statementRecorder = Optional.of(statementRecorder);
         return statementRecorder;
     }
