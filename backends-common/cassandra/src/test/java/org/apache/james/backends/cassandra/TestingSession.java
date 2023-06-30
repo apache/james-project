@@ -69,8 +69,20 @@ public class TestingSession implements Session {
         this.scenario = Scenario.combine(hooks);
     }
 
-    public void recordStatements(StatementRecorder statementRecorder) {
+    public StatementRecorder recordStatements(StatementRecorder statementRecorder) {
         this.statementRecorder = Optional.of(statementRecorder);
+        return statementRecorder;
+    }
+
+
+    public StatementRecorder recordStatements() {
+        return recordStatements(StatementRecorder.Selector.ALL);
+    }
+
+    public StatementRecorder recordStatements(StatementRecorder.Selector selector) {
+        StatementRecorder statementRecorder = new StatementRecorder(selector);
+        this.statementRecorder = Optional.of(statementRecorder);
+        return statementRecorder;
     }
 
     public void stopRecordingStatements() {
