@@ -52,14 +52,18 @@ public class StatementRecorder {
         List<Statement> select(List<Statement> statements);
     }
 
+    private final StatementRecorder.Selector selector;
     private final ConcurrentLinkedDeque statements;
 
-    public StatementRecorder() {
+    StatementRecorder(Selector selector) {
+        this.selector = selector;
         statements = new ConcurrentLinkedDeque();
     }
 
     void recordStatement(Statement statement) {
-        statements.add(statement);
+        if (statements.addAll(selector.select(ImmutableList.of(statement)))) {
+            System.out.println("recordStatement");
+        }
     }
 
     public List<Statement> listExecutedStatements() {
