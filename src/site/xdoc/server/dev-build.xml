@@ -101,17 +101,16 @@
 
     <section name="Build James from IntelliJ IDEA">
 
-        <p>This section has been created using IntelliJ IDEA 2019.2.1 and Maven 3. And downloading the master version of the server
-            from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
+        <p>This section has been created using IntelliJ IDEA 2023.1.3 and Maven 3. And downloading the master version of the server
+            from <code>https://github.com/apache/james-project.git</code>.
         </p>
 
         <subsection name="Getting the sources from the repository">
             <p>To download the source code, you can use the Git support that comes with IntelliJ IDEA following the next steps:</p>
 
-            <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Git</strong>.</p>
-            <img src="./images/intellij-idea/intellij-new-project.png"/>
-            <p>In the pop-up window, fill the <strong>URL</strong> part to <i>http://git-wip-us.apache.org/repos/asf/james-project.git</i>.</p>
-            <img src="./images/intellij-idea/intellij-git-repo.png"/>            <br/>
+            <p>First, in the Welcome page, click on <strong>Get from VCS</strong> and select <strong>Git</strong>.</p>
+            <p>In the pop-up window, fill the <strong>URL</strong> part to <i>https://github.com/apache/james-project.git</i>.</p>
+            <img src="./images/intellij-idea/intellij-new-project.png"/>            <br/>
 
             <p>When this process is done, the project should look like this. <br/></p>
             <img src="./images/intellij-idea/intellij-james-project.png"/>
@@ -130,7 +129,7 @@
             <p>We suggest you install these plugins for a better developing Apache James process:
                 <ul>
                     <li><a href="https://plugins.jetbrains.com/plugin/1347-scala">Scala</a>: Some parts of the project are written in Scala.</li>
-                    <li><a href="https://plugins.jetbrains.com/plugin/1065-checkstyle-idea">CheckStyle-IDEA</a>: Better engage the project' check style constraints.</li>
+                    <li><a href="https://plugins.jetbrains.com/plugin/1065-checkstyle-idea">CheckStyle-IDEA</a>: Better engage the project' check style constraints. (the `checkstyle.xml` file is already in root directory)</li>
                     <li><a href="https://plugins.jetbrains.com/plugin/7391-asciidoc">AsciiDoc</a>: Better manage our Antora documentations.</li>
                 </ul>
             </p>
@@ -166,6 +165,20 @@
                     </code>
                 </li>
             </ul>
+
+            <p>To import Java layout, you can go to <strong>Settings > Editor > Code Style > Java</strong>. Then click to `Imports` tab, and
+            edit layout rule in `Import layout` section.</p>
+            <img src="./images/intellij-idea/intellij-import-layout-java.png"/>
+            <p>To import Scala layout, you can go to <strong>Settings > Editor > Code Style > Scala</strong>. Then click to `Imports` tab, and
+                edit layout rule in `Import layout` section.</p>
+            <img src="./images/intellij-idea/intellij-import-layout-scala.png"/>
+            <p>To use CheckStyle plugin, you can go to <strong>Settings > Tools > Checkstyle</strong>. Then click "+" button on Configuration File
+            section. The new window will be opened, and you need to input Description and file path to "checkstyle.xml"</p>
+            <img src="./images/intellij-idea/intellij-checkstyle-setting.png"/>
+            <p>After declaring the CheckStyle rule, you can scan the source code to verify whether the current import layout is correct or not
+                by opening the CheckStyle plugin, and select James rule, then clicking on <strong>Check Current File</strong> or <strong>Check Module</strong>
+                or <strong>Check Project</strong></p>
+            <img src="./images/intellij-idea/intellij-checkstyle-scan.png"/>
         </subsection>
     </section>
 
