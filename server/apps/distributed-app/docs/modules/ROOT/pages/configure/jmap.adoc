@@ -92,6 +92,8 @@ then `capabilities."urn:ietf:params:jmap:websocket".url` in response will be "ws
 for JMAP filters. This projection optimizes reads, but needs to be correctly populated. Turning it on on
 systems with filters already defined would result in those filters to be not read.
 
+| delay.sends.enabled
+| Optional boolean. Defaults to false. Whether to support or not the delay send with JMAP protocol.
 |===
 
 == Wire tapping
