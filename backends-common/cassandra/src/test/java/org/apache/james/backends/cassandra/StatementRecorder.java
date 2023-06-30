@@ -61,9 +61,7 @@ public class StatementRecorder {
     }
 
     void recordStatement(Statement statement) {
-        if (statements.addAll(selector.select(ImmutableList.of(statement)))) {
-            System.out.println("recordStatement");
-        }
+        statements.addAll(selector.select(ImmutableList.of(statement)));
     }
 
     public List<Statement> listExecutedStatements() {
