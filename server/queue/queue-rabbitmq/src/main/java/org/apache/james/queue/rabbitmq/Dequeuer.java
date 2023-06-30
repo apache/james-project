@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
@@ -142,12 +143,15 @@ class Dequeuer {
                     dequeueMetric.increment();
                     response.ack();
                     Mono.from(mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId(), mailWithEnqueueId.getBlobIds()))).block();
+                    LifecycleUtil.dispose(mailWithEnqueueId.getMail());
                     break;
                 case RETRY:
                     response.nack(REQUEUE);
+                    LifecycleUtil.dispose(mailWithEnqueueId.getMail());
                     break;
                 case REJECT:
                     response.nack(!REQUEUE);
+                    LifecycleUtil.dispose(mailWithEnqueueId.getMail());
                     break;
             }
         };
