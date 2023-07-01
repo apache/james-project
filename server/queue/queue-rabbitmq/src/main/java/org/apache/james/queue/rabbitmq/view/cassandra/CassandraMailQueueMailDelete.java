@@ -93,7 +93,7 @@ public class CassandraMailQueueMailDelete {
     }
 
     private Mono<Instant> findNewBrowseStart(MailQueueName mailQueueName) {
-        Instant now= clock.instant();
+        Instant now = clock.instant();
         return browseStartDao.findBrowseStart(mailQueueName)
             .filter(browseStart -> browseStart.isBefore(now.minus(configuration.getSliceWindow())))
             .flatMap(browseStart -> cassandraMailQueueBrowser.browseReferences(mailQueueName, browseStart)
