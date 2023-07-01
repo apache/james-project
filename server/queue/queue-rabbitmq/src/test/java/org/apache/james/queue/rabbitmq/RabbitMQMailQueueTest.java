@@ -208,7 +208,7 @@ class RabbitMQMailQueueTest {
 
             StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE browsestart");
             StatementRecorder statementRecorder = cassandraCluster.getConf()
-                    .recordStatements(selector);
+                .recordStatements(selector);
 
             clock.setInstant(IN_SLICE_1);
             enqueueSomeMails(namePatternForSlice(1), emailCount);
@@ -707,8 +707,8 @@ class RabbitMQMailQueueTest {
             IntStream.rangeClosed(1, emailCount)
                 .forEach(Throwing.intConsumer(i -> {
                     FakeMail mail = defaultMail()
-                            .name(namePattern.apply(i))
-                            .build();
+                        .name(namePattern.apply(i))
+                        .build();
                     enQueue(mail);
                     LifecycleUtil.dispose(mail);
                 }));
@@ -732,8 +732,8 @@ class RabbitMQMailQueueTest {
 
             try {
                 await()
-                        .atMost(Duration.ofMinutes(10))
-                        .untilAsserted(() -> assertThat(counter.get()).isGreaterThanOrEqualTo(times));
+                    .atMost(Duration.ofMinutes(10))
+                    .untilAsserted(() -> assertThat(counter.get()).isGreaterThanOrEqualTo(times));
             } finally {
                 disposable.dispose();
             }
