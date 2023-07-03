@@ -20,7 +20,6 @@
 package org.apache.james.jmap.mail
 
 import org.apache.james.jmap.api.change.Limit
-import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 

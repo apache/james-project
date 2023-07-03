@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.core.{CanCalculateChanges, QueryState}
-import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryRequest, MailboxQueryResponse, MailboxQueryChangesRequest}
+import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryChangesRequest, MailboxQueryRequest, MailboxQueryResponse}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._
