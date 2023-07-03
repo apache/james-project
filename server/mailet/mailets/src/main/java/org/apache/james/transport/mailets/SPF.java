@@ -67,6 +67,7 @@ public class SPF extends GenericMailet {
 
     private boolean debug = false;
     private boolean addHeader = false;
+    private boolean ignoreLocalIps = false;
     private org.apache.james.jspf.impl.SPF spf;
     public static final AttributeName EXPLANATION_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.explanation");
     public static final AttributeName RESULT_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.result");
@@ -91,6 +92,7 @@ public class SPF extends GenericMailet {
     public void init() {
         debug = Boolean.parseBoolean(getInitParameter("debug", "false"));
         addHeader = Boolean.parseBoolean(getInitParameter("addHeader", "false"));
+        addHeader = Boolean.parseBoolean(getInitParameter("checkLocalIps", "false"));
 
         if (spfDnsService == null) {
             spf = new DefaultSPF();
@@ -111,7 +113,7 @@ public class SPF extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         String remoteAddr = mail.getRemoteAddr();
 
-        if (netMatcher.matchInetNetwork(remoteAddr)) {
+        if (ignoreLocalIps || netMatcher.matchInetNetwork(remoteAddr)) {
             LOGGER.debug("ignore SPF check for ip:{}", remoteAddr);
         } else {
             String helo = AttributeUtils.getValueAndCastFromMail(mail, Mail.SMTP_HELO, String.class).orElse(mail.getRemoteHost());
