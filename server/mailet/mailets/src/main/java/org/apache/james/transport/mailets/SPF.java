@@ -75,7 +75,7 @@ public class SPF extends GenericMailet {
 
     private boolean debug = false;
     private boolean addHeader = false;
-    private boolean ignoreLocalIps = false;
+    private boolean ignoreLocalIps = true;
     private org.apache.james.jspf.impl.SPF spf;
     public static final AttributeName EXPLANATION_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.explanation");
     public static final AttributeName RESULT_ATTRIBUTE = AttributeName.of("org.apache.james.transport.mailets.spf.result");
@@ -100,7 +100,7 @@ public class SPF extends GenericMailet {
     public void init() {
         debug = Boolean.parseBoolean(getInitParameter("debug", "false"));
         addHeader = Boolean.parseBoolean(getInitParameter("addHeader", "false"));
-        addHeader = Boolean.parseBoolean(getInitParameter("checkLocalIps", "false"));
+        ignoreLocalIps = Boolean.parseBoolean(getInitParameter("ignoreLocalIps", "true"));
 
         if (spfDnsService == null) {
             createSPF(new DNSServiceXBillImpl());
@@ -118,13 +118,14 @@ public class SPF extends GenericMailet {
     }
 
     private void createSPF(org.apache.james.jspf.core.DNSService dnsProbe) {
+        // TODO use once fixed AsynchronousSPFExecutor (see JAMES-3920)
         WiringServiceTable wiringService = new WiringServiceTable();
         wiringService.put(DNSServiceEnabled.class, dnsProbe);
         MacroExpand macroExpand = new MacroExpand(dnsProbe);
         wiringService.put(MacroExpandEnabled.class, macroExpand);
         RFC4408SPF1Parser parser = new RFC4408SPF1Parser(new DefaultTermsFactory(wiringService));
         SynchronousSPFExecutor executor = new SynchronousSPFExecutor(dnsProbe);
-        spf = new org.apache.james.jspf.impl.SPF(dnsProbe, parser, macroExpand,executor );
+        spf = new org.apache.james.jspf.impl.SPF(dnsProbe, parser, macroExpand, executor);
         wiringService.put(SPFCheckEnabled.class, spf);
     }
 
@@ -132,7 +133,7 @@ public class SPF extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         String remoteAddr = mail.getRemoteAddr();
 
-        if (ignoreLocalIps || netMatcher.matchInetNetwork(remoteAddr)) {
+        if (ignoreLocalIps && netMatcher.matchInetNetwork(remoteAddr)) {
             LOGGER.debug("ignore SPF check for ip:{}", remoteAddr);
         } else {
             String helo = AttributeUtils.getValueAndCastFromMail(mail, Mail.SMTP_HELO, String.class).orElse(mail.getRemoteHost());
