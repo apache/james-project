@@ -20,7 +20,7 @@ You can alternatively use a docker container to build the website :
 
 You need to build the homepage by:
 
-    $ docker build -t james/homepage src/homepage
+    $ docker build -t james/homepage src/homepage-docker
     $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
 
 In order to test the homepage, you can use this command:
@@ -31,7 +31,7 @@ the site will be available at http://localhost:4000/
 
 Then you build the other pages by:
 
-    $ docker build -t james/site src/site
+    $ docker build -t james/site src/site-docker
     $ docker run -v $PWD/.m2:/root/.m2 -v $PWD:/origin -v $PWD/site:/destination james/site master
 
 If you need to update the current site, checkout the branch asf-site from Apache git:
