@@ -20,7 +20,7 @@
 package org.apache.james.jmap.json
 
 import org.apache.james.jmap.core.{CanCalculateChanges, QueryState}
-import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryRequest, MailboxQueryResponse, QueryChangesRequest}
+import org.apache.james.jmap.mail.{MailboxFilter, MailboxQueryRequest, MailboxQueryResponse, MailboxQueryChangesRequest}
 import org.apache.james.mailbox.Role
 import org.apache.james.mailbox.model.MailboxId
 import play.api.libs.json._
@@ -52,12 +52,12 @@ object MailboxQuerySerializer {
 
   private implicit val emailQueryRequestReads: Reads[MailboxQueryRequest] = Json.reads[MailboxQueryRequest]
   private implicit val queryStateWrites: Writes[QueryState] = Json.valueWrites[QueryState]
-  private implicit val queryChangesReads: Reads[QueryChangesRequest] = Json.reads[QueryChangesRequest]
+  private implicit val mailboxQueryChangesReads: Reads[MailboxQueryChangesRequest] = Json.reads[MailboxQueryChangesRequest]
 
   private implicit val mailboxQueryResponseWrites: OWrites[MailboxQueryResponse] = Json.writes[MailboxQueryResponse]
 
   def serialize(mailboxQueryResponse: MailboxQueryResponse): JsObject = Json.toJsObject(mailboxQueryResponse)
 
   def deserialize(input: JsValue): JsResult[MailboxQueryRequest] = Json.fromJson[MailboxQueryRequest](input)
-  def deserializeQueryChanges(input: JsValue): JsResult[QueryChangesRequest] = Json.fromJson[QueryChangesRequest](input)
+  def deserializeMailboxQueryChanges(input: JsValue): JsResult[MailboxQueryChangesRequest] = Json.fromJson[MailboxQueryChangesRequest](input)
 }

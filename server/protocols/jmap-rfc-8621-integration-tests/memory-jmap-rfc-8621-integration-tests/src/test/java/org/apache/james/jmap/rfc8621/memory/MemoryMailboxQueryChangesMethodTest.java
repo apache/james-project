@@ -17,30 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.mail
+package org.apache.james.jmap.rfc8621.memory;
 
-import org.apache.james.jmap.api.change.Limit
-import org.apache.james.jmap.core.Id.Id
-import org.apache.james.jmap.core.{AccountId, UuidState}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.rfc8621.contract.MailboxQueryChangesContract;
 
-case class QueryChangesRequest(accountId: AccountId,
-                               sinceQueryState: UuidState,
-                               maxChanges: Option[Limit],
-                               upToId: AccountId,
-                               calculateTotal: Boolean) extends WithAccountId
-
-case class QueryChangesResponse(accountId: AccountId,
-                                oldQueryState: UuidState,
-                                newQueryState: UuidState,
-                                total: Limit,
-                                removed: List[AccountId],
-                                added: List[AddedItem])
-
-case class Filter(operator: String,
-                  conditions: List[Condition])
-
-case class Condition(hasKeyword: String)
-
-case class AddedItem(id: AccountId,
-                     index: Limit)
+public class MemoryMailboxQueryChangesMethodTest extends MemoryBase implements MailboxQueryChangesContract {
+}

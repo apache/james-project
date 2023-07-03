@@ -20,11 +20,11 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
-import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION}
+import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.{ErrorCode, Invocation, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.{IdentitySerializer, MailboxQuerySerializer}
-import org.apache.james.jmap.mail.{HasMoreChanges, IdentityChangesRequest, IdentityChangesResponse, QueryChangesRequest}
+import org.apache.james.jmap.mail.{HasMoreChanges, IdentityChangesRequest, IdentityChangesResponse, MailboxQueryChangesRequest}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
@@ -33,19 +33,19 @@ import reactor.core.scala.publisher.SMono
 
 import javax.inject.Inject
 
-class QueryChangesMethod @Inject()(val metricFactory: MetricFactory,
-                                   val sessionSupplier: SessionSupplier,
-                                   val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[QueryChangesRequest] {
-  override val methodName: MethodName = MethodName("queryChanges")
-  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(EMAIL_SUBMISSION)
+class MailboxQueryChangesMethod @Inject()(val metricFactory: MetricFactory,
+                                          val sessionSupplier: SessionSupplier,
+                                          val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxQueryChangesRequest] {
+  override val methodName: MethodName = MethodName("Mailbox/queryChanges")
+  override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_MAIL)
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext,
-                         mailboxSession: MailboxSession, request: QueryChangesRequest): Publisher[InvocationWithContext] =
-    SMono.just(InvocationWithContext(invocation = Invocation.error(ErrorCode.CannotCalculateChanges,
-      "Naive implementation for queryChanges",
+                         mailboxSession: MailboxSession, request: MailboxQueryChangesRequest): Publisher[InvocationWithContext] =
+    SMono.just(InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges,
+      "Naive implementation for Mailbox/queryChanges",
       invocation.invocation.methodCallId),
-      processingContext = invocation.processingContext))
+      invocation.processingContext))
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, QueryChangesRequest] =
-    MailboxQuerySerializer.deserializeQueryChanges(invocation.arguments.value).asEitherRequest
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MailboxQueryChangesRequest] =
+    MailboxQuerySerializer.deserializeMailboxQueryChanges(invocation.arguments.value).asEitherRequest
 }
