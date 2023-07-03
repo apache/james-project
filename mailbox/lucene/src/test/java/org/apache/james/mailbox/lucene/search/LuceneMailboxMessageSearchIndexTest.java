@@ -97,6 +97,7 @@ class LuceneMailboxMessageSearchIndexTest {
     MessageId id3;
     MessageId id4;
     MessageId id5;
+    private TestMessageId.Factory factory;
 
     protected boolean useLenient() {
         return true;
@@ -105,7 +106,7 @@ class LuceneMailboxMessageSearchIndexTest {
     @BeforeEach
     void setUp() throws Exception {
         session = MailboxSessionUtil.create(Username.of("username"));
-        TestMessageId.Factory factory = new TestMessageId.Factory();
+        factory = new TestMessageId.Factory();
         id1 = factory.generate();
         id2 = factory.generate();
         id3 = factory.generate();
@@ -190,6 +191,27 @@ class LuceneMailboxMessageSearchIndexTest {
         builder.mailboxId(TEST_ID_3);
         index.add(session, mailbox3, builder.build(id5)).block();
 
+    }
+
+    @Test
+    void dateHeaderParsingShouldNotImpactProcessing() throws Exception {
+        TestId mailboxId = TestId.of(2);
+
+        MessageId id = factory.generate();
+        MessageUid uid = MessageUid.of(500);
+        String subject = "Mail " + id;
+
+        MessageBuilder builder = new MessageBuilder()
+                .header("Subject", subject)
+                .header("Date", "31.3.2009")
+                .uid(uid)
+                .mailboxId(mailboxId);
+
+        index.add(session, mailbox3, builder.build(id)).block();
+
+        SearchQuery query = SearchQuery.of(SearchQuery.headerContains("Subject", subject));
+        Stream<MessageUid> result = index.search(session, mailbox3, query).toStream();
+        assertThat(result).containsExactly(uid);
     }
 
     @Test

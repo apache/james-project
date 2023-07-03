@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -79,11 +78,9 @@ import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Group;
 import org.apache.james.mime4j.dom.address.MailboxList;
-import org.apache.james.mime4j.dom.datetime.DateTime;
 import org.apache.james.mime4j.dom.field.DateTimeField;
 import org.apache.james.mime4j.field.address.AddressFormatter;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
-import org.apache.james.mime4j.field.datetime.parser.DateTimeParser;
 import org.apache.james.mime4j.message.SimpleContentHandler;
 import org.apache.james.mime4j.parser.MimeStreamParser;
 import org.apache.james.mime4j.stream.BodyDescriptor;
@@ -116,8 +113,6 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
@@ -135,7 +130,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private static final Date MAX_DATE;
     private static final Date MIN_DATE;
     public static final org.apache.james.events.Group GROUP = new LuceneMessageSearchIndexGroup();
@@ -628,22 +622,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     doc.add(new Field(PREFIX_HEADER_FIELD + headerName, headerValue, Store.NO, Index.ANALYZED));
 
                     if (f instanceof DateTimeField) {
-                        // We need to make sure we convert it to GMT
-                        try (StringReader reader = new StringReader(f.getBody())) {
-                            DateTime dateTime = new DateTimeParser(reader).parseAll();
-                            Calendar cal = getGMT();
-                            cal.set(dateTime.getYear(), dateTime.getMonth() - 1, dateTime.getDay(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond());
-                            sentDate = cal.getTime();
-
-                        } catch (org.apache.james.mime4j.field.datetime.parser.ParseException e) {
-                            LOGGER.debug("Unable to parse Date header for proper indexing", e);
-                            // This should never happen anyway fallback to the already parsed field
-                            sentDate = ((DateTimeField) f).getDate();
-                        }
-                        if (sentDate == null) {
-                            sentDate = membership.getInternalDate();
-                        }
-
+                        DateTimeField dateTimeField = (DateTimeField) f;
+                        sentDate = dateTimeField.getDate();
                     }
                     String field = null;
                     if ("To".equalsIgnoreCase(headerName)) {
