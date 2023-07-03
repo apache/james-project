@@ -38,7 +38,9 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.WithStorageDirective;
 import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.utils.DataProbeImpl;
+import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -97,6 +99,33 @@ class WithStorageDirectiveIntegrationTest {
             .awaitMessage(awaitAtMostOneMinute);
         testIMAPClient.select("target2")
             .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
+    void targetFolderNamesShouldWorkWhenTargetFolderDoNotExist(@TempDir File temporaryFolder) throws Exception {
+        setUp(temporaryFolder, MailetConfiguration.builder()
+            .matcher(SenderIsLocal.class)
+            .mailet(WithStorageDirective.class)
+            .addProperty("targetFolderNames", "target1, target2"));
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, RECIPIENT);
+
+        awaitAtMostOneMinute.until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select("target1")
+            .awaitMessage(awaitAtMostOneMinute)
+            .close();
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select("target2")
+            .awaitMessage(awaitAtMostOneMinute)
+            .close();
     }
 
     @Test

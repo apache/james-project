@@ -82,16 +82,25 @@ public class MailboxAppenderImpl implements MailboxAppender {
             return Flux.fromIterable(folders)
                 .skip(1)
                 .flatMap(Throwing.function(extraTargetFolder -> {
-                    MailboxPath targetMailboxPath = MailboxPath.forUser(session.getUser(), targetFolder);
+                    MailboxPath originMailboxPath = MailboxPath.forUser(session.getUser(), targetFolder);
                     MailboxPath destinationMailboxPath = MailboxPath.forUser(session.getUser(), useSlashAsSeparator(extraTargetFolder, session));
 
-                    return mailboxManager.copyMessagesReactive(MessageRange.one(id.getUid()),
-                        targetMailboxPath, destinationMailboxPath, session);
+                    return copyToExtraMailbox(id, originMailboxPath, destinationMailboxPath, session);
                 }))
                 .then(Mono.fromRunnable(() -> LOGGER.info("{} copied to {} extra mailboxes", id.getMessageId(), folders)))
                 .thenReturn(id);
         }
         return Mono.just(id);
+    }
+
+    private Mono<MessageRange> copyToExtraMailbox(ComposedMessageId id, MailboxPath originMailboxPath, MailboxPath destinationMailboxPath, MailboxSession session) {
+        return Mono.from(mailboxManager.mailboxExists(destinationMailboxPath, session))
+            .flatMap(exists -> {
+                if (exists) {
+                    return Mono.empty();
+                }
+                return Mono.from(mailboxManager.createMailboxReactive(destinationMailboxPath, session));
+            }).then(Mono.from(mailboxManager.copyMessagesReactive(MessageRange.one(id.getUid()), originMailboxPath, destinationMailboxPath, session)));
     }
 
     private String useSlashAsSeparator(String urlPath, MailboxSession session) throws MessagingException {
