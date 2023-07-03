@@ -101,7 +101,7 @@ class SPFIntegrationTests {
                         .addMailet(MailetConfiguration.builder()
                                 .matcher(All.class)
                                 .mailet(SPF.class)
-                                .addProperty("checkLocalIps", "true"))
+                                .addProperty("ignoreLocalIps", "false"))
                         .addMailet(MailetConfiguration.builder()
                                 .matcher(HasMailAttributeWithValue.class)
                                 .matcherCondition("org.apache.james.transport.mailets.spf.result, softfail")
