@@ -60,7 +60,7 @@ public class SPFTest {
     @BeforeAll
     public static void setupMockedSPFDNSService() throws TimeoutException {
         mockedSPFDNSService = mock(org.apache.james.jspf.core.DNSService.class);
-        when(mockedSPFDNSService.getRecordsAsync(any(DNSRequest.class)))
+        when(mockedSPFDNSService.getRecords(any(DNSRequest.class)))
             .thenAnswer(invocation -> {
                 DNSRequest req = invocation.getArgument(0);
                 switch (req.getRecordType()) {
@@ -69,26 +69,26 @@ public class SPFTest {
                         List<String> l = new ArrayList<>();
                         switch (req.getHostname()) {
                             case "some.host.local":
-                                return CompletableFuture.completedFuture(l);
+                                return l;
                             case "spf1.james.apache.org":
                                 // pass
                                 l.add("v=spf1 +all");
-                                return CompletableFuture.completedFuture(l);
+                                return l;
                             case "spf2.james.apache.org":
                                 // fail
                                 l.add("v=spf1 -all");
-                                return CompletableFuture.completedFuture(l);
+                                return l;
                             case "spf3.james.apache.org":
                                 // softfail
                                 l.add("v=spf1 ~all");
-                                return CompletableFuture.completedFuture(l);
+                                return l;
                             case "spf4.james.apache.org":
                                 // permerror
                                 l.add("v=spf1 badcontent!");
-                                return CompletableFuture.completedFuture(l);
+                                return l;
                             case "spf5.james.apache.org":
                                 // temperror
-                                return CompletableFuture.failedFuture(new TimeoutException("TIMEOUT"));
+                                 throw new TimeoutException("TIMEOUT");
                             default:
                                 throw new RuntimeException("Unknown record " + req.getHostname());
                         }
