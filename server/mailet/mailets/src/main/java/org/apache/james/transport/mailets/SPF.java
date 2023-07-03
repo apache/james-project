@@ -27,8 +27,16 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
+import org.apache.james.jspf.core.DNSServiceEnabled;
+import org.apache.james.jspf.core.MacroExpand;
+import org.apache.james.jspf.core.MacroExpandEnabled;
+import org.apache.james.jspf.core.SPFCheckEnabled;
 import org.apache.james.jspf.executor.SPFResult;
-import org.apache.james.jspf.impl.DefaultSPF;
+import org.apache.james.jspf.executor.SynchronousSPFExecutor;
+import org.apache.james.jspf.impl.DNSServiceXBillImpl;
+import org.apache.james.jspf.impl.DefaultTermsFactory;
+import org.apache.james.jspf.parser.RFC4408SPF1Parser;
+import org.apache.james.jspf.wiring.WiringServiceTable;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
@@ -95,9 +103,9 @@ public class SPF extends GenericMailet {
         addHeader = Boolean.parseBoolean(getInitParameter("checkLocalIps", "false"));
 
         if (spfDnsService == null) {
-            spf = new DefaultSPF();
+            createSPF(new DNSServiceXBillImpl());
         } else {
-            spf = new org.apache.james.jspf.impl.SPF(spfDnsService);
+            createSPF(spfDnsService);
         }
 
         Collection<String> ignoredNetworks = Splitter.on(',')
@@ -107,6 +115,17 @@ public class SPF extends GenericMailet {
         netMatcher = new NetMatcher(ignoredNetworks, dnsService);
 
         LOGGER.info("SPF addHeader={} debug={} ignoredNetworks={}", addHeader, debug, ignoredNetworks);
+    }
+
+    private void createSPF(org.apache.james.jspf.core.DNSService dnsProbe) {
+        WiringServiceTable wiringService = new WiringServiceTable();
+        wiringService.put(DNSServiceEnabled.class, dnsProbe);
+        MacroExpand macroExpand = new MacroExpand(dnsProbe);
+        wiringService.put(MacroExpandEnabled.class, macroExpand);
+        RFC4408SPF1Parser parser = new RFC4408SPF1Parser(new DefaultTermsFactory(wiringService));
+        SynchronousSPFExecutor executor = new SynchronousSPFExecutor(dnsProbe);
+        spf = new org.apache.james.jspf.impl.SPF(dnsProbe, parser, macroExpand,executor );
+        wiringService.put(SPFCheckEnabled.class, spf);
     }
 
     @Override
