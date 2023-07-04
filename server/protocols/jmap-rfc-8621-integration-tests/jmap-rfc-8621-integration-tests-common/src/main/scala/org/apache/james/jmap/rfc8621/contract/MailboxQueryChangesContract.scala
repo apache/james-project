@@ -151,9 +151,9 @@ trait MailboxQueryChangesContract {
     val response = `given`
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .when
+    .when
       .post
-      .`then`
+    .`then`
       .statusCode(SC_OK)
       .contentType(JSON)
       .extract
