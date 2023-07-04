@@ -21,7 +21,10 @@ package org.apache.james.rspamd;
 
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
+
+import java.util.UUID;
 
 public class DockerClamAV {
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("clamav/clamav");
@@ -36,8 +39,9 @@ public class DockerClamAV {
             .withEnv("CLAMAV_NO_FRESHCLAMD", "true")
             .withEnv("CLAMAV_NO_MILTERD", "true")
             .withNetwork(network)
-            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-clamav-test"))
-            .withNetworkAliases("clamav");
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-clamav-test-" + UUID.randomUUID()))
+            .withNetworkAliases("clamav")
+            .waitingFor(Wait.forHealthcheck());
     }
 
     public void start() {

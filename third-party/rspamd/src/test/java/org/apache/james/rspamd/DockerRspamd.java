@@ -19,11 +19,13 @@
 
 package org.apache.james.rspamd;
 
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.apache.james.rate.limiter.DockerRedis;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
@@ -58,8 +60,9 @@ public class DockerRspamd {
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/antivirus.conf"), "/etc/rspamd/override.d/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/actions.conf"), "/etc/rspamd/")
             .withCopyFileToContainer(MountableFile.forClasspathResource("rspamd-config/statistic.conf"), "/etc/rspamd/")
-            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-rspamd-test"))
-            .withNetwork(network);
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-rspamd-test-" + UUID.randomUUID()))
+            .withNetwork(network)
+            .waitingFor(Wait.forHealthcheck());
     }
 
     public Integer getPort() {
