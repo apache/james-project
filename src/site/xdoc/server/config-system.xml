@@ -229,6 +229,9 @@
                     Should we add the host in the MDC logging context for incoming IMAP, SMTP, POP3? Doing so, a DNS resolution
                     is attempted for each incoming connection, which can be costly. Remote IP is always added to the logging context.</dd>
 
+                <dt><strong>james.blob.id.hash.encoding</strong></dt>
+                <dd>Optional. String. Defaults to base64Url. <br/>
+                    The encoding type when encode blobId. The support value are: base16, hex, base32, base32Hex, base64, base64Url.</dd>
             </dl>
 
             </subsection>

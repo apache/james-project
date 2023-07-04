@@ -20,7 +20,7 @@
 package org.apache.james.blob.api;
 
 import java.io.IOException;
-import java.util.Base64;
+import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -29,11 +29,22 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteSource;
 
 public class HashBlobId implements BlobId {
+    private static final String HASH_BLOB_ID_ENCODING_TYPE_PROPERTY = "james.blob.id.hash.encoding";
+    private static final BaseEncoding HASH_BLOB_ID_ENCODING_DEFAULT = BaseEncoding.base64Url();
 
     public static class Factory implements BlobId.Factory {
+        private final BaseEncoding baseEncoding;
+
+        public Factory() {
+            this.baseEncoding = Optional.ofNullable(System.getProperty(HASH_BLOB_ID_ENCODING_TYPE_PROPERTY))
+                    .map(Factory::baseEncodingFrom)
+                    .orElse(HASH_BLOB_ID_ENCODING_DEFAULT);
+        }
+
         @Override
         public HashBlobId forPayload(byte[] payload) {
             Preconditions.checkArgument(payload != null);
@@ -51,13 +62,31 @@ public class HashBlobId implements BlobId {
 
         private HashBlobId base64(HashCode hashCode) {
             byte[] bytes = hashCode.asBytes();
-            return new HashBlobId(Base64.getEncoder().encodeToString(bytes));
+            return new HashBlobId(baseEncoding.encode(bytes));
         }
 
         @Override
         public HashBlobId from(String id) {
             Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
             return new HashBlobId(id);
+        }
+
+        private static BaseEncoding baseEncodingFrom(String encodingType) {
+            switch (encodingType) {
+                case "base16":
+                case "hex":
+                    return BaseEncoding.base16();
+                case "base64":
+                    return BaseEncoding.base64();
+                case "base64Url":
+                    return BaseEncoding.base64Url();
+                case "base32":
+                    return BaseEncoding.base32();
+                case "base32Hex":
+                    return BaseEncoding.base32Hex();
+                default:
+                    throw new IllegalArgumentException("Unknown encoding type: " + encodingType);
+            }
         }
     }
 
