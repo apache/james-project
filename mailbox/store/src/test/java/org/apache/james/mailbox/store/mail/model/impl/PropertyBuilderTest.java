@@ -26,10 +26,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 class PropertyBuilderTest {
     @Test
     void emptyPropertyBuilderShouldCreateEmptyProperties() {
         assertThat(new PropertyBuilder().toProperties()).isEmpty();
+    }
+
+    @Test
+    void nullValuePropertyBuilderShouldCreateEmptyProperties() {
+        List<String> listOfNulls = Arrays.asList(null, null, null);
+        Map <String,String> mapWithNullValues = Collections.singletonMap("k1", null);
+
+        PropertyBuilder builder = new PropertyBuilder();
+        builder.setContentLanguage(listOfNulls);
+        builder.setContentTypeParameters(mapWithNullValues);
+        builder.setCharset(null);
+
+        assertThat(builder.toProperties()).isEmpty();
     }
 
     @Test
