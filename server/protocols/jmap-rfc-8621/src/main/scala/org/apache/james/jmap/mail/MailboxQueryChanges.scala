@@ -28,18 +28,3 @@ case class MailboxQueryChangesRequest(accountId: AccountId,
                                       maxChanges: Option[Limit],
                                       upToId: Option[AccountId],
                                       calculateTotal: Boolean) extends WithAccountId
-
-case class MailboxQueryChangesResponse(accountId: AccountId,
-                                       oldQueryState: UuidState,
-                                       newQueryState: UuidState,
-                                       total: Limit,
-                                       removed: List[AccountId],
-                                       added: List[AddedItem])
-
-case class Filter(operator: String,
-                  conditions: List[Condition])
-
-case class Condition(hasKeyword: String)
-
-case class AddedItem(id: AccountId,
-                     index: Limit)
