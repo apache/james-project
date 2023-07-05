@@ -54,8 +54,8 @@ public class FakeMailQueueView<V extends ManageableMailQueue.MailQueueItemView> 
     }
 
     @Override
-    public long delete(DeleteCondition deleteCondition) {
-        return 0;
+    public Mono<Long> delete(DeleteCondition deleteCondition) {
+        return Mono.just(0L);
     }
 
     @Override
