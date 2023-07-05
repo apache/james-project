@@ -25,9 +25,14 @@ import javax.inject.Singleton;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConsistenciesConfiguration;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.events.EventListener;
 import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
@@ -115,8 +120,10 @@ import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 
+import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
@@ -155,7 +162,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
         bind(SessionProviderImpl.class).in(Scopes.SINGLETON);
 
-        bind(CassandraACLMapper.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxMapper.class).in(Scopes.SINGLETON);
 
         bind(CassandraId.Factory.class).in(Scopes.SINGLETON);
@@ -238,6 +244,21 @@ public class CassandraMailboxModule extends AbstractModule {
             .addBinding().to(AttachmentBlobReferenceSource.class);
         Multibinder.newSetBinder(binder(), BlobReferenceSource.class)
             .addBinding().to(MessageBlobReferenceSource.class);
+    }
+
+    @Provides
+    @Singleton
+    CassandraACLMapper aclMapper(CassandraACLMapper.StoreV1 storeV1,
+                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
+                                 CassandraACLDAOV2 cassandraACLDAOV2,
+                                 Session session,
+                                 CassandraConsistenciesConfiguration cassandraConsistenciesConfiguration,
+                                 CassandraSchemaVersionManager cassandraSchemaVersionManager) {
+        return new CassandraACLMapper(storeV1,
+            new CassandraACLMapper.StoreV2(userMailboxRightsDAO, cassandraACLDAOV2,
+                new CassandraEventStore(new EventStoreDao(session, JsonEventSerializer.forModules(ACLModule.ACL_UPDATE).withoutNestedType(),
+                    cassandraConsistenciesConfiguration))),
+            cassandraSchemaVersionManager);
     }
     
     @Singleton

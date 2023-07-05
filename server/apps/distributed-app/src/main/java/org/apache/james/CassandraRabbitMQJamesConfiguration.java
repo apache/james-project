@@ -26,6 +26,7 @@ import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
@@ -41,6 +42,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         private Optional<BlobStoreConfiguration> blobStoreConfiguration;
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
+        private Optional<MailQueueViewChoice> mailQueueViewChoice;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
 
         private Builder() {
@@ -49,6 +51,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             configurationPath = Optional.empty();
             blobStoreConfiguration = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
+            mailQueueViewChoice = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -94,6 +97,11 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder mailQueueViewChoice(MailQueueViewChoice mailQueueViewChoice) {
+            this.mailQueueViewChoice = Optional.of(mailQueueViewChoice);
+            return this;
+        }
+
         public CassandraRabbitMQJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -115,12 +123,17 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
+            MailQueueViewChoice mailQueueViewChoice = this.mailQueueViewChoice.orElseGet(Throwing.supplier(
+                () -> MailQueueViewChoice.parse(
+                    new PropertiesProvider(fileSystem, configurationPath))));
+
             return new CassandraRabbitMQJamesConfiguration(
                 configurationPath,
                 directories,
                 blobStoreConfiguration,
                 searchConfiguration,
-                usersRepositoryChoice);
+                usersRepositoryChoice,
+                mailQueueViewChoice);
         }
     }
 
@@ -133,13 +146,19 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     private final BlobStoreConfiguration blobStoreConfiguration;
     private final SearchConfiguration searchConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
+    private final MailQueueViewChoice mailQueueViewChoice;
 
-    public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueViewChoice mailQueueViewChoice) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
         this.searchConfiguration = searchConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
+        this.mailQueueViewChoice = mailQueueViewChoice;
+    }
+
+    public MailQueueViewChoice getMailQueueViewChoice() {
+        return mailQueueViewChoice;
     }
 
     @Override

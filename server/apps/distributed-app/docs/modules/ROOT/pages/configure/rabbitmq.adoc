@@ -104,6 +104,11 @@ this implementation relies on Cassandra.
 |===
 | Property name | explanation
 
+| cassandra.view.enabled
+| Whether the Cassandra administrative view should be activated. Boolean value defaulting to true.
+Not necessarily needed for MDA deployments, mail queue management adds significant complexity.
+
+
 | mailqueue.view.sliceWindow
 | James divides the view into slices, each slice contains data for a given period, sliceWindow parameter controls this period.
 This dividing of periods allows faster browsing of the mail queue. Tips for choosing sliceWindow are explained in
