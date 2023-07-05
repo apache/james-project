@@ -140,7 +140,7 @@ class Dequeuer {
             if (success) {
                 dequeueMetric.increment();
                 response.ack();
-                mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId(), mailWithEnqueueId.getBlobIds()));
+                Mono.from(mailQueueView.delete(DeleteCondition.withEnqueueId(mailWithEnqueueId.getEnqueueId(), mailWithEnqueueId.getBlobIds()))).block();
             } else {
                 response.nack(REQUEUE);
             }
