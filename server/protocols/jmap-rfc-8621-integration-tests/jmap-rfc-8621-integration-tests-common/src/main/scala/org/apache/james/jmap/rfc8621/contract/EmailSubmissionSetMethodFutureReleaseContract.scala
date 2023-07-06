@@ -40,8 +40,10 @@ import org.apache.james.mailbox.model.{MailboxId, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.MailboxProbeImpl
 import org.apache.james.utils.{DataProbeImpl, UpdatableTickingClock}
+import org.assertj.core.api.Assertions
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
+import org.awaitility.core.ConditionTimeoutException
 import org.hamcrest.text.CharSequenceLength
 import org.hamcrest.{Matcher, Matchers}
 import org.junit.jupiter.api.{BeforeEach, Tag, Test}
@@ -297,8 +299,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .body(request)
       .post
 
-    // Wait one second
-    updatableTickingClock.setInstant(DATE.plusSeconds(1))
+    Thread.sleep(1000)
 
     // Ensure Andre did not receive the email
     val requestAndre =
@@ -312,24 +313,27 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |    },
          |    "c1"]]
          |}""".stripMargin
-    val response = `given`(
-      baseRequestSpecBuilder(server)
-        .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
-        .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-        .setBody(requestAndre)
-        .build, new ResponseSpecBuilder().build)
-      .post
-      .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
 
-    assertThatJson(response)
-      .inPath("methodResponses[0][1].ids")
-      .isArray
-      .hasSize(0)
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`(
+        baseRequestSpecBuilder(server)
+          .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+          .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+          .setBody(requestAndre)
+          .build, new ResponseSpecBuilder().build)
+          .post
+        .`then`
+          .statusCode(SC_OK)
+          .contentType(JSON)
+          .extract
+          .body
+          .asString
+
+      assertThatJson(response)
+        .inPath("methodResponses[0][1].ids")
+        .isArray
+        .hasSize(0)
+    }
   }
 
   @Test
@@ -382,8 +386,6 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .body(request)
       .post
 
-    updatableTickingClock.setInstant(DATE.plusSeconds(20000))
-
     val requestAndre =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
@@ -395,6 +397,33 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |    },
          |    "c1"]]
          |}""".stripMargin
+
+    Assertions.assertThatThrownBy(() => {
+      calmlyAwait.atMost(1, TimeUnit.SECONDS).untilAsserted { () =>
+        val response = `given`(
+          baseRequestSpecBuilder(server)
+            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+            .setBody(requestAndre)
+            .build, new ResponseSpecBuilder().build)
+            .post
+          .`then`
+            .statusCode(SC_OK)
+            .contentType(JSON)
+            .extract
+            .body
+            .asString
+
+        assertThatJson(response)
+          .inPath("methodResponses[0][1].ids")
+          .isArray
+          .hasSizeGreaterThan(0)
+      }
+    })
+      .isInstanceOf(classOf[ConditionTimeoutException])
+
+    updatableTickingClock.setInstant(DATE.plusSeconds(20000))
+
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
@@ -712,7 +741,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .body(request)
       .post
 
-    updatableTickingClock.setInstant(DATE.plusSeconds(1))
+    Thread.sleep(1000)
 
     // Ensure Andre did not receive the email
     val requestAndre =
@@ -798,8 +827,6 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
       .body(request)
       .post
 
-    updatableTickingClock.setInstant(DATE.plusSeconds(18000))
-
     val requestAndre =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
@@ -811,6 +838,32 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
          |    },
          |    "c1"]]
          |}""".stripMargin
+
+    Assertions.assertThatThrownBy(() => {
+      calmlyAwait.atMost(1, TimeUnit.SECONDS).untilAsserted { () =>
+        val response = `given`(
+          baseRequestSpecBuilder(server)
+            .setAuth(authScheme(UserCredential(ANDRE, ANDRE_PASSWORD)))
+            .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+            .setBody(requestAndre)
+            .build, new ResponseSpecBuilder().build)
+            .post
+          .`then`
+            .statusCode(SC_OK)
+            .contentType(JSON)
+            .extract
+            .body
+            .asString
+
+        assertThatJson(response)
+          .inPath("methodResponses[0][1].ids")
+          .isArray
+          .hasSizeGreaterThan(0)
+      }
+    })
+      .isInstanceOf(classOf[ConditionTimeoutException])
+
+    updatableTickingClock.setInstant(DATE.plusSeconds(18000))
     awaitAtMostTenSeconds.untilAsserted { () =>
       val response = `given`(
         baseRequestSpecBuilder(server)
@@ -1368,7 +1421,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
   }
 
   @Test
-  def emailShouldNotBeSentWhenHoldForIsNull(server: GuiceJamesServer): Unit = {
+  def emailShouldBeSentImmediatelyWhenHoldForIsNull(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
       .setSubject("test")
