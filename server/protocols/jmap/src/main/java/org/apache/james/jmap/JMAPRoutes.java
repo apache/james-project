@@ -20,8 +20,8 @@
 package org.apache.james.jmap;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
+import static io.netty.handler.codec.http.HttpResponseStatus.FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static io.netty.handler.codec.http.HttpResponseStatus.PERMANENT_REDIRECT;
 import static io.netty.handler.codec.http.HttpResponseStatus.UNAUTHORIZED;
 
 import java.util.stream.Stream;
@@ -45,7 +45,7 @@ public interface JMAPRoutes {
     }
 
     static JMAPRoute.Action redirectTo(String location) {
-        return (req, res) -> res.status(PERMANENT_REDIRECT).header("Location", location).send();
+        return (req, res) -> res.status(FOUND).header("Location", location).send();
     }
 
     default Mono<Void> handleInternalError(HttpServerResponse response, Logger logger, Throwable e) {
