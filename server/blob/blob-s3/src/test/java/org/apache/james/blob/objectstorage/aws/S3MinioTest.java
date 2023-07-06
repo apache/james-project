@@ -28,8 +28,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.TestBlobId;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,6 +40,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -83,6 +87,18 @@ public class S3MinioTest {
     void saveShouldWorkWhenValidBlobId() {
         Mono.from(testee.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY)).block();
         assertThat(Mono.from(testee.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block()).isEqualTo(SHORT_BYTEARRAY);
+    }
+
+    @Test
+    void saveShouldWorkForAllPayloadsWithHash() {
+        Flux.range(0, 1000)
+            .concatMap(i -> {
+                byte[] payload = RandomStringUtils.random(128).getBytes(StandardCharsets.UTF_8);
+                BlobId blobId = new HashBlobId.Factory().forPayload(payload);
+                return testee.save(TEST_BUCKET_NAME, blobId, payload);
+            })
+            .then()
+            .block();
     }
 
 }
