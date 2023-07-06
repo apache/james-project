@@ -32,8 +32,12 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.TestBlobId;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -45,7 +49,7 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 @Testcontainers
-public class S3MinioTest {
+public class S3MinioTest implements BlobStoreDAOContract {
 
     private static final int MINIO_PORT = 9000;
     private static S3BlobStoreDAO testee;
@@ -73,6 +77,21 @@ public class S3MinioTest {
             .build();
 
         testee = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory());
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        testee.close();
+    }
+
+    @AfterEach
+    void tearDown() {
+        testee.deleteAllBuckets().block();
+    }
+
+    @Override
+    public BlobStoreDAO testee() {
+        return testee;
     }
 
     @Test
