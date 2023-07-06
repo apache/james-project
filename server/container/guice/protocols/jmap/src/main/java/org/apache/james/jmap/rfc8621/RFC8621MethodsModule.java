@@ -65,6 +65,7 @@ import org.apache.james.jmap.method.MDNParseMethod;
 import org.apache.james.jmap.method.MDNSendMethod;
 import org.apache.james.jmap.method.MailboxChangesMethod;
 import org.apache.james.jmap.method.MailboxGetMethod;
+import org.apache.james.jmap.method.MailboxQueryChangesMethod;
 import org.apache.james.jmap.method.MailboxQueryMethod;
 import org.apache.james.jmap.method.MailboxSetMethod;
 import org.apache.james.jmap.method.Method;
@@ -164,6 +165,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         methods.addBinding().to(DelegateGetMethod.class);
         methods.addBinding().to(DelegateSetMethod.class);
         methods.addBinding().to(DelegatedAccountSetMethod.class);
+        methods.addBinding().to(MailboxQueryChangesMethod.class);
 
         Multibinder<JMAPRoutes> routes = Multibinder.newSetBinder(binder(), JMAPRoutes.class);
         routes.addBinding().to(SessionRoutes.class);
