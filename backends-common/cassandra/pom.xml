@@ -30,6 +30,10 @@
     <artifactId>apache-james-backends-cassandra</artifactId>
     <name>Apache James :: Backends Common :: Cassandra</name>
 
+    <properties>
+        <cassandra.driver.version>4.16.0</cassandra.driver.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -60,12 +64,12 @@
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-core</artifactId>
-            <version>4.15.0</version>
+            <version>${cassandra.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-query-builder</artifactId>
-            <version>4.15.0</version>
+            <version>${cassandra.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
