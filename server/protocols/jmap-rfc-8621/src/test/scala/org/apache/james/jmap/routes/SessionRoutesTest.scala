@@ -116,7 +116,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
       .redirects().follow(false)
       .get
     .`then`
-      .statusCode(308)
+      .statusCode(302)
       .header("Location", "/jmap/session")
   }
 
