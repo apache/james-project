@@ -41,8 +41,8 @@ public class HashBlobId implements BlobId {
 
         public Factory() {
             this.baseEncoding = Optional.ofNullable(System.getProperty(HASH_BLOB_ID_ENCODING_TYPE_PROPERTY))
-                    .map(Factory::baseEncodingFrom)
-                    .orElse(HASH_BLOB_ID_ENCODING_DEFAULT);
+                .map(Factory::baseEncodingFrom)
+                .orElse(HASH_BLOB_ID_ENCODING_DEFAULT);
         }
 
         @Override
