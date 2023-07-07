@@ -17,15 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage.aws;
+package org.apache.james.blob.api;
 
 import java.time.Duration;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
@@ -33,16 +30,16 @@ import org.apache.james.core.healthcheck.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class S3HealthCheck implements HealthCheck {
+public class ObjectStoreHealthCheck implements HealthCheck {
 
-    private static final Integer HEALTH_CHECK_TIMEOUT = 5;
+    private static final Integer HEALTH_CHECK_TIMEOUT = 10;
 
-    private static final ComponentName COMPONENT_NAME = new ComponentName("S3");
+    private static final ComponentName COMPONENT_NAME = new ComponentName("ObjectStorage");
 
     private final BlobStoreDAO blobStoreDAO;
 
     @Inject
-    public S3HealthCheck(BlobStoreDAO blobStoreDAO) {
+    public ObjectStoreHealthCheck(BlobStoreDAO blobStoreDAO) {
         this.blobStoreDAO = blobStoreDAO;
     }
 
@@ -53,9 +50,10 @@ public class S3HealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        Flux<BucketName> bucketNameFlux = Flux.from(blobStoreDAO.listBuckets())
-                .timeout(Duration.ofSeconds(HEALTH_CHECK_TIMEOUT));
-        return bucketNameFlux.collect(Collectors.toList()).map(ele -> Result.healthy(COMPONENT_NAME))
-                .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking S3", e)));
+        return Flux.from(blobStoreDAO.listBuckets())
+            .timeout(Duration.ofSeconds(HEALTH_CHECK_TIMEOUT))
+            .next()
+            .thenReturn(Result.healthy(COMPONENT_NAME))
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking ObjectSotrage", e)));
     }
 }
