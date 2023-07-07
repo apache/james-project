@@ -22,7 +22,7 @@ package org.apache.james.blob.objectstorage.aws;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.ObjectStoreHealthCheck;
+import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.core.healthcheck.Result;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(DockerAwsS3Extension.class)
 public class S3HealthCheckTest {
 
-    private ObjectStoreHealthCheck s3HealthCheck;
+    private ObjectStorageHealthCheck s3HealthCheck;
 
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3) {
@@ -49,7 +49,7 @@ public class S3HealthCheckTest {
             .build();
 
         BlobStoreDAO s3BlobStoreDAO = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory());
-        s3HealthCheck = new ObjectStoreHealthCheck(s3BlobStoreDAO);
+        s3HealthCheck = new ObjectStorageHealthCheck(s3BlobStoreDAO);
     }
 
     @AfterEach

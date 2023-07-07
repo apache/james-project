@@ -26,7 +26,7 @@ import org.apache.james.blob.aes.AESBlobStoreDAO;
 import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.ObjectStoreHealthCheck;
+import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
@@ -71,7 +71,7 @@ public class BlobStoreModulesChooser {
             install(new DefaultBucketModule());
 
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(S3BlobStoreDAO.class);
-            Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ObjectStoreHealthCheck.class);
+            Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ObjectStorageHealthCheck.class);
         }
     }
 

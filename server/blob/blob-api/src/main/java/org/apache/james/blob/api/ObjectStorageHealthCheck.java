@@ -30,7 +30,7 @@ import org.apache.james.core.healthcheck.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class ObjectStoreHealthCheck implements HealthCheck {
+public class ObjectStorageHealthCheck implements HealthCheck {
 
     private static final Integer HEALTH_CHECK_TIMEOUT = 10;
 
@@ -39,7 +39,7 @@ public class ObjectStoreHealthCheck implements HealthCheck {
     private final BlobStoreDAO blobStoreDAO;
 
     @Inject
-    public ObjectStoreHealthCheck(BlobStoreDAO blobStoreDAO) {
+    public ObjectStorageHealthCheck(BlobStoreDAO blobStoreDAO) {
         this.blobStoreDAO = blobStoreDAO;
     }
 
