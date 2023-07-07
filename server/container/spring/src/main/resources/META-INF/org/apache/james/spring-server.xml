@@ -315,4 +315,12 @@
 
     <bean id="aliasreverseresolver" class="org.apache.james.rrt.lib.AliasReverseResolverImpl" />
     <bean id="cansendfrom" class="org.apache.james.rrt.lib.CanSendFromImpl" />
+
+    <!--
+    ======================================================================
+    JDKIM
+    ======================================================================
+    -->
+
+    <bean id="jdkimPublicKeyRecordRetriever" class="org.apache.james.jdkim.impl.DNSPublicKeyRecordRetriever"/>
 </beans>
