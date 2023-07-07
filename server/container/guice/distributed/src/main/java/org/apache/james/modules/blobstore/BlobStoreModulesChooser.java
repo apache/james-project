@@ -22,6 +22,7 @@ package org.apache.james.modules.blobstore;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
 import org.apache.james.blob.aes.AESBlobStoreDAO;
 import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.blob.api.BlobStore;
@@ -29,6 +30,8 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
+import org.apache.james.blob.objectstorage.aws.S3HealthCheck;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck.StorageStrategySupplier;
 import org.apache.james.modules.blobstore.validation.StoragePolicyConfigurationSanityEnforcementModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
@@ -45,6 +48,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
@@ -68,6 +72,7 @@ public class BlobStoreModulesChooser {
             install(new DefaultBucketModule());
 
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(S3BlobStoreDAO.class);
+            Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(S3HealthCheck.class);
         }
     }
 
