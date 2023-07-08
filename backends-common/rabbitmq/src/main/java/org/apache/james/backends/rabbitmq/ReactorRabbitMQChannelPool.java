@@ -685,7 +685,9 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
                 if (channel.isOpen()) {
                     channel.close();
                 }
-            })))
+            }))
+            .then()
+            .subscribeOn(Schedulers.boundedElastic()))
             .buildPool();
     }
 
