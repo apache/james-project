@@ -3323,7 +3323,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.2</version>
+                    <version>3.1.2</version>
                     <configuration>
                         <systemPropertyVariables>
                             <!--https://issues.apache.org/jira/browse/JAMES-3724-->
@@ -3342,7 +3342,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>2.22.2</version>
+                    <version>3.1.2</version>
                     <configuration>
                         <aggregate>true</aggregate>
                     </configuration>
@@ -3783,7 +3783,7 @@
                         <plugin>
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
-                            <version>2.22.2</version>
+                            <version>3.1.2</version>
                             <configuration>
                                 <excludedGroups />
                                 <groups>unstable</groups>
