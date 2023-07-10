@@ -53,3 +53,15 @@ james.protocols.mdc.hostname=false
 
 Optional. Boolean. Defaults to true.
 
+== Change the encoding type used for the blobId
+
+By default, the blobId is encoded in base64 url. The property `james.blob.id.hash.encoding` allows to change the encoding type.
+The support value are: base16, hex, base32, base32Hex, base64, base64Url.
+
+Ex in `jvm.properties`
+----
+james.blob.id.hash.encoding=base16
+----
+
+Optional. String. Defaults to base64Url.
+
