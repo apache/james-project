@@ -61,6 +61,21 @@ public class DockerAwsS3Container {
         awsS3Container.stop();
     }
 
+    public void pause() {
+        awsS3Container.getDockerClient().pauseContainerCmd(awsS3Container.getContainerId()).exec();
+    }
+
+    public void unpause() {
+        awsS3Container.getDockerClient().unpauseContainerCmd(awsS3Container.getContainerId()).exec();
+    }
+
+    public boolean isPaused() {
+        return awsS3Container.getDockerClient().inspectContainerCmd(awsS3Container.getContainerId())
+            .exec()
+            .getState()
+            .getPaused();
+    }
+
     public Host getHost() {
         return Host.from(getIp(), getPort());
     }
