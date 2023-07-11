@@ -125,3 +125,20 @@ In case your IMAP/SMTP server address does not follow the above address conventi
     </Response>
 </Autodiscover>
 ```
+
+Please note that Outlook asks a Microsoft remote service for auto configuration discovery, therefore you should not be
+able to set up an local IMAP server to test the Outlook configuration.
+
+=== Demo Outlook auto configuration
+
+- 1. Enter your email address:
+
+image:outlook_enterMailAddress.jpg[Enter your email address in Outlook]
+
+- 2. Enter your password:
+
+image:outlook_enterPassword.jpg[Enter your password in Outlook]
+
+- 3. Enjoy Outlook auto configuration!
+
+image:outlook_enjoyAutoConfig.jpg[Enter your password in Outlook]
