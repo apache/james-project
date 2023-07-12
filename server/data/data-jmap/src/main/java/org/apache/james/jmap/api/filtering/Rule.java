@@ -306,7 +306,8 @@ public class Rule {
 
         private Id id;
         private String name;
-        private Condition condition;
+        private List<Condition> conditions;
+        private ConditionCombiner conditionCombiner;
         private Action action;
 
         public Builder id(Id id) {
@@ -319,8 +320,13 @@ public class Rule {
             return this;
         }
 
-        public Builder condition(Condition condition) {
-            this.condition = condition;
+        public Builder conditions(List<Condition> conditions) {
+            this.conditions = conditions;
+            return this;
+        }
+
+        public Builder conditionCombiner(ConditionCombiner conditionCombiner) {
+            this.conditionCombiner = conditionCombiner;
             return this;
         }
 
@@ -332,10 +338,10 @@ public class Rule {
         public Rule build() {
             Preconditions.checkState(id != null, "`id` is mandatory");
             Preconditions.checkState(StringUtils.isNotBlank(name), "`name` is mandatory");
-            Preconditions.checkState(condition != null, "`condition` is mandatory");
+            Preconditions.checkState(conditions != null, "`conditions` is mandatory");
             Preconditions.checkState(action != null, "`action` is mandatory");
 
-            return new Rule(id, name, condition, action);
+            return new Rule(id, name, conditions, conditionCombiner, action);
         }
 
     }
@@ -344,15 +350,22 @@ public class Rule {
         return new Builder();
     }
 
+    public enum ConditionCombiner {
+        AND,
+        OR
+    }
+
     private final Id id;
     private final String name;
-    private final Condition condition;
+    private final List<Condition> conditions;
+    private final ConditionCombiner conditionCombiner;
     private final Action action;
 
-    private Rule(Id id, String name, Condition condition, Action action) {
+    private Rule(Id id, String name, List<Condition> conditions, ConditionCombiner conditionCombiner, Action action) {
         this.id = id;
         this.name = name;
-        this.condition = condition;
+        this.conditions = conditions;
+        this.conditionCombiner = conditionCombiner;
         this.action = action;
     }
 
@@ -364,8 +377,12 @@ public class Rule {
         return name;
     }
 
-    public Condition getCondition() {
-        return condition;
+    public List<Condition> getConditions() {
+        return conditions;
+    }
+
+    public ConditionCombiner getConditionCombiner() {
+        return conditionCombiner;
     }
 
     public Action getAction() {
@@ -379,7 +396,7 @@ public class Rule {
 
             return Objects.equals(this.id, rule.id)
                 && Objects.equals(this.name, rule.name)
-                && Objects.equals(this.condition, rule.condition)
+                && Objects.equals(this.conditions, rule.conditions)
                 && Objects.equals(this.action, rule.action);
         }
         return false;
@@ -387,7 +404,7 @@ public class Rule {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, name, condition, action);
+        return Objects.hash(id, name, conditions, action);
     }
 
     @Override
@@ -395,7 +412,7 @@ public class Rule {
         return MoreObjects.toStringHelper(this)
             .add("id", id)
             .add("name", name)
-            .add("condition", condition)
+            .add("conditions", conditions)
             .add("action", action)
             .toString();
     }

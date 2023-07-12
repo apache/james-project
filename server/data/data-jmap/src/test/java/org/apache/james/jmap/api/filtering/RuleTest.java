@@ -89,7 +89,7 @@ class RuleTest {
         assertThatThrownBy(() ->
             Rule.builder()
                 .name(NAME)
-                .condition(CONDITION)
+                .conditions(Arrays.asList(CONDITION))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -100,7 +100,7 @@ class RuleTest {
         assertThatThrownBy(() ->
             Rule.builder()
                 .id(UNIQUE_ID)
-                .condition(CONDITION)
+                .conditions(Arrays.asList(CONDITION))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -112,7 +112,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name("")
-                .condition(CONDITION)
+                .conditions(Arrays.asList(CONDITION))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -124,7 +124,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name("    ")
-                .condition(CONDITION)
+                .conditions(Arrays.asList(CONDITION))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -136,7 +136,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name(null)
-                .condition(CONDITION)
+                .conditions(Arrays.asList(CONDITION))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -159,7 +159,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name(NAME)
-                .condition(CONDITION)
+                .conditions(Arrays.asList(CONDITION))
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
@@ -169,11 +169,11 @@ class RuleTest {
         Rule rule = Rule.builder()
             .id(UNIQUE_ID)
             .name(NAME)
-            .condition(CONDITION)
+            .conditions(Arrays.asList(CONDITION))
             .action(ACTION)
             .build();
 
-        assertThat(rule.getCondition()).isEqualTo(CONDITION);
+        assertThat(rule.getConditions().get(0)).isEqualTo(CONDITION);
     }
 
     @Test
@@ -181,7 +181,7 @@ class RuleTest {
         Rule rule = Rule.builder()
             .id(UNIQUE_ID)
             .name(NAME)
-            .condition(CONDITION)
+            .conditions(Arrays.asList(CONDITION))
             .action(ACTION)
             .build();
 

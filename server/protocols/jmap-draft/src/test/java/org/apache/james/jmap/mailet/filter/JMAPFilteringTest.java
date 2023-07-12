@@ -52,6 +52,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_4_FU
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
@@ -725,19 +726,19 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditions(Arrays.asList(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox1Id.serialize())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .condition(Rule.Condition.of(FROM, NOT_CONTAINS, USER_1_USERNAME))
+                    .conditions(Arrays.asList(Rule.Condition.of(FROM, NOT_CONTAINS, USER_1_USERNAME)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox2Id.serialize())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("3"))
                     .name("rule 3")
-                    .condition(Rule.Condition.of(TO, EXACTLY_EQUALS, USER_3_ADDRESS))
+                    .conditions(Arrays.asList(Rule.Condition.of(TO, EXACTLY_EQUALS, USER_3_ADDRESS)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox3Id.serialize())))
                     .build())).block();
 
@@ -763,7 +764,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditions(Arrays.asList(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
                         mailbox3Id.serialize(),
                         mailbox2Id.serialize(),
@@ -790,13 +791,13 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditions(Arrays.asList(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditions(Arrays.asList(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
                         mailbox1Id.serialize()))))
                     .build())).block();
@@ -860,7 +861,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build())).block();
 
@@ -879,7 +880,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build())).block();
 
@@ -900,13 +901,13 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         testSystem.getRecipient1MailboxId().serialize())))
                     .build())).block();
@@ -929,7 +930,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         unknownMailboxId,
                         testSystem.getRecipient1MailboxId().serialize())))
@@ -952,7 +953,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, false, true, ImmutableList.of()))
                 .build())).block();
@@ -972,7 +973,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     true, false, false, ImmutableList.of()))
                 .build())).block();
@@ -995,7 +996,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, true, false, ImmutableList.of()))
                 .build())).block();
@@ -1018,7 +1019,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, false, false, ImmutableList.of("abc", "def")))
                 .build())).block();
@@ -1039,7 +1040,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditions(Arrays.asList(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     true, true, false, ImmutableList.of("abc", "def")))
                 .build())).block();

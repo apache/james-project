@@ -19,8 +19,10 @@
 
 package org.apache.james.jmap.cassandra.filtering;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.james.jmap.api.filtering.Rule;
 
@@ -215,22 +217,45 @@ public class RuleDTO {
     public static RuleDTO from(Rule rule) {
         return new RuleDTO(rule.getId().asString(),
                 rule.getName(),
-                ConditionDTO.from(rule.getCondition()),
+                rule.getConditions().stream().map(ConditionDTO::from).collect(Collectors.toList()),
+                rule.getConditionCombiner(),
                 ActionDTO.from(rule.getAction()));
     }
 
     private final String id;
     private final String name;
     private final ConditionDTO conditionDTO;
+    private final List<ConditionDTO> conditionDTOs;
+    private final Rule.ConditionCombiner conditionCombiner;
     private final ActionDTO actionDTO;
 
     @JsonCreator
     public RuleDTO(@JsonProperty("id") String id,
                    @JsonProperty("name") String name,
+                   @JsonProperty("conditions") List<ConditionDTO> conditionDTOs,
+                   @JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
+                   @JsonProperty("action") ActionDTO actionDTO) {
+        this.name = name;
+        this.conditionDTO = null;
+        this.conditionDTOs = conditionDTOs;
+        this.conditionCombiner = conditionCombiner;
+        this.actionDTO = actionDTO;
+        Preconditions.checkNotNull(id);
+
+        this.id = id;
+    }
+
+    @JsonCreator
+    public RuleDTO(@JsonProperty("id") String id,
+                   @JsonProperty("name") String name,
                    @JsonProperty("condition") ConditionDTO conditionDTO,
+                   @JsonProperty("conditions") List<ConditionDTO> conditionDTOs,
+                   @JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
                    @JsonProperty("action") ActionDTO actionDTO) {
         this.name = name;
         this.conditionDTO = conditionDTO;
+        this.conditionDTOs = conditionDTOs;
+        this.conditionCombiner = conditionCombiner;
         this.actionDTO = actionDTO;
         Preconditions.checkNotNull(id);
 
@@ -254,13 +279,21 @@ public class RuleDTO {
     }
 
     public Rule toRule() {
-        return Rule.builder()
+        Rule.Builder ruleBuilder = Rule.builder()
             .id(Rule.Id.of(id))
             .name(name)
-            .condition(conditionDTO.toCondition())
-            .name(name)
-            .action(actionDTO.toAction())
-            .build();
+            .action(actionDTO.toAction());
+
+        if (conditionDTO != null) {
+            ruleBuilder.conditions(Arrays.asList(conditionDTO.toCondition()));
+        } else {
+            ruleBuilder.conditions(conditionDTOs.stream().map(ConditionDTO::toCondition).collect(Collectors.toList()));
+        }
+
+        if (conditionCombiner != null) ruleBuilder.conditionCombiner(conditionCombiner);
+        else ruleBuilder.conditionCombiner(Rule.ConditionCombiner.AND);
+
+        return ruleBuilder.build();
     }
 
     @Override

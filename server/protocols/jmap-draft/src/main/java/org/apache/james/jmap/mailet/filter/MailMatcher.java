@@ -21,7 +21,10 @@ package org.apache.james.jmap.mailet.filter;
 
 import static org.apache.james.jmap.api.filtering.Rule.Condition;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.api.filtering.Rule;
@@ -30,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 
 public interface MailMatcher {
 
@@ -37,11 +41,43 @@ public interface MailMatcher {
 
         private static final Logger LOGGER = LoggerFactory.getLogger(HeaderMatcher.class);
 
+        private List<MailMatchingCondition> mailMatchingConditions;
+        private final Rule.ConditionCombiner conditionCombiner;
+
+        private HeaderMatcher(List<MailMatchingCondition> mailMatchingConditions, Rule.ConditionCombiner conditionCombiner) {
+            this.mailMatchingConditions = mailMatchingConditions;
+            this.conditionCombiner = conditionCombiner;
+        }
+
+        @Override
+        public boolean match(Mail mail) {
+            try {
+                Predicate<MailMatchingCondition> predicate = (MailMatchingCondition mailMatchingCondition) -> {
+                    Stream<String> headerLines = mailMatchingCondition.getHeaderExtractor().apply(mail);
+                    return mailMatchingCondition.getContentMatcher().match(headerLines, mailMatchingCondition.getRuleValue());
+                };
+
+                switch (conditionCombiner) {
+                    case AND:
+                        return mailMatchingConditions.stream().allMatch(predicate);
+                    case OR:
+                        return mailMatchingConditions.stream().anyMatch(predicate);
+                    default:
+                        return false;
+                }
+            } catch (Exception e) {
+                LOGGER.error("error while extracting mail header", e);
+                return false;
+            }
+        }
+    }
+
+    class MailMatchingCondition {
         private final ContentMatcher contentMatcher;
         private final String ruleValue;
         private final HeaderExtractor headerExtractor;
 
-        private HeaderMatcher(ContentMatcher contentMatcher, String ruleValue,
+        private MailMatchingCondition(ContentMatcher contentMatcher, String ruleValue,
                               HeaderExtractor headerExtractor) {
             Preconditions.checkNotNull(contentMatcher);
             Preconditions.checkNotNull(headerExtractor);
@@ -51,27 +87,28 @@ public interface MailMatcher {
             this.headerExtractor = headerExtractor;
         }
 
-        @Override
-        public boolean match(Mail mail) {
-            try {
-                Stream<String> headerLines = headerExtractor.apply(mail);
-                return contentMatcher.match(headerLines, ruleValue);
-            } catch (Exception e) {
-                LOGGER.error("error while extracting mail header", e);
-                return false;
-            }
+        public ContentMatcher getContentMatcher() {
+            return contentMatcher;
+        }
+
+        public String getRuleValue() {
+            return ruleValue;
+        }
+
+        public HeaderExtractor getHeaderExtractor() {
+            return headerExtractor;
         }
     }
 
     static MailMatcher from(Rule rule) {
-        Condition ruleCondition = rule.getCondition();
-        Optional<ContentMatcher> maybeContentMatcher = ContentMatcher.asContentMatcher(ruleCondition.getField(), ruleCondition.getComparator());
-        Optional<HeaderExtractor> maybeHeaderExtractor = HeaderExtractor.asHeaderExtractor(ruleCondition.getField());
-
-        return new HeaderMatcher(
-            maybeContentMatcher.orElseThrow(() -> new RuntimeException("No content matcher associated with field " + ruleCondition.getField())),
-            rule.getCondition().getValue(),
-            maybeHeaderExtractor.orElseThrow(() -> new RuntimeException("No content matcher associated with comparator " + ruleCondition.getComparator())));
+        return new HeaderMatcher(rule.getConditions().stream()
+            .map(ruleCondition -> new MailMatchingCondition(
+                ContentMatcher.asContentMatcher(ruleCondition.getField(), ruleCondition.getComparator()).
+                    orElseThrow(() -> new RuntimeException("No content matcher associated with field " + ruleCondition.getField())),
+                ruleCondition.getValue(),
+                HeaderExtractor.asHeaderExtractor(ruleCondition.getField())
+                    .orElseThrow(() -> new RuntimeException("No content matcher associated with comparator " + ruleCondition.getComparator())))
+            ).collect(Collectors.toList()), rule.getConditionCombiner());
     }
 
     boolean match(Mail mail);
