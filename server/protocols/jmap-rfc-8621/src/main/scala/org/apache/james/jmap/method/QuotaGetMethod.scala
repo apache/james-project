@@ -48,10 +48,13 @@ class QuotaGetMethod @Inject()(val metricFactory: MetricFactory,
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_QUOTA, JMAP_CORE)
   val jmapQuotaManagerWrapper: JmapQuotaManagerWrapper = JmapQuotaManagerWrapper(quotaManager, quotaRootResolver)
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: QuotaGetRequest): Publisher[InvocationWithContext] = {
-    val requestedProperties: Properties = request.properties.getOrElse(JmapQuota.allProperties)
+  private lazy val JMAP_QUOTA_DRAFT_COMPATIBILITY: Boolean = Option(System.getProperty("james.jmap.quota.draft.compatibility"))
+    .exists(_.toBoolean)
 
-    (requestedProperties -- JmapQuota.allProperties match {
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: QuotaGetRequest): Publisher[InvocationWithContext] = {
+    val requestedProperties: Properties = request.properties.getOrElse(JmapQuota.allProperties(JMAP_QUOTA_DRAFT_COMPATIBILITY))
+
+    (requestedProperties -- JmapQuota.allProperties(JMAP_QUOTA_DRAFT_COMPATIBILITY) match {
       case invalidProperties if invalidProperties.isEmpty() => getQuotaGetResponse(request, mailboxSession.getUser, capabilities)
         .map(result => result.asResponse(accountId = request.accountId))
         .map(response => Invocation(

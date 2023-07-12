@@ -163,6 +163,55 @@ class QuotaSerializerTest extends AnyWordSpec with Matchers {
       assertThatJson(Json.stringify(QuotaSerializer.serialize(actualValue))).isEqualTo(expectedJson)
     }
 
+    "succeed when draft compatibility" in {
+      val jmapQuota: JmapQuota = JmapQuota(
+        id = Id.validate("aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8").toOption.get,
+        resourceType = CountResourceType,
+        used = UnsignedInt.liftOrThrow(1),
+        hardLimit = UnsignedInt.liftOrThrow(2),
+        limit = Some(UnsignedInt.liftOrThrow(2)),
+        scope = AccountScope,
+        name = QuotaName("name1"),
+        types = List(MailDataType),
+        dataTypes = Some(List(MailDataType)),
+        warnLimit = Some(UnsignedInt.liftOrThrow(123)),
+        softLimit = Some(UnsignedInt.liftOrThrow(456)),
+        description = Some(QuotaDescription("Description 1")))
+
+      val actualValue: QuotaGetResponse = QuotaGetResponse(
+        accountId = ACCOUNT_ID,
+        state = UuidState.INSTANCE,
+        list = List(jmapQuota),
+        notFound = QuotaNotFound(Set(UnparsedQuotaId("notfound2"))))
+
+      val expectedJson: String =
+        """{
+          |    "accountId": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
+          |    "state": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+          |    "list": [
+          |        {
+          |            "id": "aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8",
+          |            "resourceType": "count",
+          |            "used": 1,
+          |            "hardLimit": 2,
+          |            "limit": 2,
+          |            "scope": "account",
+          |            "name": "name1",
+          |            "types": [ "Mail" ],
+          |            "dataTypes": [ "Mail" ],
+          |            "warnLimit": 123,
+          |            "softLimit": 456,
+          |            "description": "Description 1"
+          |        }
+          |    ],
+          |    "notFound": [
+          |        "notfound2"
+          |    ]
+          |}""".stripMargin
+
+      assertThatJson(Json.stringify(QuotaSerializer.serialize(actualValue))).isEqualTo(expectedJson)
+    }
+
     "succeed when list has multiple quota" in {
       val jmapQuota: JmapQuota = JmapQuota(
         id = Id.validate("aHR0cHM6Ly93d3cuYmFzZTY0ZW5jb2RlLm9yZy8").toOption.get,

@@ -83,11 +83,19 @@ case class QuotaGetRequest(accountId: AccountId,
                            properties: Option[Properties]) extends WithAccountId
 
 object JmapQuota {
-  val WARN_LIMIT_PERCENTAGE = 0.9
-  val allProperties: Properties = Properties("id", "resourceType", "used", "hardLimit", "scope", "name", "types", "warnLimit", "softLimit", "description")
-  val idProperty: Properties = Properties("id")
+  private val WARN_LIMIT_PERCENTAGE = 0.9
+  private val allRfc9245Properties: Properties = Properties("id", "resourceType", "used", "hardLimit", "scope", "name", "types", "warnLimit", "softLimit", "description")
+  private val allRfc9245PropertiesWithDraftProperties: Properties = allRfc9245Properties ++ Properties("dataTypes", "limit")
+  private val idProperty: Properties = Properties("id")
 
   def propertiesFiltered(requestedProperties: Properties): Properties = idProperty ++ requestedProperties
+
+  def allProperties(draftBackwardCompatibility: Boolean): Properties =
+    if (draftBackwardCompatibility) {
+      allRfc9245PropertiesWithDraftProperties
+    } else {
+      allRfc9245Properties
+    }
 
   def extractUserMessageCountQuota(quota: ModelQuota[QuotaCountLimit, QuotaCountUsage], countQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
     Option(quota.getLimit)
@@ -97,9 +105,11 @@ object JmapQuota {
         resourceType = CountResourceType,
         used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
         hardLimit = UnsignedInt.liftOrThrow(limit.asLong()),
+        limit = Some(UnsignedInt.liftOrThrow(limit.asLong())),
         scope = AccountScope,
         name = QuotaName.from(quotaRoot, AccountScope, CountResourceType, List(MailDataType)),
         types = List(MailDataType),
+        dataTypes = Some(List(MailDataType)),
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 
   def extractUserMessageSizeQuota(quota: ModelQuota[QuotaSizeLimit, QuotaSizeUsage], sizeQuotaIdPlaceHolder: Id, quotaRoot: ModelQuotaRoot): Option[JmapQuota] =
@@ -110,9 +120,11 @@ object JmapQuota {
         resourceType = OctetsResourceType,
         used = UnsignedInt.liftOrThrow(quota.getUsed.asLong()),
         hardLimit = UnsignedInt.liftOrThrow(limit.asLong()),
+        limit = Some(UnsignedInt.liftOrThrow(limit.asLong())),
         scope = AccountScope,
         name = QuotaName.from(quotaRoot, AccountScope, OctetsResourceType, List(MailDataType)),
         types = List(MailDataType),
+        dataTypes = Some(List(MailDataType)),
         warnLimit = Some(UnsignedInt.liftOrThrow((limit.asLong() * WARN_LIMIT_PERCENTAGE).toLong))))
 
   def correspondingState(quotas: Seq[JmapQuota]): UuidState =
@@ -124,9 +136,11 @@ case class JmapQuota(id: Id,
                      resourceType: ResourceType,
                      used: UnsignedInt,
                      hardLimit: UnsignedInt,
+                     limit: Option[UnsignedInt] = None,
                      scope: Scope,
                      name: QuotaName,
                      types: List[DataType],
+                     dataTypes: Option[List[DataType]] = None,
                      warnLimit: Option[UnsignedInt] = None,
                      softLimit: Option[UnsignedInt] = None,
                      description: Option[QuotaDescription] = None)

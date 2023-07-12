@@ -65,3 +65,16 @@ james.blob.id.hash.encoding=base16
 
 Optional. String. Defaults to base64Url.
 
+== JMAP Quota draft compatibility
+
+Some JMAP clients depend on the JMAP Quota draft specifications. The property `james.jmap.quota.draft.compatibility` allows
+to enable JMAP Quota draft compatibility for those clients and allow them a time window to adapt to the RFC-9245 JMAP Quota.
+
+Optional. Boolean. Default to false.
+
+Ex in `jvm.properties`
+----
+james.jmap.quota.draft.compatibility=true
+----
+To enable the compatibility.
+

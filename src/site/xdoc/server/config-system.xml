@@ -237,6 +237,10 @@
                 <dt><strong>james.blob.id.hash.encoding</strong></dt>
                 <dd>Optional. String. Defaults to base64Url. <br/>
                     The encoding type when encode blobId. The support value are: base16, hex, base32, base32Hex, base64, base64Url.</dd>
+
+                <dt><strong>james.jmap.quota.draft.compatibility</strong></dt>
+                <dd>Optional. Boolean. Default to false. <br/>
+                    This property allows to enable JMAP Quota draft compatibility for some JMAP clients and allow them a time window to adapt to the RFC-9245 JMAP Quota.</dd>
             </dl>
 
             </subsection>
