@@ -36,11 +36,10 @@ Change list:
 - [Migration to OpenSearch](#migration-to-opensearch)
 - [Deleted message vault is now deactivated by default](#deleted-message-vault-is-now-deactivated-by-default)
 - [SortOrder addition in Identity](#sortorder-addition-in-identity)
-- [TLS host name verification is now enabled by default](#tls-host-name-verification-is-now-enabled-by-default)
 - [Blob Store AES upgraded to PBKDF2WithHmacSHA512](#blob-store-aes-upgraded-to-pbkdf2withhmacsha512)
 - [Adding saveDate column to messageIdTable and imapUidTable](#adding-savedate-column-to-messageidtable-and-imapuidtable)
 - [Adding the saveDate to the OpenSearch index](#adding-the-savedate-to-the-opensearch-index)
-- [Adding delegatedUser column to user_table](#adding-delegatedusers-column-to-user-table)
+- [Adding delegatedUser column to user_table](#adding-delegated_users-column-to-user-table)
 - [DeletedMessageVaultHook should not be used on Cassandra based products](#deleted-message-vault-is-now-deactivated-by-default)
 
 ### JMAP filters event sourcing increments and snapshots
@@ -255,6 +254,12 @@ ALTER TABLE james_keyspace.user ADD authorized_users set<text>;
 No specific operation to conduct from a 3.7.3 version.
 
 ## 3.7.3 version
+
+Changes to apply between 3.7.2 and 3.7.3 are reported here.
+
+Change list:
+
+- [TLS host name verification is now enabled by default](#tls-host-name-verification-is-now-enabled-by-default)
 
 ### TLS host name verification is now enabled by default
 
