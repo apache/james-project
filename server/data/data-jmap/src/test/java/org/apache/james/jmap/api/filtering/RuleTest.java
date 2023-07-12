@@ -89,7 +89,7 @@ class RuleTest {
         assertThatThrownBy(() ->
             Rule.builder()
                 .name(NAME)
-                .conditions(Arrays.asList(CONDITION))
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -100,7 +100,7 @@ class RuleTest {
         assertThatThrownBy(() ->
             Rule.builder()
                 .id(UNIQUE_ID)
-                .conditions(Arrays.asList(CONDITION))
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -112,7 +112,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name("")
-                .conditions(Arrays.asList(CONDITION))
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -124,7 +124,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name("    ")
-                .conditions(Arrays.asList(CONDITION))
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -136,7 +136,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name(null)
-                .conditions(Arrays.asList(CONDITION))
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -159,7 +159,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name(NAME)
-                .conditions(Arrays.asList(CONDITION))
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
@@ -169,11 +169,11 @@ class RuleTest {
         Rule rule = Rule.builder()
             .id(UNIQUE_ID)
             .name(NAME)
-            .conditions(Arrays.asList(CONDITION))
+            .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
             .action(ACTION)
             .build();
 
-        assertThat(rule.getConditions().get(0)).isEqualTo(CONDITION);
+        assertThat(rule.getConditionGroup().getConditions().get(0)).isEqualTo(CONDITION);
     }
 
     @Test
@@ -181,7 +181,7 @@ class RuleTest {
         Rule rule = Rule.builder()
             .id(UNIQUE_ID)
             .name(NAME)
-            .conditions(Arrays.asList(CONDITION))
+            .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
             .action(ACTION)
             .build();
 

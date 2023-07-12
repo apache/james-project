@@ -19,11 +19,7 @@
 
 package org.apache.james.jmap.mailet.filter;
 
-import static org.apache.james.jmap.api.filtering.Rule.Condition;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,7 +59,7 @@ public interface MailMatcher {
                     case OR:
                         return mailMatchingConditions.stream().anyMatch(predicate);
                     default:
-                        return false;
+                        throw new Exception("this conditionCombiner case is not supported");
                 }
             } catch (Exception e) {
                 LOGGER.error("error while extracting mail header", e);
@@ -101,14 +97,14 @@ public interface MailMatcher {
     }
 
     static MailMatcher from(Rule rule) {
-        return new HeaderMatcher(rule.getConditions().stream()
+        return new HeaderMatcher(rule.getConditionGroup().getConditions().stream()
             .map(ruleCondition -> new MailMatchingCondition(
-                ContentMatcher.asContentMatcher(ruleCondition.getField(), ruleCondition.getComparator()).
-                    orElseThrow(() -> new RuntimeException("No content matcher associated with field " + ruleCondition.getField())),
+                ContentMatcher.asContentMatcher(ruleCondition.getField(), ruleCondition.getComparator())
+                    .orElseThrow(() -> new RuntimeException("No content matcher associated with field " + ruleCondition.getField())),
                 ruleCondition.getValue(),
                 HeaderExtractor.asHeaderExtractor(ruleCondition.getField())
                     .orElseThrow(() -> new RuntimeException("No content matcher associated with comparator " + ruleCondition.getComparator())))
-            ).collect(Collectors.toList()), rule.getConditionCombiner());
+            ).collect(Collectors.toList()), rule.getConditionGroup().getConditionCombiner());
     }
 
     boolean match(Mail mail);

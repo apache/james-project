@@ -112,7 +112,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
                 .map(condition -> Rule.builder()
                     .id(Rule.Id.of(String.valueOf(counter.incrementAndGet())))
                     .name(String.valueOf(counter.incrementAndGet()))
-                    .conditions(Arrays.asList(condition))
+                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(condition)))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                     .build())
                 .collect(ImmutableList.toImmutableList());

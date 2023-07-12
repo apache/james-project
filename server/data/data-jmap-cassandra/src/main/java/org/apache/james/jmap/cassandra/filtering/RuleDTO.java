@@ -34,6 +34,43 @@ import com.google.common.collect.ImmutableList;
 
 public class RuleDTO {
 
+    public static class ConditionGroupDTO {
+
+        private Rule.ConditionCombiner conditionCombiner;
+        private List<ConditionDTO> conditionDTOs;
+
+        public ConditionGroupDTO(@JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
+                                 @JsonProperty("conditions") List<ConditionDTO> conditionDTOs) {
+            this.conditionCombiner = conditionCombiner;
+            this.conditionDTOs = conditionDTOs;
+        }
+
+        public Rule.ConditionCombiner getConditionCombiner() {
+            return conditionCombiner;
+        }
+
+        public Rule.ConditionGroup toConditionGroup() {
+            return Rule.ConditionGroup.of(conditionCombiner, conditionDTOs.stream().map(ConditionDTO::toCondition).collect(Collectors.toList()));
+        }
+
+        public static ConditionGroupDTO from(Rule.ConditionGroup conditionGroup) {
+            return new ConditionGroupDTO(conditionGroup.getConditionCombiner(), conditionGroup.getConditions().stream().map(ConditionDTO::from).collect(Collectors.toList()));
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ConditionGroupDTO that = (ConditionGroupDTO) o;
+            return conditionCombiner == that.conditionCombiner && Objects.equals(conditionDTOs, that.conditionDTOs);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(conditionCombiner, conditionDTOs);
+        }
+    }
+
     public static class ConditionDTO {
 
         public static ConditionDTO from(Rule.Condition condition) {
@@ -217,30 +254,27 @@ public class RuleDTO {
     public static RuleDTO from(Rule rule) {
         return new RuleDTO(rule.getId().asString(),
                 rule.getName(),
-                rule.getConditions().stream().map(ConditionDTO::from).collect(Collectors.toList()),
-                rule.getConditionCombiner(),
+                ConditionGroupDTO.from(rule.getConditionGroup()),
                 ActionDTO.from(rule.getAction()));
     }
 
     private final String id;
     private final String name;
     private final ConditionDTO conditionDTO;
-    private final List<ConditionDTO> conditionDTOs;
-    private final Rule.ConditionCombiner conditionCombiner;
+    private final ConditionGroupDTO conditionGroupDTO;
     private final ActionDTO actionDTO;
 
     @JsonCreator
     public RuleDTO(@JsonProperty("id") String id,
                    @JsonProperty("name") String name,
-                   @JsonProperty("conditions") List<ConditionDTO> conditionDTOs,
-                   @JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
+                   @JsonProperty("conditionGroup") ConditionGroupDTO conditionGroupDTO,
                    @JsonProperty("action") ActionDTO actionDTO) {
+        Preconditions.checkNotNull(id);
+
         this.name = name;
         this.conditionDTO = null;
-        this.conditionDTOs = conditionDTOs;
-        this.conditionCombiner = conditionCombiner;
+        this.conditionGroupDTO = conditionGroupDTO;
         this.actionDTO = actionDTO;
-        Preconditions.checkNotNull(id);
 
         this.id = id;
     }
@@ -249,15 +283,18 @@ public class RuleDTO {
     public RuleDTO(@JsonProperty("id") String id,
                    @JsonProperty("name") String name,
                    @JsonProperty("condition") ConditionDTO conditionDTO,
-                   @JsonProperty("conditions") List<ConditionDTO> conditionDTOs,
-                   @JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
+                   @JsonProperty("conditionGroup") ConditionGroupDTO conditionGroupDTO,
                    @JsonProperty("action") ActionDTO actionDTO) {
+        Preconditions.checkNotNull(id);
+
         this.name = name;
         this.conditionDTO = conditionDTO;
-        this.conditionDTOs = conditionDTOs;
-        this.conditionCombiner = conditionCombiner;
+        if (conditionGroupDTO != null) {
+            this.conditionGroupDTO = conditionGroupDTO;
+        } else {
+            this.conditionGroupDTO = new ConditionGroupDTO(Rule.ConditionCombiner.AND, ImmutableList.of(conditionDTO));
+        }
         this.actionDTO = actionDTO;
-        Preconditions.checkNotNull(id);
 
         this.id = id;
     }
@@ -282,16 +319,8 @@ public class RuleDTO {
         Rule.Builder ruleBuilder = Rule.builder()
             .id(Rule.Id.of(id))
             .name(name)
+            .conditionGroup(conditionGroupDTO.toConditionGroup())
             .action(actionDTO.toAction());
-
-        if (conditionDTO != null) {
-            ruleBuilder.conditions(Arrays.asList(conditionDTO.toCondition()));
-        } else {
-            ruleBuilder.conditions(conditionDTOs.stream().map(ConditionDTO::toCondition).collect(Collectors.toList()));
-        }
-
-        if (conditionCombiner != null) ruleBuilder.conditionCombiner(conditionCombiner);
-        else ruleBuilder.conditionCombiner(Rule.ConditionCombiner.AND);
 
         return ruleBuilder.build();
     }

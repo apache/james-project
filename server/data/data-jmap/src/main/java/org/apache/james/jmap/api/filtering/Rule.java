@@ -72,6 +72,54 @@ public class Rule {
         }
     }
 
+    public static class ConditionGroup {
+
+        private final ConditionCombiner conditionCombiner;
+        private final List<Condition> conditions;
+
+        public static ConditionGroup of(ConditionCombiner conditionCombiner, List<Condition> conditions) {
+            return new ConditionGroup(conditionCombiner, conditions);
+        }
+
+        public static ConditionGroup of(ConditionCombiner conditionCombiner, Condition... conditions) {
+            return new ConditionGroup(conditionCombiner, ImmutableList.copyOf(conditions));
+        }
+
+        private ConditionGroup(ConditionCombiner conditionCombiner, List<Condition> conditions) {
+            this.conditionCombiner = conditionCombiner;
+            this.conditions = conditions;
+        }
+
+        public ConditionCombiner getConditionCombiner() {
+            return conditionCombiner;
+        }
+
+        public List<Condition> getConditions() {
+            return conditions;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ConditionGroup that = (ConditionGroup) o;
+            return conditionCombiner == that.conditionCombiner && Objects.equals(conditions, that.conditions);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(conditionCombiner, conditions);
+        }
+
+        @Override
+        public String toString() {
+            return "ConditionCombination{" +
+                "conditionCombiner=" + conditionCombiner +
+                ", conditions=" + conditions +
+                '}';
+        }
+    }
+
     public static class Condition {
 
         public enum Field {
@@ -306,8 +354,7 @@ public class Rule {
 
         private Id id;
         private String name;
-        private List<Condition> conditions;
-        private ConditionCombiner conditionCombiner;
+        private ConditionGroup conditionGroup;
         private Action action;
 
         public Builder id(Id id) {
@@ -320,13 +367,8 @@ public class Rule {
             return this;
         }
 
-        public Builder conditions(List<Condition> conditions) {
-            this.conditions = conditions;
-            return this;
-        }
-
-        public Builder conditionCombiner(ConditionCombiner conditionCombiner) {
-            this.conditionCombiner = conditionCombiner;
+        public Builder conditionGroup(ConditionGroup conditionGroup) {
+            this.conditionGroup = conditionGroup;
             return this;
         }
 
@@ -338,10 +380,10 @@ public class Rule {
         public Rule build() {
             Preconditions.checkState(id != null, "`id` is mandatory");
             Preconditions.checkState(StringUtils.isNotBlank(name), "`name` is mandatory");
-            Preconditions.checkState(conditions != null, "`conditions` is mandatory");
+            Preconditions.checkState(conditionGroup != null, "`conditions` is mandatory");
             Preconditions.checkState(action != null, "`action` is mandatory");
 
-            return new Rule(id, name, conditions, conditionCombiner, action);
+            return new Rule(id, name, conditionGroup, action);
         }
 
     }
@@ -357,15 +399,13 @@ public class Rule {
 
     private final Id id;
     private final String name;
-    private final List<Condition> conditions;
-    private final ConditionCombiner conditionCombiner;
+    private final ConditionGroup conditionGroup;
     private final Action action;
 
-    private Rule(Id id, String name, List<Condition> conditions, ConditionCombiner conditionCombiner, Action action) {
+    private Rule(Id id, String name, ConditionGroup conditionGroup, Action action) {
         this.id = id;
         this.name = name;
-        this.conditions = conditions;
-        this.conditionCombiner = conditionCombiner;
+        this.conditionGroup = conditionGroup;
         this.action = action;
     }
 
@@ -377,12 +417,8 @@ public class Rule {
         return name;
     }
 
-    public List<Condition> getConditions() {
-        return conditions;
-    }
-
-    public ConditionCombiner getConditionCombiner() {
-        return conditionCombiner;
+    public ConditionGroup getConditionGroup() {
+        return conditionGroup;
     }
 
     public Action getAction() {
@@ -396,7 +432,7 @@ public class Rule {
 
             return Objects.equals(this.id, rule.id)
                 && Objects.equals(this.name, rule.name)
-                && Objects.equals(this.conditions, rule.conditions)
+                && Objects.equals(this.conditionGroup, rule.conditionGroup)
                 && Objects.equals(this.action, rule.action);
         }
         return false;
@@ -404,7 +440,7 @@ public class Rule {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, name, conditions, action);
+        return Objects.hash(id, name, conditionGroup, action);
     }
 
     @Override
@@ -412,7 +448,7 @@ public class Rule {
         return MoreObjects.toStringHelper(this)
             .add("id", id)
             .add("name", name)
-            .add("conditions", conditions)
+            .add("conditionGroup", conditionGroup)
             .add("action", action)
             .toString();
     }
