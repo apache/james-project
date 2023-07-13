@@ -39,6 +39,7 @@ public class RuleDTO {
         private Rule.ConditionCombiner conditionCombiner;
         private List<ConditionDTO> conditionDTOs;
 
+        @JsonCreator
         public ConditionGroupDTO(@JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
                                  @JsonProperty("conditions") List<ConditionDTO> conditionDTOs) {
             this.conditionCombiner = conditionCombiner;
@@ -47,6 +48,10 @@ public class RuleDTO {
 
         public Rule.ConditionCombiner getConditionCombiner() {
             return conditionCombiner;
+        }
+
+        public List<ConditionDTO> getConditions() {
+            return conditionDTOs;
         }
 
         public Rule.ConditionGroup toConditionGroup() {
@@ -260,19 +265,16 @@ public class RuleDTO {
 
     private final String id;
     private final String name;
-    private final ConditionDTO conditionDTO;
     private final ConditionGroupDTO conditionGroupDTO;
     private final ActionDTO actionDTO;
 
-    @JsonCreator
-    public RuleDTO(@JsonProperty("id") String id,
-                   @JsonProperty("name") String name,
-                   @JsonProperty("conditionGroup") ConditionGroupDTO conditionGroupDTO,
-                   @JsonProperty("action") ActionDTO actionDTO) {
+    public RuleDTO(String id,
+                   String name,
+                   ConditionGroupDTO conditionGroupDTO,
+                   ActionDTO actionDTO) {
         Preconditions.checkNotNull(id);
 
         this.name = name;
-        this.conditionDTO = null;
         this.conditionGroupDTO = conditionGroupDTO;
         this.actionDTO = actionDTO;
 
@@ -288,7 +290,6 @@ public class RuleDTO {
         Preconditions.checkNotNull(id);
 
         this.name = name;
-        this.conditionDTO = conditionDTO;
         if (conditionGroupDTO != null) {
             this.conditionGroupDTO = conditionGroupDTO;
         } else {
@@ -307,8 +308,8 @@ public class RuleDTO {
         return name;
     }
 
-    public ConditionDTO getCondition() {
-        return conditionDTO;
+    public ConditionGroupDTO getConditionGroup() {
+        return conditionGroupDTO;
     }
 
     public ActionDTO getAction() {
@@ -332,7 +333,7 @@ public class RuleDTO {
 
             return Objects.equals(this.id, ruleDTO.id)
                    && Objects.equals(this.name, ruleDTO.name)
-                   && Objects.equals(this.conditionDTO, ruleDTO.conditionDTO)
+                   && Objects.equals(this.conditionGroupDTO, ruleDTO.conditionGroupDTO)
                    && Objects.equals(this.actionDTO, ruleDTO.actionDTO);
         }
         return false;
@@ -340,7 +341,7 @@ public class RuleDTO {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, name, conditionDTO, actionDTO);
+        return Objects.hash(id, name, conditionGroupDTO, actionDTO);
     }
 
     @Override

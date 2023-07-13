@@ -50,9 +50,11 @@ import com.google.common.collect.ImmutableSet;
 class DTOTest {
     static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");
     static final String EVENT_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/event-v2.json");
+    static final String EVENT_JSON_3 = ClassLoaderUtils.getSystemResourceAsString("json/event-v3.json");
     static final String EVENT_EMPTY_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventEmpty.json");
     static final String EVENT_COMPLEX_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex.json");
     static final String EVENT_COMPLEX_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex-v2.json");
+    static final String EVENT_COMPLEX_JSON_3 = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex-v3.json");
 
     static final RuleSetDefined SIMPLE_RULE = new RuleSetDefined(
                     new FilteringAggregateId(Username.of("Bart")),
@@ -78,9 +80,21 @@ class DTOTest {
     void shouldSerializeRule() throws Exception {
         JsonSerializationVerifier.dtoModule(FILTERING_RULE_SET_DEFINED)
             .testCase(EMPTY_RULE, EVENT_EMPTY_JSON)
-            .testCase(SIMPLE_RULE, EVENT_JSON_2)
-            .testCase(COMPLEX_RULE, EVENT_COMPLEX_JSON_2)
+            .testCase(SIMPLE_RULE, EVENT_JSON_3)
+            .testCase(COMPLEX_RULE, EVENT_COMPLEX_JSON_3)
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeV2() {
+        JsonGenericSerializer<RuleSetDefined, FilteringRuleSetDefinedDTO> serializer = JsonGenericSerializer
+            .forModules(FILTERING_RULE_SET_DEFINED)
+            .withoutNestedType();
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(serializer.deserialize(EVENT_JSON_2)).isEqualToComparingFieldByFieldRecursively(SIMPLE_RULE);
+            softly.assertThat(serializer.deserialize(EVENT_COMPLEX_JSON_2)).isEqualToComparingFieldByFieldRecursively(COMPLEX_RULE);
+        }));
     }
 
     @Test
@@ -98,8 +112,18 @@ class DTOTest {
     @Test
     void shouldSerializeIncrements() throws Exception {
         JsonSerializationVerifier.dtoModule(FILTERING_INCREMENT)
-            .testCase(INCREMENT, ClassLoaderUtils.getSystemResourceAsString("json/increment-v2.json"))
+            .testCase(INCREMENT, ClassLoaderUtils.getSystemResourceAsString("json/increment-v3.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeV2ForIncrements() throws Exception {
+        JsonGenericSerializer<IncrementalRuleChange, FilteringIncrementalRuleChangeDTO> serializer = JsonGenericSerializer
+            .forModules(FILTERING_INCREMENT)
+            .withoutNestedType();
+
+        assertThat(serializer.deserialize(ClassLoaderUtils.getSystemResourceAsString("json/increment-v2.json")))
+            .isEqualToComparingFieldByFieldRecursively(INCREMENT);
     }
 
     @Test
