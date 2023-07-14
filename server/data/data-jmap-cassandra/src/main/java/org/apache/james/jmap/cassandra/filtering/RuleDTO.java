@@ -22,6 +22,7 @@ package org.apache.james.jmap.cassandra.filtering;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.james.jmap.api.filtering.Rule;
@@ -285,13 +286,13 @@ public class RuleDTO {
     public RuleDTO(@JsonProperty("id") String id,
                    @JsonProperty("name") String name,
                    @JsonProperty("condition") ConditionDTO conditionDTO,
-                   @JsonProperty("conditionGroup") ConditionGroupDTO conditionGroupDTO,
+                   @JsonProperty("conditionGroup") Optional<ConditionGroupDTO> conditionGroupDTO,
                    @JsonProperty("action") ActionDTO actionDTO) {
         Preconditions.checkNotNull(id);
 
         this.name = name;
-        if (conditionGroupDTO != null) {
-            this.conditionGroupDTO = conditionGroupDTO;
+        if (!conditionGroupDTO.isEmpty()) {
+            this.conditionGroupDTO = conditionGroupDTO.get();
         } else {
             this.conditionGroupDTO = new ConditionGroupDTO(Rule.ConditionCombiner.AND, ImmutableList.of(conditionDTO));
         }
@@ -317,13 +318,12 @@ public class RuleDTO {
     }
 
     public Rule toRule() {
-        Rule.Builder ruleBuilder = Rule.builder()
+        return Rule.builder()
             .id(Rule.Id.of(id))
             .name(name)
             .conditionGroup(conditionGroupDTO.toConditionGroup())
-            .action(actionDTO.toAction());
-
-        return ruleBuilder.build();
+            .action(actionDTO.toAction())
+            .build();
     }
 
     @Override

@@ -85,6 +85,10 @@ public class Rule {
             return new ConditionGroup(conditionCombiner, ImmutableList.copyOf(conditions));
         }
 
+        public static ConditionGroup of(Condition condition) {
+            return ConditionGroup.of(ConditionCombiner.AND, condition);
+        }
+
         private ConditionGroup(ConditionCombiner conditionCombiner, List<Condition> conditions) {
             this.conditionCombiner = conditionCombiner;
             this.conditions = conditions;
@@ -113,10 +117,10 @@ public class Rule {
 
         @Override
         public String toString() {
-            return "ConditionCombination{" +
-                "conditionCombiner=" + conditionCombiner +
-                ", conditions=" + conditions +
-                '}';
+            return MoreObjects.toStringHelper(this)
+                .add("conditionCombiner", conditionCombiner)
+                .add("conditions", conditions)
+                .toString();
         }
     }
 
@@ -364,6 +368,11 @@ public class Rule {
 
         public Builder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        public Builder conditionGroup(Condition condition) {
+            this.conditionGroup = Rule.ConditionGroup.of(condition);
             return this;
         }
 

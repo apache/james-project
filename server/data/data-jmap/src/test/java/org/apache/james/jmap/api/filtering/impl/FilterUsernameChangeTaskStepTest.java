@@ -22,7 +22,6 @@ package org.apache.james.jmap.api.filtering.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
@@ -45,7 +44,7 @@ public class FilterUsernameChangeTaskStepTest {
     private static final String NAME = "a name";
     private static final Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
     private static final Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
-    private static final Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, CONDITION)).action(ACTION);
+    private static final Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(CONDITION).action(ACTION);
     private static final Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
     private static final Rule RULE_2 = RULE_BUILDER.id(Rule.Id.of("2")).build();
 

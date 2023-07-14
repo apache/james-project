@@ -25,10 +25,10 @@ public interface RuleFixture {
     String NAME = "a name";
     Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
     Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
-    Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION))).action(ACTION);
+    Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(CONDITION).action(ACTION);
     Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
     Rule RULE_1_MODIFIED = Rule.builder()
-        .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(CONDITION)))
+        .conditionGroup(CONDITION)
         .action(ACTION)
         .id(Rule.Id.of("1"))
         .name("newname")
@@ -40,40 +40,40 @@ public interface RuleFixture {
         .id(Rule.Id.of("id-to"))
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
-        .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(Rule.Condition.of(
+        .conditionGroup(Rule.Condition.of(
             Rule.Condition.Field.TO,
             Rule.Condition.Comparator.EXACTLY_EQUALS,
-            "A value to match 1"))))
+            "A value to match 1"))
         .build();
 
     Rule RULE_SUBJECT = Rule.builder()
         .id(Rule.Id.of("id-subject"))
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
-        .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(Rule.Condition.of(
+        .conditionGroup(Rule.Condition.of(
             Rule.Condition.Field.SUBJECT,
             Rule.Condition.Comparator.NOT_CONTAINS,
-            "A value to match 2"))))
+            "A value to match 2"))
         .build();
 
     Rule RULE_RECIPIENT = Rule.builder()
         .id(Rule.Id.of("id-rcpt"))
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
-        .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(Rule.Condition.of(
+        .conditionGroup(Rule.Condition.of(
             Rule.Condition.Field.RECIPIENT,
             Rule.Condition.Comparator.NOT_EXACTLY_EQUALS,
-            "A value to match 3"))))
+            "A value to match 3"))
         .build();
 
     Rule RULE_FROM = Rule.builder()
         .id(Rule.Id.of("id-from"))
         .name(NAME)
         .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
-        .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Arrays.asList(Rule.Condition.of(
+        .conditionGroup(Rule.Condition.of(
             Rule.Condition.Field.FROM,
             Rule.Condition.Comparator.CONTAINS,
-            "A value to match 4"))))
+            "A value to match 4"))
         .build();
 
 }

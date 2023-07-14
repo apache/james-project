@@ -59,7 +59,7 @@ public interface MailMatcher {
                     case OR:
                         return mailMatchingConditions.stream().anyMatch(predicate);
                     default:
-                        throw new Exception("this conditionCombiner case is not supported");
+                        throw new Exception(conditionCombiner + " conditionCombiner is not supported");
                 }
             } catch (Exception e) {
                 LOGGER.error("error while extracting mail header", e);
