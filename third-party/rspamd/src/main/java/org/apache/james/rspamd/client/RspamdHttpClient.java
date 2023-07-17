@@ -104,6 +104,7 @@ public class RspamdHttpClient {
     public static final String CHECK_V2_ENDPOINT = "/checkV2";
     public static final String LEARN_SPAM_ENDPOINT = "/learnspam";
     public static final String LEARN_HAM_ENDPOINT = "/learnham";
+    public static final String PING_ENDPOINT = "/ping";
     private static final int OK = 200;
     private static final int NO_CONTENT = 204;
     private static final int UNAUTHORIZED = 401;
@@ -116,6 +117,12 @@ public class RspamdHttpClient {
     public RspamdHttpClient(RspamdClientConfiguration configuration) {
         httpClient = buildReactorNettyHttpClient(configuration);
         this.objectMapper = new ObjectMapper().registerModule(new Jdk8Module());
+    }
+
+    public Mono<HttpClientResponse> ping() {
+        return httpClient.get()
+            .uri(PING_ENDPOINT)
+            .response();
     }
 
     public Mono<AnalysisResult> checkV2(Mail mail) throws MessagingException {

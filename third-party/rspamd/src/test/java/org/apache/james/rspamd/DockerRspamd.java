@@ -81,6 +81,21 @@ public class DockerRspamd {
         }
     }
 
+    public void pause() {
+        container.getDockerClient().pauseContainerCmd(container.getContainerId()).exec();
+    }
+
+    public void unPause() {
+        container.getDockerClient().unpauseContainerCmd(container.getContainerId()).exec();
+    }
+
+    public boolean isPaused() {
+        return container.getDockerClient().inspectContainerCmd(container.getContainerId())
+            .exec()
+            .getState()
+            .getPaused();
+    }
+
     public void flushAll() {
         dockerRedis.flushAll();
     }

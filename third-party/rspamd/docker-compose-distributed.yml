@@ -21,6 +21,7 @@ services:
       - $PWD/sample-configuration/listeners.xml:/root/conf/listeners.xml
       - $PWD/sample-configuration/rspamd.properties:/root/conf/rspamd.properties
       - $PWD/sample-configuration/webadmin.properties:/root/conf/webadmin.properties
+      - $PWD/sample-configuration/healthcheck.properties:/root/conf/healthcheck.properties
     ports:
       - "80:80"
       - "25:25"

@@ -50,6 +50,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
@@ -306,6 +307,14 @@ class RspamdHttpClientTest {
         AnalysisResult globalAfter = client.checkV2(hamMessage, RspamdHttpClient.Options.NONE).block();
 
         assertThat(globalBefore.getScore()).isEqualTo(globalAfter.getScore());
+    }
+
+    @Test
+    void pingTestShouldReturn200OK() {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        assertThat(client.ping().block().status()).isEqualTo(HttpResponseStatus.OK);
     }
 
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {
