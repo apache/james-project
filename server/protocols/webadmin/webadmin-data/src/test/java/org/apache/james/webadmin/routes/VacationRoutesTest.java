@@ -148,8 +148,8 @@ class VacationRoutesTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(vacation).isNotNull();
             softly.assertThat(vacation.isEnabled()).isTrue();
-            softly.assertThat(vacation.getFromDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-20T10:00:00Z[UTC]")));
-            softly.assertThat(vacation.getToDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-27T18:00:00Z[UTC]")));
+            softly.assertThat(vacation.getFromDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-20T10:00:00Z")));
+            softly.assertThat(vacation.getToDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-27T18:00:00Z")));
             softly.assertThat(vacation.getSubject()).isEqualTo(Optional.of("On vacation again"));
             softly.assertThat(vacation.getTextBody()).isEqualTo(Optional.of("Need more vacation!"));
             softly.assertThat(vacation.getHtmlBody()).isEqualTo(Optional.of("<p>Need more vacation!</p>"));
@@ -176,8 +176,8 @@ class VacationRoutesTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(vacation).isNotNull();
             softly.assertThat(vacation.isEnabled()).isTrue();
-            softly.assertThat(vacation.getFromDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-20T10:00:00Z[UTC]")));
-            softly.assertThat(vacation.getToDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-27T18:00:00Z[UTC]")));
+            softly.assertThat(vacation.getFromDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-20T10:00:00Z")));
+            softly.assertThat(vacation.getToDate()).isEqualTo(Optional.of(ZonedDateTime.parse("2021-09-27T18:00:00Z")));
             softly.assertThat(vacation.getSubject()).isEqualTo(Optional.of("On vacation again"));
             softly.assertThat(vacation.getTextBody()).isEqualTo(Optional.of("Need more vacation!"));
             softly.assertThat(vacation.getHtmlBody()).isEqualTo(Optional.of("<p>Need more vacation!</p>"));
