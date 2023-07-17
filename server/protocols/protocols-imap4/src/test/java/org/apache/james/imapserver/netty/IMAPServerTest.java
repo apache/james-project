@@ -124,7 +124,7 @@ import io.netty.handler.codec.compression.JdkZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.ssl.SslContextBuilder;
 import nl.altindag.ssl.exception.GenericKeyStoreException;
-import nl.altindag.ssl.exception.PrivateKeyParseException;
+import nl.altindag.ssl.pem.exception.PrivateKeyParseException;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;

@@ -40,9 +40,9 @@ import org.apache.james.jwt.PublicKeyReader;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-import nl.altindag.ssl.exception.CertificateParseException;
+import nl.altindag.ssl.pem.exception.PemParseException;
+import nl.altindag.ssl.pem.util.PemUtils;
 import nl.altindag.ssl.util.KeyStoreUtils;
-import nl.altindag.ssl.util.PemUtils;
 
 public class SecurityKeyLoader {
     private static final String ALIAS = "james";
@@ -104,7 +104,7 @@ public class SecurityKeyLoader {
                 fileSystem.getResource(jmapDraftConfiguration.getCertificates().get()))
                 .get(0);
             return certificate.getPublicKey();
-        } catch (CertificateParseException e) {
+        } catch (PemParseException e) {
             String publicKeyAsString = IOUtils.toString(fileSystem.getResource(jmapDraftConfiguration.getCertificates().get()), StandardCharsets.US_ASCII);
             return new PublicKeyReader()
                 .fromPEM(publicKeyAsString)
