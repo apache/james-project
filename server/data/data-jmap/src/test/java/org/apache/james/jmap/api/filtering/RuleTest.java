@@ -52,6 +52,12 @@ class RuleTest {
     }
 
     @Test
+    void innerClassConditionGroupShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Rule.ConditionGroup.class)
+            .verify();
+    }
+
+    @Test
     void innerClassActionShouldMatchBeanContract() {
         EqualsVerifier.forClass(Rule.Action.class)
             .verify();

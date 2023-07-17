@@ -34,6 +34,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.EMPTY;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULLNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULL_SCRAMBLED_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.GA_BOU_ZO_MEU_FULL_ADDRESS;
+import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_MAILBOX_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.SCRAMBLED_SUBJECT;
@@ -46,13 +47,13 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_1_FU
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_FULL_ADDRESS;
+import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_FULL_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_4_FULL_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
@@ -99,7 +100,7 @@ class JMAPFilteringTest {
         private Optional<Rule.Condition.Field> field;
         private MimeMessageBuilder mimeMessageBuilder;
         private Optional<String> valueToMatch;
-        
+
         private FilteringArgumentBuilder() {
             this.description = Optional.empty();
             this.field = Optional.empty();
@@ -179,9 +180,9 @@ class JMAPFilteringTest {
 
         public FilteringArgumentBuilder unscrambledSubjectShouldNotMatchCaseSensitive() {
             return description("unscrambled content (case sensitive)")
-                    .field(SUBJECT)
-                    .subject(UNSCRAMBLED_SUBJECT)
-                    .valueToMatch(UNSCRAMBLED_SUBJECT.toUpperCase(Locale.FRENCH));
+                .field(SUBJECT)
+                .subject(UNSCRAMBLED_SUBJECT)
+                .valueToMatch(UNSCRAMBLED_SUBJECT.toUpperCase(Locale.FRENCH));
         }
 
         public FilteringArgumentBuilder testForUpperCase() {
@@ -193,7 +194,7 @@ class JMAPFilteringTest {
             Preconditions.checkState(description.isPresent());
             Preconditions.checkState(field.isPresent());
             Preconditions.checkState(valueToMatch.isPresent());
-            
+
             return Arguments.of(description.get(), field.get(), mimeMessageBuilder, valueToMatch.get());
         }
     }
@@ -256,131 +257,131 @@ class JMAPFilteringTest {
             ADDRESS_TESTING_COMBINATION
                 .stream()
                 .flatMap(fieldAndHeader -> Stream.of(
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username exact match in a full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .valueToMatch(USER_1_USERNAME),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username exact match in a full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .valueToMatch(USER_1_USERNAME),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .valueToMatch(USER_1_ADDRESS),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .valueToMatch(USER_1_ADDRESS),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a full " + fieldAndHeader.headerName + " header with multiple addresses")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", " + USER_2_FULL_ADDRESS)
-                        .valueToMatch(USER_1_ADDRESS),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a full " + fieldAndHeader.headerName + " header with multiple addresses")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", " + USER_2_FULL_ADDRESS)
+                            .valueToMatch(USER_1_ADDRESS),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, "invalid@ white.space.in.domain.tld")
-                        .valueToMatch("invalid@ white.space.in.domain.tld"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a failing " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, "invalid@ white.space.in.domain.tld")
+                            .valueToMatch("invalid@ white.space.in.domain.tld"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a coma quoted " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
-                        .valueToMatch("\"a, b\"@quoted.com"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a coma quoted " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
+                            .valueToMatch("\"a, b\"@quoted.com"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username exact match in a coma quoted " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
-                        .valueToMatch("Toto"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username exact match in a coma quoted " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
+                            .valueToMatch("Toto"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full exact match in a coma quoted " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
-                        .valueToMatch("Toto <\"a, b\"@quoted.com>"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full exact match in a coma quoted " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
+                            .valueToMatch("Toto <\"a, b\"@quoted.com>"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a failing + coma quoted" + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
-                        .valueToMatch("\"a, b\"@quoted.com"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a failing + coma quoted" + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
+                            .valueToMatch("\"a, b\"@quoted.com"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username exact match in a failing + coma quoted " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
-                        .valueToMatch("Toto"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username exact match in a failing + coma quoted " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
+                            .valueToMatch("Toto"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full exact match in a failing + coma quoted " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
-                        .valueToMatch("Toto <\"a, b\"@quoted.com>"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full exact match in a failing + coma quoted " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
+                            .valueToMatch("Toto <\"a, b\"@quoted.com>"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
-                        .valueToMatch(USER_1_FULL_ADDRESS),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
+                            .valueToMatch(USER_1_FULL_ADDRESS),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
-                        .valueToMatch(USER_1_ADDRESS),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
+                            .valueToMatch(USER_1_ADDRESS),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
-                        .valueToMatch(USER_1_USERNAME),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
+                            .valueToMatch(USER_1_USERNAME),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full header exact match in a full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .valueToMatch(USER_1_FULL_ADDRESS),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full header exact match in a full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .valueToMatch(USER_1_FULL_ADDRESS),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Exact match in a full " + fieldAndHeader.headerName + " header with a symetric emailer")
-                        .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
-                        .valueToMatch("toto@domain.tld"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Exact match in a full " + fieldAndHeader.headerName + " header with a symetric emailer")
+                            .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
+                            .valueToMatch("toto@domain.tld"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username exact match in a username only " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_USERNAME)
-                        .valueToMatch(USER_1_USERNAME),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username exact match in a username only " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_USERNAME)
+                            .valueToMatch(USER_1_USERNAME),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in an address only " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_ADDRESS)
-                        .valueToMatch(USER_1_ADDRESS),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in an address only " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_ADDRESS)
+                            .valueToMatch(USER_1_ADDRESS),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username matching in multiple " + fieldAndHeader.headerName + " headers")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .header(fieldAndHeader.headerName, USER_2_FULL_ADDRESS)
-                        .valueToMatch(USER_1_USERNAME),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username matching in multiple " + fieldAndHeader.headerName + " headers")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .header(fieldAndHeader.headerName, USER_2_FULL_ADDRESS)
+                            .valueToMatch(USER_1_USERNAME),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username exact match in a scrambled full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
-                        .valueToMatch(FRED_MARTIN_FULLNAME),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username exact match in a scrambled full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
+                            .valueToMatch(FRED_MARTIN_FULLNAME),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username exact match in a folded full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
-                        .valueToMatch(UNFOLDED_USERNAME),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username exact match in a folded full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
+                            .valueToMatch(UNFOLDED_USERNAME),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username exact match in a full " + fieldAndHeader.headerName + " with an invalid address")
-                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
-                        .valueToMatch("Benoit"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username exact match in a full " + fieldAndHeader.headerName + " with an invalid address")
+                            .header(fieldAndHeader.headerName, "Benoit <invalid>")
+                            .valueToMatch("Benoit"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a full " + fieldAndHeader.headerName + " with an invalid address")
-                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
-                        .valueToMatch("invalid"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a full " + fieldAndHeader.headerName + " with an invalid address")
+                            .header(fieldAndHeader.headerName, "Benoit <invalid>")
+                            .valueToMatch("invalid"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid address")
-                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
-                        .valueToMatch("Benoit <invalid>"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid address")
+                            .header(fieldAndHeader.headerName, "Benoit <invalid>")
+                            .valueToMatch("Benoit <invalid>"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid structure")
-                        .header(fieldAndHeader.headerName, "Benoit <invalid")
-                        .valueToMatch("Benoit <invalid"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid structure")
+                            .header(fieldAndHeader.headerName, "Benoit <invalid")
+                            .valueToMatch("Benoit <invalid"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid structure - multi address")
-                        .header(fieldAndHeader.headerName, "Valid <toto@domain.tld>, Benoit <invalid")
-                        .valueToMatch("Benoit <invalid"))
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid structure - multi address")
+                            .header(fieldAndHeader.headerName, "Valid <toto@domain.tld>, Benoit <invalid")
+                            .valueToMatch("Benoit <invalid"))
                     .flatMap(JMAPFilteringTest::forBothCase)),
 
             Stream.of(
@@ -406,81 +407,81 @@ class JMAPFilteringTest {
         return StreamUtils.flatten(
             ADDRESS_TESTING_COMBINATION.stream()
                 .flatMap(fieldAndHeader -> Stream.of(
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full header partial match in a full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .valueToMatch("ser1 <"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full header partial match in a full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .valueToMatch("ser1 <"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address exact match in a full " + fieldAndHeader.headerName + " header with multiple addresses")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", Invalid <invalid@ white.space.in.domain.tld>")
-                        .valueToMatch("invalid@ white.space.in.domain.tld"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address exact match in a full " + fieldAndHeader.headerName + " header with multiple addresses")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", Invalid <invalid@ white.space.in.domain.tld>")
+                            .valueToMatch("invalid@ white.space.in.domain.tld"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address partial match in a full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .valueToMatch("ser1@jam"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address partial match in a full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .valueToMatch("ser1@jam"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username partial match in a full " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName,USER_1_FULL_ADDRESS)
-                        .valueToMatch("ser1"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username partial match in a full " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName,USER_1_FULL_ADDRESS)
+                            .valueToMatch("ser1"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address partial match in an address only " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName,USER_1_ADDRESS)
-                        .valueToMatch("ser1@jam"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address partial match in an address only " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName,USER_1_ADDRESS)
+                            .valueToMatch("ser1@jam"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username partial match in a headername only " + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName,GA_BOU_ZO_MEU_FULL_ADDRESS)
-                        .valueToMatch(BOU),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username partial match in a headername only " + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName,GA_BOU_ZO_MEU_FULL_ADDRESS)
+                            .valueToMatch(BOU),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address partial match against multiple" + fieldAndHeader.headerName + " header")
-                        .header(fieldAndHeader.headerName,USER_1_FULL_ADDRESS)
-                        .header(fieldAndHeader.headerName,USER_2_FULL_ADDRESS)
-                        .valueToMatch("ser1@jam"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address partial match against multiple" + fieldAndHeader.headerName + " header")
+                            .header(fieldAndHeader.headerName,USER_1_FULL_ADDRESS)
+                            .header(fieldAndHeader.headerName,USER_2_FULL_ADDRESS)
+                            .valueToMatch("ser1@jam"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username partial match in a scrambled " + fieldAndHeader.headerName + " full header")
-                        .header(fieldAndHeader.headerName,FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
-                        .valueToMatch("déric MAR"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username partial match in a scrambled " + fieldAndHeader.headerName + " full header")
+                            .header(fieldAndHeader.headerName,FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
+                            .valueToMatch("déric MAR"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username partial match in a folded " + fieldAndHeader.headerName + " full header")
-                        .header(fieldAndHeader.headerName,USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
-                        .valueToMatch("ded_us"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username partial match in a folded " + fieldAndHeader.headerName + " full header")
+                            .header(fieldAndHeader.headerName,USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
+                            .valueToMatch("ded_us"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username partial match in a " + fieldAndHeader.headerName + " full header with invalid address")
-                        .header(fieldAndHeader.headerName,"Benoit <invalid>")
-                        .valueToMatch("enoi"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username partial match in a " + fieldAndHeader.headerName + " full header with invalid address")
+                            .header(fieldAndHeader.headerName,"Benoit <invalid>")
+                            .valueToMatch("enoi"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address partial match in a " + fieldAndHeader.headerName + " full header with invalid address")
-                        .header(fieldAndHeader.headerName,"Benoit <invalid>")
-                        .valueToMatch("nvali"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address partial match in a " + fieldAndHeader.headerName + " full header with invalid address")
+                            .header(fieldAndHeader.headerName,"Benoit <invalid>")
+                            .valueToMatch("nvali"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full header partial match in a " + fieldAndHeader.headerName + " full header with invalid address")
-                        .header(fieldAndHeader.headerName,"Benoit <invalid>")
-                        .valueToMatch("enoit <invali"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full header partial match in a " + fieldAndHeader.headerName + " full header with invalid address")
+                            .header(fieldAndHeader.headerName,"Benoit <invalid>")
+                            .valueToMatch("enoit <invali"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Full header partial match in a " + fieldAndHeader.headerName + " full header with invalid structure")
-                        .header(fieldAndHeader.headerName,"Benoit <invalid")
-                        .valueToMatch("enoit <invali"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Full header partial match in a " + fieldAndHeader.headerName + " full header with invalid structure")
+                            .header(fieldAndHeader.headerName,"Benoit <invalid")
+                            .valueToMatch("enoit <invali"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Username partial match in a " + fieldAndHeader.headerName + " full header with invalid structure")
-                        .header(fieldAndHeader.headerName,"Benoit <invalid")
-                        .valueToMatch("enoi"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Username partial match in a " + fieldAndHeader.headerName + " full header with invalid structure")
+                            .header(fieldAndHeader.headerName,"Benoit <invalid")
+                            .valueToMatch("enoi"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Address partial match in a " + fieldAndHeader.headerName + " full header with invalid structure")
-                        .header(fieldAndHeader.headerName,"Benoit <invalid")
-                        .valueToMatch("nvali"))
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Address partial match in a " + fieldAndHeader.headerName + " full header with invalid structure")
+                            .header(fieldAndHeader.headerName,"Benoit <invalid")
+                            .valueToMatch("nvali"))
 
                     .flatMap(JMAPFilteringTest::forBothCase)),
             Stream.of(
@@ -504,60 +505,60 @@ class JMAPFilteringTest {
         return StreamUtils.flatten(
             ADDRESS_TESTING_COMBINATION.stream()
                 .flatMap(fieldAndHeader -> Stream.of(
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch in a " + fieldAndHeader.headerName + " full header")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch in a " + fieldAndHeader.headerName + " full header")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .valueToMatch(SHOULD_NOT_MATCH),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch in multiple " + fieldAndHeader.headerName + " full header")
-                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
-                        .header(fieldAndHeader.headerName, USER_2_FULL_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch in multiple " + fieldAndHeader.headerName + " full header")
+                            .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                            .header(fieldAndHeader.headerName, USER_2_FULL_ADDRESS)
+                            .valueToMatch(SHOULD_NOT_MATCH),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch in a scrambled " + fieldAndHeader.headerName + " full header")
-                        .header(fieldAndHeader.headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch in a scrambled " + fieldAndHeader.headerName + " full header")
+                            .header(fieldAndHeader.headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
+                            .valueToMatch(SHOULD_NOT_MATCH),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch in a folded " + fieldAndHeader.headerName + " full header")
-                        .header(fieldAndHeader.headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch in a folded " + fieldAndHeader.headerName + " full header")
+                            .header(fieldAndHeader.headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
+                            .valueToMatch(SHOULD_NOT_MATCH),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch in a " + fieldAndHeader.headerName + " empty header")
-                        .header(fieldAndHeader.headerName, EMPTY)
-                        .valueToMatch(SHOULD_NOT_MATCH),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch in a " + fieldAndHeader.headerName + " empty header")
+                            .header(fieldAndHeader.headerName, EMPTY)
+                            .valueToMatch(SHOULD_NOT_MATCH),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch when different address in a fully specified emailer for " + fieldAndHeader.headerName + " field")
-                        .header(fieldAndHeader.headerName, "\"me\" <notme@example.com>")
-                        .valueToMatch("\"me\" <me@example.com>"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch when different address in a fully specified emailer for " + fieldAndHeader.headerName + " field")
+                            .header(fieldAndHeader.headerName, "\"me\" <notme@example.com>")
+                            .valueToMatch("\"me\" <me@example.com>"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch when different username in a fully specified emailer for " + fieldAndHeader.headerName + " field")
-                        .header(fieldAndHeader.headerName, "\"notme\" <me@example.com>")
-                        .valueToMatch("\"definitlyme\" <me@example.com>"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch when different username in a fully specified emailer for " + fieldAndHeader.headerName + " field")
+                            .header(fieldAndHeader.headerName, "\"notme\" <me@example.com>")
+                            .valueToMatch("\"definitlyme\" <me@example.com>"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("No match in a full " + fieldAndHeader.headerName + " header with a symetric emailer - different personal")
-                        .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
-                        .valueToMatch("\"tata@domain.tld\" <toto@domain.tld>"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("No match in a full " + fieldAndHeader.headerName + " header with a symetric emailer - different personal")
+                            .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
+                            .valueToMatch("\"tata@domain.tld\" <toto@domain.tld>"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("No match in a full " + fieldAndHeader.headerName + " header with a symetric emailer - different address")
-                        .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
-                        .valueToMatch("\"toto@domain.tld\" <tata@domain.tld>"),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("No match in a full " + fieldAndHeader.headerName + " header with a symetric emailer - different address")
+                            .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
+                            .valueToMatch("\"toto@domain.tld\" <tata@domain.tld>"),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("Nomatch in a missing " + fieldAndHeader.headerName + " header")
-                        .valueToMatch(SHOULD_NOT_MATCH),
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("Nomatch in a missing " + fieldAndHeader.headerName + " header")
+                            .valueToMatch(SHOULD_NOT_MATCH),
 
-                    argumentBuilder(fieldAndHeader.field)
-                        .description("No username match in a " + fieldAndHeader.headerName + " full header with invalid structure")
-                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
-                        .valueToMatch(SHOULD_NOT_MATCH))
+                        argumentBuilder(fieldAndHeader.field)
+                            .description("No username match in a " + fieldAndHeader.headerName + " full header with invalid structure")
+                            .header(fieldAndHeader.headerName, "Benoit <invalid>")
+                            .valueToMatch(SHOULD_NOT_MATCH))
 
                     .map(FilteringArgumentBuilder::build)),
             Stream.of(
@@ -600,23 +601,23 @@ class JMAPFilteringTest {
         testSystem.getJmapFiltering().service(mail);
 
         assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
     }
 
     @ParameterizedTest(name = "CONTAINS should not match for field {1}: {0}")
     @MethodSource("notContainsTestSuite")
     void notMatchingContainsTest(String testDescription,
-                              Rule.Condition.Field fieldToMatch,
-                              MimeMessageBuilder mimeMessageBuilder,
-                              String valueToMatch,
-                              JMAPFilteringTestSystem testSystem) throws Exception {
+                                 Rule.Condition.Field fieldToMatch,
+                                 MimeMessageBuilder mimeMessageBuilder,
+                                 String valueToMatch,
+                                 JMAPFilteringTestSystem testSystem) throws Exception {
 
         testSystem.defineRulesForRecipient1(Rule.Condition.of(fieldToMatch, CONTAINS, valueToMatch));
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
 
         assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .isEmpty();
+            .isEmpty();
     }
 
     @ParameterizedTest(name = "NOT-CONTAINS should match for field {1}: {0}")
@@ -670,10 +671,10 @@ class JMAPFilteringTest {
     @ParameterizedTest(name = "EXACTLY-EQUALS should not match for field {1}: {0}")
     @MethodSource("notEqualsTestSuite")
     void equalsNotMatchingTest(String testDescription,
-                            Rule.Condition.Field fieldToMatch,
-                            MimeMessageBuilder mimeMessageBuilder,
-                            String valueToMatch,
-                            JMAPFilteringTestSystem testSystem) throws Exception {
+                               Rule.Condition.Field fieldToMatch,
+                               MimeMessageBuilder mimeMessageBuilder,
+                               String valueToMatch,
+                               JMAPFilteringTestSystem testSystem) throws Exception {
         testSystem.defineRulesForRecipient1(Rule.Condition.of(fieldToMatch, EXACTLY_EQUALS, valueToMatch));
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
@@ -726,26 +727,26 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox1Id.serialize())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, NOT_CONTAINS, USER_1_USERNAME)))
+                    .conditionGroup(Rule.Condition.of(FROM, NOT_CONTAINS, USER_1_USERNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox2Id.serialize())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("3"))
                     .name("rule 3")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(TO, EXACTLY_EQUALS, USER_3_ADDRESS)))
+                    .conditionGroup(Rule.Condition.of(TO, EXACTLY_EQUALS, USER_3_ADDRESS))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox3Id.serialize())))
                     .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .addFrom(USER_2_ADDRESS)
-                    .addToRecipient(USER_3_ADDRESS)
-                    .setSubject(UNSCRAMBLED_SUBJECT));
+                .addFrom(USER_2_ADDRESS)
+                .addToRecipient(USER_3_ADDRESS)
+                .setSubject(UNSCRAMBLED_SUBJECT));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -764,7 +765,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
                         mailbox3Id.serialize(),
                         mailbox2Id.serialize(),
@@ -772,7 +773,7 @@ class JMAPFilteringTest {
                     .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .setSubject(UNSCRAMBLED_SUBJECT));
+                .setSubject(UNSCRAMBLED_SUBJECT));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -791,19 +792,19 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT)))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
                         mailbox1Id.serialize()))))
                     .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .setSubject(UNSCRAMBLED_SUBJECT));
+                .setSubject(UNSCRAMBLED_SUBJECT));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -840,9 +841,9 @@ class JMAPFilteringTest {
                 Rule.Condition.of(CC, CONTAINS, SHOULD_NOT_MATCH));
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .addFrom(USER_1_FULL_ADDRESS)
-                    .addToRecipient(USER_2_FULL_ADDRESS)
-                    .addCcRecipient(USER_3_FULL_ADDRESS));
+                .addFrom(USER_1_FULL_ADDRESS)
+                .addToRecipient(USER_2_FULL_ADDRESS)
+                .addCcRecipient(USER_3_FULL_ADDRESS));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -861,7 +862,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build())).block();
 
@@ -880,7 +881,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build())).block();
 
@@ -901,13 +902,13 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         testSystem.getRecipient1MailboxId().serialize())))
                     .build())).block();
@@ -930,7 +931,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         unknownMailboxId,
                         testSystem.getRecipient1MailboxId().serialize())))
@@ -953,7 +954,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, false, true, ImmutableList.of()))
                 .build())).block();
@@ -973,7 +974,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     true, false, false, ImmutableList.of()))
                 .build())).block();
@@ -996,7 +997,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, true, false, ImmutableList.of()))
                 .build())).block();
@@ -1019,7 +1020,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, false, false, ImmutableList.of("abc", "def")))
                 .build())).block();
@@ -1040,7 +1041,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME)))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     true, true, false, ImmutableList.of("abc", "def")))
                 .build())).block();
@@ -1057,5 +1058,80 @@ class JMAPFilteringTest {
         expectedFlags.add(Flags.Flag.FLAGGED);
         assertThat(StorageDirective.fromMail(Username.of("recipient1"), mail).getFlags().get())
             .isEqualTo(expectedFlags);
+    }
+
+    @Test
+    void shouldMatchRuleOfAndConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cd")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
+                    false, false, false, ImmutableList.of()))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+    }
+
+    @Test
+    void shouldNotMatchRuleOfAndConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
+                    false, false, false, ImmutableList.of()))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME).isEmpty()).isTrue();
+    }
+
+    @Test
+    void shouldMatchRuleOfOrConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
+                    false, false, false, ImmutableList.of()))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+    }
+
+    @Test
+    void shouldNotMatchRuleOfOrConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
+                    false, false, false, ImmutableList.of()))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_3_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME).isEmpty()).isTrue();
     }
 }

@@ -29,8 +29,6 @@ import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDT
 import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventId;

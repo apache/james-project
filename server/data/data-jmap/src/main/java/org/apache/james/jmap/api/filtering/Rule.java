@@ -103,15 +103,17 @@ public class Rule {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ConditionGroup that = (ConditionGroup) o;
-            return conditionCombiner == that.conditionCombiner && Objects.equals(conditions, that.conditions);
+        public final boolean equals(Object o) {
+            if (o instanceof ConditionGroup) {
+                ConditionGroup other = (ConditionGroup) o;
+                return Objects.equals(conditionCombiner, other.conditionCombiner)
+                    && Objects.equals(conditions, other.conditions);
+            }
+            return false;
         }
 
         @Override
-        public int hashCode() {
+        public final int hashCode() {
             return Objects.hash(conditionCombiner, conditions);
         }
 
