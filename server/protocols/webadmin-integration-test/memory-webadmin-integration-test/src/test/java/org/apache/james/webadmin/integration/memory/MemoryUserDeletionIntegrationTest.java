@@ -244,7 +244,7 @@ class MemoryUserDeletionIntegrationTest {
     void shouldDeleteFilters(GuiceJamesServer server) {
         Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
         Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
-        Rule.Builder RULE_BUILDER = Rule.builder().name("A name").condition(CONDITION).action(ACTION);
+        Rule.Builder RULE_BUILDER = Rule.builder().name("A name").conditionGroup(CONDITION).action(ACTION);
         Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
         server.getProbe(MemoryUserDeletionIntegrationTestProbe.class)
             .defineFilters(ALICE, ImmutableList.of(RULE_1));

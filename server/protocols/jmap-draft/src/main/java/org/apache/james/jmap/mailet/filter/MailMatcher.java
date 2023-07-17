@@ -20,7 +20,6 @@
 package org.apache.james.jmap.mailet.filter;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.api.filtering.Rule;
