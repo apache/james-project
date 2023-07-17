@@ -658,7 +658,7 @@
         <bouncycastle.version>1.70</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
-        <scala.version>${scala.base}.10</scala.version>
+        <scala.version>${scala.base}.11</scala.version>
         <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
         <mockito.version>5.2.0</mockito.version>
@@ -3075,7 +3075,7 @@
                             <compilerPlugin>
                                 <groupId>org.scalameta</groupId>
                                 <artifactId>semanticdb-scalac_${scala.version}</artifactId>
-                                <version>4.6.0</version>
+                                <version>4.8.4</version>
                             </compilerPlugin>
                         </compilerPlugins>
                     </configuration>
