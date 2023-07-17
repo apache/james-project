@@ -642,7 +642,7 @@
         <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
         <maven-plugin-api.version>3.9.3</maven-plugin-api.version>
         <maven-reporting-impl.version>3.1.0</maven-reporting-impl.version>
-        <maven-reporting-api.version>3.0</maven-reporting-api.version>
+        <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
         <qdox.version>2.0.3</qdox.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
