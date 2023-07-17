@@ -636,7 +636,7 @@
         <guava.version>32.1.1-jre</guava.version>
 
         <jutf7.version>1.0.0</jutf7.version>
-        <apache.httpcomponents.version>4.5.13</apache.httpcomponents.version>
+        <apache.httpcomponents.version>4.5.14</apache.httpcomponents.version>
         <!-- maven-mailetdocs-plugin artifacts -->
         <maven-artifact.version>3.0-alpha-1</maven-artifact.version>
         <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
