@@ -110,7 +110,7 @@
         <dependency>
             <groupId>it.unimi.dsi</groupId>
             <artifactId>fastutil-core</artifactId>
-            <version>8.5.9</version>
+            <version>8.5.12</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
