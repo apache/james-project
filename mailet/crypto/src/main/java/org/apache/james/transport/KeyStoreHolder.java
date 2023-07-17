@@ -46,7 +46,7 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
+import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
 import org.bouncycastle.cert.jcajce.JcaCertStoreBuilder;
 import org.bouncycastle.cert.selector.X509CertificateHolderSelector;
 import org.bouncycastle.cert.selector.jcajce.JcaX509CertSelectorConverter;
@@ -101,7 +101,10 @@ public class KeyStoreHolder {
         }
         
         keyStore = KeyStore.getInstance(keyStoreType);        
-        keyStore.load(new UnsynchronizedBufferedInputStream(new FileInputStream(keyStoreFileName)), keyStorePassword.toCharArray());
+        keyStore.load(UnsynchronizedBufferedInputStream
+            .builder()
+            .setInputStream(new FileInputStream(keyStoreFileName))
+            .get(), keyStorePassword.toCharArray());
         if (keyStore.size() == 0) {
             throw new KeyStoreException("The keystore must be not empty");
         }
