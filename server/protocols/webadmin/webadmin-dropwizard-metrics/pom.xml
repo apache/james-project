@@ -33,6 +33,10 @@
     <description>HTTP endpoint to expose dropwizard collected metrics. This endpoint is intended to be called by
     Prometheus.</description>
 
+    <properties>
+        <prometheus.version>0.16.0</prometheus.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -61,12 +65,12 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_dropwizard</artifactId>
-            <version>0.15.0</version>
+            <version>${prometheus.version}</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>simpleclient_servlet</artifactId>
-            <version>0.15.0</version>
+            <version>${prometheus.version}</version>
         </dependency>
         <dependency>
             <groupId>io.rest-assured</groupId>
