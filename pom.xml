@@ -639,7 +639,7 @@
         <apache.httpcomponents.version>4.5.14</apache.httpcomponents.version>
         <!-- maven-mailetdocs-plugin artifacts -->
         <maven-artifact.version>3.0-alpha-1</maven-artifact.version>
-        <maven-plugin-annotations.version>3.6.4</maven-plugin-annotations.version>
+        <maven-plugin-annotations.version>3.9.0</maven-plugin-annotations.version>
         <maven-plugin-api.version>3.9.3</maven-plugin-api.version>
         <maven-reporting-impl.version>3.1.0</maven-reporting-impl.version>
         <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
