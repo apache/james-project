@@ -1079,7 +1079,7 @@ class JMAPFilteringTest {
     }
 
     @Test
-    void andShouldNotMatchWhenSomeConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
+    void andShouldNotMatchWhenSomeConditionsAreNotMet(JMAPFilteringTestSystem testSystem) throws Exception {
         Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
             Optional.empty(),
             Rule.builder()
