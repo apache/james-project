@@ -617,7 +617,7 @@
         <dnsjava.version>3.5.2</dnsjava.version>
         <junit.jupiter.version>5.9.3</junit.jupiter.version>
         <junit.platform.version>1.9.3</junit.platform.version>
-        <junit.vintage.version>5.8.2</junit.vintage.version>
+        <junit.vintage.version>5.9.3</junit.vintage.version>
         <concurrent.version>1.3.4</concurrent.version>
         <xbean-spring.version>4.21</xbean-spring.version>
         <netty.version>4.1.94.Final</netty.version>
