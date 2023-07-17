@@ -109,7 +109,7 @@ public class DockerRabbitMQ {
     }
 
     private String getHostIp() {
-        return container.getContainerIpAddress();
+        return container.getHost();
     }
 
     private Integer getPort() {

@@ -223,7 +223,7 @@ public class DockerCassandra {
     }
     
     public String getIp() {
-        return cassandraContainer.getContainerIpAddress();
+        return cassandraContainer.getHost();
     }
 
     public int getBindingPort() {

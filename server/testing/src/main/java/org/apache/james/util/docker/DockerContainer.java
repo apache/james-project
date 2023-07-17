@@ -193,7 +193,7 @@ public class DockerContainer implements TestRule, BeforeAllCallback, AfterAllCal
     }
     
     public String getHostIp() {
-        return container.getContainerIpAddress();
+        return container.getHost();
     }
 
     @Override
