@@ -650,7 +650,7 @@
         <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
-        <guice.version>5.1.0</guice.version>
+        <guice.version>6.0.0</guice.version>
         <logback.version>1.4.8</logback.version>
         <tink.version>1.9.0</tink.version>
         <lettuce.core.version>6.2.4.RELEASE</lettuce.core.version>
