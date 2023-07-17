@@ -46,6 +46,8 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.input.TeeInputStream;
+import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
+import org.apache.commons.io.input.UnsynchronizedFilterInputStream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.events.EventBus;
@@ -107,7 +109,6 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.io.BodyOffsetInputStream;
 import org.apache.james.util.io.InputStreamConsummer;
-import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 import org.apache.james.util.streams.Iterators;
 import org.reactivestreams.Publisher;
 
@@ -358,7 +359,9 @@ public class StoreMessageManager implements MessageManager {
             file = Files.createTempFile("imap", ".msg").toFile();
             try (FileOutputStream out = new FileOutputStream(file);
                  BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
-                 UnsynchronizedBufferedInputStream tmpMsgIn = new UnsynchronizedBufferedInputStream(new TeeInputStream(msgIn, bufferedOut));
+                 UnsynchronizedFilterInputStream tmpMsgIn = UnsynchronizedBufferedInputStream.builder()
+                     .setInputStream(new TeeInputStream(msgIn, bufferedOut))
+                     .get();
                  BodyOffsetInputStream bIn = new BodyOffsetInputStream(tmpMsgIn)) {
                 Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
                 PropertyBuilder propertyBuilder = pair.getLeft();
@@ -405,8 +408,10 @@ public class StoreMessageManager implements MessageManager {
             }
 
             try (InputStream contentStream = msgIn.getInputStream();
-                 UnsynchronizedBufferedInputStream bufferedContentStream = new UnsynchronizedBufferedInputStream(contentStream);
-                    BodyOffsetInputStream bIn = new BodyOffsetInputStream(bufferedContentStream)) {
+                 UnsynchronizedFilterInputStream bufferedContentStream = UnsynchronizedBufferedInputStream.builder()
+                     .setInputStream(contentStream)
+                     .get();
+                BodyOffsetInputStream bIn = new BodyOffsetInputStream(bufferedContentStream)) {
                 Pair<PropertyBuilder, HeaderImpl> pair = parseProperties(bIn);
                 PropertyBuilder propertyBuilder = pair.getLeft();
                 HeaderImpl headers = pair.getRight();

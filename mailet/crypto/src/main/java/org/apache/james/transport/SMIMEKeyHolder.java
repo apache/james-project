@@ -45,7 +45,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
+import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.SignerInfoGenerator;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoGeneratorBuilder;
@@ -128,7 +128,11 @@ public class SMIMEKeyHolder implements KeyHolder {
         }
         
         KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-        keyStore.load(new UnsynchronizedBufferedInputStream(new FileInputStream(keyStoreFileName)), keyStorePassword.toCharArray());
+
+        keyStore.load(UnsynchronizedBufferedInputStream.builder()
+            .setInputStream(new FileInputStream(keyStoreFileName))
+            .get(),
+            keyStorePassword.toCharArray());
         
         Enumeration<String> aliases = keyStore.aliases();
         if (keyAlias == null) {

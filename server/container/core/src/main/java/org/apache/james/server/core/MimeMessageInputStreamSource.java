@@ -33,10 +33,10 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.util.SizeFormat;
-import org.apache.james.util.io.UnsynchronizedBufferedInputStream;
 
 /**
  * Takes an input stream and creates a repeatable input stream source for a
@@ -186,7 +186,10 @@ public class MimeMessageInputStreamSource extends Disposable.LeakAware<MimeMessa
         if (getResource().getOut().isInMemory()) {
             return new ByteArrayInputStream(getResource().getOut().getData());
         } else {
-            InputStream in = new UnsynchronizedBufferedInputStream(new FileInputStream(getResource().getOut().getFile()), 2048);
+            InputStream in = UnsynchronizedBufferedInputStream.builder()
+                .setInputStream(new FileInputStream(getResource().getOut().getFile()))
+                .setBufferSize(2048)
+                .get();
             getResource().streams.add(in);
             return in;
         }
