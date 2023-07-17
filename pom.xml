@@ -625,7 +625,7 @@
 
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson.version>2.15.2</jackson.version>
-        <jackson.databind.version>2.14.1</jackson.databind.version>
+        <jackson.databind.version>2.15.2</jackson.databind.version>
         <feign.version>12.4</feign.version>
         <feign-form.version>3.8.0</feign-form.version>
         <jjwt.version>0.11.5</jjwt.version>
@@ -663,6 +663,7 @@
         <doclint>none</doclint>
         <mockito.version>5.2.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
+        <javacrumbs.json-unit.version>2.38.0</javacrumbs.json-unit.version>
     </properties>
 
     <dependencyManagement>
@@ -2498,8 +2499,13 @@
             </dependency>
             <dependency>
                 <groupId>net.javacrumbs.json-unit</groupId>
+                <artifactId>json-unit</artifactId>
+                <version>${javacrumbs.json-unit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.javacrumbs.json-unit</groupId>
                 <artifactId>json-unit-assertj</artifactId>
-                <version>3.0.0</version>
+                <version>${javacrumbs.json-unit.version}</version>
             </dependency>
             <dependency>
                 <groupId>nl.jqno.equalsverifier</groupId>
