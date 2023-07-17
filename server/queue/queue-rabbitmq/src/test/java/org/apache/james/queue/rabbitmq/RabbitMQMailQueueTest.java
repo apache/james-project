@@ -89,12 +89,10 @@ import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.assertj.core.api.SoftAssertions;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
@@ -1022,22 +1020,16 @@ class RabbitMQMailQueueTest {
                     .setText(identicalContent))
                 .build());
 
-            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(mailQueue.deQueue());
-
-            List<MailQueue.MailQueueItem> items = dequeueFlux.take(2)
+            Flux.from(mailQueue.deQueue())
+                .take(2)
                 .concatMap(mailQueueItem ->
                     Mono.fromCallable(() -> {
+                        assertThat(mailQueueItem.getMail().getMessage().getContent()).isEqualTo(identicalContent);
                         mailQueueItem.done(MailQueue.MailQueueItem.CompletionStatus.SUCCESS);
                         return mailQueueItem;
-                    }).subscribeOn(Schedulers.fromExecutor(EXECUTOR))
-                        .thenReturn(mailQueueItem)
-                        .onErrorResume(e -> Mono.just(mailQueueItem)))
+                    }).subscribeOn(Schedulers.fromExecutor(EXECUTOR)))
                 .collectList()
                 .block(Duration.ofSeconds(10));
-
-            assertThat(items)
-                .allSatisfy(Throwing.consumer(item -> assertThat(item.getMail().getMessage().getContent())
-                    .isEqualTo(identicalContent)));
         }
     }
 
