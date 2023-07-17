@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.api.filtering;
 
-import java.util.Arrays;
-
 public interface RuleFixture {
     String NAME = "a name";
     Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");

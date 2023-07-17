@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.cassandra.filtering;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -64,11 +63,13 @@ public class RuleDTO {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ConditionGroupDTO that = (ConditionGroupDTO) o;
-            return conditionCombiner == that.conditionCombiner && Objects.equals(conditionDTOs, that.conditionDTOs);
+        public final boolean equals(Object o) {
+            if (o instanceof ConditionGroupDTO) {
+                ConditionGroupDTO other = (ConditionGroupDTO) o;
+                return Objects.equals(conditionCombiner, other.conditionCombiner)
+                    && Objects.equals(conditionDTOs, other.conditionDTOs);
+            }
+            return false;
         }
 
         @Override

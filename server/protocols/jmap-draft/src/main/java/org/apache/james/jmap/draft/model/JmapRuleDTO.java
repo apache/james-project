@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.draft.model;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.james.jmap.api.filtering.Rule;
