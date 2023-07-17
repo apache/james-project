@@ -2354,7 +2354,7 @@
             <dependency>
                 <groupId>io.github.hakky54</groupId>
                 <artifactId>sslcontext-kickstart-for-pem</artifactId>
-                <version>7.4.7</version>
+                <version>8.1.2</version>
             </dependency>
             <dependency>
                 <groupId>io.github.openfeign</groupId>

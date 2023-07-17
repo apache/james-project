@@ -40,8 +40,8 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 
 import nl.altindag.ssl.SSLFactory;
-import nl.altindag.ssl.trustmanager.TrustStoreTrustOptions;
-import nl.altindag.ssl.util.PemUtils;
+import nl.altindag.ssl.pem.util.PemUtils;
+import nl.altindag.ssl.trustmanager.trustoptions.TrustStoreTrustOptions;
 
 public class LegacyJavaEncryptionFactory implements Encryption.Factory {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractConfigurableAsyncServer.class);
