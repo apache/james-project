@@ -633,7 +633,7 @@
         <testcontainers.version>1.17.6</testcontainers.version>
         <es.version>2.2.1</es.version>
         <es-reporter.version>6.0.0-RC3</es-reporter.version>
-        <guava.version>31.1-jre</guava.version>
+        <guava.version>32.1.1-jre</guava.version>
 
         <jutf7.version>1.0.0</jutf7.version>
         <apache.httpcomponents.version>4.5.13</apache.httpcomponents.version>
