@@ -93,6 +93,12 @@ extensions.routes=org.apache.james.rspamd.route.FeedMessageRoute
 ```
 How to use admin endpoint, see more at [Additional webadmin endpoints](README.md)
 
+- Declare the Rspamd healthcheck in `healthcheck.properties`
+
+```
+additional.healthchecks=org.apache.james.rspamd.healthcheck.RspamdHealthCheck
+```
+
 - Docker compose file example: [docker-compose.yml](docker-compose.yml) or [docker-compose-distributed.yml](docker-compose-distributed.yml).
   
   Please configure `ClamAV` integration into `Rspamd` if you want to enable virus scanning.
