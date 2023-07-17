@@ -95,7 +95,7 @@ class RspamdHttpClientTest {
     }
 
     @Test
-    void checkMailWithWrongPasswordShouldThrowUnauthorizedExceptionException() {
+    void checkMailWithWrongPasswordShouldThrowUnauthorizedException() {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
@@ -105,7 +105,7 @@ class RspamdHttpClientTest {
     }
 
     @Test
-    void learnSpamWithWrongPasswordShouldThrowUnauthorizedExceptionException() {
+    void learnSpamWithWrongPasswordShouldThrowUnauthorizedException() {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
@@ -116,7 +116,7 @@ class RspamdHttpClientTest {
     }
 
     @Test
-    void learnHamWithWrongPasswordShouldThrowUnauthorizedExceptionException() {
+    void learnHamWithWrongPasswordShouldThrowUnauthorizedException() {
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "wrongPassword", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 

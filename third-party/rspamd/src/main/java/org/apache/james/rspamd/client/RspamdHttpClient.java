@@ -106,7 +106,7 @@ public class RspamdHttpClient {
     public static final String LEARN_HAM_ENDPOINT = "/learnham";
     private static final int OK = 200;
     private static final int NO_CONTENT = 204;
-    private static final int FORBIDDEN = 403;
+    private static final int UNAUTHORIZED = 401;
     private static final int BUFFER_SIZE = 16384;
 
     private final HttpClient httpClient;
@@ -199,7 +199,7 @@ public class RspamdHttpClient {
             case OK:
                 return byteBufMono.asString(StandardCharsets.UTF_8)
                     .map(Throwing.function(this::convertToAnalysisResult));
-            case FORBIDDEN:
+            case UNAUTHORIZED:
                 return byteBufMono.asString(StandardCharsets.UTF_8)
                     .flatMap(responseBody -> Mono.error(() -> new UnauthorizedException(responseBody)));
             default:
@@ -213,7 +213,7 @@ public class RspamdHttpClient {
             case NO_CONTENT:
             case OK:
                 return Mono.empty();
-            case FORBIDDEN:
+            case UNAUTHORIZED:
                 return byteBufMono.asString(StandardCharsets.UTF_8)
                     .flatMap(responseBody -> Mono.error(() -> new UnauthorizedException(responseBody)));
             default:
