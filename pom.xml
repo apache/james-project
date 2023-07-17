@@ -612,7 +612,7 @@
         <apache-jspf-resolver.version>1.0.3</apache-jspf-resolver.version>
         <javamail.version>1.5.4</javamail.version>
         <javax-activation.version>1.1.1</javax-activation.version>
-        <slf4j.version>2.0.6</slf4j.version>
+        <slf4j.version>2.0.7</slf4j.version>
 
         <dnsjava.version>3.5.2</dnsjava.version>
         <junit.jupiter.version>5.9.3</junit.jupiter.version>
