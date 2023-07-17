@@ -34,7 +34,6 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.EMPTY;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULLNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULL_SCRAMBLED_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.GA_BOU_ZO_MEU_FULL_ADDRESS;
-import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_MAILBOX_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.SCRAMBLED_SUBJECT;
@@ -1061,15 +1060,14 @@ class JMAPFilteringTest {
     }
 
     @Test
-    void shouldMatchRuleOfAndConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+    void andShouldMatchWhenAllConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
         Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
             Optional.empty(),
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
                 .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cd")))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
-                    false, false, false, ImmutableList.of()))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
         FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
@@ -1081,15 +1079,14 @@ class JMAPFilteringTest {
     }
 
     @Test
-    void shouldNotMatchRuleOfAndConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+    void andShouldNotMatchWhenSomeConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
         Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
             Optional.empty(),
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
                 .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
-                    false, false, false, ImmutableList.of()))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
         FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
@@ -1099,15 +1096,14 @@ class JMAPFilteringTest {
     }
 
     @Test
-    void shouldMatchRuleOfOrConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+    void orShouldMatchWhenSomeConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
         Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
             Optional.empty(),
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
                 .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
-                    false, false, false, ImmutableList.of()))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
         FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
@@ -1118,15 +1114,14 @@ class JMAPFilteringTest {
     }
 
     @Test
-    void shouldNotMatchRuleOfOrConditionCombiner(JMAPFilteringTestSystem testSystem) throws Exception {
+    void orShouldNotMatchWhenNoConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
         Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
             Optional.empty(),
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
                 .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize()),
-                    false, false, false, ImmutableList.of()))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
                 .build())).block();
 
         FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_3_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));

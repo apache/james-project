@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 
 public interface MailMatcher {
 
@@ -104,7 +105,7 @@ public interface MailMatcher {
                 ruleCondition.getValue(),
                 HeaderExtractor.asHeaderExtractor(ruleCondition.getField())
                     .orElseThrow(() -> new RuntimeException("No content matcher associated with comparator " + ruleCondition.getComparator())))
-            ).collect(Collectors.toList()), rule.getConditionGroup().getConditionCombiner());
+            ).collect(ImmutableList.toImmutableList()), rule.getConditionGroup().getConditionCombiner());
     }
 
     boolean match(Mail mail);

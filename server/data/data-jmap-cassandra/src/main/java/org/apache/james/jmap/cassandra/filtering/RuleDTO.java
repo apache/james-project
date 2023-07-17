@@ -22,7 +22,6 @@ package org.apache.james.jmap.cassandra.filtering;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.james.jmap.api.filtering.Rule;
 
@@ -36,8 +35,8 @@ public class RuleDTO {
 
     public static class ConditionGroupDTO {
 
-        private Rule.ConditionCombiner conditionCombiner;
-        private List<ConditionDTO> conditionDTOs;
+        private final Rule.ConditionCombiner conditionCombiner;
+        private final List<ConditionDTO> conditionDTOs;
 
         @JsonCreator
         public ConditionGroupDTO(@JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
@@ -55,11 +54,11 @@ public class RuleDTO {
         }
 
         public Rule.ConditionGroup toConditionGroup() {
-            return Rule.ConditionGroup.of(conditionCombiner, conditionDTOs.stream().map(ConditionDTO::toCondition).collect(Collectors.toList()));
+            return Rule.ConditionGroup.of(conditionCombiner, conditionDTOs.stream().map(ConditionDTO::toCondition).collect(ImmutableList.toImmutableList()));
         }
 
         public static ConditionGroupDTO from(Rule.ConditionGroup conditionGroup) {
-            return new ConditionGroupDTO(conditionGroup.getConditionCombiner(), conditionGroup.getConditions().stream().map(ConditionDTO::from).collect(Collectors.toList()));
+            return new ConditionGroupDTO(conditionGroup.getConditionCombiner(), conditionGroup.getConditions().stream().map(ConditionDTO::from).collect(ImmutableList.toImmutableList()));
         }
 
         @Override
@@ -286,16 +285,17 @@ public class RuleDTO {
     @JsonCreator
     public RuleDTO(@JsonProperty("id") String id,
                    @JsonProperty("name") String name,
-                   @JsonProperty("condition") ConditionDTO conditionDTO,
+                   @JsonProperty("condition") Optional<ConditionDTO> conditionDTO,
                    @JsonProperty("conditionGroup") Optional<ConditionGroupDTO> conditionGroupDTO,
                    @JsonProperty("action") ActionDTO actionDTO) {
         Preconditions.checkNotNull(id);
 
         this.name = name;
-        if (!conditionGroupDTO.isEmpty()) {
-            this.conditionGroupDTO = conditionGroupDTO.get();
+        if (conditionGroupDTO.isPresent()) {
+            this.conditionGroupDTO = conditionGroupDTO.orElseThrow();
         } else {
-            this.conditionGroupDTO = new ConditionGroupDTO(Rule.ConditionCombiner.AND, ImmutableList.of(conditionDTO));
+            this.conditionGroupDTO = new ConditionGroupDTO(Rule.ConditionCombiner.AND,
+                ImmutableList.of(conditionDTO.orElseThrow(() -> new RuntimeException("Condition field in the rule with id " + id + " is missing"))));
         }
         this.actionDTO = actionDTO;
 

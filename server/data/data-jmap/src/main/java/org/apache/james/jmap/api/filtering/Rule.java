@@ -74,9 +74,6 @@ public class Rule {
 
     public static class ConditionGroup {
 
-        private final ConditionCombiner conditionCombiner;
-        private final List<Condition> conditions;
-
         public static ConditionGroup of(ConditionCombiner conditionCombiner, List<Condition> conditions) {
             return new ConditionGroup(conditionCombiner, conditions);
         }
@@ -88,6 +85,9 @@ public class Rule {
         public static ConditionGroup of(Condition condition) {
             return ConditionGroup.of(ConditionCombiner.AND, condition);
         }
+
+        private final ConditionCombiner conditionCombiner;
+        private final List<Condition> conditions;
 
         private ConditionGroup(ConditionCombiner conditionCombiner, List<Condition> conditions) {
             this.conditionCombiner = conditionCombiner;
