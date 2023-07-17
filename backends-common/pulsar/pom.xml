@@ -32,6 +32,7 @@
     <properties>
         <pulsar-client.version>2.11.0</pulsar-client.version>
         <clever-cloud.pulsar4s.version>2.9.0</clever-cloud.pulsar4s.version>
+        <testcontainer-pulsar.version>0.40.17</testcontainer-pulsar.version>
     </properties>
 
     <dependencies>
@@ -86,13 +87,13 @@
         <dependency>
             <groupId>com.dimafeng</groupId>
             <artifactId>testcontainers-scala-pulsar_${scala.base}</artifactId>
-            <version>0.40.10</version>
+            <version>${testcontainer-pulsar.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.dimafeng</groupId>
             <artifactId>testcontainers-scala-scalatest_${scala.base}</artifactId>
-            <version>0.40.10</version>
+            <version>${testcontainer-pulsar.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
