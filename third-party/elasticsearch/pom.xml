@@ -130,6 +130,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <finalName>apache-james-elasticsearch</finalName>
                 </configuration>
                 <executions>
                     <execution>

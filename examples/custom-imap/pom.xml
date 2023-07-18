@@ -97,6 +97,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <finalName>custom-imap</finalName>
                 </configuration>
                 <executions>
                     <execution>

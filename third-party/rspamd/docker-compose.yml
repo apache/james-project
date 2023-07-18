@@ -9,9 +9,10 @@ services:
     image: apache/james:memory-latest
     container_name: james
     hostname: james.local
+    command:
+      - --generate-keystore
     volumes:
-      - $PWD/target/apache-james-rspamd-3.9.0-SNAPSHOT-jar-with-dependencies.jar:/root/extensions-jars/james-server-rspamd.jar
-      - $PWD/sample-configuration/keystore:/root/conf/keystore
+      - $PWD/target/apache-james-rspamd-jar-with-dependencies.jar:/root/extensions-jars/james-server-rspamd.jar
       - $PWD/sample-configuration/extensions.properties:/root/conf/extensions.properties
       - $PWD/sample-configuration/mailetcontainer_memory.xml:/root/conf/mailetcontainer.xml
       - $PWD/sample-configuration/listeners.xml:/root/conf/listeners.xml

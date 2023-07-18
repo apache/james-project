@@ -6,8 +6,8 @@ services:
     image: apache/james:memory-latest
     container_name: james
     hostname: james.local
-    volumes:
-      - ./keystore:/root/conf/keystore
+    command:
+      - --generate-keystore
     ports:
       - "465:465"
       - "993:993"
