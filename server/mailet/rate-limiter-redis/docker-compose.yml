@@ -3,16 +3,20 @@ version: '3'
 services:
 
   redis:
-    image: redis:6.2.6
-
+    image: redis:7.0.12
+    command:
+      - "--loglevel"
+      - "debug"
   james:
     image: apache/james:memory-latest
     depends_on:
       - redis
     container_name: james
     hostname: james.local
+    command:
+      - --generate-keystore
     volumes:
-      - $PWD/target/james-server-rate-limiter-redis-3.8.0-SNAPSHOT-jar-with-dependencies.jar:/root/extensions-jars/james-server-rate-limiter-redis.jar
+      - $PWD/target/james-server-rate-limiter-redis-3.9.0-SNAPSHOT-jar-with-dependencies.jar:/root/extensions-jars/james-server-rate-limiter-redis.jar
       - $PWD/extensions.properties:/root/conf/extensions.properties
       - $PWD/redis.properties:/root/conf/redis.properties
       - $PWD/mailetcontainer.xml:/root/conf/mailetcontainer.xml
