@@ -22,12 +22,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,7 +73,9 @@ public abstract class AbstractFileSystemTest {
     private void createSubFolderWithAFileIn(String folderName, String fileName, String fileContent) throws IOException {
         File folder = tmpFolder.newFolder(folderName);
         File file = new File(folder.getAbsolutePath() + "/" + fileName);
-        FileUtils.writeStringToFile(file, fileContent, StandardCharsets.UTF_8);
+        try (var out = new FileOutputStream(file)) {
+            out.write(fileContent.getBytes(StandardCharsets.UTF_8));
+        }
     }
 
     @After
@@ -185,7 +186,7 @@ public abstract class AbstractFileSystemTest {
     public final void availableInputStreamShouldReturnANonEmptyStream(String url) throws Exception {
         url = replacePort(url);
         try (InputStream inputStream = fileSystem.getResource(url)) {
-            assertThat(IOUtils.toByteArray(inputStream).length).isGreaterThan(0);
+            assertThat(inputStream.readAllBytes().length).isGreaterThan(0);
         }
     }
 
@@ -231,7 +232,7 @@ public abstract class AbstractFileSystemTest {
     public final void createdFilesAsInputStreamShouldBeAvailable(String name, String extension) throws Exception {
         File temp = createTempFile(name, extension);
         try (InputStream inputStream = fileSystem.getResource("file:" + temp.getAbsolutePath())) {
-            assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
+            assertThat(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
             temp.delete();
         }
@@ -242,7 +243,7 @@ public abstract class AbstractFileSystemTest {
     public final void createdFilesAsInputStreamShouldBeAvailableWhenAccessedWithTwoSlashes(String name, String extension) throws Exception {
         File temp = createTempFile(name, extension);
         try (InputStream inputStream = fileSystem.getResource("file://" + temp.getAbsolutePath())) {
-            assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
+            assertThat(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
             temp.delete();
         }
@@ -250,7 +251,9 @@ public abstract class AbstractFileSystemTest {
 
     private File createTempFile(String name, String extension) throws IOException {
         File temp = File.createTempFile(name, extension);
-        FileUtils.write(temp, "content", StandardCharsets.UTF_8);
+        try (var out = new FileOutputStream(temp)) {
+            out.write("content".getBytes(StandardCharsets.UTF_8));
+        }
         return temp;
     }
 
