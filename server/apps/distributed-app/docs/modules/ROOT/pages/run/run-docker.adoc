@@ -57,7 +57,7 @@ You need a running *cassandra* in docker which connects to *james* network. To a
 
 You need a running *rabbitmq* in docker which connects to *james* network. To achieve this run:
 
-    $ docker run -d --network james --name=rabbitmq rabbitmq:3.9.18-management
+    $ docker run -d --network james --name=rabbitmq rabbitmq:3.12.1-management
 
 You need a running *Zenko Cloudserver* objectstorage in docker which connects to *james* network. To achieve this run:
 

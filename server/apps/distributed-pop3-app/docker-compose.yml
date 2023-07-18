@@ -38,7 +38,7 @@ services:
     image: apache/tika:1.28.2
 
   rabbitmq:
-    image: rabbitmq:3.9.18-management
+    image: rabbitmq:3.12.1-management
     ports:
       - "5672:5672"
       - "15672:15672"
