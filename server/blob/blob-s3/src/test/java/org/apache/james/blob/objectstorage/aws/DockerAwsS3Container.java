@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import java.net.URI;
+import java.util.UUID;
 
 import org.apache.james.util.Host;
 import org.testcontainers.containers.GenericContainer;
@@ -27,8 +28,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 public class DockerAwsS3Container {
 
-
-    private static final String AWS_S3_DOCKER_IMAGE = "zenko/cloudserver:8.2.6";
+    private static final String AWS_S3_DOCKER_IMAGE = "registry.scality.com/cloudserver/cloudserver:8.7.25";
     private static final int AWS_S3_PORT = 8000;
     private static final int ONE_TIME = 1;
 
@@ -40,14 +40,14 @@ public class DockerAwsS3Container {
     private DockerAwsS3 dockerAwsS3;
 
     public DockerAwsS3Container() {
-        this.awsS3Container = new GenericContainer<>(AWS_S3_DOCKER_IMAGE);
-        this.awsS3Container
+        this.awsS3Container = new GenericContainer<>(AWS_S3_DOCKER_IMAGE)
             .withExposedPorts(AWS_S3_PORT)
             .withEnv("S3BACKEND", "mem")
             .withEnv("SCALITY_ACCESS_KEY_ID", ACCESS_KEY_ID)
             .withEnv("SCALITY_SECRET_ACCESS_KEY", SECRET_ACCESS_KEY)
             .withEnv("LOG_LEVEL", "trace")
             .withEnv("REMOTE_MANAGEMENT_DISABLE", "1")
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-s3-test-" + UUID.randomUUID()))
             .waitingFor(Wait.forLogMessage(".*\"message\":\"server started\".*\\n", ONE_TIME));
     }
 
@@ -81,7 +81,7 @@ public class DockerAwsS3Container {
     }
 
     public String getIp() {
-        return awsS3Container.getContainerIpAddress();
+        return awsS3Container.getHost();
     }
 
     public int getPort() {
