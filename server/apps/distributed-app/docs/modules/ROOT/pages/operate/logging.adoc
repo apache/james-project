@@ -205,7 +205,7 @@ services:
       - "9042:9042"
 
   rabbitmq:
-    image: rabbitmq:3.9.18-management
+    image: rabbitmq:3.12.1-management
     ports:
       - "5672:5672"
       - "15672:15672"
