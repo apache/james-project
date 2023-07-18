@@ -8,9 +8,10 @@ services:
     image: apache/james:memory-latest
     container_name: james
     hostname: james.local
+    command:
+      - --generate-keystore
     volumes:
-      - ./conf/keystore:/root/conf/keystore
-      - ./target/apache-james-elasticsearch-3.8.0-SNAPSHOT-jar-with-dependencies.jar:/root/extensions-jars/apache-james-elasticsearch-3.8.0-SNAPSHOT-jar-with-dependencies.jar
+      - ./target/apache-james-elasticsearch-jar-with-dependencies.jar:/root/extensions-jars/apache-james-elasticsearch.jar
       - ./conf/extensions.properties:/root/conf/extensions.properties
       - ./conf/elasticsearch.properties:/root/conf/elasticsearch.properties
 
