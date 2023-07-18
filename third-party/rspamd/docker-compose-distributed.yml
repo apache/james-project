@@ -62,7 +62,7 @@ services:
       - REMOTE_MANAGEMENT_DISABLE=1
 
   redis:
-    image: redis:6.2.6
+    image: redis:7.0.12
 
   clamav:
     image: clamav/clamav:0.105

@@ -20,50 +20,51 @@
 package org.apache.james.rate.limiter;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.time.Duration;
+import java.util.UUID;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
+
+import com.github.fge.lambdas.Throwing;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
 
 public class DockerRedis {
-    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("redis");
-    private static final String DEFAULT_TAG = "6.2.6";
+    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("redis").withTag("7.0.12");
     private static final int DEFAULT_PORT = 6379;
 
     private final GenericContainer<?> container;
 
     public DockerRedis() {
-        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
-            .withExposedPorts(DEFAULT_PORT);
+        this.container = getContainer();
     }
 
     public DockerRedis(Network network) {
-        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
-            .withExposedPorts(DEFAULT_PORT)
-            .withNetwork(network)
-            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-redis-test"))
-            .withNetworkAliases("redis");
+        this.container = getContainer()
+            .withNetwork(network);
     }
 
-    public Integer getPort() {
-        return container.getMappedPort(DEFAULT_PORT);
+    private GenericContainer<?> getContainer() {
+        return new GenericContainer<>(DEFAULT_IMAGE_NAME)
+            .withExposedPorts(DEFAULT_PORT)
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-redis-test-" + UUID.randomUUID()))
+            .withCommand("--loglevel", "debug")
+            .withNetworkAliases("redis")
+            .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
+                .withStartupTimeout(Duration.ofMinutes(2)));
     }
 
     public URI redisURI() {
-        try {
-            return new URIBuilder()
-                .setScheme("redis")
-                .setHost(container.getHost())
-                .setPort(getPort())
-                .build();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Error when build redis uri. ", e);
-        }
+        return Throwing.supplier(() -> new URIBuilder()
+            .setScheme("redis")
+            .setHost(container.getHost())
+            .setPort(container.getMappedPort(DEFAULT_PORT))
+            .build()).get();
     }
 
     public void start() {
