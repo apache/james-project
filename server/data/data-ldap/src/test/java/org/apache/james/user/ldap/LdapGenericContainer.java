@@ -119,7 +119,16 @@ public class LdapGenericContainer extends ExternalResource {
     }
 
     public void unpause() {
-        container.unpause();
+        if (isPaused()) {
+            container.unpause();
+        }
+    }
+
+    private boolean isPaused() {
+        return container.getContainer().getDockerClient().inspectContainerCmd(container.getContainer().getContainerId())
+            .exec()
+            .getState()
+            .getPaused();
     }
 
     public String getLdapHost() {
