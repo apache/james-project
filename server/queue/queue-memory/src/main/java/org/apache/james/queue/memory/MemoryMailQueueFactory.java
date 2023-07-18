@@ -127,6 +127,7 @@ public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueF
             this.scheduler = Schedulers.newSingle("memory-mail-queue");
 
             this.flux = Mono.<MemoryMailQueueItem>create(sink -> sink.success(mailItems.poll()))
+                .subscribeOn(Schedulers.boundedElastic())
                 .repeat()
                 .subscribeOn(scheduler)
                 .flatMap(item ->
