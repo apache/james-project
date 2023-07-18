@@ -33,5 +33,5 @@ services:
       - "9042:9042"
 
   tika:
-    image: apache/tika:1.28.2
+    image: apache/tika:2.8.0.0
 
