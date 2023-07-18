@@ -207,13 +207,14 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <finalName>apache-james-rspamd</finalName>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
                             <goal>single</goal>
                         </goals>
-                        <phase>compile</phase>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>

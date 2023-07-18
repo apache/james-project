@@ -42,7 +42,7 @@ class PerRecipientRateLimitTest {
   @Test
   def rateLimitingShouldBeAppliedPerRecipient(): Unit = {
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("count", "1")
@@ -74,7 +74,7 @@ class PerRecipientRateLimitTest {
   @Test
   def rateLimitingShouldNotBeAppliedWhenDoNotHaveRecipient() : Unit = {
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("count", "1")
@@ -93,7 +93,7 @@ class PerRecipientRateLimitTest {
   @Test
   def rateLimitingShouldFlowToTheIntendedProcessor() : Unit = {
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("count", "1")
@@ -126,7 +126,7 @@ class PerRecipientRateLimitTest {
   @Test
   def rateLimitingShouldNOTBeAppliedPerSender() : Unit = {
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("count", "1")
@@ -159,7 +159,7 @@ class PerRecipientRateLimitTest {
   @Test
   def shouldRateLimitSizeOfEmails(): Unit = {
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("size", "100K")
@@ -206,7 +206,7 @@ class PerRecipientRateLimitTest {
     val mailetContext = Mockito.spy(FakeMailContext.defaultContext)
 
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("count", "1")
@@ -258,7 +258,7 @@ class PerRecipientRateLimitTest {
   @Test
   def shouldRateLimitedWhenAllRecipientsExceeded(): Unit = {
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("count", "1")
@@ -292,7 +292,7 @@ class PerRecipientRateLimitTest {
   @Test
   def mailetShouldSupportBothCountAndSize(): Unit = {
     val mailet: PerRecipientRateLimit = testee(FakeMailetConfig.builder()
-      .mailetName("PerRecipientRateLimitMailet")
+      .mailetName("PerRecipientRateLimit")
       .setProperty("duration", "20s")
       .setProperty("precision", "1s")
       .setProperty("count", "2")
@@ -354,7 +354,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWhenNoDuration(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .build()))
         .isInstanceOf(classOf[IllegalArgumentException])
     }
@@ -362,7 +362,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWhenEmptyDuration(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("duration", "")
         .build()))
         .isInstanceOf(classOf[IllegalArgumentException])
@@ -371,7 +371,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWhenBadDuration(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("duration", "bad")
         .build()))
         .isInstanceOf(classOf[IllegalArgumentException])
@@ -380,7 +380,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWhenNegativeDuration(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("duration", "-3s")
         .build()))
         .isInstanceOf(classOf[IllegalArgumentException])
@@ -389,7 +389,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWhenZeroDuration(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("count", "1")
         .setProperty("duration", "0s")
         .build()))
@@ -399,7 +399,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWhenTooSmallDuration(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("count", "1")
         .setProperty("duration", "10ms")
         .build()))
@@ -410,7 +410,7 @@ class PerRecipientRateLimitTest {
     def durationWithNoUnitShouldDefaultToSeconds(): Unit = {
       assertThat(
         testee(FakeMailetConfig.builder()
-          .mailetName("PerRecipientRateLimitMailet")
+          .mailetName("PerRecipientRateLimit")
           .setProperty("duration", "10")
           .build()).parseDuration().getSeconds)
         .isEqualTo(10L)
@@ -420,7 +420,7 @@ class PerRecipientRateLimitTest {
     def durationShouldSupportUnits(): Unit = {
       assertThat(
         testee(FakeMailetConfig.builder()
-          .mailetName("PerRecipientRateLimitMailet")
+          .mailetName("PerRecipientRateLimit")
           .setProperty("duration", "1h")
           .build()).parseDuration().getSeconds)
         .isEqualTo(3600L)
@@ -429,7 +429,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithEmptyCount(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("count", "")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -439,7 +439,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithZeroCount(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("count", "0")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -449,7 +449,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithNegativeCount(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("count", "-1")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -459,7 +459,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithBadCount(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("count", "bad")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -469,7 +469,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithEmptySize(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("size", "")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -479,7 +479,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithZeroSize(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("size", "0")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -489,7 +489,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithNegativeSize(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("size", "-1000")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -499,7 +499,7 @@ class PerRecipientRateLimitTest {
     @Test
     def shouldFailWithBadSize(): Unit = {
       assertThatThrownBy(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("size", "bad")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)
@@ -509,7 +509,7 @@ class PerRecipientRateLimitTest {
     @Test
     def sizeShouldSupportUnits(): Unit = {
       assertThatCode(() => testee(FakeMailetConfig.builder()
-        .mailetName("PerRecipientRateLimitMailet")
+        .mailetName("PerRecipientRateLimit")
         .setProperty("size", "1k")
         .setProperty("duration", "10s")
         .build()).parseDuration().getSeconds)

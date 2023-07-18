@@ -13,9 +13,10 @@ services:
     image: apache/james:distributed-latest
     container_name: james
     hostname: james.local
+    command:
+      - --generate-keystore
     volumes:
-      - $PWD/target/apache-james-clamav-3.8.0-SNAPSHOT-jar-with-dependencies.jar:/root/extensions-jars/james-server-clamav.jar
-      - $PWD/sample-configuration/keystore:/root/conf/keystore
+      - $PWD/target/apache-james-clamav-jar-with-dependencies.jar:/root/extensions-jars/james-server-clamav.jar
       - $PWD/sample-configuration/mailetcontainer.xml:/root/conf/mailetcontainer.xml
     ports:
       - "80:80"

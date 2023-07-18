@@ -121,7 +121,7 @@
                 <totalSize>200M</totalSize>
                 <exceededProcessor>tooMuchMails</exceededProcessor>
             </mailet>
-            <mailet matcher="All" class="PerRecipientRateLimitMailet">
+            <mailet matcher="All" class="PerRecipientRateLimit">
                 <keyPrefix>myPrefix</keyPrefix>
                 <duration>1h</duration>
                 <precision>1h</precision>
