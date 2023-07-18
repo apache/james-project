@@ -19,6 +19,8 @@
 
 package org.apache.james.data;
 
+import java.util.List;
+
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.user.ldap.DockerLdapSingleton;
@@ -33,7 +35,7 @@ public class DockerLdapRule implements GuiceModuleTestRule {
     @Override
     public Module getModule() {
         return binder -> binder.bind(LdapRepositoryConfiguration.class)
-            .toInstance(computeConfiguration(DockerLdapSingleton.ldapContainer.getLdapHost()));
+            .toInstance(computeConfiguration(List.of(DockerLdapSingleton.ldapContainer.getLdapHost())));
     }
 
     @Override
@@ -41,10 +43,10 @@ public class DockerLdapRule implements GuiceModuleTestRule {
         return statement;
     }
 
-    private LdapRepositoryConfiguration computeConfiguration(String ldapIp) {
+    private LdapRepositoryConfiguration computeConfiguration(List<String> ldapIps) {
         try {
             return LdapRepositoryConfiguration.builder()
-                .ldapHost(ldapIp)
+                .ldapHosts(ldapIps)
                 .principal("cn=admin,dc=james,dc=org")
                 .credentials("mysecretpassword")
                 .userBase("ou=People,dc=james,dc=org")

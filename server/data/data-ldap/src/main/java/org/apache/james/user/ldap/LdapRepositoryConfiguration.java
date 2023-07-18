@@ -20,6 +20,7 @@
 package org.apache.james.user.ldap;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,6 +31,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 
 public class LdapRepositoryConfiguration {
@@ -44,7 +46,7 @@ public class LdapRepositoryConfiguration {
     private static final int DEFAULT_POOL_SIZE = 4;
 
     public static class Builder {
-        private Optional<String> ldapHost;
+        private Optional<List<String>> ldapHosts;
         private Optional<String> principal;
         private Optional<String> credentials;
         private Optional<String> userBase;
@@ -55,7 +57,7 @@ public class LdapRepositoryConfiguration {
         private ImmutableMap.Builder<Domain, String> perDomainBaseDN;
 
         public Builder() {
-            ldapHost = Optional.empty();
+            ldapHosts = Optional.empty();
             principal = Optional.empty();
             credentials = Optional.empty();
             userBase = Optional.empty();
@@ -66,8 +68,8 @@ public class LdapRepositoryConfiguration {
             perDomainBaseDN = ImmutableMap.builder();
         }
 
-        public Builder ldapHost(String ldapHost) {
-            this.ldapHost = Optional.of(ldapHost);
+        public Builder ldapHosts(List<String> ldapHosts) {
+            this.ldapHosts = Optional.of(ldapHosts);
             return this;
         }
 
@@ -112,7 +114,7 @@ public class LdapRepositoryConfiguration {
         }
 
         public LdapRepositoryConfiguration build() throws ConfigurationException {
-            Preconditions.checkState(ldapHost.isPresent(), "'ldapHost' is mandatory");
+            Preconditions.checkState(ldapHosts.isPresent(), "'ldapHosts' is mandatory");
             Preconditions.checkState(principal.isPresent(), "'principal' is mandatory");
             Preconditions.checkState(credentials.isPresent(), "'credentials' is mandatory");
             Preconditions.checkState(userBase.isPresent(), "'userBase' is mandatory");
@@ -120,7 +122,7 @@ public class LdapRepositoryConfiguration {
             Preconditions.checkState(userObjectClass.isPresent(), "'userObjectClass' is mandatory");
 
             return new LdapRepositoryConfiguration(
-                ldapHost.get(),
+                ldapHosts.get(),
                 principal.get(),
                 credentials.get(),
                 userBase.get(),
@@ -143,7 +145,8 @@ public class LdapRepositoryConfiguration {
     }
 
     public static LdapRepositoryConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-        String ldapHost = configuration.getString("[@ldapHost]", "");
+        List<String> ldapHosts = Splitter.on(",")
+            .splitToList(configuration.getString("[@ldapHost]", ""));
         String principal = configuration.getString("[@principal]", "");
         String credentials = configuration.getString("[@credentials]", "");
         String userBase = configuration.getString("[@userBase]");
@@ -184,7 +187,7 @@ public class LdapRepositoryConfiguration {
             }
         }
         return new LdapRepositoryConfiguration(
-            ldapHost,
+            ldapHosts,
             principal,
             credentials,
             userBase,
@@ -202,13 +205,13 @@ public class LdapRepositoryConfiguration {
     }
 
     /**
-     * The URL of the LDAP server against which users are to be authenticated.
+     * The list of URLs of the LDAP servers against which users are to be authenticated.
      * Note that users are actually authenticated by binding against the LDAP
-     * server using the users &quot;dn&quot; and &quot;credentials&quot;.The
+     * servers using the users &quot;dn&quot; and &quot;credentials&quot;.The
      * value of this field is taken from the value of the configuration
-     * attribute &quot;ldapHost&quot;.
+     * attribute &quot;ldapHost&quot;. URLs are split by the comma  &quot;,&quot; character.
      */
-    private final String ldapHost;
+    private final List<String> ldapHosts;
 
     /**
      * The user with which to initially bind to the LDAP server. The value of
@@ -280,12 +283,12 @@ public class LdapRepositoryConfiguration {
 
     private final ImmutableMap<Domain, String> perDomainBaseDN;
 
-    private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
+    private LdapRepositoryConfiguration(List<String> ldapHosts, String principal, String credentials, String userBase, String userIdAttribute,
                                         String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
                                         Optional<String> administratorId, boolean trustAllCerts,
                                         ImmutableMap<Domain, String> perDomainBaseDN) throws ConfigurationException {
-        this.ldapHost = ldapHost;
+        this.ldapHosts = ldapHosts;
         this.principal = principal;
         this.credentials = credentials;
         this.userBase = userBase;
@@ -316,8 +319,8 @@ public class LdapRepositoryConfiguration {
         }
     }
 
-    public String getLdapHost() {
-        return ldapHost;
+    public List<String> getLdapHosts() {
+        return ldapHosts;
     }
 
     public String getPrincipal() {
@@ -384,7 +387,7 @@ public class LdapRepositoryConfiguration {
             return Objects.equals(this.connectionTimeout, that.connectionTimeout)
                 && Objects.equals(this.readTimeout, that.readTimeout)
                 && Objects.equals(this.supportsVirtualHosting, that.supportsVirtualHosting)
-                && Objects.equals(this.ldapHost, that.ldapHost)
+                && Objects.equals(this.ldapHosts, that.ldapHosts)
                 && Objects.equals(this.principal, that.principal)
                 && Objects.equals(this.credentials, that.credentials)
                 && Objects.equals(this.userBase, that.userBase)
@@ -402,7 +405,7 @@ public class LdapRepositoryConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(ldapHost, principal, credentials, userBase, userIdAttribute, userObjectClass,
+        return Objects.hash(ldapHosts, principal, credentials, userBase, userIdAttribute, userObjectClass,
             connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize,
             trustAllCerts, perDomainBaseDN);
     }
