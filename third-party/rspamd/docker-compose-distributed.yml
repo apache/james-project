@@ -53,7 +53,7 @@ services:
       - "15672:15672"
 
   s3:
-    image: zenko/cloudserver:8.2.6
+    image: registry.scality.com/cloudserver/cloudserver:8.7.25
     container_name: s3.docker.test
     environment:
       - SCALITY_ACCESS_KEY_ID=accessKey1
