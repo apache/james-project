@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -183,26 +184,52 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
         assertThat(usersLDAPRepository.countUsers()).isEqualTo(1);
     }
 
+    @Test
+    void shouldSupportLdapServersWithDifferentUriSchemas() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(
+            Set.of(masterLdap.getLdapHost(), slaveLdap.getLdapsHost()));
+
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository.configure(configuration);
+        usersLDAPRepository.init();
+
+        // request to Master LDAP
+        assertThat(usersLDAPRepository.countUsers()).isEqualTo(1);
+
+        // request to Slave LDAPS
+        masterLdap.pause();
+        assertThat(usersLDAPRepository.countUsers()).isEqualTo(1);
+    }
+
     static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers) {
-        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainers, Optional.of(ADMIN), "ldapHosts");
+        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainers.stream()
+                .map(LdapGenericContainer::getLdapHost)
+                .collect(Collectors.toUnmodifiableSet()),
+            Optional.of(ADMIN), "ldapHosts");
+    }
+
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(Set<String> ldapURIs) {
+        return ldapRepositoryConfigurationWithVirtualHosting(ldapURIs, Optional.of(ADMIN), "ldapHosts");
     }
 
     static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers, String ldapHostProperty) {
-        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainers, Optional.of(ADMIN), ldapHostProperty);
+        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainers.stream()
+                .map(LdapGenericContainer::getLdapHost)
+                .collect(Collectors.toUnmodifiableSet()),
+            Optional.of(ADMIN), ldapHostProperty);
     }
 
-    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers, Optional<Username> administrator, String ldapHostsProperty) {
-        PropertyListConfiguration configuration = baseConfiguration(ldapContainers, ldapHostsProperty);
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(Set<String> ldapURIs, Optional<Username> administrator, String ldapHostsProperty) {
+        PropertyListConfiguration configuration = baseConfiguration(ldapURIs, ldapHostsProperty);
         configuration.addProperty("[@userIdAttribute]", "mail");
         configuration.addProperty("supportsVirtualHosting", true);
         administrator.ifPresent(username -> configuration.addProperty("[@administratorId]", username.asString()));
         return configuration;
     }
 
-    static PropertyListConfiguration baseConfiguration(List<LdapGenericContainer> ldapContainers, String ldapHostsProperty) {
+    static PropertyListConfiguration baseConfiguration(Set<String> ldapURIs, String ldapHostsProperty) {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
-        configuration.addProperty(String.format("[@%s]", ldapHostsProperty), ldapContainers.stream()
-            .map(LdapGenericContainer::getLdapHost)
+        configuration.addProperty(String.format("[@%s]", ldapHostsProperty), ldapURIs.stream()
             .collect(Collectors.joining(",")));
         configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
         configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
@@ -210,6 +237,7 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
         configuration.addProperty("[@connectionTimeout]", "2000");
         configuration.addProperty("[@readTimeout]", "2000");
+        configuration.addProperty("[@trustAllCerts]", "true");
         return configuration;
     }
 }

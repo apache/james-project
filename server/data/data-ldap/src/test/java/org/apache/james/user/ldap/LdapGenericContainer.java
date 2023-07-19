@@ -37,6 +37,7 @@ import com.google.common.base.Strings;
 public class LdapGenericContainer extends ExternalResource {
 
     public static final int DEFAULT_LDAP_PORT = 389;
+    public static final int DEFAULT_LDAPS_PORT = 636;
 
     public static Builder builder() {
         return new Builder();
@@ -79,7 +80,8 @@ public class LdapGenericContainer extends ExternalResource {
                 .withEnv("LDAP_DOMAIN", domain)
                 .withEnv("LDAP_ADMIN_PASSWORD", password)
                 .withEnv("LDAP_CONFIG_PASSWORD", password)
-                .withExposedPorts(DEFAULT_LDAP_PORT)
+                .withEnv("LDAP_TLS_VERIFY_CLIENT", "try")
+                .withExposedPorts(DEFAULT_LDAP_PORT, DEFAULT_LDAPS_PORT)
                 .withCommands("--copy-service", "--loglevel", "debug")
                 .withName("james-testing-openldap-" + UUID.randomUUID())
                 .waitingFor(new LogMessageWaitStrategy().withRegEx(".*slapd starting\\n").withTimes(1)
@@ -136,6 +138,14 @@ public class LdapGenericContainer extends ExternalResource {
             .setScheme("ldap")
             .setHost(container.getContainer().getHost())
             .setPort(container.getMappedPort(DEFAULT_LDAP_PORT))
+            .build()).get().toString();
+    }
+
+    public String getLdapsHost() {
+        return Throwing.supplier(() -> new URIBuilder()
+            .setScheme("ldaps")
+            .setHost(container.getContainer().getHost())
+            .setPort(container.getMappedPort(DEFAULT_LDAPS_PORT))
             .build()).get().toString();
     }
 
