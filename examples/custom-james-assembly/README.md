@@ -71,7 +71,7 @@ We do provide in this example [JIB](https://github.com/GoogleContainerTools/jib/
 <plugin>
     <groupId>com.google.cloud.tools</groupId>
     <artifactId>jib-maven-plugin</artifactId>
-    <version>2.7.1</version>
+    <version>3.3.2</version>
     <configuration>
         <from>
             <image>adoptopenjdk:11-jdk-hotspot</image>
