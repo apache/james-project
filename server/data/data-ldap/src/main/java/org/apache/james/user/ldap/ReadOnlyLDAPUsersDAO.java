@@ -53,6 +53,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -70,7 +71,9 @@ import com.unboundid.ldap.sdk.SearchRequest;
 import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.unboundid.ldap.sdk.SearchScope;
+import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SimpleBindRequest;
+import com.unboundid.ldap.sdk.SingleServerSet;
 
 public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyLDAPUsersDAO.class);
@@ -141,25 +144,14 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         connectionOptions.setConnectTimeoutMillis(ldapConfiguration.getConnectionTimeout());
         connectionOptions.setResponseTimeoutMillis(ldapConfiguration.getReadTimeout());
 
-        List<URI> uris = ldapConfiguration.getLdapHosts()
-            .stream()
-            .map(Throwing.function(URI::new))
-            .collect(ImmutableList.toImmutableList());
-
-        // Assume SSL configuration is the same for all URIs
-        SocketFactory socketFactory = supportLDAPS(uris.get(0));
-
-        String[] addresses = uris.stream()
-            .map(URI::getHost)
-            .toArray(String[]::new);
-
-        int[] ports = uris.stream()
-            .mapToInt(URI::getPort)
-            .toArray();
-
         BindRequest bindRequest = new SimpleBindRequest(ldapConfiguration.getPrincipal(), ldapConfiguration.getCredentials());
 
-        FailoverServerSet failoverServerSet = new FailoverServerSet(addresses, ports, socketFactory, connectionOptions, bindRequest, null);
+        List<ServerSet> serverSets = ldapConfiguration.getLdapHosts()
+            .stream()
+            .map(toSingleServerSet(connectionOptions, bindRequest))
+            .collect(ImmutableList.toImmutableList());
+
+        FailoverServerSet failoverServerSet = new FailoverServerSet(serverSets);
         ldapConnectionPool = new LDAPConnectionPool(failoverServerSet, bindRequest, 4);
         ldapConnectionPool.setRetryFailedOperationsDueToInvalidConnections(true);
 
@@ -185,6 +177,13 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         } else {
             return null;
         }
+    }
+
+    private ThrowingFunction<String, SingleServerSet> toSingleServerSet(LDAPConnectionOptions connectionOptions, BindRequest bindRequest) {
+        return Throwing.function(uriString -> {
+            URI uri = new URI(uriString);
+            return new SingleServerSet(uri.getHost(), uri.getPort(), supportLDAPS(uri), connectionOptions, bindRequest, null);
+        });
     }
 
     @PreDestroy
