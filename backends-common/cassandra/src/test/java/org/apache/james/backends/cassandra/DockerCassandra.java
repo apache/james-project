@@ -133,7 +133,7 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_3_11_10-" + buildSpecificImageDiscriminator(), AdditionalDockerFileStep.IDENTITY);
+        this("cassandra_3_11_15-" + buildSpecificImageDiscriminator(), AdditionalDockerFileStep.IDENTITY);
     }
 
     private DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
@@ -168,7 +168,7 @@ public class DockerCassandra {
             new ImageFromDockerfile(imageName,doNotDeleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
                     additionalSteps.applyStep(builder
-                        .from("cassandra:3.11.10")
+                        .from("cassandra:3.11.15")
                         .env("CASSANDRA_CONFIG", "/etc/cassandra")
                         .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS
                             + "&& echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS
@@ -183,6 +183,7 @@ public class DockerCassandra {
                         .build()))
             .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)
+            .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-cassandra-test-" + UUID.randomUUID()))
             .withLogConsumer(DockerCassandra::displayDockerLog);
         cassandraContainer
             .waitingFor(new CassandraWaitStrategy(cassandraContainer));
