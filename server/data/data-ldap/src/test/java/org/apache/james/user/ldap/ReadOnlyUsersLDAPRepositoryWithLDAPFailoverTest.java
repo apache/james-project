@@ -171,21 +171,37 @@ class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
         assertThat(usersLDAPRepository.countUsers()).isEqualTo(1);
     }
 
-    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers) {
-        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainers, Optional.of(ADMIN));
+    @Test
+    void shouldSupportBackwardCompatibilityForTheLegacyLdapHostProperty() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfigurationWithVirtualHosting(List.of(masterLdap, slaveLdap), "ldapHost");
+
+        usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+        usersLDAPRepository.configure(configuration);
+
+        assertThatCode(() -> usersLDAPRepository.init())
+            .doesNotThrowAnyException();
+        assertThat(usersLDAPRepository.countUsers()).isEqualTo(1);
     }
 
-    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers, Optional<Username> administrator) {
-        PropertyListConfiguration configuration = baseConfiguration(ldapContainers);
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers) {
+        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainers, Optional.of(ADMIN), "ldapHosts");
+    }
+
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers, String ldapHostProperty) {
+        return ldapRepositoryConfigurationWithVirtualHosting(ldapContainers, Optional.of(ADMIN), ldapHostProperty);
+    }
+
+    static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting(List<LdapGenericContainer> ldapContainers, Optional<Username> administrator, String ldapHostsProperty) {
+        PropertyListConfiguration configuration = baseConfiguration(ldapContainers, ldapHostsProperty);
         configuration.addProperty("[@userIdAttribute]", "mail");
         configuration.addProperty("supportsVirtualHosting", true);
         administrator.ifPresent(username -> configuration.addProperty("[@administratorId]", username.asString()));
         return configuration;
     }
 
-    static PropertyListConfiguration baseConfiguration(List<LdapGenericContainer> ldapContainers) {
+    static PropertyListConfiguration baseConfiguration(List<LdapGenericContainer> ldapContainers, String ldapHostsProperty) {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
-        configuration.addProperty("[@ldapHost]", ldapContainers.stream()
+        configuration.addProperty(String.format("[@%s]", ldapHostsProperty), ldapContainers.stream()
             .map(LdapGenericContainer::getLdapHost)
             .collect(Collectors.joining(",")));
         configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");

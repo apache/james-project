@@ -146,7 +146,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             .map(Throwing.function(URI::new))
             .collect(ImmutableList.toImmutableList());
 
-        // naive assume SSL configuration is the same for all URIs firstly
+        // Assume SSL configuration is the same for all URIs
         SocketFactory socketFactory = supportLDAPS(uris.get(0));
 
         String[] addresses = uris.stream()

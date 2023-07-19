@@ -146,7 +146,9 @@ public class LdapRepositoryConfiguration {
 
     public static LdapRepositoryConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         List<String> ldapHosts = Splitter.on(",")
-            .splitToList(configuration.getString("[@ldapHost]", ""));
+            .splitToList(Optional.ofNullable(configuration.getString("[@ldapHosts]", null))
+                .orElse(configuration.getString("[@ldapHost]", ""))
+                .trim());
         String principal = configuration.getString("[@principal]", "");
         String credentials = configuration.getString("[@credentials]", "");
         String userBase = configuration.getString("[@userBase]");
@@ -209,7 +211,8 @@ public class LdapRepositoryConfiguration {
      * Note that users are actually authenticated by binding against the LDAP
      * servers using the users &quot;dn&quot; and &quot;credentials&quot;.The
      * value of this field is taken from the value of the configuration
-     * attribute &quot;ldapHost&quot;. URLs are split by the comma  &quot;,&quot; character.
+     * attribute &quot;ldapHosts&quot; and fallback to the legacy attribute &quot;ldapHost&quot;.
+     * URLs are split by the comma  &quot;,&quot; character.
      */
     private final List<String> ldapHosts;
 
