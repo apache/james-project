@@ -87,7 +87,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building'
-                sh 'mvn -U -B -e clean install -DskipTests -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT}'
+                sh 'mvn -U -B -e clean install -DskipTests -Djib.skip -T1C ${MVN_SHOW_TIMESTAMPS} ${MVN_LOCAL_REPO_OPT}'
             }
         }
 
