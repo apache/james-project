@@ -5,7 +5,7 @@
 ### Requirements
 
  - Java 11 SDK
- - Docker ∕ OpenSearch 2.1.0 and Cassandra 3.11.10
+ - Docker ∕ OpenSearch 2.1.0 and Cassandra 3.11.15
  - Maven 3
 
 *WARNING*: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
@@ -28,7 +28,7 @@ mvn clean install
 
 ### Requirements
 
- * Cassandra 3.11.10
+ * Cassandra 3.11.15
  * OpenSearch 2.1.0
 
 ### James Launch
@@ -48,7 +48,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 You need to have a Cassandra and an OpenSearch instance running. You can either install the servers or launch them via docker:
 
 ```bash
-$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.10
+$ docker run -d -p 9042:9042 --name=cassandra cassandra:3.11.15
 $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.1.0
 ```
 

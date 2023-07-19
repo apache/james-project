@@ -64,7 +64,7 @@ Step 3: Deploy
 3.1. Deploy Cassandra (optional)
 You may skip this part if you already have a running Cassandra on your network.
 
-<i>$ docker run --detach=true --name=cassandra cassandra:3.11.10</i>
+<i>$ docker run --detach=true --name=cassandra cassandra:3.11.15</i>
 
 3.2. Deploy OpenSearch (optional)
 You may skip this part if you already have a running OpenSearch on your network.
