@@ -1,4 +1,4 @@
-FROM nginx:1.22
+FROM nginx:1.25
 
 COPY conf/nginx-conf/ /etc/nginx/conf.d/
 COPY conf/default.crt /etc/ssl/certs/default.crt
