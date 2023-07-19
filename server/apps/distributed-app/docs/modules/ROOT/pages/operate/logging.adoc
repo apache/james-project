@@ -200,7 +200,7 @@ services:
       - discovery.type=single-node
 
   cassandra:
-    image: cassandra:3.11.10
+    image: cassandra:3.11.15
     ports:
       - "9042:9042"
 

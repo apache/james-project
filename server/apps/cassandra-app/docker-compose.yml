@@ -4,12 +4,19 @@ services:
 
   james:
     depends_on:
-      - opensearch
-      - cassandra
-      - tika
+      cassandra:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+      tika:
+        condition: service_started
     image: apache/james:cassandra-latest
     container_name: james
     hostname: james.local
+    networks:
+      - james
+    volumes:
+      - ${KEYSTORE_PATH}:/root/conf/keystore
     ports:
       - "80:80"
       - "25:25"
@@ -21,6 +28,10 @@ services:
       - "8000:8000"
 
   opensearch:
+    networks:
+      james:
+        aliases:
+          - elasticsearch
     image: opensearchproject/opensearch:2.1.0
     environment:
       - discovery.type=single-node
@@ -28,10 +39,21 @@ services:
       - DISABLE_SECURITY_PLUGIN=true
 
   cassandra:
-    image: cassandra:3.11.10
+    image: cassandra:3.11.15
     ports:
       - "9042:9042"
+    healthcheck:
+      test: [ "CMD-SHELL", "[ $$(nodetool statusgossip) = running ]" ]
+      interval: 3s
+      timeout: 20s
+      retries: 5
+    networks:
+      - james
 
   tika:
     image: apache/tika:2.8.0.0
+    networks:
+      - james
 
+networks:
+  james:

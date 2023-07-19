@@ -4,11 +4,16 @@ services:
 
   james:
     depends_on:
-      - opensearch
-      - cassandra
-      - tika
-      - rabbitmq
-      - s3
+      cassandra:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+      tika:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      s3:
+        condition: service_started
     image: apache/james:distributed-pop3-latest
     container_name: james
     hostname: james.local
@@ -21,6 +26,10 @@ services:
       - "587:587"
       - "993:993"
       - "8000:8000"
+    command:
+      - --generate-keystore
+    networks:
+      - james
 
   opensearch:
     image: opensearchproject/opensearch:2.1.0
@@ -28,20 +37,35 @@ services:
       - discovery.type=single-node
       - DISABLE_INSTALL_DEMO_CONFIG=true
       - DISABLE_SECURITY_PLUGIN=true
+    networks:
+      james:
+        aliases:
+          - elasticsearch
 
   cassandra:
-    image: cassandra:3.11.10
+    image: cassandra:3.11.15
     ports:
       - "9042:9042"
+    healthcheck:
+      test: [ "CMD-SHELL", "[ $$(nodetool statusgossip) = running ]" ]
+      interval: 3s
+      timeout: 20s
+      retries: 5
+    networks:
+      - james
 
   tika:
     image: apache/tika:2.8.0.0
+    networks:
+      - james
 
   rabbitmq:
     image: rabbitmq:3.12.1-management
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - james
 
   s3:
     image: registry.scality.com/cloudserver/cloudserver:8.7.25
@@ -52,3 +76,8 @@ services:
       - S3BACKEND=mem
       - LOG_LEVEL=trace
       - REMOTE_MANAGEMENT_DISABLE=1
+    networks:
+      - james
+
+networks:
+  james:
