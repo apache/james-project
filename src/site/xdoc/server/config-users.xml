@@ -125,6 +125,19 @@
             &lt;/domains&gt;
 &lt;/usersrepository&gt;</source>
 
+        <p>You can connect to multiple LDAP servers for better availability by using <code>ldapHosts</code> option
+            (fallback to <code>ldapHost</code> is supported) to specify the list of LDAP Server URL with the comma <code>,</code> delimiter.
+            We do support different schemas for LDAP servers.</p>
+
+        <p>Example:</p>
+
+        <source>
+            &lt;usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
+            principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid" trustAllCerts="true"&gt;
+            &lt;enableVirtualHosting&gt;true&lt;/enableVirtualHosting&gt;
+            &lt;/usersrepository&gt;
+        </source>
+
      </subsection>
 
   </section>

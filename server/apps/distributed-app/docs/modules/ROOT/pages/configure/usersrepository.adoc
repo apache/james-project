@@ -90,3 +90,14 @@ Moreover, per domain base DN can be configured:
     </domains>
 </usersrepository>
 ....
+
+You can connect to multiple LDAP servers for better availability by using `ldapHosts` option (fallback to `ldapHost` is supported) to specify the list of LDAP Server URL with the comma `,` delimiter. We do support different schemas for LDAP servers.
+
+Example:
+
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid" trustAllCerts="true">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
+....
