@@ -2956,11 +2956,6 @@
                 </plugin>
                 <!-- Order by groupId / artifactId / scope -->
                 <plugin>
-                    <groupId>com.coderplus.maven.plugins</groupId>
-                    <artifactId>copy-rename-maven-plugin</artifactId>
-                    <version>1.0</version>
-                </plugin>
-                <plugin>
                     <groupId>com.github.ekryd.sortpom</groupId>
                     <artifactId>sortpom-maven-plugin</artifactId>
                     <version>3.2.1</version>
@@ -3131,11 +3126,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.1.0</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.11.0</version>
                     <configuration>
@@ -3199,11 +3189,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-eclipse-plugin</artifactId>
-                    <version>2.10</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>3.3.0</version>
                 </plugin>
@@ -3237,11 +3222,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>1.6</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jxr-plugin</artifactId>
                     <version>3.3.0</version>
                 </plugin>
@@ -3249,24 +3229,6 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
                     <version>3.6.4</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-pmd-plugin</artifactId>
-                    <version>3.15.0</version>
-                    <configuration>
-                        <aggregate>true</aggregate>
-                        <targetJdk>${target.jdk}</targetJdk>
-                        <rulesets>
-                            <ruleset>/rulesets/basic.xml</ruleset>
-                            <ruleset>/rulesets/unusedcode.xml</ruleset>
-                            <ruleset>/rulesets/imports.xml</ruleset>
-                        </rulesets>
-                        <format>xml</format>
-                        <linkXref>true</linkXref>
-                        <sourceEncoding>utf-8</sourceEncoding>
-                        <minimumTokens>100</minimumTokens>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -3411,11 +3373,6 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>javacc-maven-plugin</artifactId>
                     <version>2.6</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>taglist-maven-plugin</artifactId>
-                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -3714,13 +3671,6 @@
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
             </plugin>
-            <!--
-            See JAMES-2511 basicRuleSet.xml do not exist so when re-enabled this plugin failed.
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-            </plugin>
-            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
