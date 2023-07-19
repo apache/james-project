@@ -28,8 +28,22 @@
 
         <!-- LDAP support example-->
         <!--
-        <usersrepository name="LocalUsers"
+        <usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository"
             ldapHost="ldap://myldapserver:389"
+            principal="uid=ldapUser,ou=system"
+            credentials="password"
+            userBase="ou=People,o=myorg.com,ou=system"
+            userIdAttribute="uid"
+            userObjectClass="person">
+          <enableVirtualHosting>true</enableVirtualHosting>
+          <enableForwarding>true</enableForwarding>
+        </usersrepository>
+        -->
+
+        <!-- Multiple LDAP servers support example-->
+        <!--
+        <usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository"
+            ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
             principal="uid=ldapUser,ou=system"
             credentials="password"
             userBase="ou=People,o=myorg.com,ou=system"
