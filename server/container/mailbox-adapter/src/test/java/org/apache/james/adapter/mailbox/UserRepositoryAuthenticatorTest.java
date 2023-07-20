@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.UsersRepository;
@@ -48,23 +50,23 @@ public class UserRepositoryAuthenticatorTest {
 
     @Test
     void isAuthenticShouldReturnTrueWhenGoodLoginPassword() throws Exception {
-        when(usersRepository.test(USER, PASSWORD)).thenReturn(true);
+        when(usersRepository.test(USER, PASSWORD)).thenReturn(Optional.of(USER));
 
-        assertThat(testee.isAuthentic(USER, PASSWORD)).isTrue();
+        assertThat(testee.isAuthentic(USER, PASSWORD)).isPresent();
     }
 
     @Test
     void isAuthenticShouldReturnFalseWhenWrongPassword() throws Exception {
-        when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(false);
+        when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(Optional.empty());
 
-        assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).isFalse();
+        assertThat(testee.isAuthentic(USER, BAD_PASSWORD)).isEmpty();
     }
 
     @Test
     void isAuthenticShouldReturnFalseWhenBadUser() throws Exception {
-        when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(false);
+        when(usersRepository.test(USER, BAD_PASSWORD)).thenReturn(Optional.empty());
 
-        assertThat(testee.isAuthentic(BAD_USER, BAD_PASSWORD)).isFalse();
+        assertThat(testee.isAuthentic(BAD_USER, BAD_PASSWORD)).isEmpty();
     }
 
     @Test

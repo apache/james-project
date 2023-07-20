@@ -59,8 +59,9 @@ public class UsersRepositoryAuthHook implements AuthHook {
     @Override
     public HookResult doAuth(SMTPSession session, Username username, String password) {
         try {
-            if (users.test(username, password)) {
-                session.setUsername(username);
+            Optional<Username> loggedInUser = users.test(username, password);
+            if (loggedInUser.isPresent()) {
+                session.setUsername(loggedInUser.get());
                 session.setRelayingAllowed(true);
                 return HookResult.builder()
                     .hookReturnCode(HookReturnCode.ok())

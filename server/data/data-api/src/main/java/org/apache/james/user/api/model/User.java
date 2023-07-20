@@ -27,15 +27,15 @@ import org.apache.james.core.Username;
 public interface User {
 
     /**
-     * Return the user name of this user
+     * Return the translated username of this user
      * 
-     * @return the user name for this user
+     * @return the translated username for this user
      */
     Username getUserName();
 
     /**
      * Return true if pass matches password of this user.
-     * 
+     *
      * @param pass
      *            the password to test
      * @return whether the password being tested is valid

@@ -148,23 +148,23 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
     }
 
     @Override
-    public boolean test(Username name, String password) throws UsersRepositoryException {
-        boolean isVerified = usersDAO.getUserByName(name)
-            .map(x -> x.verifyPassword(password))
-            .orElseGet(() -> {
-                LOGGER.info("Could not retrieve user {}. Password is unverified.", name);
-                return false;
-            });
+    public Optional<Username> test(Username name, String password) throws UsersRepositoryException {
+        Optional<Username> translatedUsername = usersDAO.getUserByName(name)
+            .filter(user -> user.verifyPassword(password))
+            .map(User::getUserName);
 
-        if (!isVerified && verifyFailureDelay > 0L) {
-            try {
-                Thread.sleep(verifyFailureDelay);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        if (translatedUsername.isEmpty()) {
+            LOGGER.info("Could not retrieve user {}. Password is unverified.", name);
+            if (verifyFailureDelay > 0L) {
+                try {
+                    Thread.sleep(verifyFailureDelay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
 
-        return isVerified;
+        return translatedUsername;
     }
 
     @Override

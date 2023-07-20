@@ -93,7 +93,7 @@ public class ReadOnlyLDAPUser implements User {
      * the field . This is generally the value from which the
      * user email address is built, by appending the domain name to it.
      * 
-     * @return The user's identifier or name.
+     * @return The user's identifier or translated username.
      */
     @Override
     public Username getUserName() {

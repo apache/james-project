@@ -19,6 +19,8 @@
 
 package org.apache.james.pop3server.mailbox;
 
+import java.util.Optional;
+
 import org.apache.james.UserEntityValidator;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.MailboxManager;
@@ -44,7 +46,7 @@ public class DistributedPop3ServerTest extends POP3ServerTest {
                     return usersRepository.test(userid, passwd.toString());
                 } catch (UsersRepositoryException e) {
                     e.printStackTrace();
-                    return false;
+                    return Optional.empty();
                 }
             })
             .fakeAuthorizator()

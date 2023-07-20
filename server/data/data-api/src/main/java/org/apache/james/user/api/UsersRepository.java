@@ -20,6 +20,7 @@
 package org.apache.james.user.api;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -94,20 +95,20 @@ public interface UsersRepository {
     Publisher<Boolean> containsReactive(Username name);
 
     /**
-     * Test if user with name 'name' has password 'password'.
+     * Test if user with login name 'name' has password 'password'.
      * 
      * @param name
-     *            the name of the user to be tested
+     *            the login name of the user to be tested
      * @param password
      *            the password to be tested
      * 
-     * @return true if the test is successful, false if the user doesn't exist
+     * @return Optional of a Username if the test is successful, an empty Optional if the user doesn't exist
      *         or if the password is incorrect
      * @throws UsersRepositoryException
      *             if error
      * 
      */
-    boolean test(Username name, String password) throws UsersRepositoryException;
+    Optional<Username> test(Username name, String password) throws UsersRepositoryException;
 
     /**
      * Returns a count of the users in the repository.

@@ -38,6 +38,7 @@ import reactor.core.scala.publisher.SMono
 import reactor.netty.http.server.HttpServerRequest
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.{Failure, Success, Try}
 
 object UserCredential {
@@ -116,9 +117,9 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
     SMono.fromCallable(() => authHeaders(httpRequest))
       .map(parseUserCredentials)
       .handle(publishNext)
-      .filterWhen(isValid)
-      .map(_.username)
-      .map(mailboxManager.authenticate(_).withoutDelegation())
+      .flatMap(getAuthenticatedUsername)
+      .filter(_.isDefined)
+      .map(loggedInUser => mailboxManager.authenticate(loggedInUser.get).withoutDelegation())
       .asJava()
 
 
@@ -128,7 +129,7 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
   private def publishNext[T]: (Option[T], reactor.core.publisher.SynchronousSink[T]) => Unit =
     (maybeT, sink) => maybeT.foreach(t => sink.next(t))
 
-  private def isValid(userCredential: UserCredential): SMono[Boolean] =
-    SMono.fromCallable(() => usersRepository.test(userCredential.username, userCredential.password))
+  private def getAuthenticatedUsername(userCredential: UserCredential): SMono[Option[Username]] =
+    SMono.fromCallable(() => usersRepository.test(userCredential.username, userCredential.password).toScala)
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }

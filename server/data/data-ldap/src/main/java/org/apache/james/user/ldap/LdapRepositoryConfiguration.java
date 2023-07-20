@@ -54,6 +54,7 @@ public class LdapRepositoryConfiguration {
         private Optional<String> credentials;
         private Optional<String> userBase;
         private Optional<String> userIdAttribute;
+        private Optional<String> resolveLocalPartAttribute;
         private Optional<String> userObjectClass;
         private Optional<Integer> poolSize;
         private Optional<Boolean> trustAllCerts;
@@ -65,6 +66,7 @@ public class LdapRepositoryConfiguration {
             credentials = Optional.empty();
             userBase = Optional.empty();
             userIdAttribute = Optional.empty();
+            resolveLocalPartAttribute = Optional.empty();
             userObjectClass = Optional.empty();
             poolSize = Optional.empty();
             trustAllCerts = Optional.empty();
@@ -93,6 +95,11 @@ public class LdapRepositoryConfiguration {
 
         public Builder userIdAttribute(String userIdAttribute) {
             this.userIdAttribute = Optional.of(userIdAttribute);
+            return this;
+        }
+
+        public Builder resolveLocalPartAttribute(String resolveLocalPartAttribute) {
+            this.resolveLocalPartAttribute = Optional.of(resolveLocalPartAttribute);
             return this;
         }
 
@@ -130,6 +137,7 @@ public class LdapRepositoryConfiguration {
                 credentials.get(),
                 userBase.get(),
                 userIdAttribute.get(),
+                resolveLocalPartAttribute,
                 userObjectClass.get(),
                 NO_CONNECTION_TIMEOUT,
                 NO_READ_TIME_OUT,
@@ -160,6 +168,7 @@ public class LdapRepositoryConfiguration {
         String credentials = configuration.getString("[@credentials]", "");
         String userBase = configuration.getString("[@userBase]");
         String userIdAttribute = configuration.getString("[@userIdAttribute]");
+        Optional<String> resolveLocalPartAttribute = Optional.ofNullable(configuration.getString("[@resolveLocalPartAttribute]", null));
         String userObjectClass = configuration.getString("[@userObjectClass]");
         // Default is to use connection pooling
         int connectionTimeout = configuration.getInt("[@connectionTimeout]", NO_CONNECTION_TIMEOUT);
@@ -201,6 +210,7 @@ public class LdapRepositoryConfiguration {
             credentials,
             userBase,
             userIdAttribute,
+            resolveLocalPartAttribute,
             userObjectClass,
             connectionTimeout,
             readTimeout,
@@ -254,6 +264,14 @@ public class LdapRepositoryConfiguration {
 
     /**
      * The value of this field is taken from the configuration attribute
+     * &quot;resolveLocalPartAttribute&quot;. This is the LDAP attribute type which enables
+     * user authentication using local part as login username while Virtual Hosting is on.
+     * Default to empty, which disables login with local part as username.
+     */
+    private final Optional<String> resolveLocalPartAttribute;
+
+    /**
+     * The value of this field is taken from the configuration attribute
      * &quot;userObjectClass&quot;. This is the LDAP object class to use in the
      * search filter for user nodes under the userBase value.
      */
@@ -294,7 +312,7 @@ public class LdapRepositoryConfiguration {
     private final ImmutableMap<Domain, String> perDomainBaseDN;
 
     private LdapRepositoryConfiguration(List<URI> ldapHosts, String principal, String credentials, String userBase, String userIdAttribute,
-                                        String userObjectClass, int connectionTimeout, int readTimeout,
+                                        Optional<String> resolveLocalPartAttribute, String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
                                         Optional<String> administratorId, boolean trustAllCerts,
                                         ImmutableMap<Domain, String> perDomainBaseDN) throws ConfigurationException {
@@ -303,6 +321,7 @@ public class LdapRepositoryConfiguration {
         this.credentials = credentials;
         this.userBase = userBase;
         this.userIdAttribute = userIdAttribute;
+        this.resolveLocalPartAttribute = resolveLocalPartAttribute;
         this.userObjectClass = userObjectClass;
         this.connectionTimeout = connectionTimeout;
         this.readTimeout = readTimeout;
@@ -347,6 +366,10 @@ public class LdapRepositoryConfiguration {
 
     public String getUserIdAttribute() {
         return userIdAttribute;
+    }
+
+    public Optional<String> getResolveLocalPartAttribute() {
+        return resolveLocalPartAttribute;
     }
 
     public String getUserObjectClass() {
@@ -402,6 +425,7 @@ public class LdapRepositoryConfiguration {
                 && Objects.equals(this.credentials, that.credentials)
                 && Objects.equals(this.userBase, that.userBase)
                 && Objects.equals(this.userIdAttribute, that.userIdAttribute)
+                && Objects.equals(this.resolveLocalPartAttribute, that.resolveLocalPartAttribute)
                 && Objects.equals(this.userObjectClass, that.userObjectClass)
                 && Objects.equals(this.restriction, that.restriction)
                 && Objects.equals(this.filter, that.filter)
@@ -415,7 +439,7 @@ public class LdapRepositoryConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(ldapHosts, principal, credentials, userBase, userIdAttribute, userObjectClass,
+        return Objects.hash(ldapHosts, principal, credentials, userBase, userIdAttribute, resolveLocalPartAttribute, userObjectClass,
             connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize,
             trustAllCerts, perDomainBaseDN);
     }

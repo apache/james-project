@@ -179,11 +179,8 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void testShouldReturnFalseWhenEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
-            //When
-            boolean actual = testee().test(testSystem.user1, "password");
-            //Then
-            assertThat(actual).isFalse();
+        default void testShouldReturnEmptyWhenEmptyRepository(TestSystem testSystem) throws UsersRepositoryException {
+            assertThat(testee().test(testSystem.user1, "password")).isEmpty();
         }
 
         @ParameterizedTest
@@ -341,7 +338,7 @@ public interface UsersRepositoryContract {
             testee().addUser(testSystem.user1CaseVariation, password);
 
             assertThat(testee().test(testSystem.user1, password))
-                .isTrue();
+                .isEqualTo(Optional.of(testSystem.user1));
         }
 
         @Test
@@ -350,7 +347,7 @@ public interface UsersRepositoryContract {
             testee().addUser(testSystem.user1, password);
 
             assertThat(testee().test(testSystem.user1CaseVariation, password))
-                .isTrue();
+                .isEqualTo(Optional.of(testSystem.user1CaseVariation));
         }
 
         @Test
@@ -404,65 +401,65 @@ public interface UsersRepositoryContract {
         }
 
         @Test
-        default void testShouldReturnTrueWhenAUserHasACorrectPassword(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldReturnUsernameWhenAUserHasACorrectPassword(TestSystem testSystem) throws UsersRepositoryException {
             //Given
             testee().addUser(testSystem.user1, "password");
             //When
-            boolean actual = testee().test(testSystem.user1, "password");
+            Optional<Username> loggedInUser = testee().test(testSystem.user1, "password");
             //Then
-            assertThat(actual).isTrue();
+            assertThat(loggedInUser).isEqualTo(Optional.of(testSystem.user1));
         }
 
         @Test
-        default void testShouldReturnFalseWhenAUserHasAnIncorrectPassword(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldReturnEmptyWhenAUserHasAnIncorrectPassword(TestSystem testSystem) throws UsersRepositoryException {
             //Given
             testee().addUser(testSystem.user1, "password");
             //When
-            boolean actual = testee().test(testSystem.user1, "password2");
+            Optional<Username> loggedInUser = testee().test(testSystem.user1, "password2");
             //Then
-            assertThat(actual).isFalse();
+            assertThat(loggedInUser).isEmpty();
         }
 
         @Test
-        default void testShouldReturnFalseWhenAUserHasAnIncorrectCasePassword(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldReturnEmptyWhenAUserHasAnIncorrectCasePassword(TestSystem testSystem) throws UsersRepositoryException {
             //Given
             testee().addUser(testSystem.user1, "password");
             //When
-            boolean actual = testee().test(testSystem.user1, "Password");
+            Optional<Username> loggedInUser = testee().test(testSystem.user1, "Password");
             //Then
-            assertThat(actual).isFalse();
+            assertThat(loggedInUser).isEmpty();
         }
 
         @Test
-        default void testShouldReturnFalseWhenAUserIsNotInRepository(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldReturnEmptyWhenAUserIsNotInRepository(TestSystem testSystem) throws UsersRepositoryException {
             //Given
             testee().addUser(testSystem.toUsername("username"), "password");
             //When
-            boolean actual = testee().test(testSystem.toUsername("username2"), "password");
+            Optional<Username> loggedInUser = testee().test(testSystem.toUsername("username2"), "password");
             //Then
-            assertThat(actual).isFalse();
+            assertThat(loggedInUser).isEmpty();
         }
 
         @Test
-        default void testShouldReturnTrueWhenAUserHasAnIncorrectCaseName(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldReturnUsernameWhenAUserHasAnIncorrectCaseName(TestSystem testSystem) throws UsersRepositoryException {
             //Given
             testee().addUser(testSystem.toUsername("username"), "password");
             //When
-            boolean actual = testee().test(testSystem.toUsername("userName"), "password");
+            Optional<Username> loggedInUser = testee().test(testSystem.toUsername("userName"), "password");
             //Then
-            assertThat(actual).isTrue();
+            assertThat(loggedInUser).isEqualTo(Optional.of(testSystem.toUsername("userName")));
         }
 
 
         @Test
-        default void testShouldReturnFalseWhenAUserIsRemovedFromRepository(TestSystem testSystem) throws UsersRepositoryException {
+        default void testShouldReturnEmptyWhenAUserIsRemovedFromRepository(TestSystem testSystem) throws UsersRepositoryException {
             //Given
             testee().addUser(testSystem.user1, "password");
             testee().removeUser(testSystem.user1);
             //When
-            boolean actual = testee().test(testSystem.user1, "password");
+            Optional<Username> loggedInUser = testee().test(testSystem.user1, "password");
             //Then
-            assertThat(actual).isFalse();
+            assertThat(loggedInUser).isEmpty();
         }
 
         @Test
@@ -484,7 +481,7 @@ public interface UsersRepositoryContract {
             //When
             testee().updateUser(user);
             //Then
-            assertThat(testee().test(testSystem.user1, "newpass")).isTrue();
+            assertThat(testee().test(testSystem.user1, "newpass")).isEqualTo(Optional.of(testSystem.user1));
         }
 
         @Test
@@ -496,7 +493,7 @@ public interface UsersRepositoryContract {
             //When
             testee().updateUser(user);
             //Then
-            assertThat(testee().test(testSystem.user1, "password")).isFalse();
+            assertThat(testee().test(testSystem.user1, "password")).isEmpty();
         }
 
         @Test
@@ -542,15 +539,15 @@ public interface UsersRepositoryContract {
     interface WithVirtualHostingReadWriteContract extends ReadWriteContract {
 
         @Test
-        default void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain(TestSystem testSystem) throws Exception {
+        default void testShouldReturnUsernameWhenAUserHasACorrectPasswordAndOtherCaseInDomain(TestSystem testSystem) throws Exception {
             testSystem.domainList.addDomain(Domain.of("Domain.OrG"));
             String username = "myuser";
             String password = "password";
             testee().addUser(Username.of(username + "@Domain.OrG"), password);
 
-            boolean actual = testee().test(Username.of(username + "@domain.org"), password);
+            Optional<Username> loggedInUser = testee().test(Username.of(username + "@domain.org"), password);
 
-            assertThat(actual).isTrue();
+            assertThat(loggedInUser).isEqualTo(Optional.of(Username.of(username + "@domain.org")));
         }
 
         @Test

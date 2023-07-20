@@ -30,7 +30,7 @@ public interface DelegationStore {
     /**
      * @return Lists of the users authorized to impersonnate to baseUser.
      */
-    Publisher<Username> authorizedUsers(Username baseUser);
+    Publisher<Username> authorizedUsers(Username baseUser); // delegatees list
 
     Publisher<Void> clear(Username baseUser);
 

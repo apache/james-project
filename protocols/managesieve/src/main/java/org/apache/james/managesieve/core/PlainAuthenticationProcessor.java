@@ -83,7 +83,7 @@ public class PlainAuthenticationProcessor implements AuthenticationProcessor {
         try {
             User user = usersRepository.getUserByName(userName);
             if (user != null && user.verifyPassword(password)) {
-                return userName;
+                return user.getUserName();
             } else {
                 return null;
             }

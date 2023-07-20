@@ -38,6 +38,7 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -266,23 +267,18 @@ public class AuthenticationRoutes implements JMAPRoutes {
         Username username = Username.of(request.getToken().getUsername());
 
         return authenticate(request, username)
-            .flatMap(success -> {
-                if (success) {
-                    return returnAccessTokenResponse(resp, username);
-                } else {
-                    return returnUnauthorizedResponse(resp)
-                        .doOnEach(log(() -> LOGGER.info("Authentication failure for {}", username)));
-                }
-            });
+            .flatMap(loggedInUser -> loggedInUser.map(value -> returnAccessTokenResponse(resp, value))
+                .orElseGet(() -> returnUnauthorizedResponse(resp)
+                    .doOnEach(log(() -> LOGGER.info("Authentication failure for {}", username)))));
     }
 
-    private Mono<Boolean> authenticate(AccessTokenRequest request, Username username) {
+    private Mono<Optional<Username>> authenticate(AccessTokenRequest request, Username username) {
         return Mono.fromCallable(() -> {
             try {
                 return usersRepository.test(username, request.getPassword());
             } catch (UsersRepositoryException e) {
                 LOGGER.error("Error while trying to validate authentication for user '{}'", username, e);
-                return false;
+                return Optional.<Username>empty();
             }
         }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }

@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -935,7 +936,7 @@ public class POP3ServerTest {
                     return usersRepository.test(userid, passwd.toString());
                 } catch (UsersRepositoryException e) {
                     e.printStackTrace();
-                    return false;
+                    return Optional.empty();
                 }
             })
             .fakeAuthorizator()

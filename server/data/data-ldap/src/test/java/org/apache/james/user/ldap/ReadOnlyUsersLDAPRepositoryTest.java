@@ -214,7 +214,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
         @Test
         void knownUserShouldBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
-            assertThat(usersRepository.test(JAMES_USER_MAIL, PASSWORD)).isTrue();
+            assertThat(usersRepository.test(JAMES_USER_MAIL, PASSWORD)).isEqualTo(Optional.of(JAMES_USER_MAIL));
         }
 
         @Test
@@ -249,24 +249,24 @@ class ReadOnlyUsersLDAPRepositoryTest {
             }
             ldapContainer.unpause();
 
-            assertThat(usersRepository.test(JAMES_USER_MAIL, PASSWORD)).isTrue();
+            assertThat(usersRepository.test(JAMES_USER_MAIL, PASSWORD)).isEqualTo(Optional.of(JAMES_USER_MAIL));
         }
 
         @Test
         void knownUserShouldNotBeAbleToLogInWhenPasswordIsNotCorrectWithVirtualHosting() throws Exception {
-            assertThat(usersRepository.test(JAMES_USER, BAD_PASSWORD)).isFalse();
+            assertThat(usersRepository.test(JAMES_USER, BAD_PASSWORD)).isEmpty();
         }
 
         @Test
         void unknownUserShouldNotBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
-            assertThat(usersRepository.test(UNKNOWN, PASSWORD)).isFalse();
+            assertThat(usersRepository.test(UNKNOWN, PASSWORD)).isEmpty();
         }
 
         @Test
         void specialCharacterInUserInputShouldBeSanitized() throws Exception {
             Username patternMatchingMultipleUsers = Username.of("j*");
 
-            assertThat(usersRepository.test(patternMatchingMultipleUsers, PASSWORD)).isFalse();
+            assertThat(usersRepository.test(patternMatchingMultipleUsers, PASSWORD)).isEmpty();
         }
 
         @Test
@@ -315,7 +315,7 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
         @Test
         void knownUserShouldBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
-            assertThat(usersRepository.test(JAMES_USER, PASSWORD)).isTrue();
+            assertThat(usersRepository.test(JAMES_USER, PASSWORD)).isEqualTo(Optional.of(JAMES_USER));
         }
 
         @Test
@@ -340,17 +340,17 @@ class ReadOnlyUsersLDAPRepositoryTest {
 
         @Test
         void knownUserShouldNotBeAbleToLogInWhenPasswordIsNotCorrect() throws Exception {
-            assertThat(usersRepository.test(JAMES_USER, BAD_PASSWORD)).isFalse();
+            assertThat(usersRepository.test(JAMES_USER, BAD_PASSWORD)).isEmpty();
         }
 
         @Test
         void unknownUserShouldNotBeAbleToLogIn() throws Exception {
-            assertThat(usersRepository.test(UNKNOWN, BAD_PASSWORD)).isFalse();
+            assertThat(usersRepository.test(UNKNOWN, BAD_PASSWORD)).isEmpty();
         }
 
         @Test
         void unknownUserShouldNotBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
-            assertThat(usersRepository.test(UNKNOWN, PASSWORD)).isFalse();
+            assertThat(usersRepository.test(UNKNOWN, PASSWORD)).isEmpty();
         }
 
         @Test
