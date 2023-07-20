@@ -97,19 +97,19 @@ class UsersRepositoryManagementTest {
     void testSetPassword() throws Exception {
         userManagement.addUser("testpwduser", "pwd1");
 
-        assertThat(usersRepository.test(Username.of("testpwduser"), "pwd1")).describedAs("initial password").isTrue();
+        assertThat(usersRepository.test(Username.of("testpwduser"), "pwd1")).describedAs("initial password").isPresent();
 
         // set empty pwd
         userManagement.setPassword("testpwduser", "");
-        assertThat(usersRepository.test(Username.of("testpwduser"), "")).describedAs("password changed to empty").isTrue();
+        assertThat(usersRepository.test(Username.of("testpwduser"), "")).describedAs("password changed to empty").isPresent();
 
         // change pwd
         userManagement.setPassword("testpwduser", "pwd2");
-        assertThat(usersRepository.test(Username.of("testpwduser"), "pwd2")).describedAs("password not changed to pwd2").isTrue();
+        assertThat(usersRepository.test(Username.of("testpwduser"), "pwd2")).describedAs("password not changed to pwd2").isPresent();
 
         // assure case sensitivity
         userManagement.setPassword("testpwduser", "pWD2");
-        assertThat(usersRepository.test(Username.of("testpwduser"), "pwd2")).describedAs("password no longer pwd2").isFalse();
-        assertThat(usersRepository.test(Username.of("testpwduser"), "pWD2")).describedAs("password changed to pWD2").isTrue();
+        assertThat(usersRepository.test(Username.of("testpwduser"), "pwd2")).describedAs("password no longer pwd2").isEmpty();
+        assertThat(usersRepository.test(Username.of("testpwduser"), "pWD2")).describedAs("password changed to pWD2").isPresent();
     }
 }

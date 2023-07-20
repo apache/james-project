@@ -19,6 +19,8 @@
 
 package org.apache.james.adapter.mailbox;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -41,7 +43,7 @@ public class UserRepositoryAuthenticator implements Authenticator {
     }
 
     @Override
-    public boolean isAuthentic(Username userid, CharSequence passwd) throws MailboxException {
+    public Optional<Username> isAuthentic(Username userid, CharSequence passwd) throws MailboxException {
         try {
             return repos.test(userid, passwd.toString());
         } catch (UsersRepositoryException e) {

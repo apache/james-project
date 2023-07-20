@@ -151,6 +151,7 @@ public class JPAUser implements User {
         } else {
             result = password != null && password.equals(hashPassword(pass, name, alg));
         }
+
         return result;
     }
 

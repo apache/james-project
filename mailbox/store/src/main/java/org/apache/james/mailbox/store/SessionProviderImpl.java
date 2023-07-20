@@ -37,8 +37,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
 
-import com.github.fge.lambdas.Throwing;
-
 public class SessionProviderImpl implements SessionProvider {
     private final MailboxSessionIdGenerator idGenerator;
     private final Authenticator authenticator;
@@ -57,20 +55,22 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     @Override
-    public AuthorizationStep authenticate(Username thisUserId, String passwd) {
+    public AuthorizationStep authenticate(Username loginUsername, String passwd) {
         return new AuthorizationStep() {
             @Override
             public MailboxSession as(Username otherUserId) throws MailboxException {
-                if (!isValidLogin(thisUserId, passwd)) {
+                Optional<Username> loggedInUser = isValidLogin(loginUsername, passwd);
+                if (loggedInUser.isEmpty()) {
                     throw new BadCredentialsException();
                 }
-                return authenticate(thisUserId).as(otherUserId);
+                return authenticate(loggedInUser.get()).as(otherUserId);
             }
 
             @Override
             public MailboxSession withoutDelegation() throws MailboxException {
-                if (isValidLogin(thisUserId, passwd)) {
-                    return createSession(thisUserId, Optional.ofNullable(thisUserId), MailboxSession.SessionType.User);
+                Optional<Username> loggedInUser = isValidLogin(loginUsername, passwd);
+                if (loggedInUser.isPresent()) {
+                    return createSession(loggedInUser.get(), loggedInUser, MailboxSession.SessionType.User);
                 } else {
                     throw new BadCredentialsException();
                 }
@@ -78,17 +78,15 @@ public class SessionProviderImpl implements SessionProvider {
 
             @Override
             public MailboxSession forMatchingUser(Predicate<Username> otherPredicate) throws MailboxException {
-                return authorizator.delegatedUsers(thisUserId)
+                Username loggedInUser = isValidLogin(loginUsername, passwd)
+                    .orElseThrow(BadCredentialsException::new);
+
+                return authorizator.delegatedUsers(loggedInUser)
                     .stream()
                     .filter(otherPredicate)
                     .findFirst()
-                    .map(Throwing.<Username, MailboxSession>function(otherUserId -> {
-                        if (!isValidLogin(thisUserId, passwd)) {
-                            throw new BadCredentialsException();
-                        }
-                        return createSession(otherUserId, Optional.of(thisUserId), MailboxSession.SessionType.System);
-                    }).sneakyThrow())
-                    .orElseThrow(() -> new ForbiddenDelegationException(thisUserId));
+                    .map(otherUserId -> createSession(otherUserId, Optional.of(loggedInUser), MailboxSession.SessionType.System))
+                    .orElseThrow(() -> new ForbiddenDelegationException(loggedInUser));
             }
         };
     }
@@ -147,7 +145,7 @@ public class SessionProviderImpl implements SessionProvider {
      * @param passwd the password
      * @return success true if login success false otherwise
      */
-    private boolean isValidLogin(Username userid, String passwd) throws MailboxException {
+    private Optional<Username> isValidLogin(Username userid, String passwd) throws MailboxException {
         return authenticator.isAuthentic(userid, passwd);
     }
 }

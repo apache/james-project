@@ -188,8 +188,8 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         ldapConnectionPool.close();
     }
 
-    private Filter createFilter(String username) {
-        Filter specificUserFilter = Filter.createEqualityFilter(ldapConfiguration.getUserIdAttribute(), username);
+    private Filter createFilter(String retrievalName, String ldapUserRetrievalAttribute) {
+        Filter specificUserFilter = Filter.createEqualityFilter(ldapUserRetrievalAttribute, retrievalName);
         return userExtraFilter
             .map(extraFilter -> Filter.createANDFilter(objectClassFilter, specificUserFilter, extraFilter))
             .orElseGet(() -> Filter.createANDFilter(objectClassFilter, specificUserFilter));
@@ -297,11 +297,15 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return results;
     }
 
-    private Optional<ReadOnlyLDAPUser> searchAndBuildUser(Username name) throws LDAPException {
-        SearchResult searchResult = ldapConnectionPool.search(userBase(name),
+    private Optional<ReadOnlyLDAPUser> searchAndBuildUser(Username retrievalName) throws LDAPException {
+        Optional<String> resolveLocalPartAttribute = ldapConfiguration.getResolveLocalPartAttribute();
+        String ldapUserRetrievalAttribute = resolveLocalPartAttribute.orElse(ldapConfiguration.getUserIdAttribute());
+        String[] returnedAttributes = { ldapConfiguration.getUserIdAttribute() };
+
+        SearchResult searchResult = ldapConnectionPool.search(userBase(retrievalName),
             SearchScope.SUB,
-            createFilter(name.asString()),
-            ldapConfiguration.getUserIdAttribute());
+            createFilter(retrievalName.asString(), ldapUserRetrievalAttribute),
+            returnedAttributes);
 
         SearchResultEntry result = searchResult.getSearchEntries()
             .stream()
@@ -315,7 +319,8 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         if (!ldapConfiguration.getRestriction().isActivated()
             || userInGroupsMembershipList(result.getParsedDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapConnectionPool))) {
 
-            return Optional.of(new ReadOnlyLDAPUser(name, result.getParsedDN(), ldapConnectionPool));
+            Username translatedUsername = Username.of(result.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
+            return Optional.of(new ReadOnlyLDAPUser(translatedUsername, result.getParsedDN(), ldapConnectionPool));
         }
         return Optional.empty();
     }
