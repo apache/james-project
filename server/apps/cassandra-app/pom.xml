@@ -300,10 +300,10 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <url>https://github.com/glowroot/glowroot/releases/download/v0.13.4/glowroot-0.13.4-dist.zip</url>
+                            <url>https://github.com/glowroot/glowroot/releases/download/v0.14.0/glowroot-0.14.0-dist.zip</url>
                             <unpack>true</unpack>
                             <outputDirectory>${project.build.directory}</outputDirectory>
-                            <md5>93d472281a67ab8404033a88280c23c9</md5>
+                            <md5>16073f10204751cd71d3b4ea93be2649</md5>
                         </configuration>
                     </execution>
                 </executions>
