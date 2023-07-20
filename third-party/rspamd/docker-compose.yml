@@ -36,7 +36,7 @@ services:
       - "debug"
 
   clamav:
-    image: clamav/clamav:0.105
+    image: clamav/clamav:1.1
 
   rspamd:
     depends_on:
