@@ -19,21 +19,20 @@
 
 package org.apache.james.queue.pulsar
 
+import java.util
+import java.util.Optional
+import java.util.concurrent.atomic.AtomicReference
+
 import akka.actor.ActorSystem
-import org.apache.james.backends.pulsar.{Auth, PulsarClients, PulsarConfiguration}
+import javax.annotation.PreDestroy
+import javax.inject.Inject
+import javax.mail.internet.MimeMessage
+import org.apache.james.backends.pulsar.{PulsarClients, PulsarConfiguration}
 import org.apache.james.blob.api.{BlobId, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.metrics.api.{GaugeRegistry, MetricFactory}
 import org.apache.james.queue.api.{MailQueueFactory, MailQueueItemDecoratorFactory, MailQueueName}
-import org.apache.pulsar.client.admin.PulsarAdmin
-import org.apache.pulsar.client.impl.auth.{AuthenticationBasic, AuthenticationToken}
 
-import java.util
-import java.util.Optional
-import java.util.concurrent.atomic.AtomicReference
-import javax.annotation.PreDestroy
-import javax.inject.Inject
-import javax.mail.internet.MimeMessage
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.util.Try

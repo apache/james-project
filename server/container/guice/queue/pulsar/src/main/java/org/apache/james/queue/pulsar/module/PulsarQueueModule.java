@@ -20,6 +20,7 @@
 package org.apache.james.queue.pulsar.module;
 
 import java.io.FileNotFoundException;
+import java.time.Clock;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -35,9 +36,11 @@ import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.pulsar.PulsarMailQueue;
 import org.apache.james.queue.pulsar.PulsarMailQueueFactory;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -77,23 +80,36 @@ public class PulsarQueueModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public MailQueueFactory<? extends ManageableMailQueue> mailQueue(PulsarConfiguration pulsarConfig,
-                                                                     PulsarClients pulsarClients,
-                                                                     BlobId.Factory blobIdFactory,
-                                                                     MimeMessageStore.Factory mimeFactory,
-                                                                     MailQueueItemDecoratorFactory decoratorFactory,
-                                                                     MetricFactory metricFactory,
-                                                                     GaugeRegistry gaugeRegistry) {
+    public MailQueueFactory<PulsarMailQueue> providePulsarMailQueueFactoryProxy(PulsarConfiguration pulsarConfig,
+                                                                                PulsarClients pulsarClients,
+                                                                                BlobId.Factory blobIdFactory,
+                                                                                MimeMessageStore.Factory mimeFactory,
+                                                                                MailQueueItemDecoratorFactory decoratorFactory,
+                                                                                MetricFactory metricFactory,
+                                                                                GaugeRegistry gaugeRegistry,
+                                                                                Clock clock) {
         Store<MimeMessage, MimeMessagePartsId> mimeMessageMimeMessagePartsIdStore = mimeFactory.mimeMessageStore();
         return new PulsarMailQueueFactory(
-                pulsarConfig,
-                pulsarClients,
-                blobIdFactory,
-                mimeMessageMimeMessagePartsIdStore,
-                decoratorFactory,
-                metricFactory,
-                gaugeRegistry
+            pulsarConfig,
+            pulsarClients,
+            blobIdFactory,
+            mimeMessageMimeMessagePartsIdStore,
+            decoratorFactory,
+            metricFactory,
+            gaugeRegistry
         );
+    }
+
+    @Provides
+    @Singleton
+    public MailQueueFactory<? extends ManageableMailQueue> providePulsarManageableMailQueueFactory(MailQueueFactory<PulsarMailQueue> queueFactory) {
+        return queueFactory;
+    }
+
+    @Provides
+    @Singleton
+    public MailQueueFactory<? extends MailQueue> providePulsarManageableMailQueueFactoryGenerics(MailQueueFactory<PulsarMailQueue> queueFactory) {
+        return queueFactory;
     }
 
     @Provides

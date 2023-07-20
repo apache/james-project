@@ -21,6 +21,7 @@ package org.apache.james;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
 import org.apache.james.jmap.draft.JMAPListenerModule;
@@ -68,6 +69,7 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
+import org.apache.james.modules.queue.rabbitmq.RabbitMQMailQueueModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
@@ -92,6 +94,7 @@ import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
 import org.apache.james.modules.webadmin.TasksCleanupRoutesModule;
+import org.apache.james.queue.pulsar.module.PulsarQueueModule;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableSet;
@@ -173,7 +176,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
     protected static final Module MODULES = Modules.override(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule())
         .with(new RabbitMQModule(),
-            new RabbitMailQueueRoutesModule(),
             new JMAPEventBusModule(),
             new RabbitMQEventBusModule(),
             new DistributedTaskSerializationModule());
@@ -199,7 +201,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MODULES)
-            .combineWith(MailQueueViewChoice.ModuleChooser.choose(configuration.getMailQueueViewChoice()))
+            .combineWith(chooseMailQueue(configuration))
             .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
@@ -208,6 +210,20 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
             .combineWith(chooseQuotaModule(configuration))
             .combineWith(chooseJmapModule(configuration));
+    }
+
+    private static Module chooseMailQueue(CassandraRabbitMQJamesConfiguration configuration) {
+        switch (configuration.getMailQueueChoice()) {
+            case PULSAR:
+                return new PulsarQueueModule();
+            case RABBITMQ:
+                return Modules.combine(
+                    new RabbitMailQueueRoutesModule(),
+                    new RabbitMQMailQueueModule(),
+                    MailQueueViewChoice.ModuleChooser.choose(configuration.getMailQueueViewChoice()));
+            default:
+                throw new NotImplementedException();
+        }
     }
 
     private static Module chooseDeletedMessageVault(VaultConfiguration vaultConfiguration) {
