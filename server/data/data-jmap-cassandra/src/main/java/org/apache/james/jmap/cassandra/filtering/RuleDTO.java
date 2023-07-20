@@ -21,6 +21,7 @@ package org.apache.james.jmap.cassandra.filtering;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.jmap.api.filtering.Rule;
 
@@ -31,6 +32,50 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class RuleDTO {
+
+    public static class ConditionGroupDTO {
+
+        private final Rule.ConditionCombiner conditionCombiner;
+        private final List<ConditionDTO> conditionDTOs;
+
+        @JsonCreator
+        public ConditionGroupDTO(@JsonProperty("conditionCombiner") Rule.ConditionCombiner conditionCombiner,
+                                 @JsonProperty("conditions") List<ConditionDTO> conditionDTOs) {
+            this.conditionCombiner = conditionCombiner;
+            this.conditionDTOs = conditionDTOs;
+        }
+
+        public Rule.ConditionCombiner getConditionCombiner() {
+            return conditionCombiner;
+        }
+
+        public List<ConditionDTO> getConditions() {
+            return conditionDTOs;
+        }
+
+        public Rule.ConditionGroup toConditionGroup() {
+            return Rule.ConditionGroup.of(conditionCombiner, conditionDTOs.stream().map(ConditionDTO::toCondition).collect(ImmutableList.toImmutableList()));
+        }
+
+        public static ConditionGroupDTO from(Rule.ConditionGroup conditionGroup) {
+            return new ConditionGroupDTO(conditionGroup.getConditionCombiner(), conditionGroup.getConditions().stream().map(ConditionDTO::from).collect(ImmutableList.toImmutableList()));
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof ConditionGroupDTO) {
+                ConditionGroupDTO other = (ConditionGroupDTO) o;
+                return Objects.equals(conditionCombiner, other.conditionCombiner)
+                    && Objects.equals(conditionDTOs, other.conditionDTOs);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(conditionCombiner, conditionDTOs);
+        }
+    }
 
     public static class ConditionDTO {
 
@@ -215,24 +260,44 @@ public class RuleDTO {
     public static RuleDTO from(Rule rule) {
         return new RuleDTO(rule.getId().asString(),
                 rule.getName(),
-                ConditionDTO.from(rule.getCondition()),
+                ConditionGroupDTO.from(rule.getConditionGroup()),
                 ActionDTO.from(rule.getAction()));
     }
 
     private final String id;
     private final String name;
-    private final ConditionDTO conditionDTO;
+    private final ConditionGroupDTO conditionGroupDTO;
     private final ActionDTO actionDTO;
+
+    public RuleDTO(String id,
+                   String name,
+                   ConditionGroupDTO conditionGroupDTO,
+                   ActionDTO actionDTO) {
+        Preconditions.checkNotNull(id);
+
+        this.name = name;
+        this.conditionGroupDTO = conditionGroupDTO;
+        this.actionDTO = actionDTO;
+
+        this.id = id;
+    }
 
     @JsonCreator
     public RuleDTO(@JsonProperty("id") String id,
                    @JsonProperty("name") String name,
-                   @JsonProperty("condition") ConditionDTO conditionDTO,
+                   @JsonProperty("condition") Optional<ConditionDTO> conditionDTO,
+                   @JsonProperty("conditionGroup") Optional<ConditionGroupDTO> conditionGroupDTO,
                    @JsonProperty("action") ActionDTO actionDTO) {
-        this.name = name;
-        this.conditionDTO = conditionDTO;
-        this.actionDTO = actionDTO;
         Preconditions.checkNotNull(id);
+
+        this.name = name;
+        if (conditionGroupDTO.isPresent()) {
+            this.conditionGroupDTO = conditionGroupDTO.orElseThrow();
+        } else {
+            this.conditionGroupDTO = new ConditionGroupDTO(Rule.ConditionCombiner.AND,
+                ImmutableList.of(conditionDTO.orElseThrow(() -> new RuntimeException("Condition field in the rule with id " + id + " is missing"))));
+        }
+        this.actionDTO = actionDTO;
 
         this.id = id;
     }
@@ -245,8 +310,8 @@ public class RuleDTO {
         return name;
     }
 
-    public ConditionDTO getCondition() {
-        return conditionDTO;
+    public ConditionGroupDTO getConditionGroup() {
+        return conditionGroupDTO;
     }
 
     public ActionDTO getAction() {
@@ -257,8 +322,7 @@ public class RuleDTO {
         return Rule.builder()
             .id(Rule.Id.of(id))
             .name(name)
-            .condition(conditionDTO.toCondition())
-            .name(name)
+            .conditionGroup(conditionGroupDTO.toConditionGroup())
             .action(actionDTO.toAction())
             .build();
     }
@@ -270,7 +334,7 @@ public class RuleDTO {
 
             return Objects.equals(this.id, ruleDTO.id)
                    && Objects.equals(this.name, ruleDTO.name)
-                   && Objects.equals(this.conditionDTO, ruleDTO.conditionDTO)
+                   && Objects.equals(this.conditionGroupDTO, ruleDTO.conditionGroupDTO)
                    && Objects.equals(this.actionDTO, ruleDTO.actionDTO);
         }
         return false;
@@ -278,7 +342,7 @@ public class RuleDTO {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, name, conditionDTO, actionDTO);
+        return Objects.hash(id, name, conditionGroupDTO, actionDTO);
     }
 
     @Override

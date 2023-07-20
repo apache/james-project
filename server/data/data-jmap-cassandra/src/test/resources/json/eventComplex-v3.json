@@ -1,0 +1,99 @@
+{
+  "type":"filtering-rule-set-defined",
+  "eventId":0,
+  "aggregateId":"FilteringRule/bart",
+  "rules":[
+    {
+      "id":"id-from",
+      "name":"a name",
+      "conditionGroup": {
+        "conditionCombiner": "AND",
+        "conditions": [
+          {
+            "field": "from",
+            "comparator": "contains",
+            "value": "A value to match 4"
+          }
+        ]
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        },
+        "important":false,
+        "keyworkds":[],
+        "reject":false,
+        "seen":false
+      }
+    },
+    {
+      "id":"id-rcpt",
+      "name":"a name",
+      "conditionGroup": {
+        "conditionCombiner": "AND",
+        "conditions": [
+          {
+            "field": "recipient",
+            "comparator": "not-exactly-equals",
+            "value": "A value to match 3"
+          }
+        ]
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        },
+        "important":false,
+        "keyworkds":[],
+        "reject":false,
+        "seen":false
+      }
+    },
+    {
+      "id":"id-subject",
+      "name":"a name",
+      "conditionGroup": {
+        "conditionCombiner": "AND",
+        "conditions": [
+          {
+            "field": "subject",
+            "comparator": "not-contains",
+            "value": "A value to match 2"
+          }
+        ]
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        },
+        "important":false,
+        "keyworkds":[],
+        "reject":false,
+        "seen":false
+      }
+    },
+    {
+      "id":"id-to",
+      "name":"a name",
+      "conditionGroup": {
+        "conditionCombiner": "AND",
+        "conditions": [
+          {
+            "field": "to",
+            "comparator": "exactly-equals",
+            "value": "A value to match 1"
+          }
+        ]
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        },
+        "important":false,
+        "keyworkds":[],
+        "reject":false,
+        "seen":false
+      }
+    }
+  ]
+}

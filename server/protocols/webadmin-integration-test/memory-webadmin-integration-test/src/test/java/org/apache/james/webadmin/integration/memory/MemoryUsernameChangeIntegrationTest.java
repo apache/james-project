@@ -108,7 +108,7 @@ class MemoryUsernameChangeIntegrationTest {
     private static final String NAME = "a name";
     private static final Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
     private static final Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
-    private static final Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).condition(CONDITION).action(ACTION);
+    private static final Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(CONDITION).action(ACTION);
     private static final Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
     private static final Rule RULE_2 = RULE_BUILDER.id(Rule.Id.of("2")).build();
     private static final Optional<Version> NO_VERSION = Optional.empty();

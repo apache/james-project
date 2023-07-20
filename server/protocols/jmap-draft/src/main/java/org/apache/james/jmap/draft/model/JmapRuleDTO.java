@@ -136,9 +136,9 @@ public class JmapRuleDTO {
 
     public static JmapRuleDTO from(Rule rule) {
         return new JmapRuleDTO(rule.getId().asString(),
-                rule.getName(),
-                ConditionDTO.from(rule.getCondition()),
-                ActionDTO.from(rule.getAction()));
+            rule.getName(),
+            ConditionDTO.from(rule.getConditionGroup().getConditions().get(0)),
+            ActionDTO.from(rule.getAction()));
     }
 
     private final String id;
@@ -177,7 +177,7 @@ public class JmapRuleDTO {
         return Rule.builder()
             .id(Rule.Id.of(id))
             .name(name)
-            .condition(conditionDTO.toCondition())
+            .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, ImmutableList.of(conditionDTO.toCondition())))
             .action(actionDTO.toAction())
             .build();
     }

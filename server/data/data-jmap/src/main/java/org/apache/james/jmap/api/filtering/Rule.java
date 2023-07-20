@@ -72,6 +72,60 @@ public class Rule {
         }
     }
 
+    public static class ConditionGroup {
+
+        public static ConditionGroup of(ConditionCombiner conditionCombiner, List<Condition> conditions) {
+            return new ConditionGroup(conditionCombiner, conditions);
+        }
+
+        public static ConditionGroup of(ConditionCombiner conditionCombiner, Condition... conditions) {
+            return new ConditionGroup(conditionCombiner, ImmutableList.copyOf(conditions));
+        }
+
+        public static ConditionGroup of(Condition condition) {
+            return ConditionGroup.of(ConditionCombiner.AND, condition);
+        }
+
+        private final ConditionCombiner conditionCombiner;
+        private final List<Condition> conditions;
+
+        private ConditionGroup(ConditionCombiner conditionCombiner, List<Condition> conditions) {
+            this.conditionCombiner = conditionCombiner;
+            this.conditions = conditions;
+        }
+
+        public ConditionCombiner getConditionCombiner() {
+            return conditionCombiner;
+        }
+
+        public List<Condition> getConditions() {
+            return conditions;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof ConditionGroup) {
+                ConditionGroup other = (ConditionGroup) o;
+                return Objects.equals(conditionCombiner, other.conditionCombiner)
+                    && Objects.equals(conditions, other.conditions);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(conditionCombiner, conditions);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("conditionCombiner", conditionCombiner)
+                .add("conditions", conditions)
+                .toString();
+        }
+    }
+
     public static class Condition {
 
         public enum Field {
@@ -306,7 +360,7 @@ public class Rule {
 
         private Id id;
         private String name;
-        private Condition condition;
+        private ConditionGroup conditionGroup;
         private Action action;
 
         public Builder id(Id id) {
@@ -319,8 +373,13 @@ public class Rule {
             return this;
         }
 
-        public Builder condition(Condition condition) {
-            this.condition = condition;
+        public Builder conditionGroup(Condition condition) {
+            this.conditionGroup = Rule.ConditionGroup.of(condition);
+            return this;
+        }
+
+        public Builder conditionGroup(ConditionGroup conditionGroup) {
+            this.conditionGroup = conditionGroup;
             return this;
         }
 
@@ -332,10 +391,10 @@ public class Rule {
         public Rule build() {
             Preconditions.checkState(id != null, "`id` is mandatory");
             Preconditions.checkState(StringUtils.isNotBlank(name), "`name` is mandatory");
-            Preconditions.checkState(condition != null, "`condition` is mandatory");
+            Preconditions.checkState(conditionGroup != null, "`conditions` is mandatory");
             Preconditions.checkState(action != null, "`action` is mandatory");
 
-            return new Rule(id, name, condition, action);
+            return new Rule(id, name, conditionGroup, action);
         }
 
     }
@@ -344,15 +403,20 @@ public class Rule {
         return new Builder();
     }
 
+    public enum ConditionCombiner {
+        AND,
+        OR
+    }
+
     private final Id id;
     private final String name;
-    private final Condition condition;
+    private final ConditionGroup conditionGroup;
     private final Action action;
 
-    private Rule(Id id, String name, Condition condition, Action action) {
+    private Rule(Id id, String name, ConditionGroup conditionGroup, Action action) {
         this.id = id;
         this.name = name;
-        this.condition = condition;
+        this.conditionGroup = conditionGroup;
         this.action = action;
     }
 
@@ -364,8 +428,8 @@ public class Rule {
         return name;
     }
 
-    public Condition getCondition() {
-        return condition;
+    public ConditionGroup getConditionGroup() {
+        return conditionGroup;
     }
 
     public Action getAction() {
@@ -379,7 +443,7 @@ public class Rule {
 
             return Objects.equals(this.id, rule.id)
                 && Objects.equals(this.name, rule.name)
-                && Objects.equals(this.condition, rule.condition)
+                && Objects.equals(this.conditionGroup, rule.conditionGroup)
                 && Objects.equals(this.action, rule.action);
         }
         return false;
@@ -387,7 +451,7 @@ public class Rule {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, name, condition, action);
+        return Objects.hash(id, name, conditionGroup, action);
     }
 
     @Override
@@ -395,7 +459,7 @@ public class Rule {
         return MoreObjects.toStringHelper(this)
             .add("id", id)
             .add("name", name)
-            .add("condition", condition)
+            .add("conditionGroup", conditionGroup)
             .add("action", action)
             .toString();
     }

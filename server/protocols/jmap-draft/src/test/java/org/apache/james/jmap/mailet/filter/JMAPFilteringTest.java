@@ -46,6 +46,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_1_FU
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_FULL_ADDRESS;
+import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_FULL_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_4_FULL_ADDRESS;
@@ -98,7 +99,7 @@ class JMAPFilteringTest {
         private Optional<Rule.Condition.Field> field;
         private MimeMessageBuilder mimeMessageBuilder;
         private Optional<String> valueToMatch;
-        
+
         private FilteringArgumentBuilder() {
             this.description = Optional.empty();
             this.field = Optional.empty();
@@ -178,9 +179,9 @@ class JMAPFilteringTest {
 
         public FilteringArgumentBuilder unscrambledSubjectShouldNotMatchCaseSensitive() {
             return description("unscrambled content (case sensitive)")
-                    .field(SUBJECT)
-                    .subject(UNSCRAMBLED_SUBJECT)
-                    .valueToMatch(UNSCRAMBLED_SUBJECT.toUpperCase(Locale.FRENCH));
+                .field(SUBJECT)
+                .subject(UNSCRAMBLED_SUBJECT)
+                .valueToMatch(UNSCRAMBLED_SUBJECT.toUpperCase(Locale.FRENCH));
         }
 
         public FilteringArgumentBuilder testForUpperCase() {
@@ -192,7 +193,7 @@ class JMAPFilteringTest {
             Preconditions.checkState(description.isPresent());
             Preconditions.checkState(field.isPresent());
             Preconditions.checkState(valueToMatch.isPresent());
-            
+
             return Arguments.of(description.get(), field.get(), mimeMessageBuilder, valueToMatch.get());
         }
     }
@@ -599,23 +600,23 @@ class JMAPFilteringTest {
         testSystem.getJmapFiltering().service(mail);
 
         assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
     }
 
     @ParameterizedTest(name = "CONTAINS should not match for field {1}: {0}")
     @MethodSource("notContainsTestSuite")
     void notMatchingContainsTest(String testDescription,
-                              Rule.Condition.Field fieldToMatch,
-                              MimeMessageBuilder mimeMessageBuilder,
-                              String valueToMatch,
-                              JMAPFilteringTestSystem testSystem) throws Exception {
+                                 Rule.Condition.Field fieldToMatch,
+                                 MimeMessageBuilder mimeMessageBuilder,
+                                 String valueToMatch,
+                                 JMAPFilteringTestSystem testSystem) throws Exception {
 
         testSystem.defineRulesForRecipient1(Rule.Condition.of(fieldToMatch, CONTAINS, valueToMatch));
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
 
         assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
-                .isEmpty();
+            .isEmpty();
     }
 
     @ParameterizedTest(name = "NOT-CONTAINS should match for field {1}: {0}")
@@ -669,10 +670,10 @@ class JMAPFilteringTest {
     @ParameterizedTest(name = "EXACTLY-EQUALS should not match for field {1}: {0}")
     @MethodSource("notEqualsTestSuite")
     void equalsNotMatchingTest(String testDescription,
-                            Rule.Condition.Field fieldToMatch,
-                            MimeMessageBuilder mimeMessageBuilder,
-                            String valueToMatch,
-                            JMAPFilteringTestSystem testSystem) throws Exception {
+                               Rule.Condition.Field fieldToMatch,
+                               MimeMessageBuilder mimeMessageBuilder,
+                               String valueToMatch,
+                               JMAPFilteringTestSystem testSystem) throws Exception {
         testSystem.defineRulesForRecipient1(Rule.Condition.of(fieldToMatch, EXACTLY_EQUALS, valueToMatch));
         FakeMail mail = testSystem.asMail(mimeMessageBuilder);
         testSystem.getJmapFiltering().service(mail);
@@ -725,26 +726,26 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox1Id.serialize())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .condition(Rule.Condition.of(FROM, NOT_CONTAINS, USER_1_USERNAME))
+                    .conditionGroup(Rule.Condition.of(FROM, NOT_CONTAINS, USER_1_USERNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox2Id.serialize())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("3"))
                     .name("rule 3")
-                    .condition(Rule.Condition.of(TO, EXACTLY_EQUALS, USER_3_ADDRESS))
+                    .conditionGroup(Rule.Condition.of(TO, EXACTLY_EQUALS, USER_3_ADDRESS))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailbox3Id.serialize())))
                     .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .addFrom(USER_2_ADDRESS)
-                    .addToRecipient(USER_3_ADDRESS)
-                    .setSubject(UNSCRAMBLED_SUBJECT));
+                .addFrom(USER_2_ADDRESS)
+                .addToRecipient(USER_3_ADDRESS)
+                .setSubject(UNSCRAMBLED_SUBJECT));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -763,7 +764,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
                         mailbox3Id.serialize(),
                         mailbox2Id.serialize(),
@@ -771,7 +772,7 @@ class JMAPFilteringTest {
                     .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .setSubject(UNSCRAMBLED_SUBJECT));
+                .setSubject(UNSCRAMBLED_SUBJECT));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -790,19 +791,19 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of())))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
                         mailbox1Id.serialize()))))
                     .build())).block();
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .setSubject(UNSCRAMBLED_SUBJECT));
+                .setSubject(UNSCRAMBLED_SUBJECT));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -839,9 +840,9 @@ class JMAPFilteringTest {
                 Rule.Condition.of(CC, CONTAINS, SHOULD_NOT_MATCH));
 
             FakeMail mail = testSystem.asMail(mimeMessageBuilder()
-                    .addFrom(USER_1_FULL_ADDRESS)
-                    .addToRecipient(USER_2_FULL_ADDRESS)
-                    .addCcRecipient(USER_3_FULL_ADDRESS));
+                .addFrom(USER_1_FULL_ADDRESS)
+                .addToRecipient(USER_2_FULL_ADDRESS)
+                .addCcRecipient(USER_3_FULL_ADDRESS));
 
             testSystem.getJmapFiltering().service(mail);
 
@@ -860,7 +861,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build())).block();
 
@@ -879,7 +880,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build())).block();
 
@@ -900,13 +901,13 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
                     .build(),
                 Rule.builder()
                     .id(Rule.Id.of("2"))
                     .name("rule 2")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         testSystem.getRecipient1MailboxId().serialize())))
                     .build())).block();
@@ -929,7 +930,7 @@ class JMAPFilteringTest {
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
-                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                     .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
                         unknownMailboxId,
                         testSystem.getRecipient1MailboxId().serialize())))
@@ -952,7 +953,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, false, true, ImmutableList.of()))
                 .build())).block();
@@ -972,7 +973,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     true, false, false, ImmutableList.of()))
                 .build())).block();
@@ -995,7 +996,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, true, false, ImmutableList.of()))
                 .build())).block();
@@ -1018,7 +1019,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     false, false, false, ImmutableList.of("abc", "def")))
                 .build())).block();
@@ -1039,7 +1040,7 @@ class JMAPFilteringTest {
             Rule.builder()
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
-                .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                .conditionGroup(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
                 .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(),
                     true, true, false, ImmutableList.of("abc", "def")))
                 .build())).block();
@@ -1056,5 +1057,76 @@ class JMAPFilteringTest {
         expectedFlags.add(Flags.Flag.FLAGGED);
         assertThat(StorageDirective.fromMail(Username.of("recipient1"), mail).getFlags().get())
             .isEqualTo(expectedFlags);
+    }
+
+    @Test
+    void andShouldMatchWhenAllConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cd")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+    }
+
+    @Test
+    void andShouldNotMatchWhenSomeConditionsAreNotMet(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME).isEmpty()).isTrue();
+    }
+
+    @Test
+    void orShouldMatchWhenSomeConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThatAttribute(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME))
+            .isEqualTo(RECIPIENT_1_MAILBOX_1_ATTRIBUTE);
+    }
+
+    @Test
+    void orShouldNotMatchWhenNoConditionsAreMet(JMAPFilteringTestSystem testSystem) throws Exception {
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.OR, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME), Rule.Condition.of(SUBJECT, CONTAINS, "cdf")))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(testSystem.getRecipient1MailboxId().serialize())))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_3_ADDRESS).addHeader(SUBJECT.asString(), "abcdef"));
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getAttribute(RECIPIENT_1_USERNAME_ATTRIBUTE_NAME).isEmpty()).isTrue();
     }
 }

@@ -52,6 +52,12 @@ class RuleTest {
     }
 
     @Test
+    void innerClassConditionGroupShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Rule.ConditionGroup.class)
+            .verify();
+    }
+
+    @Test
     void innerClassActionShouldMatchBeanContract() {
         EqualsVerifier.forClass(Rule.Action.class)
             .verify();
@@ -89,7 +95,7 @@ class RuleTest {
         assertThatThrownBy(() ->
             Rule.builder()
                 .name(NAME)
-                .condition(CONDITION)
+                .conditionGroup(CONDITION)
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -100,7 +106,7 @@ class RuleTest {
         assertThatThrownBy(() ->
             Rule.builder()
                 .id(UNIQUE_ID)
-                .condition(CONDITION)
+                .conditionGroup(CONDITION)
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -112,7 +118,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name("")
-                .condition(CONDITION)
+                .conditionGroup(CONDITION)
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -124,7 +130,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name("    ")
-                .condition(CONDITION)
+                .conditionGroup(CONDITION)
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -136,7 +142,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name(null)
-                .condition(CONDITION)
+                .conditionGroup(CONDITION)
                 .action(ACTION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -159,7 +165,7 @@ class RuleTest {
             Rule.builder()
                 .id(UNIQUE_ID)
                 .name(NAME)
-                .condition(CONDITION)
+                .conditionGroup(CONDITION)
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
@@ -169,11 +175,11 @@ class RuleTest {
         Rule rule = Rule.builder()
             .id(UNIQUE_ID)
             .name(NAME)
-            .condition(CONDITION)
+            .conditionGroup(CONDITION)
             .action(ACTION)
             .build();
 
-        assertThat(rule.getCondition()).isEqualTo(CONDITION);
+        assertThat(rule.getConditionGroup().getConditions().get(0)).isEqualTo(CONDITION);
     }
 
     @Test
@@ -181,7 +187,7 @@ class RuleTest {
         Rule rule = Rule.builder()
             .id(UNIQUE_ID)
             .name(NAME)
-            .condition(CONDITION)
+            .conditionGroup(CONDITION)
             .action(ACTION)
             .build();
 

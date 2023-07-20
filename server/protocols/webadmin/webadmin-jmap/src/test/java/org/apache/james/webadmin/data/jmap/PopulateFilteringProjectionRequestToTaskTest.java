@@ -210,7 +210,7 @@ class PopulateFilteringProjectionRequestToTaskTest {
         Rule rule = Rule.builder()
             .id(Rule.Id.of("2"))
             .name("rule 2")
-            .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+            .conditionGroup(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
             .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(bobInboxboxId.serialize()))))
             .build();
 
