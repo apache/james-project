@@ -179,11 +179,8 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         }
     }
 
-    private ThrowingFunction<String, SingleServerSet> toSingleServerSet(LDAPConnectionOptions connectionOptions, BindRequest bindRequest) {
-        return Throwing.function(uriString -> {
-            URI uri = new URI(uriString);
-            return new SingleServerSet(uri.getHost(), uri.getPort(), supportLDAPS(uri), connectionOptions, bindRequest, null);
-        });
+    private ThrowingFunction<URI, SingleServerSet> toSingleServerSet(LDAPConnectionOptions connectionOptions, BindRequest bindRequest) {
+        return Throwing.function(uri -> new SingleServerSet(uri.getHost(), uri.getPort(), supportLDAPS(uri), connectionOptions, bindRequest, null));
     }
 
     @PreDestroy

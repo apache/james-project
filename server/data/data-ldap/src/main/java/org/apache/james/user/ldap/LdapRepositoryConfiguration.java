@@ -19,6 +19,7 @@
 
 package org.apache.james.user.ldap;
 
+import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -30,8 +31,10 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class LdapRepositoryConfiguration {
@@ -46,7 +49,7 @@ public class LdapRepositoryConfiguration {
     private static final int DEFAULT_POOL_SIZE = 4;
 
     public static class Builder {
-        private Optional<List<String>> ldapHosts;
+        private Optional<List<URI>> ldapHosts;
         private Optional<String> principal;
         private Optional<String> credentials;
         private Optional<String> userBase;
@@ -68,7 +71,7 @@ public class LdapRepositoryConfiguration {
             perDomainBaseDN = ImmutableMap.builder();
         }
 
-        public Builder ldapHosts(List<String> ldapHosts) {
+        public Builder ldapHosts(List<URI> ldapHosts) {
             this.ldapHosts = Optional.of(ldapHosts);
             return this;
         }
@@ -145,10 +148,14 @@ public class LdapRepositoryConfiguration {
     }
 
     public static LdapRepositoryConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-        List<String> ldapHosts = Splitter.on(",")
+        List<URI> ldapHosts = Splitter.on(",")
             .splitToList(Optional.ofNullable(configuration.getString("[@ldapHosts]", null))
                 .orElse(configuration.getString("[@ldapHost]", ""))
-                .trim());
+                .trim())
+            .stream()
+            .map(Throwing.function(URI::new))
+            .collect(ImmutableList.toImmutableList());
+
         String principal = configuration.getString("[@principal]", "");
         String credentials = configuration.getString("[@credentials]", "");
         String userBase = configuration.getString("[@userBase]");
@@ -214,7 +221,7 @@ public class LdapRepositoryConfiguration {
      * attribute &quot;ldapHosts&quot; and fallback to the legacy attribute &quot;ldapHost&quot;.
      * URLs are split by the comma  &quot;,&quot; character.
      */
-    private final List<String> ldapHosts;
+    private final List<URI> ldapHosts;
 
     /**
      * The user with which to initially bind to the LDAP server. The value of
@@ -286,7 +293,7 @@ public class LdapRepositoryConfiguration {
 
     private final ImmutableMap<Domain, String> perDomainBaseDN;
 
-    private LdapRepositoryConfiguration(List<String> ldapHosts, String principal, String credentials, String userBase, String userIdAttribute,
+    private LdapRepositoryConfiguration(List<URI> ldapHosts, String principal, String credentials, String userBase, String userIdAttribute,
                                         String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
                                         Optional<String> administratorId, boolean trustAllCerts,
@@ -322,7 +329,7 @@ public class LdapRepositoryConfiguration {
         }
     }
 
-    public List<String> getLdapHosts() {
+    public List<URI> getLdapHosts() {
         return ldapHosts;
     }
 
