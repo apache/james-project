@@ -204,10 +204,10 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
-                            <url>https://github.com/glowroot/glowroot/releases/download/v0.13.6/glowroot-0.13.6-dist.zip</url>
+                            <url>https://github.com/glowroot/glowroot/releases/download/v0.14.0/glowroot-0.14.0-dist.zip</url>
                             <unpack>true</unpack>
                             <outputDirectory>${project.build.directory}</outputDirectory>
-                            <md5>f9026dbab1fbade067ca549913802fcc</md5>
+                            <md5>16073f10204751cd71d3b4ea93be2649</md5>
                         </configuration>
                     </execution>
                 </executions>
