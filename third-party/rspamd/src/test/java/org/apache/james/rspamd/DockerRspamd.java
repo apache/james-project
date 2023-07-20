@@ -33,7 +33,7 @@ import org.testcontainers.utility.MountableFile;
 public class DockerRspamd {
     public static final String PASSWORD = "admin";
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("a16bitsysop/rspamd");
-    private static final String DEFAULT_TAG = "3.3-r0-alpine3.16.2-r0";
+    private static final String DEFAULT_TAG = "3.5-r7-alpine3.18.2-r0";
     private static final int DEFAULT_PORT = 11334;
 
     private final DockerRedis dockerRedis;
