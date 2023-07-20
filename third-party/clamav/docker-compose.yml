@@ -85,7 +85,7 @@ services:
       - james
 
   clamav:
-    image: clamav/clamav:0.105
+    image: clamav/clamav:1.1
     networks:
       - james
 
