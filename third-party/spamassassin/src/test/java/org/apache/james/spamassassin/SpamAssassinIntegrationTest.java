@@ -30,7 +30,6 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import java.util.UUID;
 
 import javax.mail.MessagingException;
 
@@ -44,8 +43,6 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.Host;
-import org.apache.james.util.docker.DockerContainer;
-import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
@@ -55,7 +52,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
@@ -64,15 +60,9 @@ import com.google.inject.Singleton;
 
 class SpamAssassinIntegrationTest {
     private static final String SPAM_CONTENT = "XJS*C4JDBQADN1.NSBN3*2IDNEN*GTUBE-STANDARD-ANTI-UBE-TEST-EMAIL*C.34X";
-    private static final String SPAMASSASSIN_IMAGE = "instantlinux/spamassassin:3.4.6-1";
 
     @RegisterExtension
-    public static DockerContainer spamAssassinContainer = DockerContainer.fromName(SPAMASSASSIN_IMAGE)
-        .withExposedPorts(783)
-        .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND))
-        .withName("james-testing-spamassassin-" + UUID.randomUUID());
-
+    public static SpamAssassinExtension spamAssassinExtension = new SpamAssassinExtension();
     @RegisterExtension
     public TestIMAPClient messageReader = new TestIMAPClient();
     @RegisterExtension
@@ -100,7 +90,7 @@ class SpamAssassinIntegrationTest {
                 @Provides
                 @Singleton
                 private SpamAssassinConfiguration provideSpamAssassinConfiguration(){
-                    return new SpamAssassinConfiguration(Host.parseConfString("localhost", spamAssassinContainer.getMappedPort(783)));
+                    return new SpamAssassinConfiguration(Host.parseConfString("localhost", spamAssassinExtension.getSpamAssassin().getBindingPort()));
                 }
             })
             .build(temporaryFolder);

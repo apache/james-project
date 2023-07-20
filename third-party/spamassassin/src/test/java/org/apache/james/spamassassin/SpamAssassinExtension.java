@@ -38,33 +38,21 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
-import org.testcontainers.images.builder.ImageFromDockerfile;
-import org.testcontainers.utility.Base58;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallback, ParameterResolver {
+    public static final int SPAMASSASSIN_PORT = 783;
     private static final Duration STARTUP_TIMEOUT = Duration.ofMinutes(30);
-    private static final String UNIQUE_IDENTIFIER = Base58.randomString(16).toLowerCase();
-
-    private static final boolean DELETE_ON_EXIT = false;
-    private static final GenericContainer<?> spamAssassinContainer  = new GenericContainer<>(
-        new ImageFromDockerfile("james-spamassassin/" + UNIQUE_IDENTIFIER, DELETE_ON_EXIT)
-            .withFileFromClasspath("Dockerfile", "docker/spamassassin/Dockerfile")
-            .withFileFromClasspath("local.cf", "docker/spamassassin/local.cf")
-            .withFileFromClasspath("run.sh", "docker/spamassassin/run.sh")
-            .withFileFromClasspath("spamd.sh", "docker/spamassassin/spamd.sh")
-            .withFileFromClasspath("rule-update.sh", "docker/spamassassin/rule-update.sh")
-            .withFileFromClasspath("bayes_pg.sql", "docker/spamassassin/bayes_pg.sql"))
-        .withCreateContainerCmdModifier(cmd -> cmd.withName("spam-assassin-" + UUID.randomUUID().toString()))
+    private static final String SPAMASSASSIN_IMAGE = "instantlinux/spamassassin:4.0.0-6";
+    private static final GenericContainer<?> spamAssassinContainer  = new GenericContainer<>(SPAMASSASSIN_IMAGE)
+        .withCreateContainerCmdModifier(cmd -> cmd.withName("james-spam-assassin-test-" + UUID.randomUUID()))
         .withStartupTimeout(STARTUP_TIMEOUT)
-        .withExposedPorts(783)
-        .withTmpFs(ImmutableMap.of("/var/lib/postgresql/data", "rw,noexec,nosuid,size=200m"))
+        .withExposedPorts(SPAMASSASSIN_PORT)
         .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
     static {
@@ -106,8 +94,6 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
     }
 
     public static class SpamAssassin {
-        private static final int SPAMASSASSIN_PORT = 783;
-
         private final String ip;
         private final int bindingPort;
         private final GenericContainer<?> spamAssassinContainer;
@@ -155,7 +141,7 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
         private enum TrainingKind {
             SPAM("--spam"), HAM("--ham");
 
-            private String saLearnExtensionName;
+            private final String saLearnExtensionName;
 
             TrainingKind(String saLearnExtensionName) {
                 this.saLearnExtensionName = saLearnExtensionName;

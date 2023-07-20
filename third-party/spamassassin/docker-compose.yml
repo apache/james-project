@@ -28,6 +28,6 @@ services:
       - "8000:8000"
 
   spamassassin:
-    image: instantlinux/spamassassin:3.4.6-1
+    image: instantlinux/spamassassin:4.0.0-6
     ports:
       - "783:783"
