@@ -329,6 +329,10 @@
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>queue-pulsar-guice</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

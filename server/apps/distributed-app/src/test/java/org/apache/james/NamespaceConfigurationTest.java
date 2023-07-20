@@ -76,6 +76,7 @@ class NamespaceConfigurationTest {
     @Test
     void defaultBucketShouldBeTheConfiguredOne(GuiceJamesServer server) {
         // AwsS3BlobStoreExtension relies on a randomly generated bucket for isolation purposes
+        System.out.println(server.module);
         assertThat(server.getProbe(DefaultBucketProbe.class)
                 .getDefaultBucket())
             .isNotEqualTo(BucketName.DEFAULT);

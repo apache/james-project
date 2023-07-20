@@ -63,6 +63,7 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.queue.rabbitmq.CassandraMailQueueViewModule;
 import org.apache.james.modules.queue.rabbitmq.MailQueueViewChoice;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DKIMMailetModule;
@@ -88,6 +89,7 @@ import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.modules.webadmin.CassandraRoutesModule;
 import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
 import org.apache.james.modules.webadmin.TasksCleanupRoutesModule;
+import org.apache.james.queue.pulsar.module.PulsarMailQueueViewModule;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableSet;
@@ -195,7 +197,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MODULES)
-            .combineWith(MailQueueViewChoice.ModuleChooser.choose(configuration.getMailQueueViewChoice()))
+            .combineWith(chooseMailQueueViewModule(MailQueueViewChoice.ModuleChooser.choose(configuration.getMailQueueViewChoice())))
             .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
@@ -223,5 +225,12 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         return binder -> {
 
         };
+    }
+
+    private static Module chooseMailQueueViewModule(Module module) {
+        if (module.equals(new CassandraMailQueueViewModule())) {
+            return new PulsarMailQueueViewModule();
+        }
+        return module;
     }
 }
