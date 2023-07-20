@@ -28,14 +28,13 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 public class DockerClamAV {
-    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("clamav/clamav");
-    private static final String DEFAULT_TAG = "0.105";
+    private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("clamav/clamav").withTag("1.1");
     private static final int DEFAULT_PORT = 3310;
 
     private final GenericContainer<?> container;
 
     public DockerClamAV(Network network) {
-        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME.withTag(DEFAULT_TAG))
+        this.container = new GenericContainer<>(DEFAULT_IMAGE_NAME)
             .withExposedPorts(DEFAULT_PORT)
             .withEnv("CLAMAV_NO_FRESHCLAMD", "true")
             .withEnv("CLAMAV_NO_MILTERD", "true")
