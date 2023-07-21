@@ -71,6 +71,7 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueMetricContract;
 import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -93,6 +94,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
@@ -110,7 +112,7 @@ import reactor.rabbitmq.Sender;
 class RabbitMQMailQueueTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;
-    private static final int UPDATE_BROWSE_START_PACE = 20;
+    private static final int UPDATE_BROWSE_START_PACE = 25;
     private static final Duration ONE_HOUR_SLICE_WINDOW = Duration.ofHours(1);
     private static final org.apache.james.queue.api.MailQueueName SPOOL = org.apache.james.queue.api.MailQueueName.of("spool");
     private static final Instant IN_SLICE_1 = Instant.now().minus(60, DAYS);
@@ -200,9 +202,9 @@ class RabbitMQMailQueueTest {
                 "5-1", "5-2", "5-3", "5-4", "5-5");
         }
 
-        @Test
+        @RepeatedTest(50)
         void browseStartShouldBeUpdated(CassandraCluster cassandraCluster) {
-            int emailCount = 100;
+            int emailCount = 250;
 
             StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE browsestart");
             StatementRecorder statementRecorder = cassandraCluster.getConf()
@@ -222,12 +224,12 @@ class RabbitMQMailQueueTest {
 
             // The actual rate of update should actually be lower than the update probability.
             assertThat(statementRecorder.listExecutedStatements(selector))
-                .hasSizeBetween(2, 9);
+                .hasSizeBetween(2, 12);
         }
 
-        @Test
+        @RepeatedTest(50)
         void contentStartShouldBeUpdated(CassandraCluster cassandraCluster) {
-            int emailCount = 100;
+            int emailCount = 250;
 
             StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE contentstart");
             StatementRecorder statementRecorder = cassandraCluster.getConf().recordStatements(selector);
@@ -246,7 +248,7 @@ class RabbitMQMailQueueTest {
 
             // The actual rate of update should actually be lower than the update probability.
             assertThat(statementRecorder.listExecutedStatements(selector))
-                .hasSizeBetween(2, 9);
+                .hasSizeBetween(2, 12);
         }
 
         @Test
@@ -1060,6 +1062,6 @@ class RabbitMQMailQueueTest {
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, factory, rabbitMQExtension.getRabbitMQ().getConfiguration());
-        mailQueue = mailQueueFactory.createQueue(SPOOL);
+        mailQueue = mailQueueFactory.createQueue(SPOOL, MailQueueFactory.prefetchCount(3));
     }
 }
