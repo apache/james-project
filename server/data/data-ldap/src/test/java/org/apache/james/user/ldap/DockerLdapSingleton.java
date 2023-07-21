@@ -34,4 +34,9 @@ public class DockerLdapSingleton {
         .password(ADMIN_PASSWORD)
         .build();
 
+    public static final LdapGenericContainer ldapContainerWithLocalPartLogin = LdapGenericContainer.builder()
+        .domain(DOMAIN)
+        .password(ADMIN_PASSWORD)
+        .dockerFilePrefix("localpartLogin/")
+        .build();
 }
