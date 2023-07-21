@@ -19,7 +19,7 @@
 
 package org.apache.james.rspamd;
 
-import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
+import static org.apache.james.rspamd.RspamdExtension.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -41,11 +41,11 @@ import io.restassured.specification.RequestSpecification;
 @Tag(Unstable.TAG)
 class DockerRspamdExtensionTest {
     @RegisterExtension
-    static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
+    static RspamdExtension rspamdExtension = new RspamdExtension();
 
     @Test
     void dockerRspamdExtensionShouldWork() {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
 
         String response = rspamdApi
             .get("ping")
@@ -61,7 +61,7 @@ class DockerRspamdExtensionTest {
 
     @Test
     void checkSpamEmailWithExactPasswordHeaderShouldWork() {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
 
         rspamdApi
             .header(new Header("Password", PASSWORD))
@@ -74,7 +74,7 @@ class DockerRspamdExtensionTest {
 
     @Test
     void checkHamEmailWithExactPasswordHeaderShouldWork() {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
         rspamdApi
             .header(new Header("Password", PASSWORD))
             .body(ClassLoader.getSystemResourceAsStream("mail/ham/ham1.eml"))
@@ -86,7 +86,7 @@ class DockerRspamdExtensionTest {
 
     @Test
     void learnSpamEmailWithExactPasswordHeaderShouldWork() {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
 
         rspamdApi
             .header(new Header("Password", PASSWORD))
@@ -99,7 +99,7 @@ class DockerRspamdExtensionTest {
 
     @Test
     void learnHamEmailWithExactPasswordHeaderShouldWork() {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
 
         rspamdApi
             .header(new Header("Password", PASSWORD))
@@ -113,20 +113,20 @@ class DockerRspamdExtensionTest {
     @ParameterizedTest
     @ValueSource(strings = {"checkv2", "learnspam", "learnham"})
     void endpointsWithWrongPasswordHeaderShouldReturnUnauthorized(String endpoint) {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
 
         rspamdApi
             .header(new Header("Password", "wrongPassword"))
             .body("dummy")
             .post(endpoint)
         .then()
-            .statusCode(HttpStatus.FORBIDDEN_403)
+            .statusCode(HttpStatus.UNAUTHORIZED_401)
             .body("error", is("Unauthorized"));
     }
 
     @Test
     void checkVirusEmailWithExactPasswordHeaderShouldReturnClamVirusSymbol() {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
 
         rspamdApi
             .header(new Header("Password", PASSWORD))
@@ -140,7 +140,7 @@ class DockerRspamdExtensionTest {
 
     @Test
     void checkNonVirusEmailWithExactPasswordHeaderShouldNotReturnClamVirusSymbol() {
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
 
         rspamdApi
             .header(new Header("Password", PASSWORD))

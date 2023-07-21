@@ -25,7 +25,7 @@ import java.net.URL;
 import java.util.Optional;
 
 import org.apache.james.core.healthcheck.Result;
-import org.apache.james.rspamd.DockerRspamdExtension;
+import org.apache.james.rspamd.RspamdExtension;
 import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,14 +36,14 @@ import reactor.core.publisher.Mono;
 
 class RspamdHealthcheckTest {
     @RegisterExtension
-    static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
+    static RspamdExtension rspamdExtension = new RspamdExtension();
 
     private RspamdHealthCheck rspamdHealthCheck;
 
     @BeforeEach
     void setUp() {
-        if (rspamdExtension.dockerRspamd().isPaused()) {
-            rspamdExtension.dockerRspamd().unPause();
+        if (rspamdExtension.isPaused()) {
+            rspamdExtension.unPause();
         }
 
         RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), "passwordDoesNotMatter", Optional.empty());
@@ -60,7 +60,7 @@ class RspamdHealthcheckTest {
 
     @Test
     void checkShouldReturnUnhealthyWhenRspamdIsDown() {
-        rspamdExtension.dockerRspamd().pause();
+        rspamdExtension.pause();
         Result check = Mono.from(rspamdHealthCheck.check()).block();
 
         assertThat(check.isUnHealthy()).isTrue();
@@ -79,8 +79,8 @@ class RspamdHealthcheckTest {
 
     @Test
     void checkShouldReturnHealthyWhenRspamdIsRecovered() {
-        rspamdExtension.dockerRspamd().pause();
-        rspamdExtension.dockerRspamd().unPause();
+        rspamdExtension.pause();
+        rspamdExtension.unPause();
         Result check = Mono.from(rspamdHealthCheck.check()).block();
 
         assertThat(check.isHealthy()).isTrue();
