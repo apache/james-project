@@ -20,7 +20,7 @@
 package org.apache.james.rspamd.client;
 
 import static org.apache.james.mailbox.model.Content.BUFFER_SIZE;
-import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
+import static org.apache.james.rspamd.RspamdExtension.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,7 +34,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;
-import org.apache.james.rspamd.DockerRspamdExtension;
+import org.apache.james.rspamd.RspamdExtension;
 import org.apache.james.rspamd.exception.UnauthorizedException;
 import org.apache.james.rspamd.model.AnalysisResult;
 import org.apache.james.util.MimeMessageUtil;
@@ -64,7 +64,7 @@ class RspamdHttpClientTest {
     private final static Username ALICE = Username.of("alice@domain.tld");
 
     @RegisterExtension
-    static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
+    static RspamdExtension rspamdExtension = new RspamdExtension();
 
     private Mail spamMessage;
     private Mail hamMessage;
@@ -134,7 +134,7 @@ class RspamdHttpClientTest {
         AnalysisResult analysisResult = client.checkV2(spamMessage).block();
         assertThat(analysisResult.getAction()).isEqualTo(AnalysisResult.Action.ADD_HEADER);
 
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
         rspamdApi
             .header(new Header("Password", PASSWORD))
             .header(new Header("IP", spamMessage.getRemoteAddr()))
@@ -160,7 +160,7 @@ class RspamdHttpClientTest {
             softly.assertThat(analysisResult.hasVirus()).isEqualTo(false);
         });
 
-        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.dockerRspamd().getPort()));
+        RequestSpecification rspamdApi = WebAdminUtils.spec(Port.of(rspamdExtension.rspamdPort()));
         rspamdApi
             .header(new Header("Password", PASSWORD))
             .body(ClassLoader.getSystemResourceAsStream(HAM_MESSAGE_PATH))

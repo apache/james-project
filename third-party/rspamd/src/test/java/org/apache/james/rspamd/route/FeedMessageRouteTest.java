@@ -21,7 +21,7 @@ package org.apache.james.rspamd.route;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
+import static org.apache.james.rspamd.RspamdExtension.PASSWORD;
 import static org.apache.james.rspamd.route.FeedMessageRoute.BASE_PATH;
 import static org.apache.james.rspamd.task.FeedHamToRspamdTaskTest.ALICE_INBOX_MAILBOX;
 import static org.apache.james.rspamd.task.FeedHamToRspamdTaskTest.BOB_INBOX_MAILBOX;
@@ -62,7 +62,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.rspamd.DockerRspamdExtension;
+import org.apache.james.rspamd.RspamdExtension;
 import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.task.FeedHamToRspamdTask;
@@ -98,7 +98,7 @@ import io.restassured.RestAssured;
 @Tag(Unstable.TAG)
 public class FeedMessageRouteTest {
     @RegisterExtension
-    static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
+    static RspamdExtension rspamdExtension = new RspamdExtension();
 
     private InMemoryMailboxManager mailboxManager;
     private WebAdminServer webAdminServer;

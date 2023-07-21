@@ -19,7 +19,7 @@
 
 package org.apache.james.rspamd.task;
 
-import static org.apache.james.rspamd.DockerRspamd.PASSWORD;
+import static org.apache.james.rspamd.RspamdExtension.PASSWORD;
 import static org.apache.james.rspamd.task.FeedSpamToRspamdTask.SPAM_MAILBOX_NAME;
 import static org.apache.james.rspamd.task.RunningOptions.ALL_MESSAGES;
 import static org.apache.james.rspamd.task.RunningOptions.DEFAULT_MESSAGES_PER_SECOND;
@@ -53,7 +53,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.rspamd.DockerRspamdExtension;
+import org.apache.james.rspamd.RspamdExtension;
 import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.task.Task;
@@ -80,7 +80,7 @@ import reactor.core.publisher.Mono;
 @Tag(Unstable.TAG)
 public class FeedSpamToRspamdTaskTest {
     @RegisterExtension
-    static DockerRspamdExtension rspamdExtension = new DockerRspamdExtension();
+    static RspamdExtension rspamdExtension = new RspamdExtension();
 
     public static final Domain DOMAIN = Domain.of("domain.tld");
     public static final Username CEDRIC = Username.fromLocalPartWithDomain("cedric", DOMAIN);
