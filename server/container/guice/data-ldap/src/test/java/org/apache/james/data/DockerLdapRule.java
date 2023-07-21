@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.user.ldap.DockerLdapSingleton;
+import org.apache.james.user.ldap.LdapGenericContainer;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -34,11 +35,28 @@ import com.github.fge.lambdas.Throwing;
 import com.google.inject.Module;
 
 public class DockerLdapRule implements GuiceModuleTestRule {
+    private final boolean localPartLoginSupported;
+    private final LdapGenericContainer ldapGenericContainer;
+
+    public DockerLdapRule() {
+        this.localPartLoginSupported = false;
+        this.ldapGenericContainer = DockerLdapSingleton.ldapContainer;
+    }
+
+    public DockerLdapRule(boolean localPartLoginSupported) {
+        this.localPartLoginSupported = localPartLoginSupported;
+
+        if (localPartLoginSupported) {
+            this.ldapGenericContainer = DockerLdapSingleton.ldapContainerWithLocalPartLogin;
+        } else {
+            this.ldapGenericContainer = DockerLdapSingleton.ldapContainer;
+        }
+    }
 
     @Override
     public Module getModule() {
         return binder -> binder.bind(LdapRepositoryConfiguration.class)
-            .toInstance(computeConfiguration(List.of(DockerLdapSingleton.ldapContainer.getLdapHost())));
+            .toInstance(computeConfiguration(List.of(ldapGenericContainer.getLdapHost())));
     }
 
     @Override
@@ -50,25 +68,39 @@ public class DockerLdapRule implements GuiceModuleTestRule {
         List<URI> uris = ldapIps.stream()
             .map(Throwing.function(URI::new))
             .collect(Collectors.toUnmodifiableList());
-        try {
-            return LdapRepositoryConfiguration.builder()
-                .ldapHosts(uris)
-                .principal("cn=admin,dc=james,dc=org")
-                .credentials("mysecretpassword")
-                .userBase("ou=People,dc=james,dc=org")
-                .userIdAttribute("uid")
-                .userObjectClass("inetOrgPerson")
-                .build();
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
+
+        LdapRepositoryConfiguration.Builder ldapConfigurationBuilder = LdapRepositoryConfiguration.builder()
+            .ldapHosts(uris)
+            .principal("cn=admin,dc=james,dc=org")
+            .credentials("mysecretpassword")
+            .userBase("ou=People,dc=james,dc=org")
+            .userObjectClass("inetOrgPerson");
+
+        if (localPartLoginSupported) {
+            try {
+                return ldapConfigurationBuilder
+                    .resolveLocalPartAttribute("uid")
+                    .userIdAttribute("mail")
+                    .build();
+            } catch (ConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            try {
+                return ldapConfigurationBuilder
+                    .userIdAttribute("uid")
+                    .build();
+            } catch (ConfigurationException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public void start() {
-        DockerLdapSingleton.ldapContainer.start();
+        ldapGenericContainer.start();
     }
 
     public void stop() {
-        DockerLdapSingleton.ldapContainer.stop();
+        ldapGenericContainer.stop();
     }
 }

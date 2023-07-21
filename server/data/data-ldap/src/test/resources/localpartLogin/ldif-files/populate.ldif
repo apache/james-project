@@ -1,0 +1,65 @@
+dn: ou=people, dc=james,dc=org
+ou: people
+objectClass: organizationalUnit
+
+dn: ou=empty, dc=james,dc=org
+ou: empty
+objectClass: organizationalUnit
+
+dn: ou=whatever, dc=james,dc=org
+ou: whatever
+objectClass: organizationalUnit
+
+dn: uid=james-user, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: james-user
+cn: james-user
+sn: james-user
+mail: james-user@james.org
+userPassword: secret
+description: James user
+
+dn: uid=james-user-app1, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: james-user-app1
+cn: james-user
+sn: james-user
+mail: james-user@james.org
+userPassword: secret
+description: James user App 1
+
+dn: uid=james-user-app2, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: james-user-app2
+cn: james-user
+sn: james-user
+mail: james-user@james.org
+userPassword: secret
+description: James user App 2
+
+dn: uid=alice, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: alice
+cn: alice-cn
+sn: alice-sn
+mail: alice@james.org
+userPassword: secret
+description: Alice user
+
+dn: uid=alice-app1, ou=people, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: alice-app1
+cn: alice-cn
+sn: alice-sn
+mail: alice@james.org
+userPassword: secret
+description: Alice user App 1
+
+dn: uid=bob, ou=whatever, dc=james,dc=org
+objectClass: inetOrgPerson
+uid: bob
+cn: bob
+sn: bob
+mail: bob@extra.org
+userPassword: secret
+description: bob user
