@@ -359,7 +359,7 @@ class RabbitMQMailQueueTest {
         @Test
         void enqueuedEmailsShouldEventuallyBeCleaned() {
             ManageableMailQueue mailQueue = getManageableMailQueue();
-            int emailCount = 5;
+            int emailCount = 100;
 
             clock.setInstant(IN_SLICE_1);
             enqueueSomeMails(namePatternForSlice(1), emailCount);
@@ -374,10 +374,10 @@ class RabbitMQMailQueueTest {
             enqueueSomeMails(namePatternForSlice(5), emailCount);
 
             clock.setInstant(IN_SLICE_7);
-            dequeueMails(5);
-            dequeueMails(5);
-            dequeueMails(5);
-            dequeueMails(5);
+            dequeueMails(emailCount);
+            dequeueMails(emailCount);
+            dequeueMails(emailCount);
+            dequeueMails(emailCount);
 
             // ensure slice 1 was cleaned
             EnqueuedMailsDAO mailsDAO = new EnqueuedMailsDAO(cassandraCluster.getCassandraCluster().getConf(), new HashBlobId.Factory());
