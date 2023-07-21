@@ -269,7 +269,8 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(s -> entriesFromDN(s, ldapConfiguration.getUserIdAttribute())).sneakyThrow())
             .flatMap(entry -> Optional.ofNullable(entry.getAttribute(ldapConfiguration.getUserIdAttribute())).stream())
             .map(Attribute::getValue)
-            .map(Username::of);
+            .map(Username::of)
+            .distinct();
     }
 
     /**
@@ -355,6 +356,8 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return getValidUserDNs().stream()
             .map(Throwing.function(this::buildUser).sneakyThrow())
             .flatMap(Optional::stream)
+            .map(ReadOnlyLDAPUser::getUserName)
+            .distinct()
             .count();
     }
 
@@ -377,6 +380,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             return buildUserCollection(getValidUserDNs())
                 .stream()
                 .map(ReadOnlyLDAPUser::getUserName)
+                .distinct()
                 .iterator();
         } catch (LDAPException e) {
             throw new UsersRepositoryException("Unable to list users from ldap", e);
