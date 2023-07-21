@@ -387,7 +387,7 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:11-jre-focal</image>
+                        <image>eclipse-temurin:11-jre-jammy</image>
                     </from>
                     <to>
                         <image>apache/james</image>
