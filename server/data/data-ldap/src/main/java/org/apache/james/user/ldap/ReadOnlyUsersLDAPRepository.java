@@ -210,4 +210,14 @@ public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDA
     public boolean isReadOnly() {
         return true;
     }
+
+    @Override
+    public void assertValid(Username username) throws UsersRepositoryException {
+        assertLocalPartValid(username);
+
+        boolean localPartAsLoginUsernameSupported = ldapConfiguration.getResolveLocalPartAttribute().isPresent();
+        if (!localPartAsLoginUsernameSupported) {
+            assertDomainPartValid(username);
+        }
+    }
 }
