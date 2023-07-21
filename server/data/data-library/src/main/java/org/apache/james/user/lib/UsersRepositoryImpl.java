@@ -113,7 +113,7 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
         }
     }
 
-    private void assertLocalPartValid(Username username) throws InvalidUsernameException {
+    protected void assertLocalPartValid(Username username) throws InvalidUsernameException {
         boolean isValid = CharMatcher.anyOf(ILLEGAL_USERNAME_CHARACTERS)
             .matchesNoneOf(username.getLocalPart());
         if (!isValid) {
