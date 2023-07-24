@@ -336,7 +336,9 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
-        return getUserByName(name).isPresent();
+        return getUserByName(name)
+            .filter(readOnlyLDAPUser -> readOnlyLDAPUser.getUserName().equals(name))
+            .isPresent();
     }
 
     @Override
