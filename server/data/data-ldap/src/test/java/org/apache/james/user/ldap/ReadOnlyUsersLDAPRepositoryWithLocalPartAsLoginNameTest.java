@@ -143,6 +143,20 @@ public class ReadOnlyUsersLDAPRepositoryWithLocalPartAsLoginNameTest {
                 assertThatThrownBy(() -> usersRepository.assertValid(Username.of(JAMES_USER.getLocalPart())))
                     .isInstanceOf(InvalidUsernameException.class);
             }
+
+            @Test
+            void containsShouldNotCountLocalPartAsUserWhenValidResolveLocalPartAttribute(UsersRepositoryContract.TestSystem testSystem) throws Exception {
+                usersRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.of("uid")), testSystem.getDomainList());
+
+                assertThat(usersRepository.contains(Username.of(JAMES_USER.getLocalPart()))).isFalse();
+            }
+
+            @Test
+            void containsShouldNotCountLocalPartAsUserWhenInvalidResolveLocalPartAttribute(UsersRepositoryContract.TestSystem testSystem) throws Exception {
+                usersRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.of("invalidAttribute")), testSystem.getDomainList());
+
+                assertThat(usersRepository.contains(Username.of(JAMES_USER.getLocalPart()))).isFalse();
+            }
         }
 
         @Nested
@@ -248,6 +262,20 @@ public class ReadOnlyUsersLDAPRepositoryWithLocalPartAsLoginNameTest {
             void assertValidUsernameShouldBeStrictWhenResolveLocalPartAttributeDisabled() {
                 assertThatThrownBy(() -> usersRepository.assertValid(JAMES_USER_APP1))
                     .isInstanceOf(InvalidUsernameException.class);
+            }
+
+            @Test
+            void containsShouldNotCountAppEntryAsUserWhenValidResolveLocalPartAttribute(UsersRepositoryContract.TestSystem testSystem) throws Exception {
+                usersRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.of("uid")), testSystem.getDomainList());
+
+                assertThat(usersRepository.contains(JAMES_USER_APP1)).isFalse();
+            }
+
+            @Test
+            void containsShouldNotCountAppEntryAsUserWhenMissConfiguredResolveLocalPartAttribute(UsersRepositoryContract.TestSystem testSystem) throws Exception {
+                usersRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.of("invalidAttribute")), testSystem.getDomainList());
+
+                assertThat(usersRepository.contains(JAMES_USER_APP1)).isFalse();
             }
         }
 
