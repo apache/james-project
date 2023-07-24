@@ -83,6 +83,14 @@ public class ReadOnlyUsersLDAPRepositoryWithLocalPartAsLoginNameTest {
             usersRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.empty()), testSystem.getDomainList());
         }
 
+        @Test
+        void fqdnLoginShouldStillSucceedWhenResolveLocalPartAttributeEnabled(UsersRepositoryContract.TestSystem testSystem) throws Exception {
+            usersRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting(ldapContainer, Optional.of("uid")), testSystem.getDomainList());
+
+            assertThat(usersRepository.test(JAMES_USER_WITH_DOMAIN_PART, PASSWORD))
+                .isEqualTo(Optional.of(JAMES_USER_WITH_DOMAIN_PART));
+        }
+
         @Nested
         class LocalPartLogin {
             @Test

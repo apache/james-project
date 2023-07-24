@@ -300,12 +300,11 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     private Optional<ReadOnlyLDAPUser> searchAndBuildUser(Username retrievalName) throws LDAPException {
         Optional<String> resolveLocalPartAttribute = ldapConfiguration.getResolveLocalPartAttribute();
-        String ldapUserRetrievalAttribute = resolveLocalPartAttribute.orElse(ldapConfiguration.getUserIdAttribute());
         String[] returnedAttributes = { ldapConfiguration.getUserIdAttribute() };
 
         SearchResult searchResult = ldapConnectionPool.search(userBase(retrievalName),
             SearchScope.SUB,
-            createFilter(retrievalName.asString(), ldapUserRetrievalAttribute),
+            createFilter(retrievalName.asString(), evaluateLdapUserRetrievalAttribute(retrievalName, resolveLocalPartAttribute)),
             returnedAttributes);
 
         SearchResultEntry result = searchResult.getSearchEntries()
@@ -324,6 +323,14 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
             return Optional.of(new ReadOnlyLDAPUser(translatedUsername, result.getParsedDN(), ldapConnectionPool));
         }
         return Optional.empty();
+    }
+
+    private String evaluateLdapUserRetrievalAttribute(Username retrievalName, Optional<String> resolveLocalPartAttribute) {
+        if (retrievalName.asString().contains("@")) {
+            return ldapConfiguration.getUserIdAttribute();
+        } else {
+            return resolveLocalPartAttribute.orElse(ldapConfiguration.getUserIdAttribute());
+        }
     }
 
     private Optional<ReadOnlyLDAPUser> buildUser(DN userDN) throws LDAPException {
