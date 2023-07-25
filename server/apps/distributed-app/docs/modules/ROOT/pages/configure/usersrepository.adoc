@@ -101,3 +101,15 @@ Example:
     <enableVirtualHosting>true</enableVirtualHosting>
 </usersrepository>
 ....
+
+When VirtualHosting is on, you can enable local part as login username by configure the `resolveLocalPartAttribute`.
+This is the LDAP attribute that allows to retrieve the local part of users. Optional, default to empty, which disables login with local part as username.
+
+Example:
+
+....
+<usersrepository name="LocalUsers" class="org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository" ldapHosts="ldap://ldapServer1:389,ldaps://ldapServer2:636"
+    principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" resolveLocalPartAttribute="uid" userIdAttribute="mail" trustAllCerts="true">
+    <enableVirtualHosting>true</enableVirtualHosting>
+</usersrepository>
+....
