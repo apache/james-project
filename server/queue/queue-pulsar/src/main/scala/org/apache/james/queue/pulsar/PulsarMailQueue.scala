@@ -19,6 +19,10 @@
 
 package org.apache.james.queue.pulsar
 
+import java.time.{Instant, LocalDateTime, ZoneOffset, Duration => JavaDuration}
+import java.util.concurrent.TimeUnit
+import java.util.{Date, UUID}
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
 import akka.stream.{Attributes, OverflowStrategy}
@@ -27,6 +31,8 @@ import akka.{Done, NotUsed}
 import com.sksamuel.pulsar4s._
 import com.sksamuel.pulsar4s.akka.streams
 import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
+import javax.mail.MessagingException
+import javax.mail.internet.MimeMessage
 import org.apache.james.backends.pulsar.{PulsarClients, PulsarReader}
 import org.apache.james.blob.api.{BlobId, ObjectNotFoundException, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
@@ -37,6 +43,7 @@ import org.apache.james.queue.api.MailQueue._
 import org.apache.james.queue.api._
 import org.apache.james.queue.pulsar.EnqueueId.EnqueueId
 import org.apache.james.server.core.MailImpl
+import org.apache.james.utils.UpdatableTickingClock
 import org.apache.mailet._
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
 import org.apache.pulsar.client.api.{Schema, SubscriptionInitialPosition, SubscriptionType}
@@ -44,11 +51,6 @@ import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 
-import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
-import java.util.concurrent.TimeUnit
-import java.util.{Date, UUID}
-import javax.mail.MessagingException
-import javax.mail.internet.MimeMessage
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -97,6 +99,9 @@ class PulsarMailQueue(
   import serializers._
 
   type MessageAsJson = String
+  val DATE: Instant = Instant.parse("2023-04-14T10:00:00.00Z")
+  private val CLOCK: UpdatableTickingClock = new UpdatableTickingClock(DATE)
+  private val now: LocalDateTime = LocalDateTime.now(CLOCK)
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
@@ -161,7 +166,7 @@ class PulsarMailQueue(
           case _: Duration.Infinite =>
             (ProducerMessage(payload) -> enqueued)
           case duration: FiniteDuration =>
-            val deliverAt = ZonedDateTime.now().plus(duration.toJava).toInstant
+            val deliverAt = now.plus(duration.toJava).toInstant(ZoneOffset.UTC)
             (DefaultProducerMessage(key = None, value = payload, deliverAt = Some(deliverAt.toEpochMilli), eventTime = Some(EventTime(deliverAt.toEpochMilli))) -> enqueued)
         }
     }

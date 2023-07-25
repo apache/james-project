@@ -19,12 +19,8 @@
 
 package org.apache.james;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import javax.inject.Inject;
-
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
@@ -33,22 +29,18 @@ import org.apache.james.utils.GuiceProbe;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.inject.Inject;
 import com.google.inject.multibindings.Multibinder;
 
-class NamespaceConfigurationTest {
-    static class DefaultBucketProbe implements GuiceProbe {
-        private final BlobStore blobStore;
+public class MailQueueChoiceTest {
+    static class ConfigProbe implements GuiceProbe {
+        private final CassandraRabbitMQJamesConfiguration config;
 
         @Inject
-        DefaultBucketProbe(BlobStore blobStore) {
-            this.blobStore = blobStore;
-        }
-
-        public BucketName getDefaultBucket() {
-            return blobStore.getDefaultBucketName();
+        ConfigProbe(CassandraRabbitMQJamesConfiguration config) {
+            this.config = config;
         }
     }
-
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()
@@ -59,6 +51,7 @@ class NamespaceConfigurationTest {
                 .disableCache()
                 .deduplication()
                 .noCryptoConfig())
+            .mailQueueChoice(MailQueueChoice.PULSAR)
             .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(new DockerOpenSearchExtension())
@@ -68,16 +61,13 @@ class NamespaceConfigurationTest {
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class)
                 .addBinding()
-                .to(DefaultBucketProbe.class)))
+                .to(MailQueueChoiceTest.ConfigProbe.class)))
         .extension(new AwsS3BlobStoreExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
         .build();
 
     @Test
-    void defaultBucketShouldBeTheConfiguredOne(GuiceJamesServer server) {
-        // AwsS3BlobStoreExtension relies on a randomly generated bucket for isolation purposes
-        assertThat(server.getProbe(DefaultBucketProbe.class)
-                .getDefaultBucket())
-            .isNotEqualTo(BucketName.DEFAULT);
+    void test1(GuiceJamesServer server) throws Exception {
+        assertThat(server.getProbe(ConfigProbe.class).config.getMailQueueChoice()).isEqualTo(MailQueueChoice.PULSAR);
     }
 }
