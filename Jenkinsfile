@@ -64,6 +64,8 @@ pipeline {
             steps {
                 echo 'Building branch ' + env.BRANCH_NAME
                 echo 'Using PATH ' + env.PATH
+                sh 'mvn -version'
+                sh 'java -version'
             }
         }
 
