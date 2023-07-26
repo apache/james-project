@@ -23,6 +23,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.Duration;
 
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.fluent.Request;
@@ -37,7 +38,9 @@ import com.jayway.jsonpath.JsonPath;
 public class HttpJmapAuthentication {
 
     public static AccessToken authenticateJamesUser(URIBuilder uriBuilder, Username username, String password) {
-        return calmlyAwait.until(
+        return calmlyAwait
+            .atMost(Duration.ofMinutes(2))
+            .until(
             () -> doAuthenticate(uriBuilder, username, password), IsAnything.anything());
     }
 
