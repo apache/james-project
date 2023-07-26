@@ -919,8 +919,8 @@ public abstract class MessageMapperTest {
 
         saveMessages();
 
-        int threadCount = 2;
-        int updateCount = 10;
+        int threadCount = 8;
+        int updateCount = 40;
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> messageMapper.updateFlags(benwaInboxMailbox, message1.getUid(),
                 new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD)))
@@ -939,8 +939,8 @@ public abstract class MessageMapperTest {
         Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.THREAD_SAFE_FLAGS_UPDATE));
         saveMessages();
 
-        int threadCount = 4;
-        int updateCount = 20;
+        int threadCount = 8;
+        int updateCount = 40;
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step  < updateCount / 2) {
