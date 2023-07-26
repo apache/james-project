@@ -21,11 +21,13 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMessageMapperRelaxedConsistencyTest {
@@ -50,6 +52,18 @@ class CassandraMessageMapperRelaxedConsistencyTest {
         @Override
         protected UpdatableTickingClock updatableTickingClock() {
             return cassandraMapperProvider.getUpdatableTickingClock();
+        }
+
+        @Tag(Unstable.TAG)
+        @Override
+        public void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
+            super.setFlagsShouldWorkWithConcurrencyWithRemove();
+        }
+
+        @Tag(Unstable.TAG)
+        @Override
+        public void userFlagsUpdateShouldWorkInConcurrentEnvironment() throws Exception {
+            super.userFlagsUpdateShouldWorkInConcurrentEnvironment();
         }
     }
 
