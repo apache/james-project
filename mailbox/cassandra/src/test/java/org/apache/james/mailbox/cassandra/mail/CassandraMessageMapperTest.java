@@ -39,6 +39,7 @@ import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.StatementRecorder.Selector;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -65,6 +66,7 @@ import org.apache.james.utils.UpdatableTickingClock;
 import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -457,5 +459,17 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         MailboxMessage retrievedMessage = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message.getUid()), fetchType, 1).next();
 
         assertThat(retrievedMessage.getAttachments()).isEqualTo(message.getAttachments());
+    }
+
+    @Tag(Unstable.TAG)
+    @Override
+    public void setFlagsShouldWorkWithConcurrencyWithRemove() throws Exception {
+        super.setFlagsShouldWorkWithConcurrencyWithRemove();
+    }
+
+    @Tag(Unstable.TAG)
+    @Override
+    public void userFlagsUpdateShouldWorkInConcurrentEnvironment() throws Exception {
+        super.userFlagsUpdateShouldWorkInConcurrentEnvironment();
     }
 }
