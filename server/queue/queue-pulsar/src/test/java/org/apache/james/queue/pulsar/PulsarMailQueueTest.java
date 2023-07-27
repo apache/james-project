@@ -22,6 +22,7 @@ package org.apache.james.queue.pulsar;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -87,6 +88,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
     private PulsarClients pulsarClients;
     private ActorSystem system;
     private MemoryBlobStoreDAO memoryBlobStore;
+    private Clock clock;
 
     @BeforeEach
     void setUp(DockerPulsarExtension.DockerPulsar pulsar, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
@@ -147,7 +149,8 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
                 factory,
                 metricTestSystem.getMetricFactory(),
                 metricTestSystem.getSpyGaugeRegistry(),
-                system);
+                system,
+                clock);
     }
 
     @Disabled("JAMES-3700 We need to define a deadletter policy for the Pulsar MailQueue")

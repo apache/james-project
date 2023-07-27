@@ -20,6 +20,7 @@
 package org.apache.james.queue.pulsar.module;
 
 import java.io.FileNotFoundException;
+import java.time.Clock;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -85,7 +86,8 @@ public class PulsarQueueModule extends AbstractModule {
                                                                                 MimeMessageStore.Factory mimeFactory,
                                                                                 MailQueueItemDecoratorFactory decoratorFactory,
                                                                                 MetricFactory metricFactory,
-                                                                                GaugeRegistry gaugeRegistry) {
+                                                                                GaugeRegistry gaugeRegistry,
+                                                                                Clock clock) {
         Store<MimeMessage, MimeMessagePartsId> mimeMessageMimeMessagePartsIdStore = mimeFactory.mimeMessageStore();
         return new PulsarMailQueueFactory(
             pulsarConfig,
@@ -94,7 +96,8 @@ public class PulsarQueueModule extends AbstractModule {
             mimeMessageMimeMessagePartsIdStore,
             decoratorFactory,
             metricFactory,
-            gaugeRegistry
+            gaugeRegistry,
+            clock
         );
     }
 

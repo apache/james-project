@@ -21,6 +21,7 @@ package org.apache.james.queue.pulsar;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
 import java.util.Optional;
 
 import javax.mail.internet.MimeMessage;
@@ -62,6 +63,7 @@ class PulsarMailQueueFactoryTest implements MailQueueFactoryContract<PulsarMailQ
     private PulsarConfiguration config;
     private MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem;
     private PulsarClients pulsarClients;
+    private Clock clock;
 
     @BeforeEach
     void setUp(DockerPulsarExtension.DockerPulsar dockerPulsar, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws PulsarClientException, PulsarAdminException {
@@ -93,7 +95,8 @@ class PulsarMailQueueFactoryTest implements MailQueueFactoryContract<PulsarMailQ
                 mimeMessageStore,
                 factory,
                 metricTestSystem.getMetricFactory(),
-                metricTestSystem.getSpyGaugeRegistry());
+                metricTestSystem.getSpyGaugeRegistry(),
+                clock);
     }
 
     @Override

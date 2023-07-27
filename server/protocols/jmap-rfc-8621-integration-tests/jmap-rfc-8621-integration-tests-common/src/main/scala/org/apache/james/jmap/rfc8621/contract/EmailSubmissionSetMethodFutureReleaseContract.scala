@@ -297,7 +297,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     `with`()
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .post
+      .post.prettyPeek()
 
     Thread.sleep(1000)
 
@@ -321,7 +321,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
           .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
           .setBody(requestAndre)
           .build, new ResponseSpecBuilder().build)
-          .post
+          .post.prettyPeek()
         .`then`
           .statusCode(SC_OK)
           .contentType(JSON)
@@ -384,8 +384,9 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
     `with`()
       .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
       .body(request)
-      .post
+      .post.prettyPeek()
 
+    println("Now: " + LocalDateTime.now(updatableTickingClock))
     val requestAndre =
       s"""{
          |  "using": ["urn:ietf:params:jmap:core","urn:ietf:params:jmap:mail"],
@@ -406,7 +407,7 @@ trait EmailSubmissionSetMethodFutureReleaseContract {
             .addHeader(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
             .setBody(requestAndre)
             .build, new ResponseSpecBuilder().build)
-            .post
+            .post.prettyPeek()
           .`then`
             .statusCode(SC_OK)
             .contentType(JSON)

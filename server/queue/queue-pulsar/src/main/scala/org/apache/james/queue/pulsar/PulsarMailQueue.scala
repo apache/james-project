@@ -19,7 +19,7 @@
 
 package org.apache.james.queue.pulsar
 
-import java.time.{Instant, LocalDateTime, ZoneOffset, Duration => JavaDuration}
+import java.time.{Clock, Instant, LocalDateTime, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
@@ -92,7 +92,8 @@ class PulsarMailQueue(
                        mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
                        metricFactory: MetricFactory,
                        gaugeRegistry: GaugeRegistry,
-                       system: ActorSystem
+                       system: ActorSystem,
+                       clock: Clock
                      ) extends MailQueue with ManageableMailQueue {
 
   import schemas._
@@ -166,7 +167,7 @@ class PulsarMailQueue(
           case _: Duration.Infinite =>
             (ProducerMessage(payload) -> enqueued)
           case duration: FiniteDuration =>
-            val deliverAt = now.plus(duration.toJava).toInstant(ZoneOffset.UTC)
+            val deliverAt: Instant = ZonedDateTime.now(clock).plus(duration.toJava).toInstant;
             (DefaultProducerMessage(key = None, value = payload, deliverAt = Some(deliverAt.toEpochMilli), eventTime = Some(EventTime(deliverAt.toEpochMilli))) -> enqueued)
         }
     }
