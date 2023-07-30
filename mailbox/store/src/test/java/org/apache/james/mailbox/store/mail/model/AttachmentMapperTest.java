@@ -19,9 +19,6 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -34,19 +31,24 @@ import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
+
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public abstract class AttachmentMapperTest {
     private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
     private static final Username OWNER = Username.of("owner");
     private static final Username ADDITIONAL_OWNER = Username.of("additionalOwner");
 
-    private AttachmentMapper attachmentMapper;
+    protected AttachmentMapper attachmentMapper;
 
     protected abstract AttachmentMapper createAttachmentMapper();
 
@@ -145,7 +147,8 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
+    @Disabled
+    protected void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
         //Given
         ContentType content1 = ContentType.of("content");
         byte[] bytes1 = "payload".getBytes(StandardCharsets.UTF_8);
