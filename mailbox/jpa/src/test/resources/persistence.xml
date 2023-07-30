@@ -28,6 +28,7 @@
         <class>org.apache.james.mailbox.jpa.mail.model.JPAUserFlag</class>
         <class>org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage</class>
         <class>org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage</class>
+        <class>org.apache.james.mailbox.jpa.mail.model.JPAAttachment</class>
         <class>org.apache.james.mailbox.jpa.mail.model.JPAProperty</class>
         <class>org.apache.james.mailbox.jpa.user.model.JPASubscription</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount</class>

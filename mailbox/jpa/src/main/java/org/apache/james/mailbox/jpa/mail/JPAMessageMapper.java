@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 import javax.persistence.EntityManagerFactory;
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
 import org.apache.james.mailbox.jpa.mail.MessageUtils.MessageChangedFlags;
+import org.apache.james.mailbox.jpa.mail.model.JPAAttachment;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
@@ -44,6 +46,7 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessag
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -295,10 +298,10 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         JPAId originalMailboxId = (JPAId) original.getMailboxId();
         JPAMailbox originalMailbox = getEntityManager().find(JPAMailbox.class, originalMailboxId.getRawId());
-        
+
         MessageMetaData messageMetaData = copy(mailbox, original);
         delete(originalMailbox.toMailbox(), original);
-        
+
         return messageMetaData;
     }
 
@@ -380,13 +383,36 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             } else {
                 JPAMailboxMessage persistData = new JPAMailboxMessage(currentMailbox, message.getUid(), message.getModSeq(), message);
                 persistData.setFlags(message.createFlags());
-                getEntityManager().persist(persistData);
+
+                if (message.getAttachments().isEmpty()) {
+                    getEntityManager().persist(persistData);
+                } else {
+                    List<JPAAttachment> attachments = getAttachments(message);
+                    if (attachments.isEmpty()) {
+                        persistData.setAttachments(message.getAttachments().stream()
+                            .map(JPAAttachment::new)
+                            .collect(Collectors.toList()));
+                        getEntityManager().persist(persistData);
+                    } else {
+                        persistData.setAttachments(attachments);
+                        getEntityManager().merge(persistData);
+                    }
+                }
                 return persistData.metaData();
             }
 
         } catch (PersistenceException | ArgumentException e) {
             throw new MailboxException("Save of message " + message + " failed in mailbox " + mailbox, e);
         }
+    }
+
+    private List<JPAAttachment> getAttachments(MailboxMessage message) {
+        return message.getAttachments().stream()
+            .map(MessageAttachmentMetadata::getAttachmentId)
+            .map(attachmentId -> getEntityManager().createNamedQuery("findAttachmentById", JPAAttachment.class)
+                .setParameter("idParam", attachmentId.getId())
+                .getSingleResult())
+            .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")

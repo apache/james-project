@@ -21,6 +21,7 @@ package org.apache.james.mailbox.jpa;
 
 import java.util.List;
 
+import org.apache.james.mailbox.jpa.mail.model.JPAAttachment;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
@@ -47,7 +48,8 @@ public interface JPAMailboxFixture {
         JPAProperty.class,
         JPAUserFlag.class,
         JPAMailboxAnnotation.class,
-        JPASubscription.class
+        JPASubscription.class,
+        JPAAttachment.class
     );
 
     List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.of(
@@ -66,7 +68,8 @@ public interface JPAMailboxFixture {
         "JAMES_MAILBOX_ANNOTATION",
         "JAMES_MAILBOX",
         "JAMES_MAIL",
-        "JAMES_SUBSCRIPTION");
+        "JAMES_SUBSCRIPTION",
+        "JAMES_ATTACHMENT");
 
     List<String> QUOTA_TABLES_NAMES = ImmutableList.of(
         "JAMES_MAX_GLOBAL_MESSAGE_COUNT",

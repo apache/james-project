@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -56,19 +57,21 @@ import com.google.common.io.ByteSource;
 
 public abstract class MessageWithAttachmentMapperTest {
 
-    private static final int LIMIT = 10;
+    protected static final int LIMIT = 10;
     private static final int BODY_START = 16;
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
 
-    private MapperProvider mapperProvider;
-    private MessageMapper messageMapper;
+    protected MapperProvider mapperProvider;
+    protected MessageMapper messageMapper;
     private AttachmentMapper attachmentMapper;
 
-    private Mailbox attachmentsMailbox;
+    private MailboxMapper mailBoxMapper;
+
+    protected Mailbox attachmentsMailbox;
     
-    private SimpleMailboxMessage messageWithoutAttachment;
-    private SimpleMailboxMessage messageWith1Attachment;
-    private SimpleMailboxMessage messageWith2Attachments;
+    protected SimpleMailboxMessage messageWithoutAttachment;
+    protected SimpleMailboxMessage messageWith1Attachment;
+    protected SimpleMailboxMessage messageWith2Attachments;
 
     protected abstract MapperProvider createMapperProvider();
 
@@ -81,6 +84,7 @@ public abstract class MessageWithAttachmentMapperTest {
 
         this.messageMapper = mapperProvider.createMessageMapper();
         this.attachmentMapper = mapperProvider.createAttachmentMapper();
+        this.mailBoxMapper = mapperProvider.createMailboxMapper();
 
         attachmentsMailbox = createMailbox(MailboxPath.forUser(Username.of("benwa"), "Attachments"));
         ParsedAttachment attachment1 = ParsedAttachment.builder()
@@ -119,7 +123,7 @@ public abstract class MessageWithAttachmentMapperTest {
     }
 
     @Test
-    void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenOneAttachment() throws MailboxException {
+    protected void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenOneAttachment() throws MailboxException {
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.FULL;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(messageWith1Attachment.getUid()), fetchType, LIMIT);
@@ -127,7 +131,7 @@ public abstract class MessageWithAttachmentMapperTest {
     }
 
     @Test
-    void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenTwoAttachments() throws MailboxException {
+    protected void messagesRetrievedUsingFetchTypeFullShouldHaveAttachmentsLoadedWhenTwoAttachments() throws MailboxException {
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.FULL;
         Iterator<MailboxMessage> retrievedMessageIterator = messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(messageWith2Attachments.getUid()), fetchType, LIMIT);
@@ -161,7 +165,7 @@ public abstract class MessageWithAttachmentMapperTest {
     }
     
     @Test
-    void messagesCanBeRetrievedInMailboxWithRangeTypeOne() throws MailboxException, IOException {
+    protected void messagesCanBeRetrievedInMailboxWithRangeTypeOne() throws MailboxException, IOException {
         saveMessages();
         MessageMapper.FetchType fetchType = MessageMapper.FetchType.FULL;
         assertThat(messageMapper.findInMailbox(attachmentsMailbox, MessageRange.one(messageWith1Attachment.getUid()), fetchType, LIMIT).next())
@@ -169,10 +173,10 @@ public abstract class MessageWithAttachmentMapperTest {
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) {
-        return new Mailbox(mailboxPath, UID_VALIDITY, mapperProvider.generateId());
+        return mailBoxMapper.create(mailboxPath, UID_VALIDITY).block();
     }
     
-    private void saveMessages() throws MailboxException {
+    protected void saveMessages() throws MailboxException {
         messageMapper.add(attachmentsMailbox, messageWithoutAttachment);
         messageWithoutAttachment.setModSeq(messageMapper.getHighestModSeq(attachmentsMailbox));
         messageMapper.add(attachmentsMailbox, messageWith1Attachment);

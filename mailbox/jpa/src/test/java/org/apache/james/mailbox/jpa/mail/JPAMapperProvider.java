@@ -68,7 +68,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public AttachmentMapper createAttachmentMapper() throws MailboxException {
-        throw new NotImplementedException("not implemented");
+        return new TransactionalAttachmentMapper(new JPAAttachmentMapper(jpaTestCluster.getEntityManagerFactory()));
     }
 
     @Override
@@ -88,7 +88,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE);
+        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE, Capabilities.ATTACHMENT);
     }
 
     @Override
