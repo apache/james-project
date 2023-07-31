@@ -49,7 +49,7 @@ import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
-import org.apache.mailet.{Attribute, AttributeName, AttributeValue}
+import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
 import reactor.core.scala.publisher.{SFlux, SMono}
@@ -271,14 +271,18 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         mailImpl.setMessageNoCopy(message)
         mailImpl
       }
-
-      _ <- SMono(queue.enqueueReactive(mail, delay))
-        .`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()))
+      _ <- enqueue(mail, delay)
         .`then`(SMono.just(submissionId))
       sendAt = UTCDate(ZonedDateTime.now(clock).plus(delay))
     } yield {
       EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
+
+  private def enqueue(mail: Mail, delay: Duration): SMono[Unit] =
+    (delay match {
+      case d if d.isNegative || d.isZero => SMono(queue.enqueueReactive(mail))
+      case _ => SMono(queue.enqueueReactive(mail, delay))
+    }).`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()))
 
   private def retrieveDelay(mailParameters: Option[Map[ParameterName, Option[ParameterValue]]]): Try[Duration] =
     mailParameters match {
