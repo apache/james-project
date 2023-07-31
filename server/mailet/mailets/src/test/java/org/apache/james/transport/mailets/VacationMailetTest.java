@@ -35,12 +35,12 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.util.MimeMessageBodyGenerator;
+import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.RecipientId;
 import org.apache.james.vacation.api.Vacation;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationService;
-import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.test.FakeMail;
@@ -142,6 +142,27 @@ public class VacationMailetTest {
         verifyNoMoreInteractions(mailetContext);
     }
 
+    @Test
+    public void activateVacationShouldNotSendNotificationIfSenderSendsMailToHimself() throws Exception {
+        MailAddress sender = new MailAddress(USERNAME);
+        recipientId = RecipientId.fromMailAddress(sender);
+        when(vacationService.retrieveVacation(AccountId.fromString(USERNAME)))
+            .thenReturn(Mono.just(VACATION));
+        when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
+        when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
+        when(vacationService.isNotificationRegistered(ACCOUNT_ID, recipientId)).thenReturn(Mono.just(false));
+
+        mail = FakeMail.builder()
+            .name("name")
+            .fileName("spamMail.eml")
+            .sender(sender)
+            .recipient(sender)
+            .build();
+        testee.service(mail);
+
+        verifyNoMoreInteractions(mailetContext);
+    }
+    
     @Test
     public void activateVacationShouldSendNotificationIfErrorUpdatingNotificationRepository() throws Exception {
         when(vacationService.retrieveVacation(AccountId.fromString(USERNAME)))

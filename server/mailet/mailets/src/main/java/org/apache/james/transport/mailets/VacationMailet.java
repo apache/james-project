@@ -100,15 +100,16 @@ public class VacationMailet extends GenericMailet {
     }
 
     private void sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
-        if (shouldSendNotification(processedMail, vacation, processingDate, alreadySent)) {
+        if (shouldSendNotification(processedMail, vacation, processingDate, alreadySent, recipient)) {
             sendNotification(recipient, processedMail, vacation);
         }
     }
 
-    private boolean shouldSendNotification(Mail processedMail, Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
+    private boolean shouldSendNotification(Mail processedMail, Vacation vacation, ZonedDateTime processingDate, boolean alreadySent, MailAddress recipient) {
         return vacation.isActiveAtDate(processingDate)
             && !alreadySent
-            && !isNoReplySender(processedMail);
+            && !isNoReplySender(processedMail)
+            && !isSentToSelf(processedMail.getMaybeSender().asOptional(), recipient);
     }
 
     private Boolean isNoReplySender(Mail processedMail) {
@@ -118,6 +119,12 @@ public class VacationMailet extends GenericMailet {
                 .toLowerCase(Locale.US)
                 .endsWith("-noreply"))
             .orElse(true);
+    }
+
+    private Boolean isSentToSelf(Optional<MailAddress> maybeSender, MailAddress recipient) {
+        return maybeSender
+            .map(sender -> sender.equals(recipient))
+            .orElse(false);
     }
 
     private void sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {
