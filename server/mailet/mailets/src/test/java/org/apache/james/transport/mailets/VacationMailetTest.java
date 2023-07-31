@@ -162,6 +162,27 @@ public class VacationMailetTest {
 
         verifyNoMoreInteractions(mailetContext);
     }
+
+    @Test
+    public void activateVacationShouldNotSendNotificationIfNoReplySender() throws Exception {
+        MailAddress noReplySender = new MailAddress("james-noreply@apache.org");
+        recipientId = RecipientId.fromMailAddress(noReplySender);
+        when(vacationService.retrieveVacation(AccountId.fromString(USERNAME)))
+            .thenReturn(Mono.just(VACATION));
+        when(zonedDateTimeProvider.get()).thenReturn(DATE_TIME_2017);
+        when(automaticallySentMailDetector.isAutomaticallySent(mail)).thenReturn(false);
+        when(vacationService.isNotificationRegistered(ACCOUNT_ID, recipientId)).thenReturn(Mono.just(false));
+
+        mail = FakeMail.builder()
+            .name("name")
+            .fileName("spamMail.eml")
+            .sender(noReplySender)
+            .recipient(new MailAddress(USERNAME))
+            .build();
+        testee.service(mail);
+
+        verifyNoMoreInteractions(mailetContext, vacationService);
+    }
     
     @Test
     public void activateVacationShouldSendNotificationIfErrorUpdatingNotificationRepository() throws Exception {
