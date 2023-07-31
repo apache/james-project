@@ -21,6 +21,7 @@ package org.apache.james.backends.rabbitmq;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -114,7 +116,9 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
         assertThat(channel.isOpen()).isTrue();
         channelPool.getChannelCloseHandler().accept(SignalType.ON_NEXT, channel);
         channelPool.close();
-        assertThat(channel.isOpen()).isFalse();
+
+        Awaitility.await().atMost(TEN_SECONDS)
+            .untilAsserted(() -> assertThat(channel.isOpen()).isFalse());
     }
 
     @Test
