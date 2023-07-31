@@ -83,6 +83,14 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     }
 
     @Override
+    public Publisher<Void> enqueueReactive(Mail mail, Duration delay) {
+        if (!delay.isNegative()) {
+            LOGGER.info("Ignored delay upon enqueue of {} : {}.", mail.getName(), delay);
+        }
+        return enqueueReactive(mail);
+    }
+
+    @Override
     public void enQueue(Mail mail) {
         Mono.from(enqueueReactive(mail)).block();
     }
