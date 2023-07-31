@@ -72,7 +72,7 @@ public class VacationMailet extends GenericMailet {
             boolean hasReplyToHeaderField = Optional.ofNullable(mail.getMessage().getReplyTo())
                 .map(replyToFields -> replyToFields.length > 0)
                 .orElse(false);
-            if (!automaticallySentMailDetector.isAutomaticallySent(mail) && hasReplyToHeaderField) {
+            if (!automaticallySentMailDetector.isAutomaticallySent(mail) && hasReplyToHeaderField && !isNoReplySender(mail)) {
                 ZonedDateTime processingDate = zonedDateTimeProvider.get();
                 mail.getRecipients()
                     .forEach(mailAddress -> manageVacation(mailAddress, mail, processingDate));
@@ -108,11 +108,10 @@ public class VacationMailet extends GenericMailet {
     private boolean shouldSendNotification(Mail processedMail, Vacation vacation, ZonedDateTime processingDate, boolean alreadySent, MailAddress recipient) {
         return vacation.isActiveAtDate(processingDate)
             && !alreadySent
-            && !isNoReplySender(processedMail)
             && !isSentToSelf(processedMail.getMaybeSender().asOptional(), recipient);
     }
 
-    private Boolean isNoReplySender(Mail processedMail) {
+    private boolean isNoReplySender(Mail processedMail) {
         return processedMail.getMaybeSender()
             .asOptional()
             .map(address -> address.getLocalPart()
