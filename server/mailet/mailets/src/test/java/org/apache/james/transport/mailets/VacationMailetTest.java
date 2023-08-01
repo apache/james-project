@@ -160,7 +160,7 @@ public class VacationMailetTest {
             .build();
         testee.service(mail);
 
-        verifyNoMoreInteractions(mailetContext);
+        verifyNoMoreInteractions(mailetContext, vacationService);
     }
 
     @Test

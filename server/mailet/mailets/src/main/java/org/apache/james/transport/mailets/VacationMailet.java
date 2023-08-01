@@ -87,6 +87,10 @@ public class VacationMailet extends GenericMailet {
     }
 
     private void manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
+        if (isSentToSelf(processedMail.getMaybeSender().asOptional(), recipient)) {
+            return;
+        }
+
         AccountId accountId = AccountId.fromString(recipient.toString());
 
         Mono<Vacation> vacation = vacationService.retrieveVacation(accountId);
@@ -100,15 +104,13 @@ public class VacationMailet extends GenericMailet {
     }
 
     private void sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
-        if (shouldSendNotification(processedMail, vacation, processingDate, alreadySent, recipient)) {
+        if (shouldSendNotification(vacation, processingDate, alreadySent)) {
             sendNotification(recipient, processedMail, vacation);
         }
     }
 
-    private boolean shouldSendNotification(Mail processedMail, Vacation vacation, ZonedDateTime processingDate, boolean alreadySent, MailAddress recipient) {
-        return vacation.isActiveAtDate(processingDate)
-            && !alreadySent
-            && !isSentToSelf(processedMail.getMaybeSender().asOptional(), recipient);
+    private boolean shouldSendNotification(Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
+        return vacation.isActiveAtDate(processingDate) && !alreadySent;
     }
 
     private boolean isNoReplySender(Mail processedMail) {
@@ -120,7 +122,7 @@ public class VacationMailet extends GenericMailet {
             .orElse(true);
     }
 
-    private Boolean isSentToSelf(Optional<MailAddress> maybeSender, MailAddress recipient) {
+    private boolean isSentToSelf(Optional<MailAddress> maybeSender, MailAddress recipient) {
         return maybeSender
             .map(sender -> sender.equals(recipient))
             .orElse(false);
