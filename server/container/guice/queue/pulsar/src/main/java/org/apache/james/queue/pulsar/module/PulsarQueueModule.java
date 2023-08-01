@@ -96,8 +96,7 @@ public class PulsarQueueModule extends AbstractModule {
             mimeMessageMimeMessagePartsIdStore,
             decoratorFactory,
             metricFactory,
-            gaugeRegistry,
-            clock
+            gaugeRegistry
         );
     }
 

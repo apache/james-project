@@ -8,10 +8,13 @@ services:
       - cassandra
       - tika
       - rabbitmq
+      - pulsar
       - s3
     image: apache/james:distributed-latest
     container_name: james
     hostname: james.local
+    volumes:
+      - ./sample-configuration/pulsar.properties:/root/conf/pulsar.properties
     ports:
       - "80:80"
       - "25:25"
@@ -21,6 +24,14 @@ services:
       - "587:587"
       - "993:993"
       - "8000:8000"
+
+  pulsar:
+    image: apachepulsar/pulsar:2.10.1
+    container_name: pulsar
+    ports:
+      - "6650:6650"
+      - "8080:8080"
+#    environment:
 
   opensearch:
     image: opensearchproject/opensearch:2.1.0

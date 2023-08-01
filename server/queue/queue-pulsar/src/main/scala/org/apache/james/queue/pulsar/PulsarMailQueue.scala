@@ -19,7 +19,7 @@
 
 package org.apache.james.queue.pulsar
 
-import java.time.{Clock, Instant, LocalDateTime, ZonedDateTime, Duration => JavaDuration}
+import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
@@ -43,7 +43,6 @@ import org.apache.james.queue.api.MailQueue._
 import org.apache.james.queue.api._
 import org.apache.james.queue.pulsar.EnqueueId.EnqueueId
 import org.apache.james.server.core.MailImpl
-import org.apache.james.utils.UpdatableTickingClock
 import org.apache.mailet._
 import org.apache.pulsar.client.admin.PulsarAdminException.NotFoundException
 import org.apache.pulsar.client.api.{Schema, SubscriptionInitialPosition, SubscriptionType}
@@ -92,20 +91,17 @@ class PulsarMailQueue(
                        mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
                        metricFactory: MetricFactory,
                        gaugeRegistry: GaugeRegistry,
-                       system: ActorSystem,
-                       clock: Clock
+                       system: ActorSystem
                      ) extends MailQueue with ManageableMailQueue {
 
   import schemas._
   import serializers._
 
   type MessageAsJson = String
-  val DATE: Instant = Instant.parse("2023-04-14T10:00:00.00Z")
-  private val CLOCK: UpdatableTickingClock = new UpdatableTickingClock(DATE)
-  private val now: LocalDateTime = LocalDateTime.now(CLOCK)
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-
+//  val clock: UpdatableTickingClock = new UpdatableTickingClock(Instant.now())
+//  println("UpdatableTickingClock")
   private val awaitTimeout = 10.seconds
 
   gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + config.name, () => getSize)
@@ -165,9 +161,9 @@ class PulsarMailQueue(
       case (payload, duration, enqueued) =>
         duration match {
           case _: Duration.Infinite =>
-            (ProducerMessage(payload) -> enqueued)
+            ProducerMessage(payload) -> enqueued
           case duration: FiniteDuration =>
-            val deliverAt: Instant = ZonedDateTime.now(clock).plus(duration.toJava).toInstant;
+            val deliverAt: Instant = ZonedDateTime.now().plus(duration.toJava).toInstant
             (DefaultProducerMessage(key = None, value = payload, deliverAt = Some(deliverAt.toEpochMilli), eventTime = Some(EventTime(deliverAt.toEpochMilli))) -> enqueued)
         }
     }

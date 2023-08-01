@@ -156,6 +156,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-data-ldap</artifactId>
         </dependency>
         <dependency>
@@ -334,8 +338,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
+            <groupId>org.apache.james</groupId>
+            <artifactId>james-server-testing</artifactId>
         </dependency>
     </dependencies>
 

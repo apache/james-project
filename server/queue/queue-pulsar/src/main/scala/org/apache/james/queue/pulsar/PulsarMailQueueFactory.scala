@@ -19,7 +19,7 @@
 
 package org.apache.james.queue.pulsar
 
-import java.time.Clock
+import java.time.Instant
 import java.util
 import java.util.Optional
 import java.util.concurrent.atomic.AtomicReference
@@ -33,6 +33,7 @@ import org.apache.james.blob.api.{BlobId, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
 import org.apache.james.metrics.api.{GaugeRegistry, MetricFactory}
 import org.apache.james.queue.api.{MailQueueFactory, MailQueueItemDecoratorFactory, MailQueueName}
+import org.apache.james.utils.UpdatableTickingClock
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
@@ -45,7 +46,6 @@ class PulsarMailQueueFactory @Inject()(pulsarConfiguration: PulsarConfiguration,
   mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
   metricFactory: MetricFactory,
   gaugeRegistry: GaugeRegistry,
-  clock: Clock,
 ) extends MailQueueFactory[PulsarMailQueue] {
   private val queues: AtomicReference[Map[MailQueueName, PulsarMailQueue]] = new AtomicReference(Map.empty)
   private val admin = pulsarClients.adminClient
@@ -67,6 +67,7 @@ class PulsarMailQueueFactory @Inject()(pulsarConfiguration: PulsarConfiguration,
   }
 
   override def createQueue(name: MailQueueName, count: MailQueueFactory.PrefetchCount): PulsarMailQueue = {
+    val clock: UpdatableTickingClock = new UpdatableTickingClock(Instant.now())
     queues.updateAndGet(map => {
       val queue = map.get(name)
         .fold(new PulsarMailQueue(
@@ -77,8 +78,7 @@ class PulsarMailQueueFactory @Inject()(pulsarConfiguration: PulsarConfiguration,
           mailQueueItemDecoratorFactory,
           metricFactory,
           gaugeRegistry,
-          system,
-          clock)
+          system)
         )(identity)
       map + (name -> queue)
     })(name)
