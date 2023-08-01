@@ -37,7 +37,6 @@ import com.google.common.io.ByteSource;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -122,7 +121,7 @@ public abstract class AttachmentMapperTest {
 
         MessageId messageId1 = generateMessageId();
         AttachmentMetadata stored = attachmentMapper.storeAttachments(ImmutableList.of(ParsedAttachment.builder()
-            .contentType("content")
+            .contentType(content)
             .content(ByteSource.wrap(bytes))
             .noName()
             .noCid()
@@ -147,7 +146,6 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    @Disabled
     protected void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
         //Given
         ContentType content1 = ContentType.of("content");
