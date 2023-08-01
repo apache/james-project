@@ -182,7 +182,7 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
             .statusCode(SC_UNAUTHORIZED)
             .body("status", equalTo(401))
             .body("type", equalTo("about:blank"))
-            .body("detail", equalTo("No valid authentication methods provided"));
+            .body("detail", equalTo("Wrong credentials provided"));
     }
 
     @Test
@@ -199,7 +199,7 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
     }
 
     @Test
-    public void givenDefaultStrategiesWhenEchoMethodWithValidUnknownUserJWTAuthenticationShouldSucceed(GuiceJamesServer server) throws Throwable {
+    public void givenDefaultStrategiesWhenEchoMethodWithValidUnknownUserJWTAuthenticationShouldFail(GuiceJamesServer server) throws Throwable {
         setupJamesServerWithCustomAuthenticationStrategy(server, DEFAULT_STRATEGIES);
 
         given()
@@ -215,7 +215,7 @@ public abstract class ModularizeJmapRFC8621AuthenticationStrategyContract {
     }
 
     @Test
-    public void givenDefaultStrategiesWhenEchoMethodWithInvalidJWTAuthenticationShouldSucceed(GuiceJamesServer server) throws Throwable {
+    public void givenDefaultStrategiesWhenEchoMethodWithInvalidJWTAuthenticationShouldFail(GuiceJamesServer server) throws Throwable {
         setupJamesServerWithCustomAuthenticationStrategy(server, DEFAULT_STRATEGIES);
 
         given()

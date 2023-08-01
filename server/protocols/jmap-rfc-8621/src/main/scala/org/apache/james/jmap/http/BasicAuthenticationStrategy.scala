@@ -34,7 +34,7 @@ import org.apache.james.user.api.UsersRepository
 import org.apache.james.util.ReactorUtils
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
-import reactor.core.scala.publisher.SMono
+import reactor.core.scala.publisher.{SMono, scalaOption2JavaOptional}
 import reactor.netty.http.server.HttpServerRequest
 
 import scala.jdk.CollectionConverters._
@@ -118,8 +118,7 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
       .map(parseUserCredentials)
       .handle(publishNext)
       .flatMap(getAuthenticatedUsername)
-      .filter(_.isDefined)
-      .map(loggedInUser => mailboxManager.authenticate(loggedInUser.get).withoutDelegation())
+      .map(loggedInUser => mailboxManager.authenticate(loggedInUser).withoutDelegation())
       .asJava()
 
 
@@ -129,7 +128,8 @@ class BasicAuthenticationStrategy @Inject()(val usersRepository: UsersRepository
   private def publishNext[T]: (Option[T], reactor.core.publisher.SynchronousSink[T]) => Unit =
     (maybeT, sink) => maybeT.foreach(t => sink.next(t))
 
-  private def getAuthenticatedUsername(userCredential: UserCredential): SMono[Option[Username]] =
-    SMono.fromCallable(() => usersRepository.test(userCredential.username, userCredential.password).toScala)
+  private def getAuthenticatedUsername(userCredential: UserCredential): SMono[Username] =
+    SMono.fromCallable(() => usersRepository.test(userCredential.username, userCredential.password)
+          .orElseThrow(() => new UnauthorizedException("Wrong credentials provided")))
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
 }
