@@ -52,7 +52,7 @@ public class CassandraWaitStrategy implements WaitStrategy {
         Unreliables.retryUntilTrue(Ints.checkedCast(timeout.getSeconds()), TimeUnit.SECONDS, () -> {
                 try {
                     ClusterFactory.createWithoutKeyspace(ClusterConfiguration.builder()
-                        .host(Host.from(cassandraContainer.getContainerIpAddress(), cassandraContainer.getMappedPort(9042)))
+                        .host(Host.from(cassandraContainer.getHost(), cassandraContainer.getMappedPort(9042)))
                         .username("cassandra")
                         .password("cassandra")
                         .maxRetry(1)
