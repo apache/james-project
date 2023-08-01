@@ -19,7 +19,6 @@
 package org.apache.james.backends.opensearch;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -90,7 +89,7 @@ public class OpenSearchIndexer {
             op -> op.update(idx -> idx
                 .index(aliasName.getValue())
                 .id(updatedDocumentPart.getId().asString())
-                .document(Collections.singletonMap("doc", new RawValue(updatedDocumentPart.getUpdatedDocumentPart())))
+                .document(new RawValue(updatedDocumentPart.getUpdatedDocumentPart()))
                 .routing(routingKey.asString())
             )));
 
