@@ -86,7 +86,7 @@ public class Linshare {
     }
 
     public String getIp() {
-        return linshareBackend.getContainerIpAddress();
+        return linshareBackend.getHost();
     }
 
     public String getUrl() {
@@ -182,7 +182,7 @@ public class Linshare {
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(linshareSmtp.getMappedPort(80))
-            .setBaseUri("http://" + linshareSmtp.getContainerIpAddress())
+            .setBaseUri("http://" + linshareSmtp.getHost())
             .build();
     }
 }

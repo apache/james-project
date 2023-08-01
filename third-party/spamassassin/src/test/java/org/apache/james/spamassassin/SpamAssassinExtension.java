@@ -100,7 +100,7 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
 
         private SpamAssassin(GenericContainer<?> spamAssassinContainer) {
             this.spamAssassinContainer = spamAssassinContainer;
-            this.ip = spamAssassinContainer.getContainerIpAddress();
+            this.ip = spamAssassinContainer.getHost();
             this.bindingPort = spamAssassinContainer.getMappedPort(SPAMASSASSIN_PORT);
         }
 
