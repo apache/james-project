@@ -37,6 +37,7 @@ import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,10 +207,14 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
             .collect(Collectors.toUnmodifiableSet());
         if (!taskIds.isEmpty()) {
             taskIds.forEach(this::cancelTask);
-            Awaitility
-                .waitAtMost(TWO_MINUTES)
-                .pollDelay(Duration.ofMillis(500))
-                .until(() -> !cancelledTasks.containsAll(taskIds));
+            try {
+                Awaitility
+                    .waitAtMost(TWO_MINUTES)
+                    .pollDelay(Duration.ofMillis(500))
+                    .until(() -> !cancelledTasks.containsAll(taskIds));
+            } catch (ConditionTimeoutException e) {
+                LOGGER.warn("Some tasks were not cancelled before worker close: {}", taskIds);
+            }
         }
         taskExecutor.dispose();
         asyncTaskExecutor.dispose();
