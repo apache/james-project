@@ -29,6 +29,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
+import org.apache.james.core.quota.QuotaModelModule;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
@@ -96,6 +97,7 @@ public class GuiceUtils {
             binder -> binder.bind(EventStore.class).to(CassandraEventStore.class),
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
             binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
-            binder -> binder.bind(Clock.class).toInstance(Clock.systemUTC()));
+            binder -> binder.bind(Clock.class).toInstance(Clock.systemUTC()),
+            binder -> binder.install(new QuotaModelModule()));
     }
 }

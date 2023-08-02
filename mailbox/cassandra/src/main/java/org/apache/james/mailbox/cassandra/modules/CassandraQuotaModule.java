@@ -30,6 +30,8 @@ import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraDomainMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
+import org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValue;
+import org.apache.james.mailbox.cassandra.table.CassandraQuotaLimit;
 
 public interface CassandraQuotaModule {
     CassandraModule MODULE = CassandraModule.builder()
@@ -68,5 +70,26 @@ public interface CassandraQuotaModule {
             .withPartitionKey(CassandraGlobalMaxQuota.KEY, TEXT)
             .withColumn(CassandraGlobalMaxQuota.STORAGE, BIGINT)
             .withColumn(CassandraGlobalMaxQuota.MESSAGE, BIGINT))
+
+        .table(CassandraQuotaLimit.TABLE_NAME)
+        .comment("Holds quota limit.")
+        .options(options -> options
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraQuotaLimit.IDENTIFIER, TEXT)
+            .withPartitionKey(CassandraQuotaLimit.QUOTA_COMPONENT, TEXT)
+            .withPartitionKey(CassandraQuotaLimit.QUOTA_TYPE, TEXT)
+            .withPartitionKey(CassandraQuotaLimit.QUOTA_SCOPE, TEXT)
+            .withColumn(CassandraQuotaLimit.MAX_VALUE, BIGINT))
+
+        .table(CassandraQuotaCurrentValue.TABLE_NAME)
+        .comment("Holds quota limit.")
+        .options(options -> options
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraQuotaCurrentValue.IDENTIFIER, TEXT)
+            .withPartitionKey(CassandraQuotaCurrentValue.QUOTA_COMPONENT, TEXT)
+            .withPartitionKey(CassandraQuotaCurrentValue.QUOTA_TYPE, TEXT)
+            .withColumn(CassandraQuotaCurrentValue.CURRENT_VALUE, BIGINT))
         .build();
 }
