@@ -67,7 +67,6 @@ import org.apache.james.blob.cassandra.CassandraBlobStoreFactory;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
-import org.apache.james.junit.categories.Unstable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -96,7 +95,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
@@ -156,7 +154,8 @@ class RabbitMQMailQueueTest {
                     .sizeMetricsEnabled(true)
                     .build(),
                 CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
-                    .passthrough());
+                    .passthrough(),
+                MailQueueFactory.prefetchCount(3));
         }
 
         @Override
@@ -205,8 +204,15 @@ class RabbitMQMailQueueTest {
         }
 
         @RepeatedTest(50)
-        @Tag(Unstable.TAG)
-        void browseStartShouldBeUpdated(CassandraCluster cassandraCluster) {
+        void browseStartShouldBeUpdated(CassandraCluster cassandraCluster, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
+            setUp(cassandraCluster, metricTestSystem,
+                RabbitMQMailQueueConfiguration.builder()
+                    .sizeMetricsEnabled(true)
+                    .build(),
+                CassandraBlobStoreFactory.forTesting(cassandraCluster.getConf(), new RecordingMetricFactory())
+                    .passthrough(),
+                MailQueueFactory.prefetchCount(1));
+
             int emailCount = 250;
 
             StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE browsestart");
@@ -231,8 +237,15 @@ class RabbitMQMailQueueTest {
         }
 
         @RepeatedTest(50)
-        @Tag(Unstable.TAG)
-        void contentStartShouldBeUpdated(CassandraCluster cassandraCluster) {
+        void contentStartShouldBeUpdated(CassandraCluster cassandraCluster, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
+            setUp(cassandraCluster, metricTestSystem,
+                RabbitMQMailQueueConfiguration.builder()
+                    .sizeMetricsEnabled(true)
+                    .build(),
+                CassandraBlobStoreFactory.forTesting(cassandraCluster.getConf(), new RecordingMetricFactory())
+                    .passthrough(),
+                MailQueueFactory.prefetchCount(1));
+
             int emailCount = 250;
 
             StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE contentstart");
@@ -982,7 +995,8 @@ class RabbitMQMailQueueTest {
                     .sizeMetricsEnabled(false)
                     .build(),
                 CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
-                    .passthrough());
+                    .passthrough(),
+                MailQueueFactory.prefetchCount(3));
         }
 
         @Test
@@ -1005,7 +1019,8 @@ class RabbitMQMailQueueTest {
                     .sizeMetricsEnabled(true)
                     .build(),
                 CassandraBlobStoreFactory.forTesting(cassandra.getConf(), new RecordingMetricFactory())
-                    .deduplication());
+                    .deduplication(),
+                MailQueueFactory.prefetchCount(3));
         }
 
         @Test
@@ -1039,7 +1054,8 @@ class RabbitMQMailQueueTest {
         }
     }
 
-    private void setUp(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem, RabbitMQMailQueueConfiguration configuration, BlobStore blobStore) throws Exception {
+    private void setUp(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem, RabbitMQMailQueueConfiguration configuration,
+                       BlobStore blobStore, MailQueueFactory.PrefetchCount prefetchCount) throws Exception {
         MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
         clock = new UpdatableTickingClock(IN_SLICE_1);
 
@@ -1066,6 +1082,6 @@ class RabbitMQMailQueueTest {
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getSender(), mqManagementApi, factory, rabbitMQExtension.getRabbitMQ().getConfiguration());
-        mailQueue = mailQueueFactory.createQueue(SPOOL, MailQueueFactory.prefetchCount(3));
+        mailQueue = mailQueueFactory.createQueue(SPOOL, prefetchCount);
     }
 }
