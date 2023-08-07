@@ -63,7 +63,7 @@
             <goals>
               <goal>report-aggregate</goal>
             </goals>
-            <phase>package</phase>
+            <phase>none</phase>
             <configuration>
               <dataFileIncludes>
                 <dataFileInclude>**/jacoco.exec</dataFileInclude>
