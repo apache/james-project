@@ -21,7 +21,7 @@ package org.apache.james.rate.limiter.redis
 
 import java.time.Duration
 
-import com.google.inject.{AbstractModule, Provides}
+import com.google.inject.{AbstractModule, Provides, Scopes}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
 import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
 import io.lettuce.core.RedisClient
@@ -38,9 +38,12 @@ import reactor.core.scala.publisher.SMono
 import scala.jdk.CollectionConverters._
 
 class RedisRateLimiterModule() extends AbstractModule {
-  override def configure(): Unit =
+  override def configure(): Unit = {
     bind(classOf[RateLimiterFactory])
       .to(classOf[RedisRateLimiterFactory])
+
+    bind(classOf[RedisRateLimiterFactory]).in(Scopes.SINGLETON)
+  }
 
   @Provides
   def provideConfig(propertiesProvider: PropertiesProvider): RedisRateLimiterConfiguration =
