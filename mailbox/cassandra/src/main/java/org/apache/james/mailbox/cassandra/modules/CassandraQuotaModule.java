@@ -76,20 +76,20 @@ public interface CassandraQuotaModule {
         .options(options -> options
             .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> types -> statement
-            .withPartitionKey(CassandraQuotaLimit.IDENTIFIER, TEXT)
             .withPartitionKey(CassandraQuotaLimit.QUOTA_COMPONENT, TEXT)
-            .withPartitionKey(CassandraQuotaLimit.QUOTA_TYPE, TEXT)
             .withPartitionKey(CassandraQuotaLimit.QUOTA_SCOPE, TEXT)
+            .withPartitionKey(CassandraQuotaLimit.IDENTIFIER, TEXT)
+            .withClusteringColumn(CassandraQuotaLimit.QUOTA_TYPE, TEXT)
             .withColumn(CassandraQuotaLimit.MAX_VALUE, BIGINT))
 
         .table(CassandraQuotaCurrentValue.TABLE_NAME)
-        .comment("Holds quota limit.")
+        .comment("Holds quota current value.")
         .options(options -> options
             .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> types -> statement
-            .withPartitionKey(CassandraQuotaCurrentValue.IDENTIFIER, TEXT)
             .withPartitionKey(CassandraQuotaCurrentValue.QUOTA_COMPONENT, TEXT)
-            .withPartitionKey(CassandraQuotaCurrentValue.QUOTA_TYPE, TEXT)
+            .withPartitionKey(CassandraQuotaCurrentValue.IDENTIFIER, TEXT)
+            .withClusteringColumn(CassandraQuotaCurrentValue.QUOTA_TYPE, TEXT)
             .withColumn(CassandraQuotaCurrentValue.CURRENT_VALUE, BIGINT))
         .build();
 }
