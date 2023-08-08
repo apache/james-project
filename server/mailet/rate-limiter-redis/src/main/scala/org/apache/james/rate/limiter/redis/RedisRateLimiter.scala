@@ -21,6 +21,7 @@ package org.apache.james.rate.limiter.redis
 
 import java.time.Duration
 
+import com.google.inject.multibindings.Multibinder
 import com.google.inject.{AbstractModule, Provides, Scopes}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
 import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSlidingWindowRequestRateLimiter, RedisRateLimiterFactory => RedisSingleInstanceRateLimitjFactory}
@@ -28,6 +29,7 @@ import io.lettuce.core.RedisClient
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.resource.ClientResources
 import javax.inject.Inject
+import org.apache.james.core.healthcheck.HealthCheck
 import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.apache.james.util.concurrent.NamedThreadFactory
@@ -43,6 +45,10 @@ class RedisRateLimiterModule() extends AbstractModule {
       .to(classOf[RedisRateLimiterFactory])
 
     bind(classOf[RedisRateLimiterFactory]).in(Scopes.SINGLETON)
+
+    Multibinder.newSetBinder(binder(), classOf[HealthCheck])
+      .addBinding()
+      .to(classOf[RedisHealthCheck])
   }
 
   @Provides
