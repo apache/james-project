@@ -20,10 +20,11 @@
 package org.apache.james.core.quota;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class QuotaLimit {
 
-    public static QuotaLimit of(QuotaComponent component, QuotaScope scope, String identifier, QuotaType quotaType, long limit) {
+    public static QuotaLimit of(QuotaComponent component, QuotaScope scope, String identifier, QuotaType quotaType, Long limit) {
         return new QuotaLimit(component, scope, identifier, quotaType, limit);
     }
 
@@ -31,14 +32,14 @@ public class QuotaLimit {
     private final QuotaScope quotaScope;
     private final String identifier;
     private final QuotaType quotaType;
-    private final long limit;
+    private final Optional<Long> quotaLimit;
 
-    private QuotaLimit(QuotaComponent quotaComponent, QuotaScope quotaScope, String identifier,  QuotaType quotaType, long limit) {
+    private QuotaLimit(QuotaComponent quotaComponent, QuotaScope quotaScope, String identifier, QuotaType quotaType, Long quotaLimit) {
         this.quotaComponent = quotaComponent;
         this.quotaScope = quotaScope;
         this.identifier = identifier;
         this.quotaType = quotaType;
-        this.limit = limit;
+        this.quotaLimit = Optional.ofNullable(quotaLimit);
     }
 
     public QuotaComponent getQuotaComponent() {
@@ -57,13 +58,13 @@ public class QuotaLimit {
         return quotaType;
     }
 
-    public long getLimit() {
-        return limit;
+    public Optional<Long> getQuotaLimit() {
+        return quotaLimit;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(quotaComponent, quotaScope, identifier, quotaType, limit);
+        return Objects.hash(quotaComponent, quotaScope, identifier, quotaType, quotaLimit);
     }
 
     @Override
@@ -74,7 +75,7 @@ public class QuotaLimit {
                 && Objects.equals(quotaScope, other.quotaScope)
                 && Objects.equals(identifier, other.identifier)
                 && Objects.equals(quotaType, other.quotaType)
-                && Objects.equals(limit, other.limit);
+                && Objects.equals(quotaLimit, other.quotaLimit);
         }
         return false;
     }

@@ -23,6 +23,13 @@ import org.apache.james.core.StringWrapper;
 
 public class QuotaType extends StringWrapper {
 
+    public static final QuotaType COUNT = of("count");
+    public static final QuotaType SIZE = of("size");
+
+    public static QuotaType of(String value) {
+        return new QuotaType(value);
+    }
+
     public QuotaType(String value) {
         super(value);
     }

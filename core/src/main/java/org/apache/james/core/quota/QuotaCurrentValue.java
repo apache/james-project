@@ -21,18 +21,20 @@ package org.apache.james.core.quota;
 
 import java.util.Objects;
 
+import org.apache.james.core.Username;
+
 public class QuotaCurrentValue {
 
-    public static QuotaCurrentValue of(QuotaComponent quotaComponent, String identifier, QuotaType quotaType, long currentValue) {
+    public static QuotaCurrentValue of(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType, long currentValue) {
         return new QuotaCurrentValue(quotaComponent, identifier, quotaType, currentValue);
     }
 
     private final QuotaComponent quotaComponent;
-    private final String identifier;
+    private final Username identifier;
     private final QuotaType quotaType;
     private final long currentValue;
 
-    public QuotaCurrentValue(QuotaComponent quotaComponent, String identifier, QuotaType quotaType, long currentValue) {
+    private QuotaCurrentValue(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType, long currentValue) {
         this.quotaComponent = quotaComponent;
         this.identifier = identifier;
         this.quotaType = quotaType;
@@ -43,7 +45,7 @@ public class QuotaCurrentValue {
         return quotaComponent;
     }
 
-    public String getIdentifier() {
+    public Username getIdentifier() {
         return identifier;
     }
 

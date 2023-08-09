@@ -23,6 +23,14 @@ import org.apache.james.core.StringWrapper;
 
 public class QuotaScope extends StringWrapper {
 
+    public static final QuotaScope GLOBAL = of("global");
+    public static final QuotaScope DOMAIN = of("domain");
+    public static final QuotaScope USER = of("user");
+
+    public static QuotaScope of(String value) {
+        return new QuotaScope(value);
+    }
+
     public QuotaScope(String value) {
         super(value);
     }

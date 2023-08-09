@@ -23,6 +23,14 @@ import org.apache.james.core.StringWrapper;
 
 public class QuotaComponent extends StringWrapper {
 
+    public static final QuotaComponent MAILBOX = of("mailbox");
+    public static final QuotaComponent SIEVE = of("sieve");
+    public static final QuotaComponent JMAP_UPLOADS = of("jmapUploads");
+
+    public static QuotaComponent of(String value) {
+        return new QuotaComponent(value);
+    }
+
     public QuotaComponent(String value) {
         super(value);
     }
