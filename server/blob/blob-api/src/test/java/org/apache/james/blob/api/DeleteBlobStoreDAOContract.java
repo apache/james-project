@@ -63,7 +63,7 @@ public interface DeleteBlobStoreDAOContract {
     default void deleteShouldNotThrowWhenBucketDoesNotExist() {
         BlobStoreDAO store = testee();
 
-        assertThatCode(() -> Mono.from(store.delete(BucketName.of("not_existing_bucket_name"), TEST_BLOB_ID)).block())
+        assertThatCode(() -> Mono.from(store.delete(BucketName.of("not-existing-bucket-name"), TEST_BLOB_ID)).block())
             .doesNotThrowAnyException();
     }
 
