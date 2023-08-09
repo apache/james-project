@@ -22,14 +22,15 @@ package org.apache.james.core.quota;
 import java.util.Objects;
 
 public class QuotaCurrentValue {
-    private final QuotaComponent quotaComponent;
-    private final String identifier;
-    private final QuotaType quotaType;
-    private final long currentValue;
 
     public static QuotaCurrentValue of(QuotaComponent quotaComponent, String identifier, QuotaType quotaType, long currentValue) {
         return new QuotaCurrentValue(quotaComponent, identifier, quotaType, currentValue);
     }
+
+    private final QuotaComponent quotaComponent;
+    private final String identifier;
+    private final QuotaType quotaType;
+    private final long currentValue;
 
     public QuotaCurrentValue(QuotaComponent quotaComponent, String identifier, QuotaType quotaType, long currentValue) {
         this.quotaComponent = quotaComponent;

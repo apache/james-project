@@ -23,15 +23,15 @@ import java.util.Objects;
 
 public class QuotaLimit {
 
+    public static QuotaLimit of(QuotaComponent component, QuotaScope scope, String identifier, QuotaType quotaType, long limit) {
+        return new QuotaLimit(component, scope, identifier, quotaType, limit);
+    }
+
     private final QuotaComponent quotaComponent;
     private final QuotaScope quotaScope;
     private final String identifier;
     private final QuotaType quotaType;
     private final long limit;
-
-    public static QuotaLimit of(QuotaComponent component, QuotaScope scope, String identifier, QuotaType quotaType, long limit) {
-        return new QuotaLimit(component, scope, identifier, quotaType, limit);
-    }
 
     private QuotaLimit(QuotaComponent quotaComponent, QuotaScope quotaScope, String identifier,  QuotaType quotaType, long limit) {
         this.quotaComponent = quotaComponent;
