@@ -123,7 +123,7 @@ public class DockerCassandra {
     }
 
     private static final int CASSANDRA_PORT = 9042;
-    private static final int CASSANDRA_MEMORY = 750;
+    private static final int CASSANDRA_MEMORY = 1024;
 
     private static final String CASSANDRA_CONFIG_DIR = "$CASSANDRA_CONFIG";
     private static final String JVM_OPTIONS = CASSANDRA_CONFIG_DIR + "/jvm.options";
