@@ -119,5 +119,4 @@ public class S3MinioTest implements BlobStoreDAOContract {
             .then()
             .block();
     }
-
 }
