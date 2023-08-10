@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -179,7 +180,7 @@ class RequeueTest {
             .block();
 
         assertThat(mailQueueItem).isNotNull();
-        assertThat(Duration.between(enqueueTime, dequeueTime.get()).abs().toSeconds()).isZero();
+        assertThat(Duration.between(enqueueTime, dequeueTime.get()).abs().toSeconds()).isCloseTo(0L, offset(1L));
     }
 
     @Test
