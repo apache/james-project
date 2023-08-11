@@ -30,6 +30,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedWildcard;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
@@ -46,13 +47,13 @@ public class MailboxSubscriptionListener implements EventListener.ReactiveGroupE
 
     private final SubscriptionManager subscriptionManager;
     private final SessionProvider sessionProvider;
-    private final MailboxMapper mailboxMapper;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     @Inject
-    public MailboxSubscriptionListener(SubscriptionManager subscriptionManager, SessionProvider sessionProvider, MailboxMapper mailboxMapper) {
+    public MailboxSubscriptionListener(SubscriptionManager subscriptionManager, SessionProvider sessionProvider, MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.subscriptionManager = subscriptionManager;
         this.sessionProvider = sessionProvider;
-        this.mailboxMapper = mailboxMapper;
+        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
     @Override
@@ -81,6 +82,7 @@ public class MailboxSubscriptionListener implements EventListener.ReactiveGroupE
     private Mono<Void> propagateUnsubscriptionToChildrenMailboxes(Event event) {
         MailboxEvents.MailboxUnsubscribedEvent mailboxUnsubscribedEvent = (MailboxEvents.MailboxUnsubscribedEvent) event;
         MailboxSession mailboxSession = sessionProvider.createSystemSession(event.getUsername());
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
         MailboxQuery.UserBound findSubMailboxesQuery = MailboxQuery.builder()
             .userAndNamespaceFrom(mailboxUnsubscribedEvent.getMailboxPath())

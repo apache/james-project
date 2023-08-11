@@ -37,6 +37,7 @@ import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -63,6 +64,9 @@ class MailboxSubscriptionListenerTest {
     SubscriptionManager subscriptionManager;
 
     @Mock
+    MailboxSessionMapperFactory mailboxSessionMapperFactory;
+
+    @Mock
     MailboxMapper mailboxMapper;
 
     MailboxSubscriptionListener testee;
@@ -74,8 +78,10 @@ class MailboxSubscriptionListenerTest {
             .thenReturn(Mono.empty());
         when(subscriptionManager.unsubscribeReactive(any(), any()))
             .thenReturn(Mono.empty());
+        when(mailboxSessionMapperFactory.getMailboxMapper(any()))
+            .thenReturn(mailboxMapper);
 
-        testee = new MailboxSubscriptionListener(subscriptionManager, sessionProvider, mailboxMapper);
+        testee = new MailboxSubscriptionListener(subscriptionManager, sessionProvider, mailboxSessionMapperFactory);
     }
 
     @Test
