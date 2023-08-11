@@ -31,7 +31,7 @@ public class QuotaComponent extends StringWrapper {
         return new QuotaComponent(value);
     }
 
-    public QuotaComponent(String value) {
+    private QuotaComponent(String value) {
         super(value);
     }
 

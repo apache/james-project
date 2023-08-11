@@ -30,7 +30,7 @@ public class QuotaType extends StringWrapper {
         return new QuotaType(value);
     }
 
-    public QuotaType(String value) {
+    private QuotaType(String value) {
         super(value);
     }
 

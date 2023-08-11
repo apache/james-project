@@ -31,7 +31,7 @@ public class QuotaScope extends StringWrapper {
         return new QuotaScope(value);
     }
 
-    public QuotaScope(String value) {
+    private QuotaScope(String value) {
         super(value);
     }
 
