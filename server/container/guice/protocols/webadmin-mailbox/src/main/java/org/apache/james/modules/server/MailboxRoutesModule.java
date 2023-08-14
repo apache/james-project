@@ -31,6 +31,7 @@ import org.apache.james.webadmin.routes.DomainQuotaRoutes;
 import org.apache.james.webadmin.routes.EventDeadLettersRoutes;
 import org.apache.james.webadmin.routes.GlobalQuotaRoutes;
 import org.apache.james.webadmin.routes.MailboxesRoutes;
+import org.apache.james.webadmin.routes.QuotaLimitRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
 import org.apache.james.webadmin.service.CreateMissingParentsRequestToTask;
@@ -53,6 +54,7 @@ public class MailboxRoutesModule extends AbstractModule {
         routesMultibinder.addBinding().to(EventDeadLettersRoutes.class);
         routesMultibinder.addBinding().to(GlobalQuotaRoutes.class);
         routesMultibinder.addBinding().to(UserQuotaRoutes.class);
+        routesMultibinder.addBinding().to(QuotaLimitRoutes.class);
         routesMultibinder.addBinding().to(UserMailboxesRoutes.class);
         routesMultibinder.addBinding().to(MailboxesRoutes.class);
 
