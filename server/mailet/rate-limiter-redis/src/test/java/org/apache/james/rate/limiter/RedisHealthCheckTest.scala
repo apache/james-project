@@ -20,7 +20,7 @@
 package org.apache.james.rate.limiter
 
 import org.apache.james.core.healthcheck.Result
-import org.apache.james.rate.limiter.redis.{RedisHealthCheck, RedisRateLimiterConfiguration, RedisRateLimiterFactory}
+import org.apache.james.rate.limiter.redis.{RedisHealthCheck, RedisRateLimiterConfiguration}
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.extension.ExtendWith
@@ -34,10 +34,9 @@ class RedisHealthCheckTest {
 
   @BeforeEach
   def setup(redis: DockerRedis): Unit = {
-    val redisRateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(
-      RedisRateLimiterConfiguration.from(redis.redisURI().toString, false))
+    val redisConfiguration: RedisRateLimiterConfiguration = RedisRateLimiterConfiguration.from(redis.redisURI().toString, isCluster = false)
 
-    redisHealthCheck = new RedisHealthCheck(redisRateLimiterFactory)
+    redisHealthCheck = new RedisHealthCheck(redisConfiguration)
   }
 
   @AfterEach
@@ -67,11 +66,11 @@ class RedisHealthCheckTest {
   }
 
   @Test
-  def checkShouldReturnUnhealthyWhenRedisIsDown(redis: DockerRedis): Unit = {
+  def checkShouldReturnDegradedWhenRedisIsDown(redis: DockerRedis): Unit = {
     redis.pause()
     val result: Result = SMono.fromPublisher(redisHealthCheck.check()).block()
 
-    assertThat(result.isUnHealthy).isTrue
+    assertThat(result.isDegraded).isTrue
   }
 
   @Test
@@ -95,7 +94,7 @@ class RedisHealthCheckTest {
 
     SoftAssertions.assertSoftly(softly => {
       softly.assertThat(check1.isHealthy).isTrue
-      softly.assertThat(check2.isUnHealthy).isTrue
+      softly.assertThat(check2.isDegraded).isTrue
       softly.assertThat(check3.isHealthy).isTrue
     })
   }
