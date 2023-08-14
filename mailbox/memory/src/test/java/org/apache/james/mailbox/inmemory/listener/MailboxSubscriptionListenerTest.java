@@ -41,7 +41,7 @@ class MailboxSubscriptionListenerTest {
     private static final MailboxPath PARENT1 = new MailboxPath("namespace", BOB, "parent1");
     private static final MailboxPath PARENT1_CHILD1 = new MailboxPath("namespace", BOB, "parent1.child1");
     private static final MailboxPath PARENT1_CHILD1_CHILD1 = new MailboxPath("namespace", BOB, "parent1.child1.child1");
-    private static final MailboxPath PARENT1_CHILD1_CHILD2 = new MailboxPath("namespace", BOB, "parent1.child2");
+    private static final MailboxPath PARENT1_CHILD1_CHILD2 = new MailboxPath("namespace", BOB, "parent1.child1.child2");
     private static final TestId MAILBOX_ID = TestId.of(45);
 
     private SubscriptionManager subscriptionManager;
@@ -97,6 +97,7 @@ class MailboxSubscriptionListenerTest {
         mailboxManager.createMailbox(PARENT1_CHILD1_CHILD1, bobSession);
         mailboxManager.createMailbox(PARENT1_CHILD1_CHILD2, bobSession);
 
+        subscriptionManager.subscribe(bobSession, PARENT1_CHILD1_CHILD1);
         testee.event(parent1Child1Child1MailboxSubscribedEvent);
 
         assertThat(subscriptionManager.subscriptions(bobSession)).doesNotContain(PARENT1_CHILD1_CHILD2);
@@ -110,20 +111,20 @@ class MailboxSubscriptionListenerTest {
         mailboxManager.createMailbox(PARENT1_CHILD1, bobSession);
         mailboxManager.createMailbox(PARENT1_CHILD1_CHILD1, bobSession);
 
+        subscriptionManager.subscribe(bobSession, PARENT1_CHILD1_CHILD1);
         testee.event(parent1Child1Child1MailboxSubscribedEvent);
 
-        assertThat(subscriptionManager.subscriptions(bobSession)).contains(PARENT1_CHILD1, PARENT1);
+        assertThat(subscriptionManager.subscriptions(bobSession)).containsExactlyInAnyOrder(PARENT1_CHILD1_CHILD1, PARENT1_CHILD1, PARENT1);
     }
 
     @Test
     void shouldNotPropagateUnsubscriptionToNonChildrenMailboxes() throws Exception {
         MailboxEvents.MailboxUnsubscribedEvent parent1Child1Child1MailboxUnsubscribedEvent = new MailboxEvents.MailboxUnsubscribedEvent(null, BOB, PARENT1_CHILD1_CHILD1, MAILBOX_ID, Event.EventId.random());
 
-        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD1, bobSession);
-        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD2, bobSession);
+        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD1, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, bobSession);
+        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD2, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, bobSession);
 
-        subscriptionManager.subscribe(bobSession, PARENT1_CHILD1_CHILD2);
-
+        subscriptionManager.unsubscribe(bobSession, PARENT1_CHILD1_CHILD1);
         testee.event(parent1Child1Child1MailboxUnsubscribedEvent);
 
         assertThat(subscriptionManager.subscriptions(bobSession)).containsOnly(PARENT1_CHILD1_CHILD2);
@@ -133,15 +134,12 @@ class MailboxSubscriptionListenerTest {
     void shouldPropagateUnsubscriptionToChildrenMailboxesWhenMailboxHasMultipleChildrenMailboxes() throws Exception {
         MailboxEvents.MailboxUnsubscribedEvent parent1MailboxUnsubscribedEvent = new MailboxEvents.MailboxUnsubscribedEvent(null, BOB, PARENT1, MAILBOX_ID, Event.EventId.random());
 
-        mailboxManager.createMailbox(PARENT1, bobSession);
-        mailboxManager.createMailbox(PARENT1_CHILD1, bobSession);
-        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD1, bobSession);
-        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD2, bobSession);
+        mailboxManager.createMailbox(PARENT1, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, bobSession);
+        mailboxManager.createMailbox(PARENT1_CHILD1, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, bobSession);
+        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD1, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, bobSession);
+        mailboxManager.createMailbox(PARENT1_CHILD1_CHILD2, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, bobSession);
 
-        subscriptionManager.subscribe(bobSession, PARENT1_CHILD1);
-        subscriptionManager.subscribe(bobSession, PARENT1_CHILD1_CHILD1);
-        subscriptionManager.subscribe(bobSession, PARENT1_CHILD1_CHILD2);
-
+        subscriptionManager.unsubscribe(bobSession, PARENT1);
         testee.event(parent1MailboxUnsubscribedEvent);
 
         assertThat(subscriptionManager.subscriptions(bobSession)).isEmpty();
