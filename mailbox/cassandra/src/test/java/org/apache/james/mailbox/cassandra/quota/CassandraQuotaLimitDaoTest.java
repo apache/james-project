@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +33,6 @@ import org.apache.james.core.quota.QuotaScope;
 import org.apache.james.core.quota.QuotaType;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -59,7 +60,7 @@ public class CassandraQuotaLimitDaoTest {
         List<QuotaLimit> expected = Arrays.asList(expectedOne, expectedTwo);
 
         List<QuotaLimit> actual = cassandraQuotaLimitDao.getQuotaLimits(QuotaLimit.QuotaKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", null)).collectList().block();
-        Assertions.assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -68,7 +69,7 @@ public class CassandraQuotaLimitDaoTest {
         cassandraQuotaLimitDao.setQuotaLimit(expected).block();
 
         QuotaLimit actual = cassandraQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.SIZE)).block();
-        Assertions.assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -77,7 +78,7 @@ public class CassandraQuotaLimitDaoTest {
         cassandraQuotaLimitDao.setQuotaLimit(expected).block();
 
         QuotaLimit actual = cassandraQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.SIZE)).block();
-        Assertions.assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -87,7 +88,7 @@ public class CassandraQuotaLimitDaoTest {
         cassandraQuotaLimitDao.deleteQuotaLimit(quotaLimit.getQuotaKey()).block();
 
         QuotaLimit actual = cassandraQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.SIZE)).block();
-        Assertions.assertNull(actual);
+        assertThat(actual).isNull();
     }
 
 }
