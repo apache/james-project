@@ -65,6 +65,7 @@ import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
+import org.apache.james.mailbox.store.event.MailboxSubscriptionListener;
 import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
@@ -156,6 +157,10 @@ public class MemoryMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
             .addBinding()
             .to(MailboxAnnotationListener.class);
+
+        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
+            .addBinding()
+            .to(MailboxSubscriptionListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
         bind(MailboxManagerConfiguration.class).toInstance(MailboxManagerConfiguration.DEFAULT);

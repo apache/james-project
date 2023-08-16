@@ -22,6 +22,7 @@ package org.apache.james.jmap.rfc8621.contract
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.concurrent.TimeUnit
 
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
@@ -58,16 +59,19 @@ import sttp.client3.okhttp.OkHttpSyncBackend
 import sttp.client3.{Identity, SttpBackend, asWebSocket, basicRequest}
 import sttp.model.Uri
 import sttp.monad.MonadError
-import sttp.monad.syntax.MonadErrorOps
 import sttp.ws.WebSocketFrame
-import sttp.ws.WebSocketFrame.Text
 
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
 
 trait MailboxSetMethodContract {
-
+  private lazy val slowPacedPollInterval = Duration.ofMillis(100)
+  private lazy val calmlyAwait = Awaitility.`with`
+    .pollInterval(slowPacedPollInterval)
+    .and.`with`.pollDelay(slowPacedPollInterval)
+    .await
+  private lazy val awaitAtMostTenSeconds = calmlyAwait.atMost(10, TimeUnit.SECONDS)
   private lazy val backend: SttpBackend[Identity, WebSockets] = OkHttpSyncBackend()
   private lazy implicit val monadError: MonadError[Identity] = IdMonad
 
@@ -4602,6 +4606,129 @@ trait MailboxSetMethodContract {
          |    }, "c4"]
          |  ]
          |}""".stripMargin)
+  }
+
+  @Test
+  def subscribeChildMailboxShouldPropagateSubscriptionToParentMailboxes(server: GuiceJamesServer): Unit = {
+    val parentMailboxPath = MailboxPath.forUser(BOB, "parent")
+    server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(parentMailboxPath)
+    val childMailboxPath = MailboxPath.forUser(BOB, "parent.child")
+    val childMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(childMailboxPath)
+
+    assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .listSubscriptions(BOB.asString()))
+      .doesNotContain(childMailboxPath.getName(), parentMailboxPath.getName())
+
+    val request =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |	"methodCalls": [
+         |		["Mailbox/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"update": {
+         |					"${childMailboxId.serialize}": {
+         |						"isSubscribed": true
+         |					}
+         |				}
+         |			},
+         |			"c3"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+
+    awaitAtMostTenSeconds.untilAsserted(() => assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .listSubscriptions(BOB.asString()))
+      .contains(childMailboxPath.getName(), parentMailboxPath.getName()))
+  }
+
+  @Test
+  def unsubscribeParentMailboxShouldPropagateUnsubscriptionToChildrenMailboxes(server: GuiceJamesServer): Unit = {
+    val parentMailboxPath = MailboxPath.forUser(BOB, "parent")
+    val parentMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(parentMailboxPath)
+    val childMailboxPath = MailboxPath.forUser(BOB, "parent.child")
+    val childMailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(childMailboxPath)
+
+    // subscribe to both parent and child mailboxes
+    val subscribeToChildMailboxRequest =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |	"methodCalls": [
+         |		["Mailbox/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"update": {
+         |					"${childMailboxId.serialize}": {
+         |						"isSubscribed": true
+         |					}
+         |				}
+         |			},
+         |			"c3"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(subscribeToChildMailboxRequest)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+
+    awaitAtMostTenSeconds.untilAsserted(() => assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .listSubscriptions(BOB.asString()))
+      .contains(childMailboxPath.getName(), parentMailboxPath.getName()))
+
+    // unsubscribe parent mailbox
+    val unsubscribeToParentMailboxRequest =
+      s"""{
+         |	"using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |	"methodCalls": [
+         |		["Mailbox/set",
+         |			{
+         |				"accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |				"update": {
+         |					"${parentMailboxId.serialize}": {
+         |						"isSubscribed": false
+         |					}
+         |				}
+         |			},
+         |			"c3"
+         |		]
+         |	]
+         |}""".stripMargin
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(unsubscribeToParentMailboxRequest)
+    .when
+      .post
+    .`then`
+      .log().ifValidationFails()
+      .statusCode(SC_OK)
+      .contentType(JSON)
+
+    // should propagate unsubscription to child mailboxes
+    awaitAtMostTenSeconds.untilAsserted(() => assertThat(server.getProbe(classOf[MailboxProbeImpl])
+      .listSubscriptions(BOB.asString()))
+      .doesNotContain(childMailboxPath.getName(), parentMailboxPath.getName()))
   }
 
   @Test

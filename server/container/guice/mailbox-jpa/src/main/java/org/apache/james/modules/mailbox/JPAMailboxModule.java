@@ -54,6 +54,7 @@ import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
+import org.apache.james.mailbox.store.event.MailboxSubscriptionListener;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
@@ -124,6 +125,10 @@ public class JPAMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
             .addBinding()
             .to(MailboxAnnotationListener.class);
+
+        Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
+            .addBinding()
+            .to(MailboxSubscriptionListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
         bind(MailboxManagerConfiguration.class).toInstance(MailboxManagerConfiguration.DEFAULT);
