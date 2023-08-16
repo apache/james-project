@@ -47,12 +47,12 @@ public class QuotaType {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(value);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (o instanceof QuotaType) {
             QuotaType other = (QuotaType) o;
             return Objects.equals(value, other.value);

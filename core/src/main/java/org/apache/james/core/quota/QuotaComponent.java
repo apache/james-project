@@ -48,12 +48,12 @@ public class QuotaComponent {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(value);
     }
 
     @Override
-    public boolean equals(Object o) {
+    public final boolean equals(Object o) {
         if (o instanceof QuotaComponent) {
             QuotaComponent other = (QuotaComponent) o;
             return Objects.equals(value, other.value);
