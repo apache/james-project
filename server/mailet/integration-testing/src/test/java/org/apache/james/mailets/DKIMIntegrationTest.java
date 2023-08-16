@@ -53,10 +53,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.google.inject.Module;
+
 class DKIMIntegrationTest {
 
     private static final String FROM_LOCAL_PART = "fromUser";
     private static final String FROM = FROM_LOCAL_PART + "@" + DEFAULT_DOMAIN;
+    private static final String FROM_FAKE_GMAIL = "fakeSender@gmail.com";
     private static final String RECIPIENT_LOCAL_PART = "touser";
     private static final String RECIPIENT = RECIPIENT_LOCAL_PART + "@" + DEFAULT_DOMAIN;
 
@@ -109,29 +112,9 @@ class DKIMIntegrationTest {
     private List<Optional<String>> dkimAuthResults;
 
     @BeforeEach
-    void setup(@TempDir File temporaryFolder) throws Exception {
+    void setup() throws Exception {
         dkimAuthResults = new ArrayList<>();
         ExtractAttributeStub.setDkimAuthResultInspector(value -> dkimAuthResults.add(value.map(result -> (String) result)));
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
-            .putProcessor(ProcessorConfiguration.transport()
-                .addMailet(DKIMSIGN_MAILET)
-                .addMailet(DKIMVERIFY_MAILET)
-                .addMailet(STUB_MAILET)
-                .addMailetsFrom(CommonProcessors.transport()));
-
-        jamesServer = TemporaryJamesServer
-            .builder()
-            .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .withOverrides(binder -> binder.bind(PublicKeyRecordRetriever.class).toInstance(MOCK_PUBLIC_KEY_RECORD_RETRIEVER))
-            .withMailetContainer(mailetContainer)
-            .build(temporaryFolder);
-        jamesServer.start();
-
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-
-        dataProbe.addUser(RECIPIENT, PASSWORD);
-        dataProbe.addUser(FROM, PASSWORD);
     }
 
     @AfterEach
@@ -140,7 +123,9 @@ class DKIMIntegrationTest {
     }
 
     @Test
-    void incomingMessageShouldBeReceivedSignedAndChecked() throws Exception {
+    void incomingMessageFromLocalShouldBeReceivedSignedAndChecked(@TempDir File temporaryFolder) throws Exception {
+        initJamesServer(temporaryFolder, binder -> binder.bind(PublicKeyRecordRetriever.class).toInstance(MOCK_PUBLIC_KEY_RECORD_RETRIEVER));
+
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, RECIPIENT);
@@ -157,5 +142,44 @@ class DKIMIntegrationTest {
 
         assertThat(testIMAPClient.readFirstMessageHeaders())
                 .contains("DKIM-Signature");
+    }
+
+    @Test
+    void incomingMessageFromFakeGmailSenderShouldFailDKIMVerification(@TempDir File temporaryFolder) throws Exception {
+        initJamesServer(temporaryFolder);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM_FAKE_GMAIL, RECIPIENT);
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(dkimAuthResults)
+                .hasSize(1);
+        assertThat(dkimAuthResults.get(0))
+            .hasValueSatisfying(result -> assertThat(result).startsWith("fail"));
+    }
+
+    private void initJamesServer(File temporaryFolder, Module... overrideGuiceModules) throws Exception {
+        MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
+            .putProcessor(ProcessorConfiguration.transport()
+                .addMailet(DKIMSIGN_MAILET)
+                .addMailet(DKIMVERIFY_MAILET)
+                .addMailet(STUB_MAILET)
+                .addMailetsFrom(CommonProcessors.transport()));
+        jamesServer = TemporaryJamesServer
+            .builder()
+            .withBase(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .withOverrides(overrideGuiceModules)
+            .withMailetContainer(mailetContainer)
+            .build(temporaryFolder);
+        jamesServer.start();
+
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(RECIPIENT, PASSWORD);
+        dataProbe.addUser(FROM, PASSWORD);
     }
 }
