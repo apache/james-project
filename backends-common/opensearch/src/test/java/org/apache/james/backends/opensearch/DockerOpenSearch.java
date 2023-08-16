@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.opensearch;
 
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.OS_HTTP_PORT;
 import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.OS_MEMORY;
 
@@ -42,11 +43,11 @@ import org.apache.james.backends.opensearch.OpenSearchConfiguration.HostScheme;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.RateLimiters;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
+import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.google.common.collect.ImmutableMap;
@@ -130,6 +131,13 @@ public interface DockerOpenSearch {
     }
 
     class NoAuth implements DockerOpenSearch {
+        private static WaitStrategy openSearchWaitStrategy() {
+            return new HttpWaitStrategy()
+                .forPort(OS_HTTP_PORT)
+                .forStatusCodeMatching(response -> response == HTTP_OK)
+                .withReadTimeout(Duration.ofSeconds(10))
+                .withStartupTimeout(Duration.ofMinutes(3));
+        }
 
         static DockerContainer defaultContainer(String imageName) {
             return DockerContainer.fromName(imageName)
@@ -138,10 +146,10 @@ public interface DockerOpenSearch {
                 .withEnv("discovery.type", "single-node")
                 .withEnv("DISABLE_INSTALL_DEMO_CONFIG", "true")
                 .withEnv("DISABLE_SECURITY_PLUGIN", "true")
-                .withEnv("ES_JAVA_OPTS", "-Xms" + OS_MEMORY + "m -Xmx" + OS_MEMORY + "m")
+                .withEnv("OPENSEARCH_JAVA_OPTS", "-Xms" + OS_MEMORY + "m -Xmx" + OS_MEMORY + "m")
                 .withAffinityToContainer()
                 .withName("james-testing-opensearch-" + UUID.randomUUID())
-                .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
+                .waitingFor(openSearchWaitStrategy());
         }
 
         private final DockerContainer eSContainer;
