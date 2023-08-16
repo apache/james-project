@@ -3475,6 +3475,7 @@ The scheduled task will have the following type `reprocessing-one` and the follo
  - [Clearing a mail queue](#Clearing_a_mail_queue)
  - [Flushing mails from a mail queue](#Flushing_mails_from_a_mail_queue)
  - [RabbitMQ republishing a mail queue from cassandra](#RabbitMQ_republishing_a_mail_queue_from_cassandra)
+ - [Cassandra view of the RabbitMQ mailQueue: browse start update](#Cassandra_view_of_the_rabbitmq_mailqueue_browse_start_update)
 
 ### Listing mail queues
 
@@ -3657,6 +3658,20 @@ Response codes:
      "taskId": "a650a66a-5984-431e-bdad-f1baad885856"
  }
  ```
+
+### Cassandra view of the RabbitMQ mailQueue: browse start update
+
+```
+curl -XPOST 'http://ip:port/mailQueues/{mailQueueName}?action=updateBrowseStart
+```
+
+Will return a task that updates the browse start of the aforementioned mailQueue, regardless of the configuration.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+This is an advanced, potentially expensive operation which requires a good understanding of the RabbitMQMailQueue design
+(https://github.com/apache/james-project/blob/master/src/adr/0031-distributed-mail-queue.md). Especially, care needs to
+be taken to call this at most once per slice (not doing so might be expensive).
 
 ## Sending email over webAdmin
 

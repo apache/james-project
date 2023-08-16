@@ -23,9 +23,11 @@ import static org.apache.james.modules.queue.rabbitmq.RabbitMQModule.RABBITMQ_CO
 
 import java.io.FileNotFoundException;
 
+import com.google.inject.util.Modules;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.modules.server.BrowseStartTaskModule;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.Module;
@@ -38,7 +40,8 @@ public enum MailQueueViewChoice {
         public static Module choose(MailQueueViewChoice choice) {
             switch (choice) {
                 case CASSANDRA:
-                    return new CassandraMailQueueViewModule();
+                    return Modules.combine(new CassandraMailQueueViewModule(),
+                        new BrowseStartTaskModule());
                 case NONE:
                     return new FakeMailQueueViewModule();
                 default:

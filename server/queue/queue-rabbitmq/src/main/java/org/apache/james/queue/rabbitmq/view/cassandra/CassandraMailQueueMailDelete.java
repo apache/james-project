@@ -75,11 +75,15 @@ public class CassandraMailQueueMailDelete {
     }
 
     void updateBrowseStart(MailQueueName mailQueueName) {
-        findNewBrowseStart(mailQueueName)
-            .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart)
-                .then(clearContentBeforeBrowse(mailQueueName, newBrowseStart)))
+        updateBrowseStartReactive(mailQueueName)
             .subscribeOn(Schedulers.parallel())
             .subscribe();
+    }
+
+    Mono<Void> updateBrowseStartReactive(MailQueueName mailQueueName) {
+        return findNewBrowseStart(mailQueueName)
+            .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart)
+                .then(clearContentBeforeBrowse(mailQueueName, newBrowseStart)));
     }
 
     private void maybeUpdateBrowseStart(MailQueueName mailQueueName) {

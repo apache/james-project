@@ -86,6 +86,10 @@ public class CassandraMailQueueView implements MailQueueView<CassandraMailQueueB
         this.mimeMessageStore = mimeMessageStore;
     }
 
+    public Mono<Void> updateBrowseStart() {
+        return cassandraMailQueueMailDelete.updateBrowseStartReactive(mailQueueName);
+    }
+
     @Override
     public void initialize(MailQueueName mailQueueName) {
         storeHelper.initializeBrowseStart(mailQueueName).block();
