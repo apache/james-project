@@ -24,11 +24,13 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValue.CURRENT_VALUE;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValue.IDENTIFIER;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValue.QUOTA_COMPONENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValue.QUOTA_TYPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValue.TABLE_NAME;
+import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.CURRENT_VALUE;
+import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.IDENTIFIER;
+import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.QUOTA_COMPONENT;
+import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.QUOTA_TYPE;
+import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.TABLE_NAME;
+
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -44,10 +46,64 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.querybuilder.delete.Delete;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.api.querybuilder.update.Update;
+import com.google.common.base.MoreObjects;
 
 import reactor.core.publisher.Mono;
 
 public class CassandraQuotaCurrentValueDao {
+
+    public static class QuotaCurrentValueKey {
+
+        public static QuotaCurrentValueKey of(QuotaComponent component, Username identifier, QuotaType quotaType) {
+            return new QuotaCurrentValueKey(component, identifier, quotaType);
+        }
+
+        private final QuotaComponent quotaComponent;
+        private final Username identifier;
+        private final QuotaType quotaType;
+
+        public QuotaComponent getQuotaComponent() {
+            return quotaComponent;
+        }
+
+        public Username getIdentifier() {
+            return identifier;
+        }
+
+        public QuotaType getQuotaType() {
+            return quotaType;
+        }
+
+        private QuotaCurrentValueKey(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType) {
+            this.quotaComponent = quotaComponent;
+            this.identifier = identifier;
+            this.quotaType = quotaType;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(quotaComponent, identifier, quotaType);
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof QuotaCurrentValueKey) {
+                QuotaCurrentValueKey other = (QuotaCurrentValueKey) o;
+                return Objects.equals(quotaComponent, other.quotaComponent)
+                    && Objects.equals(identifier, other.identifier)
+                    && Objects.equals(quotaType, other.quotaType);
+            }
+            return false;
+        }
+
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("quotaComponent", quotaComponent)
+                .add("identifier", identifier)
+                .add("quotaType", quotaType)
+                .toString();
+        }
+    }
 
     private final CassandraAsyncExecutor queryExecutor;
     private final PreparedStatement increaseStatement;
@@ -64,7 +120,7 @@ public class CassandraQuotaCurrentValueDao {
         this.deleteQuotaCurrentValueStatement = session.prepare(deleteQuotaCurrentValueStatement().build());
     }
 
-    public Mono<Void> increase(QuotaCurrentValue.QuotaKey quotaKey, long amount) {
+    public Mono<Void> increase(QuotaCurrentValueKey quotaKey, long amount) {
         return queryExecutor.executeVoid(increaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
@@ -72,7 +128,7 @@ public class CassandraQuotaCurrentValueDao {
             .setLong(CURRENT_VALUE, amount));
     }
 
-    public Mono<Void> decrease(QuotaCurrentValue.QuotaKey quotaKey, long amount) {
+    public Mono<Void> decrease(QuotaCurrentValueKey quotaKey, long amount) {
         return queryExecutor.executeVoid(decreaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
@@ -80,7 +136,7 @@ public class CassandraQuotaCurrentValueDao {
             .setLong(CURRENT_VALUE, amount));
     }
 
-    public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaCurrentValue.QuotaKey quotaKey) {
+    public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaCurrentValueKey quotaKey) {
         return queryExecutor.executeSingleRow(getQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
@@ -88,7 +144,7 @@ public class CassandraQuotaCurrentValueDao {
             .map(row -> convertRowToModel(row));
     }
 
-    public Mono<Void> deleteQuotaCurrentValue(QuotaCurrentValue.QuotaKey quotaKey) {
+    public Mono<Void> deleteQuotaCurrentValue(QuotaCurrentValueKey quotaKey) {
         return queryExecutor.executeVoid(deleteQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
@@ -127,10 +183,10 @@ public class CassandraQuotaCurrentValueDao {
     }
 
     private QuotaCurrentValue convertRowToModel(Row row) {
-        return QuotaCurrentValue.of(QuotaCurrentValue.QuotaKey.of(QuotaComponent.of(row.get(QUOTA_COMPONENT, String.class)),
-                Username.of(row.get(IDENTIFIER, String.class)),
-                QuotaType.of(row.get(QUOTA_TYPE, String.class))),
-            row.get(CURRENT_VALUE, Long.class));
+        return QuotaCurrentValue.builder().quotaComponent(QuotaComponent.of(row.get(QUOTA_COMPONENT, String.class)))
+            .identifier(Username.of(row.get(IDENTIFIER, String.class)))
+            .quotaType(QuotaType.of(row.get(QUOTA_TYPE, String.class)))
+            .currentValue(row.get(CURRENT_VALUE, Long.class)).build();
     }
 
 }

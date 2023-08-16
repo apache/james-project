@@ -21,12 +21,11 @@ package org.apache.james.mailbox.cassandra.table;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 
-public interface CassandraQuotaLimit {
-    String TABLE_NAME = "quotaLimit";
+public interface CassandraQuotaCurrentValueTable {
+    String TABLE_NAME = "quotaCurrentValue";
 
     CqlIdentifier IDENTIFIER = CqlIdentifier.fromCql("identifier");
     CqlIdentifier QUOTA_COMPONENT = CqlIdentifier.fromCql("quotaComponent");
     CqlIdentifier QUOTA_TYPE = CqlIdentifier.fromCql("quotaType");
-    CqlIdentifier QUOTA_SCOPE = CqlIdentifier.fromCql("quotaScope");
-    CqlIdentifier QUOTA_LIMIT = CqlIdentifier.fromCql("quotaLimit");
+    CqlIdentifier CURRENT_VALUE = CqlIdentifier.fromCql("currentValue");
 }
