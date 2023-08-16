@@ -22,10 +22,55 @@ package org.apache.james.core.quota;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+
 public class QuotaLimit {
 
-    public static QuotaLimit of(QuotaComponent component, QuotaScope scope, String identifier, QuotaType quotaType, Long limit) {
-        return new QuotaLimit(component, scope, identifier, quotaType, limit);
+    public static class Builder {
+        private QuotaComponent quotaComponent;
+        private QuotaScope quotaScope;
+        private String identifier;
+        private QuotaType quotaType;
+        private Long quotaLimit;
+
+        public Builder quotaComponent(QuotaComponent quotaComponent) {
+            this.quotaComponent = quotaComponent;
+            return this;
+        }
+
+        public Builder quotaScope(QuotaScope quotaScope) {
+            this.quotaScope = quotaScope;
+            return this;
+        }
+
+        public Builder identifier(String identifier) {
+            this.identifier = identifier;
+            return this;
+        }
+
+        public Builder quotaType(QuotaType quotaType) {
+            this.quotaType = quotaType;
+            return this;
+        }
+
+        public Builder quotaLimit(Long quotaLimit) {
+            this.quotaLimit = quotaLimit;
+            return this;
+        }
+
+        public QuotaLimit build() {
+            Preconditions.checkState(quotaComponent != null, "`quotaComponent` is mandatory");
+            Preconditions.checkState(quotaScope != null, "`quotaScope` is mandatory");
+            Preconditions.checkState(identifier != null, "`identifier` is mandatory");
+            Preconditions.checkState(quotaType != null, "`quotaType` is mandatory");
+
+            return new QuotaLimit(quotaComponent, quotaScope, identifier, quotaType, quotaLimit);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     private final QuotaComponent quotaComponent;
@@ -78,5 +123,16 @@ public class QuotaLimit {
                 && Objects.equals(quotaLimit, other.quotaLimit);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("quotaComponent", quotaComponent)
+            .add("quotaScope", quotaScope)
+            .add("identifier", identifier)
+            .add("quotaType", quotaType)
+            .add("quotaLimit", quotaLimit)
+            .toString();
     }
 }

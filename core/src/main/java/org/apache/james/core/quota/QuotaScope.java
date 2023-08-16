@@ -19,27 +19,52 @@
 
 package org.apache.james.core.quota;
 
-import org.apache.james.core.StringWrapper;
+import java.util.Objects;
 
-public class QuotaScope extends StringWrapper {
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+
+public class QuotaScope {
 
     public static final QuotaScope GLOBAL = of("global");
     public static final QuotaScope DOMAIN = of("domain");
     public static final QuotaScope USER = of("user");
 
     public static QuotaScope of(String value) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(value), "`value` is mandatory");
         return new QuotaScope(value);
     }
 
+    private final String value;
+
     private QuotaScope(String value) {
-        super(value);
+        this.value = value;
+    }
+    
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof QuotaScope) {
-            return super.equals(o);
+            QuotaScope other = (QuotaScope) o;
+            return Objects.equals(value, other.value);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
     }
 }

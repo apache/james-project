@@ -19,27 +19,52 @@
 
 package org.apache.james.core.quota;
 
-import org.apache.james.core.StringWrapper;
+import java.util.Objects;
 
-public class QuotaComponent extends StringWrapper {
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+
+public class QuotaComponent {
 
     public static final QuotaComponent MAILBOX = of("mailbox");
     public static final QuotaComponent SIEVE = of("sieve");
     public static final QuotaComponent JMAP_UPLOADS = of("jmapUploads");
 
     public static QuotaComponent of(String value) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(value), "`value` is mandatory");
         return new QuotaComponent(value);
     }
 
+    private final String value;
+
     private QuotaComponent(String value) {
-        super(value);
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof QuotaComponent) {
-            return super.equals(o);
+            QuotaComponent other = (QuotaComponent) o;
+            return Objects.equals(value, other.value);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
     }
 }

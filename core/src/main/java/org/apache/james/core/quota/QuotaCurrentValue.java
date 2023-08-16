@@ -23,10 +23,48 @@ import java.util.Objects;
 
 import org.apache.james.core.Username;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+
 public class QuotaCurrentValue {
 
-    public static QuotaCurrentValue of(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType, long currentValue) {
-        return new QuotaCurrentValue(quotaComponent, identifier, quotaType, currentValue);
+    public static class Builder {
+        private QuotaComponent quotaComponent;
+        private Username identifier;
+        private QuotaType quotaType;
+        private long currentValue;
+
+        public Builder quotaComponent(QuotaComponent quotaComponent) {
+            this.quotaComponent = quotaComponent;
+            return this;
+        }
+
+        public Builder identifier(Username identifier) {
+            this.identifier = identifier;
+            return this;
+        }
+
+        public Builder quotaType(QuotaType quotaType) {
+            this.quotaType = quotaType;
+            return this;
+        }
+
+        public Builder currentValue(long currentValue) {
+            this.currentValue = currentValue;
+            return this;
+        }
+
+        public QuotaCurrentValue build() {
+            Preconditions.checkState(quotaComponent != null, "`quotaComponent` is mandatory");
+            Preconditions.checkState(identifier != null, "`identifier` is mandatory");
+            Preconditions.checkState(quotaType != null, "`quotaType` is mandatory");
+
+            return new QuotaCurrentValue(quotaComponent, identifier, quotaType, currentValue);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     private final QuotaComponent quotaComponent;
@@ -72,5 +110,15 @@ public class QuotaCurrentValue {
                 && Objects.equals(currentValue, other.currentValue);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("quotaComponent", quotaComponent)
+            .add("identifier", identifier)
+            .add("quotaType", quotaType)
+            .add("currentValue", currentValue)
+            .toString();
     }
 }
