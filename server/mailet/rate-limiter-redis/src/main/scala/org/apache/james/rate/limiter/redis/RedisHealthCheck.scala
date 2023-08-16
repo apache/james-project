@@ -23,14 +23,16 @@ import java.time.Duration
 
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.cluster.RedisClusterClient
+import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.{RedisClient, RedisURI}
 import javax.inject.Inject
 import org.apache.james.core.healthcheck.{ComponentName, HealthCheck, Result}
 import org.reactivestreams.Publisher
-import reactor.core.publisher.Mono
 import reactor.core.scala.publisher.SMono
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
+import scala.jdk.FutureConverters._
 
 class RedisHealthCheck @Inject()(redisConfiguration: RedisRateLimiterConfiguration) extends HealthCheck {
   private val redisComponent: ComponentName = new ComponentName("Redis")
@@ -47,16 +49,18 @@ class RedisHealthCheck @Inject()(redisConfiguration: RedisRateLimiterConfigurati
     if (redisConfiguration.isCluster) {
       val redisUris = redisConfiguration.redisURI.value.asJava
       redisUris.forEach(redisUri => redisUri.setTimeout(healthcheckTimeout))
+      val redisClusterClient = RedisClusterClient.create(redisUris)
 
-      SMono.fromPublisher(Mono.using(() => RedisClusterClient.create(redisUris),
-        (redisClusterClient: RedisClusterClient) => Mono.fromCallable(() => redisClusterClient.connect()),
-        (redisClusterClient: RedisClusterClient) => redisClusterClient.close()))
+      SMono.fromFuture(redisClusterClient.connectAsync(StringCodec.UTF8).asScala)
+        .doOnNext(redisConnection => redisConnection.closeAsync())
+        .doOnTerminate(() => redisClusterClient.close())
     } else {
       val redisUri: RedisURI = redisConfiguration.redisURI.value.last
       redisUri.setTimeout(healthcheckTimeout)
+      val redisClient = RedisClient.create(redisUri)
 
-      SMono.fromPublisher(Mono.using(() => RedisClient.create(redisUri),
-        (redisClient: RedisClient) => Mono.fromCallable(() => redisClient.connect()),
-        (redisClient: RedisClient) => redisClient.close()))
+      SMono.fromFuture(redisClient.connectAsync(StringCodec.UTF8, redisUri).asScala)
+        .doOnNext(redisConnection => redisConnection.closeAsync())
+        .doOnTerminate(() => redisClient.close())
     }
 }
