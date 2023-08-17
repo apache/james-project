@@ -135,6 +135,9 @@ public class PropagateLookupRightListener implements EventListener.ReactiveGroup
     }
 
     private Mono<Void> applyLookupRight(MailboxSession session, MailboxPath mailboxPath, MailboxACL.EntryKey entryKey) {
+        if (entryKey.equals(MailboxACL.OWNER_KEY)) {
+            return Mono.empty();
+        }
         return Mono.fromCallable(() -> MailboxACL.command()
                 .rights(Right.Lookup)
                 .key(entryKey)
