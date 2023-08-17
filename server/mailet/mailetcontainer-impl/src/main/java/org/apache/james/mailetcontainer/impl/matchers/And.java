@@ -1,5 +1,3 @@
-package org.apache.james.mailetcontainer.impl.matchers;
-
 /****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
@@ -18,6 +16,8 @@ package org.apache.james.mailetcontainer.impl.matchers;
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
+package org.apache.james.mailetcontainer.impl.matchers;
 
 import java.util.Collection;
 import java.util.Set;
