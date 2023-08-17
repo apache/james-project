@@ -94,7 +94,7 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true jacoco:report-aggregate@jacoco-report'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test -T2 ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true jacoco:report-aggregate@jacoco-report'
             }
             post {
                 always {
@@ -115,7 +115,7 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test -T2 ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true'
                 }
             }
             post {
