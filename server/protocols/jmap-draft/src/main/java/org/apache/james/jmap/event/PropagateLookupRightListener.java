@@ -139,6 +139,10 @@ public class PropagateLookupRightListener implements EventListener.ReactiveGroup
                 .rights(Right.Lookup)
                 .key(entryKey)
                 .asAddition())
-            .flatMap(aclCommand -> Mono.from(rightManager.applyRightsCommandReactive(mailboxPath, aclCommand, session)));
+            .flatMap(aclCommand -> Mono.from(rightManager.applyRightsCommandReactive(mailboxPath, aclCommand, session)))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.info("Mailbox {} not found, skip lookup right update", mailboxPath);
+                return Mono.empty();
+            });
     }
 }
