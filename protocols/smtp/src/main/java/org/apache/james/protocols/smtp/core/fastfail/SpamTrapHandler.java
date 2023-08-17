@@ -57,8 +57,7 @@ public class SpamTrapHandler implements RcptHook {
 
     @Inject
     public SpamTrapHandler() {
-        this.blockedIps = new ConcurrentHashMap<>();
-        this.clock = Clock.systemUTC();
+        this(Clock.systemUTC());
     }
 
     @VisibleForTesting
