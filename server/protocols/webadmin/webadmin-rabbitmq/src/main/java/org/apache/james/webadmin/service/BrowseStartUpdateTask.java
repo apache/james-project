@@ -24,7 +24,6 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.queue.rabbitmq.MailQueueName;
-import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
