@@ -35,6 +35,10 @@
     <property name="format" value=".prettyPeek()"/>
     <property name="message" value="Found a debug code"/>
   </module>
+  <module name="RegexpHeader">
+    <property name="fileExtensions" value="java"/>
+    <property name="header" value=".*\n.*Licensed to the Apache Software Foundation.*"/>
+  </module>
   <module name="TreeWalker">
     <module name="IllegalImport">
       <property name="regexp" value="true"/>
