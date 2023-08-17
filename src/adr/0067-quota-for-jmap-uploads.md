@@ -8,7 +8,7 @@ Accepted (lazy consensus).
 
 Implemented.
 
-Complements [ADR-48 Cleaup JMAP uploads](0048-cleanup-jmap-uploads.md).
+Overrides [ADR-48 Cleaup JMAP uploads](0048-cleanup-jmap-uploads.md).
 
 ## Context
 
@@ -41,6 +41,15 @@ Cassandra counters that would be used to keep track of users current space usage
 (namely because of counters consistency level ONE usage and non-idempotence causing the driver not to retry failed 
 updates). We thus need a corrective task in order to recompute the current values.
 
+Care needs to be taken with concurrency. Given the nature of ths quota, we expect data races (because 100MB of stoage 
+space is not much, exceeding the quota should be considered a regular operation. Clients uploading files parallely might
+trigger data races upon older data deletion). In practice this means:
+ - Be eventually consistent and cleanup data after the upload returns as upfront quota validation with JMAP upload 
+constraints on to of Cassandra counter data model is especially prone to data races
+ - Upon cleanup, free at least 50% of the space: this would decrease the frequency of updates
+ - Expose a configurable probability of recomputing the upload quota
+ - If inconsistent space usage is reported, recompute the quota
+
 JMAP upload storage evolutions:
  - As we add an application behaviour, common for any implementation, we need further layers in the design in
 order to mutualize quota handling for all implementations. A service layer `UploadService` would expose the JMAP facade
@@ -53,6 +62,10 @@ the oldest.
 of a user on `UploadReposiory` (without retrieving the uploads contents).
  - `UploadService` needs a method to delete 
 
+Asynchronous storage based cleanup using Cassandra TTL and object storage buckets is furthermore out of question as the
+application needs to be aware of what is stored in order to expose a coherent quota. We will need to rework JMAP uploads
+in order to base it on the date of the items stored in the UploadRepository.
+
 ## Alternatives
 
 Not operating in SaaS mode would allow to better trust users. As such we might simply document the limitation and 
@@ -64,6 +77,11 @@ incurs extra Cassandra reads upon uploads, which have a slight minor performance
 space like 100MB is plenty enough for dozens of mail to be composed in parallel without issues, even for power user. 
 Furthermore, the JMAP specification behaviour is lenient once the space is exceeded, hence we never block te user. 
 This clearly claims for the simpler option.
+
+Not storing the current value, and just listing actual uploads in order to retrieve the current value might lead to a huge 
+tombstone read (queue use case) that we likely want to avoid, even if it solves concurrency issues. Furthermore, for such 
+a frequent use case the performance cost of event sourcing would be a sow stopper (as Casandra implementation is lightweight 
+transaction based).
 
 ## References
 
