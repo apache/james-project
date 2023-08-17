@@ -52,10 +52,10 @@ import reactor.core.publisher.Mono;
 
 public class CassandraQuotaCurrentValueDao {
 
-    public static class QuotaCurrentValueKey {
+    public static class QuotaKey {
 
-        public static QuotaCurrentValueKey of(QuotaComponent component, Username identifier, QuotaType quotaType) {
-            return new QuotaCurrentValueKey(component, identifier, quotaType);
+        public static QuotaKey of(QuotaComponent component, Username identifier, QuotaType quotaType) {
+            return new QuotaKey(component, identifier, quotaType);
         }
 
         private final QuotaComponent quotaComponent;
@@ -74,7 +74,7 @@ public class CassandraQuotaCurrentValueDao {
             return quotaType;
         }
 
-        private QuotaCurrentValueKey(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType) {
+        private QuotaKey(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType) {
             this.quotaComponent = quotaComponent;
             this.identifier = identifier;
             this.quotaType = quotaType;
@@ -87,8 +87,8 @@ public class CassandraQuotaCurrentValueDao {
 
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof QuotaCurrentValueKey) {
-                QuotaCurrentValueKey other = (QuotaCurrentValueKey) o;
+            if (o instanceof QuotaKey) {
+                QuotaKey other = (QuotaKey) o;
                 return Objects.equals(quotaComponent, other.quotaComponent)
                     && Objects.equals(identifier, other.identifier)
                     && Objects.equals(quotaType, other.quotaType);
@@ -120,7 +120,7 @@ public class CassandraQuotaCurrentValueDao {
         this.deleteQuotaCurrentValueStatement = session.prepare(deleteQuotaCurrentValueStatement().build());
     }
 
-    public Mono<Void> increase(QuotaCurrentValueKey quotaKey, long amount) {
+    public Mono<Void> increase(QuotaKey quotaKey, long amount) {
         return queryExecutor.executeVoid(increaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
@@ -128,7 +128,7 @@ public class CassandraQuotaCurrentValueDao {
             .setLong(CURRENT_VALUE, amount));
     }
 
-    public Mono<Void> decrease(QuotaCurrentValueKey quotaKey, long amount) {
+    public Mono<Void> decrease(QuotaKey quotaKey, long amount) {
         return queryExecutor.executeVoid(decreaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
@@ -136,7 +136,7 @@ public class CassandraQuotaCurrentValueDao {
             .setLong(CURRENT_VALUE, amount));
     }
 
-    public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaCurrentValueKey quotaKey) {
+    public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaKey quotaKey) {
         return queryExecutor.executeSingleRow(getQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
@@ -144,7 +144,7 @@ public class CassandraQuotaCurrentValueDao {
             .map(row -> convertRowToModel(row));
     }
 
-    public Mono<Void> deleteQuotaCurrentValue(QuotaCurrentValueKey quotaKey) {
+    public Mono<Void> deleteQuotaCurrentValue(QuotaKey quotaKey) {
         return queryExecutor.executeVoid(deleteQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())

@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
@@ -36,8 +35,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraQuotaCurrentValueDaoTest {
 
-    private static final CassandraQuotaCurrentValueDao.QuotaCurrentValueKey QUOTA_KEY
-        = CassandraQuotaCurrentValueDao.QuotaCurrentValueKey.of(QuotaComponent.MAILBOX, Username.of("james@abc.com"), QuotaType.SIZE);
+    private static final CassandraQuotaCurrentValueDao.QuotaKey QUOTA_KEY
+        = CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.MAILBOX, Username.of("james@abc.com"), QuotaType.SIZE);
 
     private CassandraQuotaCurrentValueDao cassandraQuotaCurrentValueDao;
 
