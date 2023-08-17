@@ -52,15 +52,13 @@ class RedisHealthCheck @Inject()(redisConfiguration: RedisRateLimiterConfigurati
       val redisClusterClient = RedisClusterClient.create(redisUris)
 
       SMono.fromFuture(redisClusterClient.connectAsync(StringCodec.UTF8).asScala)
-        .doOnNext(redisConnection => redisConnection.closeAsync())
-        .doOnTerminate(() => redisClusterClient.close())
+        .doOnTerminate(() => redisClusterClient.shutdownAsync())
     } else {
       val redisUri: RedisURI = redisConfiguration.redisURI.value.last
       redisUri.setTimeout(healthcheckTimeout)
       val redisClient = RedisClient.create(redisUri)
 
       SMono.fromFuture(redisClient.connectAsync(StringCodec.UTF8, redisUri).asScala)
-        .doOnNext(redisConnection => redisConnection.closeAsync())
-        .doOnTerminate(() => redisClient.close())
+        .doOnTerminate(() => redisClient.shutdownAsync())
     }
 }
