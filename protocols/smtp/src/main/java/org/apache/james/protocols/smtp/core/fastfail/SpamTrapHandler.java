@@ -20,11 +20,14 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -42,12 +45,19 @@ public class SpamTrapHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamTrapHandler.class);
 
     /** Map which hold blockedIps and blockTime in memory */
-    private final Map<String,Long> blockedIps = new HashMap<>();
+    private final Map<String,Long> blockedIps;
+    private final Clock clock;
     
     private Collection<String> spamTrapRecips = new ArrayList<>();
     
     /** Default blocktime 12 hours */
     protected long blockTime = 4320000;
+
+    @Inject
+    public SpamTrapHandler(Clock clock) {
+        this.blockedIps = new HashMap<>();
+        this.clock = clock;
+    }
 
     public void setSpamTrapRecipients(Collection<String> spamTrapRecips) {
         this.spamTrapRecips = spamTrapRecips;
@@ -87,7 +97,7 @@ public class SpamTrapHandler implements RcptHook {
         if (rawTime != null) {
             long blockTime = rawTime;
            
-            if (blockTime > System.currentTimeMillis()) {
+            if (blockTime > clock.millis()) {
                 LOGGER.debug("BlockList contain Ip {}", ip);
                 return true;
             } else {
@@ -107,7 +117,7 @@ public class SpamTrapHandler implements RcptHook {
      * @param ip IpAddress to add
      */
     private void addIp(String ip) {
-        long bTime = System.currentTimeMillis() + blockTime;
+        long bTime = clock.millis() + blockTime;
         
         LOGGER.debug("Add ip {} for {} to blockList", ip, bTime);
     
