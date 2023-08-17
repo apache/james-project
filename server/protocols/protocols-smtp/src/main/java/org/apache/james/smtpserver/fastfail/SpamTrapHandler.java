@@ -19,7 +19,6 @@
 
 package org.apache.james.smtpserver.fastfail;
 
-import java.time.Clock;
 import java.util.Arrays;
 
 import javax.inject.Inject;
@@ -31,8 +30,8 @@ import org.apache.james.protocols.api.handler.ProtocolHandler;
 public class SpamTrapHandler extends org.apache.james.protocols.smtp.core.fastfail.SpamTrapHandler implements ProtocolHandler {
 
     @Inject
-    public SpamTrapHandler(Clock clock) {
-        super(clock);
+    public SpamTrapHandler() {
+        super();
     }
 
     @Override
