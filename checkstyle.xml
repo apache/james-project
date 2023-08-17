@@ -30,6 +30,11 @@
   <property name="severity" value="error"/>
   <property name="charset" value="UTF-8"/>
   <property name="fileExtensions" value="java, properties, xml"/>
+  <module name="RegexpSingleline">
+    <property name="fileExtensions" value="java"/>
+    <property name="format" value=".prettyPeek()"/>
+    <property name="message" value="Found a debug code"/>
+  </module>
   <module name="TreeWalker">
     <module name="IllegalImport">
       <property name="regexp" value="true"/>

@@ -112,7 +112,7 @@ public abstract class WebAdminServerIntegrationTest {
     @Test
     void metricsRoutesShouldBeExposed() {
         String body = when()
-                .get("/metrics").prettyPeek()
+                .get("/metrics")
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .extract()
