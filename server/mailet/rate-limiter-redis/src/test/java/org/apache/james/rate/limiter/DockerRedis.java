@@ -77,6 +77,21 @@ public class DockerRedis {
         container.stop();
     }
 
+    public void pause() {
+        container.getDockerClient().pauseContainerCmd(container.getContainerId()).exec();
+    }
+
+    public void unPause() {
+        container.getDockerClient().unpauseContainerCmd(container.getContainerId()).exec();
+    }
+
+    public boolean isPaused() {
+        return container.getDockerClient().inspectContainerCmd(container.getContainerId())
+            .exec()
+            .getState()
+            .getPaused();
+    }
+
     public RedisCommands<String, String> createClient() {
         return RedisClient.create(redisURI().toString())
             .connect().sync();
