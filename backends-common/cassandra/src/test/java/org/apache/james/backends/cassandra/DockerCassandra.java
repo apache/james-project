@@ -117,9 +117,13 @@ public class DockerCassandra {
         // If available try to access the image shared by all maven projects
         // This avoids rebuilding one for each maven surefire fork.
         // BUILD_ID should be set by the execution context, here JenkinsFile
-        return Optional.ofNullable(System.getenv("BUILD_ID"))
+        return getFixedBuildId()
             // Default to an image discriminator specific to this JVM
             .orElse(UUID.randomUUID().toString());
+    }
+
+    private static Optional<String> getFixedBuildId() {
+        return Optional.ofNullable(System.getenv("BUILD_ID"));
     }
 
     private static final int CASSANDRA_PORT = 9042;
@@ -133,10 +137,12 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_4_1_3-" + buildSpecificImageDiscriminator(), AdditionalDockerFileStep.IDENTITY);
+        this("cassandra_4_1_3-" + buildSpecificImageDiscriminator(),
+            getFixedBuildId().isEmpty(),
+            AdditionalDockerFileStep.IDENTITY);
     }
 
-    private DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
+    private DockerCassandra(String imageName, boolean deleteImageAfterUsage, AdditionalDockerFileStep additionalSteps) {
         client = DockerClientFactory.instance().client();
         EventsCmd eventsCmd = client.eventsCmd().withEventTypeFilter(EventType.IMAGE).withImageFilter(imageName);
         eventsCmd.exec(new ResultCallback<Event>() {
@@ -163,9 +169,8 @@ public class DockerCassandra {
             public void close() {
             }
         });
-        boolean doNotDeleteImageAfterUsage = false;
         cassandraContainer = new GenericContainer<>(
-            new ImageFromDockerfile(imageName,doNotDeleteImageAfterUsage)
+            new ImageFromDockerfile(imageName,deleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
                     additionalSteps.applyStep(builder
                         .from("cassandra:4.1.3")
