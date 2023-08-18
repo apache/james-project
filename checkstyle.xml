@@ -38,6 +38,8 @@
   <module name="RegexpHeader">
     <property name="fileExtensions" value="java"/>
     <property name="header" value=".*\n.*Licensed to the Apache Software Foundation.*"/>
+    <message key="header.missing" value="The file is missing the compulsory Apache V2 license header"/>
+    <message key="header.mismatch" value="The file is missing the compulsory Apache V2 license header"/>
   </module>
   <module name="TreeWalker">
     <module name="IllegalImport">
