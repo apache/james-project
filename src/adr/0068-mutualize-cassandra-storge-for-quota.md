@@ -43,7 +43,7 @@ storage. This relies on a part of the primary key allowing to distinguish the co
 
 The helper will consist of 2 tables:
 - One composed of counters to track current value
-- One comosed of regular `long` to track limits
+- One composed of regular `long` to track limits
 
 (one can not mix counters and regular values in the same table in Cassandra).
 
