@@ -18,7 +18,7 @@ Quota, standardized in IMAP via [RFC-9208](https://www.rfc-editor.org/rfc/rfc920
 [RFC-9425](https://datatracker.ietf.org/doc/rfc9425/) are a mechanism designed to keep track of
 user current usage of the resource and match it against the stored limit.
 
-Resource limitation is a broad use case that we might want t better enforce in Apache James. This is especially
+Resource limitation is a broad use case that we might want to better enforce in Apache James. This is especially
 important when operating in SaaS mode, and actual users might be badly intentionned. See
 [ADR-67 Quota for JMAP uploads](0067-quota-for-jmap-uploads.md).
 
@@ -56,14 +56,14 @@ We expect a small decrease of the count of tables in our Cassandra schema, going
 per user limit, one for mailbox quota per domain limit, one for mailbox quota global limit, one for Sieve uota current value, one for Sieve quota
 per user limit, one for Sieve Quota global limit, one for JMAP uploads current value) to just 2 (helper tables: one for current value, one for limits).
 
-We expect to make it easier to implement quta related features in the future.
+We expect to make it easier to implement quota related features in the future.
 
 We need to set up Cassandra migration tasks and to record the schema upgrade into the upgrade instructions. A compaibility mode will need to be
-explicitly cnfigured in order to run the migration.
+explicitly configured in order to run the migration.
 
 ## Alternatives
 
-Keep the current, exploded table structure and either do not care about table count increase or do not implement further impotant resource limitation
+Keep the current, exploded table structure and either do not care about table count increase or do not implement further important resource limitation
 use cases.
 
 ## References
