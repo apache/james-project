@@ -20,11 +20,14 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.inject.Inject;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -34,6 +37,8 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * This handler can be used for providing a spam trap. IPAddresses which send emails to the configured
  * recipients will get blacklisted for the configured time.
@@ -42,12 +47,24 @@ public class SpamTrapHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamTrapHandler.class);
 
     /** Map which hold blockedIps and blockTime in memory */
-    private final Map<String,Long> blockedIps = new HashMap<>();
+    private final Map<String,Long> blockedIps;
+    private final Clock clock;
     
     private Collection<String> spamTrapRecips = new ArrayList<>();
     
     /** Default blocktime 12 hours */
     protected long blockTime = 4320000;
+
+    @Inject
+    public SpamTrapHandler() {
+        this(Clock.systemUTC());
+    }
+
+    @VisibleForTesting
+    public SpamTrapHandler(Clock clock) {
+        this.blockedIps = new ConcurrentHashMap<>();
+        this.clock = clock;
+    }
 
     public void setSpamTrapRecipients(Collection<String> spamTrapRecips) {
         this.spamTrapRecips = spamTrapRecips;
@@ -87,15 +104,13 @@ public class SpamTrapHandler implements RcptHook {
         if (rawTime != null) {
             long blockTime = rawTime;
            
-            if (blockTime > System.currentTimeMillis()) {
+            if (blockTime > clock.millis()) {
                 LOGGER.debug("BlockList contain Ip {}", ip);
                 return true;
             } else {
                 LOGGER.debug("Remove ip {} from blockList", ip);
-               
-                synchronized (blockedIps) {
-                    blockedIps.remove(ip);
-                }
+
+                blockedIps.remove(ip);
             }
         }
         return false;
@@ -107,13 +122,10 @@ public class SpamTrapHandler implements RcptHook {
      * @param ip IpAddress to add
      */
     private void addIp(String ip) {
-        long bTime = System.currentTimeMillis() + blockTime;
+        long bTime = clock.millis() + blockTime;
         
         LOGGER.debug("Add ip {} for {} to blockList", ip, bTime);
-    
-        synchronized (blockedIps) {
-            blockedIps.put(ip, bTime);
-        }
-    
+
+        blockedIps.put(ip, bTime);
     }
 }

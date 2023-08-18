@@ -20,9 +20,9 @@
 package org.apache.james.protocols.smtp.core.fastfail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
 
 import java.net.InetSocketAddress;
+import java.time.Instant;
 import java.util.ArrayList;
 
 import org.apache.james.core.MailAddress;
@@ -30,9 +30,10 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.Test;
 
-public class SpamTrapHandlerTest {
+class SpamTrapHandlerTest {
     private static final String SPAM_TRAP_RECIP1 = "spamtrap1@localhost";
     private static final String RECIP1 = "recip@localhost";
     
@@ -52,41 +53,31 @@ public class SpamTrapHandlerTest {
     
     @Test
     void testSpamTrap() throws Exception {
-        String ip = "192.168.100.1";
-        String ip2 = "192.168.100.2";
+        String spamIP = "192.168.100.1";
+        String nonSpamIP = "192.168.100.2";
         long blockTime = 2000;
     
         ArrayList<String> rcpts = new ArrayList<>();
         rcpts.add(SPAM_TRAP_RECIP1);
-    
-        SpamTrapHandler handler = new SpamTrapHandler();
+
+        Instant now = Instant.now();
+        UpdatableTickingClock updatableTickingClock = new UpdatableTickingClock(now);
+        SpamTrapHandler handler = new SpamTrapHandler(updatableTickingClock);
     
         handler.setBlockTime(blockTime);
         handler.setSpamTrapRecipients(rcpts);
 
-        HookReturnCode result = handler.doRcpt(setUpSMTPSession(ip), MaybeSender.nullSender(), new MailAddress(SPAM_TRAP_RECIP1)).getResult();
-    
-        assertThat(result).describedAs("Blocked on first connect").isEqualTo(HookReturnCode.deny());
-    
+        HookReturnCode result = handler.doRcpt(setUpSMTPSession(spamIP), MaybeSender.nullSender(), new MailAddress(SPAM_TRAP_RECIP1)).getResult();
+        assertThat(result).describedAs("Blocked on first connect as spam IP and BlockTime still valid.").isEqualTo(HookReturnCode.deny());
 
-        result = handler.doRcpt(setUpSMTPSession(ip), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
-    
-        assertThat(result).describedAs("Blocked on second connect").isEqualTo(HookReturnCode.deny());
-    
-        
-        result = handler.doRcpt(setUpSMTPSession(ip2), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
-    
-        assertThat(result).describedAs("Not Blocked").isEqualTo(HookReturnCode.declined());
-    
-        try {
-            // Wait for the blockTime to exceed
-            Thread.sleep(blockTime);
-        } catch (InterruptedException e) {
-            fail("Failed to sleep for " + blockTime + " ms");
-        }
-    
-        result = handler.doRcpt(setUpSMTPSession(ip), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
-    
-        assertThat(result).describedAs("Not blocked. BlockTime exceeded").isEqualTo(HookReturnCode.declined());
+        result = handler.doRcpt(setUpSMTPSession(spamIP), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
+        assertThat(result).describedAs("Blocked on second connect as spam IP and BlockTime still valid.").isEqualTo(HookReturnCode.deny());
+
+        result = handler.doRcpt(setUpSMTPSession(nonSpamIP), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
+        assertThat(result).describedAs("Not Blocked as not spam IP.").isEqualTo(HookReturnCode.declined());
+
+        updatableTickingClock.setInstant(now.plusMillis(blockTime));
+        result = handler.doRcpt(setUpSMTPSession(spamIP), MaybeSender.nullSender(), new MailAddress(RECIP1)).getResult();
+        assertThat(result).describedAs("Not blocked as BlockTime exceeded.").isEqualTo(HookReturnCode.declined());
     }
 }
