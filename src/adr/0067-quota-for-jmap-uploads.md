@@ -6,7 +6,7 @@ Date: 2023-08-17
 
 Accepted (lazy consensus).
 
-Implemented.
+Not implemented yet.
 
 Overrides [ADR-48 Cleaup JMAP uploads](0048-cleanup-jmap-uploads.md).
 
@@ -41,7 +41,7 @@ Cassandra counters that would be used to keep track of users current space usage
 (namely because of counters consistency level ONE usage and non-idempotence causing the driver not to retry failed 
 updates). We thus need a corrective task in order to recompute the current values.
 
-Care needs to be taken with concurrency. Given the nature of ths quota, we expect data races (because 100MB of stoage 
+Care needs to be taken with concurrency. Given the nature of the quota, we expect data races (because 100MB of storage 
 space is not much, exceeding the quota should be considered a regular operation. Clients uploading files parallely might
 trigger data races upon older data deletion). In practice this means:
  - Be eventually consistent and cleanup data after the upload returns as upfront quota validation with JMAP upload 
@@ -72,10 +72,10 @@ Not operating in SaaS mode would allow to better trust users. As such we might s
 skip the work. Such a proposal is not acceptable for some members of the community.
 
 We might have chose to store maximum limits for JMAP upload quotas. Doing so requires extensive webadmin endpoints, and
-incurs extra Cassandra reads upon uploads, which have a slight minor performance negative impact. Aggregating `gobal`, 
+incurs extra Cassandra reads upon uploads, which have a slight minor performance negative impact. Aggregating `global`, 
 `domain` and `user` scopes together might also be some complex logic to write. All this work is of limited use as a moderate 
 space like 100MB is plenty enough for dozens of mail to be composed in parallel without issues, even for power user. 
-Furthermore, the JMAP specification behaviour is lenient once the space is exceeded, hence we never block te user. 
+Furthermore, the JMAP specification behaviour is lenient once the space is exceeded, hence we never block the user. 
 This clearly claims for the simpler option.
 
 Not storing the current value, and just listing actual uploads in order to retrieve the current value might lead to a huge 
