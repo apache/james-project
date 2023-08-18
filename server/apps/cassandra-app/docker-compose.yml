@@ -47,6 +47,8 @@ services:
       interval: 3s
       timeout: 20s
       retries: 5
+    environment:
+      - JVM_OPTS=-Dcassandra.skip_wait_for_gossip_to_settle=0 -Dcassandra.initial_token=1
     networks:
       - james
 
