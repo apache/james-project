@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.routes.MailQueueRoutes.BASE_URL;
 import static org.apache.james.webadmin.routes.MailQueueRoutes.MAIL_QUEUE_NAME;
+import static org.apache.james.webadmin.tasks.TaskFromRequestRegistry.builder;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -29,9 +30,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;
@@ -42,7 +45,7 @@ import org.apache.james.util.DurationParser;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.RepublishNotprocessedMailsTask;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -61,16 +64,19 @@ public class RabbitMQMailQueuesRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
     private final Clock clock;
+    private final Set<TaskRegistration> extraTasks;
 
     @Inject
     @SuppressWarnings("unchecked")
     @VisibleForTesting
     RabbitMQMailQueuesRoutes(MailQueueFactory<RabbitMQMailQueue> mailQueueFactory,
-                             Clock clock, JsonTransformer jsonTransformer, TaskManager taskManager) {
+                             Clock clock, JsonTransformer jsonTransformer, TaskManager taskManager,
+                             @Named("RabbitMQMailQueuesRoutes") Set<TaskRegistration> extraTasks) {
         this.mailQueueFactory = mailQueueFactory;
         this.clock = clock;
         this.jsonTransformer = jsonTransformer;
         this.taskManager = taskManager;
+        this.extraTasks = extraTasks;
     }
 
     @Override
@@ -85,8 +91,9 @@ public class RabbitMQMailQueuesRoutes implements Routes {
 
     public void republishNotProcessedMails(Service service) {
         service.post(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME,
-            TaskFromRequestRegistry.builder()
+            builder()
                 .register(REPUBLISH_NOT_PROCESSED_MAILS_REGISTRATION_KEY, this::republishNotProcessedMails)
+                .registrations(extraTasks)
                 .buildAsRoute(taskManager),
             jsonTransformer);
     }
