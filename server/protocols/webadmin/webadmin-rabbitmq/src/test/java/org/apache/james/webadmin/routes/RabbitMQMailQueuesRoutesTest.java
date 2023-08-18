@@ -34,6 +34,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
@@ -67,7 +68,8 @@ class RabbitMQMailQueuesRoutesTest {
         JsonTransformer jsonTransformer = new JsonTransformer();
         clock = UpdatableTickingClock.fixed(DATE.toInstant(), ZoneOffset.UTC);
         return WebAdminUtils.createWebAdminServer(
-                new RabbitMQMailQueuesRoutes(mailQueueFactory, clock, jsonTransformer, taskManager),
+                new RabbitMQMailQueuesRoutes(mailQueueFactory, clock, jsonTransformer, taskManager,
+                    ImmutableSet.of()),
                 new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of()))
             .start();
     }

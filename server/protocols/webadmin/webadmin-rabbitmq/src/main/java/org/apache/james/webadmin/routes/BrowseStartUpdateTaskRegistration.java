@@ -17,22 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.webadmin.routes;
 
-import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.routes.RabbitMQMailQueuesRoutes;
+import static org.apache.james.webadmin.routes.MailQueueRoutes.MAIL_QUEUE_NAME;
+
+import javax.inject.Inject;
+
+import org.apache.james.queue.rabbitmq.MailQueueName;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
+import org.apache.james.webadmin.service.BrowseStartUpdateTask;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
-
-public class RabbitMailQueueRoutesModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        install(new RabbitMailQueueTaskSerializationModule());
-
-        Multibinder.newSetBinder(binder(), Routes.class).addBinding().to(RabbitMQMailQueuesRoutes.class);
-        Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class, Names.named("RabbitMQMailQueuesRoutes"));
+public class BrowseStartUpdateTaskRegistration extends TaskFromRequestRegistry.TaskRegistration {
+    @Inject
+    public BrowseStartUpdateTaskRegistration(CassandraMailQueueView.Factory cassandraMailQueueViewFactory) {
+        super(TaskRegistrationKey.of("updateBrowseStart"),
+            request -> new BrowseStartUpdateTask(MailQueueName.fromString(request.params(MAIL_QUEUE_NAME)), cassandraMailQueueViewFactory));
     }
 }
