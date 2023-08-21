@@ -556,6 +556,8 @@ public class ClamAVScan extends GenericMailet {
                 ping();
             }
 
+        } catch (ConnectException ce) {
+            LOGGER.error("ConnectException caught {}", ce.getMessage());
         } catch (Exception e) {
             LOGGER.error("Exception thrown", e);
         }
