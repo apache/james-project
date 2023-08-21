@@ -99,7 +99,7 @@ class SessionWithInitializedTablesFactoryTest {
                 .isEqualTo(MAX_VERSION);
 
         new CassandraTableManager(MODULE, session).clearTables(t -> true);
-        versionManagerDAO(session).updateVersion(MIN_VERSION);
+        versionManagerDAO(session).updateVersion(MIN_VERSION).block();
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
 
@@ -114,7 +114,7 @@ class SessionWithInitializedTablesFactoryTest {
                 .isEqualTo(MAX_VERSION);
 
         new CassandraTableManager(MODULE, session).clearTables(t -> true);
-        versionManagerDAO(session).updateVersion(MIN_VERSION);
+        versionManagerDAO(session).updateVersion(MIN_VERSION).block();
         assertThat(versionManager(session).computeVersion().block())
                 .isEqualTo(MIN_VERSION);
         session.execute(SchemaBuilder.dropTable(TABLE_NAME).build());
@@ -131,7 +131,7 @@ class SessionWithInitializedTablesFactoryTest {
         CqlSession cluster = ClusterFactory.create(clusterConfiguration, keyspaceConfiguration);
         KeyspaceFactory.createKeyspace(keyspaceConfiguration, cluster).block();
 
-        return () -> new SessionWithInitializedTablesFactory( cluster, MODULE).get();
+        return () -> new SessionWithInitializedTablesFactory(cluster, MODULE).get();
     }
 
     private static void cleanCassandra(CqlSession session) {
