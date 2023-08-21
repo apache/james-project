@@ -178,7 +178,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
         .then()
             .body("status", is("completed"));
 
-        assertThat(statementRecorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM browsestart")))
+        assertThat(statementRecorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM browseStart")))
             .isNotEmpty();
     }
 
