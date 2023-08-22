@@ -39,6 +39,8 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -105,6 +107,8 @@ public class CassandraQuotaCurrentValueDao {
         }
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraQuotaCurrentValueDao.class);
+
     private final CassandraAsyncExecutor queryExecutor;
     private final PreparedStatement increaseStatement;
     private final PreparedStatement decreaseStatement;
@@ -125,7 +129,13 @@ public class CassandraQuotaCurrentValueDao {
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
-            .setLong(CURRENT_VALUE, amount));
+            .setLong(CURRENT_VALUE, amount))
+            .onErrorResume(ex -> {
+                LOGGER.error("Failure when increasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString());
+                LOGGER.error(ex.getMessage());
+                return Mono.empty();
+            });
     }
 
     public Mono<Void> decrease(QuotaKey quotaKey, long amount) {
@@ -133,7 +143,13 @@ public class CassandraQuotaCurrentValueDao {
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
-            .setLong(CURRENT_VALUE, amount));
+            .setLong(CURRENT_VALUE, amount))
+            .onErrorResume(ex -> {
+                LOGGER.error("Failure when decreasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString());
+                LOGGER.error(ex.getMessage());
+                return Mono.empty();
+            });
     }
 
     public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaKey quotaKey) {
