@@ -53,6 +53,7 @@ class MailAddressTest {
                 "Abc@10.42.0.1",
                 "Abc.123@example.com",
                 "user+mailbox/department=shipping@example.com",
+                "user+mailbox@example.com",
                 "\"Abc@def\"@example.com",
                 "\"Fred Bloggs\"@example.com",
                 "\"Joe.\\Blow\"@example.com",
@@ -95,7 +96,7 @@ class MailAddressTest {
                 "server-dev\\.@james.apache.org", // Javax.mail is unable to handle this so we better reject it
                 "a..b@domain.com",
                 // According to wikipedia these addresses are valid but as javax.mail is unable
-                // to work with thenm we shall rather reject them (note that this is not breaking retro-compatibility)
+                // to work with them we shall rather reject them (note that this is not breaking retro-compatibility)
                 "Loïc.Accentué@voilà.fr8",
                 "pelé@exemple.com",
                 "δοκιμή@παράδειγμα.δοκιμή",
