@@ -243,7 +243,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
 
             addressBracketsEnforcement = configuration.getBoolean("addressBracketsEnforcement", true);
 
-            verifyIdentity = configuration.getBoolean("verifyIdentity", false);
+            verifyIdentity = configuration.getBoolean("verifyIdentity", true);
         }
     }
 

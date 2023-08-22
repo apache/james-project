@@ -123,9 +123,7 @@
         <!--  the sender address matches the user who has authenticated. -->
         <!--  This prevents a user of your mail server from acting as someone else -->
         <!--  If unspecified, default value is true -->
-        <!--
         <verifyIdentity>true</verifyIdentity>
-         -->
 
         <!--  This sets the maximum allowed message size (in kilobytes) for this -->
         <!--  SMTP service. If unspecified, the value defaults to 0, which means no limit. -->
