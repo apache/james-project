@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatRuntimeException;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -119,4 +120,17 @@ public class CassandraQuotaCurrentValueDaoTest {
         assertThat(actual).isNull();
     }
 
+    @Test
+    void increaseQuotaCurrentValueShouldNotThrowExceptionWhenQueryExecutorThrowException() {
+        cassandraCluster.pause();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100l).block();
+        cassandraCluster.unpause();
+    }
+
+    @Test
+    void decreaseQuotaCurrentValueShouldNotThrowExceptionWhenQueryExecutorThrowException() {
+        cassandraCluster.pause();
+        cassandraQuotaCurrentValueDao.decrease(QUOTA_KEY, 100l).block();
+        cassandraCluster.unpause();
+    }
 }
