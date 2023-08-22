@@ -3604,6 +3604,21 @@ Response codes:
 The response body contains the id of the republishing task.
 `{      "taskId": "a650a66a-5984-431e-bdad-f1baad885856"  }`
 
+=== Cassandra view of the RabbitMQ mailQueue: browse start update
+
+....
+curl -XPOST 'http://ip:port/mailQueues/{mailQueueName}?action=updateBrowseStart
+....
+
+Will return a task that updates the browse start of the aforementioned mailQueue, regardless of the configuration.
+
+link:#_endpoints_returning_a_task[More details about endpoints returning
+a task].
+
+This is an advanced, potentially expensive operation which requires a good understanding of the RabbitMQMailQueue design
+(https://github.com/apache/james-project/blob/master/src/adr/0031-distributed-mail-queue.md). Especially, care needs to
+be taken to call this at most once per slice (not doing so might be expensive).
+
 == Sending email over webAdmin
 
 ....

@@ -24,6 +24,7 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.TEN_SECONDS;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
@@ -36,11 +37,15 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
+import org.apache.james.backends.cassandra.StatementRecorder;
+import org.apache.james.backends.cassandra.TestingSession;
+import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationTest;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
@@ -51,10 +56,47 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+
+import com.datastax.driver.core.Session;
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 import io.restassured.http.ContentType;
 
 @Tag(BasicFeature.TAG)
 class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
+    private static class TestingSessionProbe implements GuiceProbe {
+        private final TestingSession testingSession;
+
+        @Inject
+        private TestingSessionProbe(TestingSession testingSession) {
+            this.testingSession = testingSession;
+        }
+
+        public TestingSession getTestingSession() {
+            return testingSession;
+        }
+    }
+
+    private static class TestingSessionModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            Multibinder.newSetBinder(binder(), GuiceProbe.class)
+                .addBinding()
+                .to(TestingSessionProbe.class);
+
+            bind(Session.class).to(TestingSession.class);
+        }
+
+        @Provides
+        @Singleton
+        TestingSession provideSession(SessionWithInitializedTablesFactory factory) {
+            return new TestingSession(factory.get());
+        }
+    }
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
@@ -73,6 +115,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
         .server(CassandraRabbitMQJamesServerMain::createServer)
+        .overrideServerModule(new TestingSessionModule())
         .build();
 
     private static final String VERSION = "/cassandra/version";
@@ -113,6 +156,30 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
                     .statusCode(HttpStatus.OK_200)
                     .contentType(JSON_CONTENT_TYPE)
                     .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}")));
+    }
+
+    @Test
+    void shouldUpdateBrowseStart() {
+        StatementRecorder statementRecorder = new StatementRecorder();
+        testExtension.getGuiceJamesServer()
+            .getProbe(TestingSessionProbe.class)
+            .getTestingSession()
+            .recordStatements(statementRecorder);
+
+        String taskId = with()
+            .queryParam("action", "updateBrowseStart")
+            .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION.getValue()))
+        .post("/mailQueues/root")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        assertThat(statementRecorder.listExecutedStatements(StatementRecorder.Selector.preparedStatementStartingWith("SELECT * FROM browseStart")))
+            .isNotEmpty();
     }
 
     @Test
