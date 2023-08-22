@@ -81,6 +81,26 @@ class SmtpIdentityVerificationTest {
     }
 
     @Test
+    void remoteUserCanSendEmailsToLocalUsersWhenAuthNotRequired(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .verifyIdentity());
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage("other@domain.tld", USER);
+    }
+
+    @Test
+    void spoofingForbiddenWhenNoAuthRequired(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .verifyIdentity());
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessage(USER, USER))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.Sender, "530 5.7.1 Authentication Required\n"));
+    }
+
+    @Test
     void smtpShouldAcceptMessageWhenIdentityIsMatching(@TempDir File temporaryFolder) throws Exception {
         createJamesServer(temporaryFolder, SmtpConfiguration.builder()
             .requireAuthentication()

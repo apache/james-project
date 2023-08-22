@@ -2093,12 +2093,4 @@ public class SMTPServerTest {
         out.close();
         client.close();
     }
-
-    @Test
-    public void testRejectVerifyIdentityWhenAuthRequiredIsFalse() {
-        smtpConfiguration.setVerifyIdentity();
-
-        assertThatThrownBy(() -> init(smtpConfiguration))
-            .isInstanceOf(ConfigurationException.class);
-    }
 }
