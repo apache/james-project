@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class CassandraQuotaCurrentValueDaoTest {
 
     private static final CassandraQuotaCurrentValueDao.QuotaKey QUOTA_KEY
-        = CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.MAILBOX, Username.of("james@abc.com"), QuotaType.SIZE);
+        = CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.MAILBOX, "james@abc.com", QuotaType.SIZE);
 
     private CassandraQuotaCurrentValueDao cassandraQuotaCurrentValueDao;
 

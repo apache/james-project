@@ -56,19 +56,19 @@ public class CassandraQuotaCurrentValueDao {
 
     public static class QuotaKey {
 
-        public static QuotaKey of(QuotaComponent component, Username identifier, QuotaType quotaType) {
+        public static QuotaKey of(QuotaComponent component, String identifier, QuotaType quotaType) {
             return new QuotaKey(component, identifier, quotaType);
         }
 
         private final QuotaComponent quotaComponent;
-        private final Username identifier;
+        private final String identifier;
         private final QuotaType quotaType;
 
         public QuotaComponent getQuotaComponent() {
             return quotaComponent;
         }
 
-        public Username getIdentifier() {
+        public String getIdentifier() {
             return identifier;
         }
 
@@ -76,7 +76,7 @@ public class CassandraQuotaCurrentValueDao {
             return quotaType;
         }
 
-        private QuotaKey(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType) {
+        private QuotaKey(QuotaComponent quotaComponent, String identifier, QuotaType quotaType) {
             this.quotaComponent = quotaComponent;
             this.identifier = identifier;
             this.quotaType = quotaType;
@@ -127,12 +127,12 @@ public class CassandraQuotaCurrentValueDao {
     public Mono<Void> increase(QuotaKey quotaKey, long amount) {
         return queryExecutor.executeVoid(increaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
-            .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
+            .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
             .setLong(CURRENT_VALUE, amount))
             .onErrorResume(ex -> {
                 LOGGER.warn("Failure when increasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
-                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString(), ex);
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier(), ex);
                 return Mono.empty();
             });
     }
@@ -140,12 +140,12 @@ public class CassandraQuotaCurrentValueDao {
     public Mono<Void> decrease(QuotaKey quotaKey, long amount) {
         return queryExecutor.executeVoid(decreaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
-            .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
+            .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
             .setLong(CURRENT_VALUE, amount))
             .onErrorResume(ex -> {
                 LOGGER.warn("Failure when decreasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
-                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString(), ex);
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier(), ex);
                 return Mono.empty();
             });
     }
@@ -153,7 +153,7 @@ public class CassandraQuotaCurrentValueDao {
     public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaKey quotaKey) {
         return queryExecutor.executeSingleRow(getQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
-            .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
+            .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue()))
             .map(row -> convertRowToModel(row));
     }
@@ -161,7 +161,7 @@ public class CassandraQuotaCurrentValueDao {
     public Mono<Void> deleteQuotaCurrentValue(QuotaKey quotaKey) {
         return queryExecutor.executeVoid(deleteQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
-            .setString(IDENTIFIER, quotaKey.getIdentifier().asString())
+            .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue()));
     }
 
@@ -198,7 +198,7 @@ public class CassandraQuotaCurrentValueDao {
 
     private QuotaCurrentValue convertRowToModel(Row row) {
         return QuotaCurrentValue.builder().quotaComponent(QuotaComponent.of(row.get(QUOTA_COMPONENT, String.class)))
-            .identifier(Username.of(row.get(IDENTIFIER, String.class)))
+            .identifier(row.get(IDENTIFIER, String.class))
             .quotaType(QuotaType.of(row.get(QUOTA_TYPE, String.class)))
             .currentValue(row.get(CURRENT_VALUE, Long.class)).build();
     }
