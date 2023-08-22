@@ -131,9 +131,8 @@ public class CassandraQuotaCurrentValueDao {
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
             .setLong(CURRENT_VALUE, amount))
             .onErrorResume(ex -> {
-                LOGGER.error("Failure when increasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
-                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString());
-                LOGGER.error(ex.getMessage());
+                LOGGER.warn("Failure when increasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString(), ex);
                 return Mono.empty();
             });
     }
@@ -145,9 +144,8 @@ public class CassandraQuotaCurrentValueDao {
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue())
             .setLong(CURRENT_VALUE, amount))
             .onErrorResume(ex -> {
-                LOGGER.error("Failure when decreasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
-                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString());
-                LOGGER.error(ex.getMessage());
+                LOGGER.warn("Failure when decreasing {} {} quota for {}. Quota current value is thus not updated and needs recomputation",
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier().asString(), ex);
                 return Mono.empty();
             });
     }
