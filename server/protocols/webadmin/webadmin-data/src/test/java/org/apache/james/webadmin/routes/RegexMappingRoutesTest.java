@@ -63,7 +63,7 @@ class RegexMappingRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(RegexMappingRoutes.BASE_PATH)
-            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
             .build();
     }
 
