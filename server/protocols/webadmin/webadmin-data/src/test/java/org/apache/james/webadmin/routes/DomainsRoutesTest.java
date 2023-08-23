@@ -117,6 +117,7 @@ class DomainsRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(DomainsRoutes.DOMAINS)
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
             .build();
     }
 
@@ -332,7 +333,7 @@ class DomainsRoutesTest {
         }
 
         @Test
-        void putShouldReturnUserErrorWhenNameContainsUrlEncodedUrlOperator() {
+        void putWithDomainNameContainsSlashEncodedShouldDecodeAndReturnError() {
             Map<String, Object> errors = when()
                 .put(DOMAIN + "%2F" + DOMAIN)
             .then()
@@ -347,24 +348,6 @@ class DomainsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Invalid request for domain creation domain/domain");
-        }
-
-        @Test
-        void putShouldReturnUserErrorWhenNameContainsInvalidUrlEncodedCharacters() {
-            Map<String, Object> errors = when()
-                .put(DOMAIN + "%GG" + DOMAIN)
-            .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Invalid request for domain creation domain%GGdomain unable to url decode some characters");
         }
 
         @Test

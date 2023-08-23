@@ -21,9 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -203,27 +200,13 @@ public class DomainsRoutes implements Routes {
     }
 
     private Domain checkValidDomain(String domainName) {
-        String urlDecodedDomainName = urlDecodeDomain(domainName);
         try {
-            return Domain.of(urlDecodedDomainName);
+            return Domain.of(domainName);
         } catch (IllegalArgumentException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for domain creation %s", urlDecodedDomainName)
-                .cause(e)
-                .haltError();
-        }
-    }
-
-    private String urlDecodeDomain(String domainName) {
-        try {
-            return URLDecoder.decode(domainName, StandardCharsets.UTF_8.toString());
-        } catch (IllegalArgumentException | UnsupportedEncodingException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for domain creation %s unable to url decode some characters", domainName)
+                .message("Invalid request for domain creation %s", domainName)
                 .cause(e)
                 .haltError();
         }
