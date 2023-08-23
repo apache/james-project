@@ -8,6 +8,8 @@ Accepted (lazy consensus).
 
 Implemented.
 
+Overridden by [Quota for JMAP uploads](0067-quota-for-jmap-uploads.md)
+
 ## Context
 
 JMAP allows users to upload binary content called blobs to be later referenced via method calls. This includes but is not
