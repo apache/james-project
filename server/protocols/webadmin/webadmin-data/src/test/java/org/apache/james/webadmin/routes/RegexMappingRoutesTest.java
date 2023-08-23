@@ -24,10 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
 
+import java.net.URLEncoder;
+
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.lib.Mapping;
@@ -41,7 +42,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
-import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 
 class RegexMappingRoutesTest {
@@ -63,6 +63,7 @@ class RegexMappingRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(RegexMappingRoutes.BASE_PATH)
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
             .build();
     }
 
@@ -136,7 +137,7 @@ class RegexMappingRoutesTest {
     @Test
     void addRegexMappingShouldReturnBadRequestWhenRegexIsInvalid() {
         with()
-            .post("james@domain.tld/targets/O.*[]")
+            .post("james@domain.tld/targets/"+ URLEncoder.encode("O.*[]"))
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -148,7 +149,7 @@ class RegexMappingRoutesTest {
     @Test
     void addRegexMappingShouldReturnNoContentWhenRegexContainsQuestionMark() {
         with()
-            .post("james@domain.tld/targets/^[aei%3Fou].*james@domain.tld")
+            .post("james@domain.tld/targets/" + URLEncoder.encode("^[aei?ou].*james@domain.tld"))
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204)
             .contentType(ContentType.JSON);
@@ -156,6 +157,23 @@ class RegexMappingRoutesTest {
         assertThat(memoryRecipientRewriteTable
             .getStoredMappings(MappingSource.fromUser(Username.of("james@domain.tld"))))
             .containsOnly(Mapping.regex("^[aei?ou].*james@domain.tld"));
+    }
+
+    @Test
+    void addRegexMappingShouldJustDecodeOneTime() {
+        String originalRegex = "^[aei?ou].*james@domain.tld";
+        String onceEncodedRegex = URLEncoder.encode(originalRegex);
+        String twiceEncodedRegex = URLEncoder.encode(onceEncodedRegex);
+
+        with()
+            .post("james@domain.tld/targets/" + twiceEncodedRegex)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204)
+            .contentType(ContentType.JSON);
+
+        assertThat(memoryRecipientRewriteTable
+            .getStoredMappings(MappingSource.fromUser(Username.of("james@domain.tld"))))
+            .containsOnly(Mapping.regex(onceEncodedRegex));
     }
 
     @Test
