@@ -117,7 +117,7 @@ class DomainsRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(DomainsRoutes.DOMAINS)
-            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
             .build();
     }
 
