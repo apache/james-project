@@ -22,9 +22,6 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -75,7 +72,7 @@ public class RegexMappingRoutes implements Routes {
     private HaltException addRegexMapping(Request request, Response response) throws Exception {
         try {
             MappingSource mappingSource = extractMappingSource(request);
-            String regex = URLDecoder.decode(request.params(REGEX_PARAM), StandardCharsets.UTF_8.toString());
+            String regex = request.params(REGEX_PARAM);
             recipientRewriteTable.addRegexMapping(mappingSource, regex);
         } catch (InvalidRegexException e) {
             throw ErrorResponder.builder()
@@ -90,7 +87,7 @@ public class RegexMappingRoutes implements Routes {
     private HaltException removeRegexMapping(Request request, Response response) throws Exception {
         try {
             MappingSource mappingSource = MappingSource.parse(request.params(MAPPING_SOURCE_PARAM));
-            String regex = URLDecoder.decode(request.params(REGEX_PARAM), StandardCharsets.UTF_8.toString());
+            String regex = request.params(REGEX_PARAM);
             recipientRewriteTable.removeRegexMapping(mappingSource, regex);
         } catch (RecipientRewriteTableException e) {
             throw ErrorResponder.builder()
