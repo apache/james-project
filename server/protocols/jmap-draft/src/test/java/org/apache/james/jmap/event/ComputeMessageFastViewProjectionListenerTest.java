@@ -27,6 +27,7 @@ import static org.mockito.Mockito.spy;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 
 import org.apache.james.blob.api.BucketName;
@@ -138,7 +139,8 @@ class ComputeMessageFastViewProjectionListenerTest {
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
 
         BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
-            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory())));
+            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"),
+                new HashBlobId.Factory()), Clock.systemUTC()));
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager, messageFastViewProjection);
 
         FakeAuthenticator authenticator = new FakeAuthenticator();

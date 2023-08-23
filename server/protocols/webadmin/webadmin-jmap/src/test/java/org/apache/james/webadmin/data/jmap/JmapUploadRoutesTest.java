@@ -109,7 +109,7 @@ class JmapUploadRoutesTest {
             new HashBlobId.Factory(),
             new UploadConfiguration(Duration.ofSeconds(5))),
             blobStore,
-            bucketNameGenerator);
+            bucketNameGenerator, clock);
 
         JsonTransformer jsonTransformer = new JsonTransformer();
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(UploadCleanupTaskAdditionalInformationDTO.SERIALIZATION_MODULE));

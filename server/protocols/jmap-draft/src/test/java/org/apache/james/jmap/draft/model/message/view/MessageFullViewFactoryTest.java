@@ -32,6 +32,7 @@ import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -133,7 +134,8 @@ class MessageFullViewFactoryTest {
 
         fastViewProjection = spy(new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
         BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
-            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory())));
+            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(),
+                BucketName.of("default"), new HashBlobId.Factory()), Clock.systemUTC()));
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor,
             messageIdManager,
             fastViewProjection);

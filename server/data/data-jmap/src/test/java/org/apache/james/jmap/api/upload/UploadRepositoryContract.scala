@@ -26,12 +26,15 @@
  import org.apache.commons.io.IOUtils
  import org.apache.james.core.Username
  import org.apache.james.jmap.api.model.Size.sanitizeSize
- import org.apache.james.jmap.api.model.{Upload, UploadId, UploadNotFoundException}
+ import org.apache.james.jmap.api.model.{Upload, UploadId, UploadMetaData, UploadNotFoundException}
  import org.apache.james.jmap.api.upload.UploadRepositoryContract.{CONTENT_TYPE, DATA_STRING, USER}
  import org.apache.james.mailbox.model.ContentType
- import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
+ import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
  import org.junit.jupiter.api.Test
- import reactor.core.scala.publisher.SMono
+ import reactor.core.scala.publisher.{SFlux, SMono}
+ import org.assertj.core.groups.Tuple.tuple
+
+ import scala.jdk.CollectionConverters._
 
  object UploadRepositoryContract {
    private lazy val CONTENT_TYPE: ContentType = ContentType
@@ -85,6 +88,8 @@
        .isEqualTo(sanitizeSize(DATA_STRING.length))
      assertThat(actualUpload.content.apply().readAllBytes())
        .isEqualTo(DATA_STRING.getBytes)
+     assertThat(actualUpload.uploadDate)
+       .isNotNull
    }
 
    @Test
@@ -99,6 +104,75 @@
 
      assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(uploadId, Username.of("Alice"))).block())
        .isInstanceOf(classOf[UploadNotFoundException])
+   }
+
+   @Test
+   def listUploadsShouldReturnEmptyWhenNoUpload(): Unit = {
+     assertThat(SFlux.fromPublisher(testee.listUploads(USER)).collectSeq().block().asJava)
+       .isEmpty()
+   }
+
+   @Test
+   def listUploadsShouldReturnUserUploads(): Unit = {
+     val contentType1: ContentType = ContentType
+       .of("text/html")
+     val contentType2: ContentType = ContentType
+       .of("json")
+
+     val data1: InputStream = IOUtils.toInputStream("123321", StandardCharsets.UTF_8)
+     val data2: InputStream = IOUtils.toInputStream("t2", StandardCharsets.UTF_8)
+
+     val uploadId1: UploadId = SMono.fromPublisher(testee.upload(data1, contentType1, USER)).block().uploadId
+     val uploadId2: UploadId = SMono.fromPublisher(testee.upload(data2, contentType2, USER)).block().uploadId
+
+     val uploadMetaDataList: Seq[UploadMetaData] = SFlux.fromPublisher(testee.listUploads(USER)).collectSeq().block();
+
+     assertThat(uploadMetaDataList.asJava)
+       .extracting("uploadId", "contentType", "size")
+       .containsExactlyInAnyOrder(tuple(uploadId1, contentType1, 6L),
+         tuple(uploadId2, contentType2, 2L))
+
+     assertThat(uploadMetaDataList.asJava)
+       .extracting("blobId", "uploadDate")
+       .doesNotContainNull()
+   }
+
+   @Test
+   def listUploadShouldNotReturnEntryOfAnotherUser(): Unit = {
+      val data1: InputStream = IOUtils.toInputStream("123321", StandardCharsets.UTF_8)
+      val data2: InputStream = IOUtils.toInputStream("t2", StandardCharsets.UTF_8)
+
+      val uploadId1: UploadId = SMono.fromPublisher(testee.upload(data1, CONTENT_TYPE, USER)).block().uploadId
+      val uploadId2: UploadId = SMono.fromPublisher(testee.upload(data2, CONTENT_TYPE, Username.of("Alice"))).block().uploadId
+
+      val uploadMetaDataList: Seq[UploadMetaData] = SFlux.fromPublisher(testee.listUploads(USER)).collectSeq().block();
+
+      assertThat(uploadMetaDataList.asJava)
+        .extracting("uploadId")
+        .containsExactlyInAnyOrder(uploadId1)
+   }
+
+   @Test
+   def deleteShouldRemoveUpload(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     SMono.fromPublisher(testee.delete(uploadId, USER)).block()
+     assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(uploadId, USER)).block())
+       .isInstanceOf(classOf[UploadNotFoundException])
+   }
+
+   @Test
+   def deleteShouldNotThrowWhenUploadIdIsNotExist(): Unit = {
+     assertThatCode(() => SMono.fromPublisher(testee.delete(randomUploadId(), USER)).block())
+       .doesNotThrowAnyException()
+   }
+
+   @Test
+   def deleteShouldNotRemoveUploadOfAnotherUser(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+     SMono.fromPublisher(testee.delete(uploadId, Username.of("Alice"))).block()
+     assertThat(SMono.fromPublisher(testee.retrieve(uploadId, USER)).block())
+       .isNotNull
    }
 
  }

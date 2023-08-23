@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.memory.upload;
 
+import java.time.Clock;
+
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -35,7 +37,7 @@ public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
     @BeforeEach
     void setUp() {
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new HashBlobId.Factory());
-        testee = new InMemoryUploadRepository(blobStore);
+        testee = new InMemoryUploadRepository(blobStore, Clock.systemUTC());
     }
 
     @Override

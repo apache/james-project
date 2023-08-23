@@ -22,6 +22,8 @@ package org.apache.james.jmap.draft.model.message.view;
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.BOB;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
+
 import javax.mail.Flags;
 
 import org.apache.james.blob.api.BucketName;
@@ -76,7 +78,8 @@ class MessageMetadataViewFactoryTest {
             session).getId();
 
         BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
-            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory())));
+            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
+                Clock.systemUTC()));
         testee = new MessageMetadataViewFactory(blobManager, messageIdManager);
     }
 

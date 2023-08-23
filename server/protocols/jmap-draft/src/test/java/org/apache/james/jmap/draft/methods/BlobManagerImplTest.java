@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -86,7 +87,8 @@ class BlobManagerImplTest {
         session = MailboxSessionUtil.create(Username.of("user"));
 
         blobManager = new BlobManagerImpl(attachmentManager, messageIdManager, new TestMessageId.Factory(),
-            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory())));
+            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
+                Clock.systemUTC()));
     }
 
     @Test
