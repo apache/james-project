@@ -28,13 +28,9 @@ import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.mailbox.model.ContentType;
 import org.reactivestreams.Publisher;
 
-public interface UploadRepository {
+public interface UploadService {
     Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user);
 
     Publisher<Upload> retrieve(UploadId id, Username user);
 
-    Publisher<Void> delete(UploadId id, Username user);
-
-    Publisher<UploadMetaData> listUploads(Username user);
 }
-

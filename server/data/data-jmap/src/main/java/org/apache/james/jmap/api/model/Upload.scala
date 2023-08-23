@@ -20,6 +20,7 @@
 package org.apache.james.jmap.api.model
 
 import java.io.InputStream
+import java.time.Instant
 
 import org.apache.james.blob.api.BlobId
 import org.apache.james.jmap.api.model.Size.Size
@@ -31,12 +32,14 @@ object Upload {
     Upload(uploadId = metaData.uploadId,
       size = metaData.size,
       contentType = metaData.contentType,
-      content = content)
+      content = content,
+      uploadDate = metaData.uploadDate)
 }
 
 case class Upload(uploadId: UploadId,
                   size: Size,
                   contentType: ContentType,
+                  uploadDate: Instant,
                   content: () => InputStream) {
   def sizeAsLong(): java.lang.Long = size.value
 }
@@ -44,17 +47,19 @@ case class Upload(uploadId: UploadId,
 case class UploadNotFoundException(uploadId: UploadId) extends RuntimeException(s"Upload not found $uploadId")
 
 object UploadMetaData {
-  def from(uploadId: UploadId, contentType: ContentType, size: Long, blobId: BlobId): UploadMetaData =
+  def from(uploadId: UploadId, contentType: ContentType, size: Long, blobId: BlobId, uploadDate: Instant): UploadMetaData =
     UploadMetaData(uploadId = uploadId,
       contentType = contentType,
       size = Size.sanitizeSize(size),
-      blobId = blobId)
+      blobId = blobId,
+      uploadDate = uploadDate)
 }
 
 case class UploadMetaData(uploadId: UploadId,
                           contentType: ContentType,
                           size: Size,
-                          blobId: BlobId) {
+                          blobId: BlobId,
+                          uploadDate: Instant) {
   def sizeAsLong(): java.lang.Long = size.value
 }
 

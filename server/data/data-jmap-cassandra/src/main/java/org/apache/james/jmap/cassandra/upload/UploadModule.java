@@ -31,7 +31,7 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface UploadModule {
 
-    String TABLE_NAME = "uploads";
+    String TABLE_NAME = "uploads_2";
 
     CqlIdentifier ID = CqlIdentifier.fromCql("id");
     CqlIdentifier CONTENT_TYPE = CqlIdentifier.fromCql("content_type");
@@ -39,6 +39,7 @@ public interface UploadModule {
     CqlIdentifier BUCKET_ID = CqlIdentifier.fromCql("bucket_id");
     CqlIdentifier BLOB_ID = CqlIdentifier.fromCql("blob_id");
     CqlIdentifier USER = CqlIdentifier.fromCql("user");
+    CqlIdentifier UPLOAD_DATE = CqlIdentifier.fromCql("upload_date");
 
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .comment("Holds JMAP uploads")
@@ -47,11 +48,12 @@ public interface UploadModule {
                 .withCompactionWindow(7, DAYS))
             .withCaching(true, rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> types -> statement
-            .withPartitionKey(ID, DataTypes.TIMEUUID)
+            .withPartitionKey(USER, DataTypes.TEXT)
+            .withClusteringColumn(ID, DataTypes.TIMEUUID)
             .withColumn(CONTENT_TYPE, DataTypes.TEXT)
             .withColumn(SIZE, DataTypes.BIGINT)
             .withColumn(BUCKET_ID, DataTypes.TEXT)
             .withColumn(BLOB_ID, DataTypes.TEXT)
-            .withColumn(USER, DataTypes.TEXT))
+            .withColumn(UPLOAD_DATE, DataTypes.TIMESTAMP))
         .build();
 }

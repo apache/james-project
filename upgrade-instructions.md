@@ -18,6 +18,14 @@ Changes to apply between 3.8.x and 3.9.0 will be reported here.
 Change list:
 
  - [Imap Packages](#imap-packages)
+ - [Jmap uploads](#jmap-uploads)
+
+### Jmap Uploads
+
+Date: 24/08/2023
+
+`uploads` table can be deleted. Note that pending uploads will be lost during the migration, they are not used anymore.
+
 
 ### Imap Packages
 

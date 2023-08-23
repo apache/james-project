@@ -21,6 +21,8 @@ package org.apache.james.jmap.memory.upload;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,19 +43,24 @@ import org.reactivestreams.Publisher;
 import com.google.common.base.Preconditions;
 import com.google.common.io.CountingInputStream;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class InMemoryUploadRepository implements UploadRepository {
 
-    private static final Map<UploadId, ImmutablePair<Username, UploadMetaData>> uploadStore = new HashMap<>();
+    private final Map<UploadId, ImmutablePair<Username, UploadMetaData>> uploadStore;
 
     private final BlobStore blobStore;
     private final BucketName bucketName;
 
+    private final Clock clock;
+
     @Inject
-    public InMemoryUploadRepository(BlobStore blobStore) {
+    public InMemoryUploadRepository(BlobStore blobStore, Clock clock) {
         this.blobStore = blobStore;
         this.bucketName = blobStore.getDefaultBucketName();
+        this.clock = clock;
+        this.uploadStore = new HashMap<>();
     }
 
     @Override
@@ -66,8 +73,9 @@ public class InMemoryUploadRepository implements UploadRepository {
             .flatMap(dataAsByte -> Mono.from(blobStore.save(bucketName, dataAsByte, BlobStore.StoragePolicy.LOW_COST))
                 .map(blobId -> {
                     UploadId uploadId = UploadId.random();
-                    uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId)));
-                    return UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId);
+                    Instant uploadDate = clock.instant();
+                    uploadStore.put(uploadId, new ImmutablePair<>(user, UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId, uploadDate)));
+                    return UploadMetaData.from(uploadId, contentType, dataAsByte.getCount(), blobId, uploadDate);
                 })
             );
     }
@@ -81,6 +89,21 @@ public class InMemoryUploadRepository implements UploadRepository {
             .filter(pair -> user.equals(pair.left))
             .flatMap(userAndMetaData -> retrieveUpload(userAndMetaData.right))
             .switchIfEmpty(Mono.error(() -> new UploadNotFoundException(id)));
+    }
+
+    @Override
+    public Publisher<Void> delete(UploadId id, Username user) {
+        return Mono.justOrEmpty(uploadStore.get(id))
+            .filter(pair -> user.equals(pair.left))
+            .doOnNext(pair -> uploadStore.remove(id))
+            .then();
+    }
+
+    @Override
+    public Publisher<UploadMetaData> listUploads(Username user) {
+        return Flux.fromIterable(uploadStore.values())
+            .filter(pair -> user.equals(pair.left))
+            .map(pair -> pair.right);
     }
 
     private Mono<Upload> retrieveUpload(UploadMetaData uploadMetaData) {

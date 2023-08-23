@@ -21,6 +21,9 @@ package org.apache.james.jmap.api.upload;
 
 import java.io.InputStream;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.Upload;
 import org.apache.james.jmap.api.model.UploadId;
@@ -28,13 +31,23 @@ import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.mailbox.model.ContentType;
 import org.reactivestreams.Publisher;
 
-public interface UploadRepository {
-    Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user);
+public class UploadServiceDefaultImpl implements UploadService {
 
-    Publisher<Upload> retrieve(UploadId id, Username user);
+    private final UploadRepository repository;
 
-    Publisher<Void> delete(UploadId id, Username user);
+    @Inject
+    @Singleton
+    public UploadServiceDefaultImpl(UploadRepository repository) {
+        this.repository = repository;
+    }
 
-    Publisher<UploadMetaData> listUploads(Username user);
+    @Override
+    public Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
+        return repository.upload(data, contentType, user);
+    }
+
+    @Override
+    public Publisher<Upload> retrieve(UploadId id, Username user) {
+        return repository.retrieve(id, user);
+    }
 }
-

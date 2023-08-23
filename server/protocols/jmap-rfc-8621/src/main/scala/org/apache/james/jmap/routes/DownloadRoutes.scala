@@ -35,7 +35,7 @@ import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.api.model.{Upload, UploadId, UploadNotFoundException}
-import org.apache.james.jmap.api.upload.UploadRepository
+import org.apache.james.jmap.api.upload.UploadService
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, ProblemDetails, SessionTranslator}
 import org.apache.james.jmap.exceptions.UnauthorizedException
@@ -152,7 +152,7 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
   }
 }
 
-class UploadResolver @Inject()(val uploadRepository: UploadRepository) extends BlobResolver {
+class UploadResolver @Inject()(val uploadService: UploadService) extends BlobResolver {
   private val prefix = "uploads-"
 
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
@@ -163,7 +163,7 @@ class UploadResolver @Inject()(val uploadRepository: UploadRepository) extends B
       Try(UploadId.from(uploadIdAsString)) match {
         case Failure(_) => NonApplicable
         case Success(uploadId) => Applicable(
-          SMono(uploadRepository.retrieve(uploadId, mailboxSession.getUser))
+          SMono(uploadService.retrieve(uploadId, mailboxSession.getUser))
             .map(upload => UploadedBlob(blobId, upload))
             .onErrorResume {
               case _: UploadNotFoundException => SMono.error(BlobNotFoundException(blobId))

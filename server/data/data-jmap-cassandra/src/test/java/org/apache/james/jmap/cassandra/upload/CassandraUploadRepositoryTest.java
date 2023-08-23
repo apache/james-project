@@ -50,11 +50,11 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
 
     @BeforeEach
     void setUp() {
+        Clock clock = Clock.systemUTC();
         testee = new CassandraUploadRepository(new UploadDAO(cassandra.getCassandraCluster().getConf(),
             new HashBlobId.Factory(),
-            new UploadConfiguration(Duration.ofSeconds(5))),
-            new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
-            new BucketNameGenerator(Clock.systemUTC()));
+            new UploadConfiguration(Duration.ofSeconds(5))), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
+            new BucketNameGenerator(clock), clock);
     }
 
     @Override

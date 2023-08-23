@@ -33,7 +33,7 @@ import org.apache.commons.fileupload.util.LimitedInputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.api.model.{UploadId, UploadMetaData}
-import org.apache.james.jmap.api.upload.UploadRepository
+import org.apache.james.jmap.api.upload.UploadService
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, ProblemDetails, SessionTranslator}
 import org.apache.james.jmap.exceptions.UnauthorizedException
@@ -66,7 +66,7 @@ case class UploadResponse(accountId: AccountId,
 
 class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                              val configuration: JmapRfc8621Configuration,
-                             val uploadRepository: UploadRepository,
+                             val uploadService: UploadService,
                              val serializer: UploadSerializer,
                              val sessionTranslator: SessionTranslator) extends JMAPRoutes {
 
@@ -156,7 +156,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
 
   def uploadContent(accountId: AccountId, contentType: ContentType, inputStream: InputStream, session: MailboxSession): SMono[UploadResponse] =
     SMono
-      .fromPublisher(uploadRepository.upload(inputStream, contentType, session.getUser))
+      .fromPublisher(uploadService.upload(inputStream, contentType, session.getUser))
       .map(fromAttachment(_, accountId))
 
   private def fromAttachment(uploadMetaData: UploadMetaData, accountId: AccountId): UploadResponse =
