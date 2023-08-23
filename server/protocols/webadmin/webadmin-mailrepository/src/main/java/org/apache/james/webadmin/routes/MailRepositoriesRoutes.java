@@ -21,7 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.time.Clock;
 import java.util.Optional;
 import java.util.Set;
@@ -119,7 +118,7 @@ public class MailRepositoriesRoutes implements Routes {
 
     public void definePutMailRepository() {
         service.put(MAIL_REPOSITORIES + "/:encodedPath", (request, response) -> {
-            MailRepositoryPath path = decodedRepositoryPath(request);
+            MailRepositoryPath path = getRepositoryPath(request);
             String protocol = request.queryParams("protocol");
             try {
                 repositoryStoreService.createMailRepository(path, protocol);
@@ -146,7 +145,7 @@ public class MailRepositoriesRoutes implements Routes {
         service.get(MAIL_REPOSITORIES + "/:encodedPath/mails", (request, response) -> {
             Offset offset = ParametersExtractor.extractOffset(request);
             Limit limit = ParametersExtractor.extractLimit(request);
-            MailRepositoryPath path = decodedRepositoryPath(request);
+            MailRepositoryPath path = getRepositoryPath(request);
             try {
                 return repositoryStoreService.listMails(path, offset, limit)
                     .orElseThrow(() -> repositoryNotFound(request.params("encodedPath"), path));
@@ -171,13 +170,13 @@ public class MailRepositoriesRoutes implements Routes {
     public void defineGetMail() {
         service.get(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", Constants.JSON_CONTENT_TYPE,
             (request, response) ->
-                getMailAsJson(decodedRepositoryPath(request), new MailKey(request.params("mailKey")), request),
+                getMailAsJson(getRepositoryPath(request), new MailKey(request.params("mailKey")), request),
             jsonTransformer);
 
         service.get(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", Constants.RFC822_CONTENT_TYPE,
             (request, response) -> writeMimeMessage(
                 getMailAsMimeMessage(
-                    decodedRepositoryPath(request),
+                    getRepositoryPath(request),
                     new MailKey(request.params("mailKey"))),
                 response.raw()));
     }
@@ -262,7 +261,7 @@ public class MailRepositoriesRoutes implements Routes {
 
     public void defineGetMailRepository() {
         service.get(MAIL_REPOSITORIES + "/:encodedPath", (request, response) -> {
-            MailRepositoryPath path = decodedRepositoryPath(request);
+            MailRepositoryPath path = getRepositoryPath(request);
             try {
                 long size = repositoryStoreService.size(path)
                     .orElseThrow(() -> repositoryNotFound(request.params("encodedPath"), path));
@@ -280,7 +279,7 @@ public class MailRepositoriesRoutes implements Routes {
 
     public void defineDeleteMail() {
         service.delete(MAIL_REPOSITORIES + "/:encodedPath/mails/:mailKey", (request, response) -> {
-            MailRepositoryPath path = decodedRepositoryPath(request);
+            MailRepositoryPath path = getRepositoryPath(request);
             MailKey mailKey = new MailKey(request.params("mailKey"));
             try {
                 repositoryStoreService.deleteMail(path, mailKey);
@@ -298,7 +297,7 @@ public class MailRepositoriesRoutes implements Routes {
 
     public void defineDeleteAll() {
         TaskFromRequest taskFromRequest = request -> {
-            MailRepositoryPath path = decodedRepositoryPath(request);
+            MailRepositoryPath path = getRepositoryPath(request);
             try {
                 return repositoryStoreService.createClearMailRepositoryTask(path);
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
@@ -320,8 +319,8 @@ public class MailRepositoriesRoutes implements Routes {
             jsonTransformer);
     }
 
-    private Task reprocessAll(Request request) throws UnsupportedEncodingException, MailRepositoryStore.MailRepositoryStoreException {
-        MailRepositoryPath path = decodedRepositoryPath(request);
+    private Task reprocessAll(Request request) throws MailRepositoryStore.MailRepositoryStoreException {
+        MailRepositoryPath path = getRepositoryPath(request);
 
         Long repositorySize = repositoryStoreService.size(path).orElse(0L);
         return new ReprocessingAllMailsTask(reprocessingService, repositorySize, path, extractConfiguration(request));
@@ -342,8 +341,8 @@ public class MailRepositoriesRoutes implements Routes {
             jsonTransformer);
     }
 
-    private Task reprocessOne(Request request) throws UnsupportedEncodingException {
-        MailRepositoryPath path = decodedRepositoryPath(request);
+    private Task reprocessOne(Request request) {
+        MailRepositoryPath path = getRepositoryPath(request);
         MailKey key = new MailKey(request.params("key"));
 
         return new ReprocessingOneMailTask(reprocessingService, path, extractConfiguration(request), key, Clock.systemUTC());
@@ -374,8 +373,8 @@ public class MailRepositoriesRoutes implements Routes {
             .orElse(MailQueueFactory.SPOOL);
     }
 
-    private MailRepositoryPath decodedRepositoryPath(Request request) throws UnsupportedEncodingException {
-        return MailRepositoryPath.fromEncoded(request.params("encodedPath"));
+    private MailRepositoryPath getRepositoryPath(Request request) {
+        return MailRepositoryPath.from(request.params("encodedPath"));
     }
 
     private Limit parseLimit(Request request) {
