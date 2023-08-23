@@ -26,8 +26,12 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -38,10 +42,11 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.WithStorageDirective;
 import org.apache.james.transport.matchers.SenderIsLocal;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
 import org.apache.james.utils.TestIMAPClient;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -56,8 +61,10 @@ class WithStorageDirectiveIntegrationTest {
     private TemporaryJamesServer jamesServer;
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws IOException {
         jamesServer.shutdown();
+        testIMAPClient.close();
+        messageSender.close();
     }
 
     @Test
@@ -116,16 +123,27 @@ class WithStorageDirectiveIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute.until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(RECIPIENT, PASSWORD)
-            .select("target1")
-            .awaitMessage(awaitAtMostOneMinute)
-            .close();
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(RECIPIENT, PASSWORD)
-            .select("target2")
-            .awaitMessage(awaitAtMostOneMinute)
-            .close();
+
+        ConditionFactory imapAwait = Awaitility.with()
+            .pollInterval(FIVE_HUNDRED_MILLISECONDS)
+            .await()
+            .atMost(TEN_SECONDS);
+
+        awaitAtMostOneMinute.untilAsserted(() ->
+            assertThatCode(() -> testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(RECIPIENT, PASSWORD)
+                .select("target1")
+                .awaitMessage(imapAwait)
+                .close())
+                .doesNotThrowAnyException());
+
+        awaitAtMostOneMinute.untilAsserted(() ->
+            assertThatCode(() -> testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(RECIPIENT, PASSWORD)
+                .select("target2")
+                .awaitMessage(imapAwait)
+                .close())
+                .doesNotThrowAnyException());
     }
 
     @Test
