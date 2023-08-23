@@ -21,8 +21,6 @@ package org.apache.james.core.quota;
 
 import java.util.Objects;
 
-import org.apache.james.core.Username;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
