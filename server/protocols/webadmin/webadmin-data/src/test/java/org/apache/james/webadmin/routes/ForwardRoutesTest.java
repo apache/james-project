@@ -88,6 +88,7 @@ class ForwardRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/forwards")
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
             .build();
     }
 
@@ -404,6 +405,19 @@ class ForwardRoutesTest {
                 .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Requested base forward address does not correspond to a user");
+        }
+
+        @Test
+        void addForwardWithOneTimeUrlEncodedAddressShouldSucceed() {
+            with()
+                .put(ALICE + SEPARATOR + "targets" + SEPARATOR + URLEncoder.encode("alice+tag@james.org", StandardCharsets.UTF_8));
+
+            when()
+                .get(ALICE)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("mailAddress", hasItems("alice+tag@james.org"));
         }
 
         @Test

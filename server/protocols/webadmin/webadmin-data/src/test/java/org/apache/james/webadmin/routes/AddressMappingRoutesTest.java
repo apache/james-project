@@ -46,9 +46,11 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 class AddressMappingRoutesTest {
-    private static String MAPPING_SOURCE = "source@domain.tld";
-    private static String ALICE_ADDRESS = "alice@domain.tld";
-    private static String BOB_ADDRESS = "bob@domain.tld";
+    private static final String MAPPING_SOURCE = "source@domain.tld";
+    private static final String ALICE_ADDRESS = "alice@domain.tld";
+    private static final String ALICE_WITH_SLASH = "alice/@domain.tld";
+    private static final String ALICE_WITH_ENCODED_SLASH = "alice%2F@domain.tld";
+    private static final String BOB_ADDRESS = "bob@domain.tld";
 
     private WebAdminServer webAdminServer;
     private MemoryRecipientRewriteTable recipientRewriteTable;
@@ -70,6 +72,7 @@ class AddressMappingRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(AddressMappingRoutes.BASE_PATH)
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
             .build();
     }
 
@@ -85,6 +88,15 @@ class AddressMappingRoutesTest {
 
         assertThat(recipientRewriteTable.getStoredMappings(MappingSource.parse(MAPPING_SOURCE)))
             .containsAnyOf(Mapping.of(ALICE_ADDRESS));
+    }
+
+    @Test
+    void addAddressMappingShouldSupportOneTimeEncodedAddress() {
+        when()
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_WITH_ENCODED_SLASH);
+
+        assertThat(recipientRewriteTable.getStoredMappings(MappingSource.parse(MAPPING_SOURCE)))
+            .containsAnyOf(Mapping.of(ALICE_WITH_SLASH));
     }
 
     @Test

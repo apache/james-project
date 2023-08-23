@@ -90,6 +90,7 @@ class AliasRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/aliases")
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
             .build();
     }
 
