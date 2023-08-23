@@ -21,9 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -280,11 +277,8 @@ public class UserQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    private Username checkUserExist(Request request) throws UsersRepositoryException, UnsupportedEncodingException {
-        String user = URLDecoder.decode(request.params(USER),
-            StandardCharsets.UTF_8.displayName());
-
-        Username username = Username.of(user);
+    private Username checkUserExist(Request request) throws UsersRepositoryException {
+        Username username = Username.of(request.params(USER));
 
         if (!usersRepository.contains(username)) {
             throw ErrorResponder.builder()
