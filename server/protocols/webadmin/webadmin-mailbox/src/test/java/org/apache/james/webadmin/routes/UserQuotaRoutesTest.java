@@ -102,7 +102,8 @@ class UserQuotaRoutesTest {
         usersRepository.addUser(JACK, PASSWORD);
         usersRepository.addUser(GUY_WITH_STRANGE_DOMAIN, PASSWORD);
 
-        RestAssured.requestSpecification = testSystem.getRequestSpecification();
+        RestAssured.requestSpecification = testSystem.getRequestSpecification()
+            .urlEncodingEnabled(false); // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
