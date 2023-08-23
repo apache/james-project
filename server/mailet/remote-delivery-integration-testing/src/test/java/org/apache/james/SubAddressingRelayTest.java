@@ -117,7 +117,7 @@ class SubAddressingRelayTest {
     }
 
     @Test
-    void remoteDeliveryShouldCarryOverDSNParameters(DockerMockSmtp mockSmtp) throws Exception {
+    void remoteDeliveryShouldAcceptSubAddressing(DockerMockSmtp mockSmtp) throws Exception {
         AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient("TLS", "UTF-8");
 
         try {
