@@ -30,6 +30,8 @@ import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraDomainMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
+import org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable;
+import org.apache.james.mailbox.cassandra.table.CassandraQuotaLimitTable;
 
 public interface CassandraQuotaModule {
     CassandraModule MODULE = CassandraModule.builder()
@@ -68,5 +70,26 @@ public interface CassandraQuotaModule {
             .withPartitionKey(CassandraGlobalMaxQuota.KEY, TEXT)
             .withColumn(CassandraGlobalMaxQuota.STORAGE, BIGINT)
             .withColumn(CassandraGlobalMaxQuota.MESSAGE, BIGINT))
+
+        .table(CassandraQuotaLimitTable.TABLE_NAME)
+        .comment("Holds quota limits.")
+        .options(options -> options
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraQuotaLimitTable.QUOTA_SCOPE, TEXT)
+            .withPartitionKey(CassandraQuotaLimitTable.IDENTIFIER, TEXT)
+            .withClusteringColumn(CassandraQuotaLimitTable.QUOTA_COMPONENT, TEXT)
+            .withClusteringColumn(CassandraQuotaLimitTable.QUOTA_TYPE, TEXT)
+            .withColumn(CassandraQuotaLimitTable.QUOTA_LIMIT, BIGINT))
+
+        .table(CassandraQuotaCurrentValueTable.TABLE_NAME)
+        .comment("Holds quota current values.")
+        .options(options -> options
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraQuotaCurrentValueTable.IDENTIFIER, TEXT)
+            .withClusteringColumn(CassandraQuotaCurrentValueTable.QUOTA_COMPONENT, TEXT)
+            .withClusteringColumn(CassandraQuotaCurrentValueTable.QUOTA_TYPE, TEXT)
+            .withColumn(CassandraQuotaCurrentValueTable.CURRENT_VALUE, COUNTER))
         .build();
 }

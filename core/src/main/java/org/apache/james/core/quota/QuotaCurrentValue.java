@@ -21,8 +21,6 @@ package org.apache.james.core.quota;
 
 import java.util.Objects;
 
-import org.apache.james.core.Username;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
@@ -30,7 +28,7 @@ public class QuotaCurrentValue {
 
     public static class Builder {
         private QuotaComponent quotaComponent;
-        private Username identifier;
+        private String identifier;
         private QuotaType quotaType;
         private long currentValue;
 
@@ -39,7 +37,7 @@ public class QuotaCurrentValue {
             return this;
         }
 
-        public Builder identifier(Username identifier) {
+        public Builder identifier(String identifier) {
             this.identifier = identifier;
             return this;
         }
@@ -68,11 +66,11 @@ public class QuotaCurrentValue {
     }
 
     private final QuotaComponent quotaComponent;
-    private final Username identifier;
+    private final String identifier;
     private final QuotaType quotaType;
     private final long currentValue;
 
-    private QuotaCurrentValue(QuotaComponent quotaComponent, Username identifier, QuotaType quotaType, long currentValue) {
+    private QuotaCurrentValue(QuotaComponent quotaComponent, String identifier, QuotaType quotaType, long currentValue) {
         this.quotaComponent = quotaComponent;
         this.identifier = identifier;
         this.quotaType = quotaType;
@@ -83,7 +81,7 @@ public class QuotaCurrentValue {
         return quotaComponent;
     }
 
-    public Username getIdentifier() {
+    public String getIdentifier() {
         return identifier;
     }
 
