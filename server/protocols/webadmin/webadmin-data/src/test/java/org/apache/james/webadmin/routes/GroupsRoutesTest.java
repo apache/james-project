@@ -88,6 +88,7 @@ class GroupsRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath("address/groups")
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client
             .build();
     }
 

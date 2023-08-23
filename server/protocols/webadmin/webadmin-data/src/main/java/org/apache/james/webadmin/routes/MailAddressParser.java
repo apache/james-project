@@ -19,10 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
@@ -37,22 +33,13 @@ class MailAddressParser {
 
     static MailAddress parseMailAddress(String address, String addressType) {
         try {
-            String decodedAddress = URLDecoder.decode(address, StandardCharsets.UTF_8.displayName());
-            return new MailAddress(decodedAddress);
+            return new MailAddress(address);
         } catch (AddressException e) {
             LOGGER.error("The {} {} is not an email address", addressType, address);
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("The %s is not an email address", addressType)
-                .cause(e)
-                .haltError();
-        } catch (UnsupportedEncodingException e) {
-            LOGGER.error("UTF-8 should be a valid encoding");
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .type(ErrorResponder.ErrorType.SERVER_ERROR)
-                .message("Internal server error - Something went bad on the server side.")
                 .cause(e)
                 .haltError();
         }
