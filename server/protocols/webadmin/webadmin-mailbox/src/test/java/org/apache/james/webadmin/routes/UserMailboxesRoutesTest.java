@@ -45,6 +45,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -182,6 +183,7 @@ class UserMailboxesRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(USERS_BASE + SEPARATOR + USERNAME.asString() + SEPARATOR + UserMailboxesRoutes.MAILBOXES)
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
             .build();
     }
 
@@ -331,7 +333,7 @@ class UserMailboxesRoutesTest {
             when(usersRepository.contains(USERNAME)).thenReturn(true);
 
             Map<String, Object> errors = when()
-                .put(INVALID_MAILBOX_NAME)
+                .put(URLEncoder.encode(INVALID_MAILBOX_NAME))
             .then()
                 .statusCode(BAD_REQUEST_400)
                 .contentType(JSON)
@@ -450,7 +452,7 @@ class UserMailboxesRoutesTest {
         @Test
         void getShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
             Map<String, Object> errors = when()
-                .get(MAILBOX_NAME + "%")
+                .get(URLEncoder.encode(MAILBOX_NAME + "%"))
             .then()
                 .statusCode(BAD_REQUEST_400)
                 .contentType(JSON)
@@ -469,7 +471,7 @@ class UserMailboxesRoutesTest {
         @Test
         void putShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
             Map<String, Object> errors = when()
-                .put(MAILBOX_NAME + "%")
+                .put(URLEncoder.encode(MAILBOX_NAME + "%"))
             .then()
                 .statusCode(BAD_REQUEST_400)
                 .contentType(JSON)
@@ -487,7 +489,7 @@ class UserMailboxesRoutesTest {
         @Test
         void deleteShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
             Map<String, Object> errors = when()
-                .put(MAILBOX_NAME + "%")
+                .put(URLEncoder.encode(MAILBOX_NAME + "%"))
             .then()
                 .statusCode(BAD_REQUEST_400)
                 .contentType(JSON)
@@ -505,7 +507,7 @@ class UserMailboxesRoutesTest {
         @Test
         void getShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
             Map<String, Object> errors = when()
-                .get("#" + MAILBOX_NAME)
+                .get(URLEncoder.encode("#" + MAILBOX_NAME))
             .then()
                 .statusCode(BAD_REQUEST_400)
                 .contentType(JSON)
@@ -535,7 +537,7 @@ class UserMailboxesRoutesTest {
         @Test
         void putShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
             Map<String, Object> errors = when()
-                .put("#" + MAILBOX_NAME)
+                .put(URLEncoder.encode("#" + MAILBOX_NAME))
             .then()
                 .statusCode(BAD_REQUEST_400)
                 .contentType(JSON)
@@ -561,7 +563,7 @@ class UserMailboxesRoutesTest {
         @Test
         void deleteShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
             Map<String, Object> errors = when()
-                .put("#" + MAILBOX_NAME)
+                .put(URLEncoder.encode("#" + MAILBOX_NAME))
             .then()
                 .statusCode(BAD_REQUEST_400)
                 .contentType(JSON)

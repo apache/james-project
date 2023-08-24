@@ -111,6 +111,7 @@ public class WebAdminUtils {
     }
 
     public static RequestSpecification spec(Port port) {
-        return given().spec(buildRequestSpecification(port).build());
+        return given().spec(buildRequestSpecification(port).build())
+            .urlEncodingEnabled(false); // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
     }
 }

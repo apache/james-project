@@ -93,6 +93,7 @@ class SieveScriptRoutesTest {
 
         RestAssured.requestSpecification = WebAdminUtils
             .buildRequestSpecification(webAdminServer)
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
             .build();
     }
 
@@ -123,7 +124,7 @@ class SieveScriptRoutesTest {
             "}";
         String body = given()
             .pathParam("userName", "userA")
-            .pathParam("scriptName", " ")
+            .pathParam("scriptName", "%20")
             .body(sieveContent)
         .when()
             .put("sieve/{userName}/scripts/{scriptName}")
@@ -144,7 +145,7 @@ class SieveScriptRoutesTest {
             " \"details\":null" +
             "}";
         String body = given()
-            .pathParam("userName", " ")
+            .pathParam("userName", "%20")
             .pathParam("scriptName", "scriptA")
             .body(sieveContent)
         .when()

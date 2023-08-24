@@ -95,6 +95,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
             .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
