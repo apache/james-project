@@ -31,6 +31,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -176,6 +177,7 @@ class UserRoutesTest {
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
                 .setBasePath(UserRoutes.USERS)
+                .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
                 .build();
 
             return server;
@@ -607,20 +609,19 @@ class UserRoutesTest {
 
             default Stream<Arguments> illegalCharacters() {
                 return Stream.of(
-                    Arguments.of("\""),
-                    Arguments.of("("),
-                    Arguments.of(")"),
-                    Arguments.of(","),
-                    Arguments.of(":"),
-                    Arguments.of(";"),
-                    Arguments.of("<"),
-                    Arguments.of(">"),
-                    Arguments.of("@"),
-                    Arguments.of("["),
-                    Arguments.of("\\"),
-                    Arguments.of("]"),
-                    Arguments.of(" ")
-                );
+                    Arguments.of(URLEncoder.encode("\"")),
+                    Arguments.of(URLEncoder.encode("(")),
+                    Arguments.of(URLEncoder.encode(")")),
+                    Arguments.of(URLEncoder.encode(",")),
+                    Arguments.of(URLEncoder.encode(":")),
+                    Arguments.of(URLEncoder.encode(";")),
+                    Arguments.of(URLEncoder.encode("<")),
+                    Arguments.of(URLEncoder.encode(">")),
+                    Arguments.of(URLEncoder.encode("@")),
+                    Arguments.of(URLEncoder.encode("[")),
+                    Arguments.of(URLEncoder.encode("\\")),
+                    Arguments.of(URLEncoder.encode("]")),
+                    Arguments.of("%20"));
             }
 
             @ParameterizedTest

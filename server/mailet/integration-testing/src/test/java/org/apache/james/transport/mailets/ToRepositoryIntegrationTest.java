@@ -88,6 +88,7 @@ class ToRepositoryIntegrationTest {
         webAdminAPI = WebAdminUtils.buildRequestSpecification(
             jamesServer.getProbe(WebAdminGuiceProbe.class)
                 .getWebAdminPort())
+            .setUrlEncodingEnabled(false) // no further automatically encoding by Rest Assured client. rf: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3936
             .build();
     }
 
