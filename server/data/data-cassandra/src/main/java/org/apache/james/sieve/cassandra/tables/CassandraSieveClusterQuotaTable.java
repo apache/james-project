@@ -21,6 +21,7 @@ package org.apache.james.sieve.cassandra.tables;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 
+@Deprecated() // To be removed after release 3.9.0
 public interface CassandraSieveClusterQuotaTable {
     String TABLE_NAME = "sieve_cluster_quota";
 
