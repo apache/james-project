@@ -21,6 +21,8 @@ package org.apache.james.sieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.lib.SieveRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +30,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveRepositoryTest implements SieveRepositoryContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
+        CassandraSieveRepositoryModule.MODULE, CassandraMutualizedQuotaModule.MODULE, CassandraSieveQuotaModule.MODULE));
 
     SieveRepository sieveRepository;
 
