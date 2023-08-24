@@ -33,6 +33,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -153,6 +155,19 @@ class ForwardRoutesTest {
                     .jsonPath()
                     .getList(".");
             assertThat(addresses).containsExactly(ALICE, CEDRIC);
+        }
+
+        @Test
+        void shouldSupportSubAddressing() {
+            with()
+                .put(ALICE + SEPARATOR + "targets" + SEPARATOR + URLEncoder.encode("bob+tag@" + DOMAIN.name(), StandardCharsets.UTF_8));
+
+            when()
+                .get(ALICE)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("mailAddress", hasItems("bob+tag@" + DOMAIN.name()));
         }
 
         @Test
