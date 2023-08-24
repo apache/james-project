@@ -20,6 +20,8 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.events.EventListener;
+import org.apache.james.jmap.api.upload.UploadUsageRepository;
+import org.apache.james.jmap.memory.upload.InMemoryUploadUsageRepository;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -52,6 +54,7 @@ public class MemoryQuotaModule extends AbstractModule {
         bind(MaxQuotaManager.class).to(InMemoryPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
         bind(CurrentQuotaManager.class).to(InMemoryCurrentQuotaManager.class);
+        bind(UploadUsageRepository.class).to(InMemoryUploadUsageRepository.class);
 
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(QuotaUpdater.class).to(ListeningCurrentQuotaUpdater.class);
