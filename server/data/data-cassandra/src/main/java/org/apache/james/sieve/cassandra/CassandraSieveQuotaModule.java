@@ -19,17 +19,15 @@
 
 package org.apache.james.sieve.cassandra;
 
-
-import com.datastax.oss.driver.api.core.type.DataTypes;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveTable;
 
+import com.datastax.oss.driver.api.core.type.DataTypes;
+
+@Deprecated() // To be removed after release 3.9.0
 public interface CassandraSieveQuotaModule {
-
     CassandraModule MODULE = CassandraModule.builder()
 
         .table(CassandraSieveSpaceTable.TABLE_NAME)
