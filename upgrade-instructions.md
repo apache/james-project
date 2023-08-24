@@ -19,13 +19,28 @@ Change list:
 
  - [Imap Packages](#imap-packages)
  - [Jmap uploads](#jmap-uploads)
+ - [Mutualize quota table](#mutualize-quota-table)
+
+### Mutualize quota table
+
+Date: 24/08/2023
+JIRA: https://issues.apache.org/jira/projects/JAMES/issues/JAMES-3926
+
+In order to upgrade to the latest Quota data model, one need to enable quota compatibility mode in `cassandra.properties`:
+
+```
+quota.compatibility.mode=true
+```
+
+This is required for going from Cassandra schema version 12 -> 13.
+
+then run the migration: https://james.apache.org/server/manage-webadmin.html#Cassandra_Schema_upgrades
 
 ### Jmap Uploads
 
 Date: 24/08/2023
 
 `uploads` table can be deleted. Note that pending uploads will be lost during the migration, they are not used anymore.
-
 
 ### Imap Packages
 
