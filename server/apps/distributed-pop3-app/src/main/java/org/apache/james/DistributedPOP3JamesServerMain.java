@@ -50,6 +50,8 @@ import org.apache.james.modules.data.CassandraDelegationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
+import org.apache.james.modules.data.CassandraSieveQuotaLegacyModule;
+import org.apache.james.modules.data.CassandraSieveQuotaModule;
 import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.data.CassandraVacationModule;
@@ -197,7 +199,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
             .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
-            .combineWith(chooseMailboxQuotaModule(configuration))
+            .combineWith(chooseQuotaModule(configuration))
             .combineWith(new UsersRepositoryModuleChooser(new CassandraUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .overrideWith(new DistributedPop3Module())
@@ -223,11 +225,11 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         };
     }
 
-    private static Module chooseMailboxQuotaModule(DistributedPOP3JamesConfiguration configuration) {
+    private static Module chooseQuotaModule(DistributedPOP3JamesConfiguration configuration) {
         if (configuration.isQuotaCompatibilityMode()) {
-            return new CassandraMailboxQuotaLegacyModule();
+            return Modules.combine(new CassandraMailboxQuotaLegacyModule(), new CassandraSieveQuotaLegacyModule());
         } else {
-            return new CassandraMailboxQuotaModule();
+            return Modules.combine(new CassandraMailboxQuotaModule(), new CassandraSieveQuotaModule());
         }
     }
 }
