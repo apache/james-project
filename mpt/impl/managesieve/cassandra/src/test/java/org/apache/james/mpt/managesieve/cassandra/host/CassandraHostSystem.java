@@ -24,7 +24,7 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieve.cassandra.CassandraActiveScriptDAO;
 import org.apache.james.sieve.cassandra.CassandraSieveDAO;
-import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAO;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV1;
 import org.apache.james.sieve.cassandra.CassandraSieveRepository;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
@@ -43,7 +43,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
     protected SieveRepository createSieveRepository() {
         return new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
-            new CassandraSieveQuotaDAO(cassandra.getConf()),
+            new CassandraSieveQuotaDAOV1(cassandra.getConf()),
             new CassandraActiveScriptDAO(cassandra.getConf()));
     }
 

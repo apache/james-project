@@ -36,7 +36,7 @@ class CassandraSieveRepositoryTest implements SieveRepositoryContract {
     void setUp(CassandraCluster cassandra) {
         sieveRepository = new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
-            new CassandraSieveQuotaDAO(cassandra.getConf()),
+            new CassandraSieveQuotaDAOV1(cassandra.getConf()),
             new CassandraActiveScriptDAO(cassandra.getConf()));
     }
 
