@@ -36,6 +36,7 @@ import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
 import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAO;
 import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV1;
 import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV2;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaModule;
 import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
@@ -63,7 +64,7 @@ class SieveQuotaMigrationTest {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraSieveRepositoryModule.MODULE,
+        CassandraSieveQuotaModule.MODULE,
         CassandraUsersRepositoryModule.MODULE,
         CassandraDomainListModule.MODULE,
         CassandraMutualizedQuotaModule.MODULE));

@@ -23,8 +23,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAO;
-import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV1;
 import org.apache.james.sieve.cassandra.CassandraSieveRepository;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -41,5 +39,6 @@ public class CassandraSieveRepositoryModule extends AbstractModule {
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.sieve.cassandra.CassandraSieveQuotaModule.MODULE);
     }
 }

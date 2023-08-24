@@ -25,6 +25,7 @@ import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
 import org.apache.james.mpt.ManageSieveMPTContract;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaModule;
 import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,7 @@ class CassandraManageSieveMPTTest implements ManageSieveMPTContract {
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraDomainListModule.MODULE,
         CassandraSieveRepositoryModule.MODULE,
+        CassandraSieveQuotaModule.MODULE,
         CassandraUsersRepositoryModule.MODULE));
 
     private ManageSieveHostSystem system;

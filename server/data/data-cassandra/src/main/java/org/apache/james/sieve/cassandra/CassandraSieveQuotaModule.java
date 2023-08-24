@@ -19,33 +19,39 @@
 
 package org.apache.james.sieve.cassandra;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveTable;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable;
+import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
+import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
+import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
+import org.apache.james.sieve.cassandra.tables.CassandraSieveTable;
 
-public interface CassandraSieveRepositoryModule {
+public interface CassandraSieveQuotaModule {
 
     CassandraModule MODULE = CassandraModule.builder()
 
-        .table(CassandraSieveTable.TABLE_NAME)
-        .comment("Holds SIEVE scripts.")
+        .table(CassandraSieveSpaceTable.TABLE_NAME)
+        .comment("Holds per user current space occupied by SIEVE scripts.")
         .options(options -> options)
         .statement(statement -> types -> statement
-            .withPartitionKey(CassandraSieveTable.USER_NAME, DataTypes.TEXT)
-            .withClusteringColumn(CassandraSieveTable.SCRIPT_NAME, DataTypes.TEXT)
-            .withColumn(CassandraSieveTable.SCRIPT_CONTENT, DataTypes.TEXT)
-            .withColumn(CassandraSieveTable.IS_ACTIVE, DataTypes.BOOLEAN)
-            .withColumn(CassandraSieveTable.SIZE, DataTypes.BIGINT))
+            .withPartitionKey(CassandraSieveSpaceTable.USER_NAME, DataTypes.TEXT)
+            .withColumn(CassandraSieveSpaceTable.SPACE_USED, DataTypes.COUNTER))
 
-        .table(CassandraSieveActiveTable.TABLE_NAME)
-        .comment("Denormalisation table. Allows per user direct active SIEVE script retrieval.")
+        .table(CassandraSieveQuotaTable.TABLE_NAME)
+        .comment("Holds per user size limitations for SIEVE script storage.")
         .options(options -> options)
         .statement(statement -> types -> statement
-            .withPartitionKey(CassandraSieveActiveTable.USER_NAME, DataTypes.TEXT)
-            .withColumn(CassandraSieveActiveTable.SCRIPT_NAME, DataTypes.TEXT)
-            .withColumn(CassandraSieveActiveTable.DATE, DataTypes.TIMESTAMP))
+            .withPartitionKey(CassandraSieveQuotaTable.USER_NAME, DataTypes.TEXT)
+            .withColumn(CassandraSieveQuotaTable.QUOTA, DataTypes.BIGINT))
+
+        .table(CassandraSieveClusterQuotaTable.TABLE_NAME)
+        .comment("Holds default size limitations for SIEVE script storage.")
+        .options(options -> options)
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraSieveClusterQuotaTable.NAME, DataTypes.TEXT)
+            .withColumn(CassandraSieveClusterQuotaTable.VALUE, DataTypes.BIGINT))
 
         .build();
 
