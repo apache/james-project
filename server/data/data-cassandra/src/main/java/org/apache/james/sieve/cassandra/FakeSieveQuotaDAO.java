@@ -31,6 +31,8 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import reactor.core.publisher.Mono;
 
 public class FakeSieveQuotaDAO implements CassandraSieveQuotaDAO {
+    private static final String MESSAGE = "Use quota compatility mode in cassandra.properties for running the 12 -> 13 migration";
+
     @Inject
     public FakeSieveQuotaDAO() {
 
@@ -38,41 +40,41 @@ public class FakeSieveQuotaDAO implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Long> spaceUsedBy(Username username) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> updateSpaceUsed(Username username, long spaceUsed) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Optional<QuotaSizeLimit>> getQuota() {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> setQuota(QuotaSizeLimit quota) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> removeQuota() {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Optional<QuotaSizeLimit>> getQuota(Username username) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> setQuota(Username username, QuotaSizeLimit quota) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> removeQuota(Username username) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 }
