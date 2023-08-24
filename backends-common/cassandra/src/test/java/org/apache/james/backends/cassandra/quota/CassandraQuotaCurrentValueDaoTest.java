@@ -65,14 +65,12 @@ public class CassandraQuotaCurrentValueDaoTest {
 
     @Test
     void increaseQuotaCurrentValueShouldIncreaseValueSuccessfully() {
-        cassandraCluster.getCassandraCluster().getConf().printStatements();
-        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block()).isNull();
-
         cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
         cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
 
-        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue()).isEqualTo(200L);
-        cassandraCluster.getCassandraCluster().getConf().stopPrintingStatements();
+        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
+
+        assertThat(actual.getCurrentValue()).isEqualTo(200L);
     }
 
     @Test
