@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.backends.cassandra.components;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaLimitTable.IDENTIFIER;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaLimitTable.QUOTA_COMPONENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaLimitTable.QUOTA_LIMIT;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaLimitTable.QUOTA_SCOPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaLimitTable.QUOTA_TYPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaLimitTable.TABLE_NAME;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.IDENTIFIER;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.QUOTA_COMPONENT;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.QUOTA_LIMIT;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.QUOTA_SCOPE;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.QUOTA_TYPE;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.TABLE_NAME;
 
 import java.util.Objects;
 

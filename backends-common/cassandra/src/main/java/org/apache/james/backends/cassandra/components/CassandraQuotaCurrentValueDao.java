@@ -17,18 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.backends.cassandra.components;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.CURRENT_VALUE;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.IDENTIFIER;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.QUOTA_COMPONENT;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.QUOTA_TYPE;
-import static org.apache.james.mailbox.cassandra.table.CassandraQuotaCurrentValueTable.TABLE_NAME;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueTable.CURRENT_VALUE;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueTable.IDENTIFIER;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueTable.QUOTA_COMPONENT;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueTable.QUOTA_TYPE;
+import static org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueTable.TABLE_NAME;
 
 import java.util.Objects;
 

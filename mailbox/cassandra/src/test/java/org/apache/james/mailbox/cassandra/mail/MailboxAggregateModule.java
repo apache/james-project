@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
@@ -59,5 +60,5 @@ public interface MailboxAggregateModule {
         CassandraUidModule.MODULE,
         CassandraThreadModule.MODULE);
 
-    CassandraModule MODULE_WITH_QUOTA = CassandraModule.aggregateModules(CassandraQuotaModule.MODULE, MODULE);
+    CassandraModule MODULE_WITH_QUOTA = CassandraModule.aggregateModules(CassandraQuotaModule.MODULE, CassandraMutualizedQuotaModule.MODULE, MODULE);
 }

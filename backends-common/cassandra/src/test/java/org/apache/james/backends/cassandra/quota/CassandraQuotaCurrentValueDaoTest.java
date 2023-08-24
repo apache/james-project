@@ -17,19 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.backends.cassandra.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatRuntimeException;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.core.Username;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaType;
-import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,20 +40,11 @@ public class CassandraQuotaCurrentValueDaoTest {
     private CassandraQuotaCurrentValueDao cassandraQuotaCurrentValueDao;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraMutualizedQuotaModule.MODULE));
 
     @BeforeEach
-    private void setup() {
-        cassandraQuotaCurrentValueDao = GuiceUtils.testInjector(cassandraCluster.getCassandraCluster()).getInstance(CassandraQuotaCurrentValueDao.class);
-        resetCounterToZero();
-    }
-
-    private void resetCounterToZero() {
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 0).block();
-        QuotaCurrentValue quotaCurrentValue = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        cassandraQuotaCurrentValueDao.decrease(QUOTA_KEY, quotaCurrentValue.getCurrentValue()).block();
-        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        assertThat(actual.getCurrentValue()).isEqualTo(0l);
+    void setup() {
+        cassandraQuotaCurrentValueDao = new CassandraQuotaCurrentValueDao(cassandraCluster.getCassandraCluster().getConf());
     }
 
     @Test
@@ -80,13 +69,12 @@ public class CassandraQuotaCurrentValueDaoTest {
 
     @Test
     void increaseQuotaCurrentValueShouldIncreaseValueSuccessfully() {
-        QuotaCurrentValue expected = QuotaCurrentValue.builder().quotaComponent(QUOTA_KEY.getQuotaComponent())
-            .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(200l).build();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100l).block();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100l).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
 
         QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        assertThat(actual).isEqualTo(expected);
+
+        assertThat(actual.getCurrentValue()).isEqualTo(200L);
     }
 
     @Test

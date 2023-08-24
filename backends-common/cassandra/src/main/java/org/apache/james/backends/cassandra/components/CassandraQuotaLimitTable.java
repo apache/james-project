@@ -17,15 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.table;
+package org.apache.james.backends.cassandra.components;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 
-public interface CassandraQuotaCurrentValueTable {
-    String TABLE_NAME = "quotaCurrentValue";
+public interface CassandraQuotaLimitTable {
+    String TABLE_NAME = "quotaLimit";
 
     CqlIdentifier IDENTIFIER = CqlIdentifier.fromCql("identifier");
     CqlIdentifier QUOTA_COMPONENT = CqlIdentifier.fromCql("quotaComponent");
     CqlIdentifier QUOTA_TYPE = CqlIdentifier.fromCql("quotaType");
-    CqlIdentifier CURRENT_VALUE = CqlIdentifier.fromCql("currentValue");
+    CqlIdentifier QUOTA_SCOPE = CqlIdentifier.fromCql("quotaScope");
+    CqlIdentifier QUOTA_LIMIT = CqlIdentifier.fromCql("quotaLimit");
 }
