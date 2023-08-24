@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
@@ -38,7 +39,8 @@ class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraBlobModule.MODULE,
-        CassandraQuotaModule.MODULE));
+        CassandraQuotaModule.MODULE,
+        CassandraMutualizedQuotaModule.MODULE));
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {

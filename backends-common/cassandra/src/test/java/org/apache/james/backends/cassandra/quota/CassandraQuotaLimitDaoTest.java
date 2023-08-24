@@ -17,22 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.backends.cassandra.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaLimit;
 import org.apache.james.core.quota.QuotaScope;
 import org.apache.james.core.quota.QuotaType;
-import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,11 +38,11 @@ public class CassandraQuotaLimitDaoTest {
     private CassandraQuotaLimitDao cassandraQuotaLimitDao;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraMutualizedQuotaModule.MODULE));
 
     @BeforeEach
-    private void setup() {
-        cassandraQuotaLimitDao = GuiceUtils.testInjector(cassandraCluster.getCassandraCluster()).getInstance(CassandraQuotaLimitDao.class);
+    void setup() {
+        cassandraQuotaLimitDao = new CassandraQuotaLimitDao(cassandraCluster.getCassandraCluster().getConf());
     }
 
     @Test

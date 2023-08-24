@@ -21,12 +21,12 @@ package org.apache.james.jmap.cassandra.upload;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.core.quota.QuotaType;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
-import org.apache.james.mailbox.cassandra.quota.CassandraQuotaCurrentValueDao;
 
 import reactor.core.publisher.Mono;
 
