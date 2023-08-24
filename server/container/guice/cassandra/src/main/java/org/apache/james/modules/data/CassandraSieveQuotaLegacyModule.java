@@ -20,26 +20,23 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.sieve.cassandra.CassandraSieveRepository;
-import org.apache.james.sieverepository.api.SieveQuotaRepository;
-import org.apache.james.sieverepository.api.SieveRepository;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAO;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV1;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
-public class CassandraSieveRepositoryModule extends AbstractModule {
+public class CassandraSieveQuotaLegacyModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(CassandraSieveRepository.class).in(Scopes.SINGLETON);
         bind(CassandraSieveQuotaDAOV1.class).in(Scopes.SINGLETON);
         bind(CassandraSieveQuotaDAO.class).to(CassandraSieveQuotaDAOV1.class);
-        bind(SieveRepository.class).to(CassandraSieveRepository.class);
-        bind(SieveQuotaRepository.class).to(CassandraSieveRepository.class);
+        bind(CassandraSieveQuotaDAO.class).annotatedWith(Names.named("old")).to(CassandraSieveQuotaDAOV1.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.sieve.cassandra.CassandraSieveQuotaModule.MODULE);
     }
 }
