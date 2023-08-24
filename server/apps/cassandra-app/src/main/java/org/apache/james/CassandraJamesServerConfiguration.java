@@ -55,6 +55,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<VaultConfiguration> vaultConfiguration;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> quotaCompatibilityMode;
 
         private Builder() {
             rootDirectory = Optional.empty();
@@ -64,6 +65,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
             blobStoreConfiguration = Optional.empty();
             vaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
+            quotaCompatibilityMode = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -114,6 +116,11 @@ public class CassandraJamesServerConfiguration implements Configuration {
             return this;
         }
 
+        public Builder quotaCompatibilityModeEnabled(boolean value) {
+            this.quotaCompatibilityMode = Optional.of(value);
+            return this;
+        }
+
         public CassandraJamesServerConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -142,6 +149,14 @@ public class CassandraJamesServerConfiguration implements Configuration {
                 }
             });
 
+            boolean quotaCompatibilityMode = this.quotaCompatibilityMode.orElseGet(() -> {
+                try {
+                    return configurationProvider.getConfiguration("cassandra").getBoolean("quota.compatibility.mode", false);
+                } catch (ConfigurationException e) {
+                    return false;
+                }
+            });
+
             boolean jmapEnabled = this.jmapEnabled.orElseGet(() -> {
                 try {
                     return JMAPModule.parseConfiguration(propertiesProvider).isEnabled();
@@ -152,7 +167,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
                 }
             });
 
-            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, blobStoreConfiguration, usersRepositoryChoice, vaultConfiguration, jmapEnabled);
+            return new CassandraJamesServerConfiguration(configurationPath, directories, searchConfiguration, blobStoreConfiguration, usersRepositoryChoice, vaultConfiguration, jmapEnabled, quotaCompatibilityMode);
         }
     }
 
@@ -167,11 +182,12 @@ public class CassandraJamesServerConfiguration implements Configuration {
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final VaultConfiguration vaultConfiguration;
     private final boolean jmapEnabled;
+    private final boolean quotaCompatibilityMode;
 
     private CassandraJamesServerConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
                                               SearchConfiguration searchConfiguration, BlobStoreConfiguration blobStoreConfiguration,
                                               UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
-                                              VaultConfiguration vaultConfiguration, boolean jmapEnabled) {
+                                              VaultConfiguration vaultConfiguration, boolean jmapEnabled, boolean quotaCompatibilityMode) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
@@ -179,6 +195,7 @@ public class CassandraJamesServerConfiguration implements Configuration {
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.vaultConfiguration = vaultConfiguration;
         this.jmapEnabled = jmapEnabled;
+        this.quotaCompatibilityMode = quotaCompatibilityMode;
     }
 
     @Override
@@ -209,5 +226,9 @@ public class CassandraJamesServerConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isQuotaCompatibilityMode() {
+        return quotaCompatibilityMode;
     }
 }

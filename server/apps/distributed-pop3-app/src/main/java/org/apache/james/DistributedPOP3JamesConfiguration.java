@@ -47,6 +47,7 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<MailQueueViewChoice> mailQueueViewChoice;
         private Optional<VaultConfiguration> vaultConfiguration;
+        private Optional<Boolean> quotaCompatibilityMode;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -56,6 +57,7 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
             usersRepositoryImplementation = Optional.empty();
             mailQueueViewChoice = Optional.empty();
             vaultConfiguration = Optional.empty();
+            quotaCompatibilityMode = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -107,6 +109,11 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder quotaCompatibilityMode(boolean value) {
+            this.quotaCompatibilityMode = Optional.of(value);
+            return this;
+        }
+
         public DistributedPOP3JamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -139,13 +146,23 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
                 }
             });
 
+            boolean quotaCompatibilityMode = this.quotaCompatibilityMode.orElseGet(() -> {
+                try {
+                    return configurationProvider.getConfiguration("cassandra").getBoolean("quota.compatibility.mode", false);
+                } catch (ConfigurationException e) {
+                    return false;
+                }
+            });
+
             return new DistributedPOP3JamesConfiguration(
                 configurationPath,
                 directories,
                 blobStoreConfiguration,
                 searchConfiguration,
                 usersRepositoryChoice,
-                mailQueueViewChoice, vaultConfiguration);
+                mailQueueViewChoice,
+                vaultConfiguration,
+                quotaCompatibilityMode);
         }
     }
 
@@ -160,8 +177,13 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final MailQueueViewChoice mailQueueViewChoice;
     private final VaultConfiguration vaultConfiguration;
+    private final boolean quotaCompatibilityMode;
 
-    public DistributedPOP3JamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration) {
+    public DistributedPOP3JamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
+                                             BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration,
+                                             UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
+                                             MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration,
+                                             boolean quotaCompatibilityMode) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
@@ -169,6 +191,7 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.mailQueueViewChoice = mailQueueViewChoice;
         this.vaultConfiguration = vaultConfiguration;
+        this.quotaCompatibilityMode = quotaCompatibilityMode;
     }
 
     public MailQueueViewChoice getMailQueueViewChoice() {
@@ -199,5 +222,9 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
 
     public VaultConfiguration getVaultConfiguration() {
         return vaultConfiguration;
+    }
+
+    public boolean isQuotaCompatibilityMode() {
+        return quotaCompatibilityMode;
     }
 }
