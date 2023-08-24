@@ -19,12 +19,8 @@
 
 package org.apache.james.sieve.cassandra;
 
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveActiveTable;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
-import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveTable;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;

@@ -29,18 +29,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraSieveQuotaDAOTest {
+class CassandraSieveQuotaDAOV1Test {
     private static final Username USERNAME = Username.of("user");
     private static final QuotaSizeLimit QUOTA_SIZE = QuotaSizeLimit.size(15L);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
 
-    private CassandraSieveQuotaDAO sieveQuotaDAO;
+    private CassandraSieveQuotaDAOV1 sieveQuotaDAO;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        sieveQuotaDAO = new CassandraSieveQuotaDAO(cassandra.getConf());
+        sieveQuotaDAO = new CassandraSieveQuotaDAOV1(cassandra.getConf());
     }
 
     @Test
