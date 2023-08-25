@@ -100,7 +100,7 @@ public class CassandraQuotaCurrentValueDaoTest {
         assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(quotaKey).block()).isNull();
     }
 
-    @Disabled("Cassandra counter deletion is reversed once counter is incremented")
+    @Disabled("Cassandra counter deletion is reversed once counter is incremented cf http://wiki.apache.org/cassandra/Counters")
     @Test
     void deleteQuotaCurrentValueShouldResetCounterForever() {
         cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();

@@ -32,6 +32,7 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -69,6 +70,16 @@ class CassandraMailboxCounterDAOTest {
 
     @Test
     void incrementCountShouldAddOneWhenAbsent() {
+        testee.incrementCount(MAILBOX_ID).block();
+
+        assertThat(testee.countMessagesInMailbox(mailbox).block()).isEqualTo(1L);
+    }
+
+    @Disabled("Cassandra counter deletion is reversed once counter is incremented cf http://wiki.apache.org/cassandra/Counters")
+    @Test
+    void deleteShouldResetCounterValueForever() {
+        testee.incrementCount(MAILBOX_ID).block();
+        testee.delete(MAILBOX_ID).block();
         testee.incrementCount(MAILBOX_ID).block();
 
         assertThat(testee.countMessagesInMailbox(mailbox).block()).isEqualTo(1L);
