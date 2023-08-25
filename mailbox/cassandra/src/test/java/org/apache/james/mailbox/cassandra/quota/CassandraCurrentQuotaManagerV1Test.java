@@ -25,13 +25,13 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraCurrentQuotaManagerTest implements CurrentQuotaManagerContract {
+class CassandraCurrentQuotaManagerV1Test implements CurrentQuotaManagerContract {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraQuotaModule.MODULE);
 
     @Override
     public CurrentQuotaManager testee() {
-        return new CassandraCurrentQuotaManager(cassandraCluster.getCassandraCluster().getConf());
+        return new CassandraCurrentQuotaManagerV1(cassandraCluster.getCassandraCluster().getConf());
     }
 }
