@@ -19,9 +19,12 @@
 package org.apache.james.jmap.cassandra.upload;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.InputStream;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 
 import javax.inject.Inject;
 
@@ -34,7 +37,6 @@ import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.jmap.api.model.UploadNotFoundException;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.mailbox.model.ContentType;
-import org.reactivestreams.Publisher;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.io.CountingInputStream;
@@ -43,56 +45,56 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraUploadRepository implements UploadRepository {
+
+    public static final BucketName UPLOAD_BUCKET = BucketName.of("jmap-uploads");
+    public static final Duration EXPIRE_DURATION = Duration.ofDays(7);
     private final UploadDAO uploadDAO;
     private final BlobStore blobStore;
-    private final BucketNameGenerator bucketNameGenerator;
     private final Clock clock;
 
     @Inject
-    public CassandraUploadRepository(UploadDAO uploadDAO, BlobStore blobStore, BucketNameGenerator bucketNameGenerator, Clock clock) {
+    public CassandraUploadRepository(UploadDAO uploadDAO, BlobStore blobStore, Clock clock) {
         this.uploadDAO = uploadDAO;
         this.blobStore = blobStore;
-        this.bucketNameGenerator = bucketNameGenerator;
         this.clock = clock;
     }
 
     @Override
-    public Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
+    public Mono<UploadMetaData> upload(InputStream data, ContentType contentType, Username user) {
         UploadId uploadId = generateId();
-        UploadBucketName uploadBucketName = bucketNameGenerator.current();
-        BucketName bucketName = uploadBucketName.asBucketName();
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
-            .flatMap(countingInputStream -> Mono.from(blobStore.save(bucketName, countingInputStream, LOW_COST))
-                .map(blobId -> new UploadDAO.UploadRepresentation(uploadId, bucketName, blobId, contentType, countingInputStream.getCount(), user, clock.instant()))
+            .flatMap(countingInputStream -> Mono.from(blobStore.save(UPLOAD_BUCKET, countingInputStream, LOW_COST))
+                .map(blobId -> new UploadDAO.UploadRepresentation(uploadId, blobId, contentType, countingInputStream.getCount(), user, clock.instant()))
                 .flatMap(upload -> uploadDAO.save(upload)
                     .thenReturn(upload.toUploadMetaData())));
     }
 
     @Override
-    public Publisher<Upload> retrieve(UploadId id, Username user) {
+    public Mono<Upload> retrieve(UploadId id, Username user) {
         return uploadDAO.retrieve(user, id)
             .map(upload -> Upload.from(upload.toUploadMetaData(),
-                () -> blobStore.read(upload.getBucketName(), upload.getBlobId(), LOW_COST)))
+                () -> blobStore.read(UPLOAD_BUCKET, upload.getBlobId(), LOW_COST)))
             .switchIfEmpty(Mono.error(() -> new UploadNotFoundException(id)));
     }
 
     @Override
-    public Publisher<Void> delete(UploadId id, Username user) {
+    public Mono<Void> delete(UploadId id, Username user) {
         return uploadDAO.delete(user, id);
     }
 
     @Override
-    public Publisher<UploadMetaData> listUploads(Username user) {
+    public Flux<UploadMetaData> listUploads(Username user) {
         return uploadDAO.list(user)
             .map(UploadDAO.UploadRepresentation::toUploadMetaData);
     }
 
     public Mono<Void> purge() {
-        return Flux.from(blobStore.listBuckets())
-            .<UploadBucketName>handle((bucketName, sink) -> UploadBucketName.ofBucket(bucketName).ifPresentOrElse(sink::next, sink::complete))
-            .filter(bucketNameGenerator.evictionPredicate())
-            .concatMap(bucket -> blobStore.deleteBucket(bucket.asBucketName()))
+        Instant sevenDaysAgo = clock.instant().minus(EXPIRE_DURATION);
+        return Flux.from(uploadDAO.all())
+            .filter(upload -> upload.getUploadDate().isBefore(sevenDaysAgo))
+            .flatMap(upload -> Mono.from(blobStore.delete(UPLOAD_BUCKET, upload.getBlobId()))
+                .then(uploadDAO.delete(upload.getUser(), upload.getId())), DEFAULT_CONCURRENCY)
             .then();
     }
 

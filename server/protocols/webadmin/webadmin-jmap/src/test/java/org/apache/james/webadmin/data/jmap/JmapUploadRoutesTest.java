@@ -21,6 +21,7 @@ package org.apache.james.webadmin.data.jmap;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
+import static org.apache.james.jmap.cassandra.upload.CassandraUploadRepository.UPLOAD_BUCKET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
@@ -29,11 +30,10 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobStore;
@@ -42,15 +42,14 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.UploadId;
+import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.jmap.api.model.UploadNotFoundException;
-import org.apache.james.jmap.cassandra.upload.BucketNameGenerator;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
-import org.apache.james.jmap.cassandra.upload.UploadConfiguration;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadModule;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.model.ContentType;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
+import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -67,7 +66,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 import io.restassured.RestAssured;
 import reactor.core.publisher.Flux;
@@ -88,7 +86,6 @@ class JmapUploadRoutesTest {
     private WebAdminServer webAdminServer;
     private MemoryTaskManager taskManager;
     private BlobStore blobStore;
-    private BucketNameGenerator bucketNameGenerator;
     private CassandraUploadRepository cassandraUploadRepository;
     private UpdatableTickingClock clock;
 
@@ -100,16 +97,12 @@ class JmapUploadRoutesTest {
     void setUp() {
         taskManager = new MemoryTaskManager(new Hostname("foo"));
         clock = new UpdatableTickingClock(TIMESTAMP.toInstant());
-        bucketNameGenerator = new BucketNameGenerator(clock);
-        blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(),
+        blobStore = new PassThroughBlobStore(new MemoryBlobStoreDAO(),
             BucketName.of("default"),
             new HashBlobId.Factory());
 
         cassandraUploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getCassandraCluster().getConf(),
-            new HashBlobId.Factory(),
-            new UploadConfiguration(Duration.ofSeconds(5))),
-            blobStore,
-            bucketNameGenerator, clock);
+            new HashBlobId.Factory()), blobStore, clock);
 
         JsonTransformer jsonTransformer = new JsonTransformer();
         TasksRoutes tasksRoutes = new TasksRoutes(taskManager, jsonTransformer, DTOConverter.of(UploadCleanupTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
@@ -198,10 +191,8 @@ class JmapUploadRoutesTest {
     }
 
     @Test
-    void cleanUploadTaskShouldRemoveExpiredBucket() {
-        BucketName expiredBucket = bucketNameGenerator.current().asBucketName();
-
-        Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
+    void cleanUploadTaskShouldRemoveExpiredBlob() {
+        UploadMetaData uploadMetaData = Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
 
         clock.setInstant(TIMESTAMP.plusWeeks(3).toInstant());
 
@@ -216,15 +207,13 @@ class JmapUploadRoutesTest {
         .when()
             .get(taskId + "/await");
 
-        assertThat(Flux.from(blobStore.listBuckets()).collectList().block())
-            .doesNotContain(expiredBucket);
+        assertThat(Flux.from(blobStore.listBlobs(UPLOAD_BUCKET)).collectList().block())
+            .doesNotContain(uploadMetaData.blobId());
     }
 
     @Test
-    void cleanUploadTaskShouldNotRemoveUnExpiredBucket() {
-        BucketName unExpiredBucket = bucketNameGenerator.current().asBucketName();
-
-        Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
+    void cleanUploadTaskShouldNotRemoveUnExpiredBlob() {
+        UploadMetaData upload = Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
 
         String taskId = given()
             .queryParam("scope", "expired")
@@ -237,26 +226,41 @@ class JmapUploadRoutesTest {
         .when()
             .get(taskId + "/await");
 
-        assertThat(Flux.from(blobStore.listBuckets()).collectList().block())
-            .contains(unExpiredBucket);
+        assertThat(Flux.from(blobStore.listBlobs(UPLOAD_BUCKET)).collectList().block())
+            .containsOnly(upload.blobId());
+    }
+
+    @Test
+    void cleanUploadTaskShouldNotRemoveUnExpiredUpload() {
+        UploadMetaData upload = Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
+
+        String taskId = given()
+            .queryParam("scope", "expired")
+            .delete()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await");
+
+        assertThat(cassandraUploadRepository.listUploads(USERNAME).collectList().block())
+            .containsOnly(upload);
     }
 
     @Test
     void cleanUploadTaskShouldSuccessWhenMixCase() {
-        BucketName expiredBucketName1 = bucketNameGenerator.current().asBucketName();
-        Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
+        UploadMetaData upload1 = Mono.from(cassandraUploadRepository.upload(IOUtils.toInputStream("DATA 1", StandardCharsets.UTF_8), CONTENT_TYPE, USERNAME)).block();
 
         clock.setInstant(TIMESTAMP.plusWeeks(1).toInstant());
-        BucketName expiredBucketName2 = bucketNameGenerator.current().asBucketName();
-        Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
+        UploadMetaData upload2 = Mono.from(cassandraUploadRepository.upload(IOUtils.toInputStream("DATA 2", StandardCharsets.UTF_8), CONTENT_TYPE, USERNAME)).block();
 
         clock.setInstant(TIMESTAMP.plusWeeks(3).toInstant());
-        BucketName unExpiredBucketName1 = bucketNameGenerator.current().asBucketName();
-        Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
+        UploadMetaData upload3 = Mono.from(cassandraUploadRepository.upload(IOUtils.toInputStream("DATA 3", StandardCharsets.UTF_8), CONTENT_TYPE, USERNAME)).block();
 
         clock.setInstant(TIMESTAMP.plusWeeks(4).toInstant());
-        BucketName unExpiredBucketName2 = bucketNameGenerator.current().asBucketName();
-        Mono.from(cassandraUploadRepository.upload(DATA, CONTENT_TYPE, USERNAME)).block();
+        UploadMetaData upload4 = Mono.from(cassandraUploadRepository.upload(IOUtils.toInputStream("DATA 4", StandardCharsets.UTF_8), CONTENT_TYPE, USERNAME)).block();
 
         String taskId = given()
             .queryParam("scope", "expired")
@@ -269,11 +273,13 @@ class JmapUploadRoutesTest {
         .when()
             .get(taskId + "/await");
 
-        List<BucketName> bucketNameList = Flux.from(blobStore.listBuckets()).collectList().block();
+        assertThat(cassandraUploadRepository.listUploads(USERNAME).collectList().block())
+            .doesNotContain(upload1, upload2)
+            .contains(upload3, upload4);
 
-        assertThat(bucketNameList)
-            .contains(unExpiredBucketName1, unExpiredBucketName2)
-            .doesNotContain(expiredBucketName1, expiredBucketName2);
+        assertThat(Flux.from(blobStore.listBlobs(UPLOAD_BUCKET)).collectList().block())
+            .doesNotContain(upload1.blobId(), upload2.blobId())
+            .contains(upload3.blobId(), upload4.blobId());
     }
 
     @Test

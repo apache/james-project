@@ -59,7 +59,6 @@ import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptio
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionRepository;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadUsageRepository;
-import org.apache.james.jmap.cassandra.upload.UploadConfiguration;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadModule;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
@@ -83,7 +82,6 @@ public class CassandraJmapModule extends AbstractModule {
         bind(UploadDAO.class).in(Scopes.SINGLETON);
         bind(UploadRepository.class).to(CassandraUploadRepository.class);
         bind(UploadUsageRepository.class).to(CassandraUploadUsageRepository.class);
-        bind(UploadConfiguration.class).toInstance(UploadConfiguration.SINGLETON);
 
         bind(CassandraCustomIdentityDAO.class).in(Scopes.SINGLETON);
         bind(CustomIdentityDAO.class).to(CassandraCustomIdentityDAO.class);
