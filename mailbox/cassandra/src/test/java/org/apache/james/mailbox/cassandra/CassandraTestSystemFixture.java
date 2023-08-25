@@ -34,7 +34,7 @@ import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
+import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV1;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
@@ -109,7 +109,7 @@ public class CassandraTestSystemFixture {
     }
 
     public static CurrentQuotaManager createCurrentQuotaManager(CassandraCluster cassandra) {
-        return new CassandraCurrentQuotaManager(cassandra.getConf());
+        return new CassandraCurrentQuotaManagerV1(cassandra.getConf());
     }
 
 }
