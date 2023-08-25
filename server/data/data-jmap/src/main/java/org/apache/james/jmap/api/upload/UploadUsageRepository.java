@@ -21,15 +21,14 @@ package org.apache.james.jmap.api.upload;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeUsage;
-
-import reactor.core.publisher.Mono;
+import org.reactivestreams.Publisher;
 
 public interface UploadUsageRepository {
-    Mono<Void> increaseSpace(Username username, QuotaSizeUsage usage);
+    Publisher<Void> increaseSpace(Username username, QuotaSizeUsage usage);
 
-    Mono<Void> decreaseSpace(Username username, QuotaSizeUsage usage);
+    Publisher<Void> decreaseSpace(Username username, QuotaSizeUsage usage);
 
-    Mono<QuotaSizeUsage> getSpaceUsage(Username username);
+    Publisher<QuotaSizeUsage> getSpaceUsage(Username username);
 
-    Mono<Void> resetSpace(Username username, QuotaSizeUsage usage);
+    Publisher<Void> resetSpace(Username username, QuotaSizeUsage usage);
 }
