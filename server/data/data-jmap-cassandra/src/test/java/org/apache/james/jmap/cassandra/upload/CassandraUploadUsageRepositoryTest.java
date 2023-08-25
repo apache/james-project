@@ -19,20 +19,14 @@
 
 package org.apache.james.jmap.cassandra.upload;
 
-import static org.apache.james.jmap.api.upload.UploadUsageRepositoryContract.USER_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepositoryContract;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraQuotaCurrentValueDao;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import reactor.core.publisher.Mono;
 
 public class CassandraUploadUsageRepositoryTest implements UploadUsageRepositoryContract {
 
@@ -45,14 +39,6 @@ public class CassandraUploadUsageRepositoryTest implements UploadUsageRepository
     private void setup() {
         cassandraUploadUsageRepository = new CassandraUploadUsageRepository(new CassandraQuotaCurrentValueDao(cassandraCluster.getCassandraCluster().getConf()));
         resetCounterToZero();
-    }
-
-    private void resetCounterToZero() {
-        Mono.from(cassandraUploadUsageRepository.increaseSpace(USER_NAME(), QuotaSizeUsage.size(0))).block();
-        QuotaSizeUsage quotaSizeUsage = Mono.from(cassandraUploadUsageRepository.getSpaceUsage(USER_NAME())).block();
-        Mono.from(cassandraUploadUsageRepository.decreaseSpace(USER_NAME(), quotaSizeUsage)).block();
-        QuotaSizeUsage actual = Mono.from(cassandraUploadUsageRepository.getSpaceUsage(USER_NAME())).block();
-        assertThat(actual.asLong()).isEqualTo(0l);
     }
 
     @Override

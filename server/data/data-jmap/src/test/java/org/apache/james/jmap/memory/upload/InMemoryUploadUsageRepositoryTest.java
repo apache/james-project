@@ -19,15 +19,9 @@
 
 package org.apache.james.jmap.memory.upload;
 
-import static org.apache.james.jmap.api.upload.UploadUsageRepositoryContract.USER_NAME;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepositoryContract;
 import org.junit.jupiter.api.BeforeEach;
-
-import reactor.core.publisher.Mono;
 
 public class InMemoryUploadUsageRepositoryTest implements UploadUsageRepositoryContract {
 
@@ -37,14 +31,6 @@ public class InMemoryUploadUsageRepositoryTest implements UploadUsageRepositoryC
     private void setup() {
         inMemoryUploadUsageRepository = new InMemoryUploadUsageRepository();
         resetCounterToZero();
-    }
-
-    private void resetCounterToZero() {
-        Mono.from(inMemoryUploadUsageRepository.increaseSpace(USER_NAME(), QuotaSizeUsage.size(0))).block();
-        QuotaSizeUsage quotaSizeUsage = Mono.from(inMemoryUploadUsageRepository.getSpaceUsage(USER_NAME())).block();
-        Mono.from(inMemoryUploadUsageRepository.decreaseSpace(USER_NAME(), quotaSizeUsage)).block();
-        QuotaSizeUsage actual = Mono.from(inMemoryUploadUsageRepository.getSpaceUsage(USER_NAME())).block();
-        assertThat(actual.asLong()).isEqualTo(0l);
     }
 
     @Override

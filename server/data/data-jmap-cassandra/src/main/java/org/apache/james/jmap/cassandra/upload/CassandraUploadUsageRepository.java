@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.cassandra.upload;
 
-import java.util.Objects;
-
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -29,11 +27,12 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.core.quota.QuotaType;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.mailbox.cassandra.quota.CassandraQuotaCurrentValueDao;
-import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
 public class CassandraUploadUsageRepository implements UploadUsageRepository {
+
+    private static final QuotaSizeUsage DEFAULT_QUOTA_SIZE_USAGE = QuotaSizeUsage.size(0);
 
     private CassandraQuotaCurrentValueDao cassandraQuotaCurrentValueDao;
 
@@ -43,26 +42,26 @@ public class CassandraUploadUsageRepository implements UploadUsageRepository {
     }
 
     @Override
-    public Publisher<Void> increaseSpace(Username username, QuotaSizeUsage usage) {
+    public Mono<Void> increaseSpace(Username username, QuotaSizeUsage usage) {
         return cassandraQuotaCurrentValueDao.increase(CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE),
             usage.asLong());
     }
 
     @Override
-    public Publisher<Void> decreaseSpace(Username username, QuotaSizeUsage usage) {
+    public Mono<Void> decreaseSpace(Username username, QuotaSizeUsage usage) {
         return cassandraQuotaCurrentValueDao.decrease(CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE),
             usage.asLong());
     }
 
     @Override
-    public Publisher<QuotaSizeUsage> getSpaceUsage(Username username) {
+    public Mono<QuotaSizeUsage> getSpaceUsage(Username username) {
         return cassandraQuotaCurrentValueDao.getQuotaCurrentValue(CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE))
-            .map(quotaCurrentValue -> QuotaSizeUsage.size(quotaCurrentValue.getCurrentValue())).defaultIfEmpty(QuotaSizeUsage.size(0));
+            .map(quotaCurrentValue -> QuotaSizeUsage.size(quotaCurrentValue.getCurrentValue())).defaultIfEmpty(DEFAULT_QUOTA_SIZE_USAGE);
     }
 
     @Override
-    public Publisher<Void> resetSpace(Username username, QuotaSizeUsage usage) {
-        return Mono.from(getSpaceUsage(username)).flatMap(quotaSizeUsage -> Mono.from(decreaseSpace(username, quotaSizeUsage)))
-            .then(Mono.from(increaseSpace(username, usage)));
+    public Mono<Void> resetSpace(Username username, QuotaSizeUsage usage) {
+        return getSpaceUsage(username).flatMap(quotaSizeUsage -> Mono.from(decreaseSpace(username, quotaSizeUsage)))
+            .then(increaseSpace(username, usage));
     }
 }

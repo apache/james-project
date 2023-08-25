@@ -27,11 +27,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
-import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
 public class InMemoryUploadUsageRepository implements UploadUsageRepository {
+
+    private static final QuotaSizeUsage DEFAULT_QUOTA_SIZE_USAGE = QuotaSizeUsage.size(0);
 
     private final Map<Username, AtomicReference<QuotaSizeUsage>> cache;
 
@@ -40,16 +41,16 @@ public class InMemoryUploadUsageRepository implements UploadUsageRepository {
     }
 
     @Override
-    public Publisher<Void> increaseSpace(Username username, QuotaSizeUsage usage) {
+    public Mono<Void> increaseSpace(Username username, QuotaSizeUsage usage) {
         return updateSpace(username, usage.asLong());
     }
 
     @Override
-    public Publisher<Void> decreaseSpace(Username username, QuotaSizeUsage usage) {
+    public Mono<Void> decreaseSpace(Username username, QuotaSizeUsage usage) {
         return updateSpace(username, Math.negateExact(usage.asLong()));
     }
 
-    private Publisher<Void> updateSpace(Username username, long amount) {
+    private Mono<Void> updateSpace(Username username, long amount) {
         return Mono.fromRunnable(() -> {
             AtomicReference<QuotaSizeUsage> quotaSizeUsageAtomicReference = cache.get(username);
             if (Objects.isNull(quotaSizeUsageAtomicReference)) {
@@ -61,13 +62,13 @@ public class InMemoryUploadUsageRepository implements UploadUsageRepository {
     }
 
     @Override
-    public Publisher<QuotaSizeUsage> getSpaceUsage(Username username) {
-        return Mono.just(cache.getOrDefault(username, new AtomicReference<>(QuotaSizeUsage.size(0)))).map(quotaSizeUsageAtomicReference -> quotaSizeUsageAtomicReference.get());
+    public Mono<QuotaSizeUsage> getSpaceUsage(Username username) {
+        return Mono.just(cache.getOrDefault(username, new AtomicReference<>(DEFAULT_QUOTA_SIZE_USAGE))).map(quotaSizeUsageAtomicReference -> quotaSizeUsageAtomicReference.get());
     }
 
     @Override
-    public Publisher<Void> resetSpace(Username username, QuotaSizeUsage usage) {
-        return Mono.from(getSpaceUsage(username)).flatMap(quotaSizeUsage -> Mono.from(decreaseSpace(username, quotaSizeUsage)))
-            .then(Mono.from(increaseSpace(username, usage)));
+    public Mono<Void> resetSpace(Username username, QuotaSizeUsage usage) {
+        return getSpaceUsage(username).flatMap(quotaSizeUsage -> Mono.from(decreaseSpace(username, quotaSizeUsage)))
+            .then(increaseSpace(username, usage));
     }
 }
