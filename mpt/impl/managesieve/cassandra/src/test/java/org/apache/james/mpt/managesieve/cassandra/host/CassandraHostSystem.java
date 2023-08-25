@@ -20,11 +20,13 @@
 package org.apache.james.mpt.managesieve.cassandra.host;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
+import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieve.cassandra.CassandraActiveScriptDAO;
 import org.apache.james.sieve.cassandra.CassandraSieveDAO;
-import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV1;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV2;
 import org.apache.james.sieve.cassandra.CassandraSieveRepository;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
@@ -43,7 +45,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
     protected SieveRepository createSieveRepository() {
         return new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
-            new CassandraSieveQuotaDAOV1(cassandra.getConf()),
+            new CassandraSieveQuotaDAOV2(new CassandraQuotaCurrentValueDao(cassandra.getConf()), new CassandraQuotaLimitDao(cassandra.getConf())),
             new CassandraActiveScriptDAO(cassandra.getConf()));
     }
 

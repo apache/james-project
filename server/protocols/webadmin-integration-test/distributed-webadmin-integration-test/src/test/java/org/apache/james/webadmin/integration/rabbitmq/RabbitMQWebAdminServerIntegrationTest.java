@@ -136,7 +136,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":13}"));
+            .body(is("{\"version\":14}"));
     }
 
     @Test
