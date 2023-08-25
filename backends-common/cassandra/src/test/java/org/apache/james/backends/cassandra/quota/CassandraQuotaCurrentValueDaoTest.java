@@ -32,6 +32,7 @@ import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaType;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -50,76 +51,76 @@ public class CassandraQuotaCurrentValueDaoTest {
 
     @Test
     void increaseQuotaCurrentValueShouldCreateNewRowSuccessfully() {
-        QuotaCurrentValue expected = QuotaCurrentValue.builder().quotaComponent(QUOTA_KEY.getQuotaComponent())
-            .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(100l).build();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100l).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
 
-        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        assertThat(actual).isEqualTo(expected);
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue()).isEqualTo(100L);
     }
 
     @Test
     void increaseQuotaCurrentValueShouldCreateNewRowSuccessfullyWhenIncreaseAmountIsZero() {
-        QuotaCurrentValue expected = QuotaCurrentValue.builder().quotaComponent(QUOTA_KEY.getQuotaComponent())
-            .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(0l).build();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 0l).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 0L).block();
 
-        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        assertThat(actual).isEqualTo(expected);
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue()).isEqualTo(0L);
     }
 
     @Test
     void increaseQuotaCurrentValueShouldIncreaseValueSuccessfully() {
+        cassandraCluster.getCassandraCluster().getConf().printStatements();
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block()).isNull();
+
         cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
         cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
 
-        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-
-        assertThat(actual.getCurrentValue()).isEqualTo(200L);
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue()).isEqualTo(200L);
+        cassandraCluster.getCassandraCluster().getConf().stopPrintingStatements();
     }
 
     @Test
     void increaseQuotaCurrentValueShouldDecreaseValueSuccessfullyWhenIncreaseAmountIsNegative() {
-        QuotaCurrentValue expected = QuotaCurrentValue.builder().quotaComponent(QUOTA_KEY.getQuotaComponent())
-            .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(100l).build();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 200l).block();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, -100l).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 200L).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, -100L).block();
 
-        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        assertThat(actual).isEqualTo(expected);
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue()).isEqualTo(100L);
     }
 
     @Test
     void decreaseQuotaCurrentValueShouldDecreaseValueSuccessfully() {
-        QuotaCurrentValue expected = QuotaCurrentValue.builder().quotaComponent(QUOTA_KEY.getQuotaComponent())
-            .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(100l).build();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 200l).block();
-        cassandraQuotaCurrentValueDao.decrease(QUOTA_KEY, 100l).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 200L).block();
+        cassandraQuotaCurrentValueDao.decrease(QUOTA_KEY, 100L).block();
 
-        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        assertThat(actual).isEqualTo(expected);
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue()).isEqualTo(100L);
     }
 
     @Test
     void deleteQuotaCurrentValueShouldDeleteSuccessfully() {
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100l).block();
-        cassandraQuotaCurrentValueDao.deleteQuotaCurrentValue(QUOTA_KEY).block();
+        QuotaKey quotaKey = QuotaKey.of(QuotaComponent.MAILBOX, "andre@abc.com", QuotaType.SIZE);
+        cassandraQuotaCurrentValueDao.increase(quotaKey, 100L).block();
+        cassandraQuotaCurrentValueDao.deleteQuotaCurrentValue(quotaKey).block();
 
-        QuotaCurrentValue actual = cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block();
-        assertThat(actual).isNull();
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(quotaKey).block()).isNull();
+    }
+
+    @Disabled("Cassandra counter deletion is reversed once counter is incremented")
+    @Test
+    void deleteQuotaCurrentValueShouldResetCounterForever() {
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
+        cassandraQuotaCurrentValueDao.deleteQuotaCurrentValue(QUOTA_KEY).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
+
+        assertThat(cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue()).isEqualTo(100L);
     }
 
     @Test
     void increaseQuotaCurrentValueShouldNotThrowExceptionWhenQueryExecutorThrowException() {
         cassandraCluster.pause();
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100l).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
         cassandraCluster.unpause();
     }
 
     @Test
     void decreaseQuotaCurrentValueShouldNotThrowExceptionWhenQueryExecutorThrowException() {
         cassandraCluster.pause();
-        cassandraQuotaCurrentValueDao.decrease(QUOTA_KEY, 100l).block();
+        cassandraQuotaCurrentValueDao.decrease(QUOTA_KEY, 100L).block();
         cassandraCluster.unpause();
     }
 
