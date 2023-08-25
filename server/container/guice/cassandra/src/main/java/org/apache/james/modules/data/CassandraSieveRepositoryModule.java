@@ -29,17 +29,13 @@ import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraSieveRepositoryModule extends AbstractModule {
-
     @Override
     protected void configure() {
         bind(CassandraSieveRepository.class).in(Scopes.SINGLETON);
-        bind(CassandraSieveQuotaDAOV1.class).in(Scopes.SINGLETON);
-        bind(CassandraSieveQuotaDAO.class).to(CassandraSieveQuotaDAOV1.class);
         bind(SieveRepository.class).to(CassandraSieveRepository.class);
         bind(SieveQuotaRepository.class).to(CassandraSieveRepository.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule.MODULE);
-        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.sieve.cassandra.CassandraSieveQuotaModule.MODULE);
     }
 }

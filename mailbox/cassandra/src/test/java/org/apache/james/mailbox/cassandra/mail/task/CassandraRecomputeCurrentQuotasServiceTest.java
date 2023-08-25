@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
 import org.apache.james.mailbox.MailboxManager;
@@ -43,7 +42,6 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.sieve.cassandra.CassandraSieveQuotaModule;
 import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
@@ -64,9 +62,6 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         MailboxAggregateModule.MODULE_WITH_QUOTA,
         CassandraDomainListModule.MODULE,
-        CassandraSieveRepositoryModule.MODULE,
-        CassandraSieveQuotaModule.MODULE,
-        CassandraMutualizedQuotaModule.MODULE,
         CassandraUsersRepositoryModule.MODULE));
 
     UsersRepositoryImpl usersRepository;

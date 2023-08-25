@@ -21,11 +21,11 @@ package org.apache.james.mpt.managesieve.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
 import org.apache.james.mpt.ManageSieveMPTContract;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
-import org.apache.james.sieve.cassandra.CassandraSieveQuotaModule;
 import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ class CassandraManageSieveMPTTest implements ManageSieveMPTContract {
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraDomainListModule.MODULE,
         CassandraSieveRepositoryModule.MODULE,
-        CassandraSieveQuotaModule.MODULE,
+        CassandraMutualizedQuotaModule.MODULE,
         CassandraUsersRepositoryModule.MODULE));
 
     private ManageSieveHostSystem system;
