@@ -63,7 +63,8 @@ public class InMemoryUploadUsageRepository implements UploadUsageRepository {
 
     @Override
     public Mono<QuotaSizeUsage> getSpaceUsage(Username username) {
-        return Mono.just(cache.getOrDefault(username, new AtomicReference<>(DEFAULT_QUOTA_SIZE_USAGE))).map(quotaSizeUsageAtomicReference -> quotaSizeUsageAtomicReference.get());
+        return Mono.just(cache.getOrDefault(username, new AtomicReference<>(DEFAULT_QUOTA_SIZE_USAGE)))
+            .map(quotaSizeUsageAtomicReference -> quotaSizeUsageAtomicReference.get());
     }
 
     @Override
