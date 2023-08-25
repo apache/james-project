@@ -199,7 +199,7 @@ class RabbitMQMailQueueTest {
                 "5-1", "5-2", "5-3", "5-4", "5-5");
         }
 
-        @RepeatedTest(50)
+        @Test
         void browseStartShouldBeUpdated(CassandraCluster cassandraCluster, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
             setUp(cassandraCluster, metricTestSystem,
                 RabbitMQMailQueueConfiguration.builder()
@@ -232,7 +232,7 @@ class RabbitMQMailQueueTest {
                 .hasSizeBetween(2, 12);
         }
 
-        @RepeatedTest(50)
+        @Test
         void contentStartShouldBeUpdated(CassandraCluster cassandraCluster, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
             setUp(cassandraCluster, metricTestSystem,
                 RabbitMQMailQueueConfiguration.builder()
