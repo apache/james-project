@@ -41,6 +41,7 @@ import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthChec
 import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.upload.UploadRepository;
+import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
 import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
 import org.apache.james.jmap.cassandra.change.CassandraEmailChangeModule;
@@ -57,6 +58,7 @@ import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProje
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionModule;
 import org.apache.james.jmap.cassandra.pushsubscription.CassandraPushSubscriptionRepository;
 import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
+import org.apache.james.jmap.cassandra.upload.CassandraUploadUsageRepository;
 import org.apache.james.jmap.cassandra.upload.UploadConfiguration;
 import org.apache.james.jmap.cassandra.upload.UploadDAO;
 import org.apache.james.jmap.cassandra.upload.UploadModule;
@@ -80,6 +82,7 @@ public class CassandraJmapModule extends AbstractModule {
         bind(CassandraUploadRepository.class).in(Scopes.SINGLETON);
         bind(UploadDAO.class).in(Scopes.SINGLETON);
         bind(UploadRepository.class).to(CassandraUploadRepository.class);
+        bind(UploadUsageRepository.class).to(CassandraUploadUsageRepository.class);
         bind(UploadConfiguration.class).toInstance(UploadConfiguration.SINGLETON);
 
         bind(CassandraCustomIdentityDAO.class).in(Scopes.SINGLETON);
