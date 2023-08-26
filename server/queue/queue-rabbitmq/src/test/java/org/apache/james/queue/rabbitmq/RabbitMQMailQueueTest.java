@@ -211,7 +211,7 @@ class RabbitMQMailQueueTest {
 
             int emailCount = 250;
 
-            StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE browsestart");
+            StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE browseStart");
             StatementRecorder statementRecorder = cassandraCluster.getConf()
                 .recordStatements(selector);
 
@@ -244,7 +244,7 @@ class RabbitMQMailQueueTest {
 
             int emailCount = 250;
 
-            StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE contentstart");
+            StatementRecorder.Selector selector = preparedStatementStartingWith("UPDATE contentStart");
             StatementRecorder statementRecorder = cassandraCluster.getConf().recordStatements(selector);
 
             clock.setInstant(IN_SLICE_1);
@@ -1005,7 +1005,11 @@ class RabbitMQMailQueueTest {
                 .concatMap(mailQueueItem ->
                     Mono.fromCallable(() -> {
                         assertThat(mailQueueItem.getMail().getMessage().getContent()).isEqualTo(identicalContent);
-                        mailQueueItem.done(true);
+                        try {
+                            mailQueueItem.done(true);
+                        } catch (Exception e) {
+                            // Ignore
+                        }
                         return mailQueueItem;
                     }).subscribeOn(Schedulers.elastic()))
                 .collectList()

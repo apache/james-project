@@ -55,6 +55,10 @@ public class StatementRecorder {
     private final StatementRecorder.Selector selector;
     private final ConcurrentLinkedDeque statements;
 
+    public StatementRecorder() {
+        this(Selector.ALL);
+    }
+
     StatementRecorder(Selector selector) {
         this.selector = selector;
         statements = new ConcurrentLinkedDeque();
