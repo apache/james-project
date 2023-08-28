@@ -17,26 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james;
 
-import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
-import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
+import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraCurrentQuotaManagerV1Test implements CurrentQuotaManagerContract {
-
+public class CassandraLegacyQuotaJamesServerTest implements JamesServerConcreteContract, JmapJamesServerContract {
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraQuotaModule.MODULE,
-        CassandraMailboxQuotaModule.MODULE,
-        CassandraMutualizedQuotaModule.MODULE));
-
-    @Override
-    public CurrentQuotaManager testee() {
-        return new CassandraCurrentQuotaManagerV1(cassandraCluster.getCassandraCluster().getConf());
-    }
+    static JamesServerExtension testExtension = new JamesServerBuilder<CassandraJamesServerConfiguration>(tmpDir ->
+        CassandraJamesServerConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.openSearch())
+            .quotaCompatibilityModeEnabled(true)
+            .build())
+        .extension(new DockerOpenSearchExtension())
+        .extension(new CassandraExtension())
+        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 }

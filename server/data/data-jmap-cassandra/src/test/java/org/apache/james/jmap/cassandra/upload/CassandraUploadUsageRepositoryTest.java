@@ -21,9 +21,11 @@ package org.apache.james.jmap.cassandra.upload;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepositoryContract;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -31,7 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class CassandraUploadUsageRepositoryTest implements UploadUsageRepositoryContract {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraQuotaModule.MODULE));
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraQuotaModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
 
     private CassandraUploadUsageRepository cassandraUploadUsageRepository;
 
