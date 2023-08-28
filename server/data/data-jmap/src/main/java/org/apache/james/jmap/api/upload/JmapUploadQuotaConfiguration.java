@@ -19,17 +19,14 @@
 
 package org.apache.james.jmap.api.upload;
 
-import java.io.InputStream;
+public class JmapUploadQuotaConfiguration {
+    private final long uploadQuotaLimitInBytes;
 
-import org.apache.james.core.Username;
-import org.apache.james.jmap.api.model.Upload;
-import org.apache.james.jmap.api.model.UploadId;
-import org.apache.james.jmap.api.model.UploadMetaData;
-import org.apache.james.mailbox.model.ContentType;
-import org.reactivestreams.Publisher;
+    public JmapUploadQuotaConfiguration(long uploadQuotaLimitInBytes) {
+        this.uploadQuotaLimitInBytes = uploadQuotaLimitInBytes;
+    }
 
-public interface UploadService {
-    Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user);
-
-    Publisher<Upload> retrieve(UploadId id, Username user);
+    public long getUploadQuotaLimitInBytes() {
+        return uploadQuotaLimitInBytes;
+    }
 }

@@ -23,7 +23,7 @@ import java.net.URI
 import java.util.Optional
 
 import org.apache.commons.configuration2.Configuration
-import org.apache.james.jmap.core.JmapRfc8621Configuration.{MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
+import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
 import org.apache.james.util.Size
 
@@ -40,6 +40,7 @@ object JmapConfigProperties {
   val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
   val DELAY_SENDS_ENABLED: String = "delay.sends.enabled"
   val AUTHENTICATION_STRATEGIES: String = "authentication.strategy.rfc8621"
+  val JMAP_UPLOAD_QUOTA_LIMIT_PROPERTY: String = "upload.quota.limit"
 }
 
 object JmapRfc8621Configuration {
@@ -48,6 +49,7 @@ object JmapRfc8621Configuration {
   val WEBSOCKET_URL_PREFIX_DEFAULT: String = "ws://localhost"
   val UPLOAD_LIMIT_DEFAULT: MaxSizeUpload = MaxSizeUpload.of(Size.of(30L, Size.Unit.M)).get
   val MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT: MaxSizeAttachmentsPerEmail = MaxSizeAttachmentsPerEmail.of(Size.of(20_000_000L, Size.Unit.B)).get
+  val JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT: JmapUploadQuotaLimit = JmapUploadQuotaLimit.of(Size.of(200L, Size.Unit.M)).get
 
   val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(
     urlPrefixString = URL_PREFIX_DEFAULT,
@@ -68,6 +70,10 @@ object JmapRfc8621Configuration {
         .map(Size.parse)
         .map(MaxSizeAttachmentsPerEmail.of(_).get)
         .getOrElse(MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT),
+      jmapUploadQuotaLimit = Option(configuration.getString(JMAP_UPLOAD_QUOTA_LIMIT_PROPERTY, null))
+        .map(Size.parse)
+        .map(JmapUploadQuotaLimit.of(_).get)
+        .getOrElse(JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT),
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
       preventServerSideRequestForgery = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, null)).orElse(true),
@@ -80,6 +86,7 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     supportsDelaySends: Boolean = false,
                                     maxUploadSize: MaxSizeUpload = UPLOAD_LIMIT_DEFAULT,
                                     maxSizeAttachmentsPerEmail: MaxSizeAttachmentsPerEmail = MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT,
+                                    jmapUploadQuotaLimit: JmapUploadQuotaLimit = JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None,
                                     authenticationStrategies: Option[java.util.List[String]] = None,
