@@ -32,6 +32,8 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import reactor.core.publisher.Mono;
 
 public class FakeCassandraCurrentQuotaManager implements CurrentQuotaManager {
+    private static final String MESSAGE = "Use quota compatility mode in cassandra.properties for running the 12 -> 13 migration";
+
     @Inject
     public FakeCassandraCurrentQuotaManager() {
 
@@ -39,31 +41,31 @@ public class FakeCassandraCurrentQuotaManager implements CurrentQuotaManager {
 
     @Override
     public Mono<QuotaCountUsage> getCurrentMessageCount(QuotaRoot quotaRoot) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<QuotaSizeUsage> getCurrentStorage(QuotaRoot quotaRoot) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> increase(QuotaOperation quotaOperation) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> decrease(QuotaOperation quotaOperation) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 
     @Override
     public Mono<Void> setCurrentQuotas(QuotaOperation quotaOperation) {
-        return Mono.error(new NotImplementedException());
+        return Mono.error(new NotImplementedException(MESSAGE));
     }
 }
