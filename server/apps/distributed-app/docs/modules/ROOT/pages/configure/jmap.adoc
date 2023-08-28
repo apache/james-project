@@ -48,8 +48,12 @@ JMAP clients would use this property in order not to create too big emails.
 Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
 
 | upload.max.size
-| Optional. Configuration max size Upload in new JMAP-RFC-8621.
+| Optional. Configuration max size for each upload file in new JMAP-RFC-8621.
 Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).
+
+| upload.quota.limit
+| Optional. Configure JMAP upload quota for total existing uploads' size per user. User exceeding the upload quota would result in old uploads being cleaned up.
+Default value: 200M. Supported units are B (bytes) K (KB) M (MB) G (GB).
 
 | view.email.query.enabled
 | Optional boolean. Defaults to false. Should simple Email/query be resolved against a Cassandra projection, or should we resolve them against OpenSearch?

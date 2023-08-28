@@ -67,8 +67,12 @@
                     <dd>Default value: ws://localhost</dd>
 
                     <dt><strong>upload.max.size</strong></dt>
-                    <dd>Optional. Configuration max size Upload in new JMAP-RFC-8621.</dd>
+                    <dd>Optional. Configuration max size for each upload file in new JMAP-RFC-8621.</dd>
                     <dd>Default value: 30M. Supported units are B (bytes) K (KB) M (MB) G (GB).</dd>
+
+                    <dt><strong>upload.quota.limit</strong></dt>
+                    <dd>Optional. Configure JMAP upload quota for total existing uploads' size per user. User exceeding the upload quota would result in old uploads being cleaned up.</dd>
+                    <dd>Default value: 200M. Supported units are B (bytes) K (KB) M (MB) G (GB).</dd>
 
                     <dt><strong>email.send.max.size</strong></dt>
                     <dd>Optional. Configuration max size for message created in both JMAP Draft amd RFC-8621.</dd>

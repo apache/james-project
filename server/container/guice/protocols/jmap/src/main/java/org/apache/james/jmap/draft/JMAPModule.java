@@ -36,6 +36,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.Version;
+import org.apache.james.jmap.api.upload.JmapUploadQuotaConfiguration;
 import org.apache.james.jmap.core.CapabilityFactory;
 import org.apache.james.jmap.core.CoreCapabilityFactory;
 import org.apache.james.jmap.core.DelegationCapabilityFactory$;
@@ -184,6 +185,11 @@ public class JMAPModule extends AbstractModule {
     @Named("supportsDelaySends")
     boolean submissionCapability(JmapRfc8621Configuration configuration) {
         return configuration.supportsDelaySends();
+    }
+
+    @Provides
+    JmapUploadQuotaConfiguration jmapUploadQuotaConfiguration(JmapRfc8621Configuration configuration) {
+        return new JmapUploadQuotaConfiguration(configuration.jmapUploadQuotaLimit().asLong());
     }
 
     @ProvidesIntoSet

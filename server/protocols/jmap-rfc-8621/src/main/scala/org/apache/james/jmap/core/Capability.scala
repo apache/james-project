@@ -233,6 +233,19 @@ case class MaxMailboxesPerEmail(value: Option[UnsignedInt])
 case class MaxMailboxDepth(value: Option[UnsignedInt])
 case class MaxSizeMailboxName(value: UnsignedInt)
 case class MaxSizeAttachmentsPerEmail(value: UnsignedInt)
+
+object JmapUploadQuotaLimit {
+  def of(size: Size): Try[JmapUploadQuotaLimit] = refined.refineV[UnsignedIntConstraint](size.asBytes()) match {
+    case Right(value) => Success(JmapUploadQuotaLimit(value))
+    case Left(error) => Failure(new NumberFormatException(error))
+  }
+}
+
+case class JmapUploadQuotaLimit(value: UnsignedInt) {
+  def asLong(): Long = value.value
+}
+
+case class JmapUploadQuotaReadRepairProbability(value: Float)
 case class MayCreateTopLevelMailbox(value: Boolean) extends AnyVal
 
 final case class MailCapabilityProperties(maxMailboxesPerEmail: MaxMailboxesPerEmail,
