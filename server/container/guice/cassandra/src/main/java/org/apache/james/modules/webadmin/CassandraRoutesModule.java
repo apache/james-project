@@ -29,6 +29,7 @@ import org.apache.james.mailbox.cassandra.mail.migration.AclV2Migration;
 import org.apache.james.mailbox.cassandra.mail.migration.AttachmentMessageIdMigration;
 import org.apache.james.mailbox.cassandra.mail.migration.MessageDenormalizationMigration;
 import org.apache.james.mailbox.cassandra.mail.migration.MessageV3Migration;
+import org.apache.james.mailbox.cassandra.quota.migration.CassandraCurrentQuotaManagerMigration;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
@@ -44,6 +45,7 @@ public class CassandraRoutesModule extends AbstractModule {
     private static final SchemaTransition FROM_V9_TO_V10 = SchemaTransition.to(new SchemaVersion(10));
     private static final SchemaTransition FROM_V10_TO_V11 = SchemaTransition.to(new SchemaVersion(11));
     private static final SchemaTransition FROM_V11_TO_V12 = SchemaTransition.to(new SchemaVersion(12));
+    private static final SchemaTransition FROM_V12_TO_V13 = SchemaTransition.to(new SchemaVersion(13));
 
     @Override
     protected void configure() {
@@ -63,6 +65,7 @@ public class CassandraRoutesModule extends AbstractModule {
         allMigrationClazzBinder.addBinding(FROM_V9_TO_V10).to(AclV2Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V10_TO_V11).to(MessageDenormalizationMigration.class);
         allMigrationClazzBinder.addBinding(FROM_V11_TO_V12).to(AttachmentMessageIdMigration.class);
+        allMigrationClazzBinder.addBinding(FROM_V12_TO_V13).to(CassandraCurrentQuotaManagerMigration.class);
 
         bind(SchemaVersion.class)
             .annotatedWith(Names.named(CassandraMigrationService.LATEST_VERSION))
