@@ -38,6 +38,7 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV1;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
@@ -61,6 +62,7 @@ public class CassandraCurrentQuotaManagerMigrationTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraQuotaModule.MODULE,
+        CassandraMailboxQuotaModule.MODULE,
         CassandraUsersRepositoryModule.MODULE,
         CassandraDomainListModule.MODULE,
         CassandraMutualizedQuotaModule.MODULE));

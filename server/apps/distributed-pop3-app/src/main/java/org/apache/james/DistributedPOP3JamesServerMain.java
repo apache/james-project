@@ -59,6 +59,8 @@ import org.apache.james.modules.eventstore.CassandraEventStoreModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
 import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
+import org.apache.james.modules.mailbox.CassandraMailboxQuotaLegacyModule;
+import org.apache.james.modules.mailbox.CassandraMailboxQuotaModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.mailrepository.CassandraMailRepositoryModule;
@@ -195,6 +197,7 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
             .combineWith(BlobStoreModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(BlobStoreCacheModulesChooser.chooseModules(blobStoreConfiguration))
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
+            .combineWith(chooseMailboxQuotaModule(configuration))
             .combineWith(new UsersRepositoryModuleChooser(new CassandraUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .overrideWith(new DistributedPop3Module())
@@ -218,5 +221,13 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         return binder -> {
 
         };
+    }
+
+    private static Module chooseMailboxQuotaModule(DistributedPOP3JamesConfiguration configuration) {
+        if (configuration.isQuotaCompatibilityMode()) {
+            return new CassandraMailboxQuotaLegacyModule();
+        } else {
+            return new CassandraMailboxQuotaModule();
+        }
     }
 }

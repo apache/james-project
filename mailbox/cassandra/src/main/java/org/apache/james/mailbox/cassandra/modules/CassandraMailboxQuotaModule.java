@@ -17,26 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.cassandra.modules;
 
-import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import static com.datastax.oss.driver.api.core.type.DataTypes.COUNTER;
+import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
+import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
+
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
-import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 
-class CassandraCurrentQuotaManagerV1Test implements CurrentQuotaManagerContract {
+public interface CassandraMailboxQuotaModule {
+    CassandraModule MODULE = CassandraModule.builder()
+        .table(CassandraCurrentQuota.TABLE_NAME)
+        .comment("Holds per quota-root current values. Quota-roots defines groups of mailboxes which shares quotas limitations.")
+        .options(options -> options
+            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> types -> statement
+            .withPartitionKey(CassandraCurrentQuota.QUOTA_ROOT, TEXT)
+            .withColumn(CassandraCurrentQuota.MESSAGE_COUNT, COUNTER)
+            .withColumn(CassandraCurrentQuota.STORAGE, COUNTER))
 
-    @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraQuotaModule.MODULE,
-        CassandraMailboxQuotaModule.MODULE,
-        CassandraMutualizedQuotaModule.MODULE));
-
-    @Override
-    public CurrentQuotaManager testee() {
-        return new CassandraCurrentQuotaManagerV1(cassandraCluster.getCassandraCluster().getConf());
-    }
+        .build();
 }

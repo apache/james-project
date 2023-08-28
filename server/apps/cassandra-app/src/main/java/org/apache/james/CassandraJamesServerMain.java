@@ -42,6 +42,8 @@ import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
 import org.apache.james.modules.mailbox.CassandraBucketModule;
 import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
+import org.apache.james.modules.mailbox.CassandraMailboxQuotaLegacyModule;
+import org.apache.james.modules.mailbox.CassandraMailboxQuotaModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
@@ -196,6 +198,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
             .combineWith(new UsersRepositoryModuleChooser(new CassandraUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
+            .combineWith(chooseMailboxQuotaModule(configuration))
             .combineWith(chooseJmapModule(configuration));
     }
 
@@ -217,5 +220,13 @@ public class CassandraJamesServerMain implements JamesServerMain {
         return binder -> {
 
         };
+    }
+
+    private static Module chooseMailboxQuotaModule(CassandraJamesServerConfiguration configuration) {
+        if (configuration.isQuotaCompatibilityMode()) {
+            return new CassandraMailboxQuotaLegacyModule();
+        } else {
+            return new CassandraMailboxQuotaModule();
+        }
     }
 }
