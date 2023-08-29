@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -63,10 +65,27 @@ public class CassandraCurrentQuotaManagerV2 implements CurrentQuotaManager {
 
     @Override
     public Mono<CurrentQuotas> getCurrentQuotas(QuotaRoot quotaRoot) {
-        return Mono.zip(
-                getCurrentMessageCount(quotaRoot),
-                getCurrentStorage(quotaRoot))
-            .map(tuple2 -> new CurrentQuotas(tuple2.getT1(), tuple2.getT2()));
+        return currentValueDao.getQuotasByComponent(QuotaComponent.MAILBOX, quotaRoot.asString())
+            .collectList()
+            .map(this::buildCurrentQuotas);
+    }
+
+    private CurrentQuotas buildCurrentQuotas(List<QuotaCurrentValue> quotaCurrentValues) {
+        QuotaCountUsage count = extractQuotaByType(quotaCurrentValues, QuotaType.COUNT)
+            .map(value -> QuotaCountUsage.count(value.getCurrentValue()))
+            .orElse(QuotaCountUsage.count(0L));
+
+        QuotaSizeUsage size = extractQuotaByType(quotaCurrentValues, QuotaType.SIZE)
+            .map(value -> QuotaSizeUsage.size(value.getCurrentValue()))
+            .orElse(QuotaSizeUsage.size(0L));
+
+        return new CurrentQuotas(count, size);
+    }
+
+    private Optional<QuotaCurrentValue> extractQuotaByType(List<QuotaCurrentValue> quotaCurrentValues, QuotaType quotaType) {
+        return quotaCurrentValues.stream()
+            .filter(quotaValue -> quotaValue.getQuotaType().equals(quotaType))
+            .findAny();
     }
 
     @Override

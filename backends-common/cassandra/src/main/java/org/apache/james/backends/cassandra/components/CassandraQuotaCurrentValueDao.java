@@ -49,6 +49,7 @@ import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.api.querybuilder.update.Update;
 import com.google.common.base.MoreObjects;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraQuotaCurrentValueDao {
@@ -112,6 +113,7 @@ public class CassandraQuotaCurrentValueDao {
     private final PreparedStatement increaseStatement;
     private final PreparedStatement decreaseStatement;
     private final PreparedStatement getQuotaCurrentValueStatement;
+    private final PreparedStatement getQuotasByComponentStatement;
     private final PreparedStatement deleteQuotaCurrentValueStatement;
 
     @Inject
@@ -120,6 +122,7 @@ public class CassandraQuotaCurrentValueDao {
         this.increaseStatement = session.prepare(increaseStatement().build());
         this.decreaseStatement = session.prepare(decreaseStatement().build());
         this.getQuotaCurrentValueStatement = session.prepare(getQuotaCurrentValueStatement().build());
+        this.getQuotasByComponentStatement = session.prepare(getQuotasByComponentStatement().build());
         this.deleteQuotaCurrentValueStatement = session.prepare(deleteQuotaCurrentValueStatement().build());
     }
 
@@ -164,6 +167,13 @@ public class CassandraQuotaCurrentValueDao {
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue()));
     }
 
+    public Flux<QuotaCurrentValue> getQuotasByComponent(QuotaComponent quotaComponent, String identifier) {
+        return queryExecutor.executeRows(getQuotasByComponentStatement.bind()
+                .setString(QUOTA_COMPONENT, quotaComponent.getValue())
+                .setString(IDENTIFIER, identifier))
+            .map(row -> convertRowToModel(row));
+    }
+
     private Update increaseStatement() {
         return update(TABLE_NAME)
             .increment(CURRENT_VALUE, bindMarker(CURRENT_VALUE))
@@ -186,6 +196,13 @@ public class CassandraQuotaCurrentValueDao {
             .where(column(IDENTIFIER).isEqualTo(bindMarker(IDENTIFIER)),
                 column(QUOTA_COMPONENT).isEqualTo(bindMarker(QUOTA_COMPONENT)),
                 column(QUOTA_TYPE).isEqualTo(bindMarker(QUOTA_TYPE)));
+    }
+
+    private Select getQuotasByComponentStatement() {
+        return selectFrom(TABLE_NAME)
+            .all()
+            .where(column(IDENTIFIER).isEqualTo(bindMarker(IDENTIFIER)),
+                column(QUOTA_COMPONENT).isEqualTo(bindMarker(QUOTA_COMPONENT)));
     }
 
     private Delete deleteQuotaCurrentValueStatement() {
