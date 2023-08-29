@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import javax.inject.Inject;
 
@@ -65,7 +66,8 @@ public class CassandraUploadRepository implements UploadRepository {
 
         return Mono.fromCallable(() -> new CountingInputStream(data))
             .flatMap(countingInputStream -> Mono.from(blobStore.save(UPLOAD_BUCKET, countingInputStream, LOW_COST))
-                .map(blobId -> new UploadDAO.UploadRepresentation(uploadId, blobId, contentType, countingInputStream.getCount(), user, clock.instant()))
+                .map(blobId -> new UploadDAO.UploadRepresentation(uploadId, blobId, contentType, countingInputStream.getCount(), user,
+                    clock.instant().truncatedTo(ChronoUnit.MILLIS)))
                 .flatMap(upload -> uploadDAO.save(upload)
                     .thenReturn(upload.toUploadMetaData())));
     }

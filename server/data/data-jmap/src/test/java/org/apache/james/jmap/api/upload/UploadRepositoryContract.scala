@@ -30,9 +30,9 @@
  import org.apache.james.jmap.api.upload.UploadRepositoryContract.{CONTENT_TYPE, DATA_STRING, USER}
  import org.apache.james.mailbox.model.ContentType
  import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
+ import org.assertj.core.groups.Tuple.tuple
  import org.junit.jupiter.api.Test
  import reactor.core.scala.publisher.{SFlux, SMono}
- import org.assertj.core.groups.Tuple.tuple
 
  import scala.jdk.CollectionConverters._
 
@@ -135,6 +135,19 @@
      assertThat(uploadMetaDataList.asJava)
        .extracting("blobId", "uploadDate")
        .doesNotContainNull()
+   }
+
+   @Test
+   def listUploadsShouldReturnTheSameUploadDateAsUpload(): Unit = {
+     val contentType1: ContentType = ContentType
+       .of("text/html")
+     val data1: InputStream = IOUtils.toInputStream("123321", StandardCharsets.UTF_8)
+
+     val upload: UploadMetaData = SMono.fromPublisher(testee.upload(data1, contentType1, USER)).block()
+
+     val listUploadsResult: UploadMetaData = SFlux.fromPublisher(testee.listUploads(USER)).blockFirst().get;
+
+     assertThat(upload.uploadDate).isEqualTo(listUploadsResult.uploadDate)
    }
 
    @Test
