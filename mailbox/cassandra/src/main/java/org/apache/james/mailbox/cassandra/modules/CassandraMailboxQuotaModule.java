@@ -27,6 +27,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 
+@Deprecated() // To be removed after release 3.9.0
 public interface CassandraMailboxQuotaModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraCurrentQuota.TABLE_NAME)

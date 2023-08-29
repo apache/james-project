@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.table;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 
+@Deprecated() // To be removed after release 3.9.0
 public interface CassandraCurrentQuota {
 
     String TABLE_NAME = "currentQuota";

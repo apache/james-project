@@ -46,6 +46,7 @@ import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import reactor.core.publisher.Mono;
 
+@Deprecated() // To be removed after release 3.9.0
 public class CassandraCurrentQuotaManagerV1 implements CurrentQuotaManager {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
