@@ -28,6 +28,7 @@ import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
+@Deprecated() // To be removed after release 3.9.0
 public class CassandraMailboxQuotaLegacyModule extends AbstractModule {
     @Override
     protected void configure() {
