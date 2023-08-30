@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.cassandra.host;
 import java.time.Instant;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.events.EventBusTestFixture;
@@ -37,7 +38,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV1;
+import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
@@ -114,7 +115,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraPerUserMaxQuotaDao(session),
             new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
             new CassandraGlobalMaxQuotaDao(session));
-        CassandraCurrentQuotaManagerV1 currentQuotaManager = new CassandraCurrentQuotaManagerV1(session);
+        CassandraCurrentQuotaManagerV2 currentQuotaManager = new CassandraCurrentQuotaManagerV2(new CassandraQuotaCurrentValueDao(session));
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
         QuotaComponents quotaComponents = new QuotaComponents(perUserMaxQuotaManager, quotaManager, quotaRootResolver);

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import java.time.Instant;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
@@ -34,7 +35,7 @@ import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV1;
+import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
@@ -109,7 +110,7 @@ public class CassandraTestSystemFixture {
     }
 
     public static CurrentQuotaManager createCurrentQuotaManager(CassandraCluster cassandra) {
-        return new CassandraCurrentQuotaManagerV1(cassandra.getConf());
+        return new CassandraCurrentQuotaManagerV2(new CassandraQuotaCurrentValueDao(cassandra.getConf()));
     }
 
 }

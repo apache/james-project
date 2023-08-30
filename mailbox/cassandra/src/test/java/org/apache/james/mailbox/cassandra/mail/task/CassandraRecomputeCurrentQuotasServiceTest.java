@@ -49,6 +49,7 @@ import org.apache.james.user.cassandra.CassandraUsersDAO;
 import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -119,6 +120,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         return testee;
     }
 
+    @Disabled("JAMES-3926: new CassandraQuotaCurrentValueDao does not crash at failure on increase and decrease operations, thus we can't simulate the recompute task to fail by failing those cassandra queries")
     @Test
     void recomputeCurrentQuotasShouldReturnPartialWhenFailureAtReset() throws Exception {
         usersRepository().addUser(USER_1, PASSWORD);
@@ -131,12 +133,13 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
 
         cassandraCluster.getCassandraCluster().getConf().registerScenario(fail()
             .times(1)
-            .whenQueryStartsWith("UPDATE currentquota SET"));
+            .whenQueryStartsWith("UPDATE quotacurrentvalue SET"));
 
         assertThat(testee().recomputeCurrentQuotas(new RecomputeCurrentQuotasService.Context(), RunningOptions.DEFAULT).block())
             .isEqualTo(Task.Result.PARTIAL);
     }
 
+    @Disabled("JAMES-3926: new CassandraQuotaCurrentValueDao does not crash at failure on increase and decrease operations, thus we can't simulate the recompute task to fail by failing those cassandra queries")
     @Test
     void recomputeCurrentQuotasShouldUpdateContextWhenFailureAtReset() throws Exception {
         usersRepository().addUser(USER_1, PASSWORD);
@@ -149,7 +152,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
 
         cassandraCluster.getCassandraCluster().getConf().registerScenario(fail()
             .times(1)
-            .whenQueryStartsWith("UPDATE currentquota SET"));
+            .whenQueryStartsWith("UPDATE quotacurrentvalue SET"));
 
         RecomputeCurrentQuotasService.Context context = new RecomputeCurrentQuotasService.Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
