@@ -303,7 +303,7 @@ class ConsistencyTasksIntegrationTest {
     void shouldRecomputeQuotas(GuiceJamesServer server) throws Exception {
         Barrier barrier1 = new Barrier();
         Barrier barrier2 = new Barrier();
-        String updatedQuotaQueryString = "UPDATE currentquota SET messagecount";
+        String updatedQuotaQueryString = "UPDATE quotacurrentvalue SET";
         server.getProbe(TestingSessionProbe.class)
             .getTestingSession().registerScenario(
                 awaitOn(barrier1) // Event bus first execution
@@ -482,7 +482,7 @@ class ConsistencyTasksIntegrationTest {
                 awaitOn(barrier) // Event bus first execution
                     .thenExecuteNormally()
                     .times(1)
-                    .whenQueryStartsWith("UPDATE currentquota SET messagecount"));
+                    .whenQueryStartsWith("UPDATE quotacurrentvalue SET"));
 
         smtpMessageSender.connect(LOCALHOST_IP, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(ALICE.asString(), BOB.asString(), MESSAGE);
