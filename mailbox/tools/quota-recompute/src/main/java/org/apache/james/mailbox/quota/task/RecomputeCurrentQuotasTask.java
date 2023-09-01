@@ -79,7 +79,7 @@ public class RecomputeCurrentQuotasTask implements Task {
 
     @Override
     public Task.Result run() {
-        return service.recomputeCurrentQuotas(context, RunningOptions.DEFAULT)
+        return service.recomputeCurrentQuotas(context, runningOptions)
             .block();
     }
 

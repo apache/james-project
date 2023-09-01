@@ -21,6 +21,8 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,6 +32,7 @@ import javax.inject.Named;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
@@ -59,6 +62,9 @@ import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import spark.Request;
 import spark.Route;
 import spark.Service;
@@ -69,6 +75,10 @@ public class UserQuotaRoutes implements Routes {
 
     public static class RecomputeCurrentQuotasRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
         private static final String USERS_PER_SECOND = "usersPerSecond";
+        private static final String QUOTA_COMPONENT = "quotaComponent";
+        private static final ImmutableMap<String, QuotaComponent> QUOTA_COMPONENT_MAP = ImmutableMap.of(QuotaComponent.MAILBOX.getValue(), QuotaComponent.MAILBOX,
+                QuotaComponent.SIEVE.getValue(), QuotaComponent.SIEVE,
+                QuotaComponent.JMAP_UPLOADS.getValue(), QuotaComponent.JMAP_UPLOADS);
 
         @Inject
         public RecomputeCurrentQuotasRequestToTask(RecomputeCurrentQuotasService service) {
@@ -76,9 +86,7 @@ public class UserQuotaRoutes implements Routes {
         }
 
         private static RunningOptions parseRunningOptions(Request request) {
-            return intQueryParameter(request)
-                .map(RunningOptions::withUsersPerSecond)
-                .orElse(RunningOptions.DEFAULT);
+            return RunningOptions.of(intQueryParameter(request).orElse(RunningOptions.DEFAULT_USERS_PER_SECOND), getQuotaComponent(request));
         }
 
         private static Optional<Integer> intQueryParameter(Request request) {
@@ -89,6 +97,19 @@ public class UserQuotaRoutes implements Routes {
                 throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a " +
                     "strictly positive optional integer", USERS_PER_SECOND), e);
             }
+        }
+
+        private static Optional<QuotaComponent> getQuotaComponent(Request request) {
+            String quotaComponentString = request.queryParams(USERS_PER_SECOND);
+            if (Objects.isNull(quotaComponentString)) {
+                return Optional.empty();
+            }
+            QuotaComponent quotaComponent = QUOTA_COMPONENT_MAP.get(request.queryParams(USERS_PER_SECOND));
+            if (Objects.isNull(quotaComponent)) {
+                throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a existing " +
+                    "quota component", QUOTA_COMPONENT));
+            }
+            return Optional.of(quotaComponent);
         }
     }
 
