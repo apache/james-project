@@ -120,7 +120,9 @@ public class ReplaceProcessor extends AbstractMailboxProcessor<ReplaceRequest> i
 
     private Mono<Void> deleteBaseMessage(ReplaceRequest request, ImapSession session) {
         try {
-            ImmutableList<MessageUid> uids = Iterators.toStream(messageRange(session.getSelected(), new IdRange(request.getId()), request.isUseUid()).iterator())
+            ImmutableList<MessageUid> uids = Iterators.toStream(messageRange(session.getSelected(), new IdRange(request.getId()), request.isUseUid())
+                    .orElseThrow(() -> new MessageRangeException((request.getId() + " is an invalid range")))
+                    .iterator())
                 .collect(ImmutableList.toImmutableList());
 
             return getSelectedMailboxReactive(session)

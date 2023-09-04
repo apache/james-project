@@ -95,7 +95,9 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
         return getSelectedMailboxReactive(session)
             .flatMap(mailbox -> Flux.fromIterable(ImmutableList.copyOf(idSet))
-                .map(Throwing.<IdRange, MessageRange>function(idRange -> messageRange(selected, idRange, request.isUseUids())).sneakyThrow())
+                .map(Throwing.<IdRange, MessageRange>function(idRange -> messageRange(selected, idRange, request.isUseUids())
+                    .orElseThrow(() -> new MessageRangeException(idRange.getFormattedString() + " is an invalid range")))
+                    .sneakyThrow())
                 .concatMap(messageSet -> handleRange(request, session, responder, selected, mailbox, mailboxSession, failed, failedMsns, userFlags, messageSet))
                 .then())
             .then(unsolicitedResponses(session, responder, omitExpunged, request.isUseUids()))

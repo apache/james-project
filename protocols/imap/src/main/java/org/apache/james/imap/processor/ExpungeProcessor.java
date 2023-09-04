@@ -98,7 +98,9 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
             // Handle UID EXPUNGE which is part of UIDPLUS
             // See http://tools.ietf.org/html/rfc4315
             return Flux.fromIterable(ImmutableList.copyOf(ranges))
-                .map(Throwing.<IdRange, MessageRange>function(range -> messageRange(session.getSelected(), range, true)).sneakyThrow())
+                .map(Throwing.<IdRange, MessageRange>function(range -> messageRange(session.getSelected(), range, true)
+                    .orElseThrow(() -> new MessageRangeException(range.getFormattedString() + " is an invalid range")))
+                    .sneakyThrow())
                 .concatMap(range -> expunge(mailbox, range, session, mailboxSession))
                 .reduce(Integer::sum);
         }
