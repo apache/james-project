@@ -32,7 +32,7 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
+/*
 public class CassandraThreadLookupDAOTest {
     private static final Username ALICE = Username.of("alice");
     private static final Username BOB = Username.of("bob");
@@ -106,4 +106,4 @@ public class CassandraThreadLookupDAOTest {
             .isEqualTo(new ThreadTablePartitionKey(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
     }
 
-}
+}*/

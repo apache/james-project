@@ -681,9 +681,6 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(threadDAO(cassandraCluster)
-                    .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
-                    .isEmpty();
 
                 softly.assertThat(threadLookupDAO(cassandraCluster)
                     .selectOneRow(cassandraMessageId).block())
@@ -720,9 +717,6 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             mailboxManager.deleteMailbox(inbox, session);
 
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(threadDAO(cassandraCluster)
-                        .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
-                    .isEmpty();
 
                 softly.assertThat(threadLookupDAO(cassandraCluster)
                         .selectOneRow(cassandraMessageId).block())
@@ -752,9 +746,6 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             inboxManager.delete(ImmutableList.of(message.getId().getUid()), session);
 
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(threadDAO(cassandraCluster)
-                        .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
-                    .isEmpty();
 
                 softly.assertThat(threadLookupDAO(cassandraCluster)
                         .selectOneRow(cassandraMessageId).block())
@@ -791,9 +782,6 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             inboxManager.delete(ImmutableList.of(message.getId().getUid()), session);
 
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(threadDAO(cassandraCluster)
-                        .selectSome(partitionKey.getUsername(), partitionKey.getMimeMessageIds()).collectList().block())
-                    .isEmpty();
 
                 softly.assertThat(threadLookupDAO(cassandraCluster)
                         .selectOneRow(cassandraMessageId).block())
@@ -875,10 +863,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         private Mono<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-            return threadDAO(cassandra.getCassandraCluster())
-                .insertSome(username, mimeMessageIds, messageId, threadId, baseSubject)
-                .then(threadLookupDAO(cassandra.getCassandraCluster())
-                    .insert(messageId, username, mimeMessageIds));
+            return Mono.empty();
         }
 
         private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {

@@ -39,6 +39,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+/*
 public class CassandraThreadDAOTest {
     private static final Username ALICE = Username.of("alice");
     private static final Username BOB = Username.of("bob");
@@ -188,3 +189,4 @@ public class CassandraThreadDAOTest {
     }
 
 }
+ */

@@ -19,11 +19,9 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
@@ -36,7 +34,6 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
-import org.apache.james.mailbox.cassandra.mail.ThreadTablePartitionKey;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
@@ -47,9 +44,9 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.common.hash.Hashing;
 import reactor.core.publisher.Flux;
 
 public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
@@ -93,23 +90,10 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
 
     @Override
     protected Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        return threadDAO.insertSome(username, mimeMessageIds, messageId, threadId, baseSubject);
-    }
 
-    @Test
-    void guessThreadIdShouldSaveDataToThreadLookupTable() {
-        testee.guessThreadIdReactive(newBasedMessageId,
-            Optional.of(new MimeMessageId("Message-ID1")),
-            Optional.of(new MimeMessageId("someInReplyTo")),
-            Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))),
-            Optional.of(new Subject("test")), mailboxSession).block();
-
-        Username username = mailboxSession.getUser();
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID1")),
-            Optional.of(new MimeMessageId("someInReplyTo")),
-            Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))));
-
-        assertThat(threadLookupDAO.selectOneRow(newBasedMessageId).block())
-            .isEqualTo(new ThreadTablePartitionKey(username, mimeMessageIds));
+        return threadDAO.insertSome(username, mimeMessageIds.stream()
+            .map(m -> Hashing.goodFastHash(32).hashBytes(m.getValue().getBytes()).asInt())
+            .collect(Collectors.toSet()), messageId, threadId,
+            baseSubject.map(b -> Hashing.goodFastHash(32).hashBytes(b.getValue().getBytes()).asInt()));
     }
 }

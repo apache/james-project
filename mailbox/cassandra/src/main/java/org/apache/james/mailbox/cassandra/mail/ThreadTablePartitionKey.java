@@ -27,9 +27,9 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 
 public class ThreadTablePartitionKey {
     private final Username username;
-    private final Set<MimeMessageId> mimeMessageIds;
+    private final Set<Integer> mimeMessageIds;
 
-    public ThreadTablePartitionKey(Username username, Set<MimeMessageId> mimeMessageIds) {
+    public ThreadTablePartitionKey(Username username, Set<Integer> mimeMessageIds) {
         this.username = username;
         this.mimeMessageIds = mimeMessageIds;
     }
@@ -38,7 +38,7 @@ public class ThreadTablePartitionKey {
         return username;
     }
 
-    public Set<MimeMessageId> getMimeMessageIds() {
+    public Set<Integer> getMimeMessageIds() {
         return mimeMessageIds;
     }
 

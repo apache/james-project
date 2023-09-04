@@ -23,7 +23,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.common.hash.Hashing;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -58,8 +60,11 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
 
     @Override
     public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references);
-        Optional<Subject> baseSubject = subject.map(value -> new Subject(SearchUtil.getBaseSubject(value.getValue())));
+        Set<Integer> mimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references).stream()
+            .map(m -> Hashing.murmur3_32_fixed().hashBytes(m.getValue().getBytes()).asInt())
+            .collect(Collectors.toSet());
+        Optional<Integer> baseSubject = subject.map(value -> new Subject(SearchUtil.getBaseSubject(value.getValue())))
+            .map(m -> Hashing.murmur3_32_fixed().hashBytes(m.getValue().getBytes()).asInt());
         return Flux.from(threadDAO.selectSome(session.getUser(), mimeMessageIds))
             .filter(pair -> pair.getLeft().equals(baseSubject))
             .next()
