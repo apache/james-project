@@ -94,7 +94,6 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private final ModSeqProvider modSeqProvider;
     private final UidProvider uidProvider;
-    private final CassandraMessageDAO messageDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraMessageIdDAO messageIdDAO;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
@@ -115,7 +114,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     public CassandraMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider,
                                   CassandraAttachmentMapper attachmentMapper,
-                                  CassandraMessageDAO messageDAO, CassandraMessageDAOV3 messageDAOV3, CassandraMessageIdDAO messageIdDAO,
+                                  CassandraMessageDAOV3 messageDAOV3, CassandraMessageIdDAO messageIdDAO,
                                   CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMailboxCounterDAO mailboxCounterDAO,
                                   CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                   CassandraIndexTableHandler indexTableHandler, CassandraFirstUnseenDAO firstUnseenDAO,
@@ -123,7 +122,6 @@ public class CassandraMessageMapper implements MessageMapper {
                                   BatchSizes batchSizes, RecomputeMailboxCountersService recomputeMailboxCountersService, Clock clock) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
-        this.messageDAO = messageDAO;
         this.messageDAOV3 = messageDAOV3;
         this.messageIdDAO = messageIdDAO;
         this.imapUidDAO = imapUidDAO;
@@ -274,7 +272,6 @@ public class CassandraMessageMapper implements MessageMapper {
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
-            .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType)))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, metadata.getSaveDate(), fetchType));
     }
@@ -344,8 +341,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     private Mono<SimpleMailboxMessage> expungeOne(ComposedMessageIdWithMetaData metaData, Optional<Date> saveDate) {
         return delete(metaData)
-            .then(messageDAOV3.retrieveMessage(metaData, FetchType.METADATA)
-                .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metaData, FetchType.METADATA))))
+            .then(messageDAOV3.retrieveMessage(metaData, FetchType.METADATA))
             .map(pair -> pair.toMailboxMessage(metaData, ImmutableList.of(), saveDate));
     }
 

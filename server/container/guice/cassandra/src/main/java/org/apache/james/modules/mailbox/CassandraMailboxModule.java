@@ -29,7 +29,6 @@ import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.events.EventListener;
 import org.apache.james.eventsourcing.Event;
@@ -64,12 +63,10 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.AttachmentBlobReferenceSource;
-import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV1;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
@@ -77,7 +74,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -145,16 +141,13 @@ public class CassandraMailboxModule extends AbstractModule {
 
         bind(CassandraApplicableFlagDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentDAOV2.class).in(Scopes.SINGLETON);
-        bind(CassandraAttachmentMessageIdDAO.class).in(Scopes.SINGLETON);
         bind(CassandraDeletedMessageDAO.class).in(Scopes.SINGLETON);
         bind(CassandraFirstUnseenDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxCounterDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraACLDAOV1.class).in(Scopes.SINGLETON);
         bind(CassandraACLDAOV2.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxPathV3DAO.class).in(Scopes.SINGLETON);
         bind(CassandraMailboxRecentsDAO.class).in(Scopes.SINGLETON);
-        bind(CassandraMessageDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageDAOV3.class).in(Scopes.SINGLETON);
         bind(CassandraMessageIdDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMessageIdToImapUidDAO.class).in(Scopes.SINGLETON);
@@ -262,16 +255,14 @@ public class CassandraMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    CassandraACLMapper aclMapper(CassandraACLMapper.StoreV1 storeV1,
-                                 CassandraUserMailboxRightsDAO userMailboxRightsDAO,
+    CassandraACLMapper aclMapper(CassandraUserMailboxRightsDAO userMailboxRightsDAO,
                                  CassandraACLDAOV2 cassandraACLDAOV2,
                                  CqlSession session,
-                                 CassandraSchemaVersionManager cassandraSchemaVersionManager,
                                  CassandraConfiguration cassandraConfiguration) {
-        return new CassandraACLMapper(storeV1,
+        return new CassandraACLMapper(
             new CassandraACLMapper.StoreV2(userMailboxRightsDAO, cassandraACLDAOV2,
                 new CassandraEventStore(new EventStoreDao(session, JsonEventSerializer.forModules(ACLModule.ACL_UPDATE).withoutNestedType()))),
-            cassandraSchemaVersionManager, cassandraConfiguration);
+            cassandraConfiguration);
     }
     
     @Singleton

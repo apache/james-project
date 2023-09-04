@@ -34,7 +34,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Tabl
 import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Table.TYPE;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -128,23 +127,20 @@ public class CassandraAttachmentDAOV2 {
             attachment.getSize());
     }
 
-    private static Mono<DAOAttachment> fromRow(Row row, BlobId.Factory blobIfFactory, Mono<CassandraMessageId> fallback) {
-        return Optional.ofNullable(row.getUuid(MESSAGE_ID))
-            .map(CassandraMessageId.Factory::of)
-            .map(Mono::just)
-            .orElse(fallback)
-            .map(messageIdAsUUid -> new DAOAttachment(
-                messageIdAsUUid,
-                AttachmentId.from(row.getString(ID)),
-                blobIfFactory.from(row.getString(BLOB_ID)),
-                ContentType.of(row.getString(TYPE)),
-                row.getLong(SIZE)));
+    private static DAOAttachment fromRow(Row row, BlobId.Factory blobIfFactory) {
+        MessageId messageId = CassandraMessageId.Factory.of(row.getUuid(MESSAGE_ID));
+
+        return new DAOAttachment(
+            messageId,
+            AttachmentId.from(row.getString(ID)),
+            blobIfFactory.from(row.getString(BLOB_ID)),
+            ContentType.of(row.getString(TYPE)),
+            row.getLong(SIZE));
     }
 
     private final BlobId.Factory blobIdFactory;
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insertStatement;
-    private final PreparedStatement insertMessageIdStatement;
     private final PreparedStatement deleteStatement;
     private final PreparedStatement selectStatement;
     private final PreparedStatement listBlobs;
@@ -159,7 +155,6 @@ public class CassandraAttachmentDAOV2 {
         this.insertStatement = prepareInsert();
         this.deleteStatement = prepareDelete();
         this.listBlobs = prepareSelectBlobs();
-        this.insertMessageIdStatement = prepareInsertMessageId();
     }
 
     private PreparedStatement prepareSelectBlobs() {
@@ -186,14 +181,6 @@ public class CassandraAttachmentDAOV2 {
                 .build());
     }
 
-    private PreparedStatement prepareInsertMessageId() {
-        return session.prepare(
-            insertInto(TABLE_NAME)
-                .value(ID_AS_UUID, bindMarker(ID_AS_UUID))
-                .value(MESSAGE_ID, bindMarker(MESSAGE_ID))
-                .build());
-    }
-
     private PreparedStatement prepareSelect() {
         return session.prepare(selectFrom(TABLE_NAME)
             .columns(FIELDS)
@@ -201,12 +188,12 @@ public class CassandraAttachmentDAOV2 {
             .build());
     }
 
-    public Mono<DAOAttachment> getAttachment(AttachmentId attachmentId, Mono<CassandraMessageId> fallback) {
+    public Mono<DAOAttachment> getAttachment(AttachmentId attachmentId) {
         Preconditions.checkArgument(attachmentId != null);
         return cassandraAsyncExecutor.executeSingleRow(
                 selectStatement.bind()
                     .setUuid(ID_AS_UUID, attachmentId.asUUID()))
-            .flatMap(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory, fallback));
+            .map(row -> CassandraAttachmentDAOV2.fromRow(row, blobIdFactory));
     }
 
     public Mono<Void> storeAttachment(DAOAttachment attachment) {
@@ -219,14 +206,6 @@ public class CassandraAttachmentDAOV2 {
                 .setUuid(MESSAGE_ID, messageId.get())
                 .setString(TYPE, attachment.getType().asString())
                 .setString(BLOB_ID, attachment.getBlobId().asString()));
-    }
-
-    public Mono<Void> insertMessageId(AttachmentId attachmentId, MessageId messageId) {
-        CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
-        return cassandraAsyncExecutor.executeVoid(
-            insertMessageIdStatement.bind()
-                .setUuid(ID_AS_UUID, attachmentId.asUUID())
-                .setUuid(MESSAGE_ID, cassandraMessageId.get()));
     }
 
     public Mono<Void> delete(AttachmentId attachmentId) {

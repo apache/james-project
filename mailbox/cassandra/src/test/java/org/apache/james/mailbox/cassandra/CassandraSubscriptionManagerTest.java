@@ -38,14 +38,12 @@ import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV3DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -95,7 +93,6 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraThreadDAO threadDAO = null;
         CassandraThreadLookupDAO threadLookupDAO = null;
         CassandraMessageIdToImapUidDAO imapUidDAO = null;
-        CassandraMessageDAO messageDAO = null;
         CassandraMessageDAOV3 messageDAOV3 = null;
         CassandraMessageIdDAO messageIdDAO = null;
         CassandraMailboxCounterDAO mailboxCounterDAO = null;
@@ -106,7 +103,6 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
         CassandraApplicableFlagDAO applicableFlagDAO = null;
         CassandraDeletedMessageDAO deletedMessageDAO = null;
         CassandraAttachmentDAOV2 attachmentDAOV2 = null;
-        CassandraAttachmentMessageIdDAO attachmentMessageIdDAO = null;
         CassandraACLMapper aclMapper = null;
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = null;
         BlobStore blobStore = null;
@@ -120,7 +116,6 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
             cassandraCluster.getCassandraCluster().getConf(),
             threadDAO,
             threadLookupDAO,
-            messageDAO,
             messageDAOV3,
             messageIdDAO,
             imapUidDAO,
@@ -133,7 +128,6 @@ class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
             attachmentDAOV2,
             deletedMessageDAO,
             blobStore,
-            attachmentMessageIdDAO,
             aclMapper,
             userMailboxRightsDAO,
             recomputeMailboxCountersService,

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
-import static com.datastax.oss.driver.api.core.type.DataTypes.BIGINT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
 import static com.datastax.oss.driver.api.core.type.DataTypes.setOf;
@@ -27,7 +26,6 @@ import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPart
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
-import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.cassandra.table.CassandraACLV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraUserMailboxRightsTable;
 
@@ -36,14 +34,6 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 public interface CassandraAclModule {
     CassandraModule MODULE = CassandraModule
         .builder()
-        .table(CassandraACLTable.TABLE_NAME)
-        .comment("Holds mailbox ACLs")
-        .options(options -> options
-            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> types -> statement
-            .withPartitionKey(CassandraACLTable.ID, TIMEUUID)
-            .withColumn(CassandraACLTable.ACL, TEXT)
-            .withColumn(CassandraACLTable.VERSION, BIGINT))
 
         .table(CassandraACLV2Table.TABLE_NAME)
         .comment("Holds mailbox ACLs. This table do not rely on a JSON representation nor on LWT, contrary to the acl table it replaces.")

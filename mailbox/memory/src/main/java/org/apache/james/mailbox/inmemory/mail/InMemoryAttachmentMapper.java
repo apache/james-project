@@ -106,11 +106,6 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
-        return messageIdsByAttachmentId.get(attachmentId);
-    }
-
-    @Override
     public InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException {
         byte[] buf = attachmentsRawContentById.get(attachmentId);
         if (buf == null) {
