@@ -24,6 +24,7 @@ import java.time.Clock;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -41,7 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraUploadServiceTest implements UploadServiceContract {
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        UploadModule.MODULE, CassandraQuotaModule.MODULE));
+        UploadModule.MODULE, CassandraQuotaModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
 
     private CassandraUploadRepository uploadRepository;
     private CassandraUploadUsageRepository uploadUsageRepository;
