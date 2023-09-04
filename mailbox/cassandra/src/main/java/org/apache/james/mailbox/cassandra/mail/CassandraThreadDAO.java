@@ -43,8 +43,6 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.MimeMessageId;
-import org.apache.james.mailbox.store.mail.model.Subject;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -83,35 +81,35 @@ public class CassandraThreadDAO {
             .build());
     }
 
-    public Flux<Void> insertSome(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        return Flux.fromIterable(mimeMessageIds)
+    public Flux<Void> insertSome(Username username, Set<Integer> hashMimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Integer> hashBaseSubject) {
+        return Flux.fromIterable(hashMimeMessageIds)
             .flatMap(mimeMessageId -> executor.executeVoid(insertOne.bind()
                 .set(USERNAME, username.asString(), TypeCodecs.TEXT)
-                .set(MIME_MESSAGE_ID, mimeMessageId.getValue(), TypeCodecs.TEXT)
+                .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT)
                 .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
                 .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
-                .set(BASE_SUBJECT, baseSubject.map(Subject::getValue).orElse(null), TypeCodecs.TEXT)), DEFAULT_CONCURRENCY);
+                .set(BASE_SUBJECT, hashBaseSubject.orElse(null), TypeCodecs.INT)), DEFAULT_CONCURRENCY);
     }
 
-    public Flux<Pair<Optional<Subject>, ThreadId>> selectSome(Username username, Set<MimeMessageId> mimeMessageIds) {
-        return Flux.fromIterable(mimeMessageIds)
+    public Flux<Pair<Optional<Integer>, ThreadId>> selectSome(Username username, Set<Integer> hashMimeMessageIds) {
+        return Flux.fromIterable(hashMimeMessageIds)
             .flatMap(mimeMessageId -> executor
                 .executeSingleRow(selectOne.bind()
                     .set(USERNAME, username.asString(), TypeCodecs.TEXT)
-                    .set(MIME_MESSAGE_ID, mimeMessageId.getValue(), TypeCodecs.TEXT))
+                    .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT))
                 .map(this::readRow), DEFAULT_CONCURRENCY)
             .distinct();
     }
 
-    public Flux<Void> deleteSome(Username username, Set<MimeMessageId> mimeMessageIds) {
-        return Flux.fromIterable(mimeMessageIds)
+    public Flux<Void> deleteSome(Username username, Set<Integer> hashMimeMessageIds) {
+        return Flux.fromIterable(hashMimeMessageIds)
             .flatMap(mimeMessageId -> executor.executeVoid(deleteOne.bind()
                 .set(USERNAME, username.asString(), TypeCodecs.TEXT)
-                .set(MIME_MESSAGE_ID, mimeMessageId.getValue(), TypeCodecs.TEXT)));
+                .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT)));
     }
 
-    public Pair<Optional<Subject>, ThreadId> readRow(Row row) {
-        return Pair.of(Optional.ofNullable(row.getString(BASE_SUBJECT)).map(Subject::new),
+    public Pair<Optional<Integer>, ThreadId> readRow(Row row) {
+        return Pair.of(Optional.ofNullable(row.get(BASE_SUBJECT, Integer.class)),
             ThreadId.fromBaseMessageId(CassandraMessageId.Factory.of(row.getUuid(THREAD_ID))));
     }
 

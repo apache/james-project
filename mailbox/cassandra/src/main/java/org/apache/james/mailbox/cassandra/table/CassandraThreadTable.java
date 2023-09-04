@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.table;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 
 public interface CassandraThreadTable {
-    String TABLE_NAME = "threadTable";
+    String TABLE_NAME = "thread_2";
 
     CqlIdentifier USERNAME = CqlIdentifier.fromCql("username");
 

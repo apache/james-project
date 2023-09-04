@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.modules;
 
+import static com.datastax.oss.driver.api.core.type.DataTypes.INT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TEXT;
 import static com.datastax.oss.driver.api.core.type.DataTypes.TIMEUUID;
 import static com.datastax.oss.driver.api.core.type.DataTypes.frozenSetOf;
@@ -39,16 +40,16 @@ public interface CassandraThreadModule {
         .comment("Related data needed for guessing threadId algorithm")
         .statement(statement -> types -> statement
             .withPartitionKey(USERNAME, TEXT)
-            .withPartitionKey(MIME_MESSAGE_ID, TEXT)
+            .withPartitionKey(MIME_MESSAGE_ID, INT)
             .withClusteringColumn(MESSAGE_ID, TIMEUUID)
             .withColumn(THREAD_ID, TIMEUUID)
-            .withColumn(BASE_SUBJECT, TEXT))
+            .withColumn(BASE_SUBJECT, INT))
         .table(CassandraThreadLookupTable.TABLE_NAME)
         .comment("Thread table lookup by messageId, using for deletion thread data")
         .statement(statement -> types -> statement
             .withPartitionKey(MESSAGE_ID, TIMEUUID)
             .withColumn(USERNAME, TEXT)
-            .withColumn(MIME_MESSAGE_IDS, frozenSetOf(TEXT)))
+            .withColumn(MIME_MESSAGE_IDS, frozenSetOf(INT)))
         .build();
 
 }

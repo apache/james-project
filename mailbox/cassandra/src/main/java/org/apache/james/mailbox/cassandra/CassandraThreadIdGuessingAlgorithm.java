@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -41,6 +42,8 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.search.SearchUtil;
 
+import com.google.common.hash.Hashing;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -58,16 +61,22 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
 
     @Override
     public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
-        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references);
-        Optional<Subject> baseSubject = subject.map(value -> new Subject(SearchUtil.getBaseSubject(value.getValue())));
-        return Flux.from(threadDAO.selectSome(session.getUser(), mimeMessageIds))
-            .filter(pair -> pair.getLeft().equals(baseSubject))
+        Set<Integer> hashMimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references)
+            .stream()
+            .map(mimeMessageId1 -> Hashing.murmur3_32_fixed().hashBytes(mimeMessageId1.getValue().getBytes()).asInt())
+            .collect(Collectors.toSet());
+
+        Optional<Integer> hashBaseSubject = subject.map(value -> new Subject(SearchUtil.getBaseSubject(value.getValue())))
+            .map(subject1 -> Hashing.murmur3_32_fixed().hashBytes(subject1.getValue().getBytes()).asInt());
+
+        return Flux.from(threadDAO.selectSome(session.getUser(), hashMimeMessageIds))
+            .filter(pair -> pair.getLeft().equals(hashBaseSubject))
             .next()
             .map(Pair::getRight)
             .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)))
             .flatMap(threadId -> threadDAO
-                .insertSome(session.getUser(), mimeMessageIds, messageId, threadId, baseSubject)
-                .then(threadLookupDAO.insert(messageId, session.getUser(), mimeMessageIds))
+                .insertSome(session.getUser(), hashMimeMessageIds, messageId, threadId, hashBaseSubject)
+                .then(threadLookupDAO.insert(messageId, session.getUser(), hashMimeMessageIds))
                 .then(Mono.just(threadId)));
     }
 

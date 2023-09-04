@@ -20,6 +20,8 @@ package org.apache.james.mailbox.cassandra;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.backends.cassandra.Scenario.Builder.fail;
+import static org.apache.james.mailbox.cassandra.mail.CassandraThreadDAOTest.hashMimeMessagesIds;
+import static org.apache.james.mailbox.cassandra.mail.CassandraThreadDAOTest.hashSubject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -842,9 +844,9 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
 
         private Mono<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
             return threadDAO(cassandra.getCassandraCluster())
-                .insertSome(username, mimeMessageIds, messageId, threadId, baseSubject)
+                .insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject))
                 .then(threadLookupDAO(cassandra.getCassandraCluster())
-                    .insert(messageId, username, mimeMessageIds));
+                    .insert(messageId, username, hashMimeMessagesIds(mimeMessageIds)));
         }
 
         private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {

@@ -22,6 +22,8 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -38,8 +40,19 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 
 public class CassandraThreadDAOTest {
+    public static Set<Integer> hashMimeMessagesIds(Set<MimeMessageId> mimeMessageIds) {
+        return mimeMessageIds.stream()
+            .map(mimeMessageId -> Hashing.murmur3_32_fixed().hashBytes(mimeMessageId.getValue().getBytes()).asInt())
+            .collect(Collectors.toSet());
+    }
+
+    public static Optional<Integer> hashSubject(Optional<Subject> baseSubjectOptional) {
+        return baseSubjectOptional.map(baseSubject -> Hashing.murmur3_32_fixed().hashBytes(baseSubject.getValue().getBytes()).asInt());
+    }
+
     private static final Username ALICE = Username.of("alice");
     private static final Username BOB = Username.of("bob");
 
@@ -78,35 +91,38 @@ public class CassandraThreadDAOTest {
     }
 
     @Test
-    void insertShouldSuccess() {
+    void insertShouldSucceed() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId1)).collectList().block())
-            .isEqualTo(ImmutableList.of(Pair.of(message1BaseSubject, threadId1)));
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1))).collectList().block())
+            .isEqualTo(ImmutableList.of(Pair.of(hashSubject(message1BaseSubject), threadId1)));
     }
 
     @Test
     void insertNullBaseSubjectShouldBeAllowed() {
         Optional<Subject> message1BaseSubject = Optional.empty();
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId1)).collectList().block())
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1))).collectList().block())
             .isEqualTo(ImmutableList.of(Pair.of(Optional.empty(), threadId1)));
     }
 
     @Test
     void insertEmptyBaseSubjectShouldBeAllowed() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject(""));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId1)).collectList().block())
-            .isEqualTo(ImmutableList.of(Pair.of(message1BaseSubject, threadId1)));
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1))).collectList().block())
+            .isEqualTo(ImmutableList.of(Pair.of(hashSubject(message1BaseSubject), threadId1)));
     }
 
     @Test
     void selectShouldReturnEmptyByDefault() {
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId1)).collectList().block()
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1))).collectList().block()
             .isEmpty());
     }
 
@@ -115,61 +131,69 @@ public class CassandraThreadDAOTest {
         Optional<Subject> messageBaseSubject = Optional.of(new Subject("subject"));
 
         // given message1 and message2 belongs to same thread, related to each other by mimeMessageId2, mimeMessageId3
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1, mimeMessageId2, mimeMessageId3), messageId1, threadId1, messageBaseSubject).collectList().block();
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId2, mimeMessageId3, mimeMessageId4), messageId2, threadId1, messageBaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2, mimeMessageId3)), messageId1, threadId1, hashSubject(messageBaseSubject))
+            .collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2, mimeMessageId3, mimeMessageId4)), messageId2, threadId1, hashSubject(messageBaseSubject))
+            .collectList().block();
 
         // select with new message having mimeMessageId2 and mimeMessageId3
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId2, mimeMessageId3)).collectList().block())
-            .isEqualTo(ImmutableList.of(Pair.of(messageBaseSubject, threadId1)));
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2, mimeMessageId3))).collectList().block())
+            .isEqualTo(ImmutableList.of(Pair.of(hashSubject(messageBaseSubject), threadId1)));
     }
 
     @Test
     void selectShouldReturnOnlyRelatedMessageDataOfAUser() {
         // insert message1 data of ALICE
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
         // insert message2 data of BOB
         Optional<Subject> message2BaseSubject = Optional.of(new Subject("subject2"));
-        testee.insertSome(BOB, ImmutableSet.of(mimeMessageId2), messageId2, threadId2, message2BaseSubject).collectList().block();
+        testee.insertSome(BOB, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)), messageId2, threadId2, hashSubject(message2BaseSubject)).collectList().block();
 
         // select some data of BOB
-        assertThat(testee.selectSome(BOB, ImmutableSet.of(mimeMessageId2)).collectList().block())
-            .isEqualTo(ImmutableList.of(Pair.of(message2BaseSubject, threadId2)));
+        assertThat(testee.selectSome(BOB, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)))
+            .collectList().block())
+            .isEqualTo(ImmutableList.of(Pair.of(hashSubject(message2BaseSubject), threadId2)));
     }
 
     @Test
     void selectShouldReturnOnlyRelatedMessageDataOfAThread() {
         // insert message1 data of ALICE which in thread1
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
         // insert message2 data of ALICE which in thread2
         Optional<Subject> message2BaseSubject = Optional.of(new Subject("subject2"));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId2), messageId2, threadId2, message2BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)), messageId2, threadId2, hashSubject(message2BaseSubject))
+            .collectList().block();
 
         // select some data related to thread2
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId2)).collectList().block())
-            .isEqualTo(ImmutableList.of(Pair.of(message2BaseSubject, threadId2)));
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2))).collectList().block())
+            .isEqualTo(ImmutableList.of(Pair.of(hashSubject(message2BaseSubject), threadId2)));
     }
 
     @Test
     void selectWithUnrelatedMimeMessageIDsShouldReturnEmpty() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1, mimeMessageId2), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId3, mimeMessageId4, mimeMessageId5)).collectList().block())
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId3, mimeMessageId4, mimeMessageId5))).collectList().block())
             .isEqualTo(ImmutableList.of());
     }
 
     @Test
     void deletedEntriesShouldNotBeReturned() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1, mimeMessageId2), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
-        testee.deleteSome(ALICE, ImmutableSet.of(mimeMessageId1, mimeMessageId2));
+        testee.deleteSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)));
 
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId1, mimeMessageId2)).collectList().block()
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2))).collectList().block()
             .isEmpty());
     }
 
@@ -177,14 +201,16 @@ public class CassandraThreadDAOTest {
     void deleteWithUnrelatedMimeMessageIDsShouldDeleteNothing() {
         // insert message1 data
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, ImmutableSet.of(mimeMessageId1, mimeMessageId2), messageId1, threadId1, message1BaseSubject).collectList().block();
+        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), messageId1, threadId1, hashSubject(message1BaseSubject))
+            .collectList().block();
 
         // delete with unrelated mimemessageIds
-        testee.deleteSome(ALICE, ImmutableSet.of(mimeMessageId3, mimeMessageId4, mimeMessageId5));
+        testee.deleteSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId3, mimeMessageId4, mimeMessageId5)))
+            .collectList().block();
 
         // alice's data should remain
-        assertThat(testee.selectSome(ALICE, ImmutableSet.of(mimeMessageId1, mimeMessageId2)).collectList().block())
-            .isEqualTo(ImmutableList.of(Pair.of(message1BaseSubject, threadId1)));
+        assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2))).collectList().block())
+            .isEqualTo(ImmutableList.of(Pair.of(hashSubject(message1BaseSubject), threadId1)));
     }
 
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
+import static org.apache.james.mailbox.cassandra.mail.CassandraThreadDAOTest.hashMimeMessagesIds;
+import static org.apache.james.mailbox.cassandra.mail.CassandraThreadDAOTest.hashSubject;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -93,7 +95,7 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
 
     @Override
     protected Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        return threadDAO.insertSome(username, mimeMessageIds, messageId, threadId, baseSubject);
+        return threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject));
     }
 
     @Test
@@ -110,6 +112,6 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
             Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))));
 
         assertThat(threadLookupDAO.selectOneRow(newBasedMessageId).block())
-            .isEqualTo(new ThreadTablePartitionKey(username, mimeMessageIds));
+            .isEqualTo(new ThreadTablePartitionKey(username, hashMimeMessagesIds(mimeMessageIds)));
     }
 }

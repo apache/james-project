@@ -21,6 +21,18 @@ Change list:
  - [Jmap uploads](#jmap-uploads)
  - [Mutualize quota table](#mutualize-quota-table)
  - [Drop Legacy Cassandra migrations](#drop-legacy-cassandra-migrations)
+ - [Improve CassandraThreadIdGuessingAlgorithm](#improve-cassandrathreadidguessingalgorithm)
+
+### Improve CassandraThreadIdGuessingAlgorithm
+Date: 14/09/2023
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3937
+
+Concerned products: Distributed James, Cassandra James Server
+
+Following the CassandraThreadIdGuessingAlgorithm improvement, `threadTable` and `threadLookupTable` Cassandra tables can be deleted.
+
+Note that this will cause a discontinuity in thread allocation: 2 threads instead of one. This seems acceptable and preferable to a complex migration in our eyes.
 
 ### Drop Legacy Cassandra migrations
 
