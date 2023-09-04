@@ -19,21 +19,14 @@
 
 package org.apache.james.vacation.cassandra;
 
-import static com.datastax.oss.driver.api.querybuilder.SchemaBuilder.RowsPerPartition.rows;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.vacation.cassandra.tables.CassandraNotificationTable;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
-import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 
 public interface CassandraNotificationRegistryModule {
     CassandraModule MODULE = CassandraModule.table(CassandraNotificationTable.TABLE_NAME)
         .comment("Stores registry of vacation notification being sent.")
-        .options(options -> options
-            .withCompaction(SchemaBuilder.timeWindowCompactionStrategy())
-            .withCaching(true, rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> types -> statement
             .withPartitionKey(CassandraNotificationTable.ACCOUNT_ID, DataTypes.TEXT)
             .withClusteringColumn(CassandraNotificationTable.RECIPIENT_ID, DataTypes.TEXT))
