@@ -22,11 +22,9 @@ package org.apache.james.mailbox.cassandra;
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.STRONG;
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.WEAK;
 import static org.apache.james.util.FunctionalUtils.negate;
-import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -43,12 +41,10 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2;
-import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraDeletedMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
-import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAOV3;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdToImapUidDAO;
@@ -56,7 +52,6 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraThreadLookupDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
-import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
@@ -100,10 +95,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private final CassandraThreadLookupDAO threadLookupDAO;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
-    private final CassandraMessageDAO messageDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraAttachmentDAOV2 attachmentDAO;
-    private final CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
     private final ACLMapper aclMapper;
     private final CassandraUserMailboxRightsDAO rightsDAO;
     private final CassandraApplicableFlagDAO applicableFlagDAO;
@@ -117,9 +110,9 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     @Inject
     public DeleteMessageListener(CassandraThreadDAO threadDAO, CassandraThreadLookupDAO threadLookupDAO,
-                                 CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO, CassandraMessageDAO messageDAO,
+                                 CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
                                  CassandraMessageDAOV3 messageDAOV3, CassandraAttachmentDAOV2 attachmentDAO,
-                                 CassandraAttachmentMessageIdDAO attachmentMessageIdDAO, ACLMapper aclMapper,
+                                 ACLMapper aclMapper,
                                  CassandraUserMailboxRightsDAO rightsDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                  CassandraFirstUnseenDAO firstUnseenDAO, CassandraDeletedMessageDAO deletedMessageDAO,
                                  CassandraMailboxCounterDAO counterDAO, CassandraMailboxRecentsDAO recentsDAO, BlobStore blobStore,
@@ -128,10 +121,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         this.threadLookupDAO = threadLookupDAO;
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
-        this.messageDAO = messageDAO;
         this.messageDAOV3 = messageDAOV3;
         this.attachmentDAO = attachmentDAO;
-        this.attachmentMessageIdDAO = attachmentMessageIdDAO;
         this.aclMapper = aclMapper;
         this.rightsDAO = rightsDAO;
         this.applicableFlagDAO = applicableFlagDAO;
@@ -211,8 +202,6 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .flatMap(message -> Flux.fromIterable(deletionCallbackList).concatMap(callback -> callback.forMessage(message, mailboxId, owner)).then().thenReturn(message))
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
                 .flatMap(this::deleteMessageBlobs)
-                .flatMap(this::deleteAttachmentMessageIds)
-                .then(messageDAO.delete(messageId))
                 .then(messageDAOV3.delete(messageId))
                 .then(threadLookupDAO.selectOneRow(messageId)
                     .flatMap(key -> threadDAO.deleteSome(key.getUsername(), key.getMimeMessageIds())
@@ -227,8 +216,6 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .flatMap(message -> Flux.fromIterable(deletionCallbackList).concatMap(callback -> callback.forMessage(message, excludedId, owner)).then().thenReturn(message))
                 .flatMap(message -> deleteUnreferencedAttachments(message).thenReturn(message))
                 .flatMap(this::deleteMessageBlobs)
-                .flatMap(this::deleteAttachmentMessageIds)
-                .then(messageDAO.delete(messageId))
                 .then(messageDAOV3.delete(messageId))
                 .then(threadLookupDAO.selectOneRow(messageId)
                     .flatMap(key -> threadDAO.deleteSome(key.getUsername(), key.getMimeMessageIds())
@@ -245,31 +232,16 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     }
 
     private Mono<MessageRepresentation> readMessage(CassandraMessageId id) {
-        return messageDAOV3.retrieveMessage(id, MessageMapper.FetchType.METADATA)
-            .switchIfEmpty(messageDAO.retrieveMessage(id, MessageMapper.FetchType.METADATA));
+        return messageDAOV3.retrieveMessage(id, MessageMapper.FetchType.METADATA);
     }
 
     private Mono<Void> deleteUnreferencedAttachments(MessageRepresentation message) {
         return Flux.fromIterable(message.getAttachments())
-            .filterWhen(attachment -> hasOtherMessagesReferences(message, attachment), DEFAULT_CONCURRENCY)
-            .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId(), Mono.just((CassandraMessageId) message.getMessageId()))
+            .concatMap(attachment -> attachmentDAO.getAttachment(attachment.getAttachmentId())
                 .map(CassandraAttachmentDAOV2.DAOAttachment::getBlobId)
                 .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId)))
                 .then(attachmentDAO.delete(attachment.getAttachmentId())))
             .then();
-    }
-
-    private Mono<Void> deleteAttachmentMessageIds(MessageRepresentation message) {
-        return Flux.fromIterable(message.getAttachments())
-            .concatMap(attachment -> attachmentMessageIdDAO.delete(attachment.getAttachmentId(), message.getMessageId()))
-            .then();
-    }
-
-    private Mono<Boolean> hasOtherMessagesReferences(MessageRepresentation message, MessageAttachmentRepresentation attachment) {
-        return attachmentMessageIdDAO.getOwnerMessageIds(attachment.getAttachmentId())
-            .filter(Predicate.not(Predicate.isEqual(message.getMessageId())))
-            .hasElements()
-            .map(negate());
     }
 
     private Mono<Boolean> isReferenced(CassandraMessageId id) {

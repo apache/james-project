@@ -59,6 +59,4 @@ public interface AttachmentMapper extends Mapper {
         return Mono.fromCallable(() -> storeAttachments(attachments, ownerMessageId))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
     }
-
-    Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException;
 }

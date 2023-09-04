@@ -20,6 +20,20 @@ Change list:
  - [Imap Packages](#imap-packages)
  - [Jmap uploads](#jmap-uploads)
  - [Mutualize quota table](#mutualize-quota-table)
+ - [Drop Legacy Cassandra migrations](#drop-legacy-cassandra-migrations)
+
+### Drop Legacy Cassandra migrations
+
+Date: 4/09/2023
+
+We dropped the following Cassandra migrations and related tables after two years of support:
+
+ - `FROM_V8_TO_V9`: `MessageV3Migration`
+ - `FROM_V9_TO_V10`: `AclV2Migration`
+ - `FROM_V10_TO_V11`: `MessageDenormalizationMigration`
+ - `FROM_V11_TO_V12`: `AttachmentMessageIdMigration.class`
+
+In order to run these migrations, users need to perform a rolling release to 3.8.0 and run these migration first.
 
 ### Mutualize quota table
 

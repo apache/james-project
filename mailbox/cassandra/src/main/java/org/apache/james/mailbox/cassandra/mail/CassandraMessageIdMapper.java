@@ -84,7 +84,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMessageIdToImapUidDAO imapUidDAO;
     private final CassandraMessageIdDAO messageIdDAO;
-    private final CassandraMessageDAO messageDAO;
     private final CassandraMessageDAOV3 messageDAOV3;
     private final CassandraIndexTableHandler indexTableHandler;
     private final ModSeqProvider modSeqProvider;
@@ -96,14 +95,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
-                                    CassandraMessageDAO messageDAO, CassandraMessageDAOV3 messageDAOV3, CassandraIndexTableHandler indexTableHandler,
+                                    CassandraMessageDAOV3 messageDAOV3, CassandraIndexTableHandler indexTableHandler,
                                     ModSeqProvider modSeqProvider, BlobStore blobStore, CassandraConfiguration cassandraConfiguration, BatchSizes batchSizes, Clock clock) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
         this.imapUidDAO = imapUidDAO;
         this.messageIdDAO = messageIdDAO;
-        this.messageDAO = messageDAO;
         this.messageDAOV3 = messageDAOV3;
         this.indexTableHandler = indexTableHandler;
         this.modSeqProvider = modSeqProvider;
@@ -140,7 +138,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .map(metadata::asMailboxMessage);
         }
         return messageDAOV3.retrieveMessage(metadata.getComposedMessageId(), fetchType)
-            .switchIfEmpty(Mono.defer(() -> messageDAO.retrieveMessage(metadata.getComposedMessageId(), fetchType)))
             .map(messageRepresentation -> Pair.of(metadata.getComposedMessageId(), messageRepresentation))
             .flatMap(messageRepresentation -> attachmentLoader.addAttachmentToMessage(messageRepresentation, metadata.getSaveDate(), fetchType));
     }

@@ -33,9 +33,7 @@ import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
@@ -58,9 +56,6 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
     void setUp(CassandraCluster cassandra) {
         CassandraSchemaVersionDAO schemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         schemaVersionDAO.truncateVersion().block();
-        schemaVersionDAO.updateVersion(new SchemaVersion(10)).block();
-        CassandraSchemaVersionManager versionManager = new CassandraSchemaVersionManager(schemaVersionDAO);
-        CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandra.getConf());
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
             .forModules(ACLModule.ACL_UPDATE)
@@ -68,9 +63,8 @@ class CassandraACLMapperV2Test extends CassandraACLMapperContract {
         CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf());
         CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer));
         cassandraACLMapper = new CassandraACLMapper(
-            new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
             new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOv2, eventStore),
-            versionManager, CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Override

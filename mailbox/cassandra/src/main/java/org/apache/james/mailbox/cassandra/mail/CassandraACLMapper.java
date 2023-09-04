@@ -25,8 +25,6 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
-import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.eventsourcing.Command;
 import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;
@@ -58,44 +56,6 @@ public class CassandraACLMapper implements ACLMapper {
         Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL);
 
         Mono<Void> delete(CassandraId cassandraId);
-    }
-
-    public static class StoreV1 implements Store {
-        private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
-        private final CassandraACLDAOV1 cassandraACLDAOV1;
-
-        @Inject
-        public StoreV1(CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLDAOV1 cassandraACLDAOV1) {
-            this.userMailboxRightsDAO = userMailboxRightsDAO;
-            this.cassandraACLDAOV1 = cassandraACLDAOV1;
-        }
-
-        @Override
-        public Mono<MailboxACL> getACL(CassandraId cassandraId) {
-            return cassandraACLDAOV1.getACL(cassandraId);
-        }
-
-        @Override
-        public Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
-            return cassandraACLDAOV1.updateACL(cassandraId, command)
-                .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
-                    .thenReturn(aclDiff))
-                .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to update ACL")));
-        }
-
-        @Override
-        public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
-            return cassandraACLDAOV1.setACL(cassandraId, mailboxACL)
-                .flatMap(aclDiff -> userMailboxRightsDAO.update(cassandraId, aclDiff)
-                    .thenReturn(aclDiff))
-                .switchIfEmpty(Mono.error(() -> new MailboxException("Unable to update ACL")));
-        }
-
-        public Mono<Void> delete(CassandraId cassandraId) {
-            return cassandraACLDAOV1.getACL(cassandraId)
-                .flatMap(acl -> userMailboxRightsDAO.update(cassandraId, ACLDiff.computeDiff(acl, MailboxACL.EMPTY))
-                    .then(cassandraACLDAOV1.delete(cassandraId)));
-        }
     }
 
     public static class StoreV2 implements Store {
@@ -171,53 +131,42 @@ public class CassandraACLMapper implements ACLMapper {
         }
     }
 
-    public static final SchemaVersion ACL_V2_SCHEME_VERSION = new SchemaVersion(10);
-    private final StoreV1 storeV1;
     private final StoreV2 storeV2;
     private final NaiveStore naiveStore;
-    private final CassandraSchemaVersionManager versionManager;
     private final CassandraConfiguration cassandraConfiguration;
 
     @Inject
-    public CassandraACLMapper(StoreV1 storeV1, StoreV2 storeV2, CassandraSchemaVersionManager versionManager, CassandraConfiguration cassandraConfiguration) {
-        this.storeV1 = storeV1;
+    public CassandraACLMapper(StoreV2 storeV2, CassandraConfiguration cassandraConfiguration) {
         this.storeV2 = storeV2;
         naiveStore = new NaiveStore();
 
-        this.versionManager = versionManager;
         this.cassandraConfiguration = cassandraConfiguration;
     }
 
-    private Mono<Store> store() {
+    private Store store() {
         if (!cassandraConfiguration.isAclEnabled()) {
-            return Mono.just(naiveStore);
+            return naiveStore;
         }
-        return versionManager.isBefore(ACL_V2_SCHEME_VERSION)
-            .map(isBefore -> {
-                if (isBefore) {
-                    return storeV1;
-                }
-                return storeV2;
-            });
+        return storeV2;
     }
 
     @Override
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {
-        return store().flatMap(store -> store.getACL(cassandraId));
+        return store().getACL(cassandraId);
     }
 
     @Override
     public Mono<ACLDiff> updateACL(CassandraId cassandraId, MailboxACL.ACLCommand command) {
-        return store().flatMap(store -> store.updateACL(cassandraId, command));
+        return store().updateACL(cassandraId, command);
     }
 
     @Override
     public Mono<ACLDiff> setACL(CassandraId cassandraId, MailboxACL mailboxACL) {
-        return store().flatMap(store -> store.setACL(cassandraId, mailboxACL));
+        return store().setACL(cassandraId, mailboxACL);
     }
 
     @Override
     public Mono<Void> delete(CassandraId cassandraId) {
-        return store().flatMap(store -> store.delete(cassandraId));
+        return store().delete(cassandraId);
     }
 }

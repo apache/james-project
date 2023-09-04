@@ -112,9 +112,7 @@ class CassandraMailboxMapperTest {
 
     private void setUpTestee(CassandraConfiguration cassandraConfiguration) {
         CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
-        CassandraSchemaVersionManager versionManager = new CassandraSchemaVersionManager(versionDAO);
 
-        CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandra.getConf(), cassandraConfiguration);
         CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandra.getConf());
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
             .forModules(ACLModule.ACL_UPDATE)
@@ -122,9 +120,8 @@ class CassandraMailboxMapperTest {
         CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf());
         CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer));
         CassandraACLMapper aclMapper = new CassandraACLMapper(
-            new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
             new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOv2, eventStore),
-            versionManager, CassandraConfiguration.DEFAULT_CONFIGURATION);
+            CassandraConfiguration.DEFAULT_CONFIGURATION);
         testee = new CassandraMailboxMapper(
             mailboxDAO,
             mailboxPathV3DAO,

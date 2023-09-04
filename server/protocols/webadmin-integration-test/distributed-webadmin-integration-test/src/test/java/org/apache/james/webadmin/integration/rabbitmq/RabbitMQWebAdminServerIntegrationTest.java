@@ -125,7 +125,6 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
         .build();
 
     private static final String VERSION = "/cassandra/version";
-    private static final String VERSION_LATEST = VERSION + "/latest";
     private static final String UPGRADE_VERSION = VERSION + "/upgrade";
     private static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 

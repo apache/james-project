@@ -58,8 +58,6 @@ class CassandraACLMapperNoACLTest {
         CassandraSchemaVersionDAO schemaVersionDAO = new CassandraSchemaVersionDAO(cassandra.getConf());
         schemaVersionDAO.truncateVersion().block();
         schemaVersionDAO.updateVersion(new SchemaVersion(9)).block();
-        CassandraSchemaVersionManager versionManager = new CassandraSchemaVersionManager(schemaVersionDAO);
-        CassandraACLDAOV1 aclDAOV1 = new CassandraACLDAOV1(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         CassandraACLDAOV2 aclDAOv2 = new CassandraACLDAOV2(cassandra.getConf());
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
             .forModules(ACLModule.ACL_UPDATE)
@@ -67,9 +65,8 @@ class CassandraACLMapperNoACLTest {
         CassandraUserMailboxRightsDAO usersRightDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf());
         CassandraEventStore eventStore = new CassandraEventStore(new EventStoreDao(cassandra.getConf(), jsonEventSerializer));
         cassandraACLMapper = new CassandraACLMapper(
-            new CassandraACLMapper.StoreV1(usersRightDAO, aclDAOV1),
             new CassandraACLMapper.StoreV2(usersRightDAO, aclDAOv2, eventStore),
-            versionManager, CassandraConfiguration.builder()
+            CassandraConfiguration.builder()
                 .aclEnabled(Optional.of(false))
                 .build());
     }
