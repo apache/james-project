@@ -21,6 +21,8 @@ package org.apache.james.backends.rabbitmq;
 import com.google.common.collect.ImmutableMap;
 
 public class QueueArguments {
+    private static final String SINGLE_ACTIVE_CONSUMER_ARGUMENT = "x-single-active-consumer";
+
     public static class Builder {
         @FunctionalInterface
         public interface RequiresReplicationFactor {
@@ -45,6 +47,11 @@ public class QueueArguments {
 
         public Builder deadLetter(String deadLetterQueueName) {
             arguments.put("x-dead-letter-exchange", deadLetterQueueName);
+            return this;
+        }
+
+        public Builder singleActiveConsumer() {
+            arguments.put(SINGLE_ACTIVE_CONSUMER_ARGUMENT, true);
             return this;
         }
 
