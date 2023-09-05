@@ -19,22 +19,40 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
-import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraCurrentQuotaManagerV1Test implements CurrentQuotaManagerContract {
+public class CassandraPerUserMaxQuotaManagerV2Test extends GenericMaxQuotaManagerTest {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraMailboxQuotaModule.MODULE,
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
+        CassandraMailboxQuotaModule.MODULE,
         CassandraMutualizedQuotaModule.MODULE));
 
     @Override
-    public CurrentQuotaManager testee() {
-        return new CassandraCurrentQuotaManagerV1(cassandraCluster.getCassandraCluster().getConf());
+    protected MaxQuotaManager provideMaxQuotaManager() {
+        return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
+            .getInstance(CassandraPerUserMaxQuotaManagerV2.class);
+    }
+
+    @Test
+    void quotaDetailsShouldGroupStatements(CassandraCluster cassandra) {
+        StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
+
+        maxQuotaManager.quotaDetails(QUOTA_ROOT);
+
+        assertThat(statementRecorder.listExecutedStatements()).hasSize(3);
+        // 1 statement for user limits, 1 for domain limits, 1 for global limits
     }
 }

@@ -24,6 +24,7 @@ import java.time.Instant;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
+import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
@@ -36,11 +37,9 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
-import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManagerV2;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
@@ -115,9 +114,7 @@ public class CassandraMailboxManagerProvider {
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
 
         SessionProviderImpl sessionProvider = new SessionProviderImpl(noAuthenticator, noAuthorizator);
-        CassandraPerUserMaxQuotaManager maxQuotaManager = new CassandraPerUserMaxQuotaManager(new CassandraPerUserMaxQuotaDao(session),
-            new CassandraPerDomainMaxQuotaDao(session),
-            new CassandraGlobalMaxQuotaDao(session));
+        MaxQuotaManager maxQuotaManager = new CassandraPerUserMaxQuotaManagerV2(new CassandraQuotaLimitDao(session));
         CassandraCurrentQuotaManagerV2 currentQuotaUpdater = new CassandraCurrentQuotaManagerV2(new CassandraQuotaCurrentValueDao(session));
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaUpdater, maxQuotaManager);
         QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);

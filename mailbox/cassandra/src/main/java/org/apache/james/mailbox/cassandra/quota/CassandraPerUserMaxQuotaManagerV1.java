@@ -39,16 +39,17 @@ import com.google.common.collect.ImmutableMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
+@Deprecated() // To be removed after release 3.9.0
+public class CassandraPerUserMaxQuotaManagerV1 implements MaxQuotaManager {
 
     private final CassandraPerUserMaxQuotaDao perUserQuota;
     private final CassandraPerDomainMaxQuotaDao perDomainQuota;
     private final CassandraGlobalMaxQuotaDao globalQuota;
 
     @Inject
-    public CassandraPerUserMaxQuotaManager(CassandraPerUserMaxQuotaDao perUserQuota,
-                                           CassandraPerDomainMaxQuotaDao domainQuota,
-                                           CassandraGlobalMaxQuotaDao globalQuota) {
+    public CassandraPerUserMaxQuotaManagerV1(CassandraPerUserMaxQuotaDao perUserQuota,
+                                             CassandraPerDomainMaxQuotaDao domainQuota,
+                                             CassandraGlobalMaxQuotaDao globalQuota) {
         this.perUserQuota = perUserQuota;
         this.perDomainQuota = domainQuota;
         this.globalQuota = globalQuota;

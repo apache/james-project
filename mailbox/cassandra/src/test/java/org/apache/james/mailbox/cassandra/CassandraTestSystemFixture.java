@@ -25,6 +25,7 @@ import java.time.Instant;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
+import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
@@ -36,10 +37,7 @@ import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
-import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManagerV2;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -103,10 +101,7 @@ public class CassandraTestSystemFixture {
     }
 
     static MaxQuotaManager createMaxQuotaManager(CassandraCluster cassandra) {
-        return new CassandraPerUserMaxQuotaManager(
-            new CassandraPerUserMaxQuotaDao(cassandra.getConf()),
-            new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
-            new CassandraGlobalMaxQuotaDao(cassandra.getConf()));
+        return new CassandraPerUserMaxQuotaManagerV2(new CassandraQuotaLimitDao(cassandra.getConf()));
     }
 
     public static CurrentQuotaManager createCurrentQuotaManager(CassandraCluster cassandra) {

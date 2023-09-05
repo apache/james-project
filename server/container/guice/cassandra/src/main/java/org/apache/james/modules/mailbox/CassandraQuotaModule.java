@@ -27,8 +27,6 @@ import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -50,18 +48,16 @@ public class CassandraQuotaModule extends AbstractModule {
         bind(CassandraGlobalMaxQuotaDao.class).in(Scopes.SINGLETON);
         bind(CassandraPerDomainMaxQuotaDao.class).in(Scopes.SINGLETON);
         bind(CassandraPerUserMaxQuotaDao.class).in(Scopes.SINGLETON);
-        bind(CassandraPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
         bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
         bind(StoreQuotaManager.class).in(Scopes.SINGLETON);
 
-        bind(MaxQuotaManager.class).to(CassandraPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
         bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(QuotaRootDeserializer.class).to(DefaultUserQuotaRootResolver.class);
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraMutualizedQuotaModule.MODULE);
 
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);

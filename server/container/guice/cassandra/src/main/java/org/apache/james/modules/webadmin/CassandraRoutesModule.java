@@ -25,6 +25,7 @@ import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManagerMigration;
 import org.apache.james.mailbox.cassandra.quota.migration.CassandraCurrentQuotaManagerMigration;
 import org.apache.james.sieve.cassandra.migration.SieveQuotaMigration;
 import org.apache.james.webadmin.Routes;
@@ -56,6 +57,7 @@ public class CassandraRoutesModule extends AbstractModule {
 
         MapBinder<SchemaTransition, Migration> allMigrationClazzBinder = MapBinder.newMapBinder(binder(), SchemaTransition.class, Migration.class);
         allMigrationClazzBinder.addBinding(FROM_V12_TO_V13).to(CassandraCurrentQuotaManagerMigration.class);
+        allMigrationClazzBinder.addBinding(FROM_V12_TO_V13).to(CassandraPerUserMaxQuotaManagerMigration.class);
         allMigrationClazzBinder.addBinding(FROM_V13_TO_V14).to(SieveQuotaMigration.class);
 
         bind(SchemaVersion.class)
