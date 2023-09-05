@@ -31,6 +31,7 @@ public interface Constants {
 
     boolean AUTO_ACK = true;
     boolean MULTIPLE = true;
+    boolean ALLOW_QUORUM = true;
 
     String EMPTY_ROUTING_KEY = "";
     boolean REQUEUE = true;
