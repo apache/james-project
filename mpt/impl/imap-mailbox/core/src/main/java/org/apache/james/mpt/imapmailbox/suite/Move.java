@@ -56,4 +56,12 @@ public abstract class Move implements ImapTestConstants {
             .run("Move");
     }
 
+    @Test
+    public void emptyMoveShouldWork() throws Exception {
+        Assume.assumeTrue(system.supports(ImapFeatures.Feature.MOVE_SUPPORT));
+        simpleScriptedTestProtocol
+            .withLocale(Locale.US)
+            .run("MoveNoMSG");
+    }
+
 }
