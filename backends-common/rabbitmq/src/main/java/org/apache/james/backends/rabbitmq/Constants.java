@@ -21,7 +21,6 @@ package org.apache.james.backends.rabbitmq;
 
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 
 public interface Constants {
@@ -32,13 +31,12 @@ public interface Constants {
 
     boolean AUTO_ACK = true;
     boolean MULTIPLE = true;
+    boolean ALLOW_QUORUM = true;
 
     String EMPTY_ROUTING_KEY = "";
     boolean REQUEUE = true;
 
-    String SINGLE_ACTIVE_CONSUMER_ARGUMENT = "x-single-active-consumer";
-    boolean SINGLE_ACTIVE_CONSUMER = true;
-    Map<String, Object> WITH_SINGLE_ACTIVE_CONSUMER = ImmutableMap.of(Constants.SINGLE_ACTIVE_CONSUMER_ARGUMENT, Constants.SINGLE_ACTIVE_CONSUMER);
+    Map<String, Object> WITH_SINGLE_ACTIVE_CONSUMER = QueueArguments.builder().singleActiveConsumer().build();
 
     String DIRECT_EXCHANGE = "direct";
 

@@ -66,10 +66,11 @@ class RabbitMQWorkQueueTest {
 
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         worker = new ImmediateWorker();
         serializer = JsonTaskSerializer.of(TestTaskDTOModules.COMPLETED_TASK_MODULE, TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore()));
-        testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate());
+        testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate(),
+            rabbitMQExtension.getRabbitMQ().getConfiguration());
         testee.start();
     }
 
@@ -96,11 +97,12 @@ class RabbitMQWorkQueueTest {
     }
 
     @Test
-    void givenTwoWorkQueuesOnlyTheFirstOneIsConsumingTasks() {
+    void givenTwoWorkQueuesOnlyTheFirstOneIsConsumingTasks() throws Exception {
         testee.submit(TASK_WITH_ID);
 
         ImmediateWorker otherTaskManagerWorker = new ImmediateWorker();
-        try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate())) {
+        try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate(),
+                rabbitMQExtension.getRabbitMQ().getConfiguration())) {
             otherWorkQueue.start();
 
             IntStream.range(0, 9)
@@ -112,7 +114,7 @@ class RabbitMQWorkQueueTest {
     }
 
     @Test
-    void givenANonDeserializableTaskItShouldBeFlaggedAsFailedAndItDoesNotPreventFollowingTasks() throws InterruptedException {
+    void givenANonDeserializableTaskItShouldBeFlaggedAsFailedAndItDoesNotPreventFollowingTasks() throws Exception {
         Task task = new TestTask(42);
         TaskId taskId = TaskId.fromString("4bf6d081-aa30-11e9-bf6c-2d3b9e84aafd");
         TaskWithId taskWithId = new TaskWithId(taskId, task);
@@ -120,7 +122,7 @@ class RabbitMQWorkQueueTest {
         ImmediateWorker otherTaskManagerWorker = new ImmediateWorker();
         JsonTaskSerializer otherTaskSerializer = JsonTaskSerializer.of(TestTaskDTOModules.TEST_TYPE);
         try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), otherTaskSerializer,
-            RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate())) {
+            RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate(), rabbitMQExtension.getRabbitMQ().getConfiguration())) {
             //wait to be sur that the first workqueue has subscribed as an exclusive consumer of the RabbitMQ queue.
             Thread.sleep(200);
             otherWorkQueue.start();

@@ -21,6 +21,7 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
+import static org.apache.james.backends.rabbitmq.Constants.ALLOW_QUORUM;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
@@ -30,6 +31,7 @@ import java.time.Duration;
 import java.util.Optional;
 
 import org.apache.james.backends.rabbitmq.Constants;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
@@ -80,6 +82,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private final RabbitMQWorkQueueConfiguration configuration;
     private final Sender sender;
     private final ReceiverProvider receiverProvider;
+    private final RabbitMQConfiguration rabbitMQConfiguration;
     private final CancelRequestQueueName cancelRequestQueueName;
     private UnicastProcessor<TaskId> sendCancelRequestsQueue;
     private Disposable sendCancelRequestsQueueHandle;
@@ -88,13 +91,15 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     public RabbitMQWorkQueue(TaskManagerWorker worker, Sender sender,
                              ReceiverProvider receiverProvider, JsonTaskSerializer taskSerializer,
-                             RabbitMQWorkQueueConfiguration configuration, CancelRequestQueueName cancelRequestQueueName) {
+                             RabbitMQWorkQueueConfiguration configuration, CancelRequestQueueName cancelRequestQueueName,
+                             RabbitMQConfiguration rabbitMQConfiguration) {
         this.cancelRequestQueueName = cancelRequestQueueName;
         this.worker = worker;
         this.receiverProvider = receiverProvider;
         this.sender = sender;
         this.taskSerializer = taskSerializer;
         this.configuration = configuration;
+        this.rabbitMQConfiguration = rabbitMQConfiguration;
     }
 
     @Override
@@ -117,7 +122,12 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.DeclareOk> declareQueue = sender
-            .declare(QueueSpecification.queue(QUEUE_NAME).durable(true).arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER))
+            .declare(QueueSpecification.queue(QUEUE_NAME)
+                .durable(true)
+                .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(ALLOW_QUORUM)
+                    .singleActiveConsumer()
+                    .build())
+                .arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.BindOk> bindQueueToExchange = sender
             .bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME))
