@@ -99,7 +99,8 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                     UidValidity uidValidity = target.getMailboxEntity().getUidValidity();
                     return Flux.fromArray(request.getIdSet())
                         .map(Throwing.<IdRange, MessageRange>function(
-                            range -> messageRange(session.getSelected(), range, request.isUseUids()))
+                            range -> messageRange(session.getSelected(), range, request.isUseUids())
+                                .orElseThrow(() -> new MessageRangeException(range.getFormattedString() + " is an invalid range")))
                             .sneakyThrow())
                         .filter(Objects::nonNull)
                         .concatMap(range -> process(target.getId(), session.getSelected(), mailboxSession, range)

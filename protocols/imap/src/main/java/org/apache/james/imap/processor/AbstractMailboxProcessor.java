@@ -412,28 +412,28 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
      * Return a {@link MessageRange} for the given values. If the MessageRange
      * can not be generated a {@link MailboxException} will get thrown
      */
-    protected MessageRange messageRange(SelectedMailbox selected, IdRange range, boolean useUids) throws MessageRangeException {
+    protected Optional<MessageRange> messageRange(SelectedMailbox selected, IdRange range, boolean useUids) throws MessageRangeException {
         long lowVal = range.getLowVal();
         long highVal = range.getHighVal();
 
-        if (useUids == false) {
-            return msnRangeToMessageRange(selected, lowVal, highVal);
+        if (!useUids) {
+            return Optional.of(msnRangeToMessageRange(selected, lowVal, highVal));
         } else {
             if (selected.existsCount() <= 0) {
-                return null;
+                return Optional.empty();
             }
             // Take care of "*" and "*:*" values by return the last message in
             // the mailbox. See IMAP-289
             MessageUid lastUid = selected.getLastUid().orElse(MessageUid.MIN_VALUE);
             if (lowVal == Long.MAX_VALUE && highVal == Long.MAX_VALUE) {
-                return MessageRange.one(lastUid);
+                return Optional.of(MessageRange.one(lastUid));
             } else if (highVal == Long.MAX_VALUE && lastUid.compareTo(MessageUid.of(lowVal)) < 0) {
                 // Sequence uid ranges which use *:<uid-higher-then-last-uid>
                 // MUST return at least the highest uid in the mailbox
                 // See IMAP-291
-                return MessageRange.one(lastUid);
+                return Optional.of(MessageRange.one(lastUid));
             } 
-            return MessageRange.range(MessageUid.of(lowVal), MessageUid.of(highVal));
+            return Optional.of(MessageRange.range(MessageUid.of(lowVal), MessageUid.of(highVal)));
         }
     }
 
