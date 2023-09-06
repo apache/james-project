@@ -21,6 +21,8 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -99,17 +101,22 @@ public class UserQuotaRoutes implements Routes {
             }
         }
 
-        private static Optional<QuotaComponent> getQuotaComponent(Request request) {
-            String quotaComponentString = request.queryParams(USERS_PER_SECOND);
-            if (Objects.isNull(quotaComponentString)) {
-                return Optional.empty();
+        private static List<QuotaComponent> getQuotaComponent(Request request) {
+            List<QuotaComponent> quotaComponents = new ArrayList<>();
+            String[] quotaComponentStrings = request.queryParamsValues(QUOTA_COMPONENT);
+            if (Objects.isNull(quotaComponentStrings) || quotaComponentStrings.length == 0) {
+                return ImmutableList.of();
             }
-            QuotaComponent quotaComponent = QUOTA_COMPONENT_MAP.get(request.queryParams(USERS_PER_SECOND));
-            if (Objects.isNull(quotaComponent)) {
-                throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s', expecting a existing " +
-                    "quota component", QUOTA_COMPONENT));
+            for (String quotaComponentString : quotaComponentStrings) {
+                QuotaComponent quotaComponent = QUOTA_COMPONENT_MAP.get(quotaComponentString);
+                if (Objects.isNull(quotaComponent)) {
+                    throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s' with value '%s', expecting existing " +
+                        "quota components", QUOTA_COMPONENT, quotaComponentString));
+                }
+                quotaComponents.add(quotaComponent);
             }
-            return Optional.of(quotaComponent);
+
+            return ImmutableList.copyOf(quotaComponents);
         }
     }
 

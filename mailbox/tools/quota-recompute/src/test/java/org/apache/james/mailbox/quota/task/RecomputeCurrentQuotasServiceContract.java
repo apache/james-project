@@ -20,12 +20,15 @@
 package org.apache.james.mailbox.quota.task;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -41,7 +44,9 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Running
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,6 +57,8 @@ public interface RecomputeCurrentQuotasServiceContract {
     String PASSWORD = "password";
     MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER_1, "mailbox");
     CurrentQuotas EXPECTED_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(1L), QuotaSizeUsage.size(103L));
+
+    JMAPCurrentUploadUsageRecomputator jmapCurrentUploadUsageRecomputator = Mockito.mock(JMAPCurrentUploadUsageRecomputator.class);
 
     UsersRepository usersRepository();
 
@@ -65,6 +72,11 @@ public interface RecomputeCurrentQuotasServiceContract {
 
     RecomputeCurrentQuotasService testee();
 
+    @BeforeEach
+    default void setup() {
+        when(jmapCurrentUploadUsageRecomputator.recomputeCurrentUploadUsage(Mockito.any())).thenReturn(Mono.empty());
+    }
+
     @Test
     default void recomputeCurrentQuotasShouldReturnCompleteWhenNoData() {
         assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
@@ -76,6 +88,25 @@ public interface RecomputeCurrentQuotasServiceContract {
         usersRepository().addUser(USER_1, PASSWORD);
 
         assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
+            .isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    default void recomputeCurrentQuotasShouldReturnPartialWhenRecomputeJMAPCurrentUploadUsageFail() throws Exception {
+        when(jmapCurrentUploadUsageRecomputator.recomputeCurrentUploadUsage(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
+        usersRepository().addUser(USER_1, PASSWORD);
+
+        assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
+            .isEqualTo(Task.Result.PARTIAL);
+    }
+
+    @Test
+    default void recomputeCurrentQuotasShouldRunRecomputeMailboxUserCurrentQuotasOnly() throws Exception {
+        when(jmapCurrentUploadUsageRecomputator.recomputeCurrentUploadUsage(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
+        usersRepository().addUser(USER_1, PASSWORD);
+
+        assertThat(testee().recomputeCurrentQuotas(new Context(),
+            RunningOptions.of(RunningOptions.DEFAULT_USERS_PER_SECOND, ImmutableList.of(QuotaComponent.MAILBOX))).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 

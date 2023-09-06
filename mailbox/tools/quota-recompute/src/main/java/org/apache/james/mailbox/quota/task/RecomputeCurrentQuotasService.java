@@ -20,11 +20,10 @@
 package org.apache.james.mailbox.quota.task;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -32,7 +31,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
-import org.apache.james.jmap.api.upload.CurrentUploadUsageRecomputator;
+import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
@@ -51,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -59,33 +59,33 @@ public class RecomputeCurrentQuotasService {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecomputeCurrentQuotasService.class);
 
     public static class RunningOptions {
-        public static RunningOptions of(int usersPerSecond, Optional<QuotaComponent> quotaComponent) {
+        public static RunningOptions of(int usersPerSecond, List<QuotaComponent> quotaComponent) {
             return new RunningOptions(usersPerSecond, quotaComponent);
         }
 
         public static RunningOptions withUsersPerSecond(int usersPerSecond) {
-            return new RunningOptions(usersPerSecond, Optional.empty());
+            return new RunningOptions(usersPerSecond, ImmutableList.of());
         }
 
         public static final int DEFAULT_USERS_PER_SECOND = 1;
-        public static final RunningOptions DEFAULT = of(DEFAULT_USERS_PER_SECOND, Optional.empty());
+        public static final RunningOptions DEFAULT = of(DEFAULT_USERS_PER_SECOND, ImmutableList.of());
 
         private final int usersPerSecond;
-        private final Optional<QuotaComponent> quotaComponent;
+        private final List<QuotaComponent> quotaComponents;
 
-        private RunningOptions(int usersPerSecond, Optional<QuotaComponent> quotaComponent) {
+        private RunningOptions(int usersPerSecond, List<QuotaComponent> quotaComponent) {
             Preconditions.checkArgument(usersPerSecond > 0, "'usersPerSecond' needs to be strictly positive");
 
             this.usersPerSecond = usersPerSecond;
-            this.quotaComponent = quotaComponent;
+            this.quotaComponents = quotaComponent;
         }
 
         public int getUsersPerSecond() {
             return usersPerSecond;
         }
 
-        public Optional<QuotaComponent> getQuotaComponent() {
-            return quotaComponent;
+        public List<QuotaComponent> getQuotaComponents() {
+            return quotaComponents;
         }
     }
 
@@ -165,7 +165,7 @@ public class RecomputeCurrentQuotasService {
     private final UserQuotaRootResolver userQuotaRootResolver;
     private final SessionProvider sessionProvider;
     private final MailboxManager mailboxManager;
-    private final CurrentUploadUsageRecomputator currentUploadUsageRecomputator;
+    private final JMAPCurrentUploadUsageRecomputator jmapCurrentUploadUsageRecomputator;
 
     @Inject
     public RecomputeCurrentQuotasService(UsersRepository usersRepository,
@@ -174,14 +174,14 @@ public class RecomputeCurrentQuotasService {
                                          UserQuotaRootResolver userQuotaRootResolver,
                                          SessionProvider sessionProvider,
                                          MailboxManager mailboxManager,
-                                         CurrentUploadUsageRecomputator currentUploadUsageRecomputator) {
+                                         JMAPCurrentUploadUsageRecomputator jmapCurrentUploadUsageRecomputator) {
         this.usersRepository = usersRepository;
         this.storeCurrentQuotaManager = storeCurrentQuotaManager;
         this.currentQuotaCalculator = currentQuotaCalculator;
         this.userQuotaRootResolver = userQuotaRootResolver;
         this.sessionProvider = sessionProvider;
         this.mailboxManager = mailboxManager;
-        this.currentUploadUsageRecomputator = currentUploadUsageRecomputator;
+        this.jmapCurrentUploadUsageRecomputator = jmapCurrentUploadUsageRecomputator;
     }
 
     public Mono<Task.Result> recomputeCurrentQuotas(Context context, RunningOptions runningOptions) {
@@ -189,7 +189,7 @@ public class RecomputeCurrentQuotasService {
             .transform(ReactorUtils.<Username, Task.Result>throttle()
                 .elements(runningOptions.getUsersPerSecond())
                 .per(Duration.ofSeconds(1))
-                .forOperation(username -> recomputeQuotasOfUser(runningOptions.quotaComponent, context, username)))
+                .forOperation(username -> recomputeQuotasOfUser(runningOptions.getQuotaComponents(), context, username)))
             .reduce(Task.Result.COMPLETED, Task::combine)
             .onErrorResume(UsersRepositoryException.class, e -> {
                 LOGGER.error("Error while accessing users from repository", e);
@@ -197,21 +197,17 @@ public class RecomputeCurrentQuotasService {
             });
     }
 
-    private Mono<Task.Result> recomputeQuotasOfUser(Optional<QuotaComponent> quotaComponentOptional, Context context, Username username) {
-        Mono<Task.Result> mono1 = recomputeUserCurrentQuotas(context, username);
-        Mono<Task.Result> mono2 = recomputeCurrentUploadUsage(username);
-        if (quotaComponentOptional.isEmpty()) {
-            return Mono.zip(mono1, mono2).map(objects -> Task.combine(objects.getT1(), objects.getT2()));
-        } else if (QuotaComponent.MAILBOX.equals(quotaComponentOptional.get())) {
-            return mono1;
-        } else if (QuotaComponent.JMAP_UPLOADS.equals(quotaComponentOptional.get())) {
-            return mono2;
+    private Mono<Task.Result> recomputeQuotasOfUser(List<QuotaComponent> quotaComponents, Context context, Username username) {
+        Map<QuotaComponent, Mono<Task.Result>> map = ImmutableMap.of(QuotaComponent.MAILBOX, recomputeMailboxUserCurrentQuotas(context, username),
+            QuotaComponent.JMAP_UPLOADS, recomputeJMAPCurrentUploadUsage(username));
+        if (quotaComponents.isEmpty()) {
+            return Flux.merge(map.values()).reduce(Task.Result.COMPLETED, Task::combine);
         } else {
-            throw new RuntimeException(String.format("Could not a matching quota component for '%s'", quotaComponentOptional.get().getValue()));
+            return Flux.fromIterable(quotaComponents).flatMap(map::get).reduce(Task.Result.COMPLETED, Task::combine);
         }
     }
 
-    private Mono<Task.Result> recomputeUserCurrentQuotas(Context context, Username username) {
+    private Mono<Task.Result> recomputeMailboxUserCurrentQuotas(Context context, Username username) {
         MailboxSession session = sessionProvider.createSystemSession(username);
         QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
 
@@ -231,12 +227,15 @@ public class RecomputeCurrentQuotasService {
             .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 
-    private Mono<Task.Result> recomputeCurrentUploadUsage(Username username) {
-        return currentUploadUsageRecomputator.recomputeCurrentUploadUsage(username)
+    private Mono<Task.Result> recomputeJMAPCurrentUploadUsage(Username username) {
+        return jmapCurrentUploadUsageRecomputator.recomputeCurrentUploadUsage(username)
             .then(Mono.just(Task.Result.COMPLETED))
             .onErrorResume(e -> {
-                LOGGER.error("Error while recomputing current upload usage quota for {}", username, e);
+                LOGGER.error("Error while recomputing jmap current upload usage quota for {}", username, e);
                 return Mono.just(Task.Result.PARTIAL);
+            })
+            .doFinally(signalType -> {
+                System.out.println("runnnnnn");
             });
     }
 }

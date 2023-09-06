@@ -19,28 +19,32 @@
 
 package org.apache.james.mailbox.quota.task;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 
 public class RunningOptionsDTO {
     public static RunningOptionsDTO asDTO(RunningOptions domainObject) {
-        return new RunningOptionsDTO(Optional.of(domainObject.getUsersPerSecond()), domainObject.getQuotaComponent().map(QuotaComponent::getValue));
+        return new RunningOptionsDTO(Optional.of(domainObject.getUsersPerSecond()),
+            domainObject.getQuotaComponents().stream().map(QuotaComponent::getValue).collect(ImmutableList.toImmutableList()));
     }
 
     private final Optional<Integer> usersPerSecond;
-    private final Optional<String> quotaComponent;
+    private final List<String> quotaComponents;
 
     @JsonCreator
     public RunningOptionsDTO(
             @JsonProperty("usersPerSecond") Optional<Integer> usersPerSecond,
-            @JsonProperty("quotaComponent") Optional<String> quotaComponent) {
+            @JsonProperty("quotaComponent") List<String> quotaComponents) {
         this.usersPerSecond = usersPerSecond;
-        this.quotaComponent = quotaComponent;
+        this.quotaComponents = quotaComponents;
     }
 
     public Optional<Integer> getUsersPerSecond() {
@@ -48,6 +52,7 @@ public class RunningOptionsDTO {
     }
 
     public RunningOptions asDomainObject() {
-        return RunningOptions.of(usersPerSecond.orElse(RunningOptions.DEFAULT_USERS_PER_SECOND), quotaComponent.map(QuotaComponent::of));
+        return RunningOptions.of(usersPerSecond.orElse(RunningOptions.DEFAULT_USERS_PER_SECOND),
+            quotaComponents.stream().map(QuotaComponent::of).collect(ImmutableList.toImmutableList()));
     }
 }

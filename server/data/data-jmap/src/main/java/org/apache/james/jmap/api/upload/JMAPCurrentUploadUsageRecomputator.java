@@ -28,13 +28,13 @@ import org.apache.james.jmap.api.model.UploadMetaData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CurrentUploadUsageRecomputator {
+public class JMAPCurrentUploadUsageRecomputator {
 
     private final UploadRepository uploadRepository;
     private final UploadUsageRepository uploadUsageRepository;
 
     @Inject
-    public CurrentUploadUsageRecomputator(UploadRepository uploadRepository, UploadUsageRepository uploadUsageRepository) {
+    public JMAPCurrentUploadUsageRecomputator(UploadRepository uploadRepository, UploadUsageRepository uploadUsageRepository) {
         this.uploadRepository = uploadRepository;
         this.uploadUsageRepository = uploadUsageRepository;
     }
