@@ -113,3 +113,12 @@ Example:
     <enableVirtualHosting>true</enableVirtualHosting>
 </usersrepository>
 ....
+
+The "userListBase" configuration option is used to differentiate users that can login from those that are listed
+ as regular users. This is useful for dis-activating users, for instance.
+
+A different values from &quot;userBase&quot; can be used for setting up virtual logins,
+for instance in conjunction with "resolveLocalPartAttribute". This can also be used to manage
+disactivated users (in "userListBase" but not in "userBase").
+
+Note that "userListBase" can not be specified on a per-domain-basis.

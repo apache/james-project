@@ -245,7 +245,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     private Stream<String> allDNs() {
         return Stream.concat(
-            Stream.of(ldapConfiguration.getUserBase()),
+            Stream.of(ldapConfiguration.getUserListBase()),
             ldapConfiguration.getPerDomainBaseDN().values().stream());
     }
 

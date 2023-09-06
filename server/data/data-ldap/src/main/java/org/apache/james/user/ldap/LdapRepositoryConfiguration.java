@@ -53,6 +53,7 @@ public class LdapRepositoryConfiguration {
         private Optional<String> principal;
         private Optional<String> credentials;
         private Optional<String> userBase;
+        private Optional<String> userListBase;
         private Optional<String> userIdAttribute;
         private Optional<String> resolveLocalPartAttribute;
         private Optional<String> userObjectClass;
@@ -65,6 +66,7 @@ public class LdapRepositoryConfiguration {
             principal = Optional.empty();
             credentials = Optional.empty();
             userBase = Optional.empty();
+            userListBase = Optional.empty();
             userIdAttribute = Optional.empty();
             resolveLocalPartAttribute = Optional.empty();
             userObjectClass = Optional.empty();
@@ -90,6 +92,11 @@ public class LdapRepositoryConfiguration {
 
         public Builder userBase(String userBase) {
             this.userBase = Optional.of(userBase);
+            return this;
+        }
+
+        public Builder userListBase(String userBase) {
+            this.userListBase = Optional.of(userBase);
             return this;
         }
 
@@ -136,6 +143,7 @@ public class LdapRepositoryConfiguration {
                 principal.get(),
                 credentials.get(),
                 userBase.get(),
+                userListBase.orElse(userBase.get()),
                 userIdAttribute.get(),
                 resolveLocalPartAttribute,
                 userObjectClass.get(),
@@ -167,6 +175,8 @@ public class LdapRepositoryConfiguration {
         String principal = configuration.getString("[@principal]", "");
         String credentials = configuration.getString("[@credentials]", "");
         String userBase = configuration.getString("[@userBase]");
+        String userListBase = Optional.ofNullable(configuration.getString("[@userListBase]", null))
+            .orElse(userBase);
         String userIdAttribute = configuration.getString("[@userIdAttribute]");
         Optional<String> resolveLocalPartAttribute = Optional.ofNullable(configuration.getString("[@resolveLocalPartAttribute]", null));
         String userObjectClass = configuration.getString("[@userObjectClass]");
@@ -209,7 +219,7 @@ public class LdapRepositoryConfiguration {
             principal,
             credentials,
             userBase,
-            userIdAttribute,
+            userListBase, userIdAttribute,
             resolveLocalPartAttribute,
             userObjectClass,
             connectionTimeout,
@@ -248,11 +258,24 @@ public class LdapRepositoryConfiguration {
     private final String credentials;
 
     /**
-     * This is the LDAP context/sub-context within which to search for user
+     * This is the LDAP context/sub-context within which resides user
      * entities. The value of this field is taken from the configuration
      * attribute &quot;userBase&quot;.
      */
     private final String userBase;
+
+    /**
+     * This is the LDAP context/sub-context within which to search for user
+     * entities. The value of this field is taken from the configuration
+     * attribute &quot;userListBase&quot;.<br>
+     * <br>
+     * A different values from &quot;userBase&quot; can be used for setting up virtual logins,
+     * for instance in conjunction with &quot;resolveLocalPartAttribute&quot;. This can also be used to manage
+     * disactivated users (in userListBased but not in userBase).<br>
+     * <br>
+     * Note that userListBase can not be specified on a per-domain-basis.
+     */
+    private final String userListBase;
 
     /**
      * The value of this field is taken from the configuration attribute
@@ -311,7 +334,7 @@ public class LdapRepositoryConfiguration {
 
     private final ImmutableMap<Domain, String> perDomainBaseDN;
 
-    private LdapRepositoryConfiguration(List<URI> ldapHosts, String principal, String credentials, String userBase, String userIdAttribute,
+    private LdapRepositoryConfiguration(List<URI> ldapHosts, String principal, String credentials, String userBase, String userListBase, String userIdAttribute,
                                         Optional<String> resolveLocalPartAttribute, String userObjectClass, int connectionTimeout, int readTimeout,
                                         boolean supportsVirtualHosting, int poolSize, ReadOnlyLDAPGroupRestriction restriction, String filter,
                                         Optional<String> administratorId, boolean trustAllCerts,
@@ -320,6 +343,7 @@ public class LdapRepositoryConfiguration {
         this.principal = principal;
         this.credentials = credentials;
         this.userBase = userBase;
+        this.userListBase = userListBase;
         this.userIdAttribute = userIdAttribute;
         this.resolveLocalPartAttribute = resolveLocalPartAttribute;
         this.userObjectClass = userObjectClass;
@@ -362,6 +386,10 @@ public class LdapRepositoryConfiguration {
 
     public String getUserBase() {
         return userBase;
+    }
+
+    public String getUserListBase() {
+        return userListBase;
     }
 
     public String getUserIdAttribute() {
@@ -424,6 +452,7 @@ public class LdapRepositoryConfiguration {
                 && Objects.equals(this.principal, that.principal)
                 && Objects.equals(this.credentials, that.credentials)
                 && Objects.equals(this.userBase, that.userBase)
+                && Objects.equals(this.userListBase, that.userListBase)
                 && Objects.equals(this.userIdAttribute, that.userIdAttribute)
                 && Objects.equals(this.resolveLocalPartAttribute, that.resolveLocalPartAttribute)
                 && Objects.equals(this.userObjectClass, that.userObjectClass)
@@ -439,7 +468,7 @@ public class LdapRepositoryConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(ldapHosts, principal, credentials, userBase, userIdAttribute, resolveLocalPartAttribute, userObjectClass,
+        return Objects.hash(ldapHosts, principal, credentials, userBase, userListBase, userIdAttribute, resolveLocalPartAttribute, userObjectClass,
             connectionTimeout, readTimeout, supportsVirtualHosting, restriction, filter, administratorId, poolSize,
             trustAllCerts, perDomainBaseDN);
     }

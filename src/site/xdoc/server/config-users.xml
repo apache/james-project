@@ -150,6 +150,15 @@
             &lt;/usersrepository&gt;
         </source>
 
+        <p>The &quot;userListBase&quot; configuration option is used to differentiate users that can login from those that are listed
+        as regular users. This is useful for dis-activating users, for instance.</p>
+
+        <p>A different values from &quot;userBase&quot; can be used for setting up virtual logins,
+        for instance in conjunction with &quot;resolveLocalPartAttribute&quot;. This can also be used to manage
+        disactivated users (in userListBased but not in userBase).</p>
+
+        <p>Note that &quot;userListBase&quot; can not be specified on a per-domain-basis.</p>
+
      </subsection>
 
   </section>
