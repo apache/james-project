@@ -233,9 +233,6 @@ public class RecomputeCurrentQuotasService {
             .onErrorResume(e -> {
                 LOGGER.error("Error while recomputing jmap current upload usage quota for {}", username, e);
                 return Mono.just(Task.Result.PARTIAL);
-            })
-            .doFinally(signalType -> {
-                System.out.println("runnnnnn");
             });
     }
 }
