@@ -125,7 +125,8 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         List<MessageRange> ranges = new ArrayList<>();
 
         for (IdRange range : request.getIdSet()) {
-            MessageRange messageSet = messageRange(session.getSelected(), range, request.isUseUids());
+            MessageRange messageSet = messageRange(session.getSelected(), range, request.isUseUids())
+                .orElseThrow(() -> new MessageRangeException(range.getFormattedString() + " is an invalid range"));
             if (messageSet != null) {
                 MessageRange normalizedMessageSet = normalizeMessageRange(selected, messageSet);
                 MessageRange batchedMessageSet = MessageRange.range(normalizedMessageSet.getUidFrom(), normalizedMessageSet.getUidTo());
