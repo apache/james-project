@@ -21,7 +21,6 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -102,21 +101,20 @@ public class UserQuotaRoutes implements Routes {
         }
 
         private static List<QuotaComponent> getQuotaComponent(Request request) {
-            List<QuotaComponent> quotaComponents = new ArrayList<>();
             String[] quotaComponentStrings = request.queryParamsValues(QUOTA_COMPONENT);
             if (Objects.isNull(quotaComponentStrings) || quotaComponentStrings.length == 0) {
                 return ImmutableList.of();
             }
-            for (String quotaComponentString : quotaComponentStrings) {
-                QuotaComponent quotaComponent = QUOTA_COMPONENT_MAP.get(quotaComponentString);
-                if (Objects.isNull(quotaComponent)) {
-                    throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s' with value '%s', expecting existing " +
-                        "quota components", QUOTA_COMPONENT, quotaComponentString));
-                }
-                quotaComponents.add(quotaComponent);
-            }
-
-            return ImmutableList.copyOf(quotaComponents);
+            return Arrays.stream(quotaComponentStrings)
+                .map(quotaComponentString -> {
+                    QuotaComponent quotaComponent = QUOTA_COMPONENT_MAP.get(quotaComponentString);
+                    if (Objects.isNull(quotaComponent)) {
+                        throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s' with value '%s', expecting existing " +
+                            "quota components", QUOTA_COMPONENT, quotaComponentString));
+                    }
+                    return quotaComponent;
+                })
+                .collect(Collectors.toUnmodifiableList());
         }
     }
 

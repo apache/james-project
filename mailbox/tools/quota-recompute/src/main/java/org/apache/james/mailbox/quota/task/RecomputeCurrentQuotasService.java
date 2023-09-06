@@ -203,7 +203,9 @@ public class RecomputeCurrentQuotasService {
         if (quotaComponents.isEmpty()) {
             return Flux.merge(map.values()).reduce(Task.Result.COMPLETED, Task::combine);
         } else {
-            return Flux.fromIterable(quotaComponents).flatMap(map::get).reduce(Task.Result.COMPLETED, Task::combine);
+            return Flux.fromIterable(quotaComponents)
+                .flatMap(quotaComponent -> map.getOrDefault(quotaComponent, Mono.just(Task.Result.PARTIAL)))
+                .reduce(Task.Result.COMPLETED, Task::combine);
         }
     }
 

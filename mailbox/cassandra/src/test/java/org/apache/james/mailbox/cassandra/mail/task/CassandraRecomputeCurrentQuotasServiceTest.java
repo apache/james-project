@@ -27,7 +27,6 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -43,7 +42,6 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.sieve.cassandra.CassandraSieveRepositoryModule;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersDAO;
@@ -53,7 +51,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 

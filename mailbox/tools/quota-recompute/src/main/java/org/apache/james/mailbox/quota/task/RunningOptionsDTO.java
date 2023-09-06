@@ -21,7 +21,6 @@ package org.apache.james.mailbox.quota.task;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
