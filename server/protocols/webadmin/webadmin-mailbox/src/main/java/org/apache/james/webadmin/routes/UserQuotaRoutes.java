@@ -101,20 +101,13 @@ public class UserQuotaRoutes implements Routes {
         }
 
         private static List<QuotaComponent> getQuotaComponent(Request request) {
-            String[] quotaComponentStrings = request.queryParamsValues(QUOTA_COMPONENT);
-            if (Objects.isNull(quotaComponentStrings) || quotaComponentStrings.length == 0) {
-                return ImmutableList.of();
-            }
-            return Arrays.stream(quotaComponentStrings)
-                .map(quotaComponentString -> {
-                    QuotaComponent quotaComponent = QUOTA_COMPONENT_MAP.get(quotaComponentString);
-                    if (Objects.isNull(quotaComponent)) {
-                        throw new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s' with value '%s', expecting existing " +
-                            "quota components", QUOTA_COMPONENT, quotaComponentString));
-                    }
-                    return quotaComponent;
-                })
-                .collect(Collectors.toUnmodifiableList());
+            return Optional.of(request.queryParamsValues(QUOTA_COMPONENT))
+                .map(quotaComponentStrings -> Arrays.stream(quotaComponentStrings)
+                    .map(quotaComponentString -> Optional.of(QUOTA_COMPONENT_MAP.get(quotaComponentString))
+                        .orElseThrow(() -> new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s' with value '%s', expecting existing " +
+                            "quota components", QUOTA_COMPONENT, quotaComponentString))))
+                    .collect(Collectors.toUnmodifiableList()))
+                .orElse(ImmutableList.of());
         }
     }
 
