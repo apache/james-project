@@ -101,9 +101,9 @@ public class UserQuotaRoutes implements Routes {
         }
 
         private static List<QuotaComponent> getQuotaComponent(Request request) {
-            return Optional.of(request.queryParamsValues(QUOTA_COMPONENT))
+            return Optional.ofNullable(request.queryParamsValues(QUOTA_COMPONENT))
                 .map(quotaComponentStrings -> Arrays.stream(quotaComponentStrings)
-                    .map(quotaComponentString -> Optional.of(QUOTA_COMPONENT_MAP.get(quotaComponentString))
+                    .map(quotaComponentString -> Optional.ofNullable(QUOTA_COMPONENT_MAP.get(quotaComponentString))
                         .orElseThrow(() -> new IllegalArgumentException(String.format("Illegal value supplied for query parameter '%s' with value '%s', expecting existing " +
                             "quota components", QUOTA_COMPONENT, quotaComponentString))))
                     .collect(Collectors.toUnmodifiableList()))
