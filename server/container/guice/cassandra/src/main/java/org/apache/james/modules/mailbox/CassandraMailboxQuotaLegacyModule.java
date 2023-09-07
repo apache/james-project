@@ -38,7 +38,7 @@ public class CassandraMailboxQuotaLegacyModule extends AbstractModule {
         bind(CurrentQuotaManager.class).to(CassandraCurrentQuotaManagerV1.class);
         bind(CurrentQuotaManager.class).annotatedWith(Names.named("old")).to(CassandraCurrentQuotaManagerV1.class);
 
-        bind(MaxQuotaManager.class).in(Scopes.SINGLETON);
+        bind(CassandraPerUserMaxQuotaManagerV1.class).in(Scopes.SINGLETON);
         bind(MaxQuotaManager.class).to(CassandraPerUserMaxQuotaManagerV1.class);
         bind(MaxQuotaManager.class).annotatedWith(Names.named("old")).to(CassandraPerUserMaxQuotaManagerV1.class);
 
