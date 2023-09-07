@@ -26,6 +26,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class QuotaSizeUsage implements QuotaUsageValue<QuotaSizeUsage, QuotaSizeLimit> {
+
+    public static final QuotaSizeUsage ZERO = new QuotaSizeUsage(0L);
     private static final Logger LOGGER = LoggerFactory.getLogger(QuotaSizeUsage.class);
 
     public static class Sanitized extends QuotaSizeUsage {

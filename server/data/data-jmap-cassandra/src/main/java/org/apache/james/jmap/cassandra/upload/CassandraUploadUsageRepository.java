@@ -34,7 +34,7 @@ public class CassandraUploadUsageRepository implements UploadUsageRepository {
 
     private static final QuotaSizeUsage DEFAULT_QUOTA_SIZE_USAGE = QuotaSizeUsage.size(0);
 
-    private CassandraQuotaCurrentValueDao cassandraQuotaCurrentValueDao;
+    private final CassandraQuotaCurrentValueDao cassandraQuotaCurrentValueDao;
 
     @Inject
     public CassandraUploadUsageRepository(CassandraQuotaCurrentValueDao cassandraQuotaCurrentValueDao) {
@@ -61,7 +61,8 @@ public class CassandraUploadUsageRepository implements UploadUsageRepository {
 
     @Override
     public Mono<Void> resetSpace(Username username, QuotaSizeUsage usage) {
-        return getSpaceUsage(username).flatMap(quotaSizeUsage -> Mono.from(decreaseSpace(username, quotaSizeUsage)))
-            .then(increaseSpace(username, usage));
+        return getSpaceUsage(username)
+            .switchIfEmpty(Mono.just(QuotaSizeUsage.ZERO))
+            .flatMap(quotaSizeUsage -> decreaseSpace(username, QuotaSizeUsage.size(quotaSizeUsage.asLong() - usage.asLong())));
     }
 }
