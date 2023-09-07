@@ -28,9 +28,9 @@ import com.google.common.base.Preconditions;
 
 public class QuotaComponent {
 
-    public static final QuotaComponent MAILBOX = of("mailbox");
-    public static final QuotaComponent SIEVE = of("sieve");
-    public static final QuotaComponent JMAP_UPLOADS = of("jmapUploads");
+    public static final QuotaComponent MAILBOX = of("MAILBOX");
+    public static final QuotaComponent SIEVE = of("SIEVE");
+    public static final QuotaComponent JMAP_UPLOADS = of("JMAP_UPLOADS");
 
     public static QuotaComponent of(String value) {
         Preconditions.checkArgument(StringUtils.isNotBlank(value), "`value` is mandatory");

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import java.time.Instant;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.junit.jupiter.api.Test;
@@ -36,11 +37,12 @@ class RecomputeCurrentQuotasTaskSerializationTest {
     static final String QUOTA_ROOT_AS_STRING = "bob@localhost";
 
     static final RecomputeCurrentQuotasService SERVICE = mock(RecomputeCurrentQuotasService.class);
-    static final RecomputeCurrentQuotasTask TASK = new RecomputeCurrentQuotasTask(SERVICE, RunningOptions.withUsersPerSecond(17));
+    static final RecomputeCurrentQuotasTask TASK = new RecomputeCurrentQuotasTask(SERVICE, RunningOptions.of(17, ImmutableList.of(QuotaComponent.JMAP_UPLOADS)));
     static final RecomputeCurrentQuotasTask TASK_DEFAULT = new RecomputeCurrentQuotasTask(SERVICE, RunningOptions.DEFAULT);
     static final String SERIALIZED_TASK_LEGACY = "{\"type\": \"recompute-current-quotas\"}";
-    static final String SERIALIZED_TASK = "{\"type\": \"recompute-current-quotas\",\"runningOptions\":{\"usersPerSecond\":17}}";
-    static final RecomputeCurrentQuotasTask.Details DETAILS = new RecomputeCurrentQuotasTask.Details(TIMESTAMP, 12, ImmutableList.of(QUOTA_ROOT_AS_STRING), RunningOptions.withUsersPerSecond(17));
+    static final String SERIALIZED_TASK = "{\"type\": \"recompute-current-quotas\",\"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"JMAP_UPLOADS\"]}}";
+    static final RecomputeCurrentQuotasTask.Details DETAILS = new RecomputeCurrentQuotasTask.Details(TIMESTAMP, 12,
+        ImmutableList.of(QUOTA_ROOT_AS_STRING), RunningOptions.of(17, ImmutableList.of(QuotaComponent.JMAP_UPLOADS)));
     static final RecomputeCurrentQuotasTask.Details DETAILS_DEFAULT = new RecomputeCurrentQuotasTask.Details(TIMESTAMP, 12, ImmutableList.of(QUOTA_ROOT_AS_STRING), RunningOptions.DEFAULT);
     static final String SERIALIZED_ADDITIONAL_INFORMATION_LEGACY = "{" +
         "  \"type\":\"recompute-current-quotas\"," +
@@ -52,7 +54,7 @@ class RecomputeCurrentQuotasTaskSerializationTest {
         "  \"type\":\"recompute-current-quotas\"," +
         "  \"processedQuotaRoots\":12," +
         "  \"failedQuotaRoots\":[\"bob@localhost\"]," +
-        "  \"runningOptions\":{\"usersPerSecond\":17}," +
+        "  \"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"JMAP_UPLOADS\"]}," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"" +
         "}";
 

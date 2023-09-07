@@ -41,13 +41,17 @@ public class RunningOptionsDTO {
     @JsonCreator
     public RunningOptionsDTO(
             @JsonProperty("usersPerSecond") Optional<Integer> usersPerSecond,
-            @JsonProperty("quotaComponent") List<String> quotaComponents) {
+            @JsonProperty("quotaComponents") List<String> quotaComponents) {
         this.usersPerSecond = usersPerSecond;
         this.quotaComponents = quotaComponents;
     }
 
     public Optional<Integer> getUsersPerSecond() {
         return usersPerSecond;
+    }
+
+    public List<String> getQuotaComponents() {
+        return quotaComponents;
     }
 
     public RunningOptions asDomainObject() {
