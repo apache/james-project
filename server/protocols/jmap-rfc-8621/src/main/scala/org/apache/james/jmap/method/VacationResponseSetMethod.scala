@@ -21,6 +21,7 @@ package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
 import javax.inject.{Inject, Named}
+import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.EventBus
 import org.apache.james.jmap.InjectionKeys
@@ -82,22 +83,27 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
   override val methodName: MethodName = MethodName("VacationResponse/set")
   override val requiredCapabilities: Set[CapabilityIdentifier] = Set(JMAP_CORE, JMAP_VACATION_RESPONSE)
 
-  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: VacationResponseSetRequest): SMono[InvocationWithContext] = {
+  override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: VacationResponseSetRequest): SMono[InvocationWithContext] =
     update(mailboxSession, request)
-      .map(updateResult => createResponse(invocation.invocation, request, updateResult))
-      .flatMap(next => {
-        val event = StateChangeEvent(eventId = EventId.random(),
-          username = mailboxSession.getUser,
-          map = Map(VacationResponseTypeName -> UuidState.fromGenerateUuid()))
-        val accountId = AccountId.fromUsername(mailboxSession.getUser)
-        SMono(eventBus.dispatch(event, AccountIdRegistrationKey(accountId)))
-          .`then`(SMono.just(next))
-      })
-      .map(InvocationWithContext(_, invocation.processingContext))
-  }
+      .flatMap(updateResults => dispatchVacationResponseChangeEvent(mailboxSession.getUser, updateResults)
+        .`then`(SMono.just(InvocationWithContext(createResponse(invocation.invocation, request, updateResults), invocation.processingContext))))
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseSetRequest] =
     VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value).asEitherRequest
+
+  private def dispatchVacationResponseChangeEvent(username: Username, updateResults: VacationResponseUpdateResults): SMono[Void] = {
+    def noVacationResponseChange: Boolean = updateResults.updateSuccess.isEmpty
+
+    if (noVacationResponseChange) {
+      SMono.empty
+    } else {
+      val vacationResponseChangedEvent = StateChangeEvent(eventId = EventId.random(),
+        username = username,
+        map = Map(VacationResponseTypeName -> UuidState.fromGenerateUuid()))
+
+      SMono(eventBus.dispatch(vacationResponseChangedEvent, AccountIdRegistrationKey(AccountId.fromUsername(username))))
+    }
+  }
 
   private def update(mailboxSession: MailboxSession, vacationResponseSetRequest: VacationResponseSetRequest): SMono[VacationResponseUpdateResults] =
     SFlux.fromIterable(vacationResponseSetRequest.parsePatch()
