@@ -34,7 +34,7 @@ import org.apache.james.jmap.api.upload.UploadService;
 import org.apache.james.jmap.api.upload.UploadServiceContract;
 import org.apache.james.jmap.api.upload.UploadServiceDefaultImpl;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraMailboxQuotaModule;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,7 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraUploadServiceTest implements UploadServiceContract {
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        UploadModule.MODULE, CassandraQuotaModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
+        UploadModule.MODULE, CassandraMailboxQuotaModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
 
     private CassandraUploadRepository uploadRepository;
     private CassandraUploadUsageRepository uploadUsageRepository;

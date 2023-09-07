@@ -44,6 +44,7 @@ import com.datastax.oss.driver.api.querybuilder.select.Select;
 
 import reactor.core.publisher.Mono;
 
+@Deprecated() // To be removed after release 3.9.0
 public class CassandraPerDomainMaxQuotaDao {
     private final CassandraAsyncExecutor queryExecutor;
     private final PreparedStatement setMaxStorageStatement;

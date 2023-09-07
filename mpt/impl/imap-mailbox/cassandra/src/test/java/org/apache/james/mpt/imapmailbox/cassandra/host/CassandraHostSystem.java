@@ -22,6 +22,7 @@ import java.time.Instant;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
+import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.events.EventBusTestFixture;
@@ -39,10 +40,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManagerV2;
-import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
-import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
+import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManagerV2;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
@@ -83,7 +81,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
 
     private final CassandraCluster cassandra;
     private CassandraMailboxManager mailboxManager;
-    private CassandraPerUserMaxQuotaManager perUserMaxQuotaManager;
+    private CassandraPerUserMaxQuotaManagerV2 perUserMaxQuotaManager;
     
     public CassandraHostSystem(CassandraCluster cluster) {
         this.cassandra = cluster;
@@ -111,10 +109,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, authorizator);
         QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
 
-        perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(
-            new CassandraPerUserMaxQuotaDao(session),
-            new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
-            new CassandraGlobalMaxQuotaDao(session));
+        perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManagerV2(new CassandraQuotaLimitDao(session));
         CassandraCurrentQuotaManagerV2 currentQuotaManager = new CassandraCurrentQuotaManagerV2(new CassandraQuotaCurrentValueDao(session));
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
