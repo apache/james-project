@@ -24,20 +24,20 @@ import java.nio.charset.StandardCharsets
 import org.apache.commons.io.IOUtils
 import org.apache.james.core.Username
 import org.apache.james.core.quota.QuotaSizeUsage
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputatorContract.USER_1
+import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculatorContract.USER_1
 import org.apache.james.mailbox.model.ContentType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Mono
 
-object JMAPCurrentUploadUsageRecomputatorContract {
+object JMAPCurrentUploadUsageCalculatorContract {
   val USER_1: Username = Username.of("user1")
 }
 
-trait JMAPCurrentUploadUsageRecomputatorContract {
+trait JMAPCurrentUploadUsageCalculatorContract {
   def uploadRepository: UploadRepository
   def uploadUsageRepository: UploadUsageRepository
-  def currentUploadUsageRecomputator: JMAPCurrentUploadUsageRecomputator
+  def currentUploadUsageRecomputator: JMAPCurrentUploadUsageCalculator
 
   @Test
   def recomputeCurrentUploadUsageShouldRecomputeSuccessfully(): Unit = {

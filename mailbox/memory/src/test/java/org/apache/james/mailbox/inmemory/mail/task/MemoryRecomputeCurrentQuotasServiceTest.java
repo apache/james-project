@@ -55,7 +55,7 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
         resources = InMemoryIntegrationResources.defaultResources();
         InMemoryMailboxManager mailboxManager = resources.getMailboxManager();
         testee = new RecomputeCurrentQuotasService(usersRepository, resources.getCurrentQuotaManager(),
-            resources.getCurrentQuotaCalculator(), resources.getDefaultUserQuotaRootResolver(), mailboxManager.getSessionProvider(), mailboxManager, jmapCurrentUploadUsageRecomputator);
+            resources.getCurrentQuotaCalculator(), resources.getDefaultUserQuotaRootResolver(), mailboxManager.getSessionProvider(), mailboxManager, JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR);
     }
 
     @Override

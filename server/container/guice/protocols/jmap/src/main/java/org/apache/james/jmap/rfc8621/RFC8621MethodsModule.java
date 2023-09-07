@@ -31,7 +31,7 @@ import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.Version;
 import org.apache.james.jmap.api.model.TypeName;
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputator;
+import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculator;
 import org.apache.james.jmap.api.upload.UploadService;
 import org.apache.james.jmap.api.upload.UploadServiceDefaultImpl;
 import org.apache.james.jmap.change.EmailDeliveryTypeName$;
@@ -138,7 +138,7 @@ public class RFC8621MethodsModule extends AbstractModule {
         bind(WebPushClient.class).to(DefaultWebPushClient.class);
 
         bind(UploadService.class).to(UploadServiceDefaultImpl.class).in(Scopes.SINGLETON);
-        bind(JMAPCurrentUploadUsageRecomputator.class).in(Scopes.SINGLETON);
+        bind(JMAPCurrentUploadUsageCalculator.class).in(Scopes.SINGLETON);
 
         Multibinder<Method> methods = Multibinder.newSetBinder(binder(), Method.class);
         methods.addBinding().to(CoreEchoMethod.class);

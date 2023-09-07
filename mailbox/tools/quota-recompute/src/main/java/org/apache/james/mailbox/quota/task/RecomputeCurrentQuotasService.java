@@ -31,7 +31,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputator;
+import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
@@ -165,7 +165,7 @@ public class RecomputeCurrentQuotasService {
     private final UserQuotaRootResolver userQuotaRootResolver;
     private final SessionProvider sessionProvider;
     private final MailboxManager mailboxManager;
-    private final JMAPCurrentUploadUsageRecomputator jmapCurrentUploadUsageRecomputator;
+    private final JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator;
 
     @Inject
     public RecomputeCurrentQuotasService(UsersRepository usersRepository,
@@ -174,14 +174,14 @@ public class RecomputeCurrentQuotasService {
                                          UserQuotaRootResolver userQuotaRootResolver,
                                          SessionProvider sessionProvider,
                                          MailboxManager mailboxManager,
-                                         JMAPCurrentUploadUsageRecomputator jmapCurrentUploadUsageRecomputator) {
+                                         JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator) {
         this.usersRepository = usersRepository;
         this.storeCurrentQuotaManager = storeCurrentQuotaManager;
         this.currentQuotaCalculator = currentQuotaCalculator;
         this.userQuotaRootResolver = userQuotaRootResolver;
         this.sessionProvider = sessionProvider;
         this.mailboxManager = mailboxManager;
-        this.jmapCurrentUploadUsageRecomputator = jmapCurrentUploadUsageRecomputator;
+        this.jmapCurrentUploadUsageCalculator = jmapCurrentUploadUsageCalculator;
     }
 
     public Mono<Task.Result> recomputeCurrentQuotas(Context context, RunningOptions runningOptions) {
@@ -230,7 +230,7 @@ public class RecomputeCurrentQuotasService {
     }
 
     private Mono<Task.Result> recomputeJMAPCurrentUploadUsage(Username username) {
-        return jmapCurrentUploadUsageRecomputator.recomputeCurrentUploadUsage(username)
+        return jmapCurrentUploadUsageCalculator.recomputeCurrentUploadUsage(username)
             .then(Mono.just(Task.Result.COMPLETED))
             .onErrorResume(e -> {
                 LOGGER.error("Error while recomputing jmap current upload usage quota for {}", username, e);

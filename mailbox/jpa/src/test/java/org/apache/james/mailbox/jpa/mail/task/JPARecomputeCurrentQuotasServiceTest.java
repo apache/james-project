@@ -87,7 +87,7 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
 
         CurrentQuotaCalculator currentQuotaCalculator = new CurrentQuotaCalculator(mapperFactory, userQuotaRootResolver);
 
-        testee = new RecomputeCurrentQuotasService(usersRepository, currentQuotaManager, currentQuotaCalculator, userQuotaRootResolver, sessionProvider, mailboxManager, jmapCurrentUploadUsageRecomputator);
+        testee = new RecomputeCurrentQuotasService(usersRepository, currentQuotaManager, currentQuotaCalculator, userQuotaRootResolver, sessionProvider, mailboxManager, JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR);
     }
 
     @AfterEach

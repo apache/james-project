@@ -17,35 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.upload;
+package org.apache.james.jmap.cassandra.upload;
 
 import java.time.Clock;
 
-import org.apache.james.blob.api.BlobStore;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
+import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputator;
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageRecomputatorContract;
+import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculator;
+import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculatorContract;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class InMemoryJMAPCurrentUploadUsageRecomputatorTest implements JMAPCurrentUploadUsageRecomputatorContract {
+public class CassandraJMAPCurrentUploadUsageCalculatorTest implements JMAPCurrentUploadUsageCalculatorContract {
+
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(UploadModule.MODULE, CassandraMutualizedQuotaModule.MODULE));
 
     private UploadRepository uploadRepository;
     private UploadUsageRepository uploadUsageRepository;
-    private JMAPCurrentUploadUsageRecomputator jmapCurrentUploadUsageRecomputator;
+    private JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator;
 
     @BeforeEach
     private void setup() {
-        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new HashBlobId.Factory());
-        uploadRepository = new InMemoryUploadRepository(blobStore, Clock.systemUTC());
-        uploadUsageRepository = new InMemoryUploadUsageRepository();
-        jmapCurrentUploadUsageRecomputator = new JMAPCurrentUploadUsageRecomputator(uploadRepository, uploadUsageRepository);
+        Clock clock = Clock.systemUTC();
+        uploadRepository = new CassandraUploadRepository(new UploadDAO(cassandraCluster.getCassandraCluster().getConf(),
+            new HashBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
+            clock);
+        uploadUsageRepository = new CassandraUploadUsageRepository(new CassandraQuotaCurrentValueDao(cassandraCluster.getCassandraCluster().getConf()));
+        jmapCurrentUploadUsageCalculator = new JMAPCurrentUploadUsageCalculator(uploadRepository, uploadUsageRepository);
     }
-
 
     @Override
     public UploadRepository uploadRepository() {
@@ -58,7 +66,7 @@ public class InMemoryJMAPCurrentUploadUsageRecomputatorTest implements JMAPCurre
     }
 
     @Override
-    public JMAPCurrentUploadUsageRecomputator currentUploadUsageRecomputator() {
-        return jmapCurrentUploadUsageRecomputator;
+    public JMAPCurrentUploadUsageCalculator currentUploadUsageRecomputator() {
+        return jmapCurrentUploadUsageCalculator;
     }
 }
