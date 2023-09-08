@@ -62,7 +62,7 @@
       </subsection>
       <subsection name="LinShare Blob Export Configuration">
           <p>
-              Instead of exporting blobs in local file system, using <a href="https://www.linshare.org/en/index.html">LinShare</a> helps you upload your blobs and people
+              Instead of exporting blobs in local file system, using <a href="https://www.linshare.org">LinShare</a> helps you upload your blobs and people
               you have been shared to can access those blobs by accessing to LinShare server and download them.
 
               This way helps you to share via whole network as long as they can access to LinShare server.

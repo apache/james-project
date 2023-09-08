@@ -11,7 +11,7 @@ This is a collection of Grafana dashboards to display James metrics.
 
 ## Expose metrics for Prometheus collection
 
-To enable James metrics, add ``extensions.routes`` to [webadmin.properties]( https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc) file:
+To enable James metrics, add ``extensions.routes`` to [webadmin.properties]( https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docs/modules/ROOT/pages/configure/webadmin.adoc) file:
 ```
 extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
 ```

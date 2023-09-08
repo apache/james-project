@@ -22,7 +22,7 @@ two artifacts into server/container/guice/jpa-smtp/target directory :
 
  To run james, you have to create a directory containing required configuration files names **conf**.
 
- A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/jpa-smtp/sample-configuration) is provided with some default value you may need to replace.
+ A [sample directory](https://github.com/apache/james-project/tree/master/server/apps/jpa-smtp-app/sample-configuration) is provided with some default value you may need to replace.
 
 
 ## Running

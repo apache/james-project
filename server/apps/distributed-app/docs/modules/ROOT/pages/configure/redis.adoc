@@ -3,7 +3,7 @@
 
 This configuration helps you configure components using Redis. This so far only includes optional rate limiting component.
 
-Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/redis.properties[example]
+Consult this link:https://github.com/apache/james-project/blob/fabfdf4874da3aebb04e6fe4a7277322a395536a/server/mailet/rate-limiter-redis/redis.properties[example]
 to get some examples and hints.
 
 == Redis Configuration

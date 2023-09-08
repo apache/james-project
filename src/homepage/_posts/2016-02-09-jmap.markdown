@@ -14,4 +14,4 @@ It allows to develop easily a mail client in a browser, without the pain of usin
 Feel free to help us, you can see our advancement on the specification implementation into [jmap/doc][doc]
 
 [JMAP]: http://jmap.io
-[doc]: https://github.com/apache/james-project/tree/master/server/protocols/jmap/doc/specs
+[doc]: https://github.com/apache/james-project/tree/3.3.x/server/protocols/jmap/doc/specs

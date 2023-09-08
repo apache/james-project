@@ -31,7 +31,7 @@
     
     <p>SMTP Auth and "Verify Identity" options are enabled when you install James (<a href="config-smtp-lmtp.html">read more</a>).</p>
 
-    <p>SMTP outgoing traffic can be transmitted via SSL by default. Check <a href="http://james.apache.org/server/dev-provided-mailets.html#RemoteDelivery">RemoteDelivery</a> documentation for
+    <p>SMTP outgoing traffic can be transmitted via SSL by default. Check <a href="https://james.apache.org/server/3/dev-provided-mailets.html#RemoteDelivery">RemoteDelivery</a> documentation for
     further explanations.</p>
 
   </section>

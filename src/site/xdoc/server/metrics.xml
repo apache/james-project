@@ -51,7 +51,7 @@
         </section>
 
         <section name="Expose metrics for Prometheus collection">
-            <p>To enable James metrics, add <code>extensions.routes</code> to <a href="https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc">webadmin.properties</a> file:</p>
+            <p>To enable James metrics, add <code>extensions.routes</code> to <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docs/modules/ROOT/pages/configure/webadmin.adoc">webadmin.properties</a> file:</p>
             <pre><code>extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes</code></pre>
 
             <p>Connect to james-admin url to test the result:</p>
@@ -90,7 +90,7 @@
                     <li>Pre-deletion hooks execution statistics time percentiles</li>
                 </ul>
 
-                Retrieve <a href="https://github.com/apache/james-project/tree/master/grafana-reporting">available boards</a> for Grafana.
+                Retrieve <a href="https://github.com/apache/james-project/tree/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting">available boards</a> for Grafana.
             </p>
 
             <img src="images/performances/metrics.png"/>
