@@ -39,7 +39,7 @@
       <ul>
         <li>Testing main <a href="https://github.com/linagora/james-gatling">JMAP</a> commands</li>
         <li>Testing main <a href="https://github.com/linagora/gatling-imap">IMAP</a> commands</li>
-        <li>Testing basic <a href="https://github.com/linagora/james-gatling/tree/master/src/main/scala-2.11/org/apache/james/gatling/smtp">SMTP</a> scenarios</li>
+        <li>Testing basic <a href="https://github.com/linagora/james-gatling/tree/master/src/main/scala-2.13/org/apache/james/gatling/smtp">SMTP</a> scenarios</li>
       </ul>
 
       <img src="images/performances/gatling_2.png"/>
@@ -56,7 +56,7 @@
       <p> Additionally, we added metrics a bit everywhere in James using the brand new metrics API. We collect and export
         everything in OpenSearch using <a href="http://metrics.dropwizard.io/3.2.1/">Dropwizard metrics</a>. Then we
         graph it all using <a href="http://grafana.com/">Grafana</a>. This allows us to collect all statistics and percentiles.
-        Boards can be downloaded <a href="https://github.com/apache/james-project/tree/master/grafana-reporting">here</a>.</p>
+        Boards can be downloaded <a href="https://github.com/apache/james-project/tree/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting">here</a>.</p>
 
       <img src="images/performances/metrics.png"/>
 

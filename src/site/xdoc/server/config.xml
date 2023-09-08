@@ -169,7 +169,7 @@
         <td></td>
       </tr>
       <tr>
-        <td><a href="https://github.com/apache/james-project/tree/master/server/apps/spring-app/src/main/resources/log4j.properties">log4j.properties</a></td>
+        <td><a href="https://github.com/apache/james-project/blob/087e8e13e13f868280e19b74b6a8f14f55c997d1/mailbox/spring/src/main/resources/log4j.properties">log4j.properties</a></td>
         <td>See <a href="monitor-logging.html">monitoring with log4j</a> section.</td>
         <td></td>
       </tr>

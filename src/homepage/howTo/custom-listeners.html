@@ -80,20 +80,20 @@ layout: howTo
                 </p>
 
                 <header class="major">
-                    <h3><b>Use the custom BigMessageListener in James</b></h3>
+                    <h3><b>Use the custom SetCustomFlagOnBigMessages in James</b></h3>
                 </header>
 
                 <p>
                     Once you have a custom Listener, it's very simple to setup James with that Listener.
                     In this example, we will use the
-                    <a href="https://github.com/apache/james-project/blob/master/examples/custom-mailets/src/main/java/org/apache/james/examples/custom/listeners/BigMessageListener.java">BigMessageListener</a>
+                    <a href="https://github.com/apache/james-project/blob/master/examples/custom-listeners/src/main/java/org/apache/james/examples/custom/listeners/SetCustomFlagOnBigMessages.java">SetCustomFlagOnBigMessages</a>
                     which will listen events fired after emails are appended to users mailboxes,
                     then for each email added event, determine the size of added email by getting size information from the event.
-                    If the size of the email is greater than or equals 1 MB, then BigMessageListener will add a "BIG_MESSAGE" flag to that email
+                    If the size of the email is greater than or equals 1 MB, then SetCustomFlagOnBigMessages will add a "BIG_MESSAGE" flag to that email
                 </p>
 
                 <header class="major">
-                    <h3><b>Starting James with BigMessageListener</b></h3>
+                    <h3><b>Starting James with SetCustomFlagOnBigMessages</b></h3>
                 </header>
 
                 <p>We will take the simplest James product(JPA Guice) for the example</p>
@@ -110,7 +110,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
                 </code></pre>
 
                 <p>
-                    Second, modify listener.xml configuration file in conf/ directory to use only BigMessageListener
+                    Second, modify listener.xml configuration file in conf/ directory to use only SetCustomFlagOnBigMessages
                     by specifying its full class name. We only need to use this Listener in our example.
                 </p>
                 <pre><code>
@@ -232,7 +232,7 @@ A1 UID SEARCH ALL
 A1 FETCH 1 (FLAGS)
                 </code></pre>
                 <p>
-                    That's it, we are now sure that our BigMessageListener worked !
+                    That's it, we are now sure that our SetCustomFlagOnBigMessages worked !
                     Now that you have learned how to set up a custom Listener, you can follow this setup to add your own !
                 </p>
             </div>

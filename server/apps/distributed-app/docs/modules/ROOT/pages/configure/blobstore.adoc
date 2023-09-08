@@ -205,7 +205,7 @@ Default: file://var/blobExporting
 
 === LinShare Blob Export Configuration
 
-Instead of exporting blobs in local file system, using https://www.linshare.org/en/index.html[LinShare]
+Instead of exporting blobs in local file system, using https://www.linshare.org[LinShare]
 helps you upload your blobs and people you have been shared to can access those blobs by accessing to
 LinShare server and download them.
 

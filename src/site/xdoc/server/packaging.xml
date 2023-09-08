@@ -37,15 +37,15 @@
             <p>Thus, one must carefully choose his packaging.</p>
 
             <ul>To help you doing this, here is a list of available packages:
-                <li><a href="https://github.com/apache/james-project/tree/master/server/app">Spring</a>: Allows you to
+                <li><a href="https://github.com/apache/james-project/tree/master/server/apps/spring-app">Spring</a>: Allows you to
                     choose across various available implementations for each component. Requires more configuration effort.</li>
-                <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-guice">
+                <li><a href="https://github.com/apache/james-project/tree/master/server/apps/cassandra-app">
                     Cassandra-guice</a>: Ships a James server storing emails in Cassandra and index them in OpenSearch targeting single server deployment. Optional support for LDAP authentication.</li>
-                <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-rabbitmq-guice">
+                <li><a href="https://github.com/apache/james-project/tree/master/server/apps/distributed-app">
                     Distributed: cassandra-rabbitmq-guice</a>: Ships a James server storing emails in Cassandra and index them in OpenSearch targeting multi node deployments. S3 is used to store blobs. RabbitMQ is used for inter-node messaging. Optional support for LDAP authentication.</li>
-                <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/jpa-guice">
+                <li><a href="https://github.com/apache/james-project/tree/master/server/apps/jpa-app">
                     Jpa-Guice</a>: Ships a James server storing emails in a SQL database (derby by default) accessed with JPA and Lucene to index emails and targets single node deployment.</li>
-                <li><a href="https://github.com/apache/james-project/tree/master/server/container/guice/jpa-smtp">
+                <li><a href="https://github.com/apache/james-project/tree/master/server/apps/jpa-smtp-app">
                     Jpa-Smtp</a>: A tiny SMTP server shiped without mailbox, using SQL database to store data, accessed by JPA.</li>
             </ul>
 

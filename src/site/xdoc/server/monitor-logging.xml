@@ -87,7 +87,7 @@ drwxrwxrwx. 7 root root   4096 2010-11-06 09:01 ../
 -rw-r--r--. 1 root root     71 2010-11-06 09:24 usersrepository.log
 </source>
 
-      <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/apps/spring-app/src/main/resources/log4j.properties">log4j.properties</a> in GIT to get some examples and hints.</p>
+      <p>Consult <a href="https://github.com/apache/james-project/blob/087e8e13e13f868280e19b74b6a8f14f55c997d1/mailbox/spring/src/main/resources/log4j.properties">log4j.properties</a> in GIT to get some examples and hints.</p>
 
       <p>You can rise the logging level on protocols.</p>
       <p>Set log4j.logger.james.smtpserver=DEBUG, SMTPSERVER</p>

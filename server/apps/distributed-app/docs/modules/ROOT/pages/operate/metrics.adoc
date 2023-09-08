@@ -14,7 +14,7 @@ We also support displaying them via https://grafana.com/[Grafana]. Two methods c
  
 == Expose metrics for Prometheus collection
 
-To enable James metrics, add ``extensions.routes`` to https://github.com/apache/james-project/blob/master/docs/modules/servers/pages/distributed/configure/webadmin.adoc[webadmin.properties] file:
+To enable James metrics, add ``extensions.routes`` to https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docs/modules/ROOT/pages/configure/webadmin.adoc[webadmin.properties] file:
 ```
 extensions.routes=org.apache.james.webadmin.dropwizard.MetricsRoutes
 ```
@@ -171,7 +171,7 @@ Import the different dashboards you want.
 You then need to enable reporting through ElasticSearch. Modify your
 James ElasticSearch configuration file accordingly. To help you doing
 this, you can take a look to
-link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/elasticsearch.properties[elasticsearch.properties].
+link:https://github.com/apache/james-project/blob/3.7.x/server/apps/distributed-app/sample-configuration/elasticsearch.properties[elasticsearch.properties].
 
 If some metrics seem abnormally slow despite in depth database
 performance tuning, feedback is appreciated as well on the bug tracker,

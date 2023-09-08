@@ -33,7 +33,7 @@
           And it is only applicable with Guice products.
       </p>
       <p>
-          Consult <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/redis.properties">redis.properties</a>
+          Consult <a href="https://github.com/apache/james-project/blob/fabfdf4874da3aebb04e6fe4a7277322a395536a/server/mailet/rate-limiter-redis/redis.properties">redis.properties</a>
           in GIT to get some examples and hints.
       </p>
 

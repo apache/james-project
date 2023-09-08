@@ -164,7 +164,7 @@
                             <item name="SMTP Hook" href="/server/dev-extend-smtp-hook.html" />
                         </item>
                         <item name="Provided Extensions" href="/server/dev-provided.html" collapse="true" >
-                            <item name="Mailets" href="/server/dev-provided-mailets.html" />
+                            <item name="Mailets" href="/server/3/dev-provided-mailets.html" />
                             <item name="SMTP Hooks" href="/server/dev-provided-smtp-hooks.html" />
                         </item>
                     </item>

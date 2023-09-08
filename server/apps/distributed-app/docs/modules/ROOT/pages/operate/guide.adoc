@@ -51,9 +51,9 @@ xref:operate/webadmin.adoc#_removing_a_mail_from_a_mail_repository[delete
 a single mail of a mail repository].
 
 Performance of mail processing can be monitored via the
-https://github.com/apache/james-project/blob/master/grafana-reporting/MAILET-1490071694187-dashboard.json[mailet
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MAILET-1490071694187-dashboard.json[mailet
 grafana board] and
-https://github.com/apache/james-project/blob/master/grafana-reporting/MATCHER-1490071813409-dashboard.json[matcher
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MATCHER-1490071813409-dashboard.json[matcher
 grafana board].
 
 === Recipient rewriting
@@ -90,9 +90,9 @@ link:config-listeners.html[here].
 Currently, an administrator can monitor listeners failures through
 `ERROR` log review. Metrics regarding mailbox listeners can be monitored
 via
-https://github.com/apache/james-project/blob/master/grafana-reporting/MailboxListeners-1528958667486-dashboard.json[mailbox_listeners
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MailboxListeners-1528958667486-dashboard.json[mailbox_listeners
 grafana board] and
-https://github.com/apache/james-project/blob/master/grafana-reporting/MailboxListeners%20rate-1552903378376.json[mailbox_listeners_rate
+https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MailboxListeners%20rate-1552903378376.json[mailbox_listeners_rate
 grafana board].
 
 Upon exceptions, a bounded number of retries are performed (with

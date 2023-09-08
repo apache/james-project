@@ -81,7 +81,7 @@
         <ul>
             <li><a href="https://github.com/apache/james-project/blob/master/mailet/api/src/main/java/org/apache/mailet/Mailet.java">Mailets</a></li>
             <li><a href="https://github.com/apache/james-project/blob/master/mailet/api/src/main/java/org/apache/mailet/Matcher.java">Matchers</a></li>
-            <li><a href="https://github.com/apache/james-project/blob/master/mailbox/api/src/main/java/org/apache/james/mailbox/events/MailboxListener.java">Mailbox Listeners</a></li>
+            <li><a href="https://github.com/apache/james-project/blob/master/mailbox/api/src/main/java/org/apache/james/mailbox/events/MailboxEvents.java">Mailbox Events</a></li>
             <li><a href="https://github.com/apache/james-project/blob/master/mailbox/api/src/main/java/org/apache/james/mailbox/extension/PreDeletionHook.java">PreDeletion hooks</a></li>
             <li><a href="https://github.com/apache/james-project/blob/master/protocols/api/src/main/java/org/apache/james/protocols/api/handler/ProtocolHandler.java">Protocol handlers</a> (SMTP/LMTP/POP3)</li>
             <li><a href="https://github.com/apache/james-project/blob/master/server/protocols/webadmin/webadmin-core/src/main/java/org/apache/james/webadmin/Routes.java">Additional webAdmin routes</a></li>

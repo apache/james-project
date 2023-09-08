@@ -149,7 +149,7 @@ After that restart james.
         <p>Upon injections, the user can reference additional guice modules, that are going to be used only upon extensions instantiation.
             In order to do that:</p>
         <p> 1. Place the jar containing the guice module that should be used to instantiate your extensions within the /extensions-jars folder</p>
-        <p> 2. Register your module fully qualified class name within <a href="https://github.com/apache/james-project/blob/master/server/container/guice/memory-guice/sample-configuration/extensions.properties">
+        <p> 2. Register your module fully qualified class name within <a href="https://github.com/apache/james-project/blob/3.6.x/server/container/guice/memory-guice/sample-configuration/extensions.properties">
             extensions.properties</a> under the <code>guice.extension.module</code> key.</p>
     </subsection>
 

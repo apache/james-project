@@ -71,7 +71,7 @@ James keeps tracks of various metrics and allow to easily visualize them.
 
 Read this page for [explanations on metrics](metrics.html).
 
-Here is a list of [available metric boards](https://github.com/apache/james-project/tree/master/grafana-reporting)
+Here is a list of [available metric boards](https://github.com/apache/james-project/tree/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting)
 
 Monitoring these graphs on a regular basis allows diagnosing early some performance issues. 
 
@@ -154,8 +154,8 @@ Also, one can decide to
 or [delete a single mail of a mail repository](manage-webadmin.html#Removing_a_mail_from_a_mail_repository).
 
 Performance of mail processing can be monitored via the 
-[mailet grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MAILET-1490071694187-dashboard.json) 
-and [matcher grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MATCHER-1490071813409-dashboard.json).
+[mailet grafana board](https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MAILET-1490071694187-dashboard.json) 
+and [matcher grafana board](https://github.com/apache/james-project/blob/fabfdf4874da3aebb04e6fe4a7277322a395536a/server/mailet/rate-limiter-redis/redis.properties).
 
 ## Mailbox Event Bus
 
@@ -192,8 +192,8 @@ You can get more information about those [here](config-listeners.html).
 
 Currently, an administrator can monitor listeners failures through `ERROR` log review. 
 Metrics regarding mailbox listeners can be monitored via
-[mailbox_listeners grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MailboxListeners-1528958667486-dashboard.json) 
-and [mailbox_listeners_rate grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MailboxListeners%20rate-1552903378376.json).
+[mailbox_listeners grafana board](https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MailboxListeners-1528958667486-dashboard.json) 
+and [mailbox_listeners_rate grafana board](https://github.com/apache/james-project/blob/d2cf7c8e229d9ed30125871b3de5af3cb1553649/server/grafana-reporting/es-datasource/MailboxListeners%20rate-1552903378376.json).
 
 Upon exceptions, a bounded number of retries are performed (with exponential backoff delays). 
 If after those retries the listener is still failing to perform its operation, then the event will be stored in the 
