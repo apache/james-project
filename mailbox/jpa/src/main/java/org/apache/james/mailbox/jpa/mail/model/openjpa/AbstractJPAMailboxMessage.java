@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.Flags;
 import javax.persistence.Basic;
@@ -46,26 +46,29 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
-import org.apache.james.mailbox.jpa.mail.model.JPAAttachment;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
@@ -274,14 +277,6 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         @ElementJoinColumn(name = "MAIL_UID", referencedColumnName = "MAIL_UID")})
     private List<JPAUserFlag> userFlags;
 
-    /**
-     * Metadata for attachments
-     */
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @OrderBy("attachmentId")
-    @ElementJoinColumns({@ElementJoinColumn(name = "MAILBOX_ID", referencedColumnName = "MAILBOX_ID"),
-        @ElementJoinColumn(name = "MAIL_UID", referencedColumnName = "MAIL_UID")})
-    private List<JPAAttachment> attachments;
 
     protected AbstractJPAMailboxMessage() {
     }
@@ -291,7 +286,6 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         this.mailbox = mailbox;
         this.internalDate = internalDate;
         userFlags = new ArrayList<>();
-        attachments = new ArrayList<>();
 
         setFlags(flags);
         this.contentOctets = contentOctets;
@@ -344,7 +338,6 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         for (Property property : properties) {
             this.properties.add(new JPAProperty(property, order++));
         }
-        this.attachments = new ArrayList<>();
     }
 
     @Override
@@ -561,17 +554,26 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
             + " )";
     }
 
-    /**
-     * Utility attachments' setter.
-     */
-    public void setAttachments(List<JPAAttachment> attachments) {
-        this.attachments = attachments;
-    }
-
     @Override
     public List<MessageAttachmentMetadata> getAttachments() {
-        return this.attachments.stream()
-            .map(JPAAttachment::toMessageAttachmentMetadata)
-            .collect(Collectors.toList());
+        try {
+            AtomicInteger counter = new AtomicInteger(0);
+            MessageParser.ParsingResult parsingResult = new MessageParser().retrieveAttachments(getFullContent());
+            ImmutableList<MessageAttachmentMetadata> result = parsingResult
+                .getAttachments()
+                .stream()
+                .map(Throwing.<ParsedAttachment, MessageAttachmentMetadata>function(
+                        attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet()), getMessageId()))
+                    .sneakyThrow())
+                .collect(ImmutableList.toImmutableList());
+            parsingResult.dispose();
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private AttachmentId generateFixedAttachmentId(int position) {
+        return AttachmentId.from(getMailboxId().serialize() + "-" + getUid().asLong() + "-" + position);
     }
 }

@@ -36,6 +36,7 @@ class JPAConfigurationTest {
     private static final String USER_NAME = "username";
     private static final String PASSWORD = "password";
     private static final String EMPTY_STRING = "";
+    private static final boolean ATTACHMENT_STORAGE = true;
 
     @Test
     void buildShouldReturnCorrespondingProperties() {
@@ -48,6 +49,7 @@ class JPAConfigurationTest {
             .username(USER_NAME)
             .password(PASSWORD)
             .maxConnections(MAX_CONNECTIONS)
+            .attachmentStorage(ATTACHMENT_STORAGE)
             .build();
 
         SoftAssertions.assertSoftly(softly -> {
@@ -61,6 +63,7 @@ class JPAConfigurationTest {
                 softly.assertThat(credential.getUsername()).isEqualTo(USER_NAME);
             });
             softly.assertThat(configuration.getMaxConnections()).contains(MAX_CONNECTIONS);
+            softly.assertThat(configuration.isAttachmentStorageEnabled()).contains(ATTACHMENT_STORAGE);
         });
     }
 
@@ -80,6 +83,7 @@ class JPAConfigurationTest {
             softly.assertThat(configuration.getValidationQueryTimeoutSec()).isEmpty();
             softly.assertThat(configuration.getCredential()).isEmpty();
             softly.assertThat(configuration.getMaxConnections()).isEmpty();
+            softly.assertThat(configuration.isAttachmentStorageEnabled()).isEmpty();
         });
     }
 
