@@ -21,6 +21,7 @@ package org.apache.james.modules.data;
 import static org.apache.james.modules.data.JPAConfiguration.Credential.NO_CREDENTIAL;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.CUSTOM_DATASOURCE_PROPERTIES;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.CUSTOM_OPENJPA_PROPERTIES;
+import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_ATTACHMENT_STORAGE;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_MAX_CONNECTIONS;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_MULTITHREADED;
 import static org.apache.james.modules.data.JPAConfiguration.ReadyToBuild.NO_TEST_ON_BORROW;
@@ -53,6 +54,8 @@ public class JPAConfiguration {
     static final String DATASOURCE_VALIDATION_QUERY = "datasource.validationQuery";
     static final String DATASOURCE_MAX_TOTAL = "datasource.maxTotal";
     static List<String> DEFAULT_DATASOURCE_PROPERTIES = List.of(DATASOURCE_TEST_ON_BORROW, DATASOURCE_VALIDATION_QUERY_TIMEOUT_SEC, DATASOURCE_VALIDATION_QUERY, DATASOURCE_MAX_TOTAL);
+
+    static final String ATTACHMENT_STORAGE = "attachmentStorage.enabled";
 
     static {
     }
@@ -107,6 +110,7 @@ public class JPAConfiguration {
         static final Optional<Integer> NO_MAX_CONNECTIONS = Optional.empty();
         static final Map<String,String> CUSTOM_OPENJPA_PROPERTIES = Map.of();
         static final Map<String,String> CUSTOM_DATASOURCE_PROPERTIES = Map.of();
+        static final Optional<Boolean> NO_ATTACHMENT_STORAGE = Optional.empty();
 
         private final String driverName;
         private final String driverURL;
@@ -119,12 +123,14 @@ public class JPAConfiguration {
         private Optional<Integer> maxConnections;
         private Map<String,String> customDatasourceProperties;
         private Map<String,String> customOpenjpaProperties;
+        private Optional<Boolean> attachmentStorage;
 
 
         private ReadyToBuild(String driverName, String driverURL, Optional<Credential> credential,
                             Optional<Boolean> testOnBorrow, Optional<Boolean> multithreaded, Optional<Integer> validationQueryTimeoutSec,
                             Optional<String> validationQuery,Optional<Integer> maxConnections,
-                            Map<String,String> customDatasourceProperties, Map<String,String> customOpenjpaProperties
+                            Map<String,String> customDatasourceProperties, Map<String,String> customOpenjpaProperties,
+                            Optional<Boolean> attachmentStorage
         ) {
             this.driverName = driverName;
             this.driverURL = driverURL;
@@ -136,15 +142,16 @@ public class JPAConfiguration {
             this.maxConnections = maxConnections;
             this.customDatasourceProperties = customDatasourceProperties;
             this.customOpenjpaProperties = customOpenjpaProperties;
+            this.attachmentStorage = attachmentStorage;
         }
 
         public JPAConfiguration build() {
-            return new JPAConfiguration(driverName, driverURL, credential, testOnBorrow, multithreaded, validationQueryTimeoutSec, validationQuery, maxConnections, customDatasourceProperties, customOpenjpaProperties);
+            return new JPAConfiguration(driverName, driverURL, credential, testOnBorrow, multithreaded, validationQueryTimeoutSec, validationQuery, maxConnections, customDatasourceProperties, customOpenjpaProperties, attachmentStorage);
         }
 
         public RequirePassword username(String username) {
             return password -> new ReadyToBuild(driverName, driverURL, Credential.of(username, password),
-                testOnBorrow, multithreaded, validationQueryTimeoutSec, validationQuery, maxConnections, customDatasourceProperties, customOpenjpaProperties);
+                testOnBorrow, multithreaded, validationQueryTimeoutSec, validationQuery, maxConnections, customDatasourceProperties, customOpenjpaProperties, attachmentStorage);
         }
 
         public ReadyToBuild testOnBorrow(Boolean testOnBorrow) {
@@ -172,6 +179,11 @@ public class JPAConfiguration {
             return this;
         }
 
+        public ReadyToBuild attachmentStorage(Boolean attachmentStorage) {
+            this.attachmentStorage = Optional.ofNullable(attachmentStorage);
+            return this;
+        }
+
         public ReadyToBuild setCustomDatasourceProperties(Map<String, String> customDatasourceProperties) {
             this.customDatasourceProperties = new HashMap<>(customDatasourceProperties);
             DEFAULT_DATASOURCE_PROPERTIES.forEach(this.customDatasourceProperties::remove);
@@ -193,7 +205,7 @@ public class JPAConfiguration {
 
     public static RequireDriverName builder() {
         return driverName -> driverURL -> new ReadyToBuild(driverName, driverURL, NO_CREDENTIAL, NO_TEST_ON_BORROW, NO_MULTITHREADED,
-            NO_VALIDATION_QUERY_TIMEOUT_SEC, NO_VALIDATION_QUERY, NO_MAX_CONNECTIONS, CUSTOM_DATASOURCE_PROPERTIES, CUSTOM_OPENJPA_PROPERTIES);
+            NO_VALIDATION_QUERY_TIMEOUT_SEC, NO_VALIDATION_QUERY, NO_MAX_CONNECTIONS, CUSTOM_DATASOURCE_PROPERTIES, CUSTOM_OPENJPA_PROPERTIES, NO_ATTACHMENT_STORAGE);
     }
 
     private final String driverName;
@@ -206,11 +218,13 @@ public class JPAConfiguration {
     private final Optional<Integer> maxConnections;
     private Map<String,String> customDatasourceProperties;
     private Map<String,String> customOpenjpaProperties;
+    private final Optional<Boolean> attachmentStorage;
 
 
     @VisibleForTesting
     JPAConfiguration(String driverName, String driverURL, Optional<Credential> credential, Optional<Boolean> testOnBorrow, Optional<Boolean> multithreaded,
-                     Optional<Integer> validationQueryTimeoutSec, Optional<String> validationQuery, Optional<Integer> maxConnections, Map<String,String> customDatasourceProperties, Map<String,String> customOpenjpaProperties) {
+                     Optional<Integer> validationQueryTimeoutSec, Optional<String> validationQuery, Optional<Integer> maxConnections, Map<String,String> customDatasourceProperties, Map<String,String> customOpenjpaProperties,
+                     Optional<Boolean> attachmentStorage) {
         Preconditions.checkNotNull(driverName, "driverName cannot be null");
         Preconditions.checkNotNull(driverURL, "driverURL cannot be null");
         validationQueryTimeoutSec.ifPresent(timeoutInSec ->
@@ -228,6 +242,7 @@ public class JPAConfiguration {
         this.maxConnections = maxConnections;
         this.customDatasourceProperties = customDatasourceProperties;
         this.customOpenjpaProperties = customOpenjpaProperties;
+        this.attachmentStorage = attachmentStorage;
 
     }
 
@@ -267,8 +282,11 @@ public class JPAConfiguration {
         return customDatasourceProperties;
     }
 
-
     public Optional<Integer> getMaxConnections() {
         return maxConnections;
+    }
+
+    public Optional<Boolean> isAttachmentStorageEnabled() {
+        return attachmentStorage;
     }
 }

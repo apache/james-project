@@ -40,6 +40,7 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
+import org.apache.james.modules.data.JPAConfiguration;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.JPAUsersRepository;
 import org.apache.james.user.jpa.model.JPAUser;
@@ -69,9 +70,16 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
     @BeforeEach
     void setUp() throws Exception {
         EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
+
+        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
+            .driverName("driverName")
+            .driverURL("driverUrl")
+            .build();
+
         JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory,
             new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(entityManagerFactory));
+            new JPAModSeqProvider(entityManagerFactory),
+            jpaConfiguration);
 
         usersRepository = new JPAUsersRepository(NO_DOMAIN_LIST);
         usersRepository.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());

@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,6 +43,7 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
+import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessageWithAttachmentStorage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -54,6 +56,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.modules.data.JPAConfiguration;
 import org.apache.openjpa.persistence.ArgumentException;
 
 import com.github.fge.lambdas.Throwing;
@@ -73,12 +76,15 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private final MessageUtils messageMetadataMapper;
     private final JPAUidProvider uidProvider;
     private final JPAModSeqProvider modSeqProvider;
+    private final JPAConfiguration jpaConfiguration;
 
-    public JPAMessageMapper(JPAUidProvider uidProvider, JPAModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
+    public JPAMessageMapper(JPAUidProvider uidProvider, JPAModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory,
+                            JPAConfiguration jpaConfiguration) {
         super(entityManagerFactory);
         this.messageMetadataMapper = new MessageUtils(uidProvider, modSeqProvider);
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
+        this.jpaConfiguration = jpaConfiguration;
     }
 
     @Override
@@ -361,6 +367,8 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             copy = new JPAStreamingMailboxMessage(currentMailbox, uid, modSeq, original);
         } else if (original instanceof JPAEncryptedMailboxMessage) {
             copy = new JPAEncryptedMailboxMessage(currentMailbox, uid, modSeq, original);
+        } else if (original instanceof JPAMailboxMessageWithAttachmentStorage) {
+            copy = new JPAMailboxMessageWithAttachmentStorage(currentMailbox, uid, modSeq, original);
         } else {
             copy = new JPAMailboxMessage(currentMailbox, uid, modSeq, original);
         }
@@ -375,13 +383,19 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             // org.apache.openjpa.persistence.ArgumentException.
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
             JPAMailbox currentMailbox = getEntityManager().find(JPAMailbox.class, mailboxId.getRawId());
+
+            boolean isAttachmentStorage = false;
+            if (Objects.nonNull(jpaConfiguration)) {
+                isAttachmentStorage = jpaConfiguration.isAttachmentStorageEnabled().orElse(false);
+            }
+
             if (message instanceof AbstractJPAMailboxMessage) {
                 ((AbstractJPAMailboxMessage) message).setMailbox(currentMailbox);
 
                 getEntityManager().persist(message);
                 return message.metaData();
-            } else {
-                JPAMailboxMessage persistData = new JPAMailboxMessage(currentMailbox, message.getUid(), message.getModSeq(), message);
+            } else if (isAttachmentStorage) {
+                JPAMailboxMessageWithAttachmentStorage persistData = new JPAMailboxMessageWithAttachmentStorage(currentMailbox, message.getUid(), message.getModSeq(), message);
                 persistData.setFlags(message.createFlags());
 
                 if (message.getAttachments().isEmpty()) {
@@ -398,6 +412,11 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                         getEntityManager().merge(persistData);
                     }
                 }
+                return persistData.metaData();
+            } else {
+                JPAMailboxMessage persistData = new JPAMailboxMessage(currentMailbox, message.getUid(), message.getModSeq(), message);
+                persistData.setFlags(message.createFlags());
+                getEntityManager().persist(persistData);
                 return persistData.metaData();
             }
 
@@ -468,7 +487,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     private List<MessageUid> getUidList(List<MailboxMessage> messages) {
         return messages.stream()
-            .map(message -> message.getUid())
+            .map(MailboxMessage::getUid)
             .collect(ImmutableList.toImmutableList());
     }
 

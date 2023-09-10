@@ -107,6 +107,13 @@
                     t0.mailbox_uid_validity, t0.user_name FROM public.james_mailbox t0 WHERE (t0.mailbox_name LIKE ?
                         ESCAPE '\\' AND t0.user_name = ? AND t0.mailbox_namespace = ?) [params=?, ?, ?]} [code=0, state=22025]"</code></p>
 
+                <p>Attachment storage configuration</p>
+                <dl>
+                    <dt><strong>attachmentStorage.enabled</strong></dt>
+                    <dd>(Guice only). The attachment storage configuration for JPA is used to enable the implementation of the attachment storage mechanism.
+                        *WARNING*: this configuration is not designed to store large binary content, as it is not optimized for this purpose.
+                        Optional, Allowed values are: `true` or `false`, defaults to `false`</dd>
+                </dl>
             </subsection>
 
             <subsection name="META-INF/persistence.xml">

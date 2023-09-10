@@ -42,6 +42,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
+import org.apache.james.modules.data.JPAConfiguration;
 
 /**
  * JPA implementation of {@link MailboxSessionMapperFactory}
@@ -53,16 +54,19 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     private final JPAUidProvider uidProvider;
     private final JPAModSeqProvider modSeqProvider;
     private final AttachmentMapper attachmentMapper;
+    private final JPAConfiguration jpaConfiguration;
 
     @Inject
-    public JPAMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider, JPAModSeqProvider modSeqProvider) {
+    public JPAMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider,
+                                          JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration) {
         this.entityManagerFactory = entityManagerFactory;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         EntityManagerUtils.safelyClose(createEntityManager());
         this.attachmentMapper = new JPAAttachmentMapper(entityManagerFactory);
+        this.jpaConfiguration = jpaConfiguration;
     }
-    
+
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession session) {
         return new JPAMailboxMapper(entityManagerFactory);
@@ -70,7 +74,7 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
 
     @Override
     public MessageMapper createMessageMapper(MailboxSession session) {
-        return new JPAMessageMapper(uidProvider, modSeqProvider, entityManagerFactory);
+        return new JPAMessageMapper(uidProvider, modSeqProvider, entityManagerFactory, jpaConfiguration);
     }
 
     @Override

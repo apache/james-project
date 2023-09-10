@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.modules.data.JPAConfiguration;
 
 import com.google.common.collect.ImmutableList;
 
@@ -59,9 +60,16 @@ public class JPAMapperProvider implements MapperProvider {
     public MessageMapper createMessageMapper() {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
 
+        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
+            .driverName("driverName")
+            .driverURL("driverUrl")
+            .attachmentStorage(true)
+            .build();
+
         JPAMessageMapper messageMapper = new JPAMessageMapper(new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(entityManagerFactory),
-            entityManagerFactory);
+            entityManagerFactory,
+            jpaConfiguration);
 
         return new TransactionalMessageMapper(messageMapper);
     }
