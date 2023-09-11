@@ -110,7 +110,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-jpa-common-guice</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
