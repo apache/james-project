@@ -60,7 +60,7 @@ public class UploadServiceDefaultImpl implements UploadService {
         return Mono.from(uploadRepository.upload(data, contentType, user))
             .flatMap(upload -> Mono.from(uploadUsageRepository.increaseSpace(user, QuotaSizeUsage.size(upload.sizeAsLong())))
                 .thenReturn(upload))
-            .doOnSuccess(uploaded -> cleanupUploadIfNeeded(user, uploaded.uploadId())
+            .doOnSuccess(uploaded -> cleanupUploadIfNeeded(user, uploaded)
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .subscribe());
     }
@@ -70,28 +70,28 @@ public class UploadServiceDefaultImpl implements UploadService {
         return uploadRepository.retrieve(id, user);
     }
 
-    private Mono<Void> cleanupUploadIfNeeded(Username username, UploadId notCleanUploadId) {
+    private Mono<Void> cleanupUploadIfNeeded(Username username, UploadMetaData notCleanUpload) {
         return Mono.from(uploadUsageRepository.getSpaceUsage(username))
             .map(QuotaSizeUsage::asLong)
             .filter(quotaExceededPredicate())
             .switchIfEmpty(Mono.empty())
-            .flatMap(quotaExceeded -> cleanupUpload(username, quotaExceeded, notCleanUploadId));
+            .flatMap(quotaExceeded -> cleanupUpload(username, quotaExceeded, notCleanUpload));
     }
 
     private Predicate<Long> quotaExceededPredicate() {
         return currentUploadUsage -> currentUploadUsage > jmapUploadQuotaConfiguration.getUploadQuotaLimitInBytes();
     }
 
-    private Mono<Void> cleanupUpload(Username username, long currentUploadUsage, UploadId notCleanUploadId) {
+    private Mono<Void> cleanupUpload(Username username, long currentUploadUsage, UploadMetaData notCleanUpload) {
         long minimumSpaceToClean = currentUploadUsage - jmapUploadQuotaConfiguration.getUploadQuotaLimitInBytes() / 2;
         AtomicLong cleanedSpace = new AtomicLong(0L);
 
         return Flux.from(uploadRepository.listUploads(username))
-            .filter(upload -> !upload.uploadId().equals(notCleanUploadId))
+            .filter(upload -> !upload.equals(notCleanUpload))
             .sort(Comparator.comparing(UploadMetaData::uploadDate))
             .concatMap(deleteUpload(username, minimumSpaceToClean, cleanedSpace))
             .map(UploadMetaData::sizeAsLong)
-            .reduce(Long::sum)
+            .reduce(notCleanUpload.sizeAsLong(), Long::sum)
             .filter(totalSpaceUsed -> totalSpaceUsed != currentUploadUsage)
             .flatMap(totalSpaceUsed -> Mono.from(uploadUsageRepository.resetSpace(username, QuotaSizeUsage.size(totalSpaceUsed))))
             .then();
