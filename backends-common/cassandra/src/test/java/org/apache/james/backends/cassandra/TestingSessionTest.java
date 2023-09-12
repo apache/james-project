@@ -146,7 +146,7 @@ class TestingSessionTest {
                 .whenQueryStartsWith("SELECT value FROM schemaversion"));
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-            .isInstanceOf(InjectedFailureException.class);
+            .hasCauseInstanceOf(InjectedFailureException.class);
     }
 
     @Test
@@ -159,7 +159,7 @@ class TestingSessionTest {
         assertThatThrownBy(() -> new CassandraAsyncExecutor(cassandra.getConf())
                 .executeVoid(selectFrom(TABLE_NAME).column(VALUE).build())
                 .block())
-            .isInstanceOf(InjectedFailureException.class);
+            .hasCauseInstanceOf(InjectedFailureException.class);
     }
 
     @Test
@@ -170,7 +170,7 @@ class TestingSessionTest {
                 .forAllQueries());
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-            .isInstanceOf(InjectedFailureException.class);
+            .hasCauseInstanceOf(InjectedFailureException.class);
     }
 
     @Test
@@ -199,9 +199,9 @@ class TestingSessionTest {
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(InjectedFailureException.class);
+                .hasCauseInstanceOf(InjectedFailureException.class);
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(InjectedFailureException.class);
+                .hasCauseInstanceOf(InjectedFailureException.class);
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
                 .doesNotThrowAnyException();
         });
@@ -222,7 +222,7 @@ class TestingSessionTest {
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
                 .doesNotThrowAnyException();
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(InjectedFailureException.class);
+                .hasCauseInstanceOf(InjectedFailureException.class);
             assertThatCode(() -> dao.getCurrentSchemaVersion().block())
                 .doesNotThrowAnyException();
         });
@@ -237,11 +237,11 @@ class TestingSessionTest {
 
         SoftAssertions.assertSoftly(softly -> {
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(InjectedFailureException.class);
+                .hasCauseInstanceOf(InjectedFailureException.class);
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(InjectedFailureException.class);
+                .hasCauseInstanceOf(InjectedFailureException.class);
             assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-                .isInstanceOf(InjectedFailureException.class);
+                .hasCauseInstanceOf(InjectedFailureException.class);
         });
     }
 
@@ -255,7 +255,7 @@ class TestingSessionTest {
         dao.updateVersion(new SchemaVersion(36)).block();
 
         assertThatThrownBy(() -> dao.getCurrentSchemaVersion().block())
-            .isInstanceOf(InjectedFailureException.class);
+            .hasCauseInstanceOf(InjectedFailureException.class);
     }
 
     @Timeout(10)
@@ -344,6 +344,7 @@ class TestingSessionTest {
 
         CompletableFuture<Void> operation = dao.updateVersion(newVersion)
             .subscribeOn(Schedulers.fromExecutor(EXECUTOR))
+            .onErrorMap(Throwable::getCause)
             .toFuture();
 
         barrier.awaitCaller();
