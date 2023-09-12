@@ -45,7 +45,7 @@ public class CassandraAsyncExecutor {
     public static String asString(Statement statement) {
         if (statement instanceof BoundStatement) {
             BoundStatement boundStatement = (BoundStatement) statement;
-           return boundStatement.getPreparedStatement().getQuery();
+            return boundStatement.getPreparedStatement().getQuery();
         } else if (statement instanceof SimpleStatement) {
             SimpleStatement simpleStatement = (SimpleStatement) statement;
             return simpleStatement.getQuery();
