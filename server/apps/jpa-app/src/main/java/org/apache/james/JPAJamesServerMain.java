@@ -41,6 +41,7 @@ import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.RecomputeSingleComponentCurrentQuotasServicesExcludingJMAPModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
@@ -60,6 +61,7 @@ public class JPAJamesServerMain implements JamesServerMain {
     private static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
+        new RecomputeSingleComponentCurrentQuotasServicesExcludingJMAPModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),

@@ -32,9 +32,13 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
+import org.apache.james.mailbox.quota.task.RecomputeJMAPUploadCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.BeforeEach;
+
+import com.google.common.collect.ImmutableSet;
 
 class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
 
@@ -54,8 +58,13 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
 
         resources = InMemoryIntegrationResources.defaultResources();
         InMemoryMailboxManager mailboxManager = resources.getMailboxManager();
-        testee = new RecomputeCurrentQuotasService(usersRepository, resources.getCurrentQuotaManager(),
-            resources.getCurrentQuotaCalculator(), resources.getDefaultUserQuotaRootResolver(), mailboxManager.getSessionProvider(), mailboxManager, JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR);
+        testee = new RecomputeCurrentQuotasService(usersRepository,
+            ImmutableSet.of(new RecomputeMailboxCurrentQuotasService(resources.getCurrentQuotaManager(),
+                    resources.getCurrentQuotaCalculator(),
+                    resources.getDefaultUserQuotaRootResolver(),
+                    mailboxManager.getSessionProvider(),
+                    mailboxManager),
+                new RecomputeJMAPUploadCurrentQuotasService(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR)));
     }
 
     @Override

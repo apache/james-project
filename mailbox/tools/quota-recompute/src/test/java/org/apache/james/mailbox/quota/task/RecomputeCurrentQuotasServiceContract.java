@@ -49,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -207,8 +208,9 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot())
-            .isEqualTo(new Context(1L, ImmutableList.of()).snapshot());
+        assertThat(context.snapshot().getResults())
+            .containsExactlyInAnyOrderElementsOf(new Context(ImmutableMap.of(QuotaComponent.MAILBOX, new Context.Statistic(1L, ImmutableList.of()),
+                QuotaComponent.JMAP_UPLOADS, new Context.Statistic(1L, ImmutableList.of()))).snapshot().getResults());
     }
 
     @Test
@@ -224,8 +226,9 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot())
-            .isEqualTo(new Context(1L, ImmutableList.of()).snapshot());
+        assertThat(context.snapshot().getResults())
+            .containsExactlyInAnyOrderElementsOf(new Context(ImmutableMap.of(QuotaComponent.MAILBOX, new Context.Statistic(1L, ImmutableList.of()),
+                QuotaComponent.JMAP_UPLOADS, new Context.Statistic(1L, ImmutableList.of()))).snapshot().getResults());
     }
 
     @Test
@@ -247,8 +250,9 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot())
-            .isEqualTo(new Context(2L, ImmutableList.of()).snapshot());
+        assertThat(context.snapshot().getResults())
+            .containsExactlyInAnyOrderElementsOf(new Context(ImmutableMap.of(QuotaComponent.MAILBOX, new Context.Statistic(2L, ImmutableList.of()),
+                QuotaComponent.JMAP_UPLOADS, new Context.Statistic(2L, ImmutableList.of()))).snapshot().getResults());
     }
 
     default void appendAMessageForUser(MessageManager messageManager, MailboxSession session) throws Exception {

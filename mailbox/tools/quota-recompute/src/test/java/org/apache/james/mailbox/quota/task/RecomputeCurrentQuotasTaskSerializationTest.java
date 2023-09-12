@@ -37,24 +37,29 @@ class RecomputeCurrentQuotasTaskSerializationTest {
     static final String QUOTA_ROOT_AS_STRING = "bob@localhost";
 
     static final RecomputeCurrentQuotasService SERVICE = mock(RecomputeCurrentQuotasService.class);
-    static final RecomputeCurrentQuotasTask TASK = new RecomputeCurrentQuotasTask(SERVICE, RunningOptions.of(17, ImmutableList.of(QuotaComponent.JMAP_UPLOADS)));
+    static final RecomputeCurrentQuotasTask TASK = new RecomputeCurrentQuotasTask(SERVICE, RunningOptions.of(17, ImmutableList.of(QuotaComponent.MAILBOX)));
     static final RecomputeCurrentQuotasTask TASK_DEFAULT = new RecomputeCurrentQuotasTask(SERVICE, RunningOptions.DEFAULT);
     static final String SERIALIZED_TASK_LEGACY = "{\"type\": \"recompute-current-quotas\"}";
-    static final String SERIALIZED_TASK = "{\"type\": \"recompute-current-quotas\",\"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"JMAP_UPLOADS\"]}}";
-    static final RecomputeCurrentQuotasTask.Details DETAILS = new RecomputeCurrentQuotasTask.Details(TIMESTAMP, 12,
-        ImmutableList.of(QUOTA_ROOT_AS_STRING), RunningOptions.of(17, ImmutableList.of(QuotaComponent.JMAP_UPLOADS)));
-    static final RecomputeCurrentQuotasTask.Details DETAILS_DEFAULT = new RecomputeCurrentQuotasTask.Details(TIMESTAMP, 12, ImmutableList.of(QUOTA_ROOT_AS_STRING), RunningOptions.DEFAULT);
+    static final String SERIALIZED_TASK = "{\"type\": \"recompute-current-quotas\",\"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"MAILBOX\"]}}";
+    static final RecomputeCurrentQuotasTask.Details DETAILS = new RecomputeCurrentQuotasTask.Details(TIMESTAMP,
+        ImmutableList.of(new RecomputeSingleQuotaComponentResult(QuotaComponent.MAILBOX.getValue(),
+            12,
+            ImmutableList.of(QUOTA_ROOT_AS_STRING))),
+        RunningOptions.of(17, ImmutableList.of(QuotaComponent.MAILBOX)));
+    static final RecomputeCurrentQuotasTask.Details DETAILS_DEFAULT = new RecomputeCurrentQuotasTask.Details(TIMESTAMP,
+        ImmutableList.of(new RecomputeSingleQuotaComponentResult(QuotaComponent.MAILBOX.getValue(),
+            12,
+            ImmutableList.of(QUOTA_ROOT_AS_STRING))),
+        RunningOptions.DEFAULT);
     static final String SERIALIZED_ADDITIONAL_INFORMATION_LEGACY = "{" +
         "  \"type\":\"recompute-current-quotas\"," +
-        "  \"processedQuotaRoots\":12," +
-        "  \"failedQuotaRoots\":[\"bob@localhost\"]," +
+        "  \"recomputeSingleQuotaComponentResults\":[{\"quotaComponent\":\"MAILBOX\",\"processedIdentifierCount\":12,\"failedIdentifiers\":[\"bob@localhost\"]}]," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"" +
         "}";
     static final String SERIALIZED_ADDITIONAL_INFORMATION = "{" +
         "  \"type\":\"recompute-current-quotas\"," +
-        "  \"processedQuotaRoots\":12," +
-        "  \"failedQuotaRoots\":[\"bob@localhost\"]," +
-        "  \"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"JMAP_UPLOADS\"]}," +
+        "  \"recomputeSingleQuotaComponentResults\":[{\"quotaComponent\":\"MAILBOX\",\"processedIdentifierCount\":12,\"failedIdentifiers\":[\"bob@localhost\"]}]," +
+        "  \"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"MAILBOX\"]}," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"" +
         "}";
 

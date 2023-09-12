@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainListModule;
 import org.apache.james.mailbox.MailboxManager;
@@ -39,6 +40,8 @@ import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
+import org.apache.james.mailbox.quota.task.RecomputeJMAPUploadCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -53,6 +56,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
     static final DomainList NO_DOMAIN_LIST = null;
@@ -85,8 +90,13 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         userQuotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
         CurrentQuotaCalculator currentQuotaCalculator = new CurrentQuotaCalculator(mapperFactory, userQuotaRootResolver);
 
-        testee = new RecomputeCurrentQuotasService(usersRepository, currentQuotaManager, currentQuotaCalculator, userQuotaRootResolver,
-            sessionProvider, mailboxManager, JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR);
+        testee = new RecomputeCurrentQuotasService(usersRepository,
+            ImmutableSet.of(new RecomputeMailboxCurrentQuotasService(currentQuotaManager,
+                    currentQuotaCalculator,
+                    userQuotaRootResolver,
+                    sessionProvider,
+                    mailboxManager),
+                new RecomputeJMAPUploadCurrentQuotasService(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR)));
     }
 
     @Override
@@ -157,7 +167,8 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
         assertThat(context.snapshot())
-            .isEqualTo(new RecomputeCurrentQuotasService.Context(0L,
-                ImmutableList.of(userQuotaRootResolver.forUser(USER_1))).snapshot());
+            .isEqualTo(new RecomputeCurrentQuotasService.Context(ImmutableMap.of(QuotaComponent.MAILBOX,
+                new RecomputeCurrentQuotasService.Context.Statistic(1L, ImmutableList.of(userQuotaRootResolver.forUser(USER_1).asString()))))
+                .snapshot());
     }
 }

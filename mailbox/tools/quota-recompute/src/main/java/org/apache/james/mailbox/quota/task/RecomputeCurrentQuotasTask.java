@@ -21,9 +21,9 @@ package org.apache.james.mailbox.quota.task;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
-import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Context;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Context.Snapshot;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
@@ -31,21 +31,17 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import com.google.common.collect.ImmutableList;
-
 public class RecomputeCurrentQuotasTask implements Task {
     static final TaskType RECOMPUTE_CURRENT_QUOTAS = TaskType.of("recompute-current-quotas");
 
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
         private final Instant instant;
-        private final long processedQuotaRoots;
-        private final ImmutableList<String> failedQuotaRoots;
+        private final List<RecomputeSingleQuotaComponentResult> recomputeSingleQuotaComponentResults;
         private final RunningOptions runningOptions;
 
-        Details(Instant instant, long processedQuotaRoots, ImmutableList<String> failedQuotaRoots, RunningOptions runningOptions) {
+        Details(Instant instant, List<RecomputeSingleQuotaComponentResult> recomputeSingleQuotaComponentResults, RunningOptions runningOptions) {
             this.instant = instant;
-            this.processedQuotaRoots = processedQuotaRoots;
-            this.failedQuotaRoots = failedQuotaRoots;
+            this.recomputeSingleQuotaComponentResults = recomputeSingleQuotaComponentResults;
             this.runningOptions = runningOptions;
         }
 
@@ -54,12 +50,8 @@ public class RecomputeCurrentQuotasTask implements Task {
             return instant;
         }
 
-        long getProcessedQuotaRoots() {
-            return processedQuotaRoots;
-        }
-
-        ImmutableList<String> getFailedQuotaRoots() {
-            return failedQuotaRoots;
+        public List<RecomputeSingleQuotaComponentResult> getResults() {
+            return recomputeSingleQuotaComponentResults;
         }
 
         public RunningOptions getRunningOptions() {
@@ -97,10 +89,7 @@ public class RecomputeCurrentQuotasTask implements Task {
         Snapshot snapshot = context.snapshot();
 
         return Optional.of(new Details(Clock.systemUTC().instant(),
-            snapshot.getProcessedQuotaRootCount(),
-            snapshot.getFailedQuotaRoots()
-                .stream()
-                .map(QuotaRoot::asString)
-                .collect(ImmutableList.toImmutableList()), runningOptions));
+            snapshot.getResults(),
+            runningOptions));
     }
 }
