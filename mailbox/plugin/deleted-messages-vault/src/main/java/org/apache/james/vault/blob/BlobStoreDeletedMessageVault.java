@@ -122,7 +122,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private Mono<InputStream> loadMimeMessage(StorageInformation storageInformation, Username username, MessageId messageId) {
-        return Mono.fromSupplier(() -> blobStore.read(storageInformation.getBucketName(), storageInformation.getBlobId(), LOW_COST))
+        return Mono.from(blobStore.readReactive(storageInformation.getBucketName(), storageInformation.getBlobId(), LOW_COST))
             .onErrorResume(
                 ObjectNotFoundException.class,
                 ex -> Mono.error(new DeletedMessageContentNotFoundException(username, messageId)));
