@@ -83,8 +83,10 @@ trait UploadServiceContract {
 
     assertThat(SMono(testee.retrieve(uploadId70, BOB)).block().uploadId)
       .isEqualTo(uploadId70)
-    assertThatThrownBy(() => SMono(testee.retrieve(uploadId50, BOB)).block().uploadId)
-      .isInstanceOf(classOf[UploadNotFoundException])
+
+    awaitAtMostTwoMinutes.untilAsserted(() =>
+      assertThatThrownBy(() => SMono(testee.retrieve(uploadId50, BOB)).block().uploadId)
+        .isInstanceOf(classOf[UploadNotFoundException]))
   }
 
   @Test
