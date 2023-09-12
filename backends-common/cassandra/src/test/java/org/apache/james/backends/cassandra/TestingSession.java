@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
+import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -100,21 +101,13 @@ public class TestingSession implements CqlSession {
 
     private void printStatement(String query) {
         if (printStatements) {
-            print("Executing: " + query);
+            print(query);
         }
     }
 
     private void printStatement(Statement statement) {
         if (printStatements) {
-            if (statement instanceof BoundStatement) {
-                BoundStatement boundStatement = (BoundStatement) statement;
-                print("Executing: " + boundStatement.getPreparedStatement().getQuery());
-            } else if (statement instanceof SimpleStatement) {
-                SimpleStatement simpleStatement = (SimpleStatement) statement;
-                print("Executing: " + simpleStatement.getQuery());
-            } else {
-                print(statement.toString());
-            }
+            print(CassandraAsyncExecutor.asString(statement));
         }
     }
 
