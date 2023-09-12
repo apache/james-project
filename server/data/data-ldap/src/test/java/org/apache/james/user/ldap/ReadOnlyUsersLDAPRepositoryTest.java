@@ -133,6 +133,49 @@ class ReadOnlyUsersLDAPRepositoryTest {
     }
 
     @Nested
+    class UserListBaseTests {
+        private ReadOnlyUsersLDAPRepository usersLDAPRepository;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            usersLDAPRepository = new ReadOnlyUsersLDAPRepository(new SimpleDomainList());
+            usersLDAPRepository.configure(configuration(ldapContainer));
+            usersLDAPRepository.init();
+        }
+
+        private PropertyListConfiguration configuration(LdapGenericContainer ldapContainer) {
+            PropertyListConfiguration configuration = new PropertyListConfiguration();
+            configuration.addProperty("[@ldapHost]", ldapContainer.getLdapHost());
+            configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
+            configuration.addProperty("[@credentials]", ADMIN_PASSWORD);
+            configuration.addProperty("[@userBase]", "dc=james,dc=org");
+            configuration.addProperty("[@userListBase]", "ou=whatever,dc=james,dc=org");
+            configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
+            configuration.addProperty("[@connectionTimeout]", "2000");
+            configuration.addProperty("[@readTimeout]", "2000");
+            configuration.addProperty("[@userIdAttribute]", "mail");
+            configuration.addProperty("supportsVirtualHosting", true);
+            return configuration;
+        }
+
+        @Test
+        void shouldValidatePasswordForUserListBase() throws Exception {
+            assertThat(usersLDAPRepository.getUserByName(Username.of("bob@extra.org")).verifyPassword("secret")).isTrue();
+        }
+
+        @Test
+        void shouldValidatePasswordForUserBase() throws Exception {
+            assertThat(usersLDAPRepository.getUserByName(Username.of("james-user@james.org")).verifyPassword("secret")).isTrue();
+        }
+
+        @Test
+        void shouldListEntriesInUserListBase() throws Exception {
+            // james-user@james.org is not in userListBase thus is not listed
+            assertThat(ImmutableList.copyOf(usersLDAPRepository.list())).containsOnly(Username.of("bob@extra.org"));
+        }
+    }
+
+    @Nested
     class FilterTests {
         @Test
         void filterShouldKeepMatchingEntries() throws Exception {
