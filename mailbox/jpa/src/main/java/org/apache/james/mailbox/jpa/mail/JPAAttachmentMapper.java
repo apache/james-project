@@ -93,11 +93,6 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
             .collect(ImmutableList.toImmutableList());
     }
 
-    @Override
-    public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) {
-        throw new UnsupportedOperationException("JPA does not support MessageId");
-    }
-
     private AttachmentMetadata getAttachmentMetadata(AttachmentId attachmentId) {
         try {
             return getEntityManager().createNamedQuery("findAttachmentById", JPAAttachment.class)

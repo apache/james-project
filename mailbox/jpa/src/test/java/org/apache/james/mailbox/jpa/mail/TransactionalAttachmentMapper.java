@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
@@ -43,7 +42,7 @@ public class TransactionalAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException {
+    public InputStream loadAttachmentContent(AttachmentId attachmentId) {
         return attachmentMapper.loadAttachmentContent(attachmentId);
     }
 
@@ -75,10 +74,5 @@ public class TransactionalAttachmentMapper implements AttachmentMapper {
     @Override
     public Mono<List<MessageAttachmentMetadata>> storeAttachmentsReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
         return attachmentMapper.executeReactive(attachmentMapper.storeAttachmentsReactive(attachments, ownerMessageId));
-    }
-
-    @Override
-    public Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException {
-        return attachmentMapper.getRelatedMessageIds(attachmentId);
     }
 }
