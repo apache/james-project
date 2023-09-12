@@ -60,7 +60,7 @@ public class UploadServiceDefaultImpl implements UploadService {
         return Mono.from(uploadRepository.upload(data, contentType, user))
             .flatMap(upload -> Mono.from(uploadUsageRepository.increaseSpace(user, QuotaSizeUsage.size(upload.sizeAsLong())))
                 .thenReturn(upload))
-            .doOnSuccess(uploaded -> cleanupUploadIfNeeded(user)
+            .doOnSuccess(uploaded -> cleanupUploadIfNeeded(user, uploaded.uploadId())
                 .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
                 .subscribe());
     }
@@ -70,23 +70,24 @@ public class UploadServiceDefaultImpl implements UploadService {
         return uploadRepository.retrieve(id, user);
     }
 
-    private Mono<Void> cleanupUploadIfNeeded(Username username) {
+    private Mono<Void> cleanupUploadIfNeeded(Username username, UploadId notCleanUploadId) {
         return Mono.from(uploadUsageRepository.getSpaceUsage(username))
             .map(QuotaSizeUsage::asLong)
             .filter(quotaExceededPredicate())
             .switchIfEmpty(Mono.empty())
-            .flatMap(quotaExceeded -> cleanupUpload(username, quotaExceeded));
+            .flatMap(quotaExceeded -> cleanupUpload(username, quotaExceeded, notCleanUploadId));
     }
 
     private Predicate<Long> quotaExceededPredicate() {
         return currentUploadUsage -> currentUploadUsage > jmapUploadQuotaConfiguration.getUploadQuotaLimitInBytes();
     }
 
-    private Mono<Void> cleanupUpload(Username username, long currentUploadUsage) {
+    private Mono<Void> cleanupUpload(Username username, long currentUploadUsage, UploadId notCleanUploadId) {
         long minimumSpaceToClean = currentUploadUsage - jmapUploadQuotaConfiguration.getUploadQuotaLimitInBytes() / 2;
         AtomicLong cleanedSpace = new AtomicLong(0L);
 
         return Flux.from(uploadRepository.listUploads(username))
+            .filter(upload -> !upload.uploadId().equals(notCleanUploadId))
             .sort(Comparator.comparing(UploadMetaData::uploadDate))
             .concatMap(deleteUpload(username, minimumSpaceToClean, cleanedSpace))
             .map(UploadMetaData::sizeAsLong)
