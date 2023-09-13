@@ -1,4 +1,4 @@
 = Download Apache James releases
 :navtitle: Download releases
 
-(TODO)
+https://james.apache.org/download[Download Apache James releases]

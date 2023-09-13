@@ -126,18 +126,13 @@ layout: howTo
 &lt;/smtpservers&gt;
                 </code></pre>
 
-                <p>Create a keystore (default password being <code>james72laBalle</code>):</p>
-
-                <pre><code>keytool -genkey -alias james -keyalg RSA -keystore keystore</code></pre>
-
                 <p>Then start a James server with your JAR and the configuration:</p>
 
                 <pre><code>docker run -d \
   -v $PWD/smtpserver.xml:/root/conf/smtpserver.xml \
   -v $PWD/exts:/root/extensions-jars \
-  -v $PWD/keystore:/root/conf/keystore \
   -p 25:25 \
-  apache/james:memory-latest
+  apache/james:memory-latest --generate-keystore
                 </code></pre>
 
                 <p>You can play with <code>telnet</code> utility with the resulting server:</p>

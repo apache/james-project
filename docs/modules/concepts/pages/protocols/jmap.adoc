@@ -1,4 +1,29 @@
 = JSON Meta Application Protocol (JMAP)
 :navtitle: JMAP
 
-(TODO)
+== Overview
+
+https://jmap.io/[JSON Meta Application Protocol] ("JMAP")
+is
+
+From <<RFC8620>>:
+
+   The JSON Meta Application Protocol (JMAP) is used for synchronising
+   data, such as mail, calendars, or contacts, between a client and a
+   server.  It is optimised for mobile and web environments and aims to
+   provide a consistent interface to different data types.
+
+   This specification is for the generic mechanism of data
+   synchronisation.  Further specifications define the data models for
+   different data types that may be synchronised via JMAP.
+
+
+== Specifications
+
+=== RFC8620
+
+https://tools.ietf.org/html/rfc8620[RFC8620] ("The JSON Meta Application Protocol (JMAP)")
+
+== Related Concepts
+
+

@@ -96,23 +96,14 @@ layout: howTo
                     <h3><b>Starting James with SetCustomFlagOnBigMessages</b></h3>
                 </header>
 
-                <p>We will take the simplest James product(JPA Guice) for the example</p>
+                <p>You can retrieve the sources of this mini-project on <a href="https://github.com/apache/james-project/tree/master/examples/custom-listeners">GitHub</a></p>
 
-                <p>First, get template JPA product configuration:</p>
-                <pre><code>
-$ git clone https://github.com/apache/james-project
-$ cp -rf james-project/server/apps/jpa-app/sample-configuration conf
-                </code></pre>
 
-                <p>Then create the keystore file in the conf/ directory with the default password <code>james72laBalle</code>
-                <pre><code>
-$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
-                </code></pre>
+                <p>We will take the simplest James InMemory version for the example</p>
 
-                <p>
-                    Second, modify listener.xml configuration file in conf/ directory to use only SetCustomFlagOnBigMessages
-                    by specifying its full class name. We only need to use this Listener in our example.
-                </p>
+                <p>First, we will need to compile our project with <code>mvn clean install</code>. A jar will be outputted in the target directory.</p>
+
+                <p>Second, we will write the <code>listeners.xml</code> file expressing the logic we want. In this case, we want to use only the BigMessageListener.</p>
                 <pre><code>
 &lt;listeners&gt;
     &lt;listener&gt;
@@ -121,65 +112,14 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 &lt;/listeners&gt;
                 </code></pre>
 
-                <p>Finally, starting a James Server by docker compose</p>
-                <p>Getting James docker-compose.yml</p>
-                <pre><code>
-$ wget https://raw.githubusercontent.com/apache/james-project/master/server/apps/jpa-app/docker-compose.yml
-                </code></pre>
-                <p>Using James Guice JPA instead of the default product</p>
-                <pre><code>
-services:
-  james:
-    ...
-    image: apache/james:jpa-latest
-                </code></pre>
-                <p>Add the following volumes for james service:</p>
-                <pre><code>
-volumes:
-  - $PWD/conf:/root/conf/
-                </code></pre>
+                <p>Finally, we will start a James server using that. We will rely on docker default image for simplicity.
+                    We need to be using the <code>listeners.xml</code> configuration that we had been writing and position the jar in the extensions-jars folder (specific to guice).
+                    This can be achieved with the following command:</p>
 
-                <p>
-                    When you are using your listeners, place the jar containing your listeners into "extensions-jars" directory
-                    and add a volume for it.
-                </p>
-                <pre><code>
-volumes:
-  - $PWD/extensions-jars:/root/extensions-jars/
-                </code></pre>
-                <p>
-                    Putting compiled jars into extensions-jars directory
-                </p>
-                <p>
-                    When you write a custom Listener, you have to compile it and place the compiled jar package inside "extensions-jars" directory
-                    to make James load your Listener when it starts up.
-                    In this case, you should compile the James's module <b>examples/custom-listeners</b> and put it to "extensions-jars".
-                    The jar name can be sightly different by the time because its name carries James version, but you can recognize it easily.
-                </p>
-                <pre><code>
-$ mkdir extensions-jars
-$ cd james-project
-$ mvn clean install -DskipTests -f examples/custom-listeners/pom.xml
-$ cd ../
-$ cp james-project/examples/custom-listeners/target/custom-listeners-****.jar extensions-jars/custom-listeners.jar
-                </code></pre>
-                <p>
-                    Check out the docker-compose.yml to get the host name of james service, currently it's <b>james.local</b>.
-                    So you, have to modify James domain list to use this <b>james.local</b> as James default domain:
-                </p>
-                <pre><code>
-&lt;domainlist&gt;
-    &lt;autodetect&gt;true&lt;/autodetect&gt;
-    &lt;autodetectIP&gt;true&lt;/autodetectIP&gt;
-    &lt;defaultDomain&gt;james.local&lt;/defaultDomain&gt;
-&lt;/domainlist&gt;
-                </code></pre>
-                <p>
-                    Now, you are able to start james by docker compose, then wait for all docker containers to be up.
-                </p>
-                <pre><code>
-$ docker-compose up -d
-                </code></pre>
+                <pre><code>docker run -p "25:25" -p "143:143" \
+               -v "$PWD/src/main/resources/listeners.xml:/root/conf/listeners.xml" \
+               -v "$PWD/target/custom-listeners:/root/extensions-jars/custom-listeners" \
+        apache/james:memory-latest --generate-keystore</code></pre>
 
                 <header class="major">
                     <h3><b>Verifying the result of the setup</b></h3>

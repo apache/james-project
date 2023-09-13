@@ -53,6 +53,6 @@ tags:
 * ```tags``` attributes can be added to a post. Tags can be specified as a [YAML list](https://en.wikipedia.org/wiki/YAML#Basic_components) or a space-separated string
 
 #### Warning!
-**The value is conditionning the display or not of the post at compilation, so is post date means you must build site with jekyll after it to actually publish it.**
+**The value is conditioning the display or not of the post at compilation, so is post date means you must build site with jekyll after it to actually publish it.**
 
 No Content Management System here who's publish for you the post.

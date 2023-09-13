@@ -64,7 +64,7 @@ layout: howTo
           <p>None of the matchers and mailets available in James allows us to implement what we want. We will have to
           write our own mailet and matcher in a separated maven project depending on James Mailet API.</p>
 
-          <p>We will write a <b>IsDelayedForMoreThan</b> matcher with a configurable delay. If the Sent Date of incoming emails is older than specified delay, then the emails
+          <p>We will write a <a href="https://github.com/apache/james-project/blob/master/examples/custom-mailets/src/main/java/org/apache/james/examples/custom/mailets/IsDelayedForMoreThan.java">IsDelayedForMoreThan</a> matcher with a configurable delay. If the Sent Date of incoming emails is older than specified delay, then the emails
           should be matched (return all mail recipients). Otherwise, we just return an empty list of recipients.</p>
 
           <p>To ease our Job, we can rely on the <b>org.apache.james.apache-mailet-base</b> maven project, which provides us a <b>GenericMatcher</b> that we can extend.</p>
@@ -72,8 +72,8 @@ layout: howTo
           <p>Here is the dependency:</p>
 
           <pre><code>&lt;dependency&gt;
-&lt;groupId&gt;org.apache.james&lt;/groupId&gt;
-&lt;artifactId&gt;apache-mailet-base&lt;/artifactId&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-base&lt;/artifactId&gt;
 &lt;/dependency&gt;</code></pre>
 
           <p>The main method of a matcher is the <b>match</b> method:</p>
@@ -82,7 +82,7 @@ layout: howTo
 
           <p>For us, it becomes, with <b>maxDelay</b> being previously configured:</p>
 
-          <pre><code>    private final Clock clock;
+          <pre><code>private final Clock clock;
 private Duration maxDelay;
 
 @Override
@@ -107,7 +107,7 @@ public void init() {
     maxDelay = Duration.ofMillis(TimeConverter.getMilliSeconds(condition, DEFAULT_UNIT));
 }</code></pre>
 
-          <p>Now, let's take a look at the <b>SendPromotionCode</b> mailet. Of course, we want to write a generic mailet
+          <p>Now, let's take a look at the <a href="https://github.com/apache/james-project/blob/master/examples/custom-mailets/src/main/java/org/apache/james/examples/custom/mailets/SendPromotionCode.java">SendPromotionCode</a> mailet. Of course, we want to write a generic mailet
              with a configurable reason (why are we sending the promotion code). To keep things simple, only one promotion
              code will be used, and will be written in the configuration. We can here also simply extend the
               <b>GenericMailet</b> helper class.</p>
@@ -118,7 +118,7 @@ public void init() {
 
           <p>For us, it becomes, with <b>reason</b> and <b>promotionCode</b> being previously configured:</p>
 
-            <pre><code>    public static final boolean REPLY_TO_SENDER_ONLY = false;
+            <pre><code>public static final boolean REPLY_TO_SENDER_ONLY = false;
 
 private String reason;
 private String promotionCode;
@@ -203,7 +203,7 @@ public void init() throws MessagingException {
         <pre><code>docker run -p "25:25" -p "143:143" \
                -v "$PWD/src/main/resources/mailetcontainer.xml:/root/conf/mailetcontainer.xml" \
                -v "$PWD/target/custom-mailets.jar:/root/extensions-jars/custom-mailets.jar" \
-        apache/james:jpa-latest</code></pre>
+        apache/james:memory-latest --generate-keystore</code></pre>
 
         </div>
           <footer class="major">

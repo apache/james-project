@@ -271,12 +271,12 @@ $ cp -rf james-project/server/apps/distributed-app/sample-configuration conf
 $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
                 </code></pre>
 
-                <p>Second, modify deletedMessageVault.properties configuration file like in the previous example</p>
+                <p>Second, modify <code>deletedMessageVault.properties</code> configuration file like in the previous example</p>
 
-                <p>Third, modify listeners.xml to configure DeletedMessageVaultHook by adding preDeletionHook section at previous paragraph</p>
+                <p>Third, modify <code>listeners.xml</code> to configure DeletedMessageVaultHook by adding preDeletionHook section at previous paragraph</p>
 
                 <p>
-                    Fourth, modify blob.properties file to configure the BlobStore that will be used and the file exporting mechanism, like
+                    Fourth, modify <code>blob.properties</code> file to configure the BlobStore that will be used and the file exporting mechanism, like
                     we saw previously as well.
                 </p>
 
