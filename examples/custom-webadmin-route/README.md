@@ -54,21 +54,14 @@ host=localhost
 extensions.routes=org.apache.james.examples.RouteA
 ```
 
-Create a keystore (default password being `james72laBalle`):
-
-```
-keytool -genkey -alias james -keyalg RSA -keystore keystore
-```
-
 Then start a James server with your JAR and the configuration:
 
 ```
 $ docker run -d \
    -v $PWD/webadmin.properties:/root/conf/webadmin.properties \
    -v $PWD/exts:/root/extensions-jars \
-   -v $PWD/keystore:/root/conf/keystore \
    -p 25:25 \
-   apache/james:memory-latest
+   apache/james:memory-latest --generate-keystore
 ```
 
 You can play with `curl` utility with the resulting server:

@@ -67,18 +67,13 @@ layout: howTo
 # Healthchecks need to be located within the classpath or in the ./extensions-jars folder.
 additional.healthchecks=org.apache.james.examples.HealthCheckA</code></pre>
 
-                <p>Create a keystore (default password being <code>james72laBalle</code>):</p>
-
-                <pre><code>keytool -genkey -alias james -keyalg RSA -keystore keystore</code></pre>
-
                 <p>Then start a James server with your JAR and the configuration:</p>
 
                 <pre><code>docker run -d \
    -v $PWD/healthcheck.properties:/root/conf/healthcheck.properties \
    -v $PWD/healthcheck-extension.jar:/root/extensions-jars \
-   -v $PWD/keystore:/root/conf/keystore \
    -p 25:25 \
-   apache/james:memory-latest</code></pre>
+   apache/james:memory-latest --generate-keystore</code></pre>
 
                 <p>You can use <code>curl</code> command to get your healthcheck status:</p>
 

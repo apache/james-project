@@ -1,5 +1,6 @@
 = James Test Server
 :navtitle: Test 
 
-(TODO)
+https://github.com/apache/james-project/tree/master/server/apps/memory-app[Apache James Memory App]
+is a memory-only implementation of Apache James. It is useful for testing and development purposes.
 

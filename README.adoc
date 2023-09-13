@@ -92,6 +92,7 @@ Useful options includes:
 
  - `-DskipTests` to skip the long to execute resource consuming test suite that requires a docker daemon.
  - `-T 4` to parallelize the build on several CPUs.
+ - `-Dmaven.javadoc.skip=true` to skip the javadoc generation.
 ====
 
 == How to run James in Docker

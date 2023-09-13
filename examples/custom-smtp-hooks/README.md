@@ -89,21 +89,14 @@ Then embed your extension into a James server. First configure your hook:
 </smtpservers>
 ```
 
-Create a keystore (default password being `james72laBalle`):
-
-```
-keytool -genkey -alias james -keyalg RSA -keystore keystore
-```
-
 Then start a James server with your JAR and the configuration:
 
 ```
 docker run -d \
   -v $PWD/smtpserver.xml:/root/conf/smtpserver.xml \
   -v $PWD/exts:/root/extensions-jars \
-  -v $PWD/keystore:/root/conf/keystore \
   -p 25:25 \
-  apache/james:memory-latest
+  apache/james:memory-latest --generate-keystore
 ```
 
 You can play with `telnet` utility with the resulting server:
