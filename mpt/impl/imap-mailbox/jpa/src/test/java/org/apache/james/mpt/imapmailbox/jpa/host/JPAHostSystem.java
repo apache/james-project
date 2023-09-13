@@ -64,6 +64,7 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.modules.data.JPAConfiguration;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
@@ -99,7 +100,11 @@ public class JPAHostSystem extends JamesImapHostSystem {
         EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JPAUidProvider uidProvider = new JPAUidProvider(entityManagerFactory);
         JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(entityManagerFactory);
-        JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider);
+        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
+            .driverName("driverName")
+            .driverURL("driverUrl")
+            .build();
+        JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider, jpaConfiguration);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
