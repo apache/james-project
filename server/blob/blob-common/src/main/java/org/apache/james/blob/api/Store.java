@@ -111,7 +111,8 @@ public interface Store<T, I> {
                 // Critical to correctly propagate errors.
                 // Replacing by `map` would cause the error not to be catch downstream. No idea why, failed to reproduce with a test.
                 // Impact: unacknowledged messages for RabbitMQ mailQueue that eventually piles up to interruption of service.
-                .flatMap(e -> Mono.fromCallable(() -> decoder.decode(e)));
+                .flatMap(e -> Mono.fromCallable(() -> decoder.decode(e))
+                    .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER));
         }
 
         private Mono<CloseableByteSource> readByteSource(BucketName bucketName, BlobId blobId, StoragePolicy storagePolicy) {
