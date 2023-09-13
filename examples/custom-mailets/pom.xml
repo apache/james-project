@@ -47,6 +47,7 @@
     </dependency>
   </dependencies>
   <build>
+    <finalName>custom-mailets</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
