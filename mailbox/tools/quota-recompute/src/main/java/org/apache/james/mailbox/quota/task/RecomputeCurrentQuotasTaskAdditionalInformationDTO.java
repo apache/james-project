@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -89,8 +90,13 @@ public class RecomputeCurrentQuotasTaskAdditionalInformationDTO implements Addit
     }
 
     private static RecomputeCurrentQuotasTaskAdditionalInformationDTO fromDomainObject(RecomputeCurrentQuotasTask.Details details, String type) {
+        Optional<RecomputeSingleQuotaComponentResult> recomputeSingleQuotaComponentResultOfMailbox = details.getResults().stream()
+            .filter(recomputeSingleQuotaComponentResult -> QuotaComponent.MAILBOX.getValue().equals(recomputeSingleQuotaComponentResult.getQuotaComponent()))
+            .findFirst();
         return new RecomputeCurrentQuotasTaskAdditionalInformationDTO(
             type,
+            recomputeSingleQuotaComponentResultOfMailbox.map(RecomputeSingleQuotaComponentResult::getProcessedIdentifierCount).orElse(0L),
+            recomputeSingleQuotaComponentResultOfMailbox.map(RecomputeSingleQuotaComponentResult::getFailedIdentifiers).orElse(ImmutableList.of()),
             details.getResults().stream()
                 .map(recomputeSingleQuotaComponentResult -> new RecomputeSingleQuotaComponentResultDTO(recomputeSingleQuotaComponentResult.getQuotaComponent(),
                     recomputeSingleQuotaComponentResult.getProcessedIdentifierCount(),
@@ -110,18 +116,32 @@ public class RecomputeCurrentQuotasTaskAdditionalInformationDTO implements Addit
     }
 
     private final String type;
+    private final long processedQuotaRoots;
+    private final ImmutableList<String> failedQuotaRoots;
     private final List<RecomputeSingleQuotaComponentResultDTO> recomputeSingleQuotaComponentResults;
     private final Optional<RunningOptionsDTO> runningOptions;
     private final Instant timestamp;
 
     public RecomputeCurrentQuotasTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                              @JsonProperty("processedQuotaRoots") long processedQuotaRoots,
+                                                              @JsonProperty("failedQuotaRoots") ImmutableList<String> failedQuotaRoots,
                                                               @JsonProperty("recomputeSingleQuotaComponentResults") List<RecomputeSingleQuotaComponentResultDTO> recomputeSingleQuotaComponentResults,
                                                               @JsonProperty("runningOptions") Optional<RunningOptionsDTO> runningOptions,
                                                               @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
+        this.processedQuotaRoots = processedQuotaRoots;
+        this.failedQuotaRoots = failedQuotaRoots;
         this.recomputeSingleQuotaComponentResults = recomputeSingleQuotaComponentResults;
         this.runningOptions = runningOptions;
         this.timestamp = timestamp;
+    }
+
+    public long getProcessedQuotaRoots() {
+        return processedQuotaRoots;
+    }
+
+    public ImmutableList<String> getFailedQuotaRoots() {
+        return failedQuotaRoots;
     }
 
     public List<RecomputeSingleQuotaComponentResultDTO> getRecomputeSingleQuotaComponentResults() {
@@ -144,11 +164,13 @@ public class RecomputeCurrentQuotasTaskAdditionalInformationDTO implements Addit
 
     private RecomputeCurrentQuotasTask.Details toDomainObject() {
         return new RecomputeCurrentQuotasTask.Details(timestamp,
-            recomputeSingleQuotaComponentResults.stream()
+            Optional.ofNullable(recomputeSingleQuotaComponentResults)
+                .map(recomputeSingleQuotaComponentResults -> recomputeSingleQuotaComponentResults.stream()
                 .map(recomputeSingleQuotaComponentResultDTO -> new RecomputeSingleQuotaComponentResult(recomputeSingleQuotaComponentResultDTO.getQuotaComponent(),
                     recomputeSingleQuotaComponentResultDTO.getProcessedIdentifierCount(),
                     recomputeSingleQuotaComponentResultDTO.getFailedIdentifiers()))
-                .collect(Collectors.toUnmodifiableList()),
+                .collect(Collectors.toUnmodifiableList()))
+                .orElse(ImmutableList.of(new RecomputeSingleQuotaComponentResult(QuotaComponent.MAILBOX.getValue(), processedQuotaRoots, failedQuotaRoots))),
             runningOptions.map(RunningOptionsDTO::asDomainObject).orElse(RunningOptions.DEFAULT));
     }
 }

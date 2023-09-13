@@ -38,6 +38,7 @@ import java.util.Map;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -1379,6 +1380,21 @@ class UserQuotaRoutesTest {
         }
 
         @Test
+        void postShouldFailWhenQuotaComponentIsWrong() {
+            given()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .queryParam("quotaComponent", QuotaComponent.MAILBOX.getValue())
+                .queryParam("quotaComponent", "invalid")
+                .post("/quota/users")
+                .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("Illegal value supplied for query parameter 'quotaComponent' with value 'invalid', expecting existing quota components"));
+        }
+
+        @Test
         void postShouldCreateANewTask() {
             given()
                 .queryParam("task", "RecomputeCurrentQuotas")
@@ -1393,6 +1409,8 @@ class UserQuotaRoutesTest {
             given()
                 .queryParam("task", "RecomputeCurrentQuotas")
                 .queryParam("usersPerSecond", "1")
+                .queryParam("quotaComponent", QuotaComponent.MAILBOX.getValue())
+                .queryParam("quotaComponent", QuotaComponent.JMAP_UPLOADS.getValue())
                 .post("/quota/users")
             .then()
                 .statusCode(HttpStatus.CREATED_201)
@@ -1440,6 +1458,27 @@ class UserQuotaRoutesTest {
                 .body("taskId", is(taskId))
                 .body("type", is("recompute-current-quotas"))
                 .body("additionalInformation.runningOptions.usersPerSecond", is(20));
+        }
+
+        @Test
+        void quotaComponentsShouldBePartOfTaskDetails() {
+            String taskId = with()
+                .queryParam("task", "RecomputeCurrentQuotas")
+                .queryParam("quotaComponent", QuotaComponent.MAILBOX.getValue())
+                .queryParam("quotaComponent", "JMAP_UPLOADS")
+                .post("/quota/users")
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+                .when()
+                .get(taskId + "/await")
+                .then()
+                .body("taskId", is(taskId))
+                .body("type", is("recompute-current-quotas"))
+                .body("additionalInformation.runningOptions.quotaComponents",
+                    containsInAnyOrder(QuotaComponent.MAILBOX.getValue(), QuotaComponent.JMAP_UPLOADS.getValue()));
         }
     }
 }

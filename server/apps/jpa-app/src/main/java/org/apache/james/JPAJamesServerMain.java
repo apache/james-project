@@ -47,7 +47,6 @@ import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.ReIndexingModule;
-import org.apache.james.modules.server.RecomputeSingleComponentCurrentQuotasServicesExcludingJMAPModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
@@ -61,7 +60,6 @@ public class JPAJamesServerMain implements JamesServerMain {
     private static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
         new DataRoutesModules(),
-        new RecomputeSingleComponentCurrentQuotasServicesExcludingJMAPModule(),
         new InconsistencyQuotasSolvingRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),

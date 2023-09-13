@@ -58,7 +58,6 @@ import org.apache.james.modules.server.MailboxesExportRoutesModule;
 import org.apache.james.modules.server.MailetContainerModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
-import org.apache.james.modules.server.RecomputeSingleComponentCurrentQuotasServicesExcludingJMAPModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.UserIdentityModule;
@@ -78,7 +77,6 @@ import com.google.inject.util.Modules;
 public class MemoryJamesServerMain implements JamesServerMain {
 
     public static final Module WEBADMIN = Modules.combine(
-        new RecomputeSingleComponentCurrentQuotasServicesExcludingJMAPModule(),
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new VacationRoutesModule(),

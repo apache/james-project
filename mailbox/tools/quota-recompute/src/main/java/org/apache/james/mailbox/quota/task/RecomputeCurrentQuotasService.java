@@ -142,22 +142,22 @@ public class RecomputeCurrentQuotasService {
             }
         }
 
-        private Map<QuotaComponent, Statistic> map;
+        private Map<QuotaComponent, Statistic> mapQuotaComponentToStatistic;
 
         public Context() {
-            this.map = new ConcurrentHashMap<>();
+            this.mapQuotaComponentToStatistic = new ConcurrentHashMap<>();
         }
 
-        public Context(Map<QuotaComponent, Statistic> map) {
-            this.map = new ConcurrentHashMap<>(map);
+        public Context(Map<QuotaComponent, Statistic> mapQuotaComponentToStatistic) {
+            this.mapQuotaComponentToStatistic = new ConcurrentHashMap<>(mapQuotaComponentToStatistic);
         }
 
         public Statistic getStatistic(QuotaComponent quotaComponent) {
-            return map.computeIfAbsent(quotaComponent, key -> new Statistic(new AtomicLong(), new ConcurrentLinkedDeque<>()));
+            return mapQuotaComponentToStatistic.computeIfAbsent(quotaComponent, key -> new Statistic(new AtomicLong(), new ConcurrentLinkedDeque<>()));
         }
 
         public Snapshot snapshot() {
-            return new Snapshot(map.entrySet().stream()
+            return new Snapshot(mapQuotaComponentToStatistic.entrySet().stream()
                 .map(quotaComponentStatisticEntry -> new RecomputeSingleQuotaComponentResult(quotaComponentStatisticEntry.getKey().getValue(),
                     quotaComponentStatisticEntry.getValue().processedIdentifierCount.get(),
                     ImmutableList.copyOf(quotaComponentStatisticEntry.getValue().failedIdentifiers)))

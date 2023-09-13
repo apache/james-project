@@ -19,6 +19,9 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.apache.james.mailbox.quota.task.RecomputeJMAPUploadCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeSingleComponentCurrentQuotasService;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -39,10 +42,19 @@ import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewTaskAdditionalIn
 import org.apache.james.webadmin.dto.DTOModuleInjections;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
 
 public class JmapTaskSerializationModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), RecomputeSingleComponentCurrentQuotasService.class)
+            .addBinding()
+            .to(RecomputeJMAPUploadCurrentQuotasService.class);
+    }
+
     @ProvidesIntoSet
     public TaskDTOModule<? extends Task, ? extends TaskDTO> recomputeAllJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
         return RecomputeAllFastViewProjectionItemsTask.module(corrector);

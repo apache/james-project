@@ -53,11 +53,14 @@ class RecomputeCurrentQuotasTaskSerializationTest {
         RunningOptions.DEFAULT);
     static final String SERIALIZED_ADDITIONAL_INFORMATION_LEGACY = "{" +
         "  \"type\":\"recompute-current-quotas\"," +
-        "  \"recomputeSingleQuotaComponentResults\":[{\"quotaComponent\":\"MAILBOX\",\"processedIdentifierCount\":12,\"failedIdentifiers\":[\"bob@localhost\"]}]," +
+        "  \"processedQuotaRoots\":12," +
+        "  \"failedQuotaRoots\":[\"bob@localhost\"]," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"" +
         "}";
     static final String SERIALIZED_ADDITIONAL_INFORMATION = "{" +
         "  \"type\":\"recompute-current-quotas\"," +
+        "  \"processedQuotaRoots\":12," +
+        "  \"failedQuotaRoots\":[\"bob@localhost\"]," +
         "  \"recomputeSingleQuotaComponentResults\":[{\"quotaComponent\":\"MAILBOX\",\"processedIdentifierCount\":12,\"failedIdentifiers\":[\"bob@localhost\"]}]," +
         "  \"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"MAILBOX\"]}," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"" +
