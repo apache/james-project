@@ -26,10 +26,10 @@ import java.time.{Duration, Instant}
 import org.apache.commons.io.IOUtils
 import org.apache.james.core.Username
 import org.apache.james.core.quota.QuotaSizeUsage
-import org.apache.james.jmap.api.model.UploadMetaData
+import org.apache.james.jmap.api.model.{UploadMetaData, UploadNotFoundException}
 import org.apache.james.jmap.api.upload.UploadServiceContract.{BOB, CONTENT_TYPE, TEN_BYTES_DATA_STRING, UPLOAD_QUOTA_LIMIT, awaitAtMostTwoMinutes}
 import org.apache.james.mailbox.model.ContentType
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.Test
@@ -67,6 +67,26 @@ trait UploadServiceContract {
 
     assertThat(SMono.fromPublisher(uploadUsageRepository.getSpaceUsage(BOB)).block().asLong())
       .isEqualTo(10L)
+  }
+
+  @Test
+  def uploadShouldNotCleanJustUploadedFile(): Unit = {
+    // given UPLOAD_QUOTA_LIMIT = 100bytes
+
+    // upload 50 bytes
+    val uploadId50 = SMono.fromPublisher(testee.upload(asInputStream(new String(new Array[Byte](50), java.nio.charset.StandardCharsets.UTF_8)), CONTENT_TYPE, BOB))
+      .block().uploadId
+
+    // upload 70 bytes
+    val uploadId70 = SMono.fromPublisher(testee.upload(asInputStream(new String(new Array[Byte](70), java.nio.charset.StandardCharsets.UTF_8)), CONTENT_TYPE, BOB))
+      .block().uploadId
+
+    assertThat(SMono(testee.retrieve(uploadId70, BOB)).block().uploadId)
+      .isEqualTo(uploadId70)
+
+    awaitAtMostTwoMinutes.untilAsserted(() =>
+      assertThatThrownBy(() => SMono(testee.retrieve(uploadId50, BOB)).block().uploadId)
+        .isInstanceOf(classOf[UploadNotFoundException]))
   }
 
   @Test
