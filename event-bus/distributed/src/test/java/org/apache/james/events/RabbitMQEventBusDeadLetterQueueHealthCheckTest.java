@@ -49,7 +49,7 @@ import com.rabbitmq.client.ConnectionFactory;
 
 class RabbitMQEventBusDeadLetterQueueHealthCheckTest {
     @RegisterExtension
-    RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
         .isolationPolicy(RabbitMQExtension.IsolationPolicy.STRONG);
 
     public static final ImmutableMap<String, Object> NO_QUEUE_DECLARE_ARGUMENTS = ImmutableMap.of();

@@ -36,10 +36,6 @@ public class DockerCassandraSingleton {
 
     public static final DockerCassandra singleton = new DockerCassandra();
 
-    static {
-        singleton.start();
-    }
-
     public static void incrementTestsPlayed() {
         testsPlayedCount += 1;
     }

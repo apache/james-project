@@ -19,17 +19,15 @@
 
 package org.apache.james.backends.opensearch;
 
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.apache.james.RegistrableExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
 import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
-public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
+public class DockerOpenSearchExtension implements RegistrableExtension {
 
     @FunctionalInterface
     interface CleanupStrategy {
@@ -93,8 +91,18 @@ public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachC
     }
 
     @Override
+    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+        openSearch.start();
+    }
+
+    @Override
     public void afterEach(ExtensionContext context) {
         cleanupStrategy.clean(openSearch);
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        openSearch.stop();
     }
 
     @Override

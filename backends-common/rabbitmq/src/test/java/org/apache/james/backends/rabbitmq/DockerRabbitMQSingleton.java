@@ -23,9 +23,5 @@ public class DockerRabbitMQSingleton {
 
     public static final DockerRabbitMQ SINGLETON = DockerRabbitMQ.withoutCookie();
 
-    static {
-        SINGLETON.start();
-    }
-
     // Cleanup will be performed by test container resource reaper
 }

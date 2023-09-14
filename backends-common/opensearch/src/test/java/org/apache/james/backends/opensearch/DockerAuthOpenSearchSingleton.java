@@ -22,7 +22,4 @@ package org.apache.james.backends.opensearch;
 public class DockerAuthOpenSearchSingleton {
     public static DockerOpenSearch INSTANCE = new DockerOpenSearch.WithAuth();
 
-    static {
-        INSTANCE.start();
-    }
 }
