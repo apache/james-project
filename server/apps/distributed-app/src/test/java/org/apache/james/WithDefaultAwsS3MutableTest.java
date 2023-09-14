@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.blob.objectstorage.aws.AwsS3BlobStoreExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class WithDefaultAwsS3MutableTest implements MailsShouldBeWellReceivedConcreteContract {

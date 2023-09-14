@@ -23,7 +23,7 @@ import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnec
 
 import org.apache.james.CassandraRabbitMQJamesServerFixture;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.blob.objectstorage.aws.AwsS3BlobStoreExtension;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
 

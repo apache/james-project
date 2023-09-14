@@ -37,8 +37,8 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.blob.objectstorage.aws.AwsS3BlobStoreExtension;
 import org.apache.james.junit.categories.BasicFeature;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.probe.DataProbe;
@@ -311,7 +311,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
 
 
     @Test
-    void tasksCleanupShouldComplete(){
+    void tasksCleanupShouldComplete() {
         String taskId = with()
             .basePath("/tasks")
             .queryParam("olderThan", "15day")

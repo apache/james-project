@@ -22,7 +22,7 @@ package org.apache.james;
 import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.hamcrest.Matchers.is;
 
-import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.blob.objectstorage.aws.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueConfiguration;

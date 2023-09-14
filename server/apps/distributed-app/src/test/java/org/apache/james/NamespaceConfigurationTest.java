@@ -25,7 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.blob.objectstorage.aws.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;

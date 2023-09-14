@@ -23,8 +23,8 @@ import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.ONE_MINUTE;
 
+import org.apache.james.blob.objectstorage.aws.AwsS3BlobStoreExtension;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;

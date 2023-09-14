@@ -47,18 +47,18 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
+import org.apache.james.blob.objectstorage.aws.AwsS3BlobStoreExtension;
 import org.apache.james.core.Username;
+import org.apache.james.events.DispatchingFailureGroup;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
-import org.apache.james.events.DispatchingFailureGroup;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
@@ -287,7 +287,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 
@@ -320,7 +320,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 
@@ -338,7 +338,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         MailboxId mailboxId = generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 
@@ -363,7 +363,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateSecondEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(2)));
 
@@ -381,7 +381,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 
@@ -402,7 +402,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 
@@ -432,7 +432,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 
@@ -460,7 +460,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 
@@ -487,7 +487,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateSecondEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(2)));
 
@@ -515,7 +515,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateSecondEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(2)));
 
@@ -544,7 +544,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateSecondEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(2)));
 
@@ -568,7 +568,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateSecondEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(2)));
 
@@ -595,7 +595,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateSecondEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(2)));
 
@@ -624,7 +624,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateSecondEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(2)));
 
@@ -648,7 +648,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         generateInitialEvent();
 
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> with()
-            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID).prettyPeek()
+            .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .then()
             .body(".", hasSize(1)));
 

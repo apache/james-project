@@ -46,15 +46,6 @@ public class DockerAwsS3Extension implements RegistrableExtension {
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) throws Exception {
-        try {
-            container.tryDeleteAllData();
-        } catch (Exception ignored) {
-            // Ignored
-        }
-    }
-
-    @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return (parameterContext.getParameter().getType() == DockerAwsS3Container.class);
     }
