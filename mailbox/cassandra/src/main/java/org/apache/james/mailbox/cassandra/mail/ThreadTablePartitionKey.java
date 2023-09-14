@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 
 public class ThreadTablePartitionKey {
     private final Username username;
