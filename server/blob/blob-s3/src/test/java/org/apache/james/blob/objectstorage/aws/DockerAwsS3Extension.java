@@ -19,12 +19,41 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import org.apache.james.RegistrableExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class DockerAwsS3Extension implements ParameterResolver {
+public class DockerAwsS3Extension implements RegistrableExtension {
+
+    private final DockerAwsS3Container container = new DockerAwsS3Container();
+
+    public DockerAwsS3Extension() {
+
+    }
+
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+        if (!container.getRawContainer().isRunning()) {
+            container.start();
+        }
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+        container.stop();
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
+        try {
+            container.tryDeleteAllData();
+        } catch (Exception ignored) {
+            // Ignored
+        }
+    }
+
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return (parameterContext.getParameter().getType() == DockerAwsS3Container.class);
@@ -32,6 +61,11 @@ public class DockerAwsS3Extension implements ParameterResolver {
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return DockerAwsS3Singleton.singleton;
+        return container;
     }
+
+    public DockerAwsS3Container getContainer() {
+        return container;
+    }
+
 }

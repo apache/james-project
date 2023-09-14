@@ -19,21 +19,17 @@
 
 package org.apache.james.modules.objectstorage.aws.s3;
 
-import java.util.UUID;
-
 import org.apache.james.GuiceModuleTestRule;
-import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
-import org.apache.james.blob.objectstorage.aws.DockerAwsS3Singleton;
-import org.apache.james.blob.objectstorage.aws.Region;
-import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
+import org.apache.james.blob.objectstorage.aws.TestS3Module;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.google.inject.Module;
 
 public class DockerAwsS3TestRule implements GuiceModuleTestRule {
+
+    public static final DockerAwsS3Container S3_CONTAINER = new DockerAwsS3Container();
 
     public DockerAwsS3TestRule() {
     }
@@ -50,7 +46,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
     }
 
     private void ensureAwsS3started() {
-        DockerAwsS3Singleton.singleton.dockerAwsS3();
+        start();
     }
 
     @Override
@@ -59,31 +55,13 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
-        AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
-            .endpoint(DockerAwsS3Singleton.singleton.getEndpoint())
-            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
-            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
-            .build();
-
-        Region region = DockerAwsS3Container.REGION;
-        S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
-            .authConfiguration(authConfiguration)
-            .region(region)
-            .defaultBucketName(defaultBucketName)
-            .bucketPrefix(UUID.randomUUID().toString())
-            .build();
-
-        return binder -> {
-            binder.bind(BucketName.class).toInstance(defaultBucketName);
-            binder.bind(Region.class).toInstance(region);
-            binder.bind(AwsS3AuthConfiguration.class).toInstance(authConfiguration);
-            binder.bind(S3BlobStoreConfiguration.class).toInstance(configuration);
-        };
+        return new TestS3Module(S3_CONTAINER);
     }
 
     public void start() {
-        ensureAwsS3started();
+        if (!S3_CONTAINER.getRawContainer().isRunning()) {
+            S3_CONTAINER.start();
+        }
     }
 
     public void stop() {

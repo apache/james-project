@@ -19,13 +19,30 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
-public class DockerAwsS3Singleton {
+import java.util.UUID;
 
-    public static final DockerAwsS3Container singleton = new DockerAwsS3Container();
+import org.apache.james.blob.api.BucketName;
 
-    static {
-        singleton.start();
+import com.google.inject.AbstractModule;
+
+public class TestS3Module extends AbstractModule {
+    private final DockerAwsS3Container s3Container;
+
+    public TestS3Module(DockerAwsS3Container s3Container) {
+        this.s3Container = s3Container;
     }
 
-    // Cleanup will be performed by test namespace resource reaper
+    @Override
+    protected void configure() {
+        BucketName defaultBucketName = BucketName.of(UUID.randomUUID().toString());
+        bind(BucketName.class).toInstance(defaultBucketName);
+        bind(Region.class).toInstance(DockerAwsS3Container.REGION);
+        bind(AwsS3AuthConfiguration.class).toInstance(S3ConfigurationHelper.authConfiguration(s3Container));
+        bind(S3BlobStoreConfiguration.class).toInstance(
+            S3ConfigurationHelper.baseBlobStoreConfiguration(s3Container)
+                .defaultBucketName(defaultBucketName)
+                .bucketPrefix(UUID.randomUUID().toString())
+                .build()
+        );
+    }
 }

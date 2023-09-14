@@ -20,14 +20,21 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.UUID;
 
 import org.apache.james.util.Host;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class DockerAwsS3Container {
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.model.Bucket;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
+public class DockerAwsS3Container {
+    public static final Duration STARTUP_TIMEOUT = Duration.ofMinutes(5);
     private static final String AWS_S3_DOCKER_IMAGE = "registry.scality.com/cloudserver/cloudserver:8.7.25";
     private static final int AWS_S3_PORT = 8000;
     private static final int ONE_TIME = 1;
@@ -37,7 +44,6 @@ public class DockerAwsS3Container {
     public static final String SECRET_ACCESS_KEY = "newSecretKey";
 
     private final GenericContainer<?> awsS3Container;
-    private DockerAwsS3 dockerAwsS3;
 
     public DockerAwsS3Container() {
         this.awsS3Container = new GenericContainer<>(AWS_S3_DOCKER_IMAGE)
@@ -48,13 +54,12 @@ public class DockerAwsS3Container {
             .withEnv("LOG_LEVEL", "trace")
             .withEnv("REMOTE_MANAGEMENT_DISABLE", "1")
             .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-s3-test-" + UUID.randomUUID()))
-            .waitingFor(Wait.forLogMessage(".*\"message\":\"server started\".*\\n", ONE_TIME));
+            .waitingFor(Wait.forLogMessage(".*\"message\":\"server started\".*\\n", ONE_TIME))
+            .withStartupTimeout(STARTUP_TIMEOUT);
     }
 
     public void start() {
         awsS3Container.start();
-
-        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost().asString() + "/"), REGION);
     }
 
     public void stop() {
@@ -85,6 +90,7 @@ public class DockerAwsS3Container {
     }
 
     public int getPort() {
+        start();
         return awsS3Container.getMappedPort(AWS_S3_PORT);
     }
 
@@ -92,11 +98,20 @@ public class DockerAwsS3Container {
         return URI.create("http://" + getIp() + ":" + getPort() + "/");
     }
 
-    public DockerAwsS3 dockerAwsS3() {
-        return dockerAwsS3;
-    }
-
     public GenericContainer<?> getRawContainer() {
         return awsS3Container;
+    }
+
+    public void tryDeleteAllData() throws S3Exception {
+        try (var client = S3AsyncClient.builder()
+            .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(DockerAwsS3Container.ACCESS_KEY_ID, DockerAwsS3Container.SECRET_ACCESS_KEY)))
+            .endpointOverride(getEndpoint())
+            .region(DockerAwsS3Container.REGION.asAws())
+            .build()) {
+            client.listBuckets().join().buckets()
+                .stream()
+                .map(Bucket::name)
+                .forEach(bucketName -> client.deleteBucket(builder -> builder.bucket(bucketName)).join());
+        }
     }
 }

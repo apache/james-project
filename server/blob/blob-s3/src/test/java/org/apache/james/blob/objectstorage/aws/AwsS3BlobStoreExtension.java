@@ -19,23 +19,14 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
-import java.net.URI;
+import org.apache.james.GuiceModuleTestExtension;
 
-public class DockerAwsS3 {
-    private final URI awsS3Endpoint;
-    private final Region region;
+import com.google.inject.Module;
 
-    public DockerAwsS3(URI awsS3Endpoint, Region region) {
-        this.awsS3Endpoint = awsS3Endpoint;
-        this.region = region;
-    }
+public class AwsS3BlobStoreExtension extends DockerAwsS3Extension implements GuiceModuleTestExtension {
 
-    public Region region() {
-        return region;
-    }
-
-    public URI awsS3Endpoint() {
-        return awsS3Endpoint;
+    @Override
+    public Module getModule() {
+        return new TestS3Module(getContainer());
     }
 }
-

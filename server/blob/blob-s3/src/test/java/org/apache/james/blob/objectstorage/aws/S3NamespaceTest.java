@@ -37,15 +37,7 @@ class S3NamespaceTest implements BlobStoreContract {
 
     @BeforeAll
     static void setUpClass(DockerAwsS3Container dockerAwsS3) {
-        AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
-            .endpoint(dockerAwsS3.getEndpoint())
-            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
-            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
-            .build();
-
-        S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
-            .authConfiguration(authConfiguration)
-            .region(dockerAwsS3.dockerAwsS3().region())
+        S3BlobStoreConfiguration s3Configuration = S3ConfigurationHelper.baseBlobStoreConfiguration(dockerAwsS3)
             .defaultBucketName(BucketName.of("namespace"))
             .build();
 

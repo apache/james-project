@@ -17,34 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.blob.objectstorage.aws;
 
-import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.blob.objectstorage.aws.DockerAwsS3Singleton;
-import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import static org.apache.james.blob.objectstorage.aws.DockerAwsS3Container.REGION;
 
-import com.google.inject.Module;
+public class S3ConfigurationHelper {
 
-public class AwsS3BlobStoreExtension implements GuiceModuleTestExtension {
-
-    private final DockerAwsS3TestRule awsS3TestRule;
-
-    public AwsS3BlobStoreExtension() {
-        this.awsS3TestRule = new DockerAwsS3TestRule();
+    public static S3BlobStoreConfiguration.Builder.ReadyToBuild baseBlobStoreConfiguration(DockerAwsS3Container s3Container) {
+        return S3BlobStoreConfiguration.builder()
+            .authConfiguration(authConfiguration(s3Container))
+            .region(REGION);
     }
 
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) {
-        ensureAwsS3started();
-    }
-
-    private void ensureAwsS3started() {
-        DockerAwsS3Singleton.singleton.dockerAwsS3();
-    }
-
-    @Override
-    public Module getModule() {
-        return awsS3TestRule.getModule();
+    public static AwsS3AuthConfiguration authConfiguration(DockerAwsS3Container s3Container) {
+         return AwsS3AuthConfiguration.builder()
+            .endpoint(s3Container.getEndpoint())
+            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
+            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
+            .build();
     }
 }

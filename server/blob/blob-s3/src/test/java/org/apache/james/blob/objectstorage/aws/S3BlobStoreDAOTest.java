@@ -47,18 +47,8 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
 
     @BeforeAll
     static void setUp(DockerAwsS3Container dockerAwsS3) {
-        AwsS3AuthConfiguration authConfiguration = AwsS3AuthConfiguration.builder()
-            .endpoint(dockerAwsS3.getEndpoint())
-            .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
-            .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
-            .build();
-
-        S3BlobStoreConfiguration s3Configuration = S3BlobStoreConfiguration.builder()
-            .authConfiguration(authConfiguration)
-            .region(dockerAwsS3.dockerAwsS3().region())
-            .build();
-
-        testee = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory());
+        S3BlobStoreConfiguration blobStoreConfiguration = S3ConfigurationHelper.baseBlobStoreConfiguration(dockerAwsS3).build();
+        testee = new S3BlobStoreDAO(blobStoreConfiguration, new TestBlobId.Factory());
     }
 
     @AfterEach
