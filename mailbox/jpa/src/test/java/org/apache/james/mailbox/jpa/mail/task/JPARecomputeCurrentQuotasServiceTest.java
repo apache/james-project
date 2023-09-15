@@ -95,7 +95,7 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
                     userQuotaRootResolver,
                     sessionProvider,
                     mailboxManager),
-                JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR));
+                RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE));
     }
 
     @AfterEach

@@ -63,7 +63,7 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
                     resources.getDefaultUserQuotaRootResolver(),
                     mailboxManager.getSessionProvider(),
                     mailboxManager),
-                JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR));
+                RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE));
     }
 
     @Override
