@@ -20,19 +20,39 @@
 package org.apache.james.backends.cassandra.utils;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
 import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
 import com.datastax.dse.driver.api.core.cql.reactive.ReactiveRow;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraAsyncExecutor {
+    public class CassandraAsyncExecutorException extends RuntimeException {
+        public CassandraAsyncExecutorException(Statement statement, Throwable e) {
+            super("Failed executing " + asString(statement), e);
+        }
+    }
+
+    public static String asString(Statement statement) {
+        if (statement instanceof BoundStatement) {
+            BoundStatement boundStatement = (BoundStatement) statement;
+            return boundStatement.getPreparedStatement().getQuery();
+        } else if (statement instanceof SimpleStatement) {
+            SimpleStatement simpleStatement = (SimpleStatement) statement;
+            return simpleStatement.getQuery();
+        } else {
+            return statement.toString();
+        }
+    }
 
     private final CqlSession session;
 
@@ -47,20 +67,28 @@ public class CassandraAsyncExecutor {
 
     public Mono<Boolean> executeReturnApplied(Statement statement) {
         return Mono.defer(() -> Mono.from(execute(statement)))
-            .map(ReactiveRow::wasApplied);
+            .map(ReactiveRow::wasApplied)
+            .onErrorMap(withStatement(statement));
+    }
+
+    private Function<Throwable, Throwable> withStatement(Statement statement) {
+        return e -> new CassandraAsyncExecutorException(statement, e);
     }
 
     public Mono<Void> executeVoid(Statement statement) {
         return Mono.defer(() -> Mono.from(execute(statement)))
-                .then();
+            .then()
+            .onErrorMap(withStatement(statement));
     }
 
     public Mono<Row> executeSingleRow(Statement statement) {
-        return Mono.defer(() -> Mono.from(execute(statement)));
+        Mono<Row> result = Mono.defer(() -> Mono.from(execute(statement)));
+        return result.onErrorMap(withStatement(statement));
     }
 
     public Flux<Row> executeRows(Statement statement) {
-        return Flux.defer(() -> Flux.from(execute(statement)));
+        Flux<Row> result = Flux.defer(() -> Flux.from(execute(statement)));
+        return result.onErrorMap(withStatement(statement));
     }
 
     public Mono<Optional<Row>> executeSingleRowOptional(Statement statement) {
