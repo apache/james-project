@@ -57,7 +57,7 @@ class ScrolledSearchTest {
     private static final ConditionFactory WAIT_CONDITION = await().timeout(Durations.FIVE_SECONDS);
 
     @RegisterExtension
-    public DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
+    public static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
     private ReactorOpenSearchClient client;
 
     @BeforeEach

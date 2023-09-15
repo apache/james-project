@@ -30,7 +30,7 @@ public class S3ConfigurationHelper {
     }
 
     public static AwsS3AuthConfiguration authConfiguration(DockerAwsS3Container s3Container) {
-         return AwsS3AuthConfiguration.builder()
+        return AwsS3AuthConfiguration.builder()
             .endpoint(s3Container.getEndpoint())
             .accessKeyId(DockerAwsS3Container.ACCESS_KEY_ID)
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)

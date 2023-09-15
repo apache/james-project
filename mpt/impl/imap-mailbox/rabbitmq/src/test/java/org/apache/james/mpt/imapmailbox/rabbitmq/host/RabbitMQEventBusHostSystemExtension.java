@@ -21,13 +21,15 @@ package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 
-public class RabbitMQEventBusHostSystemExtension implements BeforeEachCallback, AfterEachCallback {
+public class RabbitMQEventBusHostSystemExtension implements BeforeEachCallback, AfterEachCallback, BeforeAllCallback, AfterAllCallback {
     private final RabbitMQExtension rabbitMQExtension;
     private RabbitMQEventBusHostSystem hostSystem;
 
@@ -62,5 +64,15 @@ public class RabbitMQEventBusHostSystemExtension implements BeforeEachCallback, 
 
     public RabbitMQEventBusHostSystem getHostSystem() {
         return hostSystem;
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+        rabbitMQExtension.beforeAll(extensionContext);
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+        rabbitMQExtension.afterAll(extensionContext);
     }
 }
