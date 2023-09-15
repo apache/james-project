@@ -28,7 +28,6 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -59,7 +58,7 @@ public interface RecomputeCurrentQuotasServiceContract {
     MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER_1, "mailbox");
     CurrentQuotas EXPECTED_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(1L), QuotaSizeUsage.size(103L));
 
-    JMAPCurrentUploadUsageCalculator JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR = Mockito.mock(JMAPCurrentUploadUsageCalculator.class);
+    RecomputeMailboxCurrentQuotasService JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR = Mockito.mock(RecomputeMailboxCurrentQuotasService.class);
 
     UsersRepository usersRepository();
 
@@ -75,7 +74,8 @@ public interface RecomputeCurrentQuotasServiceContract {
 
     @BeforeEach
     default void setup() {
-        when(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR.recomputeCurrentUploadUsage(Mockito.any())).thenReturn(Mono.empty());
+        when(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR.getQuotaComponent()).thenReturn(QuotaComponent.JMAP_UPLOADS);
+        when(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR.recomputeCurrentQuotas(Mockito.any())).thenReturn(Mono.empty());
     }
 
     @Test
@@ -94,7 +94,7 @@ public interface RecomputeCurrentQuotasServiceContract {
 
     @Test
     default void recomputeCurrentQuotasShouldReturnPartialWhenRecomputeJMAPCurrentUploadUsageFail() throws Exception {
-        when(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR.recomputeCurrentUploadUsage(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
+        when(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR.recomputeCurrentQuotas(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
         usersRepository().addUser(USER_1, PASSWORD);
 
         assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
@@ -103,7 +103,7 @@ public interface RecomputeCurrentQuotasServiceContract {
 
     @Test
     default void recomputeCurrentQuotasShouldRunRecomputeMailboxUserCurrentQuotasOnly() throws Exception {
-        when(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR.recomputeCurrentUploadUsage(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
+        when(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR.recomputeCurrentQuotas(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
         usersRepository().addUser(USER_1, PASSWORD);
 
         assertThat(testee().recomputeCurrentQuotas(new Context(),

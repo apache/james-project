@@ -31,15 +31,10 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.task.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Mono;
 
 public class RecomputeMailboxCurrentQuotasService implements RecomputeSingleComponentCurrentQuotasService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecomputeMailboxCurrentQuotasService.class);
 
     private final CurrentQuotaManager storeCurrentQuotaManager;
     private final CurrentQuotaCalculator currentQuotaCalculator;
@@ -67,23 +62,13 @@ public class RecomputeMailboxCurrentQuotasService implements RecomputeSingleComp
     }
 
     @Override
-    public Mono<Task.Result> recomputeCurrentQuotas(RecomputeCurrentQuotasService.Context context, Username username) {
+    public Mono<Void> recomputeCurrentQuotas(Username username) {
         MailboxSession session = sessionProvider.createSystemSession(username);
         QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
 
         return currentQuotaCalculator.recalculateCurrentQuotas(quotaRoot, session)
             .map(recalculatedQuotas -> QuotaOperation.from(quotaRoot, recalculatedQuotas))
             .flatMap(quotaOperation -> Mono.from(storeCurrentQuotaManager.setCurrentQuotas(quotaOperation)))
-            .then(Mono.just(Task.Result.COMPLETED))
-            .doOnNext(any -> {
-                LOGGER.info("Current quotas recomputed for {}", quotaRoot);
-                context.getStatistic(getQuotaComponent()).incrementProcessed();
-            })
-            .onErrorResume(e -> {
-                LOGGER.error("Error while recomputing current quotas for {}", quotaRoot, e);
-                context.getStatistic(getQuotaComponent()).addToFailedIdentifiers(quotaRoot.asString());
-                return Mono.just(Task.Result.PARTIAL);
-            })
             .doFinally(any -> mailboxManager.endProcessingRequest(session));
     }
 }

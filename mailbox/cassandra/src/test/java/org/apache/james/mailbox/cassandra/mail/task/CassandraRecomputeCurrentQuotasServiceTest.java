@@ -40,7 +40,6 @@ import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
-import org.apache.james.mailbox.quota.task.RecomputeJMAPUploadCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
@@ -96,7 +95,7 @@ public class CassandraRecomputeCurrentQuotasServiceTest implements RecomputeCurr
                     userQuotaRootResolver,
                     sessionProvider,
                     mailboxManager),
-                new RecomputeJMAPUploadCurrentQuotasService(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR)));
+                JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR));
     }
 
     @Override

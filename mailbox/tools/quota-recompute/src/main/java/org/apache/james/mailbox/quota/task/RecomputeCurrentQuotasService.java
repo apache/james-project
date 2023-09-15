@@ -133,11 +133,11 @@ public class RecomputeCurrentQuotasService {
                 this.failedIdentifiers = new ConcurrentLinkedDeque<>(failedQuotaRoots);
             }
 
-            void incrementProcessed() {
+            public void incrementProcessed() {
                 processedIdentifierCount.incrementAndGet();
             }
 
-            void addToFailedIdentifiers(String identifier) {
+            public void addToFailedIdentifiers(String identifier) {
                 failedIdentifiers.add(identifier);
             }
         }
@@ -193,15 +193,29 @@ public class RecomputeCurrentQuotasService {
     private Mono<Task.Result> recomputeQuotasOfUser(List<QuotaComponent> quotaComponents, Context context, Username username) {
         if (quotaComponents.isEmpty()) {
             return Flux.merge(recomputeSingleComponentCurrentQuotasServiceMap.values().stream()
-                    .map(recomputeSingleComponentCurrentQuotasService -> recomputeSingleComponentCurrentQuotasService.recomputeCurrentQuotas(context, username))
+                    .map(recomputeSingleComponentCurrentQuotasService -> recomputeCurrentQuotas(recomputeSingleComponentCurrentQuotasService, context, username))
                     .collect(Collectors.toUnmodifiableList()))
                 .reduce(Task.Result.COMPLETED, Task::combine);
         } else {
             return Flux.fromIterable(quotaComponents)
                 .flatMap(quotaComponent -> Optional.ofNullable(recomputeSingleComponentCurrentQuotasServiceMap.get(quotaComponent))
-                    .map(recomputeSingleComponentCurrentQuotasService -> recomputeSingleComponentCurrentQuotasService.recomputeCurrentQuotas(context, username))
+                    .map(recomputeSingleComponentCurrentQuotasService -> recomputeCurrentQuotas(recomputeSingleComponentCurrentQuotasService, context, username))
                     .orElse(Mono.just(Task.Result.PARTIAL)))
                 .reduce(Task.Result.COMPLETED, Task::combine);
         }
+    }
+
+    public Mono<Task.Result> recomputeCurrentQuotas(RecomputeSingleComponentCurrentQuotasService recomputeSingleComponentCurrentQuotasService, Context context, Username username) {
+        return recomputeSingleComponentCurrentQuotasService.recomputeCurrentQuotas(username)
+            .then(Mono.just(Task.Result.COMPLETED))
+            .doOnNext(any -> {
+                LOGGER.info("jmap current upload usage quota recomputed for {}", username);
+                context.getStatistic(recomputeSingleComponentCurrentQuotasService.getQuotaComponent()).incrementProcessed();
+            })
+            .onErrorResume(e -> {
+                LOGGER.error("Error while recomputing jmap current upload usage quota for {}", username, e);
+                context.getStatistic(recomputeSingleComponentCurrentQuotasService.getQuotaComponent()).addToFailedIdentifiers(username.asString());
+                return Mono.just(Task.Result.PARTIAL);
+            });
     }
 }

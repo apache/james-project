@@ -32,7 +32,6 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
-import org.apache.james.mailbox.quota.task.RecomputeJMAPUploadCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -64,7 +63,7 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
                     resources.getDefaultUserQuotaRootResolver(),
                     mailboxManager.getSessionProvider(),
                     mailboxManager),
-                new RecomputeJMAPUploadCurrentQuotasService(JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR)));
+                JMAP_CURRENT_UPLOAD_USAGE_CALCULATOR));
     }
 
     @Override

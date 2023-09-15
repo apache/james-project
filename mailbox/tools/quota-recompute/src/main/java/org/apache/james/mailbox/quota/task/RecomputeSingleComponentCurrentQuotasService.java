@@ -21,12 +21,11 @@ package org.apache.james.mailbox.quota.task;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
-import org.apache.james.task.Task;
 
 import reactor.core.publisher.Mono;
 
 public interface RecomputeSingleComponentCurrentQuotasService {
     QuotaComponent getQuotaComponent();
 
-    Mono<Task.Result> recomputeCurrentQuotas(RecomputeCurrentQuotasService.Context context, Username username);
+    Mono<Void> recomputeCurrentQuotas(Username username);
 }

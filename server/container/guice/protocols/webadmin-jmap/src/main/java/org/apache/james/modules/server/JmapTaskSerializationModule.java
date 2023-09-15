@@ -19,7 +19,7 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
-import org.apache.james.mailbox.quota.task.RecomputeJMAPUploadCurrentQuotasService;
+import org.apache.james.jmap.api.upload.RecomputeJMAPUploadCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeSingleComponentCurrentQuotasService;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;

@@ -17,22 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.task;
+package org.apache.james.jmap.api.upload;
 
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
-import org.apache.james.jmap.api.upload.JMAPCurrentUploadUsageCalculator;
-import org.apache.james.task.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.james.mailbox.quota.task.RecomputeSingleComponentCurrentQuotasService;
 
 import reactor.core.publisher.Mono;
 
 public class RecomputeJMAPUploadCurrentQuotasService implements RecomputeSingleComponentCurrentQuotasService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecomputeJMAPUploadCurrentQuotasService.class);
 
     private final JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator;
 
@@ -47,17 +42,7 @@ public class RecomputeJMAPUploadCurrentQuotasService implements RecomputeSingleC
     }
 
     @Override
-    public Mono<Task.Result> recomputeCurrentQuotas(RecomputeCurrentQuotasService.Context context, Username username) {
-        return jmapCurrentUploadUsageCalculator.recomputeCurrentUploadUsage(username)
-            .then(Mono.just(Task.Result.COMPLETED))
-            .doOnNext(any -> {
-                LOGGER.info("jmap current upload usage quota recomputed for {}", username);
-                context.getStatistic(getQuotaComponent()).incrementProcessed();
-            })
-            .onErrorResume(e -> {
-                LOGGER.error("Error while recomputing jmap current upload usage quota for {}", username, e);
-                context.getStatistic(getQuotaComponent()).addToFailedIdentifiers(username.asString());
-                return Mono.just(Task.Result.PARTIAL);
-            });
+    public Mono<Void> recomputeCurrentQuotas(Username username) {
+        return jmapCurrentUploadUsageCalculator.recomputeCurrentUploadUsage(username);
     }
 }
