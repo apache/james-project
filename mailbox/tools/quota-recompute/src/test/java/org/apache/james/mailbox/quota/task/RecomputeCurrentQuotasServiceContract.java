@@ -58,7 +58,7 @@ public interface RecomputeCurrentQuotasServiceContract {
     MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER_1, "mailbox");
     CurrentQuotas EXPECTED_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(1L), QuotaSizeUsage.size(103L));
 
-    RecomputeMailboxCurrentQuotasService RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE = Mockito.mock(RecomputeMailboxCurrentQuotasService.class);
+    RecomputeSingleComponentCurrentQuotasService RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE = Mockito.mock(RecomputeSingleComponentCurrentQuotasService.class);
 
     UsersRepository usersRepository();
 
