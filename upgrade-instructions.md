@@ -22,6 +22,7 @@ Change list:
  - [Mutualize quota table](#mutualize-quota-table)
  - [Drop Legacy Cassandra migrations](#drop-legacy-cassandra-migrations)
  - [Improve CassandraThreadIdGuessingAlgorithm](#improve-cassandrathreadidguessingalgorithm)
+ - [Set up TTL on the mailbox_change and email_change tables](#set-up-ttl-on-the-mailboxchange-and-emailchange-tables)
 
 ### Set up TTL on the mailbox_change and email_change tables
 Date: 15/09/2023
