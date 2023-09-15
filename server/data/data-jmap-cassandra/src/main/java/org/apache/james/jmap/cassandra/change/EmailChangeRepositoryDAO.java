@@ -49,6 +49,7 @@ import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
@@ -66,6 +67,7 @@ import reactor.core.publisher.Mono;
 
 public class EmailChangeRepositoryDAO {
     private static final TypeCodec<Set<UUID>> SET_OF_UUIDS_CODEC = CodecRegistry.DEFAULT.codecFor(DataTypes.frozenSetOf(DataTypes.UUID), GenericType.setOf(UUID.class));
+    private static final CqlIdentifier TTL_FOR_ROW = CqlIdentifier.fromCql("ttl");
 
     private final CassandraAsyncExecutor executor;
     private final UserDefinedType zonedDateTimeUserType;
@@ -74,9 +76,11 @@ public class EmailChangeRepositoryDAO {
     private final PreparedStatement selectFromStatement;
     private final PreparedStatement selectLatestStatement;
     private final PreparedStatement selectLatestNotDelegatedStatement;
+    private final int timeToLive;
 
     @Inject
-    public EmailChangeRepositoryDAO(CqlSession session, CassandraTypesProvider cassandraTypesProvider) {
+    public EmailChangeRepositoryDAO(CqlSession session, CassandraTypesProvider cassandraTypesProvider,
+                                    CassandraChangesConfiguration cassandraChangesConfiguration) {
         executor = new CassandraAsyncExecutor(session);
         zonedDateTimeUserType = cassandraTypesProvider.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME);
 
@@ -88,6 +92,7 @@ public class EmailChangeRepositoryDAO {
             .value(CREATED, bindMarker(CREATED))
             .value(UPDATED, bindMarker(UPDATED))
             .value(DESTROYED, bindMarker(DESTROYED))
+            .usingTtl(bindMarker(TTL_FOR_ROW))
             .build());
 
         selectAllStatement = session.prepare(selectFrom(TABLE_NAME)
@@ -118,6 +123,8 @@ public class EmailChangeRepositoryDAO {
             .limit(1)
             .allowFiltering()
             .build());
+
+        timeToLive = Math.toIntExact(cassandraChangesConfiguration.getEmailChangeTtl().getSeconds());
     }
 
     Mono<Void> insert(EmailChange change) {
@@ -128,7 +135,8 @@ public class EmailChangeRepositoryDAO {
             .set(CREATED, toUuidSet(change.getCreated()), SET_OF_UUIDS_CODEC)
             .set(UPDATED, toUuidSet(change.getUpdated()), SET_OF_UUIDS_CODEC)
             .set(DESTROYED, toUuidSet(change.getDestroyed()), SET_OF_UUIDS_CODEC)
-            .setUdtValue(DATE, CassandraZonedDateTimeModule.toUDT(zonedDateTimeUserType, change.getDate())));
+            .setUdtValue(DATE, CassandraZonedDateTimeModule.toUDT(zonedDateTimeUserType, change.getDate()))
+            .setInt(TTL_FOR_ROW, timeToLive));
     }
 
     private ImmutableSet<UUID> toUuidSet(List<MessageId> idSet) {

@@ -20,8 +20,12 @@ package org.apache.james.modules.mailbox;
 
 import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 
+import java.io.FileNotFoundException;
+
 import javax.inject.Singleton;
 
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.MailboxUserDeletionTaskStep;
 import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
@@ -41,6 +45,7 @@ import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.jmap.cassandra.change.CassandraChangesConfiguration;
 import org.apache.james.jmap.cassandra.change.CassandraEmailChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraMailboxChangeRepository;
 import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
@@ -118,6 +123,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.MailboxManagerDefinition;
+import org.apache.james.utils.PropertiesProvider;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 
@@ -270,6 +276,17 @@ public class CassandraMailboxModule extends AbstractModule {
         @Inject
         private CassandraMailboxManagerDefinition(CassandraMailboxManager manager) {
             super("cassandra-mailboxmanager", manager);
+        }
+    }
+
+    @Provides
+    @Singleton
+    CassandraChangesConfiguration providesCassandraChangesConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            Configuration configuration = propertiesProvider.getConfiguration("cassandra");
+            return CassandraChangesConfiguration.from(configuration);
+        } catch (FileNotFoundException e) {
+            return CassandraChangesConfiguration.DEFAULT;
         }
     }
 }
