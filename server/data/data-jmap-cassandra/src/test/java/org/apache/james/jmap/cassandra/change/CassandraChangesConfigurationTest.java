@@ -64,12 +64,12 @@ class CassandraChangesConfigurationTest {
     }
 
     @Test
-    void shouldThrowWhenConfiguredZeroTTL() {
+    void shouldAcceptZeroTTL() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("email.change.ttl", "0");
 
-        assertThatThrownBy(() -> CassandraChangesConfiguration.from(configuration))
-            .isInstanceOf(IllegalArgumentException.class);
+        assertThat(CassandraChangesConfiguration.from(configuration).getEmailChangeTtl().getSeconds())
+            .isEqualTo(0L);
     }
 
     @Test

@@ -96,4 +96,28 @@ public class CassandraEmailChangeRepositoryTest implements EmailChangeRepository
             .untilAsserted(() -> assertThat(emailChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
                 .isEmpty());
     }
+
+    @Test
+    void emailChangeRecordsShouldNotBeDeletedWhenTtlIsZero(CassandraCluster cassandra) throws InterruptedException {
+        emailChangeRepositoryDAO = new EmailChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            new CassandraChangesConfiguration.Builder()
+                .emailChangeTtl(Duration.ofSeconds(0))
+                .build());
+
+        EmailChange emailChange = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(generateNewState())
+            .date(DATE)
+            .isShared(false)
+            .created(generateNewMessageId())
+            .build();
+
+        assertThatCode(() -> emailChangeRepositoryDAO.insert(emailChange).block())
+            .doesNotThrowAnyException();
+
+        Thread.sleep(200L);
+
+        assertThat(emailChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
+            .isNotEmpty();
+    }
 }

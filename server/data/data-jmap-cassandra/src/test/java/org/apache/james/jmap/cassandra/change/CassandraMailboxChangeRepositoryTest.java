@@ -98,4 +98,28 @@ public class CassandraMailboxChangeRepositoryTest implements MailboxChangeReposi
             .untilAsserted(() -> assertThat(mailboxChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
                 .isEmpty());
     }
+
+    @Test
+    void mailboxChangeRecordsShouldNotBeDeletedWhenTtlIsZero(CassandraCluster cassandra) throws InterruptedException {
+        mailboxChangeRepositoryDAO = new MailboxChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            new CassandraChangesConfiguration.Builder()
+                .mailboxChangeTtl(Duration.ofSeconds(0))
+                .build());
+
+        MailboxChange mailboxChange = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory().generate())
+            .date(DATE)
+            .isCountChange(false)
+            .created(ImmutableList.of(generateNewMailboxId()))
+            .build();
+
+        assertThatCode(() -> mailboxChangeRepositoryDAO.insert(mailboxChange).block())
+            .doesNotThrowAnyException();
+
+        Thread.sleep(200L);
+
+        assertThat(mailboxChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
+            .isNotEmpty();
+    }
 }

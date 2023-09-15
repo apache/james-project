@@ -84,11 +84,11 @@ public class CassandraChangesConfiguration {
     private final Duration mailboxChangeTtl;
 
     private CassandraChangesConfiguration(Duration emailChangeTtl, Duration mailboxChangeTtl) {
-        Preconditions.checkArgument(emailChangeTtl.getSeconds() > 0, "'TTL' needs to be positive");
+        Preconditions.checkArgument(emailChangeTtl.getSeconds() >= 0, "'TTL' needs to be positive");
         Preconditions.checkArgument(emailChangeTtl.getSeconds() < Integer.MAX_VALUE,
             "'TTL' must not greater than %s sec", Integer.MAX_VALUE);
 
-        Preconditions.checkArgument(mailboxChangeTtl.getSeconds() > 0, "'TTL' needs to be positive");
+        Preconditions.checkArgument(mailboxChangeTtl.getSeconds() >= 0, "'TTL' needs to be positive");
         Preconditions.checkArgument(mailboxChangeTtl.getSeconds() < Integer.MAX_VALUE,
             "'TTL' must not greater than %s sec", Integer.MAX_VALUE);
 

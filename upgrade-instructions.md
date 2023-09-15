@@ -23,6 +23,24 @@ Change list:
  - [Drop Legacy Cassandra migrations](#drop-legacy-cassandra-migrations)
  - [Improve CassandraThreadIdGuessingAlgorithm](#improve-cassandrathreadidguessingalgorithm)
 
+### Set up TTL on the mailbox_change and email_change tables
+Date: 15/09/2023
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3940
+
+Concerned products: Distributed James, Cassandra James Server
+
+From now on, we set a default 60 days (configurable) Cassandra time-to-live on the `mailbox_change` and `email_change` tables 
+to reduce considered outdated changes' storage usage.
+
+If you want to keep the old behavior which is not using Cassandra time-to-live on those JMAP change tables, please set the 
+following configurations in `cassandra.properties`:
+
+```
+email.change.ttl=0
+mailbox.change.ttl=0
+```
+
 ### Improve CassandraThreadIdGuessingAlgorithm
 Date: 14/09/2023
 

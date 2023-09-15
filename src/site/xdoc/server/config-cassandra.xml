@@ -127,9 +127,11 @@
             have access to the mailboxes they own. ACLs can represent a high volume of requests. If you do not propose mailbox sharing
             features to your users, you can consider disabling them in order to improve performance.</dd>
         <dt><strong>email.change.ttl</strong></dt>
-        <dd>Optional. Duration, default to 60 days. Cassandra Time-to-live for Email change records.</dd>
+        <dd>Optional. Duration, default to 60 days. Cassandra Time-to-live for Email change records.
+            Setting time-to-live to zero means refusing to use time-to-live on email changes.</dd>
         <dt><strong>mailbox.change.ttl</strong></dt>
-        <dd>Optional. Duration, default to 60 days. Cassandra Time-to-live for Mailbox change records.</dd>
+        <dd>Optional. Duration, default to 60 days. Cassandra Time-to-live for Mailbox change records.
+            Setting time-to-live to zero means refusing to use time-to-live on mailbox changes.</dd>
       </dl>
 
 
