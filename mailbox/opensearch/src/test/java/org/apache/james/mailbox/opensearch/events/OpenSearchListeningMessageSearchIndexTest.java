@@ -179,7 +179,7 @@ class OpenSearchListeningMessageSearchIndexTest {
     UpdatableTickingClock clock;
 
     @RegisterExtension
-    DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
+    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension();
 
     @BeforeEach
     void setup() throws Exception {
