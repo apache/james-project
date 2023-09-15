@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.mailbox.cassandra.mail.CassandraThreadDAOTest.hashMimeMessagesIds;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.util.Set;
@@ -33,7 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraThreadLookupDAOTest {
+class CassandraThreadLookupDAOTest {
     private static final Username ALICE = Username.of("alice");
     private static final Username BOB = Username.of("bob");
 
@@ -64,10 +65,10 @@ public class CassandraThreadLookupDAOTest {
 
     @Test
     void insertShouldSuccess() {
-        testee.insert(messageId1, ALICE, Set.of(mimeMessageId1, mimeMessageId2)).block();
+        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
 
         assertThat(testee.selectOneRow(messageId1).block())
-            .isEqualTo(new ThreadTablePartitionKey(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
+            .isEqualTo(new ThreadTablePartitionKey(ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))));
     }
 
     @Test
@@ -78,16 +79,16 @@ public class CassandraThreadLookupDAOTest {
 
     @Test
     void selectShouldReturnOnlyRelatedDataByThatMessageId() {
-        testee.insert(messageId1, ALICE, Set.of(mimeMessageId1, mimeMessageId2)).block();
-        testee.insert(messageId2, BOB, Set.of(mimeMessageId3, mimeMessageId4)).block();
+        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
+        testee.insert(messageId2, BOB, hashMimeMessagesIds(Set.of(mimeMessageId3, mimeMessageId4))).block();
 
         assertThat(testee.selectOneRow(messageId1).block())
-            .isEqualTo(new ThreadTablePartitionKey(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
+            .isEqualTo(new ThreadTablePartitionKey(ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))));
     }
 
     @Test
     void deletedEntriesShouldNotBeReturned() {
-        testee.insert(messageId1, ALICE, Set.of(mimeMessageId1, mimeMessageId2)).block();
+        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
 
         testee.deleteOneRow(messageId1).block();
 
@@ -97,13 +98,13 @@ public class CassandraThreadLookupDAOTest {
 
     @Test
     void deleteByNonExistMessageIdShouldDeleteNothing() {
-        testee.insert(messageId1, ALICE, Set.of(mimeMessageId1, mimeMessageId2)).block();
+        testee.insert(messageId1, ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))).block();
 
         testee.deleteOneRow(messageId2).block();
 
         // message1's data should remain
         assertThat(testee.selectOneRow(messageId1).block())
-            .isEqualTo(new ThreadTablePartitionKey(ALICE, Set.of(mimeMessageId1, mimeMessageId2)));
+            .isEqualTo(new ThreadTablePartitionKey(ALICE, hashMimeMessagesIds(Set.of(mimeMessageId1, mimeMessageId2))));
     }
 
 }
