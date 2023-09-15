@@ -29,7 +29,7 @@ import org.apache.james.backends.opensearch.IndexCreationFactory.IndexCreationCu
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.opensearch.client.opensearch._types.analysis.Analyzer;
 import org.opensearch.client.opensearch._types.analysis.CustomAnalyzer;
 import org.opensearch.client.opensearch._types.analysis.NGramTokenFilter;
@@ -41,6 +41,7 @@ import org.opensearch.client.opensearch._types.analysis.TokenizerDefinition;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.opensearch.indices.IndexSettingsAnalysis;
 
+@ExtendWith(DockerOpenSearchExtension.class)
 class IndexCreationFactoryTest {
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
@@ -92,13 +93,11 @@ class IndexCreationFactoryTest {
             .build();
     }
 
-    @RegisterExtension
-    public DockerOpenSearchExtension elasticSearch = new DockerOpenSearchExtension();
     private ReactorOpenSearchClient client;
 
     @BeforeEach
-    void setUp() {
-        client = elasticSearch.getDockerOpenSearch().clientProvider().get();
+    void setUp(DockerOpenSearch dockerOpenSearch) {
+        client = dockerOpenSearch.clientProvider().get();
     }
 
     @AfterEach
