@@ -73,6 +73,8 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -288,6 +290,52 @@ class ComputeMessageFastViewProjectionListenerTest {
 
         assertThat(eventDeadLetters.failedIds(ComputeMessageFastViewProjectionListener.GROUP).collectList().block())
             .hasSize(1);
+    }
+
+    @Test
+    void shouldDeletePreviewWhenMessageDeletedAndNoLongerReferenced() throws Exception {
+        ComposedMessageId composedId = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
+            mailboxSession).getId();
+
+        assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
+            .isNotNull();
+
+        inboxMessageManager.delete(ImmutableList.of(composedId.getUid()), mailboxSession);
+
+        assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
+            .isNull();
+    }
+
+    @Test
+    void shouldKeepPreviewWhenExpungedAndStillReferenced() throws Exception {
+        ComposedMessageId composedId = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
+            mailboxSession).getId();
+
+        mailboxManager.moveMessages(MessageRange.all(), BOB_INBOX_PATH, BOB_OTHER_BOX_PATH, mailboxSession);
+
+        assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
+            .isNotNull();
+    }
+
+    @Test
+    void shouldKeepPreviewWhenMessageIdReferenceInCopied() throws Exception {
+        ComposedMessageId composedId = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
+            mailboxSession).getId();
+
+        mailboxManager.copyMessages(MessageRange.all(), BOB_INBOX_PATH, BOB_OTHER_BOX_PATH, mailboxSession);
+        assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
+            .isNotNull();
+
+        inboxMessageManager.delete(ImmutableList.of(composedId.getUid()), mailboxSession);
+
+        assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
+            .isNotNull();
     }
 
     private Message previewMessage() throws Exception {
