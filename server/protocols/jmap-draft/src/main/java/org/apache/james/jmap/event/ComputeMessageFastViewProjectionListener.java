@@ -84,7 +84,7 @@ public class ComputeMessageFastViewProjectionListener implements EventListener.R
         }
         if (event instanceof Expunged) {
             MailboxSession session = sessionProvider.createSystemSession(event.getUsername());
-            return handedExpungedEvent((Expunged) event, session);
+            return handleExpungedEvent((Expunged) event, session);
         }
         return Mono.empty();
     }
@@ -110,7 +110,7 @@ public class ComputeMessageFastViewProjectionListener implements EventListener.R
         return messageFastViewPrecomputedPropertiesFactory.from(messageResult);
     }
 
-    private Mono<Void> handedExpungedEvent(Expunged expunged, MailboxSession session) {
+    private Mono<Void> handleExpungedEvent(Expunged expunged, MailboxSession session) {
         ImmutableSet<MessageId> expungedMessageIds = expunged.getMessageIds();
         return Mono.from(messageIdManager.accessibleMessagesReactive(expungedMessageIds, session))
             .flatMapIterable(accessibleMessageIds -> CollectionUtils.subtract(expungedMessageIds, accessibleMessageIds))
