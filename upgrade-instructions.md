@@ -38,8 +38,8 @@ If you want to keep the old behavior which is not using Cassandra time-to-live o
 following configurations in `cassandra.properties`:
 
 ```
-email.change.ttl=0
-mailbox.change.ttl=0
+email.change.ttl=0 second
+mailbox.change.ttl=0 second
 ```
 
 ### Improve CassandraThreadIdGuessingAlgorithm
