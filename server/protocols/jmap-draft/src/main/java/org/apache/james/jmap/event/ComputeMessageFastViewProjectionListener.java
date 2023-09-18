@@ -113,8 +113,7 @@ public class ComputeMessageFastViewProjectionListener implements EventListener.R
     private Mono<Void> handedExpungedEvent(Expunged expunged, MailboxSession session) {
         ImmutableSet<MessageId> expungedMessageIds = expunged.getMessageIds();
         return Mono.from(messageIdManager.accessibleMessagesReactive(expungedMessageIds, session))
-            .map(accessibleMessageIds -> CollectionUtils.subtract(expungedMessageIds, accessibleMessageIds))
-            .flatMapMany(Flux::fromIterable)
+            .flatMapIterable(accessibleMessageIds -> CollectionUtils.subtract(expungedMessageIds, accessibleMessageIds))
             .flatMap(messageFastViewProjection::delete, DEFAULT_CONCURRENCY)
             .then();
     }
