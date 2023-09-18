@@ -146,15 +146,16 @@ class ScriptTest {
     void toSummaryShouldWork() {
         String name = "name";
         boolean isActive = true;
+        long size = 48L;
         assertThat(
             Script.builder()
                 .name(name)
                 .content("content")
                 .isActive(isActive)
-                .size(48L)
+                .size(size)
                 .build()
                 .toSummary())
-            .isEqualTo(new ScriptSummary(new ScriptName(name), isActive));
+            .isEqualTo(new ScriptSummary(new ScriptName(name), isActive, size));
     }
 
     @Test

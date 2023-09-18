@@ -25,8 +25,11 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -408,6 +411,31 @@ public abstract class WebAdminServerIntegrationTest {
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
+    }
+
+    @Test
+    void recomputeQuotaTaskShouldBeExposed() throws Exception {
+        dataProbe.addUser(USERNAME, "anyPassword");
+
+        String taskId = with()
+            .queryParam("task", "RecomputeCurrentQuotas")
+            .post("/quota/users")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await")
+            .then()
+            .body("taskId", is(taskId))
+            .body("type", is("recompute-current-quotas"))
+            .body("additionalInformation.recomputeSingleQuotaComponentResults", hasSize(3))
+            .body("additionalInformation.recomputeSingleQuotaComponentResults", hasItems(
+                both(hasEntry("quotaComponent", "MAILBOX")).and(hasEntry("processedIdentifierCount", 1)),
+                both(hasEntry("quotaComponent", "JMAP_UPLOADS")).and(hasEntry("processedIdentifierCount", 1)),
+                both(hasEntry("quotaComponent", "SIEVE")).and(hasEntry("processedIdentifierCount", 1))
+            ));
     }
 
     public static ListAppender<ILoggingEvent> getListAppenderForClass(Class clazz) {

@@ -52,7 +52,7 @@ public class JPASieveScript {
     }
 
     public static ScriptSummary toSummary(JPASieveScript script) {
-        return new ScriptSummary(new ScriptName(script.getScriptName()), script.isActive());
+        return new ScriptSummary(new ScriptName(script.getScriptName()), script.isActive(), script.getScriptSize());
     }
 
     public static class Builder {

@@ -120,4 +120,9 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
         return limitDao.deleteQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(
             QUOTA_COMPONENT, QuotaScope.USER, username.asString(), QuotaType.SIZE));
     }
+
+    @Override
+    public Mono<Void> resetSpaceUsed(Username username, long spaceUsed) {
+        return spaceUsedBy(username).flatMap(currentSpace -> currentValueDao.increase(asQuotaKey(username), spaceUsed - currentSpace));
+    }
 }

@@ -34,6 +34,10 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-tools-quota-recompute</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-webadmin-core</artifactId>
         </dependency>
         <dependency>

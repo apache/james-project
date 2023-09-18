@@ -129,4 +129,20 @@ interface CassandraSieveQuotaDAOContract {
 
         assertThat(testee().spaceUsedBy(USERNAME).block()).isEqualTo(0L);
     }
+
+    @Test
+    default void resetSpaceUsedShouldResetSpaceWhenNewSpaceIsGreaterThanCurrentSpace() {
+        testee().updateSpaceUsed(USERNAME, 10L).block();
+        testee().resetSpaceUsed(USERNAME, 15L).block();
+
+        assertThat(testee().spaceUsedBy(USERNAME).block()).isEqualTo(15L);
+    }
+
+    @Test
+    default void resetSpaceUsedShouldResetSpaceWhenNewSpaceIsSmallerThanCurrentSpace() {
+        testee().updateSpaceUsed(USERNAME, 10L).block();
+        testee().resetSpaceUsed(USERNAME, 9L).block();
+
+        assertThat(testee().spaceUsedBy(USERNAME).block()).isEqualTo(9L);
+    }
 }

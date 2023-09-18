@@ -153,6 +153,11 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
+    public Flux<ScriptSummary> listScriptsReactive(Username username) {
+        return cassandraSieveDAO.listScripts(username);
+    }
+
+    @Override
     public InputStream getActive(Username username) throws ScriptNotFoundException {
         return IOUtils.toInputStream(
             cassandraActiveScriptDAO.getActiveScriptInfo(username)
@@ -296,4 +301,8 @@ public class CassandraSieveRepository implements SieveRepository {
         cassandraSieveQuotaDAO.removeQuota(username).block();
     }
 
+    @Override
+    public Mono<Void> resetSpaceUsedReactive(Username username, long spaceUsed) {
+        return cassandraSieveQuotaDAO.resetSpaceUsed(username, spaceUsed);
+    }
 }

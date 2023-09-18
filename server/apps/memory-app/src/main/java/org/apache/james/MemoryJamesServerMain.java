@@ -49,6 +49,7 @@ import org.apache.james.modules.queue.memory.MemoryMailQueueModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
+import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.JmapTasksModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
@@ -82,6 +83,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new VacationRoutesModule(),
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
+        new InconsistencyQuotasSolvingRoutesModule(),
         new MailboxesExportRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),

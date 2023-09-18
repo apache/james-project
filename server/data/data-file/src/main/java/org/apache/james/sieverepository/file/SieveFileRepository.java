@@ -60,6 +60,9 @@ import org.apache.james.sieverepository.api.exception.StorageException;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 /**
  * <code>SieveFileRepository</code> manages sieve scripts stored on the file system.
  * <p>The sieve root directory is a sub-directory of the application base directory named "sieve".
@@ -215,8 +218,13 @@ public class SieveFileRepository implements SieveRepository {
         Predicate<File> isActive = isActiveValidator(activeFile);
         return Stream.of(Optional.ofNullable(getUserDirectory(username).listFiles()).orElse(new File[]{}))
             .filter(file -> !SYSTEM_FILES.contains(file.getName()))
-            .map(file -> new ScriptSummary(new ScriptName(file.getName()), isActive.test(file)))
+            .map(file -> new ScriptSummary(new ScriptName(file.getName()), isActive.test(file), file.length()))
             .collect(ImmutableList.toImmutableList());
+    }
+
+    @Override
+    public Flux<ScriptSummary> listScriptsReactive(Username username) {
+        return Mono.fromCallable(() -> listScripts(username)).flatMapMany(Flux::fromIterable);
     }
 
     private Predicate<File> isActiveValidator(File activeFile) {
@@ -491,4 +499,8 @@ public class SieveFileRepository implements SieveRepository {
         }
     }
 
+    @Override
+    public Mono<Void> resetSpaceUsedReactive(Username username, long spaceUsed) {
+        return Mono.error(new UnsupportedOperationException());
+    }
 }

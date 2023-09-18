@@ -112,7 +112,8 @@ public class CassandraSieveDAO {
                     .setString(USER_NAME, username.asString()))
             .map(row -> new ScriptSummary(
                 new ScriptName(row.getString(SCRIPT_NAME)),
-                row.getBoolean(IS_ACTIVE)));
+                row.getBoolean(IS_ACTIVE),
+                row.getLong(SIZE)));
     }
 
     public Mono<Boolean> updateScriptActivation(Username username, ScriptName scriptName, boolean active) {

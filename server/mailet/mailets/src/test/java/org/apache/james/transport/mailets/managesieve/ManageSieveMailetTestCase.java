@@ -373,7 +373,8 @@ class ManageSieveMailetTestCase {
 
     @Test
     void testListScripts() throws Exception {
-        when(sieveRepository.listScripts(USERNAME)).thenReturn(Lists.newArrayList(new ScriptSummary(new ScriptName("scriptName2"), true), new ScriptSummary(new ScriptName("scriptName1"), false)));
+        when(sieveRepository.listScripts(USERNAME)).thenReturn(Lists.newArrayList(new ScriptSummary(new ScriptName("scriptName2"), true, 10L),
+            new ScriptSummary(new ScriptName("scriptName1"), false, 10L)));
         MimeMessage message = prepareMimeMessage("LISTSCRIPTS");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);

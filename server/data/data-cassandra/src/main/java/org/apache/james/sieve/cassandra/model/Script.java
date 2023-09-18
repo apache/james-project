@@ -114,7 +114,7 @@ public class Script {
     }
 
     public ScriptSummary toSummary() {
-        return new ScriptSummary(name, isActive);
+        return new ScriptSummary(name, isActive, size);
     }
 
     public long getSize() {
