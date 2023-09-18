@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.pulsar.client.admin.PulsarAdmin;
@@ -53,6 +55,7 @@ public class DockerPulsarExtension implements GuiceModuleTestExtension {
     private PulsarAdmin adminClient;
     private DockerPulsar dockerPulsar;
 
+    @Inject
     public DockerPulsarExtension() {
         container = new PulsarContainer(DEFAULT_IMAGE_NAME.withTag("2.10.1"))
                 .withLogConsumer(DockerPulsarExtension::displayDockerLog);

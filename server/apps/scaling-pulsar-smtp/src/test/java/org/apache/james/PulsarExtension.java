@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.pulsar.DockerPulsarExtension;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
 import org.apache.pulsar.client.admin.PulsarAdminException;
@@ -32,6 +34,7 @@ public class PulsarExtension implements GuiceModuleTestExtension {
 
     private final DockerPulsarExtension pulsar;
 
+    @Inject
     public PulsarExtension() {
         this.pulsar = new DockerPulsarExtension();
     }

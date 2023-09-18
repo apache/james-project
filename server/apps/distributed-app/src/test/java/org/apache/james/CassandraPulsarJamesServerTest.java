@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,6 +41,7 @@ public class CassandraPulsarJamesServerTest implements JmapJamesServerContract, 
             .overrideWith(new TestJMAPServerModule()))
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
+        .extensions(new RabbitMQExtension())
         .extension(new PulsarExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
