@@ -27,7 +27,6 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
-import com.datastax.oss.driver.api.querybuilder.schema.compaction.TimeWindowCompactionStrategy;
 
 public interface CassandraBlobCacheModule {
 
@@ -35,9 +34,8 @@ public interface CassandraBlobCacheModule {
         .builder()
         .table(TABLE_NAME)
         .options(options -> options
-            .withCompaction(SchemaBuilder.timeWindowCompactionStrategy()
-                .withCompactionWindow(1, TimeWindowCompactionStrategy.CompactionWindowUnit.HOURS))
-            .withCompression("LZ4Compressor", 8, 1.0)) // todo check
+            .withCompaction(SchemaBuilder.sizeTieredCompactionStrategy())
+            .withCompression("LZ4Compressor", 8, 1.0))
         .comment("Write through cache for small blobs stored in a slower blob store implementation.")
         .statement(statement ->  types -> statement
             .withPartitionKey(ID, DataTypes.TEXT)

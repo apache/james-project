@@ -23,6 +23,18 @@ Change list:
  - [Drop Legacy Cassandra migrations](#drop-legacy-cassandra-migrations)
  - [Improve CassandraThreadIdGuessingAlgorithm](#improve-cassandrathreadidguessingalgorithm)
  - [Set up TTL on the mailbox_change and email_change tables](#set-up-ttl-on-the-mailboxchange-and-emailchange-tables)
+ - [Change compaction strategy of blob_cache table](#change-compaction-strategy-of-blobcache-table)
+
+
+### Change compaction strategy of blob_cache table
+Date: 18/09/2023
+
+To decrease the pressure on the Cassandra server.
+The`blob_cache` table needs to use STCS instead of TWCS compaction strategy.
+
+```
+ALTER TABLE james_keyspace.blob_cache WITH compaction = { 'class' :  'SizeTieredCompactionStrategy'  };
+```
 
 ### Set up TTL on the mailbox_change and email_change tables
 Date: 15/09/2023
