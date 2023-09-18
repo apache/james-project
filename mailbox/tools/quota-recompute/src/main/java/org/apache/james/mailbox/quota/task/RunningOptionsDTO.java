@@ -19,32 +19,43 @@
 
 package org.apache.james.mailbox.quota.task;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 
 public class RunningOptionsDTO {
     public static RunningOptionsDTO asDTO(RunningOptions domainObject) {
-        return new RunningOptionsDTO(Optional.of(domainObject.getUsersPerSecond()));
+        return new RunningOptionsDTO(Optional.of(domainObject.getUsersPerSecond()),
+            domainObject.getQuotaComponents().stream().map(QuotaComponent::getValue).collect(ImmutableList.toImmutableList()));
     }
 
     private final Optional<Integer> usersPerSecond;
+    private final List<String> quotaComponents;
 
     @JsonCreator
     public RunningOptionsDTO(
-            @JsonProperty("usersPerSecond") Optional<Integer> usersPerSecond) {
+            @JsonProperty("usersPerSecond") Optional<Integer> usersPerSecond,
+            @JsonProperty("quotaComponents") List<String> quotaComponents) {
         this.usersPerSecond = usersPerSecond;
+        this.quotaComponents = quotaComponents;
     }
 
     public Optional<Integer> getUsersPerSecond() {
         return usersPerSecond;
     }
 
+    public List<String> getQuotaComponents() {
+        return quotaComponents;
+    }
+
     public RunningOptions asDomainObject() {
-        return usersPerSecond.map(RunningOptions::withUsersPerSecond)
-            .orElse(RunningOptions.DEFAULT);
+        return RunningOptions.of(usersPerSecond.orElse(RunningOptions.DEFAULT_USERS_PER_SECOND),
+            quotaComponents.stream().map(QuotaComponent::of).collect(ImmutableList.toImmutableList()));
     }
 }

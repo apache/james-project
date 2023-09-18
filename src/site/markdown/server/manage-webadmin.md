@@ -2000,10 +2000,16 @@ An admin can specify the concurrency that should be used when running the task:
  
 This optional parameter must have a strictly positive integer as a value and be passed as query parameters.
 
+An admin can select which quota component he wants to recompute:
+
+- `quotaComponent` component whose quota need to be reprocessed. It could be one of values: MAILBOX, SIEVE, JMAP_UPLOADS.
+
+The admin could select several quota components. If he does not select, quotas of all components would be recomputed.
+
 Example:
 
 ```
-curl -XPOST /quota/users?task=RecomputeCurrentQuotas&usersPerSecond=20
+curl -XPOST /quota/users?task=RecomputeCurrentQuotas&usersPerSecond=20&quotaComponent=MAILBOX&quotaComponent=JMAP_UPLOADS
 ```
 
 The scheduled task will have the following type `recompute-current-quotas` and the following `additionalInformation`:
@@ -2011,8 +2017,18 @@ The scheduled task will have the following type `recompute-current-quotas` and t
 ```
 {
   "type":"recompute-current-quotas",
-  "processedQuotaRoots": 3,
-  "failedQuotaRoots": ["#private&bob@localhost"],
+  "recomputeSingleQuotaComponentResults": [
+    {
+      "quotaComponent": "MAILBOX",
+      "processedIdentifierCount": 3,
+      "failedIdentifiers": ["#private&bob@localhost"]
+    },
+    {
+      "quotaComponent": "JMAP_UPLOADS",
+      "processedIdentifierCount": 3,
+      "failedIdentifiers": ["bob@localhost"]
+    }
+  ],
   "runningOptions": {
     "usersPerSecond":20
   }

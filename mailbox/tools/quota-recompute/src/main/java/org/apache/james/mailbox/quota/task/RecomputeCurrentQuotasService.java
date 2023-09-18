@@ -21,21 +21,20 @@ package org.apache.james.mailbox.quota.task;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.model.QuotaOperation;
-import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
-import org.apache.james.mailbox.quota.UserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -51,44 +50,50 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class RecomputeCurrentQuotasService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RecomputeCurrentQuotasService.class);
 
     public static class RunningOptions {
-        public static RunningOptions withUsersPerSecond(int usersPerSecond) {
-            return new RunningOptions(usersPerSecond);
+        public static RunningOptions of(int usersPerSecond, List<QuotaComponent> quotaComponent) {
+            return new RunningOptions(usersPerSecond, quotaComponent);
         }
 
-        public static final RunningOptions DEFAULT = withUsersPerSecond(1);
+        public static RunningOptions withUsersPerSecond(int usersPerSecond) {
+            return new RunningOptions(usersPerSecond, ImmutableList.of());
+        }
+
+        public static final int DEFAULT_USERS_PER_SECOND = 1;
+        public static final RunningOptions DEFAULT = of(DEFAULT_USERS_PER_SECOND, ImmutableList.of());
 
         private final int usersPerSecond;
+        private final List<QuotaComponent> quotaComponents;
 
-        private RunningOptions(int usersPerSecond) {
+        private RunningOptions(int usersPerSecond, List<QuotaComponent> quotaComponent) {
             Preconditions.checkArgument(usersPerSecond > 0, "'usersPerSecond' needs to be strictly positive");
 
             this.usersPerSecond = usersPerSecond;
+            this.quotaComponents = quotaComponent;
         }
 
         public int getUsersPerSecond() {
             return usersPerSecond;
         }
+
+        public List<QuotaComponent> getQuotaComponents() {
+            return quotaComponents;
+        }
     }
 
     public static class Context {
         static class Snapshot {
-            private final long processedQuotaRootCount;
-            private final ImmutableList<QuotaRoot> failedQuotaRoots;
+            private final List<RecomputeSingleQuotaComponentResult> recomputeSingleQuotaComponentResults;
 
-            private Snapshot(long processedQuotaRootCount, ImmutableList<QuotaRoot> failedQuotaRoots) {
-                this.processedQuotaRootCount = processedQuotaRootCount;
-                this.failedQuotaRoots = failedQuotaRoots;
+            private Snapshot(List<RecomputeSingleQuotaComponentResult> results) {
+                this.recomputeSingleQuotaComponentResults = results;
             }
 
-            long getProcessedQuotaRootCount() {
-                return processedQuotaRootCount;
-            }
-
-            ImmutableList<QuotaRoot> getFailedQuotaRoots() {
-                return failedQuotaRoots;
+            public List<RecomputeSingleQuotaComponentResult> getResults() {
+                return recomputeSingleQuotaComponentResults;
             }
 
             @Override
@@ -96,73 +101,80 @@ public class RecomputeCurrentQuotasService {
                 if (o instanceof Snapshot) {
                     Snapshot that = (Snapshot) o;
 
-                    return Objects.equals(this.processedQuotaRootCount, that.processedQuotaRootCount)
-                        && Objects.equals(this.failedQuotaRoots, that.failedQuotaRoots);
+                    return Objects.equals(this.recomputeSingleQuotaComponentResults, that.recomputeSingleQuotaComponentResults);
                 }
                 return false;
             }
 
             @Override
             public final int hashCode() {
-                return Objects.hash(processedQuotaRootCount, failedQuotaRoots);
+                return Objects.hash(recomputeSingleQuotaComponentResults);
             }
 
             @Override
             public String toString() {
                 return MoreObjects.toStringHelper(this)
-                    .add("processedQuotaRootCount", processedQuotaRootCount)
-                    .add("failedQuotaRoots", failedQuotaRoots)
+                    .add("results", recomputeSingleQuotaComponentResults)
                     .toString();
             }
         }
 
-        private final AtomicLong processedQuotaRootCount;
-        private final ConcurrentLinkedDeque<QuotaRoot> failedQuotaRoots;
+        public static class Statistic {
+            private final AtomicLong processedIdentifierCount;
+            private final ConcurrentLinkedDeque<String> failedIdentifiers;
+
+            public Statistic(AtomicLong processedIdentifierCount, ConcurrentLinkedDeque<String> failedIdentifiers) {
+                this.processedIdentifierCount = processedIdentifierCount;
+                this.failedIdentifiers = failedIdentifiers;
+            }
+
+            public Statistic(long processedQuotaRootCount, Collection<String> failedQuotaRoots) {
+                this.processedIdentifierCount = new AtomicLong(processedQuotaRootCount);
+                this.failedIdentifiers = new ConcurrentLinkedDeque<>(failedQuotaRoots);
+            }
+
+            public void incrementProcessed() {
+                processedIdentifierCount.incrementAndGet();
+            }
+
+            public void addToFailedIdentifiers(String identifier) {
+                failedIdentifiers.add(identifier);
+            }
+        }
+
+        private Map<QuotaComponent, Statistic> mapQuotaComponentToStatistic;
 
         public Context() {
-            this.processedQuotaRootCount = new AtomicLong();
-            this.failedQuotaRoots = new ConcurrentLinkedDeque<>();
+            this.mapQuotaComponentToStatistic = new ConcurrentHashMap<>();
         }
 
-        public Context(long processedQuotaRootCount, Collection<QuotaRoot> failedQuotaRoots) {
-            this.processedQuotaRootCount = new AtomicLong(processedQuotaRootCount);
-            this.failedQuotaRoots = new ConcurrentLinkedDeque<>(failedQuotaRoots);
+        public Context(Map<QuotaComponent, Statistic> mapQuotaComponentToStatistic) {
+            this.mapQuotaComponentToStatistic = new ConcurrentHashMap<>(mapQuotaComponentToStatistic);
         }
 
-        void incrementProcessed() {
-            processedQuotaRootCount.incrementAndGet();
-        }
-
-        void addToFailedMailboxes(QuotaRoot quotaRoot) {
-            failedQuotaRoots.add(quotaRoot);
+        public Statistic getStatistic(QuotaComponent quotaComponent) {
+            return mapQuotaComponentToStatistic.computeIfAbsent(quotaComponent, key -> new Statistic(new AtomicLong(), new ConcurrentLinkedDeque<>()));
         }
 
         public Snapshot snapshot() {
-            return new Snapshot(processedQuotaRootCount.get(),
-                ImmutableList.copyOf(failedQuotaRoots));
+            return new Snapshot(mapQuotaComponentToStatistic.entrySet().stream()
+                .map(quotaComponentStatisticEntry -> new RecomputeSingleQuotaComponentResult(quotaComponentStatisticEntry.getKey().getValue(),
+                    quotaComponentStatisticEntry.getValue().processedIdentifierCount.get(),
+                    ImmutableList.copyOf(quotaComponentStatisticEntry.getValue().failedIdentifiers)))
+                .collect(Collectors.toUnmodifiableList()));
         }
     }
 
     private final UsersRepository usersRepository;
-    private final CurrentQuotaManager storeCurrentQuotaManager;
-    private final CurrentQuotaCalculator currentQuotaCalculator;
-    private final UserQuotaRootResolver userQuotaRootResolver;
-    private final SessionProvider sessionProvider;
-    private final MailboxManager mailboxManager;
+    private final Map<QuotaComponent, RecomputeSingleComponentCurrentQuotasService> recomputeSingleComponentCurrentQuotasServiceMap;
 
     @Inject
     public RecomputeCurrentQuotasService(UsersRepository usersRepository,
-                                         CurrentQuotaManager storeCurrentQuotaManager,
-                                         CurrentQuotaCalculator currentQuotaCalculator,
-                                         UserQuotaRootResolver userQuotaRootResolver,
-                                         SessionProvider sessionProvider,
-                                         MailboxManager mailboxManager) {
+                                         Set<RecomputeSingleComponentCurrentQuotasService> recomputeSingleComponentCurrentQuotasServices) {
         this.usersRepository = usersRepository;
-        this.storeCurrentQuotaManager = storeCurrentQuotaManager;
-        this.currentQuotaCalculator = currentQuotaCalculator;
-        this.userQuotaRootResolver = userQuotaRootResolver;
-        this.sessionProvider = sessionProvider;
-        this.mailboxManager = mailboxManager;
+        this.recomputeSingleComponentCurrentQuotasServiceMap = recomputeSingleComponentCurrentQuotasServices.stream()
+            .collect(Collectors.toUnmodifiableMap(recomputeSingleComponentCurrentQuotasService -> recomputeSingleComponentCurrentQuotasService.getQuotaComponent(),
+                recomputeSingleComponentCurrentQuotasService -> recomputeSingleComponentCurrentQuotasService));
     }
 
     public Mono<Task.Result> recomputeCurrentQuotas(Context context, RunningOptions runningOptions) {
@@ -170,7 +182,7 @@ public class RecomputeCurrentQuotasService {
             .transform(ReactorUtils.<Username, Task.Result>throttle()
                 .elements(runningOptions.getUsersPerSecond())
                 .per(Duration.ofSeconds(1))
-                .forOperation(username -> recomputeUserCurrentQuotas(context, username)))
+                .forOperation(username -> recomputeQuotasOfUser(runningOptions.getQuotaComponents(), context, username)))
             .reduce(Task.Result.COMPLETED, Task::combine)
             .onErrorResume(UsersRepositoryException.class, e -> {
                 LOGGER.error("Error while accessing users from repository", e);
@@ -178,23 +190,32 @@ public class RecomputeCurrentQuotasService {
             });
     }
 
-    private Mono<Task.Result> recomputeUserCurrentQuotas(Context context, Username username) {
-        MailboxSession session = sessionProvider.createSystemSession(username);
-        QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
+    private Mono<Task.Result> recomputeQuotasOfUser(List<QuotaComponent> quotaComponents, Context context, Username username) {
+        if (quotaComponents.isEmpty()) {
+            return Flux.merge(recomputeSingleComponentCurrentQuotasServiceMap.values().stream()
+                    .map(recomputeSingleComponentCurrentQuotasService -> recomputeCurrentQuotas(recomputeSingleComponentCurrentQuotasService, context, username))
+                    .collect(Collectors.toUnmodifiableList()))
+                .reduce(Task.Result.COMPLETED, Task::combine);
+        } else {
+            return Flux.fromIterable(quotaComponents)
+                .flatMap(quotaComponent -> Optional.ofNullable(recomputeSingleComponentCurrentQuotasServiceMap.get(quotaComponent))
+                    .map(recomputeSingleComponentCurrentQuotasService -> recomputeCurrentQuotas(recomputeSingleComponentCurrentQuotasService, context, username))
+                    .orElse(Mono.just(Task.Result.PARTIAL)))
+                .reduce(Task.Result.COMPLETED, Task::combine);
+        }
+    }
 
-        return currentQuotaCalculator.recalculateCurrentQuotas(quotaRoot, session)
-            .map(recalculatedQuotas -> QuotaOperation.from(quotaRoot, recalculatedQuotas))
-            .flatMap(quotaOperation -> Mono.from(storeCurrentQuotaManager.setCurrentQuotas(quotaOperation)))
+    public Mono<Task.Result> recomputeCurrentQuotas(RecomputeSingleComponentCurrentQuotasService recomputeSingleComponentCurrentQuotasService, Context context, Username username) {
+        return recomputeSingleComponentCurrentQuotasService.recomputeCurrentQuotas(username)
             .then(Mono.just(Task.Result.COMPLETED))
             .doOnNext(any -> {
-                LOGGER.info("Current quotas recomputed for {}", quotaRoot);
-                context.incrementProcessed();
+                LOGGER.info("jmap current upload usage quota recomputed for {}", username);
+                context.getStatistic(recomputeSingleComponentCurrentQuotasService.getQuotaComponent()).incrementProcessed();
             })
             .onErrorResume(e -> {
-                LOGGER.error("Error while recomputing current quotas for {}", quotaRoot, e);
-                context.addToFailedMailboxes(quotaRoot);
+                LOGGER.error("Error while recomputing jmap current upload usage quota for {}", username, e);
+                context.getStatistic(recomputeSingleComponentCurrentQuotasService.getQuotaComponent()).addToFailedIdentifiers(username.asString());
                 return Mono.just(Task.Result.PARTIAL);
-            })
-            .doFinally(any -> mailboxManager.endProcessingRequest(session));
+            });
     }
 }

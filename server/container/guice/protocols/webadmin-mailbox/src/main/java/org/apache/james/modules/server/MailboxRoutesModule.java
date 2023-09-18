@@ -25,6 +25,8 @@ import static org.apache.james.webadmin.routes.MailboxesRoutes.ONE_MAIL_TASKS;
 import static org.apache.james.webadmin.routes.UserMailboxesRoutes.USER_MAILBOXES_OPERATIONS_INJECTION_KEY;
 import static org.apache.james.webadmin.routes.UserQuotaRoutes.USER_QUOTAS_OPERATIONS_INJECTION_KEY;
 
+import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeSingleComponentCurrentQuotasService;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.jackson.QuotaModule;
 import org.apache.james.webadmin.routes.DomainQuotaRoutes;
@@ -65,6 +67,10 @@ public class MailboxRoutesModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAILBOX_TASKS));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(ONE_MAIL_TASKS));
         Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(USER_QUOTAS_OPERATIONS_INJECTION_KEY));
+
+        Multibinder.newSetBinder(binder(), RecomputeSingleComponentCurrentQuotasService.class)
+            .addBinding()
+            .to(RecomputeMailboxCurrentQuotasService.class);
 
         userBoundTasks.addBinding().to(SubscribeAllRequestToTask.class);
         allMailboxesTasks.addBinding().to(CreateMissingParentsRequestToTask.class);

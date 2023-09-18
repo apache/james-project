@@ -20,10 +20,12 @@
 package org.apache.james.mailbox.quota.task;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxManager;
@@ -41,9 +43,12 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Running
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -52,6 +57,8 @@ public interface RecomputeCurrentQuotasServiceContract {
     String PASSWORD = "password";
     MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER_1, "mailbox");
     CurrentQuotas EXPECTED_QUOTAS = new CurrentQuotas(QuotaCountUsage.count(1L), QuotaSizeUsage.size(103L));
+
+    RecomputeSingleComponentCurrentQuotasService RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE = Mockito.mock(RecomputeSingleComponentCurrentQuotasService.class);
 
     UsersRepository usersRepository();
 
@@ -65,6 +72,12 @@ public interface RecomputeCurrentQuotasServiceContract {
 
     RecomputeCurrentQuotasService testee();
 
+    @BeforeEach
+    default void setup() {
+        when(RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE.getQuotaComponent()).thenReturn(QuotaComponent.JMAP_UPLOADS);
+        when(RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE.recomputeCurrentQuotas(Mockito.any())).thenReturn(Mono.empty());
+    }
+
     @Test
     default void recomputeCurrentQuotasShouldReturnCompleteWhenNoData() {
         assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
@@ -76,6 +89,25 @@ public interface RecomputeCurrentQuotasServiceContract {
         usersRepository().addUser(USER_1, PASSWORD);
 
         assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
+            .isEqualTo(Task.Result.COMPLETED);
+    }
+
+    @Test
+    default void recomputeCurrentQuotasShouldReturnPartialWhenRecomputeJMAPCurrentUploadUsageFail() throws Exception {
+        when(RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE.recomputeCurrentQuotas(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
+        usersRepository().addUser(USER_1, PASSWORD);
+
+        assertThat(testee().recomputeCurrentQuotas(new Context(), RunningOptions.DEFAULT).block())
+            .isEqualTo(Task.Result.PARTIAL);
+    }
+
+    @Test
+    default void recomputeCurrentQuotasShouldRunRecomputeMailboxUserCurrentQuotasOnly() throws Exception {
+        when(RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE.recomputeCurrentQuotas(Mockito.any())).thenReturn(Mono.error(new RuntimeException()));
+        usersRepository().addUser(USER_1, PASSWORD);
+
+        assertThat(testee().recomputeCurrentQuotas(new Context(),
+            RunningOptions.of(RunningOptions.DEFAULT_USERS_PER_SECOND, ImmutableList.of(QuotaComponent.MAILBOX))).block())
             .isEqualTo(Task.Result.COMPLETED);
     }
 
@@ -176,8 +208,9 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot())
-            .isEqualTo(new Context(1L, ImmutableList.of()).snapshot());
+        assertThat(context.snapshot().getResults())
+            .containsExactlyInAnyOrderElementsOf(new Context(ImmutableMap.of(QuotaComponent.MAILBOX, new Context.Statistic(1L, ImmutableList.of()),
+                QuotaComponent.JMAP_UPLOADS, new Context.Statistic(1L, ImmutableList.of()))).snapshot().getResults());
     }
 
     @Test
@@ -193,8 +226,9 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot())
-            .isEqualTo(new Context(1L, ImmutableList.of()).snapshot());
+        assertThat(context.snapshot().getResults())
+            .containsExactlyInAnyOrderElementsOf(new Context(ImmutableMap.of(QuotaComponent.MAILBOX, new Context.Statistic(1L, ImmutableList.of()),
+                QuotaComponent.JMAP_UPLOADS, new Context.Statistic(1L, ImmutableList.of()))).snapshot().getResults());
     }
 
     @Test
@@ -216,8 +250,9 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot())
-            .isEqualTo(new Context(2L, ImmutableList.of()).snapshot());
+        assertThat(context.snapshot().getResults())
+            .containsExactlyInAnyOrderElementsOf(new Context(ImmutableMap.of(QuotaComponent.MAILBOX, new Context.Statistic(2L, ImmutableList.of()),
+                QuotaComponent.JMAP_UPLOADS, new Context.Statistic(2L, ImmutableList.of()))).snapshot().getResults());
     }
 
     default void appendAMessageForUser(MessageManager messageManager, MailboxSession session) throws Exception {

@@ -17,54 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.core.quota;
+package org.apache.james.jmap.api.upload;
 
-import java.util.Objects;
+import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaComponent;
+import org.apache.james.mailbox.quota.task.RecomputeSingleComponentCurrentQuotasService;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
+import reactor.core.publisher.Mono;
 
-public class QuotaComponent {
+public class RecomputeJMAPUploadCurrentQuotasService implements RecomputeSingleComponentCurrentQuotasService {
 
-    public static final QuotaComponent MAILBOX = of("MAILBOX");
-    public static final QuotaComponent SIEVE = of("SIEVE");
-    public static final QuotaComponent JMAP_UPLOADS = of("JMAP_UPLOADS");
+    private final JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator;
 
-    public static QuotaComponent of(String value) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(value), "`value` is mandatory");
-        return new QuotaComponent(value);
-    }
-
-    private final String value;
-
-    private QuotaComponent(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
+    @Inject
+    public RecomputeJMAPUploadCurrentQuotasService(JMAPCurrentUploadUsageCalculator jmapCurrentUploadUsageCalculator) {
+        this.jmapCurrentUploadUsageCalculator = jmapCurrentUploadUsageCalculator;
     }
 
     @Override
-    public final int hashCode() {
-        return Objects.hash(value);
+    public QuotaComponent getQuotaComponent() {
+        return QuotaComponent.JMAP_UPLOADS;
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (o instanceof QuotaComponent) {
-            QuotaComponent other = (QuotaComponent) o;
-            return Objects.equals(value, other.value);
-        }
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("value", value)
-            .toString();
+    public Mono<Void> recomputeCurrentQuotas(Username username) {
+        return jmapCurrentUploadUsageCalculator.recomputeCurrentUploadUsage(username);
     }
 }
