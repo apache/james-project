@@ -169,4 +169,9 @@ public class CassandraSieveQuotaDAOV1 implements CassandraSieveQuotaDAO {
             deleteUserQuotaStatement.bind()
                 .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()));
     }
+
+    @Override
+    public Mono<Void> resetSpaceUsed(Username username, long spaceUsed) {
+        return spaceUsedBy(username).flatMap(currentSpace -> updateSpaceUsed(username, spaceUsed - currentSpace));
+    }
 }

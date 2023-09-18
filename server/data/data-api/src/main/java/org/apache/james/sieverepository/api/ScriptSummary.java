@@ -28,9 +28,12 @@ public class ScriptSummary {
     private final ScriptName name;
     private final boolean activeFile;
 
-    public ScriptSummary(ScriptName name, boolean activeFile) {
+    private final long size;
+
+    public ScriptSummary(ScriptName name, boolean activeFile, long size) {
         this.name = name;
         this.activeFile = activeFile;
+        this.size = size;
     }
 
     public ScriptName getName() {
@@ -41,20 +44,25 @@ public class ScriptSummary {
         return activeFile;
     }
 
+    public long getSize() {
+        return size;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ScriptSummary) {
             ScriptSummary that = (ScriptSummary) o;
 
             return Objects.equal(this.name, that.name)
-                && Objects.equal(this.activeFile, that.activeFile);
+                && Objects.equal(this.activeFile, that.activeFile)
+                && Objects.equal(this.size, that.size);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(name, activeFile);
+        return Objects.hashCode(name, activeFile, size);
     }
 
     @Override
@@ -62,6 +70,7 @@ public class ScriptSummary {
         return MoreObjects.toStringHelper(this)
             .add("name",  name)
             .add("activeFile", activeFile)
+            .add("size", size)
             .toString();
     }
 }

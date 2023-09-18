@@ -77,4 +77,9 @@ public class FakeSieveQuotaDAO implements CassandraSieveQuotaDAO {
     public Mono<Void> removeQuota(Username username) {
         return Mono.error(new NotImplementedException(MESSAGE));
     }
+
+    @Override
+    public Mono<Void> resetSpaceUsed(Username username, long spaceUsed) {
+        return Mono.error(new NotImplementedException(MESSAGE));
+    }
 }

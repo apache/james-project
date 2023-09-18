@@ -57,6 +57,9 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public class JPASieveRepository implements SieveRepository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JPASieveRepository.class);
@@ -118,6 +121,11 @@ public class JPASieveRepository implements SieveRepository {
         return findAllSieveScriptsForUser(username).stream()
                 .map(JPASieveScript::toSummary)
                 .collect(ImmutableList.toImmutableList());
+    }
+
+    @Override
+    public Flux<ScriptSummary> listScriptsReactive(Username username) {
+        return Mono.fromCallable(() -> listScripts(username)).flatMapMany(Flux::fromIterable);
     }
 
     private List<JPASieveScript> findAllSieveScriptsForUser(Username username) throws StorageException {
@@ -346,5 +354,10 @@ public class JPASieveRepository implements SieveRepository {
             Optional<JPASieveQuota> quotaForUser = findQuotaForUser(username, entityManager);
             quotaForUser.ifPresent(entityManager::remove);
         }), throwStorageExceptionConsumer("Unable to remove quota for user " + username));
+    }
+
+    @Override
+    public Mono<Void> resetSpaceUsedReactive(Username username, long spaceUsed) {
+        return Mono.error(new UnsupportedOperationException());
     }
 }

@@ -31,6 +31,9 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 
 /**
  * <code>SieveRepository</code>
@@ -50,6 +53,8 @@ public interface SieveRepository extends SieveQuotaRepository {
     
     List<ScriptSummary> listScripts(Username username) throws StorageException;
 
+    Flux<ScriptSummary> listScriptsReactive(Username username);
+
     ZonedDateTime getActivationDateForActiveScript(Username username) throws StorageException, ScriptNotFoundException;
 
     InputStream getActive(Username username) throws ScriptNotFoundException, StorageException;
@@ -61,5 +66,7 @@ public interface SieveRepository extends SieveQuotaRepository {
     void deleteScript(Username username, ScriptName name) throws ScriptNotFoundException, IsActiveException, StorageException;
     
     void renameScript(Username username, ScriptName oldName, ScriptName newName) throws ScriptNotFoundException, DuplicateException, StorageException;
+
+    Mono<Void> resetSpaceUsedReactive(Username username, long spaceUsed);
 
 }

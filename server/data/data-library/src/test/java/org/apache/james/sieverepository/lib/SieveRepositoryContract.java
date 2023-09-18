@@ -144,14 +144,14 @@ public interface SieveRepositoryContract {
     @Test
     default void putScriptShouldWork() throws Exception {
         sieveRepository().putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
-        assertThat(sieveRepository().listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, false));
+        assertThat(sieveRepository().listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, false, SCRIPT_CONTENT.length()));
     }
 
     @Test
     default void setActiveShouldWork() throws Exception {
         sieveRepository().putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository().setActive(USERNAME, SCRIPT_NAME);
-        assertThat(sieveRepository().listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, true));
+        assertThat(sieveRepository().listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, true, SCRIPT_CONTENT.length()));
     }
 
     @Test
@@ -159,7 +159,8 @@ public interface SieveRepositoryContract {
         sieveRepository().putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository().setActive(USERNAME, SCRIPT_NAME);
         sieveRepository().putScript(USERNAME, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
-        assertThat(sieveRepository().listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, true), new ScriptSummary(OTHER_SCRIPT_NAME, false));
+        assertThat(sieveRepository().listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, true, SCRIPT_CONTENT.length()),
+            new ScriptSummary(OTHER_SCRIPT_NAME, false, OTHER_SCRIPT_CONTENT.length()));
     }
 
     @Test

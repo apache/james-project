@@ -17,31 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.sieve.cassandra;
+package org.apache.james.sieverepository.api;
 
-import java.util.Optional;
+import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSizeLimit;
 
 import reactor.core.publisher.Mono;
 
-public interface CassandraSieveQuotaDAO {
-    Mono<Long> spaceUsedBy(Username username);
+public class SieveCurrentUploadUsageCalculator {
 
-    Mono<Void> updateSpaceUsed(Username username, long spaceUsed);
+    private final SieveRepository sieveRepository;
 
-    Mono<Optional<QuotaSizeLimit>> getQuota();
+    @Inject
+    public SieveCurrentUploadUsageCalculator(SieveRepository sieveRepository) {
+        this.sieveRepository = sieveRepository;
+    }
 
-    Mono<Void> setQuota(QuotaSizeLimit quota);
-
-    Mono<Void> removeQuota();
-
-    Mono<Optional<QuotaSizeLimit>> getQuota(Username username);
-
-    Mono<Void> setQuota(Username username, QuotaSizeLimit quota);
-
-    Mono<Void> removeQuota(Username username);
-
-    Mono<Void> resetSpaceUsed(Username username, long spaceUsed);
+    public Mono<Void> recomputeCurrentUploadUsage(Username username) {
+        return sieveRepository.listScriptsReactive(username)
+            .map(ScriptSummary::getSize)
+            .reduce(Long::sum)
+            .flatMap(sum -> sieveRepository.resetSpaceUsedReactive(username, sum));
+    }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.server;
 
+import org.apache.james.mailbox.quota.task.RecomputeSieveUploadCurrentQuotasService;
+import org.apache.james.mailbox.quota.task.RecomputeSingleComponentCurrentQuotasService;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.SieveQuotaRoutes;
 import org.apache.james.webadmin.routes.SieveScriptRoutes;
@@ -36,5 +38,9 @@ public class SieveRoutesModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), Routes.class)
             .addBinding()
             .to(SieveScriptRoutes.class);
+
+        Multibinder.newSetBinder(binder(), RecomputeSingleComponentCurrentQuotasService.class)
+            .addBinding()
+            .to(RecomputeSieveUploadCurrentQuotasService.class);
     }
 }

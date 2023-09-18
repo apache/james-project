@@ -17,31 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.sieve.cassandra;
+package org.apache.james.mailbox.quota.task;
 
-import java.util.Optional;
+import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaComponent;
+import org.apache.james.sieverepository.api.SieveCurrentUploadUsageCalculator;
 
 import reactor.core.publisher.Mono;
 
-public interface CassandraSieveQuotaDAO {
-    Mono<Long> spaceUsedBy(Username username);
+public class RecomputeSieveUploadCurrentQuotasService implements RecomputeSingleComponentCurrentQuotasService {
 
-    Mono<Void> updateSpaceUsed(Username username, long spaceUsed);
+    private final SieveCurrentUploadUsageCalculator sieveCurrentUploadUsageCalculator;
 
-    Mono<Optional<QuotaSizeLimit>> getQuota();
+    @Inject
+    public RecomputeSieveUploadCurrentQuotasService(SieveCurrentUploadUsageCalculator sieveCurrentUploadUsageCalculator) {
+        this.sieveCurrentUploadUsageCalculator = sieveCurrentUploadUsageCalculator;
+    }
 
-    Mono<Void> setQuota(QuotaSizeLimit quota);
+    @Override
+    public QuotaComponent getQuotaComponent() {
+        return QuotaComponent.SIEVE;
+    }
 
-    Mono<Void> removeQuota();
-
-    Mono<Optional<QuotaSizeLimit>> getQuota(Username username);
-
-    Mono<Void> setQuota(Username username, QuotaSizeLimit quota);
-
-    Mono<Void> removeQuota(Username username);
-
-    Mono<Void> resetSpaceUsed(Username username, long spaceUsed);
+    @Override
+    public Mono<Void> recomputeCurrentQuotas(Username username) {
+        return sieveCurrentUploadUsageCalculator.recomputeCurrentUploadUsage(username);
+    }
 }
