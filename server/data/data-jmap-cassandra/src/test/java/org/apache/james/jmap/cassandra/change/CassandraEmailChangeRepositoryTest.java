@@ -19,17 +19,25 @@
 
 package org.apache.james.jmap.cassandra.change;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Awaitility.await;
+
+import java.time.Duration;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.EmailChangeRepositoryContract;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraEmailChangeRepositoryTest implements EmailChangeRepositoryContract {
@@ -45,7 +53,8 @@ public class CassandraEmailChangeRepositoryTest implements EmailChangeRepository
 
     @BeforeEach
     public void setUp(CassandraCluster cassandra) {
-        emailChangeRepositoryDAO = new EmailChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        emailChangeRepositoryDAO = new EmailChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            CassandraChangesConfiguration.DEFAULT);
         emailChangeRepository = new CassandraEmailChangeRepository(emailChangeRepositoryDAO, DEFAULT_NUMBER_OF_CHANGES);
     }
 
@@ -62,5 +71,53 @@ public class CassandraEmailChangeRepositoryTest implements EmailChangeRepository
     @Override
     public MessageId generateNewMessageId() {
         return new CassandraMessageId.Factory().generate();
+    }
+
+    @Test
+    void emailChangeRecordsShouldBeDeletedAfterTTL(CassandraCluster cassandra) {
+        emailChangeRepositoryDAO = new EmailChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            new CassandraChangesConfiguration.Builder()
+                .emailChangeTtl(Duration.ofSeconds(1))
+                .build());
+
+        EmailChange emailChange = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(generateNewState())
+            .date(DATE)
+            .isShared(false)
+            .created(generateNewMessageId())
+            .build();
+
+        assertThatCode(() -> emailChangeRepositoryDAO.insert(emailChange).block())
+            .doesNotThrowAnyException();
+
+        await().atMost(Duration.ofSeconds(3))
+            .await()
+            .untilAsserted(() -> assertThat(emailChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
+                .isEmpty());
+    }
+
+    @Test
+    void emailChangeRecordsShouldNotBeDeletedWhenTtlIsZero(CassandraCluster cassandra) throws InterruptedException {
+        emailChangeRepositoryDAO = new EmailChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            new CassandraChangesConfiguration.Builder()
+                .emailChangeTtl(Duration.ofSeconds(0))
+                .build());
+
+        EmailChange emailChange = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(generateNewState())
+            .date(DATE)
+            .isShared(false)
+            .created(generateNewMessageId())
+            .build();
+
+        assertThatCode(() -> emailChangeRepositoryDAO.insert(emailChange).block())
+            .doesNotThrowAnyException();
+
+        Thread.sleep(200L);
+
+        assertThat(emailChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
+            .isNotEmpty();
     }
 }

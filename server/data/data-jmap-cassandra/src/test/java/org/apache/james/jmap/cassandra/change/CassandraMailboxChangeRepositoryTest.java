@@ -19,18 +19,28 @@
 
 package org.apache.james.jmap.cassandra.change;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.awaitility.Awaitility.await;
+
+import java.time.Duration;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.jmap.api.change.MailboxChange;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepositoryContract;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMailboxChangeRepositoryTest implements MailboxChangeRepositoryContract {
 
@@ -45,7 +55,8 @@ public class CassandraMailboxChangeRepositoryTest implements MailboxChangeReposi
 
     @BeforeEach
     public void setUp(CassandraCluster cassandra) {
-        mailboxChangeRepositoryDAO = new MailboxChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        mailboxChangeRepositoryDAO = new MailboxChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            CassandraChangesConfiguration.DEFAULT);
         mailboxChangeRepository = new CassandraMailboxChangeRepository(mailboxChangeRepositoryDAO, DEFAULT_NUMBER_OF_CHANGES);
     }
 
@@ -62,5 +73,53 @@ public class CassandraMailboxChangeRepositoryTest implements MailboxChangeReposi
     @Override
     public MailboxId generateNewMailboxId() {
         return CassandraId.timeBased();
+    }
+
+    @Test
+    void mailboxChangeRecordsShouldBeDeletedAfterTTL(CassandraCluster cassandra) {
+        mailboxChangeRepositoryDAO = new MailboxChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            new CassandraChangesConfiguration.Builder()
+            .mailboxChangeTtl(Duration.ofSeconds(1))
+            .build());
+
+        MailboxChange mailboxChange = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory().generate())
+            .date(DATE)
+            .isCountChange(false)
+            .created(ImmutableList.of(generateNewMailboxId()))
+            .build();
+
+        assertThatCode(() -> mailboxChangeRepositoryDAO.insert(mailboxChange).block())
+            .doesNotThrowAnyException();
+
+        await().atMost(Duration.ofSeconds(3))
+            .await()
+            .untilAsserted(() -> assertThat(mailboxChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
+                .isEmpty());
+    }
+
+    @Test
+    void mailboxChangeRecordsShouldNotBeDeletedWhenTtlIsZero(CassandraCluster cassandra) throws InterruptedException {
+        mailboxChangeRepositoryDAO = new MailboxChangeRepositoryDAO(cassandra.getConf(), cassandra.getTypesProvider(),
+            new CassandraChangesConfiguration.Builder()
+                .mailboxChangeTtl(Duration.ofSeconds(0))
+                .build());
+
+        MailboxChange mailboxChange = MailboxChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(stateFactory().generate())
+            .date(DATE)
+            .isCountChange(false)
+            .created(ImmutableList.of(generateNewMailboxId()))
+            .build();
+
+        assertThatCode(() -> mailboxChangeRepositoryDAO.insert(mailboxChange).block())
+            .doesNotThrowAnyException();
+
+        Thread.sleep(200L);
+
+        assertThat(mailboxChangeRepositoryDAO.getAllChanges(ACCOUNT_ID).collectList().block())
+            .isNotEmpty();
     }
 }

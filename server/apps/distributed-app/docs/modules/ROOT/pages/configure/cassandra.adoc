@@ -152,4 +152,10 @@ by turning it off. Reads performed as part of write transaction are also perform
 have access to the mailboxes they own. ACLs can represent a high volume of requests. If you do not propose mailbox sharing
 features to your users, you can consider disabling them in order to improve performance.
 
+| email.change.ttl
+| Optional. Duration, default to 60 days. Cassandra Time-to-live for Email change records. Setting time-to-live to zero means refusing to use time-to-live on email changes.
+
+| mailbox.change.ttl
+| Optional. Duration, default to 60 days. Cassandra Time-to-live for Mailbox change records. Setting time-to-live to zero means refusing to use time-to-live on mailbox changes.
+
 |===
