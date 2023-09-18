@@ -26,6 +26,7 @@ import javax.mail.Flags;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.Index;
 import javax.persistence.Table;
 
 import org.apache.commons.io.input.BoundedInputStream;
@@ -50,7 +51,13 @@ import org.apache.openjpa.persistence.Persistent;
  * TODO: Fix me!
  */
 @Entity(name = "MailboxMessage")
-@Table(name = "JAMES_MAIL")
+@Table(name = "JAMES_MAIL",
+        indexes = {
+                @Index(name = "MAIL_IS_SEEN_INDEX", columnList = "MAILBOX_ID, MAIL_IS_SEEN"),
+                @Index(name = "MAIL_IS_RECENT_INDEX", columnList = "MAILBOX_ID, MAIL_IS_RECENT"),
+                @Index(name = "MAIL_IS_DELETED_INDEX", columnList = "MAILBOX_ID, MAIL_IS_DELETED"),
+                @Index(name = "MAIL_MODSEQ_INDEX", columnList = "MAILBOX_ID, MAIL_MODSEQ")
+        })
 public class JPAStreamingMailboxMessage extends AbstractJPAMailboxMessage {
 
     @Persistent(optional = false, fetch = FetchType.LAZY)
