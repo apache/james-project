@@ -41,7 +41,11 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
 
     public SMTPSessionImpl(ProtocolTransport transport, SMTPConfiguration config) {
         super(transport, config);
-        relayingAllowed = config.isRelayingAllowed(getRemoteAddress().getAddress().getHostAddress());
+        relayingAllowed = Optional.ofNullable(getRemoteAddress())
+            .flatMap(addres -> Optional.ofNullable(addres.getAddress()))
+            .flatMap(address -> Optional.ofNullable(address.getHostAddress()))
+            .map(config::isRelayingAllowed)
+            .orElse(false);
     }
 
     @Override
