@@ -20,6 +20,7 @@
 package org.apache.james.jmap.event;
 
 import static javax.mail.Flags.Flag.DELETED;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -186,7 +187,8 @@ public class PopulateEmailQueryViewListenerTest {
             outboxId,
             ImmutableSortedMap.of(MessageUid.of(1), outdatedMessageMetaData),
             Event.EventId.random(),
-            !IS_DELIVERY);
+            !IS_DELIVERY,
+            !IS_APPENDED);
 
         Mono.from(queryViewListener.reactiveEvent(addedOutDatedEvent)).block();
 

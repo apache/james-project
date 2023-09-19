@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -162,7 +163,7 @@ class MailboxListenerTest {
     @Test
     void addedShouldBeNoopWhenEmpty() {
         Added added = new Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
-            Event.EventId.random(), !IS_DELIVERY);
+            Event.EventId.random(), !IS_DELIVERY, IS_APPENDED);
 
         assertThat(added.isNoop()).isTrue();
     }
@@ -170,7 +171,7 @@ class MailboxListenerTest {
     @Test
     void addedShouldNotBeNoopWhenNotEmpty() {
         Added added = new Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
-            Event.EventId.random(), !IS_DELIVERY);
+            Event.EventId.random(), !IS_DELIVERY, IS_APPENDED);
 
         assertThat(added.isNoop()).isFalse();
     }
