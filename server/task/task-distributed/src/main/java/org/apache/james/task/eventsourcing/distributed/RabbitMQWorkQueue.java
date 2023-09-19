@@ -129,8 +129,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
                 .durable(true)
                 .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(ALLOW_QUORUM)
                     .singleActiveConsumer()
-                    .build())
-                .arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER))
+                    .build()))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.BindOk> bindQueueToExchange = sender
             .bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME))
