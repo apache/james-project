@@ -87,6 +87,9 @@ public class ComputeMessageFastViewProjectionListener implements EventListener.R
     }
 
     private Mono<Void> handleAddedEvent(Added addedEvent, MailboxSession session) {
+        if (!addedEvent.isAppended()) {
+            return Mono.empty();
+        }
         return Flux.from(messageIdManager.getMessagesReactive(addedEvent.getMessageIds(), FetchGroup.FULL_CONTENT, session))
             .flatMap(Throwing.function(messageResult -> Mono.fromCallable(
                 () -> Pair.of(messageResult.getMessageId(),
