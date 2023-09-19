@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,7 +60,7 @@ class EventTest {
 
     @Test
     void getMessageIdsShouldReturnEmptyWhenAddedEmpty() {
-        Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48), ImmutableSortedMap.of(), Event.EventId.of(UUID_1), !IS_DELIVERY);
+        Added added = new Added(MailboxSession.SessionId.of(36), BOB, MailboxPath.inbox(BOB), TestId.of(48), ImmutableSortedMap.of(), Event.EventId.of(UUID_1), !IS_DELIVERY, IS_APPENDED);
 
         assertThat(added.getMessageIds()).isEmpty();
     }
@@ -77,7 +78,7 @@ class EventTest {
             ImmutableSortedMap.of(
                 uid1, metaData1,
                 uid2, metaData2),
-            Event.EventId.of(UUID_1), !IS_DELIVERY);
+            Event.EventId.of(UUID_1), !IS_DELIVERY, IS_APPENDED);
 
         assertThat(added.getMessageIds()).containsOnly(messageId1, messageId2);
     }
@@ -94,7 +95,7 @@ class EventTest {
             ImmutableSortedMap.of(
                 uid1, metaData1,
                 uid2, metaData2),
-            Event.EventId.of(UUID_1), !IS_DELIVERY);
+            Event.EventId.of(UUID_1), !IS_DELIVERY, IS_APPENDED);
 
         assertThat(added.getMessageIds()).containsExactly(messageId);
     }

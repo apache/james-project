@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.opensearch.events;
 
 import static org.apache.james.jmap.JMAPTestingConstants.BOB;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -338,7 +339,7 @@ class OpenSearchListeningMessageSearchIndexTest {
             outbox.getMailboxId(),
             ImmutableSortedMap.of(MESSAGE_UID_1, outdatedMessageMetaData),
             Event.EventId.random(),
-            !IS_DELIVERY);
+            !IS_DELIVERY, IS_APPENDED);
 
         Mono.from(testee.reactiveEvent(addedOutDatedEvent)).block();
 

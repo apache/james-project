@@ -20,6 +20,7 @@
 
 package org.apache.james.mailbox.store.search;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -1704,6 +1705,7 @@ public abstract class AbstractMessageSearchIndexTest {
                 .mailbox(quanMailbox)
                 .addMetaData(messageMetaData)
                 .isDelivery(!IS_DELIVERY)
+                .isAppended(IS_APPENDED)
                 .build(),
             new MailboxIdRegistrationKey(quanMailbox.getMailboxId())).block();
     }

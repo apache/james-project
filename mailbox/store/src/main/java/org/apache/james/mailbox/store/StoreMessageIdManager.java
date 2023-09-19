@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
@@ -487,6 +488,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                             .mailbox(mailbox)
                             .addMetaData(metadata)
                             .isDelivery(!IS_DELIVERY)
+                            .isAppended(!IS_APPENDED)
                             .build(),
                         new MailboxIdRegistrationKey(mailbox.getMailboxId())));
             }).sneakyThrow())

@@ -22,6 +22,7 @@ package org.apache.james.event.json;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.apache.james.mailbox.store.mail.model.MailboxMessage.EMPTY_SAVE_DATE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,10 +77,10 @@ class AddedSerializationTest {
     private static final SortedMap<MessageUid, MessageMetaData> ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID = ImmutableSortedMap.of(
         MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), Optional.of(Date.from(INSTANT)), MESSAGE_ID, ThreadId.fromBaseMessageId(TestMessageId.of(100))));
 
-    private static final Added DEFAULT_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED, EVENT_ID, !IS_DELIVERY);
-    private static final Added BACKWARD_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_ADDED, EVENT_ID, !IS_DELIVERY);
+    private static final Added DEFAULT_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED, EVENT_ID, !IS_DELIVERY, IS_APPENDED);
+    private static final Added BACKWARD_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_ADDED, EVENT_ID, !IS_DELIVERY, IS_APPENDED);
     private static final Added ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT = new Added(
-        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID, !IS_DELIVERY);
+        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID, !IS_DELIVERY, IS_APPENDED);
     private static final String DEFAULT_ADDED_EVENT_JSON = 
         "{" +
         "  \"Added\": {" +
@@ -106,6 +107,7 @@ class AddedSerializationTest {
         "    }," +
         "    \"sessionId\": 42," +
         "    \"isDelivery\": false," +
+        "    \"isAppended\": true," +
         "    \"user\": \"user\"" +
         "  }" +
         "}";
@@ -135,6 +137,7 @@ class AddedSerializationTest {
             "    }," +
             "    \"sessionId\": 42," +
             "    \"isDelivery\": false," +
+            "    \"isAppended\": true," +
             "    \"user\": \"user\"" +
             "  }" +
             "}";
@@ -193,7 +196,7 @@ class AddedSerializationTest {
     class WithEmptyAddedMap {
 
         private final Added emptyAddedEvent = new Added(SESSION_ID, USERNAME, MAILBOX_PATH,
-            MAILBOX_ID, ImmutableSortedMap.of(), EVENT_ID, !IS_DELIVERY);
+            MAILBOX_ID, ImmutableSortedMap.of(), EVENT_ID, !IS_DELIVERY, IS_APPENDED);
         private final String emptyAddedEventJson =
             "{" +
             "  \"Added\": {" +
@@ -207,6 +210,7 @@ class AddedSerializationTest {
             "    \"added\": {}," +
             "    \"sessionId\": 42," +
             "    \"isDelivery\": false," +
+            "    \"isAppended\": true," +
             "    \"user\": \"user\"" +
             "  }" +
             "}";

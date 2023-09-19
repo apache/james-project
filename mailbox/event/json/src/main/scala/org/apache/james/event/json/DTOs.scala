@@ -104,6 +104,8 @@ object DTOs {
 
   case class IsDelivery(value: Boolean) extends AnyVal
 
+  case class IsAppended(value: Boolean) extends AnyVal
+
   object SystemFlag extends Enumeration {
     type SystemFlag = Value
     val Answered, Deleted, Draft, Flagged, Recent, Seen = Value

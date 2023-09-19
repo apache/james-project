@@ -527,15 +527,18 @@ public interface MailboxEvents {
      */
     class Added extends MetaDataHoldingEvent {
         public static boolean IS_DELIVERY = true;
+        public static boolean IS_APPENDED = true;
 
         private final Map<MessageUid, MessageMetaData> added;
         private final boolean isDelivery;
+        private final boolean isAppended;
 
         public Added(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId,
-                     SortedMap<MessageUid, MessageMetaData> uids, EventId eventId, boolean isDelivery) {
+                     SortedMap<MessageUid, MessageMetaData> uids, EventId eventId, boolean isDelivery, boolean isAppended) {
             super(sessionId, username, path, mailboxId, eventId);
             this.added = ImmutableMap.copyOf(uids);
             this.isDelivery = isDelivery;
+            this.isAppended = isAppended;
         }
 
         /**
@@ -560,6 +563,10 @@ public interface MailboxEvents {
             return isDelivery;
         }
 
+        public boolean isAppended() {
+            return isAppended;
+        }
+
         @Override
         public boolean isNoop() {
             return added.isEmpty();
@@ -576,6 +583,7 @@ public interface MailboxEvents {
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.added, that.added)
+                    && Objects.equals(this.isAppended, that.isAppended)
                     && Objects.equals(this.isDelivery, that.isDelivery);
             }
             return false;
@@ -583,7 +591,7 @@ public interface MailboxEvents {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, username, path, mailboxId, added, isDelivery);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, added, isDelivery, isAppended);
         }
     }
 

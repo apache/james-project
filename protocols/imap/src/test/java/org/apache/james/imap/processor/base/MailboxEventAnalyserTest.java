@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor.base;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -134,6 +135,7 @@ class MailboxEventAnalyserTest {
         .mailbox(DEFAULT_MAILBOX)
         .addMetaData(new MessageMetaData(MessageUid.of(11), ModSeq.first(), new Flags(), 45, new Date(), Optional.empty(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())))
         .isDelivery(!IS_DELIVERY)
+        .isAppended(!IS_APPENDED)
         .build();
 
     private SelectedMailboxImpl testee;

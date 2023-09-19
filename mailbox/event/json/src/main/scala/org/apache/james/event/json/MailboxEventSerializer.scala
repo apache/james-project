@@ -31,7 +31,8 @@ import org.apache.james.event.json.DTOs._
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{EventSerializer, Event => JavaEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
-import org.apache.james.mailbox.events.MailboxEvents.{MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED
+import org.apache.james.mailbox.events.MailboxEvents.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, MailboxSubscribedEvent => JavaMailboxSubscribedEvent, MailboxUnsubscribedEvent => JavaMailboxUnsubscribedEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.events.{MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, ThreadId, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
@@ -69,7 +70,7 @@ private object DTO {
   }
 
   case class Added(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
-                   added: Map[MessageUid, DTOs.MessageMetaData], isDelivery: Option[IsDelivery]) extends Event {
+                   added: Map[MessageUid, DTOs.MessageMetaData], isDelivery: Option[IsDelivery], isAppended: Option[IsAppended]) extends Event {
     override def toJava: JavaEvent = new JavaAdded(
       sessionId,
       user,
@@ -77,9 +78,12 @@ private object DTO {
       mailboxId,
       new JavaTreeMap[MessageUid, JavaMessageMetaData](added.view.mapValues(_.toJava).toMap.asJava),
       eventId,
-      fallbackIsDelivery())
+      fallbackIsDelivery(),
+      fallbackIsAppended())
 
     def fallbackIsDelivery(): Boolean = isDelivery.exists(_.value)
+
+    def fallbackIsAppended(): Boolean = isAppended.map(_.value).getOrElse(IS_APPENDED)
   }
 
   case class Expunged(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
@@ -176,7 +180,8 @@ private object ScalaConverter {
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
     added = event.getAdded.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap,
-    isDelivery = Option(IsDelivery(event.isDelivery)))
+    isDelivery = Option(IsDelivery(event.isDelivery)),
+    isAppended = Option(IsAppended(event.isAppended)))
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
     eventId = event.getEventId,
@@ -255,6 +260,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val modSeqWrites: Writes[ModSeq] = value => JsNumber(value.asLong())
   implicit val userFlagWrites: Writes[UserFlag] = value => JsString(value.value)
   implicit val isDeliveryWrites: Writes[IsDelivery] = value => JsBoolean(value.value)
+  implicit val isAppendedWrites: Writes[IsAppended] = value => JsBoolean(value.value)
   implicit val flagWrites: Writes[Flags] = Json.writes[Flags]
   implicit val eventIdWrites: Writes[EventId] = value => JsString(value.getId.toString)
 
@@ -335,6 +341,10 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val eventIdReads: Reads[EventId] = {
     case JsString(x) => JsSuccess(EventId.of(x))
+    case _ => JsError()
+  }
+  implicit val isAppendedReads: Reads[IsAppended] = {
+    case JsBoolean(x) => JsSuccess(IsAppended(x))
     case _ => JsError()
   }
 

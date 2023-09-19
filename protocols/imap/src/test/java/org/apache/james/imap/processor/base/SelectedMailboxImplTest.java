@@ -23,6 +23,7 @@ import static javax.mail.Flags.Flag.ANSWERED;
 import static javax.mail.Flags.Flag.FLAGGED;
 import static javax.mail.Flags.Flag.RECENT;
 import static javax.mail.Flags.Flag.SEEN;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
 import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -225,6 +226,7 @@ class SelectedMailboxImplTest {
             .mailbox(mailbox)
             .addMetaData(new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), Optional.empty(), new DefaultMessageId(), ThreadId.fromBaseMessageId(new DefaultMessageId())))
             .isDelivery(!IS_DELIVERY)
+            .isAppended(!IS_APPENDED)
             .build();
     }
 
