@@ -30,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.james.backends.rabbitmq.Constants;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.server.task.json.JsonTaskSerializer;
