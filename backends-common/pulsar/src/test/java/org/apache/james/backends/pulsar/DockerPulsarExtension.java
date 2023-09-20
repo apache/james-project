@@ -20,35 +20,29 @@
 package org.apache.james.backends.pulsar;
 
 import java.util.HashSet;
-import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.james.GuiceModuleTestExtension;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminException;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.common.policies.data.TenantInfo;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PulsarContainer;
 import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.utility.DockerImageName;
 
-public class DockerPulsarExtension implements
-        AfterAllCallback,
-        BeforeAllCallback,
-        BeforeEachCallback,
-        ParameterResolver {
+import com.google.inject.Module;
+
+public class DockerPulsarExtension implements GuiceModuleTestExtension {
     private static final Logger logger = LoggerFactory.getLogger(DockerPulsarExtension.class);
     private static PulsarContainer container;
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("apachepulsar/pulsar");
@@ -61,9 +55,20 @@ public class DockerPulsarExtension implements
     private PulsarAdmin adminClient;
     private DockerPulsar dockerPulsar;
 
+    @Inject
     public DockerPulsarExtension() {
         container = new PulsarContainer(DEFAULT_IMAGE_NAME.withTag("2.10.1"))
                 .withLogConsumer(DockerPulsarExtension::displayDockerLog);
+    }
+
+    @Override
+    public Module getModule() {
+        return new TestPulsarModule(dockerPulsar);
+    }
+
+    @Override
+    public Optional<Class<?>> supportedParameterClass() {
+        return GuiceModuleTestExtension.super.supportedParameterClass();
     }
 
     PulsarConfiguration pulsarConfiguration() {

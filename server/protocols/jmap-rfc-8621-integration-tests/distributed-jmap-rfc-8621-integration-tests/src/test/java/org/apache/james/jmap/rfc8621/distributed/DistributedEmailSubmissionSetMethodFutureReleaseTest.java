@@ -27,6 +27,7 @@ import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
+import org.apache.james.MailQueueChoice;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.jmap.rfc8621.contract.EmailSubmissionSetMethodFutureReleaseContract;
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
@@ -58,6 +59,7 @@ public class DistributedEmailSubmissionSetMethodFutureReleaseTest implements Ema
                 .deduplication()
                 .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
+            .mailQueueChoice(MailQueueChoice.RABBITMQ)
             .build())
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())

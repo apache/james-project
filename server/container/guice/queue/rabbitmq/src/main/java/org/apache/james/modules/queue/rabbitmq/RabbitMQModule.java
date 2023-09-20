@@ -33,13 +33,6 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
-import org.apache.james.queue.rabbitmq.RabbitMQMailQueueDeadLetterQueueHealthCheck;
-import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
-import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -68,34 +61,8 @@ public class RabbitMQModule extends AbstractModule {
 
         Multibinder<HealthCheck> healthCheckMultiBinder = Multibinder.newSetBinder(binder(), HealthCheck.class);
         healthCheckMultiBinder.addBinding().to(RabbitMQHealthCheck.class);
-        healthCheckMultiBinder.addBinding().to(RabbitMQMailQueueDeadLetterQueueHealthCheck.class);
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
-        reconnectionHandlerMultibinder.addBinding().to(SpoolerReconnectionHandler.class);
-    }
-
-    @Provides
-    @Singleton
-    public MailQueueFactory<RabbitMQMailQueue> provideRabbitMQMailQueueFactoryProxy(RabbitMQMailQueueFactory queueFactory) {
-        return queueFactory;
-    }
-
-    @Provides
-    @Singleton
-    public MailQueueFactory<? extends ManageableMailQueue> provideRabbitMQManageableMailQueueFactory(MailQueueFactory<RabbitMQMailQueue> queueFactory) {
-        return queueFactory;
-    }
-
-    @Provides
-    @Singleton
-    public MailQueueFactory<?> provideRabbitMQMailQueueFactory(MailQueueFactory<RabbitMQMailQueue> queueFactory) {
-        return queueFactory;
-    }
-
-    @Provides
-    @Singleton
-    public MailQueueFactory<? extends MailQueue> provideMailQueueFactoryGenerics(MailQueueFactory<RabbitMQMailQueue> queueFactory) {
-        return queueFactory;
     }
 
     @ProvidesIntoSet
@@ -121,12 +88,6 @@ public class RabbitMQModule extends AbstractModule {
     @Singleton
     private RabbitMQConfiguration getMailQueueConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) org.apache.commons.configuration2.Configuration configuration) {
         return RabbitMQConfiguration.from(configuration);
-    }
-
-    @Provides
-    @Singleton
-    private RabbitMQMailQueueConfiguration getMailQueueSizeConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) org.apache.commons.configuration2.Configuration configuration) {
-        return RabbitMQMailQueueConfiguration.from(configuration);
     }
 
     @Provides

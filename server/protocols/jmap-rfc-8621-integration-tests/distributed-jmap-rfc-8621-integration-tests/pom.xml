@@ -45,6 +45,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-backends-pulsar</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-rabbitmq</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -114,6 +120,11 @@
             <artifactId>jmap-rfc-8621-integration-tests-common</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>pulsar</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -147,7 +158,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
-                                <excludedGroups />
+                                <excludedGroups/>
                                 <groups>unstable</groups>
                             </configuration>
                         </plugin>

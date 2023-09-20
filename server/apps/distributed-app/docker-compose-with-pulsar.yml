@@ -1,0 +1,96 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      opensearch:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      s3:
+        condition: service_started
+      pulsar:
+        condition: service_started
+    image: apache/james:distributed-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    networks:
+      - james
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+    volumes:
+      - ./sample-configuration/pulsar.properties:/root/conf/pulsar.properties
+      - ./sample-configuration/queue-pulsar.properties:/root/conf/queue.properties
+
+  opensearch:
+    image: opensearchproject/opensearch:2.1.0
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    networks:
+      james:
+        aliases:
+          - elasticsearch
+
+  cassandra:
+    container_name: cassandra
+    image: cassandra:4.1.3
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: [ "CMD", "cqlsh", "-e", "describe keyspaces" ]
+      interval: 3s
+      timeout: 20s
+      retries: 5
+    environment:
+      - JVM_OPTS=-Dcassandra.skip_wait_for_gossip_to_settle=0 -Dcassandra.initial_token=1
+    networks:
+      - james
+
+  rabbitmq:
+    image: rabbitmq:3.12.1-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - james
+
+  s3:
+    image: registry.scality.com/cloudserver/cloudserver:8.7.25
+    container_name: s3.docker.test
+    environment:
+      - SCALITY_ACCESS_KEY_ID=accessKey1
+      - SCALITY_SECRET_ACCESS_KEY=secretKey1
+      - S3BACKEND=mem
+      - LOG_LEVEL=trace
+      - REMOTE_MANAGEMENT_DISABLE=1
+    networks:
+      - james
+
+  pulsar:
+    image: apachepulsar/pulsar:2.10.1
+    container_name: pulsar
+    command: >
+      bin/pulsar standalone
+    ports:
+      - "8080:8080"
+      - "6650:6650"
+    networks:
+      - james
+networks:
+  james:

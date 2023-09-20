@@ -65,6 +65,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-backends-pulsar</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-rabbitmq</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -153,6 +159,10 @@
             <artifactId>james-server-guice-common</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-common</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -285,6 +295,13 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>scaling-pulsar-smtp</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
         </dependency>
@@ -311,6 +328,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.james</groupId>
+            <artifactId>queue-pulsar-guice</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <scope>test</scope>
@@ -322,6 +343,11 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>pulsar</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -390,14 +416,22 @@
                     <container>
                         <mainClass>org.apache.james.CassandraRabbitMQJamesServerMain</mainClass>
                         <ports>
-                            <port>80</port> <!-- JMAP -->
-                            <port>143</port> <!-- IMAP -->
-                            <port>993</port> <!-- IMAPS -->
-                            <port>25</port> <!-- SMTP -->
-                            <port>465</port> <!-- SMTP + STARTTLS -->
-                            <port>587</port> <!-- SMTPS -->
-                            <port>4000</port> <!-- GLOWROOT, if activated -->
-                            <port>8000</port> <!-- WEBADMIN -->
+                            <port>80</port>
+                            <!-- JMAP -->
+                            <port>143</port>
+                            <!-- IMAP -->
+                            <port>993</port>
+                            <!-- IMAPS -->
+                            <port>25</port>
+                            <!-- SMTP -->
+                            <port>465</port>
+                            <!-- SMTP + STARTTLS -->
+                            <port>587</port>
+                            <!-- SMTPS -->
+                            <port>4000</port>
+                            <!-- GLOWROOT, if activated -->
+                            <port>8000</port>
+                            <!-- WEBADMIN -->
                         </ports>
                         <appRoot>/root</appRoot>
                         <jvmFlags>
@@ -442,7 +476,8 @@
                         <permissions>
                             <permission>
                                 <file>/usr/bin/james-cli</file>
-                                <mode>755</mode> <!-- Read/write/execute for owner, read/execute for group/other -->
+                                <mode>755</mode>
+                                <!-- Read/write/execute for owner, read/execute for group/other -->
                             </permission>
                         </permissions>
                     </extraDirectories>

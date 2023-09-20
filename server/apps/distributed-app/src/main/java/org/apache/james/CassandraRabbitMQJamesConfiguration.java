@@ -47,6 +47,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
         private Optional<MailQueueViewChoice> mailQueueViewChoice;
+        private Optional<MailQueueChoice> mailQueueChoice;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<VaultConfiguration> vaultConfiguration;
         private Optional<Boolean> jmapEnabled;
@@ -59,6 +60,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             blobStoreConfiguration = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
             mailQueueViewChoice = Optional.empty();
+            mailQueueChoice = Optional.empty();
             vaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
             quotaCompatibilityMode = Optional.empty();
@@ -112,6 +114,11 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder mailQueueChoice(MailQueueChoice mailQueueChoice) {
+            this.mailQueueChoice = Optional.of(mailQueueChoice);
+            return this;
+        }
+
         public Builder vaultConfiguration(VaultConfiguration vaultConfiguration) {
             this.vaultConfiguration = Optional.of(vaultConfiguration);
             return this;
@@ -150,6 +157,9 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             MailQueueViewChoice mailQueueViewChoice = this.mailQueueViewChoice.orElseGet(Throwing.supplier(
                 () -> MailQueueViewChoice.parse(propertiesProvider)));
 
+            MailQueueChoice mailQueueChoice = this.mailQueueChoice.orElseGet(Throwing.supplier(
+                () -> MailQueueChoice.parse(propertiesProvider)));
+
             VaultConfiguration vaultConfiguration = this.vaultConfiguration.orElseGet(() -> {
                 try {
                     return VaultConfiguration.from(configurationProvider.getConfiguration("deletedMessageVault"));
@@ -182,6 +192,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 blobStoreConfiguration,
                 searchConfiguration,
                 usersRepositoryChoice,
+                mailQueueChoice,
                 mailQueueViewChoice, vaultConfiguration,
                 jmapEnabled,
                 quotaCompatibilityMode);
@@ -197,6 +208,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     private final BlobStoreConfiguration blobStoreConfiguration;
     private final SearchConfiguration searchConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
+    private final MailQueueChoice mailQueueChoice;
     private final MailQueueViewChoice mailQueueViewChoice;
     private final VaultConfiguration vaultConfiguration;
     private final boolean jmapEnabled;
@@ -204,7 +216,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
 
     public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
                                                BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration,
-                                               UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
+                                               UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueChoice mailQueueChoice,
                                                MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration,
                                                boolean jmapEnabled, boolean quotaCompatibilityMode) {
         this.configurationPath = configurationPath;
@@ -212,6 +224,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         this.blobStoreConfiguration = blobStoreConfiguration;
         this.searchConfiguration = searchConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
+        this.mailQueueChoice = mailQueueChoice;
         this.mailQueueViewChoice = mailQueueViewChoice;
         this.vaultConfiguration = vaultConfiguration;
         this.jmapEnabled = jmapEnabled;
@@ -220,6 +233,10 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
 
     public MailQueueViewChoice getMailQueueViewChoice() {
         return mailQueueViewChoice;
+    }
+
+    public MailQueueChoice getMailQueueChoice() {
+        return mailQueueChoice;
     }
 
     @Override

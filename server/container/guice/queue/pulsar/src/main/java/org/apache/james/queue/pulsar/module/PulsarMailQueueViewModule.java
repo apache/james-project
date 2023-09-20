@@ -17,46 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.queue.pulsar.module;
 
-import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
-import org.apache.james.backends.pulsar.DockerPulsarExtension;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.backends.pulsar.PulsarConfiguration;
-import org.apache.pulsar.client.admin.PulsarAdminException;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.junit.jupiter.api.extension.ExtensionContext;
 
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 
-public class PulsarExtension implements GuiceModuleTestExtension {
+public class PulsarMailQueueViewModule extends AbstractModule {
+    static final String PULSAR_CONFIGURATION_NAME = "pulsar";
 
-    private final DockerPulsarExtension pulsar;
-
-    @Inject
-    public PulsarExtension() {
-        this.pulsar = new DockerPulsarExtension();
-    }
-
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) throws PulsarClientException, PulsarAdminException {
-        pulsar.beforeAll(extensionContext);
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
-        pulsar.afterAll(extensionContext);
-    }
-
-    @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        pulsar.beforeEach(extensionContext);
-    }
-
-    @Override
-    public Module getModule() {
-            return Modules.combine(binder -> binder.bind(PulsarConfiguration.class)
-                            .toInstance(pulsar.getConfiguration()));
+    @Provides
+    @Singleton
+    private PulsarConfiguration pulsarConfiguration(@Named(PULSAR_CONFIGURATION_NAME) Configuration configuration) {
+        return PulsarConfiguration.from(configuration);
     }
 }

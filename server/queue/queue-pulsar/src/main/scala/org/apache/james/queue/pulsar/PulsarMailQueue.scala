@@ -19,6 +19,10 @@
 
 package org.apache.james.queue.pulsar
 
+import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
+import java.util.concurrent.TimeUnit
+import java.util.{Date, UUID}
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source, SourceQueueWithComplete, StreamConverters}
 import akka.stream.{Attributes, OverflowStrategy}
@@ -27,6 +31,8 @@ import akka.{Done, NotUsed}
 import com.sksamuel.pulsar4s._
 import com.sksamuel.pulsar4s.akka.streams
 import com.sksamuel.pulsar4s.akka.streams.{CommittableMessage, Control}
+import javax.mail.MessagingException
+import javax.mail.internet.MimeMessage
 import org.apache.james.backends.pulsar.{PulsarClients, PulsarReader}
 import org.apache.james.blob.api.{BlobId, ObjectNotFoundException, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
@@ -44,11 +50,6 @@ import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory
 import play.api.libs.json._
 
-import java.time.{Instant, ZonedDateTime, Duration => JavaDuration}
-import java.util.concurrent.TimeUnit
-import java.util.{Date, UUID}
-import javax.mail.MessagingException
-import javax.mail.internet.MimeMessage
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
@@ -99,7 +100,6 @@ class PulsarMailQueue(
   type MessageAsJson = String
 
   private val logger = LoggerFactory.getLogger(this.getClass)
-
   private val awaitTimeout = 10.seconds
 
   gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + config.name, () => getSize)
