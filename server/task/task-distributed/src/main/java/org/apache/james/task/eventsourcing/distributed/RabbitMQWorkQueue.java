@@ -32,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.james.backends.rabbitmq.Constants;
 import org.apache.james.backends.rabbitmq.QueueArguments;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
@@ -130,8 +129,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
                 .durable(true)
                 .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(ALLOW_QUORUM)
                     .singleActiveConsumer()
-                    .build())
-                .arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER))
+                    .build()))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.BindOk> bindQueueToExchange = sender
             .bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME))
