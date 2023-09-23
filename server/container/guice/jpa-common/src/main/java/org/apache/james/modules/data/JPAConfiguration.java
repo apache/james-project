@@ -60,6 +60,20 @@ public class JPAConfiguration {
     static {
     }
 
+    public JPAConfiguration() {
+        this.driverName = "";
+        this.driverURL = "";
+        this.credential = Optional.empty();
+        this.testOnBorrow = Optional.empty();
+        this.multithreaded = Optional.empty();
+        this.validationQueryTimeoutSec = Optional.empty();
+        this.validationQuery = Optional.empty();
+        this.maxConnections = Optional.empty();
+        this.customDatasourceProperties = Map.of();
+        this.customOpenjpaProperties = Map.of();
+        this.attachmentStorage = Optional.empty();
+    }
+
     public static class Credential {
         private static final Logger LOGGER = LoggerFactory.getLogger(Credential.class);
         static final Optional<Credential> NO_CREDENTIAL = Optional.empty();
