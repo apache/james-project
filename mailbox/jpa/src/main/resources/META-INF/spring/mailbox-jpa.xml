@@ -57,6 +57,7 @@
         <constructor-arg index="0" ref="entityManagerFactory"/>
         <constructor-arg index="1" ref="jpa-uidProvider"/>
         <constructor-arg index="2" ref="jpa-modSeqProvider"/>
+        <constructor-arg index="3" ref="jpa-configuration"/>
     </bean>
     <bean id="jpa-uidProvider" class="org.apache.james.mailbox.jpa.mail.JPAUidProvider">
         <constructor-arg index="0" ref="entityManagerFactory"/>
@@ -104,4 +105,5 @@
     <bean id="jpaCurrentQuotaManager" class="org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager">
         <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
+    <bean id="jpa-configuration" class="org.apache.james.modules.data.JPAConfiguration"/>
 </beans>
