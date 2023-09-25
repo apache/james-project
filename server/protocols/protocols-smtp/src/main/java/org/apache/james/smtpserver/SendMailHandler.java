@@ -28,6 +28,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -36,12 +37,14 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.smtpserver.futurerelease.FutureReleaseParameters;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Queue the message
@@ -89,6 +92,18 @@ public class SendMailHandler implements JamesMessageHook {
                         session.getRemoteAddress().getAddress(),
                         mail.getRecipients(),
                         holdFor.value());
+
+                    AuditTrail.entry()
+                        .username(session.getUsername().asString())
+                        .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+                        .protocol("SMTP")
+                        .action("SPOOL")
+                        .parameters(ImmutableMap.of("mailId", mail.getName(),
+                            "mimeMessageId", mail.getMessage().getMessageID(),
+                            "sender", mail.getMaybeSender().asString(),
+                            "recipients", StringUtils.join(mail.getRecipients()),
+                            "holdFor", holdFor.value().toString()))
+                        .log("SMTP mail spooled.");
                 }),
                 Throwing.runnable(() -> {
                     queue.enQueue(mail);
@@ -97,6 +112,17 @@ public class SendMailHandler implements JamesMessageHook {
                         mail.getMaybeSender().asString(),
                         session.getRemoteAddress().getAddress(),
                         mail.getRecipients());
+
+                    AuditTrail.entry()
+                        .username(session.getUsername().asString())
+                        .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+                        .protocol("SMTP")
+                        .action("SPOOL")
+                        .parameters(ImmutableMap.of("mailId", mail.getName(),
+                            "mimeMessageId", mail.getMessage().getMessageID(),
+                            "sender", mail.getMaybeSender().asString(),
+                            "recipients", StringUtils.join(mail.getRecipients())))
+                        .log("SMTP mail spooled.");
                 }));
         } catch (Exception me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
