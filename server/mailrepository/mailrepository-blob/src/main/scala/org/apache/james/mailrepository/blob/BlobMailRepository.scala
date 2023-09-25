@@ -23,28 +23,26 @@ import java.util
 import java.util.Date
 import java.util.stream.Stream
 
+import com.google.common.collect.ImmutableMap
 import javax.mail.MessagingException
 import javax.mail.internet.MimeMessage
-
-import scala.jdk.CollectionConverters.IterableHasAsJava
-
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED
 import org.apache.james.blob.api.Store.Impl
 import org.apache.james.blob.api.{BlobId, BlobPartsId, BlobStore, BlobStoreDAO, BlobType, BucketName, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId
-import org.apache.james.mailrepository.api.{MailKey, MailRepository}
-import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail, PerRecipientHeaders}
-
-import com.google.common.collect.ImmutableMap
-
-import play.api.libs.json.{Format, Json}
-import reactor.core.publisher.{Flux, Mono}
-import scala.jdk.StreamConverters._
-
 import org.apache.james.core.{MailAddress, MaybeSender}
+import org.apache.james.mailrepository.api.{MailKey, MailRepository}
 import org.apache.james.server.blob.deduplication.BlobStoreFactory
 import org.apache.james.server.core.MailImpl
+import org.apache.james.util.AuditTrail
+import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail, PerRecipientHeaders}
+import play.api.libs.json.{Format, Json}
+import reactor.core.publisher.{Flux, Mono}
+
+import scala.jdk.CollectionConverters.IterableHasAsJava
+import scala.jdk.StreamConverters._
 
 
 private[blob] object serializers {
@@ -147,6 +145,15 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
 
   @throws[MessagingException]
   override def store(mc: Mail): MailKey = {
+    AuditTrail.entry
+      .protocol("mailrepository")
+      .action("store")
+      .parameters(ImmutableMap.of("mailId", mc.getName,
+        "mimeMessageId", mc.getMessage.getMessageID,
+        "sender", mc.getMaybeSender.asString,
+        "recipients", StringUtils.join(mc.getRecipients)))
+      .log("BlobMailRepository is storing mail.")
+
     mimeMessageStore.save(mc.getMessage)
       .flatMap(mimePartsId => mailMetadataStore.save((mc, mimePartsId)))
       .map(mailPartsId => mailPartsId.toMailKey)

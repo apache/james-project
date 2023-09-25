@@ -44,6 +44,7 @@ import javax.persistence.NoResultException;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.MailAddress;
@@ -55,6 +56,7 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.jpa.model.JPAMail;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageWrapper;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -134,6 +136,15 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
 
     @Override
     public MailKey store(Mail mail) throws MessagingException {
+        AuditTrail.entry()
+            .protocol("mailrepository")
+            .action("store")
+            .parameters(ImmutableMap.of("mailId", mail.getName(),
+                "mimeMessageId", mail.getMessage().getMessageID(),
+                "sender", mail.getMaybeSender().asString(),
+                "recipients", StringUtils.join(mail.getRecipients())))
+            .log("JPAMailRepository is storing mail.");
+
         MailKey key = MailKey.forMail(mail);
         EntityManager entityManager = entityManager();
         try {

@@ -38,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.Initializable;
@@ -46,11 +47,13 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MimeMessageWrapper;
+import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 
 /**
@@ -171,6 +174,15 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public MailKey store(Mail mc) throws MessagingException {
+        AuditTrail.entry()
+            .protocol("mailrepository")
+            .action("store")
+            .parameters(ImmutableMap.of("mailId", mc.getName(),
+                "mimeMessageId", mc.getMessage().getMessageID(),
+                "sender", mc.getMaybeSender().asString(),
+                "recipients", StringUtils.join(mc.getRecipients())))
+            .log("FileMailRepository is storing mail.");
+
         boolean wasLocked = true;
         MailKey key = MailKey.forMail(mc);
         try {
