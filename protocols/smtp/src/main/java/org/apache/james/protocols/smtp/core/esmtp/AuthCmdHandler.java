@@ -51,6 +51,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
+import org.apache.james.util.AuditTrail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -387,6 +388,14 @@ public class AuthCmdHandler
                     } else if (SMTPRetCode.AUTH_OK.equals(res.getRetCode())) {
                         // TODO: Make this string a more useful debug message
                         AUTHENTICATION_DEDICATED_LOGGER.debug("AUTH method {} succeeded", authType);
+
+                        AuditTrail.entry()
+                            .username(username.asString())
+                            .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+                            .protocol("SMTP")
+                            .action("AUTH")
+                            .parameters(ImmutableMap.of("authType", authType))
+                            .log("SMTP Authentication succeeded.");
                     }
                     return res;
                 }
