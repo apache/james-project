@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -44,6 +45,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MemoizedSupplier;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.DsnParameters.RecipientDsnParameters;
@@ -175,10 +177,22 @@ public class RecipientRewriteTableProcessor {
     }
 
     public void processMail(Mail mail) throws MessagingException {
+        Collection<MailAddress> recipientsBeforeRecipientsRewrite = ImmutableList.copyOf(mail.getRecipients());
         List<Decision> decisions = executeRrtFor(mail);
 
         applyDecisionsOnMailRecipients(mail, decisions);
         applyDecisionOnDSNParameters(mail, decisions);
+        Collection<MailAddress> recipientsAfterRecipientsRewrite = mail.getRecipients();
+
+        AuditTrail.entry()
+            .protocol("mailetcontainer")
+            .action("RecipientRewrite")
+            .parameters(ImmutableMap.of("mailId", mail.getName(),
+                "mimeMessageId", mail.getMessage().getMessageID(),
+                "sender", mail.getMaybeSender().asString(),
+                "recipientsBeforeRewrite", StringUtils.join(recipientsBeforeRecipientsRewrite),
+                "recipientsAfterRewrite", StringUtils.join(recipientsAfterRecipientsRewrite)))
+            .log("Recipients rewritten.");
     }
 
     private void applyDecisionOnDSNParameters(Mail mail, List<Decision> decisions) {
