@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
@@ -39,6 +40,7 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
+import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
 import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
@@ -47,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * <p>The RemoteDelivery mailet delivers messages to a remote SMTP server able to deliver or forward messages to their final
@@ -207,8 +210,27 @@ public class RemoteDelivery extends GenericMailet {
         if (!mail.getRecipients().isEmpty()) {
             if (configuration.getGatewayServer().isEmpty()) {
                 serviceNoGateway(mail);
+
+                AuditTrail.entry()
+                    .protocol("mailetcontainer")
+                    .action("RemoteDelivery")
+                    .parameters(ImmutableMap.of("mailId", mail.getName(),
+                        "mimeMessageId", mail.getMessage().getMessageID(),
+                        "sender", mail.getMaybeSender().asString(),
+                        "recipients", StringUtils.join(mail.getRecipients())))
+                    .log("Remote delivering mail planned without gateway.");
             } else {
                 serviceWithGateway(mail);
+
+                AuditTrail.entry()
+                    .protocol("mailetcontainer")
+                    .action("RemoteDelivery")
+                    .parameters(ImmutableMap.of("gateways", StringUtils.join(configuration.getGatewayServer()),
+                        "mailId", mail.getName(),
+                        "mimeMessageId", mail.getMessage().getMessageID(),
+                        "sender", mail.getMaybeSender().asString(),
+                        "recipients", StringUtils.join(mail.getRecipients())))
+                    .log("Remote delivering mail planned with gateway.");
             }
         } else {
             LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getMaybeSender());
