@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 
@@ -404,6 +405,15 @@ public class AuthCmdHandler
 
         res = AUTH_FAILED;
         AUTHENTICATION_DEDICATED_LOGGER.info("AUTH method {} failed from {}@{}", authType, username, session.getRemoteAddress().getAddress().getHostAddress());
+
+        AuditTrail.entry()
+            .username(username.asString())
+            .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+            .protocol("SMTP")
+            .action("AUTH")
+            .parameters(ImmutableMap.of("authType", authType))
+            .log("SMTP Authentication failed.");
+
         return res;
     }
 
