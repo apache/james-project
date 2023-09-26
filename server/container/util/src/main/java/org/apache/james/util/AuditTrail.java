@@ -38,6 +38,7 @@ public class AuditTrail {
     public static class Entry {
         Optional<String> username = Optional.empty();
         Optional<String> remoteIP = Optional.empty();
+        Optional<String> sessionId = Optional.empty();
         Optional<String> userAgent = Optional.empty();
         Optional<String> protocol = Optional.empty();
         Optional<String> action = Optional.empty();
@@ -54,6 +55,16 @@ public class AuditTrail {
 
         public Entry remoteIP(String remoteIP) {
             this.remoteIP = Optional.ofNullable(remoteIP);
+            return this;
+        }
+
+        public Entry remoteIP(Optional<String> remoteIP) {
+            this.remoteIP = remoteIP;
+            return this;
+        }
+
+        public Entry sessionId(String sessionId) {
+            this.sessionId = Optional.ofNullable(sessionId);
             return this;
         }
 
@@ -78,14 +89,17 @@ public class AuditTrail {
         }
 
         public void log(String message) {
-            MDCStructuredLogger.forLogger(LOGGER)
-                .field("username", username.orElse(""))
-                .field("remoteIP", remoteIP.orElse(""))
-                .field("userAgent", userAgent.orElse(""))
-                .field("protocol", protocol.orElse(""))
-                .field("action", action.orElse(""))
-                .field("parameters", StringUtils.join(parameters))
-                .log(logger -> logger.info(message));
+            if (LOGGER.isInfoEnabled()) {
+                MDCStructuredLogger.forLogger(LOGGER)
+                    .field("username", username.orElse(""))
+                    .field("remoteIP", remoteIP.orElse(""))
+                    .field("sessionId", sessionId.orElse(""))
+                    .field("userAgent", userAgent.orElse(""))
+                    .field("protocol", protocol.orElse(""))
+                    .field("action", action.orElse(""))
+                    .field("parameters", StringUtils.join(parameters))
+                    .log(logger -> logger.info(message));
+            }
         }
     }
 }

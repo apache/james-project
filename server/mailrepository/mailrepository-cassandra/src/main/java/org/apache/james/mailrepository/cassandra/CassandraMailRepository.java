@@ -67,15 +67,6 @@ public class CassandraMailRepository implements MailRepository {
 
     @Override
     public MailKey store(Mail mail) throws MessagingException {
-        AuditTrail.entry()
-            .protocol("mailrepository")
-            .action("store")
-            .parameters(ImmutableMap.of("mailId", mail.getName(),
-                "mimeMessageId", mail.getMessage().getMessageID(),
-                "sender", mail.getMaybeSender().asString(),
-                "recipients", StringUtils.join(mail.getRecipients())))
-            .log("CassandraMailRepository is storing mail.");
-
         MailKey mailKey = MailKey.forMail(mail);
 
         return mimeMessageStore.save(mail.getMessage())
@@ -83,6 +74,14 @@ public class CassandraMailRepository implements MailRepository {
                 parts.getHeaderBlobId(),
                 parts.getBodyBlobId()))
             .then(keysDAO.store(url, mailKey))
+            .doOnSuccess(Throwing.consumer(any -> AuditTrail.entry()
+                .protocol("mailrepository")
+                .action("store")
+                .parameters(ImmutableMap.of("mailId", mail.getName(),
+                    "mimeMessageId", mail.getMessage().getMessageID(),
+                    "sender", mail.getMaybeSender().asString(),
+                    "recipients", StringUtils.join(mail.getRecipients())))
+                .log("CassandraMailRepository stored mail.")))
             .thenReturn(mailKey)
             .block();
     }

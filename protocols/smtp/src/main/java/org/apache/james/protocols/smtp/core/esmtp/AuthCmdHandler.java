@@ -392,7 +392,9 @@ public class AuthCmdHandler
 
                         AuditTrail.entry()
                             .username(username.asString())
-                            .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+                            .remoteIP(Optional.ofNullable(session.getRemoteAddress())
+                                .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
+                            .sessionId(session.getSessionID())
                             .protocol("SMTP")
                             .action("AUTH")
                             .parameters(ImmutableMap.of("authType", authType))
@@ -408,7 +410,8 @@ public class AuthCmdHandler
 
         AuditTrail.entry()
             .username(username.asString())
-            .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+            .remoteIP(Optional.ofNullable(session.getRemoteAddress())
+                .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
             .protocol("SMTP")
             .action("AUTH")
             .parameters(ImmutableMap.of("authType", authType))

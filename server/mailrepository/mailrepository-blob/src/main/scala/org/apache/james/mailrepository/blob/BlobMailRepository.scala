@@ -144,21 +144,19 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
   import BlobMailRepository._
 
   @throws[MessagingException]
-  override def store(mc: Mail): MailKey = {
-    AuditTrail.entry
-      .protocol("mailrepository")
-      .action("store")
-      .parameters(ImmutableMap.of("mailId", mc.getName,
-        "mimeMessageId", mc.getMessage.getMessageID,
-        "sender", mc.getMaybeSender.asString,
-        "recipients", StringUtils.join(mc.getRecipients)))
-      .log("BlobMailRepository is storing mail.")
-
+  override def store(mc: Mail): MailKey =
     mimeMessageStore.save(mc.getMessage)
       .flatMap(mimePartsId => mailMetadataStore.save((mc, mimePartsId)))
+      .doOnSuccess(_ => AuditTrail.entry
+        .protocol("mailrepository")
+        .action("store")
+        .parameters(ImmutableMap.of("mailId", mc.getName,
+          "mimeMessageId", mc.getMessage.getMessageID,
+          "sender", mc.getMaybeSender.asString,
+          "recipients", StringUtils.join(mc.getRecipients)))
+        .log("BlobMailRepository stored mail."))
       .map(mailPartsId => mailPartsId.toMailKey)
       .block()
-  }
 
   @throws[MessagingException]
   override def size: Long = Flux.from(blobStore.listBlobs(metadataBucketName)).count().block()

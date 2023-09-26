@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.PerRecipientHeaders.Header;
@@ -171,6 +172,14 @@ public class MailDispatcher {
                             .then(Mono.<MailAddress>empty());
                     }),
                     Throwing.consumer(savedHeaders -> restoreHeaders(mail.getMessage(), savedHeaders)))
+                    .doOnSuccess(Throwing.consumer(succeededRecipient -> AuditTrail.entry()
+                        .protocol("mailetcontainer")
+                        .action("LocalDelivery")
+                        .parameters(ImmutableMap.of("mailId", mail.getName(),
+                            "mimeMessageId", mail.getMessage().getMessageID(),
+                            "sender", mail.getMaybeSender().asString(),
+                            "recipient", succeededRecipient.asString()))
+                        .log("Local delivered mail.")))
                     .onErrorResume(ex -> {
                         LOGGER.error("Error while storing mail. This is a final exception.", ex);
                         if (propagate) {
