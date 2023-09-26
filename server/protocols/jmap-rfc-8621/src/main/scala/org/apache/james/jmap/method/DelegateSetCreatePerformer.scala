@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.method
 
+import com.google.common.collect.ImmutableMap
 import javax.inject.Inject
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
@@ -29,6 +30,7 @@ import org.apache.james.jmap.method.DelegateSetCreatePerformer.{CreationFailure,
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.UserDoesNotExistException
 import org.apache.james.user.api.{DelegationStore, UsersRepository}
+import org.apache.james.util.AuditTrail
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -86,6 +88,13 @@ class DelegateSetCreatePerformer @Inject()(delegationStore: DelegationStore,
     SMono.fromPublisher(usersRepository.containsReactive(request.username))
       .filter(bool => bool)
       .flatMap(_ => SMono.fromPublisher(delegationStore.addAuthorizedUser(mailboxSession.getUser, request.username))
+        .doOnSuccess(_ => AuditTrail.entry
+          .username(mailboxSession.getUser.asString())
+          .protocol("JMAP")
+          .action("DelegateSet/create")
+          .parameters(ImmutableMap.of("delegator", mailboxSession.getUser.asString(),
+            "delegatee", request.username.asString()))
+          .log("Delegation added."))
         .`then`(SMono.just[CreationResult](CreationSuccess(delegateCreationId, evaluateCreationResponse(request, mailboxSession))))
         .onErrorResume(e => SMono.just[CreationResult](CreationFailure(delegateCreationId, e))))
       .switchIfEmpty(SMono.just[CreationResult](CreationFailure(delegateCreationId, new UserDoesNotExistException(request.username))))

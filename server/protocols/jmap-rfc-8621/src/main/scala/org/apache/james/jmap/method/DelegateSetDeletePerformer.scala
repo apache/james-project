@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.method
 
+import com.google.common.collect.ImmutableMap
 import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.SetError
@@ -27,7 +28,7 @@ import org.apache.james.jmap.delegation.{DelegateSetRequest, DelegationId, Unpar
 import org.apache.james.jmap.method.DelegateSetDeletePerformer.{DelegateDeletionFailure, DelegateDeletionResult, DelegateDeletionResults, DelegateDeletionSuccess}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.user.api.DelegationStore
-import org.apache.james.util.ReactorUtils
+import org.apache.james.util.{AuditTrail, ReactorUtils}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object DelegateSetDeletePerformer {
@@ -72,6 +73,13 @@ class DelegateSetDeletePerformer @Inject()(delegationStore: DelegationStore) {
         id => SFlux(delegationStore.authorizedUsers(baseUser))
           .filter(authorizedUser => DelegationId.from(baseUser, authorizedUser).equals(id))
           .next()
-          .flatMap(authorizedUser => SMono(delegationStore.removeAuthorizedUser(baseUser, authorizedUser)))
+          .flatMap(authorizedUser => SMono(delegationStore.removeAuthorizedUser(baseUser, authorizedUser))
+            .doOnSuccess(_ => AuditTrail.entry
+              .username(baseUser.asString())
+              .protocol("JMAP")
+              .action("DelegateSet/destroy")
+              .parameters(ImmutableMap.of("delegator", baseUser.asString(),
+                "delegatee", authorizedUser.asString()))
+              .log("Delegation removed.")))
           .`then`(SMono.just[DelegateDeletionResult](DelegateDeletionSuccess(id))))
 }
