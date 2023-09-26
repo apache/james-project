@@ -932,6 +932,7 @@ public class StoreMessageManager implements MessageManager {
                             .metaData(moveUids)
                             .isDelivery(!IS_DELIVERY)
                             .isAppended(!IS_APPENDED)
+                            .movedFrom(getId())
                             .build(),
                         new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())),
                     eventBus.dispatch(EventFactory.expunged()
@@ -939,6 +940,7 @@ public class StoreMessageManager implements MessageManager {
                             .mailboxSession(session)
                             .mailbox(getMailboxEntity())
                             .addMetaData(moveResult.getOriginalMessages())
+                            .movedTo(to.getId())
                             .build(),
                         new MailboxIdRegistrationKey(mailbox.getMailboxId())),
                     eventBus.dispatch(EventFactory.moved()

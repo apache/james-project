@@ -67,6 +67,7 @@ class MailboxListenerTest {
     private static final Username BOB = Username.of("bob");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final TestId MAILBOX_ID = TestId.of(18);
+    private static final TestId MOVED_FROM_MAILBOX_ID = TestId.of(28);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("bob", Optional.empty());
     private static final QuotaCountUsage QUOTA_COUNT = QuotaCountUsage.count(34);
     private static final QuotaSizeUsage QUOTA_SIZE = QuotaSizeUsage.size(48);
@@ -163,7 +164,7 @@ class MailboxListenerTest {
     @Test
     void addedShouldBeNoopWhenEmpty() {
         Added added = new Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
-            Event.EventId.random(), !IS_DELIVERY, IS_APPENDED);
+            Event.EventId.random(), !IS_DELIVERY, IS_APPENDED, Optional.empty());
 
         assertThat(added.isNoop()).isTrue();
     }
@@ -171,7 +172,7 @@ class MailboxListenerTest {
     @Test
     void addedShouldNotBeNoopWhenNotEmpty() {
         Added added = new Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
-            Event.EventId.random(), !IS_DELIVERY, IS_APPENDED);
+            Event.EventId.random(), !IS_DELIVERY, IS_APPENDED, Optional.empty());
 
         assertThat(added.isNoop()).isFalse();
     }
@@ -179,7 +180,7 @@ class MailboxListenerTest {
     @Test
     void expungedShouldBeNoopWhenEmpty() {
         Expunged expunged = new Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
-            Event.EventId.random());
+            Event.EventId.random(), Optional.empty());
 
         assertThat(expunged.isNoop()).isTrue();
     }
@@ -187,7 +188,7 @@ class MailboxListenerTest {
     @Test
     void expungedShouldNotBeNoopWhenNotEmpty() {
         Expunged expunged = new Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
-            Event.EventId.random());
+            Event.EventId.random(), Optional.empty());
 
         assertThat(expunged.isNoop()).isFalse();
     }

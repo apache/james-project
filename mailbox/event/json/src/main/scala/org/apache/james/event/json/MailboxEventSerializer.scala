@@ -40,6 +40,7 @@ import org.apache.james.mailbox.{MessageUid, ModSeq}
 import play.api.libs.json._
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 private sealed trait Event {
   def toJava: JavaEvent
@@ -70,7 +71,8 @@ private object DTO {
   }
 
   case class Added(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
-                   added: Map[MessageUid, DTOs.MessageMetaData], isDelivery: Option[IsDelivery], isAppended: Option[IsAppended]) extends Event {
+                   added: Map[MessageUid, DTOs.MessageMetaData], isDelivery: Option[IsDelivery], isAppended: Option[IsAppended],
+                   movedFromMailboxId: Option[MailboxId]) extends Event {
     override def toJava: JavaEvent = new JavaAdded(
       sessionId,
       user,
@@ -79,7 +81,8 @@ private object DTO {
       new JavaTreeMap[MessageUid, JavaMessageMetaData](added.view.mapValues(_.toJava).toMap.asJava),
       eventId,
       fallbackIsDelivery(),
-      fallbackIsAppended())
+      fallbackIsAppended(),
+      movedFromMailboxId.toJava)
 
     def fallbackIsDelivery(): Boolean = isDelivery.exists(_.value)
 
@@ -87,14 +90,15 @@ private object DTO {
   }
 
   case class Expunged(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, mailboxId: MailboxId,
-                      expunged: Map[MessageUid, DTOs.MessageMetaData]) extends Event {
+                      expunged: Map[MessageUid, DTOs.MessageMetaData], movedToMailboxId: Option[MailboxId]) extends Event {
     override def toJava: JavaEvent = new JavaExpunged(
       sessionId,
       user,
       path.toJava,
       mailboxId,
       expunged.view.mapValues(_.toJava).toMap.asJava,
-      eventId)
+      eventId,
+      movedToMailboxId.toJava)
   }
 
   case class MessageMoveEvent(eventId: EventId, user: Username, previousMailboxIds: Iterable[MailboxId], targetMailboxIds: Iterable[MailboxId],
@@ -181,7 +185,8 @@ private object ScalaConverter {
     mailboxId = event.getMailboxId,
     added = event.getAdded.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap,
     isDelivery = Option(IsDelivery(event.isDelivery)),
-    isAppended = Option(IsAppended(event.isAppended)))
+    isAppended = Option(IsAppended(event.isAppended)),
+    movedFromMailboxId = event.movedFromMailboxId().toScala)
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
     eventId = event.getEventId,
@@ -189,7 +194,8 @@ private object ScalaConverter {
     user = event.getUsername,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    expunged = event.getExpunged.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
+    expunged = event.getExpunged.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap,
+    movedToMailboxId = event.movedToMailboxId.toScala)
 
   private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
     eventId = event.getEventId,
