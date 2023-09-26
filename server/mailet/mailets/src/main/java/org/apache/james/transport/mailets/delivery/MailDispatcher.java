@@ -169,17 +169,19 @@ public class MailDispatcher {
                     Throwing.function(any -> {
                         addSpecificHeadersForRecipient(mail, message, recipient);
                         return storeMailWithRetry(mail, recipient)
+                            .doOnSuccess(Throwing.consumer(success -> AuditTrail.entry()
+                                .protocol("mailetcontainer")
+                                .action("LocalDelivery")
+                                .parameters(ImmutableMap.of("mailId", mail.getName(),
+                                    "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                                        .map(Throwing.function(MimeMessage::getMessageID))
+                                        .orElse(""),
+                                    "sender", mail.getMaybeSender().asString(),
+                                    "recipient", recipient.asString()))
+                                .log("Local delivered mail.")))
                             .then(Mono.<MailAddress>empty());
                     }),
                     Throwing.consumer(savedHeaders -> restoreHeaders(mail.getMessage(), savedHeaders)))
-                    .doOnSuccess(Throwing.consumer(succeededRecipient -> AuditTrail.entry()
-                        .protocol("mailetcontainer")
-                        .action("LocalDelivery")
-                        .parameters(ImmutableMap.of("mailId", mail.getName(),
-                            "mimeMessageId", mail.getMessage().getMessageID(),
-                            "sender", mail.getMaybeSender().asString(),
-                            "recipient", succeededRecipient.asString()))
-                        .log("Local delivered mail.")))
                     .onErrorResume(ex -> {
                         LOGGER.error("Error while storing mail. This is a final exception.", ex);
                         if (propagate) {

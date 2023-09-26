@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,6 +37,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
+import javax.mail.internet.MimeMessage;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
@@ -72,6 +74,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -166,7 +169,9 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
                 .protocol("mailrepository")
                 .action("store")
                 .parameters(ImmutableMap.of("mailId", mail.getName(),
-                    "mimeMessageId", mail.getMessage().getMessageID(),
+                    "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                        .map(Throwing.function(MimeMessage::getMessageID))
+                        .orElse(""),
                     "sender", mail.getMaybeSender().asString(),
                     "recipients", StringUtils.join(mail.getRecipients())))
                 .log("JPAMailRepository stored mail.");
