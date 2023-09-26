@@ -32,6 +32,7 @@ import org.threeten.extra.Temporals;
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * <p>
@@ -113,7 +114,9 @@ public interface MailQueue extends Closeable {
     Publisher<Void> enqueueReactive(Mail mail);
 
     default Publisher<Void> enqueueReactive(Mail mail, Duration delay) {
-        return Mono.fromRunnable(Throwing.runnable(() -> enQueue(mail, delay)).sneakyThrow());
+        return Mono.fromRunnable(Throwing.runnable(() -> enQueue(mail, delay)).sneakyThrow())
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
     }
 
     /**
