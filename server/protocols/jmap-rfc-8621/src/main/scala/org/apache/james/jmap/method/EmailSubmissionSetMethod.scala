@@ -24,6 +24,7 @@ import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import java.time.{Clock, Duration, LocalDateTime, ZoneId, ZonedDateTime}
 
 import cats.implicits.toTraverseOps
+import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
 import javax.annotation.PreDestroy
@@ -31,6 +32,7 @@ import javax.inject.Inject
 import javax.mail.Address
 import javax.mail.Message.RecipientType
 import javax.mail.internet.{InternetAddress, MimeMessage}
+import org.apache.commons.lang3.StringUtils
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
@@ -49,6 +51,7 @@ import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.server.core.{MailImpl, MimeMessageSource, MimeMessageWrapper}
+import org.apache.james.util.AuditTrail
 import org.apache.mailet.{Attribute, AttributeName, AttributeValue, Mail}
 import org.slf4j.{Logger, LoggerFactory}
 import play.api.libs.json._
@@ -57,6 +60,7 @@ import reactor.core.scheduler.Schedulers
 import reactor.util.concurrent.Queues
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
@@ -271,17 +275,46 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         mailImpl.setMessageNoCopy(message)
         mailImpl
       }
-      _ <- enqueue(mail, delay)
+      _ <- enqueue(mail, delay, mailboxSession)
         .`then`(SMono.just(submissionId))
       sendAt = UTCDate(ZonedDateTime.now(clock).plus(delay))
     } yield {
       EmailSubmissionCreationResponse(submissionId, sendAt) -> request.emailId
     }
 
-  private def enqueue(mail: Mail, delay: Duration): SMono[Unit] =
+  private def enqueue(mail: Mail, delay: Duration, mailboxSession: MailboxSession): SMono[Unit] =
     (delay match {
       case d if d.isNegative || d.isZero => SMono(queue.enqueueReactive(mail))
+        .doOnSuccess(_ => AuditTrail.entry
+          .username(mailboxSession.getUser.asString())
+          .protocol("JMAP")
+          .action("EmailSubmission")
+          .parameters(ImmutableMap.of("mailId", mail.getName,
+            "mimeMessageId", Option(mail.getMessage)
+              .flatMap(message => Option(message.getMessageID))
+              .getOrElse(""),
+            "sender", mail.getMaybeSender.asString,
+            "recipients", StringUtils.join(mail.getRecipients),
+            "loggedInUser", mailboxSession.getLoggedInUser.toScala
+              .map(_.asString())
+              .getOrElse("")))
+          .log("JMAP mail spooled."))
       case _ => SMono(queue.enqueueReactive(mail, delay))
+        .doOnSuccess(_ => AuditTrail.entry
+          .username(mailboxSession.getUser.asString())
+          .protocol("JMAP")
+          .action("EmailSubmission")
+          .parameters(ImmutableMap.of("mailId", mail.getName,
+            "mimeMessageId", Option(mail.getMessage)
+              .flatMap(message => Option(message.getMessageID))
+              .getOrElse(""),
+            "sender", mail.getMaybeSender.asString,
+            "recipients", StringUtils.join(mail.getRecipients),
+            "holdFor", delay.toString,
+            "loggedInUser", mailboxSession.getLoggedInUser.toScala
+              .map(_.asString())
+              .getOrElse("")))
+          .log("JMAP mail spooled."))
     }).`then`(SMono.fromCallable(() => LifecycleUtil.dispose(mail)).subscribeOn(Schedulers.boundedElastic()))
 
   private def retrieveDelay(mailParameters: Option[Map[ParameterName, Option[ParameterValue]]]): Try[Duration] =
