@@ -43,6 +43,9 @@ public class MemoryMailRepository implements MailRepository {
 
     @Override
     public MailKey store(Mail mail) throws MessagingException {
+        MailKey mailKey = MailKey.forMail(mail);
+        mails.put(mailKey, cloneMail(mail));
+
         AuditTrail.entry()
             .protocol("mailrepository")
             .action("store")
@@ -50,10 +53,8 @@ public class MemoryMailRepository implements MailRepository {
                 "mimeMessageId", mail.getMessage().getMessageID(),
                 "sender", mail.getMaybeSender().asString(),
                 "recipients", StringUtils.join(mail.getRecipients())))
-            .log("MemoryMailRepository is storing mail.");
+            .log("MemoryMailRepository stored mail.");
 
-        MailKey mailKey = MailKey.forMail(mail);
-        mails.put(mailKey, cloneMail(mail));
         return mailKey;
     }
 

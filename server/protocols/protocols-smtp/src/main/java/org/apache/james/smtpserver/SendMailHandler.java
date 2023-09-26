@@ -95,7 +95,9 @@ public class SendMailHandler implements JamesMessageHook {
 
                     AuditTrail.entry()
                         .username(session.getUsername().asString())
-                        .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+                        .remoteIP(Optional.ofNullable(session.getRemoteAddress())
+                            .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
+                        .sessionId(session.getSessionID())
                         .protocol("SMTP")
                         .action("SPOOL")
                         .parameters(ImmutableMap.of("mailId", mail.getName(),
@@ -115,7 +117,9 @@ public class SendMailHandler implements JamesMessageHook {
 
                     AuditTrail.entry()
                         .username(session.getUsername().asString())
-                        .remoteIP(session.getRemoteAddress().getAddress().getHostAddress())
+                        .remoteIP(Optional.ofNullable(session.getRemoteAddress())
+                            .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
+                        .sessionId(session.getSessionID())
                         .protocol("SMTP")
                         .action("SPOOL")
                         .parameters(ImmutableMap.of("mailId", mail.getName(),

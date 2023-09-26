@@ -54,6 +54,7 @@ class AuditTrailTest {
         AuditTrail.Entry auditTrail = AuditTrail.entry()
             .username("bob@domain.tld")
             .remoteIP("1.2.3.4")
+            .sessionId("sessionId")
             .userAgent("Thunderbird")
             .protocol("IMAP")
             .action("login")
@@ -63,6 +64,7 @@ class AuditTrailTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(auditTrail.username).isEqualTo(Optional.of("bob@domain.tld"));
             softly.assertThat(auditTrail.remoteIP).isEqualTo(Optional.of("1.2.3.4"));
+            softly.assertThat(auditTrail.sessionId).isEqualTo(Optional.of("sessionId"));
             softly.assertThat(auditTrail.userAgent).isEqualTo(Optional.of("Thunderbird"));
             softly.assertThat(auditTrail.protocol).isEqualTo(Optional.of("IMAP"));
             softly.assertThat(auditTrail.action).isEqualTo(Optional.of("login"));
@@ -88,6 +90,7 @@ class AuditTrailTest {
         AuditTrail.entry()
             .username("bob@domain.tld")
             .remoteIP("1.2.3.4")
+            .sessionId("sessionId")
             .userAgent("Thunderbird")
             .protocol("IMAP")
             .action("login")
@@ -101,6 +104,7 @@ class AuditTrailTest {
                 softly.assertThat(loggingEvent.getFormattedMessage()).isEqualTo("Authentication via IMAP");
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("username")).isEqualTo("bob@domain.tld");
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("remoteIP")).isEqualTo("1.2.3.4");
+                softly.assertThat(loggingEvent.getMDCPropertyMap().get("sessionId")).isEqualTo("sessionId");
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("userAgent")).isEqualTo("Thunderbird");
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("protocol")).isEqualTo("IMAP");
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("action")).isEqualTo("login");

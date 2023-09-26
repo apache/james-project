@@ -174,15 +174,6 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public MailKey store(Mail mc) throws MessagingException {
-        AuditTrail.entry()
-            .protocol("mailrepository")
-            .action("store")
-            .parameters(ImmutableMap.of("mailId", mc.getName(),
-                "mimeMessageId", mc.getMessage().getMessageID(),
-                "sender", mc.getMaybeSender().asString(),
-                "recipients", StringUtils.join(mc.getRecipients())))
-            .log("FileMailRepository is storing mail.");
-
         boolean wasLocked = true;
         MailKey key = MailKey.forMail(mc);
         try {
@@ -194,6 +185,16 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
                 }
             }
             internalStore(mc);
+
+            AuditTrail.entry()
+                .protocol("mailrepository")
+                .action("store")
+                .parameters(ImmutableMap.of("mailId", mc.getName(),
+                    "mimeMessageId", mc.getMessage().getMessageID(),
+                    "sender", mc.getMaybeSender().asString(),
+                    "recipients", StringUtils.join(mc.getRecipients())))
+                .log("FileMailRepository stored mail.");
+
             return key;
         } catch (MessagingException e) {
             LOGGER.error("Exception caught while storing mail {}", key, e);

@@ -136,15 +136,6 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
 
     @Override
     public MailKey store(Mail mail) throws MessagingException {
-        AuditTrail.entry()
-            .protocol("mailrepository")
-            .action("store")
-            .parameters(ImmutableMap.of("mailId", mail.getName(),
-                "mimeMessageId", mail.getMessage().getMessageID(),
-                "sender", mail.getMaybeSender().asString(),
-                "recipients", StringUtils.join(mail.getRecipients())))
-            .log("JPAMailRepository is storing mail.");
-
         MailKey key = MailKey.forMail(mail);
         EntityManager entityManager = entityManager();
         try {
@@ -170,6 +161,16 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
             transaction.begin();
             jpaMail = entityManager.merge(jpaMail);
             transaction.commit();
+
+            AuditTrail.entry()
+                .protocol("mailrepository")
+                .action("store")
+                .parameters(ImmutableMap.of("mailId", mail.getName(),
+                    "mimeMessageId", mail.getMessage().getMessageID(),
+                    "sender", mail.getMaybeSender().asString(),
+                    "recipients", StringUtils.join(mail.getRecipients())))
+                .log("JPAMailRepository stored mail.");
+
             return key;
         } catch (MessagingException e) {
             LOGGER.error("Exception caught while storing mail {}", key, e);

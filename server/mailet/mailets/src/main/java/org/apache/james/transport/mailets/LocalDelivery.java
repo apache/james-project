@@ -25,7 +25,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.mail.MessagingException;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.metrics.api.MetricFactory;
@@ -33,12 +32,9 @@ import org.apache.james.transport.mailets.delivery.MailDispatcher;
 import org.apache.james.transport.mailets.delivery.MailboxAppenderImpl;
 import org.apache.james.transport.mailets.delivery.SimpleMailStore;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.MailetUtil;
-
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Receives a Mail from the Queue and takes care of delivery of the
@@ -66,15 +62,6 @@ public class LocalDelivery extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        AuditTrail.entry()
-            .protocol("mailetcontainer")
-            .action("LocalDelivery")
-            .parameters(ImmutableMap.of("mailId", mail.getName(),
-                "mimeMessageId", mail.getMessage().getMessageID(),
-                "sender", mail.getMaybeSender().asString(),
-                "recipients", StringUtils.join(mail.getRecipients())))
-            .log("Local delivering mail.");
-
         mailDispatcher.dispatch(mail);
     }
 
