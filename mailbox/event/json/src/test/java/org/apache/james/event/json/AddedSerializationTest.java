@@ -59,6 +59,7 @@ class AddedSerializationTest {
     private static final Username USERNAME = Username.of("user");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final MailboxId MAILBOX_ID = TestId.of(18);
+    private static final MailboxId MOVED_FROM_MAILBOX_ID = TestId.of(28);
     private static final String MAILBOX_NAME = "mailboxName";
     private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, Username.of("user"), MAILBOX_NAME);
     private static final MessageUid MESSAGE_UID = MessageUid.of(123456);
@@ -77,10 +78,10 @@ class AddedSerializationTest {
     private static final SortedMap<MessageUid, MessageMetaData> ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID = ImmutableSortedMap.of(
         MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), Optional.of(Date.from(INSTANT)), MESSAGE_ID, ThreadId.fromBaseMessageId(TestMessageId.of(100))));
 
-    private static final Added DEFAULT_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED, EVENT_ID, !IS_DELIVERY, IS_APPENDED);
-    private static final Added BACKWARD_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_ADDED, EVENT_ID, !IS_DELIVERY, IS_APPENDED);
+    private static final Added DEFAULT_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED, EVENT_ID, !IS_DELIVERY, IS_APPENDED, Optional.empty());
+    private static final Added BACKWARD_ADDED_EVENT = new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_ADDED, EVENT_ID, !IS_DELIVERY, IS_APPENDED, Optional.empty());
     private static final Added ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT = new Added(
-        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID, !IS_DELIVERY, IS_APPENDED);
+        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, ADDED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID, !IS_DELIVERY, IS_APPENDED, Optional.of(MOVED_FROM_MAILBOX_ID));
     private static final String DEFAULT_ADDED_EVENT_JSON = 
         "{" +
         "  \"Added\": {" +
@@ -138,6 +139,7 @@ class AddedSerializationTest {
             "    \"sessionId\": 42," +
             "    \"isDelivery\": false," +
             "    \"isAppended\": true," +
+            "    \"movedFromMailboxId\": \"28\"," +
             "    \"user\": \"user\"" +
             "  }" +
             "}";
@@ -192,11 +194,44 @@ class AddedSerializationTest {
             .isEqualTo(BACKWARD_ADDED_EVENT);
     }
 
+    @Test
+    void addedWithMovedFromMailboxIdShouldBeWellDeserialized() {
+        assertThat(EVENT_SERIALIZER.fromJson("{" +
+            "  \"Added\": {" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"path\": {" +
+            "      \"namespace\": \"#private\"," +
+            "      \"user\": \"user\"," +
+            "      \"name\": \"mailboxName\"" +
+            "    }," +
+            "    \"mailboxId\": \"18\"," +
+            "    \"added\": {" +
+            "      \"123456\": {" +
+            "        \"uid\": 123456," +
+            "        \"modSeq\": 35," +
+            "        \"flags\": {" +
+            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+            "          \"userFlags\":[\"User Custom Flag\"]}," +
+            "        \"size\": 45,  " +
+            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+            "        \"messageId\": \"42\"" +
+            "      }" +
+            "    }," +
+            "    \"sessionId\": 42," +
+            "    \"user\": \"user\"," +
+            "    \"movedFromMailboxId\": \"28\"" +
+            "  }" +
+            "}").get())
+            .isEqualTo(new Added(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_ADDED, EVENT_ID, !IS_DELIVERY, IS_APPENDED, Optional.of(MOVED_FROM_MAILBOX_ID)));
+    }
+
+
     @Nested
     class WithEmptyAddedMap {
 
         private final Added emptyAddedEvent = new Added(SESSION_ID, USERNAME, MAILBOX_PATH,
-            MAILBOX_ID, ImmutableSortedMap.of(), EVENT_ID, !IS_DELIVERY, IS_APPENDED);
+            MAILBOX_ID, ImmutableSortedMap.of(), EVENT_ID, !IS_DELIVERY,
+            IS_APPENDED, Optional.empty());
         private final String emptyAddedEventJson =
             "{" +
             "  \"Added\": {" +

@@ -415,10 +415,14 @@ public interface MailboxEvents {
 
     class Expunged extends MetaDataHoldingEvent {
         private final Map<MessageUid, MessageMetaData> expunged;
+        private final Optional<MailboxId> movedToMailboxId;
 
-        public Expunged(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, Map<MessageUid, MessageMetaData> uids, EventId eventId) {
+        public Expunged(MailboxSession.SessionId sessionId, Username username,
+                        MailboxPath path, MailboxId mailboxId, Map<MessageUid, MessageMetaData> uids,
+                        EventId eventId, Optional<MailboxId> movedToMailboxId) {
             super(sessionId, username, path, mailboxId, eventId);
             this.expunged = ImmutableMap.copyOf(uids);
+            this.movedToMailboxId = movedToMailboxId;
         }
 
         @Override
@@ -445,6 +449,14 @@ public interface MailboxEvents {
             return expunged.isEmpty();
         }
 
+        public boolean isMoved() {
+            return movedToMailboxId.isPresent();
+        }
+
+        public Optional<MailboxId> movedToMailboxId() {
+            return movedToMailboxId;
+        }
+
         @Override
         public final boolean equals(Object o) {
             if (o instanceof Expunged) {
@@ -455,6 +467,7 @@ public interface MailboxEvents {
                     && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
+                    && Objects.equals(this.movedToMailboxId, that.movedToMailboxId)
                     && Objects.equals(this.expunged, that.expunged);
             }
             return false;
@@ -462,7 +475,8 @@ public interface MailboxEvents {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, username, path, mailboxId, expunged);
+            return Objects.hash(eventId, sessionId, username,
+                path, mailboxId, expunged, movedToMailboxId);
         }
     }
 
@@ -533,12 +547,16 @@ public interface MailboxEvents {
         private final boolean isDelivery;
         private final boolean isAppended;
 
+        private final Optional<MailboxId> movedFromMailboxId;
+
         public Added(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId,
-                     SortedMap<MessageUid, MessageMetaData> uids, EventId eventId, boolean isDelivery, boolean isAppended) {
+                     SortedMap<MessageUid, MessageMetaData> uids, EventId eventId,
+                     boolean isDelivery, boolean isAppended, Optional<MailboxId> movedFromMailboxId) {
             super(sessionId, username, path, mailboxId, eventId);
             this.added = ImmutableMap.copyOf(uids);
             this.isDelivery = isDelivery;
             this.isAppended = isAppended;
+            this.movedFromMailboxId = movedFromMailboxId;
         }
 
         /**
@@ -567,6 +585,14 @@ public interface MailboxEvents {
             return isAppended;
         }
 
+        public boolean isMoved() {
+            return movedFromMailboxId.isPresent();
+        }
+
+        public Optional<MailboxId> movedFromMailboxId() {
+            return movedFromMailboxId;
+        }
+
         @Override
         public boolean isNoop() {
             return added.isEmpty();
@@ -584,6 +610,7 @@ public interface MailboxEvents {
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.added, that.added)
                     && Objects.equals(this.isAppended, that.isAppended)
+                    && Objects.equals(this.movedFromMailboxId, that.movedFromMailboxId)
                     && Objects.equals(this.isDelivery, that.isDelivery);
             }
             return false;
@@ -591,7 +618,7 @@ public interface MailboxEvents {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, username, path, mailboxId, added, isDelivery, isAppended);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, added, isDelivery, isAppended, movedFromMailboxId);
         }
     }
 

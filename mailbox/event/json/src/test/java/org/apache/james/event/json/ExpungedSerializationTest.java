@@ -57,6 +57,7 @@ class ExpungedSerializationTest {
     private static final Username USERNAME = Username.of("user");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final MailboxId MAILBOX_ID = TestId.of(18);
+    private static final MailboxId MOVED_MAILBOX_ID = TestId.of(28);
     private static final String MAILBOX_NAME = "mailboxName";
     private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, Username.of("user"), MAILBOX_NAME);
     private static final MessageUid MESSAGE_UID = MessageUid.of(123456);
@@ -75,10 +76,10 @@ class ExpungedSerializationTest {
     private static final Map<MessageUid, MessageMetaData> EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID = ImmutableMap.of(
         MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), Optional.of(Date.from(INSTANT)), MESSAGE_ID, ThreadId.fromBaseMessageId(TestMessageId.of(100))));
 
-    private static final Expunged DEFAULT_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EXPUNGED, EVENT_ID);
-    private static final Expunged BACKWARD_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_EXPUNGED, EVENT_ID);
+    private static final Expunged DEFAULT_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EXPUNGED, EVENT_ID, Optional.empty());
+    private static final Expunged BACKWARD_EXPUNGED_EVENT = new Expunged(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_EXPUNGED, EVENT_ID, Optional.empty());
     private static final Expunged EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID_EVENT = new Expunged(
-        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID);
+        SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, EXPUNGED_WITH_DISTINCT_MESSAGE_ID_AND_THREAD_ID, EVENT_ID, Optional.of(MOVED_MAILBOX_ID));
     private static final String DEFAULT_EXPUNGED_EVENT_JSON =
         "{" +
         "  \"Expunged\": {" +
@@ -132,7 +133,8 @@ class ExpungedSerializationTest {
             "      }" +
             "    }," +
             "    \"sessionId\": 42," +
-            "    \"user\": \"user\"" +
+            "    \"user\": \"user\"," +
+            "    \"movedToMailboxId\":  \"28\"" +
             "  }" +
             "}";
     private static final String DEFAULT_BACKWARD_EXPUNGED_EVENT_JSON =
@@ -186,11 +188,42 @@ class ExpungedSerializationTest {
             .isEqualTo(BACKWARD_EXPUNGED_EVENT);
     }
 
+    @Test
+    void expungedWithMovedToMailboxIdShouldBeWellDeserialized() {
+        assertThat(EVENT_SERIALIZER.fromJson("{" +
+            "  \"Expunged\": {" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+            "    \"path\": {" +
+            "      \"namespace\": \"#private\"," +
+            "      \"user\": \"user\"," +
+            "      \"name\": \"mailboxName\"" +
+            "    }," +
+            "    \"mailboxId\": \"18\"," +
+            "    \"expunged\": {" +
+            "      \"123456\": {" +
+            "        \"uid\": 123456," +
+            "        \"modSeq\": 35," +
+            "        \"flags\": {" +
+            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+            "          \"userFlags\":[\"User Custom Flag\"]}," +
+            "        \"size\": 45,  " +
+            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+            "        \"messageId\": \"42\"" +
+            "      }" +
+            "    }," +
+            "    \"sessionId\": 42," +
+            "    \"user\": \"user\"," +
+            "    \"movedToMailboxId\": \"28\"" +
+            "  }" +
+            "}").get())
+            .isEqualTo(new Expunged(SESSION_ID, USERNAME, MAILBOX_PATH, MAILBOX_ID, BACKWARD_EXPUNGED, EVENT_ID, Optional.of(MOVED_MAILBOX_ID)));
+    }
+
     @Nested
     class WithEmptyExpungedMap {
 
         private final Expunged emptyExpungedEvent = new Expunged(SESSION_ID, USERNAME,
-            MAILBOX_PATH, MAILBOX_ID, ImmutableMap.of(), EVENT_ID);
+            MAILBOX_PATH, MAILBOX_ID, ImmutableMap.of(), EVENT_ID, Optional.empty());
         private final String emptyExpungedEventJson =
             "{" +
             "  \"Expunged\": {" +

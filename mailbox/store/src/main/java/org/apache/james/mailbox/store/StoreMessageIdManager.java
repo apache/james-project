@@ -368,8 +368,8 @@ public class StoreMessageIdManager implements MessageIdManager {
             .collect(ImmutableList.toImmutableList());
 
         return validateQuota(messageMoves, mailboxMessage.get())
-            .then(addMessageToMailboxes(mailboxMessage.get(), messageMoves.addedMailboxes(), mailboxSession))
-            .then(removeMessageFromMailboxes(mailboxMessage.get().getMessageId(), messagesToRemove, mailboxSession))
+            .then(addMessageToMailboxes(mailboxMessage.get(), messageMoves, mailboxSession))
+            .then(expungeMessageFromMailboxes(mailboxMessage.get().getMessageId(), messagesToRemove, mailboxSession, messageMoves))
             .then(eventBus.dispatch(EventFactory.moved()
                     .session(mailboxSession)
                     .messageMoves(messageMoves.asMessageMoves())
@@ -381,7 +381,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                     .collect(ImmutableSet.toImmutableSet())));
     }
 
-    private Mono<Void> removeMessageFromMailboxes(MessageId messageId, List<Pair<MailboxMessage, Mailbox>> messages, MailboxSession mailboxSession) {
+    private Mono<Void> expungeMessageFromMailboxes(MessageId messageId, List<Pair<MailboxMessage, Mailbox>> messages, MailboxSession mailboxSession, MessageMovesWithMailbox messageMoves) {
         if (messages.isEmpty()) {
             return Mono.empty();
         }
@@ -394,16 +394,28 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         return Mono.from(messageIdMapper.deleteReactive(messageId, mailboxIds))
             .then(Flux.fromIterable(messages)
-                .flatMap(message -> eventBus.dispatch(EventFactory.expunged()
-                        .randomEventId()
-                        .mailboxSession(mailboxSession)
-                        .mailbox(message.getRight())
-                        .addMetaData(message.getLeft().metaData())
-                        .build(),
-                    new MailboxIdRegistrationKey(message.getRight().getMailboxId())), DEFAULT_CONCURRENCY)
+                .flatMap(message -> dispatchExpungedEvent(message, mailboxSession, messageMoves), DEFAULT_CONCURRENCY)
                 .then());
     }
-    
+
+    private Mono<Void> dispatchExpungedEvent(Pair<MailboxMessage, Mailbox> message, MailboxSession mailboxSession, MessageMovesWithMailbox messageMoves) {
+        return Mono.just(EventFactory.expunged()
+                .randomEventId()
+                .mailboxSession(mailboxSession)
+                .mailbox(message.getRight())
+                .addMetaData(message.getLeft().metaData()))
+            .map(eventBuilder -> {
+                if (isSingleMove(messageMoves)) {
+                    return eventBuilder
+                        .movedTo(messageMoves.addedMailboxes().iterator().next().getMailboxId())
+                        .build();
+                } else {
+                    return eventBuilder.build();
+                }
+            })
+            .flatMap(event -> eventBus.dispatch(event, new MailboxIdRegistrationKey(message.getRight().getMailboxId())));
+    }
+
     private Mono<Void> dispatchFlagsChange(MailboxSession mailboxSession, MailboxId mailboxId, ImmutableList<UpdatedFlags> updatedFlags, List<Mailbox> knownMailboxes) {
         if (updatedFlags.stream().anyMatch(UpdatedFlags::flagsChanged)) {
             return knownMailboxes.stream()
@@ -463,10 +475,10 @@ public class StoreMessageIdManager implements MessageIdManager {
         }
     }
 
-    private Mono<Void> addMessageToMailboxes(MailboxMessage mailboxMessage, Set<Mailbox> mailboxes, MailboxSession mailboxSession) {
+    private Mono<Void> addMessageToMailboxes(MailboxMessage mailboxMessage, MessageMovesWithMailbox messageMoves, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
-        return Flux.fromIterable(mailboxes)
+        return Flux.fromIterable(messageMoves.addedMailboxes())
             .flatMap(Throwing.<Mailbox, Mono<Void>>function(mailbox -> {
                 MailboxACL.Rfc4314Rights myRights = rightManager.myRights(mailbox, mailboxSession);
                 boolean shouldPreserveFlags = myRights.contains(Right.Write);
@@ -482,17 +494,32 @@ public class StoreMessageIdManager implements MessageIdManager {
                     .build());
 
                 return save(messageIdMapper, copy, mailbox)
-                    .flatMap(metadata -> eventBus.dispatch(EventFactory.added()
-                            .randomEventId()
-                            .mailboxSession(mailboxSession)
-                            .mailbox(mailbox)
-                            .addMetaData(metadata)
-                            .isDelivery(!IS_DELIVERY)
-                            .isAppended(!IS_APPENDED)
-                            .build(),
-                        new MailboxIdRegistrationKey(mailbox.getMailboxId())));
+                    .flatMap(metadata -> dispatchAddedEvent(mailboxSession, mailbox, metadata, messageMoves));
             }).sneakyThrow())
             .then();
+    }
+
+    private Mono<Void> dispatchAddedEvent(MailboxSession mailboxSession, Mailbox mailbox, MessageMetaData messageMetaData, MessageMovesWithMailbox messageMoves) {
+        return Mono.just(EventFactory.added()
+                .randomEventId()
+                .mailboxSession(mailboxSession)
+                .mailbox(mailbox)
+                .addMetaData(messageMetaData)
+                .isDelivery(!IS_DELIVERY)
+                .isAppended(!IS_APPENDED))
+            .map(eventBuilder -> {
+                if (isSingleMove(messageMoves)) {
+                    return eventBuilder
+                        .movedFrom(messageMoves.removedMailboxes().iterator().next().getMailboxId())
+                        .build();
+                } else {
+                    return eventBuilder.build();
+                }
+            }).flatMap(event -> eventBus.dispatch(event, new MailboxIdRegistrationKey(mailbox.getMailboxId())));
+    }
+
+    private boolean isSingleMove(MessageMovesWithMailbox messageMoves) {
+        return messageMoves.addedMailboxes().size() == 1 && messageMoves.removedMailboxes().size() == 1;
     }
 
     private Mono<MessageMetaData> save(MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage, Mailbox mailbox) {

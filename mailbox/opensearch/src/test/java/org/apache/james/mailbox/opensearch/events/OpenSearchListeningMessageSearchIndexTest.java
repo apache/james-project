@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -339,7 +340,7 @@ class OpenSearchListeningMessageSearchIndexTest {
             outbox.getMailboxId(),
             ImmutableSortedMap.of(MESSAGE_UID_1, outdatedMessageMetaData),
             Event.EventId.random(),
-            !IS_DELIVERY, IS_APPENDED);
+            !IS_DELIVERY, IS_APPENDED, Optional.empty());
 
         Mono.from(testee.reactiveEvent(addedOutDatedEvent)).block();
 

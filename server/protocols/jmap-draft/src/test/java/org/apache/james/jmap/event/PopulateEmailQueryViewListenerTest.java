@@ -188,7 +188,8 @@ public class PopulateEmailQueryViewListenerTest {
             ImmutableSortedMap.of(MessageUid.of(1), outdatedMessageMetaData),
             Event.EventId.random(),
             !IS_DELIVERY,
-            !IS_APPENDED);
+            !IS_APPENDED,
+            Optional.empty());
 
         Mono.from(queryViewListener.reactiveEvent(addedOutDatedEvent)).block();
 

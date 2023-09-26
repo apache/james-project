@@ -19,9 +19,13 @@
 
 package org.apache.james.mailbox.store.event;
 
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_APPENDED;
+import static org.apache.james.mailbox.events.MailboxEvents.Added.IS_DELIVERY;
+
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.Function;
 
@@ -146,16 +150,6 @@ public class EventFactory {
     }
 
     @FunctionalInterface
-    public interface RequireIsDelivery<T> {
-        T isDelivery(boolean isDelivery);
-    }
-
-    @FunctionalInterface
-    public interface RequireIsAppended<T> {
-        T isAppended(boolean isAppended);
-    }
-
-    @FunctionalInterface
     public interface RequireAclDiff<T> {
         T aclDiff(ACLDiff aclDiff);
     }
@@ -232,6 +226,55 @@ public class EventFactory {
     }
 
     public static class AddedFinalStage {
+
+        public static class Builder {
+            static final boolean IS_DELIVERY_DEFAULT = IS_DELIVERY;
+            static final boolean IS_APPENDED_DEFAULT = IS_APPENDED;
+
+            private final Event.EventId eventId;
+            private final MailboxPath path;
+            private final MailboxId mailboxId;
+            private final Username username;
+            private final MailboxSession.SessionId sessionId;
+            private final Map<MessageUid, MessageMetaData> metaData;
+            private boolean isDelivery;
+
+            private boolean isAppended;
+            private Optional<MailboxId> movedFromMailboxId;
+
+            public Builder(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username,
+                           MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData) {
+                this.eventId = eventId;
+                this.path = path;
+                this.mailboxId = mailboxId;
+                this.username = username;
+                this.sessionId = sessionId;
+                this.metaData = metaData;
+                this.isDelivery = IS_DELIVERY_DEFAULT;
+                this.isAppended = IS_APPENDED_DEFAULT;
+                this.movedFromMailboxId = Optional.empty();
+            }
+
+            public Builder isDelivery(boolean isDelivery) {
+                this.isDelivery = isDelivery;
+                return this;
+            }
+
+            public Builder isAppended(boolean isAppended) {
+                this.isAppended = isAppended;
+                return this;
+            }
+
+            public Builder movedFrom(MailboxId mailboxId) {
+                this.movedFromMailboxId = Optional.of(mailboxId);
+                return this;
+            }
+
+            public Added build() {
+                return new AddedFinalStage(eventId, path, mailboxId, username, sessionId, metaData, isDelivery, isAppended, movedFromMailboxId).build();
+            }
+        }
+
         private final Event.EventId eventId;
         private final MailboxPath path;
         private final MailboxId mailboxId;
@@ -241,10 +284,11 @@ public class EventFactory {
         private final boolean isDelivery;
 
         private final boolean isAppended;
+        private final Optional<MailboxId> movedFromMailboxId;
 
         AddedFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username,
                         MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData,
-                        boolean isDelivery, boolean isAppended) {
+                        boolean isDelivery, boolean isAppended, Optional<MailboxId> movedFromMailboxId) {
             this.eventId = eventId;
             this.path = path;
             this.mailboxId = mailboxId;
@@ -253,6 +297,7 @@ public class EventFactory {
             this.metaData = ImmutableSortedMap.copyOf(metaData);
             this.isDelivery = isDelivery;
             this.isAppended = isAppended;
+            this.movedFromMailboxId = movedFromMailboxId;
         }
 
         public Added build() {
@@ -262,25 +307,61 @@ public class EventFactory {
             Preconditions.checkNotNull(sessionId);
             Preconditions.checkNotNull(metaData);
 
-            return new Added(sessionId, username, path, mailboxId, metaData, eventId, isDelivery, isAppended);
+            return new Added(sessionId, username, path, mailboxId, metaData, eventId, isDelivery, isAppended, movedFromMailboxId);
         }
     }
 
     public static class ExpungedFinalStage {
+
+        public static class Builder {
+            private final Event.EventId eventId;
+            private final MailboxPath path;
+            private final MailboxId mailboxId;
+            private final Username username;
+            private final MailboxSession.SessionId sessionId;
+            private final Map<MessageUid, MessageMetaData> metaData;
+
+            private Optional<MailboxId> movedToMailboxId;
+
+            public Builder(Event.EventId eventId, MailboxPath path, MailboxId mailboxId,
+                           Username username, MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData) {
+                this.eventId = eventId;
+                this.path = path;
+                this.mailboxId = mailboxId;
+                this.username = username;
+                this.sessionId = sessionId;
+                this.metaData = metaData;
+                this.movedToMailboxId = Optional.empty();
+            }
+
+            public Builder movedTo(MailboxId mailboxId) {
+                this.movedToMailboxId = Optional.of(mailboxId);
+                return this;
+            }
+
+            public Expunged build() {
+                return new ExpungedFinalStage(eventId, path, mailboxId, username, sessionId, metaData, movedToMailboxId).build();
+            }
+        }
+
         private final Event.EventId eventId;
         private final MailboxPath path;
         private final MailboxId mailboxId;
         private final Username username;
         private final MailboxSession.SessionId sessionId;
         private final ImmutableSortedMap<MessageUid, MessageMetaData> metaData;
+        private final Optional<MailboxId> movedToMailboxId;
 
-        ExpungedFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username, MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData) {
+        ExpungedFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username,
+                           MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData,
+                           Optional<MailboxId> movedToMailboxId) {
             this.eventId = eventId;
             this.path = path;
             this.mailboxId = mailboxId;
             this.username = username;
             this.sessionId = sessionId;
             this.metaData = ImmutableSortedMap.copyOf(metaData);
+            this.movedToMailboxId = movedToMailboxId;
         }
 
         public Expunged build() {
@@ -289,8 +370,9 @@ public class EventFactory {
             Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(sessionId);
             Preconditions.checkNotNull(metaData);
+            Preconditions.checkNotNull(movedToMailboxId);
 
-            return new Expunged(sessionId, username, path, mailboxId, metaData, eventId);
+            return new Expunged(sessionId, username, path, mailboxId, metaData, eventId, movedToMailboxId);
         }
     }
 
@@ -488,13 +570,15 @@ public class EventFactory {
         }
     }
 
-    public static RequireMailboxEvent<RequireMetadata<RequireIsDelivery<RequireIsAppended<AddedFinalStage>>>> added() {
-        return eventId -> user -> sessionId -> mailboxId -> path -> metaData -> isDelivery -> isAppended
-            -> new AddedFinalStage(eventId, path, mailboxId, user, sessionId, metaData, isDelivery, isAppended);
+
+    public static RequireMailboxEvent<RequireMetadata<AddedFinalStage.Builder>> added() {
+        return eventId -> user -> sessionId -> mailboxId -> path -> metaData
+            ->  new AddedFinalStage.Builder(eventId, path, mailboxId, user, sessionId, metaData);
     }
 
-    public static RequireMailboxEvent<RequireMetadata<ExpungedFinalStage>> expunged() {
-        return eventId -> user -> sessionId -> mailboxId -> path -> metaData -> new ExpungedFinalStage(eventId, path, mailboxId, user, sessionId, metaData);
+    public static RequireMailboxEvent<RequireMetadata<ExpungedFinalStage.Builder>> expunged() {
+        return eventId -> user -> sessionId -> mailboxId -> path -> metaData
+            -> new ExpungedFinalStage.Builder(eventId, path, mailboxId, user, sessionId, metaData);
     }
 
     public static RequireMailboxEvent<RequireUpdatedFlags<FlagsUpdatedFinalStage>> flagsUpdated() {
