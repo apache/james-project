@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailrepository.api.MailKey;
@@ -31,6 +32,7 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 
 public class MemoryMailRepository implements MailRepository {
@@ -50,7 +52,9 @@ public class MemoryMailRepository implements MailRepository {
             .protocol("mailrepository")
             .action("store")
             .parameters(ImmutableMap.of("mailId", mail.getName(),
-                "mimeMessageId", mail.getMessage().getMessageID(),
+                "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function(MimeMessage::getMessageID))
+                    .orElse(""),
                 "sender", mail.getMaybeSender().asString(),
                 "recipients", StringUtils.join(mail.getRecipients())))
             .log("MemoryMailRepository stored mail.");

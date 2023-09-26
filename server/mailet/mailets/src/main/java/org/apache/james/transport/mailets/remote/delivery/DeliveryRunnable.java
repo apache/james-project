@@ -24,9 +24,11 @@ import static org.apache.james.transport.mailets.remote.delivery.Bouncer.IS_DELI
 import java.io.Closeable;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.dnsservice.api.DNSService;
@@ -137,7 +139,9 @@ public class DeliveryRunnable implements Disposable {
                         .protocol("mailetcontainer")
                         .action("RemoteDelivery")
                         .parameters(ImmutableMap.of("mailId", mail.getName(),
-                            "mimeMessageId", mail.getMessage().getMessageID(),
+                            "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                                .map(Throwing.function(MimeMessage::getMessageID))
+                                .orElse(""),
                             "sender", mail.getMaybeSender().asString(),
                             "recipients", StringUtils.join(mail.getRecipients())))
                         .log("Remote delivering mail failed temporarily.");
@@ -166,7 +170,9 @@ public class DeliveryRunnable implements Disposable {
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
                     .parameters(ImmutableMap.of("mailId", mail.getName(),
-                        "mimeMessageId", mail.getMessage().getMessageID(),
+                        "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                            .map(Throwing.function(MimeMessage::getMessageID))
+                            .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
                         "recipients", StringUtils.join(mail.getRecipients())))
                     .log("Remote delivering mail succeeded.");
@@ -176,7 +182,9 @@ public class DeliveryRunnable implements Disposable {
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
                     .parameters(ImmutableMap.of("mailId", mail.getName(),
-                        "mimeMessageId", mail.getMessage().getMessageID(),
+                        "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                            .map(Throwing.function(MimeMessage::getMessageID))
+                            .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
                         "recipients", StringUtils.join(mail.getRecipients())))
                     .log("Remote delivering mail failed temporarily.");
@@ -187,7 +195,9 @@ public class DeliveryRunnable implements Disposable {
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
                     .parameters(ImmutableMap.of("mailId", mail.getName(),
-                        "mimeMessageId", mail.getMessage().getMessageID(),
+                        "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                            .map(Throwing.function(MimeMessage::getMessageID))
+                            .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
                         "recipients", StringUtils.join(mail.getRecipients())))
                     .log("Remote delivering mail failed permanently.");
@@ -219,7 +229,9 @@ public class DeliveryRunnable implements Disposable {
                 .protocol("mailetcontainer")
                 .action("RemoteDelivery")
                 .parameters(ImmutableMap.of("mailId", mail.getName(),
-                    "mimeMessageId", mail.getMessage().getMessageID(),
+                    "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                        .map(Throwing.function(MimeMessage::getMessageID))
+                        .orElse(""),
                     "sender", mail.getMaybeSender().asString(),
                     "recipients", StringUtils.join(mail.getRecipients())))
                 .log("Remote delivering mail failed after maximum retries.");

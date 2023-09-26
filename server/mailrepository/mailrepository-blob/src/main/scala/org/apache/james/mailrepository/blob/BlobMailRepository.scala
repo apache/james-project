@@ -151,7 +151,9 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
         .protocol("mailrepository")
         .action("store")
         .parameters(ImmutableMap.of("mailId", mc.getName,
-          "mimeMessageId", mc.getMessage.getMessageID,
+          "mimeMessageId", Option(mc.getMessage)
+            .flatMap(message => Option(message.getMessageID))
+            .getOrElse(""),
           "sender", mc.getMaybeSender.asString,
           "recipients", StringUtils.join(mc.getRecipients)))
         .log("BlobMailRepository stored mail."))

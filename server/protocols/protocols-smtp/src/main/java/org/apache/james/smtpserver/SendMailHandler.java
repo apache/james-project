@@ -26,9 +26,11 @@ import java.io.IOException;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
@@ -94,14 +96,18 @@ public class SendMailHandler implements JamesMessageHook {
                         holdFor.value());
 
                     AuditTrail.entry()
-                        .username(session.getUsername().asString())
+                        .username(Optional.ofNullable(session.getUsername())
+                            .map(Username::asString)
+                            .orElse(""))
                         .remoteIP(Optional.ofNullable(session.getRemoteAddress())
                             .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
                         .sessionId(session.getSessionID())
                         .protocol("SMTP")
                         .action("SPOOL")
                         .parameters(ImmutableMap.of("mailId", mail.getName(),
-                            "mimeMessageId", mail.getMessage().getMessageID(),
+                            "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                                .map(Throwing.function(MimeMessage::getMessageID))
+                                .orElse(""),
                             "sender", mail.getMaybeSender().asString(),
                             "recipients", StringUtils.join(mail.getRecipients()),
                             "holdFor", holdFor.value().toString()))
@@ -116,14 +122,18 @@ public class SendMailHandler implements JamesMessageHook {
                         mail.getRecipients());
 
                     AuditTrail.entry()
-                        .username(session.getUsername().asString())
+                        .username(Optional.ofNullable(session.getUsername())
+                            .map(Username::asString)
+                            .orElse(""))
                         .remoteIP(Optional.ofNullable(session.getRemoteAddress())
                             .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
                         .sessionId(session.getSessionID())
                         .protocol("SMTP")
                         .action("SPOOL")
                         .parameters(ImmutableMap.of("mailId", mail.getName(),
-                            "mimeMessageId", mail.getMessage().getMessageID(),
+                            "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                                .map(Throwing.function(MimeMessage::getMessageID))
+                                .orElse(""),
                             "sender", mail.getMaybeSender().asString(),
                             "recipients", StringUtils.join(mail.getRecipients())))
                         .log("SMTP mail spooled.");

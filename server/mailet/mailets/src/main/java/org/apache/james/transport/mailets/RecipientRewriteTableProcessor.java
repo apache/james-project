@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
@@ -188,7 +189,9 @@ public class RecipientRewriteTableProcessor {
             .protocol("mailetcontainer")
             .action("RecipientRewrite")
             .parameters(ImmutableMap.of("mailId", mail.getName(),
-                "mimeMessageId", mail.getMessage().getMessageID(),
+                "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function(MimeMessage::getMessageID))
+                    .orElse(""),
                 "sender", mail.getMaybeSender().asString(),
                 "recipientsBeforeRewrite", StringUtils.join(recipientsBeforeRecipientsRewrite),
                 "recipientsAfterRewrite", StringUtils.join(recipientsAfterRecipientsRewrite)))
