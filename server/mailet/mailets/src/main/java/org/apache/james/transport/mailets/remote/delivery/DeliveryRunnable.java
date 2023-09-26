@@ -26,6 +26,9 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.function.Supplier;
 
+import javax.mail.MessagingException;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.metrics.api.Metric;
@@ -33,6 +36,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
@@ -44,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -141,13 +146,21 @@ public class DeliveryRunnable implements Disposable {
     }
 
     @VisibleForTesting
-    void attemptDelivery(Mail mail) throws MailQueue.MailQueueException {
+    void attemptDelivery(Mail mail) throws MessagingException {
         ExecutionResult executionResult = mailDelivrer.deliver(mail);
         switch (executionResult.getExecutionState()) {
             case SUCCESS:
                 outgoingMailsMetric.increment();
                 configuration.getOnSuccess()
                     .ifPresent(Throwing.consumer(onSuccess -> mailetContext.sendMail(mail, onSuccess.getValue())));
+                AuditTrail.entry()
+                    .protocol("mailetcontainer")
+                    .action("RemoteDelivery")
+                    .parameters(ImmutableMap.of("mailId", mail.getName(),
+                        "mimeMessageId", mail.getMessage().getMessageID(),
+                        "sender", mail.getMaybeSender().asString(),
+                        "recipients", StringUtils.join(mail.getRecipients())))
+                    .log("Remote delivering mail succeeded.");
                 break;
             case TEMPORARY_FAILURE:
                 handleTemporaryFailure(mail, executionResult);
