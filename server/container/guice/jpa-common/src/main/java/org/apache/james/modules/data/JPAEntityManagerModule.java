@@ -32,6 +32,7 @@ import javax.persistence.Persistence;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.common.base.Joiner;

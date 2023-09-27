@@ -31,18 +31,6 @@
     <packaging>jar</packaging>
     <name>Apache James :: Mailbox :: JPA</name>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -100,16 +88,6 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-jpa</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-jpa-common-guice</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-jpa-common-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

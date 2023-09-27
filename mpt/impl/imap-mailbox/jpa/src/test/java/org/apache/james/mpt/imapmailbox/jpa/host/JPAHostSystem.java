@@ -23,6 +23,7 @@ import java.time.Instant;
 
 import javax.persistence.EntityManagerFactory;
 
+import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -64,7 +65,6 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.apache.james.modules.data.JPAConfiguration;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;

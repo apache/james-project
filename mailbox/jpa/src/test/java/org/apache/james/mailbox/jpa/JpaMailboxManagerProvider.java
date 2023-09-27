@@ -23,6 +23,7 @@ import java.time.Instant;
 
 import javax.persistence.EntityManagerFactory;
 
+import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
@@ -46,7 +47,6 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
-import org.apache.james.modules.data.JPAConfiguration;
 import org.apache.james.utils.UpdatableTickingClock;
 
 public class JpaMailboxManagerProvider {
