@@ -63,7 +63,7 @@ public class JPAAttachment {
     private long size;
 
     @Basic(optional = false, fetch = FetchType.LAZY)
-    @Column(name = "CONTENT", nullable = false)
+    @Column(name = "CONTENT", length = 1048576000, nullable = false)
     @Lob
     private byte[] content;
 

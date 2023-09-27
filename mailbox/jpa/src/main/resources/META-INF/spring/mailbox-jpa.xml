@@ -105,5 +105,5 @@
     <bean id="jpaCurrentQuotaManager" class="org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager">
         <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
-    <bean id="jpa-configuration" class="org.apache.james.modules.data.JPAConfiguration"/>
+    <bean id="jpa-configuration" class="org.apache.james.backends.jpa.JPAConfiguration"/>
 </beans>

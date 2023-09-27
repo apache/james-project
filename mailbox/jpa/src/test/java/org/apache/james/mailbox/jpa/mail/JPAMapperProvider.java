@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -39,7 +40,6 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
-import org.apache.james.modules.data.JPAConfiguration;
 
 import com.google.common.collect.ImmutableList;
 

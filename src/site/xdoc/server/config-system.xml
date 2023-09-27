@@ -86,7 +86,7 @@
                     <dd>Supported adapters are: DB2, DERBY, H2, HSQL, INFORMIX, MYSQL, ORACLE, POSTGRESQL, SQL_SERVER, SYBASE .</dd>
                     <dt><strong>openjpa.streaming</strong></dt>
                     <dd>true or false - Use streaming for Blobs. This is only supported on a limited set of databases atm. You
-                        should check if its supported by your DB before enable it. See <a href="http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html">http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html</a> (#7.11. LOB Streaming).</dd>
+                        should check if it's supported by your DB before enable it. See <a href="http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html">http://openjpa.apache.org/builds/latest/docs/manual/ref_guide_mapping_jpa.html</a> (#7.11. LOB Streaming).</dd>
                 </dl>
 
                 <p>NOTE: all<code>openjpa.*</code> properties will be passed to OpenJPA library as configuration See <a href="https://openjpa.apache.org/builds/3.2.2/apache-openjpa/docs/ref_guide_conf_openjpa.html">https://openjpa.apache.org/builds/3.2.2/apache-openjpa/docs/ref_guide_conf_openjpa.html</a> for a complete list </p>
@@ -110,8 +110,8 @@
                 <p>Attachment storage configuration</p>
                 <dl>
                     <dt><strong>attachmentStorage.enabled</strong></dt>
-                    <dd>(Guice only). The attachment storage configuration for JPA is used to enable the implementation of the attachment storage mechanism.
-                        *WARNING*: this configuration is not designed to store large binary content, as it is not optimized for this purpose.
+                    <dd>The attachment storage configuration for JPA is used to enable the implementation of the attachment storage mechanism.
+                        *WARNING*: this configuration is not designed to store large binary content (no more than 1 GB of data), as it is not optimized for this purpose.
                         Optional, Allowed values are: `true` or `false`, defaults to `false`</dd>
                 </dl>
             </subsection>

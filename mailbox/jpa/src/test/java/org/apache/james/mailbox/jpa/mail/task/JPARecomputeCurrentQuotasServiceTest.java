@@ -22,6 +22,7 @@ package org.apache.james.mailbox.jpa.mail.task;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
@@ -40,7 +41,6 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.modules.data.JPAConfiguration;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.JPAUsersRepository;
 import org.apache.james.user.jpa.model.JPAUser;

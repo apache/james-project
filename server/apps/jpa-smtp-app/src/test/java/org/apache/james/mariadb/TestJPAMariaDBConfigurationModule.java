@@ -21,7 +21,7 @@ package org.apache.james.mariadb;
 
 import javax.inject.Singleton;
 
-import org.apache.james.modules.data.JPAConfiguration;
+import org.apache.james.backends.jpa.JPAConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
