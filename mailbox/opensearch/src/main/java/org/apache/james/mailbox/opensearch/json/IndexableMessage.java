@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono;
 
 public class IndexableMessage {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
 
     public static class Builder {
         private static ZonedDateTime getSanitizedInternalDate(MailboxMessage message, ZoneId zoneId) {

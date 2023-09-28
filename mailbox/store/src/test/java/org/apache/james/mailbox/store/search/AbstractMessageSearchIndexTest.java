@@ -110,7 +110,7 @@ public abstract class AbstractMessageSearchIndexTest {
     private Mailbox mailbox2;
     private Mailbox otherMailbox;
     private Mailbox quanMailbox;
-    private MailboxSession session;
+    protected MailboxSession session;
     private MailboxSession otherSession;
     private MailboxSession quanSession;
 
@@ -131,7 +131,7 @@ public abstract class AbstractMessageSearchIndexTest {
     private MailboxPath inboxPath;
     private MailboxPath otherInboxPath;
     private MailboxPath quanInboxPath;
-    private StoreMessageManager inboxMessageManager;
+    protected StoreMessageManager inboxMessageManager;
     private StoreMessageManager quanInboxMessageManager;
     private MessageMapper messageMapper;
     private MessageId newBasedMessageId;

@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.opensearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
@@ -34,12 +35,14 @@ import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
@@ -63,10 +66,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.opensearch._types.query_dsl.MatchAllQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
+import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
+import org.opensearch.client.opensearch.core.GetRequest;
+import org.opensearch.client.opensearch.core.GetResponse;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -155,6 +163,82 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     @Override
     protected MessageId initOtherBasedMessageId() {
         return InMemoryMessageId.of(1000);
+    }
+
+    @Test
+    void theDocumentShouldBeReindexWithNewMailboxWhenMoveMessages() throws Exception {
+        // Given mailboxA, mailboxB. Add message in mailboxA
+        MailboxPath mailboxA = MailboxPath.forUser(USERNAME, "mailboxA");
+        MailboxPath mailboxB = MailboxPath.forUser(USERNAME, "mailboxB");
+        MailboxId mailboxAId = storeMailboxManager.createMailbox(mailboxA, session).get();
+        MailboxId mailboxBId = storeMailboxManager.createMailbox(mailboxB, session).get();
+
+        ComposedMessageId composedMessageId = storeMailboxManager.getMailbox(mailboxAId, session)
+            .appendMessage(MessageManager.AppendCommand.from(
+                    Message.Builder.of()
+                        .setTo("benwa@linagora.com")
+                        .setBody(Strings.repeat("append to inbox A", 5000), StandardCharsets.UTF_8)),
+                session).getId();
+
+        awaitUntilAsserted(mailboxAId, 1);
+
+        // When moving the message from mailboxA to mailboxB
+        storeMailboxManager.moveMessages(MessageRange.from(composedMessageId.getUid()), mailboxAId, mailboxBId, session);
+
+        // Then the message is not anymore when searching with mailboxA, but is in mailboxB
+        awaitUntilAsserted(mailboxAId, 0);
+
+        // verify the messageDocumentWasUpdated
+        MessageUid bMessageUid = Flux.from(storeMailboxManager.getMailbox(mailboxBId, session).search(SearchQuery.matchAll(), session))
+            .next().block();
+
+        ObjectNode updatedDocument = client.get(
+                 new GetRequest.Builder()
+                    .index("mailboxWriteAlias")
+                    .id(mailboxBId.serialize() + ":" + bMessageUid.asLong())
+                    .routing(mailboxBId.serialize())
+                    .build())
+            .filter(GetResponse::found)
+            .map(GetResponse::source)
+            .block();
+
+        assertThat(updatedDocument).isNotNull();
+        assertSoftly(softly -> {
+            softly.assertThat(updatedDocument.get("mailboxId").asText()).isEqualTo(mailboxBId.serialize());
+            softly.assertThat(updatedDocument.get("uid").asLong()).isEqualTo(bMessageUid.asLong());
+        });
+    }
+
+    @Test
+    void theMessageShouldBeIndexedWhenMoveMessagesButIndexedDocumentNotFound() throws Exception {
+        // Given mailboxA, mailboxB. Add message in mailboxA
+        MailboxPath mailboxA = MailboxPath.forUser(USERNAME, "mailboxA");
+        MailboxPath mailboxB = MailboxPath.forUser(USERNAME, "mailboxB");
+        MailboxId mailboxAId = storeMailboxManager.createMailbox(mailboxA, session).get();
+        MailboxId mailboxBId = storeMailboxManager.createMailbox(mailboxB, session).get();
+
+        ComposedMessageId composedMessageId = storeMailboxManager.getMailbox(mailboxAId, session)
+            .appendMessage(MessageManager.AppendCommand.from(
+                    Message.Builder.of()
+                        .setTo("benwa@linagora.com")
+                        .setBody(Strings.repeat("append to inbox A", 5000), StandardCharsets.UTF_8)),
+                session).getId();
+
+        awaitUntilAsserted(mailboxAId, 1);
+
+        // Try to delete the document manually to simulate a not found document.
+        client.deleteByQuery(new DeleteByQueryRequest.Builder()
+                .index("mailboxWriteAlias")
+                .query(new MatchAllQuery.Builder().build()._toQuery())
+                .build())
+            .block();
+        awaitUntilAsserted(mailboxAId, 0);
+
+        // When moving the message from mailboxA to mailboxB
+        storeMailboxManager.moveMessages(MessageRange.from(composedMessageId.getUid()), mailboxAId, mailboxBId, session);
+
+        // Then the message should be indexed in mailboxB
+        awaitUntilAsserted(mailboxBId, 1);
     }
 
     @Test
@@ -478,5 +562,11 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                             .build())
                         .block()
                         .hits().total().value()).isEqualTo(totalHits));
+    }
+
+    private void awaitUntilAsserted(MailboxId mailboxId, long expectedCountResult) {
+        CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+            .untilAsserted(() -> assertThat(messageSearchIndex.search(session, List.of(mailboxId), SearchQuery.matchAll(), 100L).toStream().count())
+                .isEqualTo(expectedCountResult));
     }
 }
