@@ -21,6 +21,10 @@ package org.apache.james.mailrepository.api;
 
 import java.util.stream.Stream;
 
+/**
+ * This interface allows to a register repository to a given url.
+ * User can then list them and check existence.
+ */
 public interface MailRepositoryUrlStore {
 
     void add(MailRepositoryUrl url);
