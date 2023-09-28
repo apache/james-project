@@ -28,6 +28,7 @@ import javax.inject.Named;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.lmtpserver.DataLineLMTPHandler;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -44,8 +45,11 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.AuditTrail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -95,6 +99,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                     }),
                     mailboxSession);
             mailboxManager.endProcessingRequest(mailboxSession);
+            auditTrail(session, recipient, envelope);
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.ok())
                 .smtpReturnCode(SMTPRetCode.MAIL_OK)
@@ -106,6 +111,26 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 .hookReturnCode(HookReturnCode.denySoft())
                 .smtpDescription(" Temporary error deliver message to " + recipient)
                 .build();
+        }
+    }
+
+    private void auditTrail(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
+        if (envelope instanceof DataLineLMTPHandler.ReadOnlyMailEnvelope) {
+            DataLineLMTPHandler.ReadOnlyMailEnvelope readOnlyMailEnvelope = (DataLineLMTPHandler.ReadOnlyMailEnvelope) envelope;
+            AuditTrail.entry()
+                .username(Optional.ofNullable(session.getUsername())
+                    .map(Username::asString)
+                    .orElse(""))
+                .remoteIP(Optional.ofNullable(session.getRemoteAddress())
+                    .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
+                .sessionId(session.getSessionID())
+                .protocol("LMTP")
+                .action("Deliver mail")
+                .parameters(ImmutableMap.of("mailId", readOnlyMailEnvelope.getMailId(),
+                    "mimeMessageId", readOnlyMailEnvelope.getMimeMessageId().orElse(""),
+                    "sender", readOnlyMailEnvelope.getMaybeSender().asString(),
+                    "recipient", recipient.asString()))
+                .log("LMTP mail sent.");
         }
     }
 }
