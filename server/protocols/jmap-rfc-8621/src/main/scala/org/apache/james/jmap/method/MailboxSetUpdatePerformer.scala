@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.method
 
+import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
@@ -32,10 +33,11 @@ import org.apache.james.mailbox.exception.{InsufficientRightsException, MailboxE
 import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
-import org.apache.james.util.ReactorUtils
+import org.apache.james.util.{AuditTrail, ReactorUtils}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 object MailboxSetUpdatePerformer {
 
@@ -215,7 +217,17 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     }).getOrElse(SMono.empty)
 
     val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
-      .flatMap(partialUpdate => SMono.fromCallable(() => mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession)),
+      .flatMap(partialUpdate => SMono.fromCallable(() => mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession))
+        .doOnSuccess(_ => AuditTrail.entry
+          .username(mailboxSession.getUser.asString())
+          .protocol("JMAP")
+          .action("Mailbox/set update")
+          .parameters(ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
+            "delegator", mailboxSession.getUser.asString(),
+            "delegatee", partialUpdate.username.asString(),
+            "mailboxId", mailboxId.serialize(),
+            "rights", partialUpdate.rights.asJava.serialize()))
+          .log("JMAP mailbox shared.")),
         maxConcurrency = 5)
       .`then`()
 
