@@ -119,6 +119,37 @@ class MailboxListenersLoaderImplTest {
     }
 
     @Test
+    void configurationShouldBeOptional() throws Exception {
+        XMLConfiguration configuration = toConfigutation("<listeners>" +
+                    "<listener>" +
+                        "<class>org.apache.james.modules.mailbox.ConfiguredListener</class>" +
+                    "</listener>" +
+                "</listeners>");
+
+        testee.configure(configuration);
+
+        assertThat(ConfiguredListener.value).isNull();
+    }
+
+    @Test
+    void configurationShouldBeTakenIntoAccount() throws Exception {
+        ConfiguredListener.value = "v1";
+
+        XMLConfiguration configuration = toConfigutation("<listeners>" +
+                    "<listener>" +
+                        "<class>org.apache.james.modules.mailbox.ConfiguredListener</class>" +
+                        "<configuration>" +
+                            "<value>v2</value>>" +
+                        "</configuration>" +
+                    "</listener>" +
+                "</listeners>");
+
+        testee.configure(configuration);
+
+        assertThat(ConfiguredListener.value).isEqualTo("v2");
+    }
+
+    @Test
     void customGroupCanBePassed() throws Exception {
         XMLConfiguration configuration = toConfigutation("<listeners>" +
                     "<listener>" +
