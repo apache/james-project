@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor.fetch;
 
 import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode.IGNORE;
+import static org.apache.james.mailbox.model.FetchGroup.FULL_CONTENT;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -53,12 +55,14 @@ import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -170,6 +174,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 if (fetch.isOnlyFlags()) {
                     return processMessageRangeForFlags(selected, mailbox, fetch, mailboxSession, responder, builder, range);
                 } else {
+                    auditTrail(mailbox, mailboxSession, resultToFetch, range);
                     return processMessageRange(selected, mailbox, fetch, mailboxSession, responder, builder, resultToFetch, range);
                 }
             })
@@ -227,6 +232,19 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
             .doOnNext(responder::respond)
             .then();
+    }
+
+    private static void auditTrail(MessageManager mailbox, MailboxSession mailboxSession, FetchGroup resultToFetch, MessageRange range) {
+        if (resultToFetch.equals(FULL_CONTENT)) {
+            AuditTrail.entry()
+                .username(mailboxSession.getUser().asString())
+                .protocol("IMAP")
+                .action("FETCH")
+                .parameters(ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                    "mailboxId", mailbox.getId().serialize(),
+                    "messageUids", range.toString()))
+                .log("IMAP FETCH full content read.");
+        }
     }
 
     @Override
