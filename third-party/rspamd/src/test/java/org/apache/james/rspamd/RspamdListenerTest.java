@@ -113,7 +113,8 @@ public class RspamdListenerTest {
         spamCapitalMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY).block().getMailboxId();
         trashMailboxId = mailboxMapper.create(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY).block().getMailboxId();
 
-        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration,
+            RspamdListener.RspamdListenerConfiguration.DEFAULT);
     }
 
     @Test
@@ -225,7 +226,8 @@ public class RspamdListenerTest {
     void eventShouldCallReportPerUserSpamLearningWhenTheMovedEventMatchesAndPerUserBayesIsEnabled() throws Exception {
         RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
         when(configuration.usePerUserBayes()).thenReturn(true);
-        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration,
+            RspamdListener.RspamdListenerConfiguration.DEFAULT);
 
         createMessage(inbox);
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
@@ -247,7 +249,8 @@ public class RspamdListenerTest {
     void eventShouldCallReportGlobalSpamLearningWhenTheMovedEventMatchesAndPerUserBayesIsDisabled() throws Exception {
         RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
         when(configuration.usePerUserBayes()).thenReturn(false);
-        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration,
+            RspamdListener.RspamdListenerConfiguration.DEFAULT);
 
         createMessage(inbox);
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
@@ -287,7 +290,8 @@ public class RspamdListenerTest {
     void eventShouldCallReportPerUserHamLearningWhenTheMessageIsAddedInInboxAndPerUserBayesIsEnabled() throws Exception {
         RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
         when(configuration.usePerUserBayes()).thenReturn(true);
-        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration,
+            RspamdListener.RspamdListenerConfiguration.DEFAULT);
 
         SimpleMailboxMessage message = createMessage(inbox);
 
@@ -309,7 +313,8 @@ public class RspamdListenerTest {
     void eventShouldCallReportGlobalHamLearningWhenTheMessageIsAddedInInboxAndPerUserBayesIsDisabled() throws Exception {
         RspamdClientConfiguration configuration = mock(RspamdClientConfiguration.class);
         when(configuration.usePerUserBayes()).thenReturn(false);
-        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration);
+        listener = new RspamdListener(rspamdHttpClient, mailboxManager, mapperFactory, systemMailboxesProvider, configuration,
+            RspamdListener.RspamdListenerConfiguration.DEFAULT);
 
         SimpleMailboxMessage message = createMessage(inbox);
 

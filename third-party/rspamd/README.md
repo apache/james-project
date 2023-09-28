@@ -113,6 +113,9 @@ then run it: `docker-compose up`
 ## Additional webadmin endpoints
 
 ### Report spam messages to Rspamd
+
+#### Use a webadmin task
+
 One can use this route to schedule a task that reports spam messages to Rspamd for its spam classify learning.
 This task can be configured to report spam messages to per-user Bayes via `perUserBayes` in `rspamd.properties`.
 
@@ -210,4 +213,31 @@ The scheduled task will have the following type `FeedHamToRspamdTask` and the fo
   "timestamp": "2007-12-03T10:15:30Z",
   "type": "FeedHamToRspamdTask"
 }
+```
+
+#### Use live reporting
+
+Alternatively, ham/spam can be reported by using a mailbox listener. To do so enable `RspamdListener` within `listeners.xml`
+configuration file:
+
+```xml
+<listeners>
+    <listener>
+        <class>org.apache.james.rspamd.RspamdListener</class>
+        <async>true</async>
+    </listener>
+</listeners>
+```
+
+Note that you can turn off `reportAdded` (which reports incoming messages as Ham) resulting in lesser work:
+
+
+
+```xml
+<listeners>
+    <listener>
+        <class>org.apache.james.rspamd.RspamdListener</class>
+        <async>true</async>
+    </listener>
+</listeners>
 ```
