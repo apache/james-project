@@ -122,7 +122,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         }
     }
 
-    private Mono<Void> handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
+    protected Mono<Void> handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
         return Flux.fromIterable(MessageRange.toRanges(added.getUids()))
             .concatMap(range -> retrieveMailboxMessages(session, mailbox, range))
             .publishOn(Schedulers.parallel())
