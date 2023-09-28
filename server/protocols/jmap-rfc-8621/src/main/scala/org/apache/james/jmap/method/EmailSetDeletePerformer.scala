@@ -19,16 +19,20 @@
 
 package org.apache.james.jmap.method
 
+import com.google.common.collect.ImmutableMap
 import javax.inject.Inject
+import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{DestroyIds, EmailSet, EmailSetRequest, UnparsedMessageId}
 import org.apache.james.jmap.method.EmailSetDeletePerformer.{DestroyFailure, DestroyResult, DestroyResults}
 import org.apache.james.mailbox.model.{DeleteResult, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
+import org.apache.james.util.AuditTrail
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 
 object EmailSetDeletePerformer {
   case class DestroyResults(results: Seq[DestroyResult]) {
@@ -85,6 +89,7 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
       }
 
       SMono(messageIdManager.delete(messageIds.toList.asJava, mailboxSession))
+        .doOnSuccess(auditTrail(_, mailboxSession))
         .map(DestroyResult.from)
         .onErrorResume(e => SMono.just(messageIds.map(id => DestroyFailure(EmailSet.asUnparsed(id), e))))
         .map(_ ++ parsingErrors)
@@ -93,4 +98,17 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
       SMono.just(DestroyResults(Seq()))
     }
   }
+
+  private def auditTrail(deleteResult: DeleteResult, mailboxSession: MailboxSession): Unit =
+    if (!deleteResult.getDestroyed.isEmpty) {
+      AuditTrail.entry
+        .username(mailboxSession.getUser.asString())
+        .protocol("JMAP")
+        .action("Email/set destroy")
+        .parameters(ImmutableMap.of("messageIds", StringUtils.join(deleteResult.getDestroyed),
+          "loggedInUser", mailboxSession.getLoggedInUser.toScala
+            .map(_.asString())
+            .getOrElse("")))
+        .log("Mails deleted.")
+    }
 }
