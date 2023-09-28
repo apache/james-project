@@ -25,10 +25,12 @@ import java.time.ZoneId
 import java.util.Date
 
 import cats.implicits._
+import com.google.common.collect.ImmutableMap
 import eu.timepit.refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import javax.inject.Inject
+import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.api.model.{EmailAddress, Preview}
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
@@ -51,12 +53,14 @@ import org.apache.james.mime4j.field.AddressListFieldLenientImpl
 import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawFieldParser}
 import org.apache.james.mime4j.util.MimeUtil
+import org.apache.james.util.AuditTrail
 import org.apache.james.util.html.HtmlTextExtractor
 import org.slf4j.{Logger, LoggerFactory}
 import reactor.core.scala.publisher.{SFlux, SMono}
 import reactor.core.scheduler.Schedulers
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.{Failure, Success, Try}
 
 object Email {
@@ -651,8 +655,19 @@ private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
   private val reader: GenericEmailViewReader[EmailFullView] = new GenericEmailViewReader[EmailFullView](messageIdManager, FULL_CONTENT, htmlTextExtractor, fullViewFactory)
 
 
-  override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] =
+  override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
+    AuditTrail.entry
+      .username(mailboxSession.getUser.asString())
+      .protocol("JMAP")
+      .action("Email full view read")
+      .parameters(ImmutableMap.of("messageIds", StringUtils.join(ids.asJava),
+        "loggedInUser", mailboxSession.getLoggedInUser.toScala
+          .map(_.asString())
+          .getOrElse("")))
+      .log("JMAP Email full view read.")
+
     reader.read(ids, request, mailboxSession)
+  }
 }
 
 object EmailFastViewReader {
