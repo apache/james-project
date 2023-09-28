@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -104,27 +104,4 @@ object Auth {
   case class Basic(userId: String, password: String) extends Auth
 }
 
-case class PulsarConfiguration(brokerUri: String, adminUri: String, namespace: Namespace, auth: Auth = Auth.NoAuth) {
-  private val pulsarAuth = auth match {
-    case Auth.NoAuth => new AuthenticationDisabled()
-    case Auth.Token(value) => new AuthenticationToken(value)
-    case Auth.Basic(userId, password) =>
-      val basic = new AuthenticationBasic()
-      basic.configure(Map("userId" -> userId, "password" -> password).asJava)
-      basic
-  }
-
-  lazy val adminClient: PulsarAdmin =
-    PulsarAdmin.builder()
-      .serviceHttpUrl(adminUri)
-      .authentication(pulsarAuth)
-      .build()
-
-  lazy val asyncClient: PulsarAsyncClient =
-    PulsarClient(
-      PulsarClientConfig(
-        serviceUrl = brokerUri,
-        authentication = Some(pulsarAuth)
-      )
-    )
-}
+case class PulsarConfiguration(brokerUri: String, adminUri: String, namespace: Namespace, auth: Auth = Auth.NoAuth)
