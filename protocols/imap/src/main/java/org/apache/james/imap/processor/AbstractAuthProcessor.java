@@ -38,10 +38,12 @@ import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.AuditTrail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -87,6 +89,12 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     session.authenticated();
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
+                    AuditTrail.entry()
+                        .username(mailboxSession.getUser().asString())
+                        .sessionId(session.sessionId().asString())
+                        .protocol("IMAP")
+                        .action("AUTH")
+                        .log("IMAP Authentication succeeded.");
                     okComplete(request, responder);
                     responder.flush();
                     session.stopDetectingCommandInjection();
@@ -126,6 +134,15 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             final MailboxSession mailboxSession = mailboxSessionSupplier.get();
             session.authenticated();
             session.setMailboxSession(mailboxSession);
+            AuditTrail.entry()
+                .username(mailboxSession.getLoggedInUser()
+                    .map(Username::asString)
+                    .orElse(""))
+                .sessionId(session.sessionId().asString())
+                .protocol("IMAP")
+                .action("AUTH")
+                .parameters(ImmutableMap.of("delegatorUser", mailboxSession.getUser().asString()))
+                .log("IMAP Authentication with delegation succeeded.");
             okComplete(request, responder);
             provisionInbox(session, mailboxManager, mailboxSession);
         } catch (BadCredentialsException e) {
