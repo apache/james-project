@@ -19,25 +19,22 @@
 
 package org.apache.james;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
-import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlModule;
-import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlStore;
+import org.apache.james.mailrepository.jpa.JPAMailRepositoryUrlStore;
 import org.apache.james.modules.RunArgumentsModule;
-import org.apache.james.modules.data.CassandraDelegationStoreModule;
-import org.apache.james.modules.data.CassandraDomainListModule;
-import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
-import org.apache.james.modules.data.CassandraUsersRepositoryModule;
+import org.apache.james.modules.data.JPADomainListModule;
+import org.apache.james.modules.data.JPAEntityManagerModule;
+import org.apache.james.modules.data.JPARecipientRewriteTableModule;
+import org.apache.james.modules.data.JPAUsersRepositoryModule;
+import org.apache.james.modules.data.MemoryDelegationStoreModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
-import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
-import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailrepository.BlobstoreMailRepositoryModule;
-import org.apache.james.modules.metrics.CassandraMetricsModule;
+import org.apache.james.modules.objectstorage.DefaultBucketModule;
+import org.apache.james.modules.objectstorage.S3BlobStoreModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.DataRoutesModules;
@@ -54,7 +51,6 @@ import org.apache.james.server.blob.deduplication.PassThroughBlobStore;
 
 import com.google.inject.Module;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
@@ -70,22 +66,18 @@ public class Main implements JamesServerMain {
             new SMTPServerModule(),
             new ProtocolHandlerModule()
     );
-
     private static final Module BLOB_MODULE = Modules.combine(
-            new CassandraBlobStoreDependenciesModule(),
             new BlobStoreAPIModule(),
+            new S3BlobStoreModule(),
+            new DefaultBucketModule(),
             binder -> {
-                binder.bind(BucketName.class)
-                        .annotatedWith(Names.named(BlobStore.DEFAULT_BUCKET_NAME_QUALIFIER))
-                        .toInstance(BucketName.DEFAULT);
-                binder.bind(CassandraBlobStoreDAO.class).in(Scopes.SINGLETON);
-
-                binder.bind(BlobStoreDAO.class).to(CassandraBlobStoreDAO.class);
+                binder.bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class);
                 binder.bind(BlobStore.class)
                         .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
                         .to(PassThroughBlobStore.class);
             }
     );
+
 
     public static final Module QUEUE_MODULES = Modules.combine(
             new RawPostDequeueDecoratorModule(),
@@ -94,22 +86,18 @@ public class Main implements JamesServerMain {
 
     public static final Module SERVER_CORE_MODULES = Modules.combine(
             new DefaultProcessorsConfigurationProviderModule(),
-            new CassandraSessionModule(),
+            new JPAEntityManagerModule(),
             new MailStoreRepositoryModule(),
             new MailetContainerModule(),
             new BlobstoreMailRepositoryModule(),
             binder -> {
-                binder.bind(MailRepositoryUrlStore.class).to(CassandraMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
+                binder.bind(MailRepositoryUrlStore.class).to(JPAMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
             },
-            binder -> {
-                Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder, CassandraModule.class);
-                cassandraModuleBinder.addBinding().toInstance(CassandraMailRepositoryUrlModule.MODULE);
-            },
-            new CassandraDomainListModule(),
-            new CassandraRecipientRewriteTableModule(),
-            new CassandraDelegationStoreModule(),
-            new CassandraUsersRepositoryModule(),
-            new CassandraMetricsModule(),
+            new CoreDataModule(),
+            new JPADomainListModule(),
+            new JPARecipientRewriteTableModule(),
+            new JPAUsersRepositoryModule(),
+            new MemoryDelegationStoreModule(),
             new TaskManagerModule()
     );
 

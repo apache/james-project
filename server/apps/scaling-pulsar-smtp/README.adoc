@@ -1,77 +1,79 @@
-# Pulsar backed SMTP processing
+= Pulsar backed SMTP processing
 
-## App goals
+== App goals
 
-Ultimately this app will provide an easily scalable smtp processing module based on Apache Pulsar for small to large deployments. The dependency on cassandra is temporary and will be removed incrementally as suitable alternative implementations for the guice modules are integrated.
+This app provides an easily scalable SMTP processing module based on Apache Pulsar for small to large deployments. The idea being that it is easy enough to operate this assembly at a "reasonable" cost in the cloud until the scale is large enough to warrant switching to the fully distributed app.
 
-Cassandra is pretty expensive to operate and only makes sense for really large scale deployments. On the other hand, there are cost-efficient SAAS deployments of pulsar. For small scale deployments destined to grow this app will instead rely on 
-- A blobstore (for mail repository) 
-- A PostgresSQL database for reference data (domain list, recipient rewrite table and users)
+In order to support such small deployments destined to grow this app relies on :
+- Apache pulsar as there are cost-efficient SAAS deployments that make this app easy to deploy
+- A Blobstore (for mail repository) as they are very cost-efficient and available at most providers in the Cloud market.
+- A PostgresSQL database for reference data (domain list, recipient rewrite table and users). PostgreSQL databases as a service is available on multiple cloud platform and for this kind of information entry tiers should allow to operate a reasonable service. 
 
-The idea being that it will be easy enough to operate this assembly at a "reasonable" cost in the cloud until the scale is large enough to warrant switching to the fully distributed app. 
-
-## Building
+== Building
 
 In order to build the docker packaging, run:
 
-```
+----
 mvn clean install -DskipTests
-```
 
-## ZIP distribution
+----
+
+== ZIP distribution
 
 Available in `target` directory, the ZIP include detailed instructions.
 
-## Docker distribution
+== Docker distribution
 
 To import the image locally:
 
-```
+----
 docker image load -i target/jib-image.tar
-```
+
+----
 
 Then run it:
 
-```
+----
 docker run apache/james:scaling-pulsar-smtp-latest
-```
 
+----
 
 For security reasons you are required to generate your own keystore, that you can mount into the container via a volume:
 
-```
+----
 keytool -genkey -alias james -keyalg RSA -keystore keystore
 docker run -v $PWD/keystore:/root/conf/keystore apache/james:scaling-pulsar-smtp-latest
-```
+----
 
 In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `--generate-keystore` when running,
 James will auto-generate keystore file with the default setting that is declared in `jmap.properties` (tls.keystoreURL, tls.secret)
 
-```
+----
 docker run --network james apache/james:scaling-pulsar-smtp-latest --generate-keystore
-```
+----
 
-Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags) 
+Use the https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags[JAVA_TOOL_OPTIONS environment option]
 to pass extra JVM flags. For instance:
 
-```
+----
 docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:scaling-pulsar-smtp-latest
-```
+----
 
-[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
+https://glowroot.org/[Glowroot APM] is packaged as part of the docker distribution to easily enable valuable performances insights.
 Disabled by default, its java agent can easily be enabled:
 
-```
+----
 docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:scaling-pulsar-smtp-latest
-```
-The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
+----
 
-```
+The https://james.apache.org/server/manage-cli.html[CLI] can easily be used:
+
+----
 docker exec CONTAINER-ID james-cli ListDomains
-```
+----
 
 Note that you can create a domain via an environment variable. This domain will be created upon James start:
 
-```
+----
 --environment DOMAIN=domain.tld
-```
+----

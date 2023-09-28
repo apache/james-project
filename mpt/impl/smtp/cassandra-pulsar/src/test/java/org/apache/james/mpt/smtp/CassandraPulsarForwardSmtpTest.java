@@ -21,26 +21,23 @@ package org.apache.james.mpt.smtp;
 
 import static org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType.SMTP_GLOBAL_SERVER;
 
-import org.apache.james.CassandraExtension;
-import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.Main;
+import org.apache.james.PostgresExtension;
 import org.apache.james.PulsarExtension;
 import org.apache.james.TestingSmtpRelayJamesServerBuilder;
-import org.apache.james.junit.categories.Unstable;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-@Tag(Unstable.TAG)
+//FIXME rename this test
 public class CassandraPulsarForwardSmtpTest implements ForwardSmtpTest {
 
     @Order(1)
     @RegisterExtension
     static JamesServerExtension testExtension = TestingSmtpRelayJamesServerBuilder.forConfiguration(c -> c)
-            .extension(new DockerOpenSearchExtension())
-            .extension(new CassandraExtension())
+            .extension(new PostgresExtension())
             .extension(new PulsarExtension())
+            .extension(new AwsS3BlobStoreExtension())
             .extension(new InMemoryDnsExtension())
             .server(Main::createServer)
             .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)

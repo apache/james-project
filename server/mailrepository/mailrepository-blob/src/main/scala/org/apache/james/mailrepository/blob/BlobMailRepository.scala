@@ -57,7 +57,7 @@ object BlobMailRepository {
     private[blob] val METADATA_BLOB_TYPE = new BlobType("mailMetadata", SIZE_BASED)
 
     class Factory extends BlobPartsId.Factory[BlobMailRepository.MailPartsId] {
-      override def generate(map: util.Map[BlobType, BlobId]) = {
+      override def generate(map: util.Map[BlobType, BlobId]): MailPartsId = {
         require(map.containsKey(METADATA_BLOB_TYPE), "Expecting 'mailMetadata' blobId to be specified")
         require(map.size == 1, "blobId other than 'mailMetadata' are not supported")
         new BlobMailRepository.MailPartsId(map.get(METADATA_BLOB_TYPE))
@@ -66,7 +66,7 @@ object BlobMailRepository {
   }
 
   private[blob] case class MailPartsId private[blob](metadataBlobId: BlobId) extends BlobPartsId {
-    override def asMap = ImmutableMap.of(MailPartsId.METADATA_BLOB_TYPE, metadataBlobId)
+    override def asMap: ImmutableMap[BlobType, BlobId] = ImmutableMap.of(MailPartsId.METADATA_BLOB_TYPE, metadataBlobId)
 
     def toMailKey: MailKey = new MailKey(metadataBlobId.asString())
   }
@@ -177,12 +177,12 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
   }
 
   @throws[MessagingException]
-  override def remove(key: MailKey) = {
+  override def remove(key: MailKey): Unit = {
     Mono.from(blobStore.delete(metadataBucketName, blobIdFactory.from(key.asString()))).block()
   }
 
   @throws[MessagingException]
-  override def removeAll() = {
+  override def removeAll(): Unit = {
     Flux.from(blobStore.listBlobs(metadataBucketName))
       .flatMap(blobId => blobStore.delete(metadataBucketName, blobId))
       .blockLast()
@@ -194,7 +194,7 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
     .bucket(metadataBucketName)
     .passthrough()
 
-  val mailMetadataStore = new Store.Impl[(Mail, MimeMessagePartsId), BlobMailRepository.MailPartsId](
+  private val mailMetadataStore = new Store.Impl[(Mail, MimeMessagePartsId), BlobMailRepository.MailPartsId](
     new MailPartsId.Factory,
     new BlobMailRepository.MailEncoder(blobStore, blobIdFactory),
     new BlobMailRepository.MailDecoder(blobIdFactory),
