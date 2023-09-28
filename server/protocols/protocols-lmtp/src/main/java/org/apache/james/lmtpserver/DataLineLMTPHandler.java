@@ -23,6 +23,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.Response;
@@ -37,6 +40,8 @@ import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
 import org.apache.james.smtpserver.DataLineJamesMessageHookHandler;
 import org.apache.mailet.Mail;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * Handler which takes care of deliver the mail to the recipients INBOX
@@ -90,15 +95,28 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
         }
     }
 
-    private static final class ReadOnlyMailEnvelope extends MailToMailEnvelopeWrapper {
+    public static final class ReadOnlyMailEnvelope extends MailToMailEnvelopeWrapper {
+        private final String mailId;
+        private final Optional<String> mimeMessageId;
 
         public ReadOnlyMailEnvelope(Mail mail) {
             super(mail, null);
+            this.mailId = mail.getName();
+            this.mimeMessageId = Optional.ofNullable(Throwing.supplier(mail::getMessage).get())
+                .map(Throwing.function(MimeMessage::getMessageID));
         }
 
         @Override
         public OutputStream getMessageOutputStream() throws IOException {
             throw new IOException("Read-only envelope");
+        }
+
+        public String getMailId() {
+            return mailId;
+        }
+
+        public Optional<String> getMimeMessageId() {
+            return mimeMessageId;
         }
     }
 }
