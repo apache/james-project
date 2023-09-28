@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
@@ -51,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -125,7 +128,16 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
         return mailbox.expungeReactive(range, mailboxSession)
             .doOnNext(selected::removeRecent)
             .count()
-            .map(Long::intValue);
+            .map(Long::intValue)
+            .doOnSuccess(any -> AuditTrail.entry()
+                .username(mailboxSession.getUser().asString())
+                .sessionId(session.sessionId().asString())
+                .protocol("IMAP")
+                .action("EXPUNGE")
+                .parameters(ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                    "mailboxId", mailbox.getId().serialize(),
+                    "messageUids", range.toString()))
+                .log("IMAP EXPUNGE succeeded."));
     }
 
     @Override
