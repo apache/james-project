@@ -217,7 +217,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     doAuthWithDelegation(() -> getMailboxManager()
                             .authenticate(authenticatedUser)
                             .as(associatedUser),
-                        session, request, responder);
+                        session, request, responder, authenticatedUser, associatedUser);
                 } else {
                     authSuccess(authenticatedUser, session, request, responder);
                 }
