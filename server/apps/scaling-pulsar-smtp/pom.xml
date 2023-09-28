@@ -17,7 +17,8 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -258,11 +259,32 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install-glowroot</id>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <url>
+                                https://github.com/glowroot/glowroot/releases/download/v0.13.6/glowroot-0.13.6-dist.zip
+                            </url>
+                            <unpack>true</unpack>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <md5>f9026dbab1fbade067ca549913802fcc</md5>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>gcr.io/distroless/java:11</image>
+                        <image>eclipse-temurin:11-jre-focal</image>
                     </from>
                     <to>
                         <image>apache/james</image>
@@ -272,14 +294,91 @@
                     </to>
                     <container>
                         <mainClass>org.apache.james.Main</mainClass>
+                        <extraClasspath>/root/extensions-jars/*</extraClasspath>
                         <ports>
                             <port>25</port>
                             <port>8000</port>
                         </ports>
+                        <appRoot>/root</appRoot>
+                        <jvmFlags>
+                            <jvmFlag>-Dlogback.configurationFile=/root/conf/logback.xml</jvmFlag>
+                            <jvmFlag>-Dworking.directory=/root/</jvmFlag>
+                            <!-- Prevents Logjam (CVE-2015-4000) -->
+                            <jvmFlag>-Djdk.tls.ephemeralDHKeySize=2048</jvmFlag>
+                            <jvmFlag>-Dextra.props=/root/conf/jvm.properties</jvmFlag>
+                        </jvmFlags>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                        <volumes>
+                            <volume>/logs</volume>
+                            <volume>/root/conf</volume>
+                            <volume>/root/extensions-jars</volume>
+                            <volume>/root/glowroot/plugins</volume>
+                            <volume>/root/glowroot/data</volume>
+                        </volumes>
                     </container>
+                    <extraDirectories>
+                        <paths>
+                            <path>
+                                <from>sample-configuration</from>
+                                <into>/root/conf</into>
+                            </path>
+                            <path>
+                                <from>docker-configuration</from>
+                                <into>/root/conf</into>
+                            </path>
+                            <path>
+                                <from>src/main/scripts</from>
+                                <into>/usr/bin</into>
+                            </path>
+                            <path>
+                                <from>target/glowroot</from>
+                                <into>/root</into>
+                            </path>
+                            <path>
+                                <from>src/main/extensions-jars</from>
+                                <into>/root/extensions-jars</into>
+                            </path>
+                        </paths>
+                        <permissions>
+                            <permission>
+                                <file>/usr/bin/james-cli</file>
+                                <mode>755</mode>
+                                <!-- Read/write/execute for owner, read/execute for group/other -->
+                            </permission>
+                        </permissions>
+                    </extraDirectories>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>buildTar</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-glowroot-resources</id>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/glowroot</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/glowroot</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-
 </project>

@@ -1,0 +1,66 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      - s3
+      - pulsar
+      - postgres
+    image: apache/james:scaling-pulsar-smtp-latest
+    container_name: james
+    hostname: james.local
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+      - "5005:5005"
+    environment:
+      #- JDK_JAVA_OPTIONS=-Dlogback.configurationFile=/root/conf/logback.xml -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:5005 -Dworking.directory=/root/
+      - JDK_JAVA_OPTIONS=-Dlogback.configurationFile=/root/conf/logback.xml -Dworking.directory=/root/
+      - OBJECTSTORAGE_S3_ENDPOINT=http://s3.docker.test:8000/
+      - OBJECTSTORAGE_S3_REGION=us-east-1
+      - OBJECTSTORAGE_S3_ACCESSKEYID=accessKey1
+      - OBJECTSTORAGE_S3_SECRETKEY=secretKey1
+      - DATABASE_URL=jdbc:postgresql://postgres/postgres
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=password
+      - PULSAR_BROKER_URI=pulsar://pulsar:6650
+      - PULSAR_ADMIN_URI=http://pulsar:8080/
+      - PULSAR_NAMESPACE=public/default
+    volumes:
+      #- $PWD/mariadb-java-client-2.7.2.jar:/root/libs/mariadb-java-client-2.7.2.jar
+      #- $PWD/sample-configuration/james-database.properties:/root/conf/james-database.properties
+      #- $PWD/sample-configuration/pulsar.properties:/root/conf/pulsar.properties
+      #- $PWD/sample-configuration/blob.properties:/root/conf/blob.properties
+      #- $PWD/sample-configuration/mailetcontainer.xml:/root/conf/mailetcontainer.xml
+      #- $PWD/sample-configuration/mailrepositorystore.xml:/root/conf/mailrepositorystore.xml
+      #- $PWD/sample-configuration/jvm.properties:/root/conf/jvm.properties
+      #- $PWD/keystore:/root/conf/keystore
+      - ./sample-configuration:/root/conf
+
+  s3:
+    image: zenko/cloudserver:8.2.6
+    container_name: s3.docker.test
+    ports:
+      - "8001:8000"
+    environment:
+      - SCALITY_ACCESS_KEY_ID=accessKey1
+      - SCALITY_SECRET_ACCESS_KEY=secretKey1
+      - S3BACKEND=mem
+      - LOG_LEVEL=trace
+      - REMOTE_MANAGEMENT_DISABLE=1
+
+  postgres:
+    image: postgres:14
+    environment:
+      - POSTGRES_PASSWORD=password
+
+  pulsar:
+    image: apachepulsar/pulsar:2.10.1
+    command: bin/pulsar standalone
