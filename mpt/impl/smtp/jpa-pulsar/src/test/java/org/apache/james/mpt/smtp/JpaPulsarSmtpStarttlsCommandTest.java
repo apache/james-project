@@ -30,7 +30,7 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraPulsarSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
+public class JpaPulsarSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
 
     @Order(1)
     @RegisterExtension

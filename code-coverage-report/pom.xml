@@ -202,7 +202,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mpt-smtp-cassandra-pulsar</artifactId>
+            <artifactId>apache-james-mpt-smtp-jpa-pulsar</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

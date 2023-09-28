@@ -32,9 +32,9 @@
 
     <modules>
         <module>cassandra</module>
-        <module>cassandra-pulsar</module>
         <module>cassandra-rabbitmq-object-storage</module>
         <module>core</module>
+        <module>jpa-pulsar</module>
     </modules>
 
     <dependencyManagement>

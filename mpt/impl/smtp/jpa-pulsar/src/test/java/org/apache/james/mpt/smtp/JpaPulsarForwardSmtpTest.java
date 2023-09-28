@@ -29,8 +29,8 @@ import org.apache.james.TestingSmtpRelayJamesServerBuilder;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.RegisterExtension;
-//FIXME rename this test
-public class CassandraPulsarForwardSmtpTest implements ForwardSmtpTest {
+
+public class JpaPulsarForwardSmtpTest implements ForwardSmtpTest {
 
     @Order(1)
     @RegisterExtension
