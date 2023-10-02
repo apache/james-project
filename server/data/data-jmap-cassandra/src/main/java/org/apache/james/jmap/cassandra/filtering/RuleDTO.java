@@ -220,7 +220,7 @@ public class RuleDTO {
         }
 
         public Rule.Action toAction() {
-            return Rule.Action.of(appendIn.toAppendInMailboxes());
+            return Rule.Action.of(appendIn.toAppendInMailboxes(), isSeen(), isImportant(), isReject(), getKeyworkds());
         }
 
         @Override

@@ -19,10 +19,12 @@
 
 package org.apache.james.jmap.api.filtering;
 
+import com.google.common.collect.ImmutableList;
+
 public interface RuleFixture {
     String NAME = "a name";
     Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
-    Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
+    Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"), true, true, true, ImmutableList.of("abc"));
     Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(CONDITION).action(ACTION);
     Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
     Rule RULE_1_MODIFIED = Rule.builder()
