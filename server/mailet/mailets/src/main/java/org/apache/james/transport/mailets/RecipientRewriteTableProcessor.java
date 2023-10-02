@@ -188,13 +188,13 @@ public class RecipientRewriteTableProcessor {
         AuditTrail.entry()
             .protocol("mailetcontainer")
             .action("RecipientRewrite")
-            .parameters(ImmutableMap.of("mailId", mail.getName(),
+            .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                 "mimeMessageId", Optional.ofNullable(mail.getMessage())
                     .map(Throwing.function(MimeMessage::getMessageID))
                     .orElse(""),
                 "sender", mail.getMaybeSender().asString(),
                 "recipientsBeforeRewrite", StringUtils.join(recipientsBeforeRecipientsRewrite),
-                "recipientsAfterRewrite", StringUtils.join(recipientsAfterRecipientsRewrite)))
+                "recipientsAfterRewrite", StringUtils.join(recipientsAfterRecipientsRewrite))))
             .log("Recipients rewritten.");
     }
 

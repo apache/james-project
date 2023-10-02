@@ -286,10 +286,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
     (delay match {
       case d if d.isNegative || d.isZero => SMono(queue.enqueueReactive(mail))
         .doOnSuccess(_ => AuditTrail.entry
-          .username(mailboxSession.getUser.asString())
+          .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("EmailSubmission")
-          .parameters(ImmutableMap.of("mailId", mail.getName,
+          .parameters(() => ImmutableMap.of("mailId", mail.getName,
             "mimeMessageId", Option(mail.getMessage)
               .flatMap(message => Option(message.getMessageID))
               .getOrElse(""),
@@ -301,10 +301,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
           .log("JMAP mail spooled."))
       case _ => SMono(queue.enqueueReactive(mail, delay))
         .doOnSuccess(_ => AuditTrail.entry
-          .username(mailboxSession.getUser.asString())
+          .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("EmailSubmission")
-          .parameters(ImmutableMap.of("mailId", mail.getName,
+          .parameters(() => ImmutableMap.of("mailId", mail.getName,
             "mimeMessageId", Option(mail.getMessage)
               .flatMap(message => Option(message.getMessageID))
               .getOrElse(""),

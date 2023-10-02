@@ -19,8 +19,10 @@
 
 package org.apache.james.util;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -48,28 +50,40 @@ public class AuditTrail {
 
         }
 
-        public Entry username(String username) {
-            this.username = Optional.ofNullable(username);
+        public Entry username(Supplier<String> usernameSupplier) {
+            try {
+                this.username = Optional.ofNullable(usernameSupplier.get());
+            } catch (Exception e) {
+                LOGGER.warn("Exception while providing AuditTrail username", e);
+            }
             return this;
         }
 
-        public Entry remoteIP(String remoteIP) {
-            this.remoteIP = Optional.ofNullable(remoteIP);
+        public Entry remoteIP(Supplier<Optional<InetSocketAddress>> remoteIPSupplier) {
+            try {
+                this.remoteIP = remoteIPSupplier.get()
+                    .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress());
+            } catch (Exception e) {
+                LOGGER.warn("Exception while providing AuditTrail remoteIP", e);
+            }
             return this;
         }
 
-        public Entry remoteIP(Optional<String> remoteIP) {
-            this.remoteIP = remoteIP;
+        public Entry sessionId(Supplier<String> sessionIdSupplier) {
+            try {
+                this.sessionId = Optional.ofNullable(sessionIdSupplier.get());
+            } catch (Exception e) {
+                LOGGER.warn("Exception while providing AuditTrail sessionId", e);
+            }
             return this;
         }
 
-        public Entry sessionId(String sessionId) {
-            this.sessionId = Optional.ofNullable(sessionId);
-            return this;
-        }
-
-        public Entry userAgent(String userAgent) {
-            this.userAgent = Optional.ofNullable(userAgent);
+        public Entry userAgent(Supplier<String> userAgentSupplier) {
+            try {
+                this.userAgent = Optional.ofNullable(userAgentSupplier.get());
+            } catch (Exception e) {
+                LOGGER.warn("Exception while providing AuditTrail userAgent", e);
+            }
             return this;
         }
 
@@ -83,8 +97,12 @@ public class AuditTrail {
             return this;
         }
 
-        public Entry parameters(Map<String, String> parameters) {
-            this.parameters = parameters;
+        public Entry parameters(Supplier<Map<String, String>> parametersSupplier) {
+            try {
+                this.parameters = parametersSupplier.get();
+            } catch (Exception e) {
+                LOGGER.warn("Exception while providing AuditTrail parameters", e);
+            }
             return this;
         }
 

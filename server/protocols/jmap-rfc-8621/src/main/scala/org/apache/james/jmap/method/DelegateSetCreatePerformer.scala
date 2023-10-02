@@ -89,10 +89,10 @@ class DelegateSetCreatePerformer @Inject()(delegationStore: DelegationStore,
       .filter(bool => bool)
       .flatMap(_ => SMono.fromPublisher(delegationStore.addAuthorizedUser(mailboxSession.getUser, request.username))
         .doOnSuccess(_ => AuditTrail.entry
-          .username(mailboxSession.getUser.asString())
+          .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("DelegateSet/create")
-          .parameters(ImmutableMap.of("delegator", mailboxSession.getUser.asString(),
+          .parameters(() => ImmutableMap.of("delegator", mailboxSession.getUser.asString(),
             "delegatee", request.username.asString()))
           .log("Delegation added."))
         .`then`(SMono.just[CreationResult](CreationSuccess(delegateCreationId, evaluateCreationResponse(request, mailboxSession))))

@@ -190,12 +190,12 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
             AuditTrail.entry()
                 .protocol("mailrepository")
                 .action("store")
-                .parameters(ImmutableMap.of("mailId", mc.getName(),
+                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mc.getName(),
                     "mimeMessageId", Optional.ofNullable(mc.getMessage())
                         .map(Throwing.function(MimeMessage::getMessageID))
                         .orElse(""),
                     "sender", mc.getMaybeSender().asString(),
-                    "recipients", StringUtils.join(mc.getRecipients())))
+                    "recipients", StringUtils.join(mc.getRecipients()))))
                 .log("FileMailRepository stored mail.");
 
             return key;

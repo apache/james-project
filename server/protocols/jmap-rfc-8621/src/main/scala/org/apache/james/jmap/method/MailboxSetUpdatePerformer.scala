@@ -219,10 +219,10 @@ class MailboxSetUpdatePerformer @Inject()(serializer: MailboxSerializer,
     val partialUpdatesOperation: SMono[Unit] = SFlux.fromIterable(validatedPatch.rightsPartialUpdates)
       .flatMap(partialUpdate => SMono.fromCallable(() => mailboxManager.applyRightsCommand(mailboxId, partialUpdate.asACLCommand(), mailboxSession))
         .doOnSuccess(_ => AuditTrail.entry
-          .username(mailboxSession.getUser.asString())
+          .username(() => mailboxSession.getUser.asString())
           .protocol("JMAP")
           .action("Mailbox/set update")
-          .parameters(ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
+          .parameters(() => ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser.toScala.map(_.asString()).getOrElse(""),
             "delegator", mailboxSession.getUser.asString(),
             "delegatee", partialUpdate.username.asString(),
             "mailboxId", mailboxId.serialize(),

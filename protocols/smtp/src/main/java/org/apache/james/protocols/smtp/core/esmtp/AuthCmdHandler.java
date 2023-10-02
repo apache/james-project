@@ -391,13 +391,12 @@ public class AuthCmdHandler
                         AUTHENTICATION_DEDICATED_LOGGER.debug("AUTH method {} succeeded", authType);
 
                         AuditTrail.entry()
-                            .username(username.asString())
-                            .remoteIP(Optional.ofNullable(session.getRemoteAddress())
-                                .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
-                            .sessionId(session.getSessionID())
+                            .username(username::asString)
+                            .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
+                            .sessionId(session::getSessionID)
                             .protocol("SMTP")
                             .action("AUTH")
-                            .parameters(ImmutableMap.of("authType", authType))
+                            .parameters(() -> ImmutableMap.of("authType", authType))
                             .log("SMTP Authentication succeeded.");
                     }
                     return res;
@@ -409,12 +408,11 @@ public class AuthCmdHandler
         AUTHENTICATION_DEDICATED_LOGGER.info("AUTH method {} failed from {}@{}", authType, username, session.getRemoteAddress().getAddress().getHostAddress());
 
         AuditTrail.entry()
-            .username(username.asString())
-            .remoteIP(Optional.ofNullable(session.getRemoteAddress())
-                .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
+            .username(username::asString)
+            .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
             .protocol("SMTP")
             .action("AUTH")
-            .parameters(ImmutableMap.of("authType", authType))
+            .parameters(() -> ImmutableMap.of("authType", authType))
             .log("SMTP Authentication failed.");
 
         return res;

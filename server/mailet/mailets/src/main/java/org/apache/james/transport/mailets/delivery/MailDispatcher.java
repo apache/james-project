@@ -172,12 +172,12 @@ public class MailDispatcher {
                             .doOnSuccess(Throwing.consumer(success -> AuditTrail.entry()
                                 .protocol("mailetcontainer")
                                 .action("LocalDelivery")
-                                .parameters(ImmutableMap.of("mailId", mail.getName(),
+                                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                                     "mimeMessageId", Optional.ofNullable(mail.getMessage())
                                         .map(Throwing.function(MimeMessage::getMessageID))
                                         .orElse(""),
                                     "sender", mail.getMaybeSender().asString(),
-                                    "recipient", recipient.asString()))
+                                    "recipient", recipient.asString())))
                                 .log("Local delivered mail.")))
                             .then(Mono.<MailAddress>empty());
                     }),

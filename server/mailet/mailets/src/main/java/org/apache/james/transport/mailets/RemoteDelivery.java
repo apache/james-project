@@ -217,12 +217,12 @@ public class RemoteDelivery extends GenericMailet {
                 AuditTrail.entry()
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
-                    .parameters(ImmutableMap.of("mailId", mail.getName(),
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                         "mimeMessageId", Optional.ofNullable(mail.getMessage())
                             .map(Throwing.function(MimeMessage::getMessageID))
                             .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
-                        "recipients", StringUtils.join(mail.getRecipients())))
+                        "recipients", StringUtils.join(mail.getRecipients()))))
                     .log("Remote delivering mail planned without gateway.");
             } else {
                 serviceWithGateway(mail);
@@ -230,13 +230,13 @@ public class RemoteDelivery extends GenericMailet {
                 AuditTrail.entry()
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
-                    .parameters(ImmutableMap.of("gateways", StringUtils.join(configuration.getGatewayServer()),
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("gateways", StringUtils.join(configuration.getGatewayServer()),
                         "mailId", mail.getName(),
                         "mimeMessageId", Optional.ofNullable(mail.getMessage())
                             .map(Throwing.function(MimeMessage::getMessageID))
                             .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
-                        "recipients", StringUtils.join(mail.getRecipients())))
+                        "recipients", StringUtils.join(mail.getRecipients()))))
                     .log("Remote delivering mail planned with gateway.");
             }
         } else {

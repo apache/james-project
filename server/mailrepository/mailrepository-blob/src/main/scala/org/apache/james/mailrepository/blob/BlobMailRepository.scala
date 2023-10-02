@@ -150,7 +150,7 @@ class BlobMailRepository(val blobStore: BlobStoreDAO,
       .doOnSuccess(_ => AuditTrail.entry
         .protocol("mailrepository")
         .action("store")
-        .parameters(ImmutableMap.of("mailId", mc.getName,
+        .parameters(() => ImmutableMap.of("mailId", mc.getName,
           "mimeMessageId", Option(mc.getMessage)
             .flatMap(message => Option(message.getMessageID))
             .getOrElse(""),
