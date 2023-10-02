@@ -168,12 +168,12 @@ public class JPAMailRepository implements MailRepository, Configurable, Initiali
             AuditTrail.entry()
                 .protocol("mailrepository")
                 .action("store")
-                .parameters(ImmutableMap.of("mailId", mail.getName(),
+                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                     "mimeMessageId", Optional.ofNullable(mail.getMessage())
                         .map(Throwing.function(MimeMessage::getMessageID))
                         .orElse(""),
                     "sender", mail.getMaybeSender().asString(),
-                    "recipients", StringUtils.join(mail.getRecipients())))
+                    "recipients", StringUtils.join(mail.getRecipients()))))
                 .log("JPAMailRepository stored mail.");
 
             return key;

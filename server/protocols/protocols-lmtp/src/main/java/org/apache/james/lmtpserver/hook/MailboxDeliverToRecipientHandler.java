@@ -118,15 +118,14 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
         if (envelope instanceof DataLineLMTPHandler.ReadOnlyMailEnvelope) {
             DataLineLMTPHandler.ReadOnlyMailEnvelope readOnlyMailEnvelope = (DataLineLMTPHandler.ReadOnlyMailEnvelope) envelope;
             AuditTrail.entry()
-                .username(Optional.ofNullable(session.getUsername())
+                .username(() -> Optional.ofNullable(session.getUsername())
                     .map(Username::asString)
                     .orElse(""))
-                .remoteIP(Optional.ofNullable(session.getRemoteAddress())
-                    .map(inetSocketAddress -> inetSocketAddress.getAddress().getHostAddress()))
-                .sessionId(session.getSessionID())
+                .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
+                .sessionId(session::getSessionID)
                 .protocol("LMTP")
                 .action("Deliver mail")
-                .parameters(ImmutableMap.of("mailId", readOnlyMailEnvelope.getMailId(),
+                .parameters(() -> ImmutableMap.of("mailId", readOnlyMailEnvelope.getMailId(),
                     "mimeMessageId", readOnlyMailEnvelope.getMimeMessageId().orElse(""),
                     "sender", readOnlyMailEnvelope.getMaybeSender().asString(),
                     "recipient", recipient.asString()))

@@ -90,8 +90,8 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
                     AuditTrail.entry()
-                        .username(mailboxSession.getUser().asString())
-                        .sessionId(session.sessionId().asString())
+                        .username(() -> mailboxSession.getUser().asString())
+                        .sessionId(() -> session.sessionId().asString())
                         .protocol("IMAP")
                         .action("AUTH")
                         .log("IMAP Authentication succeeded.");
@@ -101,7 +101,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 } catch (BadCredentialsException e) {
                     authFailure = true;
                     AuditTrail.entry()
-                        .username(authenticationAttempt.getAuthenticationId().asString())
+                        .username(() -> authenticationAttempt.getAuthenticationId().asString())
                         .protocol("IMAP")
                         .action("AUTH")
                         .log("IMAP Authentication failed because of bad credentials.");
@@ -142,22 +142,22 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             session.authenticated();
             session.setMailboxSession(mailboxSession);
             AuditTrail.entry()
-                .username(mailboxSession.getLoggedInUser()
+                .username(() -> mailboxSession.getLoggedInUser()
                     .map(Username::asString)
                     .orElse(""))
-                .sessionId(session.sessionId().asString())
+                .sessionId(() -> session.sessionId().asString())
                 .protocol("IMAP")
                 .action("AUTH")
-                .parameters(ImmutableMap.of("delegatorUser", mailboxSession.getUser().asString()))
+                .parameters(() -> ImmutableMap.of("delegatorUser", mailboxSession.getUser().asString()))
                 .log("IMAP Authentication with delegation succeeded.");
             okComplete(request, responder);
             provisionInbox(session, mailboxManager, mailboxSession);
         } catch (BadCredentialsException e) {
             AuditTrail.entry()
-                .username(authenticateUser.asString())
+                .username(authenticateUser::asString)
                 .protocol("IMAP")
                 .action("AUTH")
-                .parameters(ImmutableMap.of("delegatorUser", delegatorUser.asString()))
+                .parameters(() -> ImmutableMap.of("delegatorUser", delegatorUser.asString()))
                 .log("IMAP Authentication with delegation failed because of bad credentials.");
             manageFailureCount(session, request, responder);
         } catch (UserDoesNotExistException e) {
@@ -166,10 +166,10 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         } catch (ForbiddenDelegationException e) {
             LOGGER.info("Delegate forbidden", e);
             AuditTrail.entry()
-                .username(authenticateUser.asString())
+                .username(authenticateUser::asString)
                 .protocol("IMAP")
                 .action("AUTH")
-                .parameters(ImmutableMap.of("delegatorUser", delegatorUser.asString()))
+                .parameters(() -> ImmutableMap.of("delegatorUser", delegatorUser.asString()))
                 .log("IMAP Authentication with delegation failed because of non existing delegation.");
             no(request, responder, HumanReadableText.DELEGATION_FORBIDDEN);
         } catch (MailboxException e) {

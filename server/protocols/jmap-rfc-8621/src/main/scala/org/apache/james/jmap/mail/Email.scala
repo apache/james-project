@@ -657,10 +657,10 @@ private class EmailFullViewReader @Inject()(messageIdManager: MessageIdManager,
 
   override def read[T >: EmailFullView](ids: Seq[MessageId], request: EmailGetRequest, mailboxSession: MailboxSession): SFlux[T] = {
     AuditTrail.entry
-      .username(mailboxSession.getUser.asString())
+      .username(() => mailboxSession.getUser.asString())
       .protocol("JMAP")
       .action("Email full view read")
-      .parameters(ImmutableMap.of("messageIds", StringUtils.join(ids.asJava),
+      .parameters(() => ImmutableMap.of("messageIds", StringUtils.join(ids.asJava),
         "loggedInUser", mailboxSession.getLoggedInUser.toScala
           .map(_.asString())
           .getOrElse("")))

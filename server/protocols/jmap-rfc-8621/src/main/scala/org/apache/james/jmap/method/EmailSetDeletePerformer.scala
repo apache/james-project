@@ -102,10 +102,10 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
   private def auditTrail(deleteResult: DeleteResult, mailboxSession: MailboxSession): Unit =
     if (!deleteResult.getDestroyed.isEmpty) {
       AuditTrail.entry
-        .username(mailboxSession.getUser.asString())
+        .username(() => mailboxSession.getUser.asString())
         .protocol("JMAP")
         .action("Email/set destroy")
-        .parameters(ImmutableMap.of("messageIds", StringUtils.join(deleteResult.getDestroyed),
+        .parameters(() => ImmutableMap.of("messageIds", StringUtils.join(deleteResult.getDestroyed),
           "loggedInUser", mailboxSession.getLoggedInUser.toScala
             .map(_.asString())
             .getOrElse("")))

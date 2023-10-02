@@ -237,10 +237,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     private static void auditTrail(MessageManager mailbox, MailboxSession mailboxSession, FetchGroup resultToFetch, MessageRange range) {
         if (resultToFetch.equals(FULL_CONTENT)) {
             AuditTrail.entry()
-                .username(mailboxSession.getUser().asString())
+                .username(() -> mailboxSession.getUser().asString())
                 .protocol("IMAP")
                 .action("FETCH")
-                .parameters(ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
+                .parameters(() -> ImmutableMap.of("loggedInUser", mailboxSession.getLoggedInUser().map(Username::asString).orElse(""),
                     "mailboxId", mailbox.getId().serialize(),
                     "messageUids", range.toString()))
                 .log("IMAP FETCH full content read.");

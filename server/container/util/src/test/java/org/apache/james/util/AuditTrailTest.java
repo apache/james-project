@@ -22,6 +22,7 @@ package org.apache.james.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Optional;
 
@@ -52,13 +53,13 @@ class AuditTrailTest {
     @Test
     void shouldSetEntriesExactly() {
         AuditTrail.Entry auditTrail = AuditTrail.entry()
-            .username("bob@domain.tld")
-            .remoteIP("1.2.3.4")
-            .sessionId("sessionId")
-            .userAgent("Thunderbird")
+            .username(() -> "bob@domain.tld")
+            .remoteIP(() -> Optional.of(new InetSocketAddress("1.2.3.4", 80)))
+            .sessionId(() -> "sessionId")
+            .userAgent(() -> "Thunderbird")
             .protocol("IMAP")
             .action("login")
-            .parameters(Map.of("key1", "value1",
+            .parameters(() -> Map.of("key1", "value1",
                 "key2", "value2"));
 
         SoftAssertions.assertSoftly(softly -> {
@@ -88,13 +89,13 @@ class AuditTrailTest {
         auditTrailLogger.addAppender(loggingEvents);
 
         AuditTrail.entry()
-            .username("bob@domain.tld")
-            .remoteIP("1.2.3.4")
-            .sessionId("sessionId")
-            .userAgent("Thunderbird")
+            .username(() -> "bob@domain.tld")
+            .remoteIP(() -> Optional.of(new InetSocketAddress("1.2.3.4", 80)))
+            .sessionId(() -> "sessionId")
+            .userAgent(() -> "Thunderbird")
             .protocol("IMAP")
             .action("login")
-            .parameters(Map.of("key1", "value1",
+            .parameters(() -> Map.of("key1", "value1",
                 "key2", "value2"))
             .log("Authentication via IMAP");
 

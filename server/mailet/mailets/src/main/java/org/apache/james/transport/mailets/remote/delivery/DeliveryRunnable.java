@@ -138,12 +138,12 @@ public class DeliveryRunnable implements Disposable {
                     AuditTrail.entry()
                         .protocol("mailetcontainer")
                         .action("RemoteDelivery")
-                        .parameters(ImmutableMap.of("mailId", mail.getName(),
+                        .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                             "mimeMessageId", Optional.ofNullable(mail.getMessage())
                                 .map(Throwing.function(MimeMessage::getMessageID))
                                 .orElse(""),
                             "sender", mail.getMaybeSender().asString(),
-                            "recipients", StringUtils.join(mail.getRecipients())))
+                            "recipients", StringUtils.join(mail.getRecipients()))))
                         .log("Remote delivering mail failed temporarily.");
 
                     queueItem.done(MailQueue.MailQueueItem.CompletionStatus.RETRY);
@@ -169,24 +169,24 @@ public class DeliveryRunnable implements Disposable {
                 AuditTrail.entry()
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
-                    .parameters(ImmutableMap.of("mailId", mail.getName(),
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                         "mimeMessageId", Optional.ofNullable(mail.getMessage())
                             .map(Throwing.function(MimeMessage::getMessageID))
                             .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
-                        "recipients", StringUtils.join(mail.getRecipients())))
+                        "recipients", StringUtils.join(mail.getRecipients()))))
                     .log("Remote delivering mail succeeded.");
                 break;
             case TEMPORARY_FAILURE:
                 AuditTrail.entry()
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
-                    .parameters(ImmutableMap.of("mailId", mail.getName(),
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                         "mimeMessageId", Optional.ofNullable(mail.getMessage())
                             .map(Throwing.function(MimeMessage::getMessageID))
                             .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
-                        "recipients", StringUtils.join(mail.getRecipients())))
+                        "recipients", StringUtils.join(mail.getRecipients()))))
                     .log("Remote delivering mail failed temporarily.");
                 handleTemporaryFailure(mail, executionResult);
                 break;
@@ -194,12 +194,12 @@ public class DeliveryRunnable implements Disposable {
                 AuditTrail.entry()
                     .protocol("mailetcontainer")
                     .action("RemoteDelivery")
-                    .parameters(ImmutableMap.of("mailId", mail.getName(),
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                         "mimeMessageId", Optional.ofNullable(mail.getMessage())
                             .map(Throwing.function(MimeMessage::getMessageID))
                             .orElse(""),
                         "sender", mail.getMaybeSender().asString(),
-                        "recipients", StringUtils.join(mail.getRecipients())))
+                        "recipients", StringUtils.join(mail.getRecipients()))))
                     .log("Remote delivering mail failed permanently.");
                 handlePermanentFailure(mail, executionResult);
                 break;
@@ -228,12 +228,12 @@ public class DeliveryRunnable implements Disposable {
             AuditTrail.entry()
                 .protocol("mailetcontainer")
                 .action("RemoteDelivery")
-                .parameters(ImmutableMap.of("mailId", mail.getName(),
+                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                     "mimeMessageId", Optional.ofNullable(mail.getMessage())
                         .map(Throwing.function(MimeMessage::getMessageID))
                         .orElse(""),
                     "sender", mail.getMaybeSender().asString(),
-                    "recipients", StringUtils.join(mail.getRecipients())))
+                    "recipients", StringUtils.join(mail.getRecipients()))))
                 .log("Remote delivering mail failed after maximum retries.");
         }
     }
