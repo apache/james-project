@@ -14,7 +14,11 @@
       "action": {
         "appendIn": {
           "mailboxIds":["id-01"]
-        }
+        },
+        "important":true,
+        "keyworkds":["abc"],
+        "reject":true,
+        "seen":true
       }
     },
     {
@@ -28,7 +32,11 @@
       "action": {
         "appendIn": {
           "mailboxIds":["id-01"]
-        }
+        },
+        "important":true,
+        "keyworkds":["abc"],
+        "reject":true,
+        "seen":true
       }
     }
   ]
