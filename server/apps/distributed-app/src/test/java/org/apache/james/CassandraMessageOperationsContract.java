@@ -49,7 +49,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
-interface CassandraBlobStoreContract {
+interface CassandraMessageOperationsContract {
     class TestingSessionProbe implements GuiceProbe {
         private final TestingSession testingSession;
 
