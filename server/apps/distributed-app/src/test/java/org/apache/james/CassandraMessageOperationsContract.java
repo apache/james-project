@@ -39,6 +39,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -98,6 +99,7 @@ interface CassandraMessageOperationsContract {
     }
 
     @Test
+    @Disabled("TODO wait to https://github.com/linagora/james-project/issues/4872")
     default void noCallToBlobStoreWhenMoveMessages(GuiceJamesServer server) throws Exception {
         // Given Mailbox1, Mailbox2. And a message in Mailbox1
         String myBox1 = "MyBox1" + UUID.randomUUID();
@@ -143,6 +145,7 @@ interface CassandraMessageOperationsContract {
     }
 
     @Test
+    @Disabled("TODO wait to https://github.com/linagora/james-project/issues/4872")
     default void noCallToBlobStoreWhenResetTheFlags(GuiceJamesServer server) throws Exception {
         // Given Mailbox1 And a message in Mailbox1
         String myBox1 = "MyBox1" + UUID.randomUUID();
