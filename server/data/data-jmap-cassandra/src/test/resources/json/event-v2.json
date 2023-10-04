@@ -15,10 +15,10 @@
         "appendIn": {
           "mailboxIds":["id-01"]
         },
-        "important":false,
-        "keyworkds":[],
-        "reject":false,
-        "seen":false
+        "important":true,
+        "keyworkds":["abc"],
+        "reject":true,
+        "seen":true
       }
     },
     {
@@ -33,10 +33,10 @@
         "appendIn": {
           "mailboxIds":["id-01"]
         },
-        "important":false,
-        "keyworkds":[],
-        "reject":false,
-        "seen":false
+        "important":true,
+        "keyworkds":["abc"],
+        "reject":true,
+        "seen":true
       }
     }
   ]
