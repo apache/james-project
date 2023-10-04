@@ -323,10 +323,6 @@
                                 <into>/root/conf</into>
                             </path>
                             <path>
-                                <from>docker-configuration</from>
-                                <into>/root/conf</into>
-                            </path>
-                            <path>
                                 <from>src/main/scripts</from>
                                 <into>/usr/bin</into>
                             </path>
