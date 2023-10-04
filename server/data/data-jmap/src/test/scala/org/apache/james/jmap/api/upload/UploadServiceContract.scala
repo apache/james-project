@@ -35,6 +35,8 @@ import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
 import org.junit.jupiter.api.Test
 import reactor.core.scala.publisher.{SFlux, SMono}
 
+import scala.concurrent.duration.MICROSECONDS
+
 object UploadServiceContract {
   private lazy val UPLOAD_QUOTA_LIMIT: Long = 100L
   lazy val TEST_CONFIGURATION: JmapUploadQuotaConfiguration = new JmapUploadQuotaConfiguration(UPLOAD_QUOTA_LIMIT)
@@ -183,6 +185,7 @@ trait UploadServiceContract {
   def givenQuotaExceededThenUploadShouldRepairInconsistentCurrentUsage(): Unit = {
     Range.inclusive(1, 10)
       .foreach(_ => SMono.fromPublisher(testee.upload(asInputStream(TEN_BYTES_DATA_STRING), CONTENT_TYPE, BOB))
+        .delayElement(scala.concurrent.duration.Duration(200, MICROSECONDS))
         .block())
 
     // Try to make the current stored usage inconsistent
