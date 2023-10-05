@@ -48,7 +48,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
-public class WithCassandraDeduplicationBlobStoreMutableTest implements MailsShouldBeWellReceivedConcreteContract {
+public class WithCassandraDeduplicationBlobStoreMutableTest implements MailsShouldBeWellReceivedConcreteContract, CassandraMessageOperationsContract {
     private static final String JAMES_SERVER_HOST = "127.0.0.1";
     private static final String YET_ANOTHER_USER = "yet-another-user@" + DOMAIN;
 
@@ -63,7 +63,8 @@ public class WithCassandraDeduplicationBlobStoreMutableTest implements MailsShou
             .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
+            .overrideWith(new TestJMAPServerModule())
+            .overrideWith(new TestingSessionModule()))
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
