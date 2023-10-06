@@ -59,12 +59,15 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
+import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
 import org.apache.james.mailbox.opensearch.search.OpenSearchSearcher;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
@@ -95,6 +98,112 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         }
     }
 
+    interface IndexingStrategy {
+        Mono<Void> handleExpungedEvent(MailboxEvents.Expunged expunged, MailboxSession session, MailboxId mailboxId);
+
+        Mono<Void> handleAddedEvent(MailboxSession session, MailboxEvents.Added addedEvent, MailboxId mailboxId);
+    }
+
+    class NaiveIndexingStrategy implements IndexingStrategy {
+
+        @Override
+        public Mono<Void> handleExpungedEvent(MailboxEvents.Expunged expunged, MailboxSession session, MailboxId mailboxId) {
+            return delete(session, expunged.getMailboxId(), expunged.getUids());
+        }
+
+        @Override
+        public Mono<Void> handleAddedEvent(MailboxSession session, MailboxEvents.Added addedEvent, MailboxId mailboxId) {
+            return processAddedEvent(session, addedEvent, mailboxId);
+        }
+    }
+
+
+    class OptimizedIndexingStrategy implements IndexingStrategy {
+
+        @Override
+        public Mono<Void> handleExpungedEvent(MailboxEvents.Expunged expunged, MailboxSession session, MailboxId mailboxId) {
+            return Mono.just(expunged)
+                .filter(MailboxEvents.Expunged::isMoved)
+                .flatMap(expungedEvent -> processExpunged(session, mailboxId, expungedEvent).thenReturn(expunged))
+                .switchIfEmpty(Mono.defer(() -> delete(session, mailboxId, expunged.getUids())).thenReturn(expunged))
+                .then();
+        }
+
+        @Override
+        public Mono<Void> handleAddedEvent(MailboxSession session, MailboxEvents.Added addedEvent, MailboxId mailboxId) {
+            return Mono.just(addedEvent)
+                .filter(event -> !event.isMoved())
+                .flatMap(added -> processAddedEvent(session, added, mailboxId));
+        }
+
+        private Mono<Void> processExpunged(MailboxSession session, MailboxId mailboxId, MailboxEvents.Expunged expungedEvent) {
+            return Mono.justOrEmpty(expungedEvent.movedToMailboxId())
+                .flatMap(movedToMailboxId -> Flux.fromIterable(expungedEvent.getExpunged().values())
+                    .concatMap(oldMessageData -> handleExpungedMessage(oldMessageData, mailboxId, movedToMailboxId, session))
+                    .then(Mono.defer(() -> delete(session, mailboxId, expungedEvent.getUids()))));
+        }
+
+        private Mono<Void> handleExpungedMessage(MessageMetaData expungedMessageMetaData,
+                                                 MailboxId movedFromMailboxId,
+                                                 MailboxId movedToMailboxId,
+                                                 MailboxSession session) {
+            return newIndexByIndexedDocument(expungedMessageMetaData.getUid(), movedFromMailboxId, movedToMailboxId, session, expungedMessageMetaData.getMessageId())
+                .onErrorResume(OpenSearchNotFoundException.class,
+                    notFoundException -> {
+                        LOGGER.warn("Can not find message {} in mailbox {} for reindexing",
+                            expungedMessageMetaData.getUid(),
+                            movedFromMailboxId.serialize());
+                        return notFoundHandleFallBack(expungedMessageMetaData, movedToMailboxId, session);
+                    });
+        }
+
+        private Mono<Void> newIndexByIndexedDocument(MessageUid oldMessageUid,
+                                                     MailboxId movedFromMailboxId,
+                                                     MailboxId movedToMailboxId,
+                                                     MailboxSession session,
+                                                     MessageId messageId) {
+            RoutingKey movedFromRoutingKey = routingKeyFactory.from(movedFromMailboxId);
+            return openSearchIndexer.get(indexIdFor(movedFromMailboxId, oldMessageUid), movedFromRoutingKey)
+                .filter(GetResponse::found)
+                .switchIfEmpty(Mono.error(() -> new OpenSearchNotFoundException("Can not find message " + oldMessageUid + " in mailbox " + movedFromMailboxId.serialize())))
+                .mapNotNull(GetResponse::source)
+                .flatMap(document -> updateDocumentThenIndex(messageId, movedToMailboxId, document, session));
+        }
+
+        private Mono<Void> notFoundHandleFallBack(MessageMetaData expungedMessageMetaData, MailboxId movedToMailboxId, MailboxSession session) {
+            return retrieveMailboxMessage(session, expungedMessageMetaData.getMessageId(), movedToMailboxId, FetchType.FULL)
+                .publishOn(Schedulers.parallel())
+                .flatMap(mailboxMessage -> factory.getMailboxMapper(session)
+                    .findMailboxById(movedToMailboxId)
+                    .flatMap(mailbox -> add(session, mailbox, mailboxMessage))
+                    .doOnSuccess(any -> reIndexNotFoundMetric.increment()));
+        }
+
+        private Mono<Void> updateDocumentThenIndex(MessageId messageId,
+                                                   MailboxId movedToMailboxId,
+                                                   ObjectNode origin,
+                                                   MailboxSession session) {
+            return retrieveMailboxMessage(session, messageId, movedToMailboxId, FetchType.METADATA)
+                .flatMap(mailboxMessage -> Mono.fromCallable(() -> {
+                        messageToOpenSearchJson.updateMessageUid(origin, mailboxMessage.getUid());
+                        messageToOpenSearchJson.updateMailboxId(origin, movedToMailboxId);
+                        mailboxMessage.getSaveDate().ifPresent(newSaveDate -> messageToOpenSearchJson.updateSaveDate(origin, newSaveDate));
+                        return origin;
+                    }).map(messageToOpenSearchJson::toString)
+                    .flatMap(jsonContent -> add(movedToMailboxId, mailboxMessage.getUid(), jsonContent)));
+        }
+
+        private Mono<MailboxMessage> retrieveMailboxMessage(MailboxSession session,
+                                                            MessageId messageId,
+                                                            MailboxId movedToMailboxId,
+                                                            FetchType fetchType) {
+            return factory.getMessageIdMapper(session)
+                .findReactive(List.of(messageId), fetchType)
+                .filter(mailboxMessage -> mailboxMessage.getMailboxId().equals(movedToMailboxId))
+                .next();
+        }
+    }
+
     private static final int FLAGS_UPDATE_PROCESSING_WINDOW_SIZE = 32;
 
     public static class OpenSearchListeningMessageSearchIndexGroup extends Group {
@@ -115,13 +224,17 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     private final MessageId.Factory messageIdFactory;
     private final SessionProvider sessionProvider;
     private final MailboxSessionMapperFactory factory;
+    
+    private final Metric reIndexNotFoundMetric;
+    private final IndexingStrategy indexingStrategy;
 
     @Inject
     public OpenSearchListeningMessageSearchIndex(MailboxSessionMapperFactory factory,
                                                  Set<SearchOverride> searchOverrides,
                                                  @Named(MailboxOpenSearchConstants.InjectionNames.MAILBOX) OpenSearchIndexer indexer,
                                                  OpenSearchSearcher searcher, MessageToOpenSearchJson messageToOpenSearchJson,
-                                                 SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory, MessageId.Factory messageIdFactory) {
+                                                 SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory, MessageId.Factory messageIdFactory,
+                                                 OpenSearchMailboxConfiguration configuration, MetricFactory metricFactory) {
         super(factory, searchOverrides, sessionProvider);
         this.sessionProvider = sessionProvider;
         this.factory = factory;
@@ -130,6 +243,14 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         this.searcher = searcher;
         this.routingKeyFactory = routingKeyFactory;
         this.messageIdFactory = messageIdFactory;
+        if (configuration.isOptimiseMoves()) {
+            this.indexingStrategy = new OptimizedIndexingStrategy();
+        } else {
+            this.indexingStrategy = new NaiveIndexingStrategy();
+        }
+        this.reIndexNotFoundMetric = metricFactory.generate("opensearch_reindex_not_found");
+
+        LOGGER.info("OpenSearchMessageSearchIndex activated with index strategy: {}", indexingStrategy.getClass().getSimpleName());
     }
 
     @Override
@@ -159,9 +280,9 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         MailboxId mailboxId = mailboxEvent.getMailboxId();
 
         if (event instanceof MailboxEvents.Added) {
-            return handleAddedEvent(session, (MailboxEvents.Added) event, mailboxId);
+            return indexingStrategy.handleAddedEvent(session, (MailboxEvents.Added) event, mailboxId);
         } else if (event instanceof MailboxEvents.Expunged) {
-            return handleExpungedEvent((MailboxEvents.Expunged) event, session, mailboxId);
+            return indexingStrategy.handleExpungedEvent((MailboxEvents.Expunged) event, session, mailboxId);
         } else if (event instanceof MailboxEvents.FlagsUpdated) {
             MailboxEvents.FlagsUpdated flagsUpdated = (MailboxEvents.FlagsUpdated) event;
             return update(session, mailboxId, flagsUpdated.getUpdatedFlags());
@@ -172,86 +293,10 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         }
     }
 
-    private Mono<Void> handleExpungedEvent(MailboxEvents.Expunged expunged, MailboxSession session, MailboxId mailboxId) {
-        if (expunged.isMoved()) {
-            return Mono.justOrEmpty(expunged.movedToMailboxId())
-                .flatMap(movedToMailboxId -> Flux.fromIterable(expunged.getExpunged().values())
-                    .concatMap(oldMessageData -> handleExpungedMessage(oldMessageData, mailboxId, movedToMailboxId, session))
-                    .then(Mono.defer(() -> delete(session, mailboxId, expunged.getUids()))));
-        } else {
-            return delete(session, mailboxId, expunged.getUids());
-        }
-    }
-
-    private Mono<Void> handleExpungedMessage(MessageMetaData expungedMessageMetaData,
-                                             MailboxId movedFromMailboxId,
-                                             MailboxId movedToMailboxId,
-                                             MailboxSession session) {
-        return newIndexByIndexedDocument(expungedMessageMetaData.getUid(), movedFromMailboxId, movedToMailboxId, session, expungedMessageMetaData.getMessageId())
-            .onErrorResume(OpenSearchNotFoundException.class,
-                notFoundException -> {
-                    LOGGER.warn("Can not find message {} in mailbox {} for reindexing",
-                        expungedMessageMetaData.getUid(),
-                        movedFromMailboxId.serialize());
-                    return notFoundHandleFallBack(expungedMessageMetaData, movedToMailboxId, session);
-                });
-    }
-
-    private Mono<Void> notFoundHandleFallBack(MessageMetaData expungedMessageMetaData, MailboxId movedToMailboxId, MailboxSession session) {
-        return retrieveMailboxMessage(session, expungedMessageMetaData.getMessageId(), movedToMailboxId, FetchType.FULL)
-            .publishOn(Schedulers.parallel())
-            .flatMap(mailboxMessage -> factory.getMailboxMapper(session)
-                .findMailboxById(movedToMailboxId)
-                .flatMap(mailbox -> add(session, mailbox, mailboxMessage)));
-    }
-
-    private Mono<Void> newIndexByIndexedDocument(MessageUid oldMessageUid,
-                                                 MailboxId movedFromMailboxId,
-                                                 MailboxId movedToMailboxId,
-                                                 MailboxSession session,
-                                                 MessageId messageId) {
-        RoutingKey movedFromRoutingKey = routingKeyFactory.from(movedFromMailboxId);
-        return openSearchIndexer.get(indexIdFor(movedFromMailboxId, oldMessageUid), movedFromRoutingKey)
-            .filter(GetResponse::found)
-            .switchIfEmpty(Mono.error(() -> new OpenSearchNotFoundException("Can not find message " + oldMessageUid + " in mailbox " + movedFromMailboxId.serialize())))
-            .mapNotNull(GetResponse::source)
-            .flatMap(document -> updateDocumentThenIndex(messageId, movedToMailboxId, document, session));
-    }
-
-    private Mono<Void> updateDocumentThenIndex(MessageId messageId,
-                                               MailboxId movedToMailboxId,
-                                               ObjectNode origin,
-                                               MailboxSession session) {
-        return retrieveMailboxMessage(session, messageId, movedToMailboxId, FetchType.METADATA)
-            .flatMap(mailboxMessage -> Mono.fromCallable(() -> {
-                    messageToOpenSearchJson.updateMessageUid(origin, mailboxMessage.getUid());
-                    messageToOpenSearchJson.updateMailboxId(origin, movedToMailboxId);
-                    mailboxMessage.getSaveDate().ifPresent(newSaveDate -> messageToOpenSearchJson.updateSaveDate(origin, newSaveDate));
-                    return origin;
-                }).map(messageToOpenSearchJson::toString)
-                .flatMap(jsonContent -> add(movedToMailboxId, mailboxMessage.getUid(), jsonContent)));
-    }
-
-    private Mono<MailboxMessage> retrieveMailboxMessage(MailboxSession session,
-                                                        MessageId messageId,
-                                                        MailboxId movedToMailboxId,
-                                                        FetchType fetchType) {
-        return factory.getMessageIdMapper(session)
-            .findReactive(List.of(messageId), fetchType)
-            .filter(mailboxMessage -> mailboxMessage.getMailboxId().equals(movedToMailboxId))
-            .next();
-    }
-
-    private Mono<Void> handleAddedEvent(MailboxSession session,
-                                        MailboxEvents.Added addedEvent,
-                                        MailboxId mailboxId) {
-        if (addedEvent.isMoved()) {
-            return Mono.empty();
-        } else {
-            return factory.getMailboxMapper(session)
-                .findMailboxById(mailboxId)
-                .flatMap(mailbox -> handleAdded(session, mailbox, addedEvent));
-        }
+    private Mono<Void> processAddedEvent(MailboxSession session, MailboxEvents.Added addedEvent, MailboxId mailboxId) {
+        return factory.getMailboxMapper(session)
+            .findMailboxById(mailboxId)
+            .flatMap(mailbox -> handleAdded(session, mailbox, addedEvent));
     }
 
     @Override
@@ -354,19 +399,13 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         return DocumentId.fromString(mailboxId.serialize() + ID_SEPARATOR + uid.asLong());
     }
 
-    private void logIfNoMessageId(SearchResult searchResult) {
-        if (!searchResult.getMessageId().isPresent()) {
-            LOGGER.error("No messageUid for {} in mailbox {}", searchResult.getMessageUid(), searchResult.getMailboxId());
-        }
-    }
-
     @Override
     public Mono<Flags> retrieveIndexedFlags(Mailbox mailbox, MessageUid uid) {
         RoutingKey routingKey = routingKeyFactory.from(mailbox.getMailboxId());
 
         return openSearchIndexer.get(indexIdFor(mailbox.getMailboxId(), uid), routingKey)
             .filter(GetResponse::found)
-            .map(GetResponse::source)
+            .mapNotNull(GetResponse::source)
             .map(this::extractFlags);
     }
 

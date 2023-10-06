@@ -124,6 +124,12 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         awaitForOpenSearch(queryConverter.from(mailboxIds, query), messageCount);
     }
 
+    protected OpenSearchMailboxConfiguration openSearchMailboxConfiguration() {
+        return OpenSearchMailboxConfiguration.builder()
+            .optimiseMoves(false)
+            .build();
+    }
+
     @Override
     protected void initializeMailboxManager() {
         messageIdFactory = new InMemoryMessageId.Factory();
@@ -144,7 +150,8 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                     MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
                 new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
-                preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory))
+                preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
+                openSearchMailboxConfiguration(), new RecordingMetricFactory()))
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();
