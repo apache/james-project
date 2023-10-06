@@ -139,7 +139,7 @@ class MailboxListenersLoaderImplTest {
                     "<listener>" +
                         "<class>org.apache.james.modules.mailbox.ConfiguredListener</class>" +
                         "<configuration>" +
-                            "<value>v2</value>>" +
+                            "<value>v2</value>" +
                         "</configuration>" +
                     "</listener>" +
                 "</listeners>");
