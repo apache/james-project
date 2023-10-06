@@ -232,12 +232,14 @@ configuration file:
 Note that you can turn off `reportAdded` (which reports incoming messages as Ham) resulting in lesser work:
 
 
-
 ```xml
 <listeners>
     <listener>
         <class>org.apache.james.rspamd.RspamdListener</class>
         <async>true</async>
+        <configuration>
+          <reportAdded>false</reportAdded>
+        </configuration>
     </listener>
 </listeners>
 ```
