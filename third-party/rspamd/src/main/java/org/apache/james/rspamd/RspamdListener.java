@@ -24,6 +24,8 @@ import java.nio.ByteBuffer;
 
 import javax.inject.Inject;
 
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
@@ -59,6 +61,20 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
 
     }
 
+    public static class RspamdListenerConfiguration {
+        public static final RspamdListenerConfiguration DEFAULT = new RspamdListenerConfiguration(true);
+
+        public static RspamdListenerConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) {
+            return new RspamdListenerConfiguration(configuration.getBoolean("reportAdded", true));
+        }
+
+        private final boolean reportAdded;
+
+        public RspamdListenerConfiguration(boolean reportAdded) {
+            this.reportAdded = reportAdded;
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RspamdListener.class);
 
     private static final int LIMIT = 1;
@@ -69,15 +85,27 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
     private final MailboxManager mailboxManager;
     private final MailboxSessionMapperFactory mapperFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
+    private final RspamdListenerConfiguration rspamdListenerConfiguration;
 
-    @Inject
     public RspamdListener(RspamdHttpClient rspamdHttpClient, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory, 
-                          SystemMailboxesProvider systemMailboxesProvider, RspamdClientConfiguration configuration) {
+                          SystemMailboxesProvider systemMailboxesProvider, RspamdClientConfiguration configuration, RspamdListenerConfiguration rspamdListenerConfiguration) {
         this.rspamdHttpClient = rspamdHttpClient;
         this.configuration = configuration;
         this.mailboxManager = mailboxManager;
         this.mapperFactory = mapperFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
+        this.rspamdListenerConfiguration = rspamdListenerConfiguration;
+    }
+
+    @Inject
+    public RspamdListener(RspamdHttpClient rspamdHttpClient, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory,
+                          SystemMailboxesProvider systemMailboxesProvider, RspamdClientConfiguration configuration, HierarchicalConfiguration<ImmutableNode> rspamdListenerConfiguration) {
+        this.rspamdHttpClient = rspamdHttpClient;
+        this.configuration = configuration;
+        this.mailboxManager = mailboxManager;
+        this.mapperFactory = mapperFactory;
+        this.systemMailboxesProvider = systemMailboxesProvider;
+        this.rspamdListenerConfiguration = RspamdListenerConfiguration.from(rspamdListenerConfiguration);
     }
 
     @Override
@@ -94,7 +122,7 @@ public class RspamdListener implements SpamEventListener, EventListener.Reactive
     public Publisher<Void> reactiveEvent(Event event) {
         if (event instanceof MessageMoveEvent) {
             return handleMessageMoved((MessageMoveEvent) event);
-        } else if (event instanceof MailboxEvents.Added) {
+        } else if (rspamdListenerConfiguration.reportAdded && event instanceof MailboxEvents.Added) {
             return handleMessageAdded((MailboxEvents.Added) event);
         }
         return Mono.empty();
