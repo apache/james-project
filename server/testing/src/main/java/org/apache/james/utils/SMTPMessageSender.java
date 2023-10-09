@@ -110,6 +110,10 @@ public class SMTPMessageSender extends ExternalResource implements Closeable, Af
         return sendMessageWithHeaders(from, recipients, message);
     }
 
+    public SMTPMessageSender sendMessage(String from, String... recipients) throws IOException {
+        return sendMessage(from, ImmutableList.copyOf(recipients));
+    }
+
     public SMTPMessageSender sendMessageNoBracket(String from, String recipient) throws IOException {
         doHelo();
         doSetSender(from);
