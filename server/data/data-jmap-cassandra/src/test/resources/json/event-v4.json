@@ -1,0 +1,34 @@
+{
+  "type":"filtering-rule-set-defined",
+  "eventId":0,
+  "aggregateId":"FilteringRule/bart",
+  "rules":[
+    {
+      "id":"1",
+      "name":"a name",
+      "conditionGroup": {
+        "conditionCombiner": "AND",
+        "conditions": [
+          {
+            "field": "cc",
+            "comparator": "contains",
+            "value": "something"
+          }
+        ]
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["id-01"]
+        },
+        "important":true,
+        "keyworkds":["abc"],
+        "reject":true,
+        "seen":true,
+        "forwardTo": {
+          "addresses": ["abc@example.com"],
+          "keepACopy": true
+        }
+      }
+    }
+  ]
+}

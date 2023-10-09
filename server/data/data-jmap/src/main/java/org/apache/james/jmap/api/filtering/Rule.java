@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -284,12 +285,62 @@ public class Rule {
             }
         }
 
+        public static class Forward {
+            public static Forward of(ImmutableList<MailAddress> addresses, boolean keepACopy) {
+                return new Forward(addresses, keepACopy);
+            }
+
+            private final ImmutableList<MailAddress> addresses;
+            private final boolean keepACopy;
+
+            public Forward(ImmutableList<MailAddress> addresses, boolean keepACopy) {
+                this.addresses = addresses;
+                this.keepACopy = keepACopy;
+            }
+
+            public List<MailAddress> getAddresses() {
+                return addresses;
+            }
+
+            public boolean isKeepACopy() {
+                return keepACopy;
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof Forward) {
+                    Forward forward = (Forward) o;
+                    return Objects.equals(addresses, forward.addresses)
+                        && Objects.equals(keepACopy, forward.keepACopy);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(addresses, keepACopy);
+            }
+
+            @Override
+            public String toString() {
+                return MoreObjects.toStringHelper(this)
+                    .add("addresses", addresses)
+                    .add("keepACopy", keepACopy)
+                    .toString();
+            }
+        }
+
         public static Action of(AppendInMailboxes appendInMailboxes) {
-            return new Action(appendInMailboxes, false, false, false, ImmutableList.of());
+            return new Action(appendInMailboxes, false, false, false, ImmutableList.of(), Optional.empty());
         }
 
         public static Action of(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant, boolean reject, List<String> withKeywords) {
-            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords);
+            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, Optional.empty());
+        }
+
+        public static Action of(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant,
+                                boolean reject, List<String> withKeywords, Optional<Forward> forward) {
+            return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward);
         }
 
         private final AppendInMailboxes appendInMailboxes;
@@ -297,13 +348,16 @@ public class Rule {
         private final boolean markAsImportant;
         private final boolean reject;
         private final List<String> withKeywords;
+        private Optional<Forward> forward;
 
-        private Action(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant, boolean reject, List<String> withKeywords) {
+        private Action(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant,
+                       boolean reject, List<String> withKeywords, Optional<Forward> forward) {
             this.appendInMailboxes = appendInMailboxes;
             this.markAsSeen = markAsSeen;
             this.markAsImportant = markAsImportant;
             this.reject = reject;
             this.withKeywords = withKeywords;
+            this.forward = forward;
         }
         
         public AppendInMailboxes getAppendInMailboxes() {
@@ -326,6 +380,10 @@ public class Rule {
             return withKeywords;
         }
 
+        public Optional<Forward> getForward() {
+            return forward;
+        }
+
         @Override
         public final boolean equals(Object o) {
             if (o instanceof Action) {
@@ -334,14 +392,15 @@ public class Rule {
                     && Objects.equals(markAsSeen, action.markAsSeen)
                     && Objects.equals(markAsImportant, action.markAsImportant)
                     && Objects.equals(reject, action.reject)
-                    && Objects.equals(withKeywords, action.withKeywords);
+                    && Objects.equals(withKeywords, action.withKeywords)
+                    && Objects.equals(forward, action.forward);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(appendInMailboxes, markAsImportant, markAsSeen, reject, withKeywords);
+            return Objects.hash(appendInMailboxes, markAsImportant, markAsSeen, reject, withKeywords, forward);
         }
 
         @Override
@@ -352,6 +411,7 @@ public class Rule {
                 .add("markAsSeen", markAsSeen)
                 .add("reject", reject)
                 .add("withKeywords", withKeywords)
+                .add("withKeywords", forward)
                 .toString();
         }
     }

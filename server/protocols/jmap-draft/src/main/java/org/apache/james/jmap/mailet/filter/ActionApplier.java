@@ -101,6 +101,17 @@ public class ActionApplier {
                 .collect(ImmutableList.toImmutableList()));
             return;
         }
+        if (action.getForward().isPresent()) {
+            Rule.Action.Forward forward = action.getForward().get();
+            if (!forward.isKeepACopy()) {
+                mail.setRecipients(mail.getRecipients().stream()
+                    .filter(recipient -> !recipient.equals(mailAddress))
+                    .collect(ImmutableList.toImmutableList()));
+            }
+            mail.setRecipients(Stream.concat(mail.getRecipients().stream(), forward.getAddresses().stream())
+                .collect(ImmutableList.toImmutableList()));
+            return;
+        }
         Optional<ImmutableList<String>> targetMailboxes = Optional.of(action.getAppendInMailboxes().getMailboxIds()
             .stream()
             .flatMap(this::asMailboxName)

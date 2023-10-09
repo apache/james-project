@@ -34,6 +34,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.EMPTY;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULLNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULL_SCRAMBLED_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.GA_BOU_ZO_MEU_FULL_ADDRESS;
+import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_MAILBOX_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.SCRAMBLED_SUBJECT;
@@ -54,6 +55,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -61,6 +63,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -1031,6 +1034,65 @@ class JMAPFilteringTest {
 
         assertThat(StorageDirective.fromMail(Username.of("recipient1"), mail).getFlags().get().getUserFlags())
             .containsOnly("abc", "def");
+    }
+
+    @Test
+    void actionShouldSupportForward(JMAPFilteringTestSystem testSystem) throws Exception {
+        ImmutableList<MailAddress> forwardedMailAddresses = ImmutableList.of("abc@example.com")
+            .stream()
+            .map(Throwing.function(MailAddress::new))
+            .collect(ImmutableList.toImmutableList());
+        Rule.Action.Forward forward = Rule.Action.Forward.of(forwardedMailAddresses, true);
+
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME)))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()),
+                    false,
+                    false,
+                    false,
+                    ImmutableList.of(),
+                    Optional.of(forward)))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getRecipients()).contains(new MailAddress(RECIPIENT_1));
+        assertThat(mail.getRecipients()).containsAll(forwardedMailAddresses);
+    }
+
+    @Test
+    void actionForwardShouldNotKeepACopyWhenKeepACopyIsFalse(JMAPFilteringTestSystem testSystem) throws Exception {
+        ImmutableList<MailAddress> forwardedMailAddresses = ImmutableList.of("abc@example.com")
+            .stream()
+            .map(Throwing.function(MailAddress::new))
+            .collect(ImmutableList.toImmutableList());
+        Rule.Action.Forward forward = Rule.Action.Forward.of(forwardedMailAddresses, false);
+
+        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
+            Optional.empty(),
+            Rule.builder()
+                .id(Rule.Id.of("1"))
+                .name("rule 1")
+                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME)))
+                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()),
+                    false,
+                    false,
+                    false,
+                    ImmutableList.of(),
+                    Optional.of(forward)))
+                .build())).block();
+
+        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS));
+
+        testSystem.getJmapFiltering().service(mail);
+
+        assertThat(mail.getRecipients()).doesNotContain(new MailAddress(RECIPIENT_1));
     }
 
     @Test

@@ -23,10 +23,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.filtering.Rule;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -175,9 +177,59 @@ public class RuleDTO {
             }
         }
 
+        public static class ForwardDTO {
+            public static ForwardDTO from(Rule.Action.Forward forward) {
+                return new ForwardDTO(forward.getAddresses().stream().map(MailAddress::asString).collect(ImmutableList.toImmutableList()),
+                    forward.isKeepACopy());
+            }
+
+            private final List<String> addresses;
+            private final boolean keepACopy;
+
+            public ForwardDTO(@JsonProperty("addresses") List<String> addresses, @JsonProperty("keepACopy") boolean keepACopy) {
+                this.addresses = addresses;
+                this.keepACopy = keepACopy;
+            }
+
+            public List<String> getAddresses() {
+                return addresses;
+            }
+
+            public boolean isKeepACopy() {
+                return keepACopy;
+            }
+
+            public Rule.Action.Forward toForward() {
+                return Rule.Action.Forward.of(addresses.stream()
+                        .map(Throwing.function(MailAddress::new))
+                        .collect(ImmutableList.toImmutableList()),
+                    keepACopy);
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof ForwardDTO) {
+                    ForwardDTO that = (ForwardDTO) o;
+
+                    return Objects.equals(this.addresses, that.addresses)
+                        && Objects.equals(this.keepACopy, that.keepACopy);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(addresses, keepACopy);
+            }
+        }
+
         public static ActionDTO from(Rule.Action action) {
             return new ActionDTO(AppendInMailboxesDTO.from(action.getAppendInMailboxes()),
-                action.isMarkAsSeen(), action.isMarkAsImportant(), action.isReject(), ImmutableList.copyOf(action.getWithKeywords()));
+                action.isMarkAsSeen(),
+                action.isMarkAsImportant(),
+                action.isReject(),
+                ImmutableList.copyOf(action.getWithKeywords()),
+                action.getForward().map(ForwardDTO::from));
         }
 
         @JsonCreator
@@ -185,12 +237,14 @@ public class RuleDTO {
                          @JsonProperty("seen") boolean seen,
                          @JsonProperty("important") boolean important,
                          @JsonProperty("reject") boolean reject,
-                         @JsonProperty("keywords") List<String> keyworkds) {
+                         @JsonProperty("keywords") List<String> keyworkds,
+                         @JsonProperty("forwardTo") Optional<ForwardDTO> forwardTo) {
             this.appendIn = appendIn;
             this.keyworkds = keyworkds;
             this.seen = seen;
             this.important = important;
             this.reject = reject;
+            this.forwardTo = forwardTo;
         }
 
         private final AppendInMailboxesDTO appendIn;
@@ -198,6 +252,7 @@ public class RuleDTO {
         private final boolean important;
         private final boolean reject;
         private final List<String> keyworkds;
+        private Optional<ForwardDTO> forwardTo;
 
         public AppendInMailboxesDTO getAppendIn() {
             return appendIn;
@@ -219,8 +274,17 @@ public class RuleDTO {
             return keyworkds;
         }
 
+        public Optional<ForwardDTO> getForwardTo() {
+            return forwardTo;
+        }
+
         public Rule.Action toAction() {
-            return Rule.Action.of(appendIn.toAppendInMailboxes(), isSeen(), isImportant(), isReject(), getKeyworkds());
+            return Rule.Action.of(appendIn.toAppendInMailboxes(),
+                isSeen(),
+                isImportant(),
+                isReject(),
+                getKeyworkds(),
+                forwardTo.map(ForwardDTO::toForward));
         }
 
         @Override
@@ -232,14 +296,15 @@ public class RuleDTO {
                     && Objects.equals(this.seen, actionDTO.seen)
                     && Objects.equals(this.important, actionDTO.important)
                     && Objects.equals(this.reject, actionDTO.reject)
-                    && Objects.equals(this.keyworkds, actionDTO.keyworkds);
+                    && Objects.equals(this.keyworkds, actionDTO.keyworkds)
+                    && Objects.equals(this.forwardTo, actionDTO.forwardTo);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(appendIn, reject, seen, important, keyworkds);
+            return Objects.hash(appendIn, reject, seen, important, keyworkds, forwardTo);
         }
     }
 
