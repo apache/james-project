@@ -48,6 +48,11 @@ import com.google.common.collect.ImmutableList;
  *  &lt;/mailet&gt;
  * </code>
  * </pre>
+ *
+ * The <b>rewriteSenderUponForward</b> option (fault to true) can be used to prevent senders to be rewritten upon forwards in the transport enveloppe
+ * (JAMES 3.8.0 default behaviour). <b>WARNING</b>: Please note that not rewriting the sender will cause issues forwarding emails
+ * from external senders to external addresses as the DKIM and SPF records will not be matching the ones of the sending
+ * domain.
  */
 public class RecipientRewriteTable extends GenericMailet {
     public static final String ERROR_PROCESSOR = "errorProcessor";
