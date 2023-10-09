@@ -229,6 +229,19 @@ public class RecipientRewriteTableProcessor {
                     copy.setSender(originalRecipient);
                     copy.setRecipients(forwards);
                     context.sendMail(copy);
+
+                    AuditTrail.entry()
+                        .protocol("mailetcontainer")
+                        .action("RecipientRewrite")
+                        .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                            "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                                .map(Throwing.function(MimeMessage::getMessageID))
+                                .orElse(""),
+                            "sender", mail.getMaybeSender().asString(),
+                            "forwardedMailId", copy.getName(),
+                            "forwardedMailSender", originalRecipient.asString(),
+                            "forwardedMailRecipient", StringUtils.join(forwards))))
+                        .log("Mail forwarded.");
                 } finally {
                     LifecycleUtil.dispose(copy);
                 }
