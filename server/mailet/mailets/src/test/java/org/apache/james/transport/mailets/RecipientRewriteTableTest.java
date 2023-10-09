@@ -20,11 +20,14 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.MailAddressFixture;
@@ -44,7 +47,9 @@ class RecipientRewriteTableTest {
     void setUp() throws Exception {
         DomainList domainList = mock(DomainList.class);
         org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore = mock(org.apache.james.rrt.api.RecipientRewriteTable.class);
-        
+
+        when(virtualTableStore.getStoredMappings(any())).thenReturn(MappingsImpl.empty());
+
         mailet = new RecipientRewriteTable(virtualTableStore, domainList);
 
         message = MimeMessageUtil.defaultMimeMessage();

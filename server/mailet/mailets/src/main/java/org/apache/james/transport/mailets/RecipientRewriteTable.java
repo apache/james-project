@@ -56,6 +56,7 @@ public class RecipientRewriteTable extends GenericMailet {
     private final DomainList domainList;
     private RecipientRewriteTableProcessor processor;
     private ProcessingState errorProcessor;
+    private boolean rewriteSenderUponForward = true;
 
     @Inject
     public RecipientRewriteTable(org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore, DomainList domainList) {
@@ -66,7 +67,9 @@ public class RecipientRewriteTable extends GenericMailet {
     @Override
     public void init() throws MessagingException {
         errorProcessor = new ProcessingState(getInitParameter(ERROR_PROCESSOR, Mail.ERROR));
-        processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext(), errorProcessor);
+        rewriteSenderUponForward = getBooleanParameter("rewriteSenderUponForward", true);
+        processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext(), errorProcessor,
+            rewriteSenderUponForward);
     }
 
 

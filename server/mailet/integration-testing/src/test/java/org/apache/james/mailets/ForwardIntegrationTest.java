@@ -23,8 +23,6 @@ import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 
@@ -36,35 +34,26 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.modules.MailboxProbeImpl;
-import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.transport.mailets.NoClassDefFoundErrorMailet;
 import org.apache.james.transport.mailets.RecipientRewriteTable;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
-import org.apache.james.utils.TestIMAPClient;
-import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.routes.ForwardRoutes;
 import org.apache.mailet.Mail;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.github.fge.lambdas.Throwing;
-import io.restassured.specification.RequestSpecification;
 
 public class ForwardIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
@@ -82,8 +71,6 @@ public class ForwardIntegrationTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private DataProbe dataProbe;
-    private RequestSpecification webAdminApi;
     private MailRepositoryProbeImpl mailRepositoryProbe;
 
     @BeforeEach
@@ -100,11 +87,12 @@ public class ForwardIntegrationTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString())
+                        .addProperty("rewriteSenderUponForward", "true"))))
             .build(temporaryFolder);
         jamesServer.start();
 
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
         dataProbe.addDomain(JAMES_ANOTHER_DOMAIN);
 
@@ -122,7 +110,6 @@ public class ForwardIntegrationTest {
         jamesServer.shutdown();
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardShouldRewriteTheSender() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -144,7 +131,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void latestForwardShouldRewriteTheSender() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -169,7 +155,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void groupShouldBeAppliedToForwardedMails() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -194,7 +179,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardsShouldBeAppliedToGroupMembers() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -219,7 +203,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardsShouldBeAppliedToAliases() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -245,7 +228,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardsShouldApplyAliases() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -271,7 +253,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardShouldSplitForwardedRecipient() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -298,7 +279,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardShouldSplitForwardedRecipients() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -328,7 +308,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardShouldSplitLocalCopy() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
@@ -358,7 +337,6 @@ public class ForwardIntegrationTest {
         }));
     }
 
-    @Disabled("See JAMES-3944")
     @Test
     void forwardShouldSupportSeveralTargets() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
