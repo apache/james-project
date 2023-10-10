@@ -21,7 +21,6 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
-import static org.apache.james.backends.rabbitmq.Constants.ALLOW_QUORUM;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
@@ -75,6 +74,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     public static final int NUM_RETRIES = 8;
     public static final Duration FIRST_BACKOFF = Duration.ofMillis(100);
+    public static final boolean AUTO_DELETE_QUEUE = true;
 
     private final TaskManagerWorker worker;
     private final JsonTaskSerializer taskSerializer;
@@ -123,7 +123,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
         Mono<AMQP.Queue.DeclareOk> declareQueue = sender
             .declare(QueueSpecification.queue(QUEUE_NAME)
                 .durable(true)
-                .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(ALLOW_QUORUM)
+                .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(!AUTO_DELETE_QUEUE)
                     .singleActiveConsumer()
                     .build()))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
