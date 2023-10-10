@@ -159,7 +159,7 @@ public class ForwardIntegrationTest {
     void groupShouldBeAppliedToForwardedMails() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(BOB),
-                Mapping.forward(DELPHINE.asString()));
+                Mapping.forward(GROUP.asString()));
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(GROUP),
                 Mapping.group(DELPHINE.asString()));
@@ -230,10 +230,12 @@ public class ForwardIntegrationTest {
 
     @Test
     void forwardsShouldApplyAliases() throws Exception {
+        String delphineAlias = "delphine-alias@" + JAMES_ANOTHER_DOMAIN;
+
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(BOB),
-                Mapping.forward(DELPHINE.asString()));
-        String delphineAlias = "delphine-alias@" + JAMES_ANOTHER_DOMAIN;
+                Mapping.forward(delphineAlias));
+
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(Username.of(delphineAlias)),
                 Mapping.alias(DELPHINE.asString()));
@@ -295,16 +297,16 @@ public class ForwardIntegrationTest {
         Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            Mail forwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+            Mail bobForwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
                 .filter(Throwing.predicate(mail -> mail.getRecipients().contains(DELPHINE.asMailAddress())))
                 .findAny().get();
-            Mail regularMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+            Mail aliceForwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
                 .filter(Throwing.predicate(mail -> mail.getRecipients().contains(CEDRIC.asMailAddress())))
                 .findAny().get();
-            softly.assertThat(forwardedMail.getRecipients()).containsOnly(DELPHINE.asMailAddress());
-            softly.assertThat(forwardedMail.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
-            softly.assertThat(regularMail.getRecipients()).containsOnly(CEDRIC.asMailAddress());
-            softly.assertThat(regularMail.getMaybeSender().asOptional()).contains(ALICE.asMailAddress());
+            softly.assertThat(bobForwardedMail.getRecipients()).containsOnly(DELPHINE.asMailAddress());
+            softly.assertThat(bobForwardedMail.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
+            softly.assertThat(aliceForwardedMail.getRecipients()).containsOnly(CEDRIC.asMailAddress());
+            softly.assertThat(aliceForwardedMail.getMaybeSender().asOptional()).contains(ALICE.asMailAddress());
         }));
     }
 
@@ -327,13 +329,13 @@ public class ForwardIntegrationTest {
             Mail forwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
                 .filter(Throwing.predicate(mail -> mail.getRecipients().contains(DELPHINE.asMailAddress())))
                 .findAny().get();
-            Mail regularMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+            Mail localCopy = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
                 .filter(Throwing.predicate(mail -> mail.getRecipients().contains(BOB.asMailAddress())))
                 .findAny().get();
             softly.assertThat(forwardedMail.getRecipients()).containsOnly(DELPHINE.asMailAddress());
             softly.assertThat(forwardedMail.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
-            softly.assertThat(regularMail.getRecipients()).containsOnly(BOB.asMailAddress());
-            softly.assertThat(regularMail.getMaybeSender().asOptional()).contains(new MailAddress(FROM));
+            softly.assertThat(localCopy.getRecipients()).containsOnly(BOB.asMailAddress());
+            softly.assertThat(localCopy.getMaybeSender().asOptional()).contains(new MailAddress(FROM));
         }));
     }
 
