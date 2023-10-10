@@ -113,7 +113,6 @@ import reactor.core.publisher.Mono;
  * This class needs to be extended by the different mailbox 
  * implementations which are responsible to setup and 
  * implement the test methods.
- * 
  */
 public abstract class MailboxManagerTest<T extends MailboxManager> {
     public static final Username USER_1 = Username.of("USER_1");
@@ -215,10 +214,22 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
 
-        MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "name.subfolder");
+        MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "subfolder");
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, session);
 
         assertThat(subscriptionManager.subscriptions(session)).containsOnly(mailboxPath);
+    }
+
+    @Test
+    void createMailboxShouldSubscribeCreatedParentsWhenRequested() throws Exception {
+        session = mailboxManager.createSystemSession(USER_1);
+        mailboxManager.startProcessingRequest(session);
+
+        MailboxPath parentPath = MailboxPath.forUser(USER_1, "parent");
+        MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "parent.subfolder");
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, MailboxManager.CreateOption.CREATE_SUBSCRIPTION, session);
+
+        assertThat(subscriptionManager.subscriptions(session)).containsOnly(parentPath, mailboxPath);
     }
 
     @Test
