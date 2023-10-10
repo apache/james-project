@@ -81,7 +81,7 @@ public class JMAPFiltering extends GenericMailet {
                 Stream<Rule> matchingRules = ruleMatcher.findApplicableRules(mail);
 
                 actionApplierFactory.forMail(mail)
-                    .forRecipient(recipient, username)
+                    .forRecipient(getMailetContext(), recipient, username)
                     .apply(matchingRules.map(Rule::getAction));
             });
     }

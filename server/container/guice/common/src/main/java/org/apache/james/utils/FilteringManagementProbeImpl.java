@@ -16,24 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules;
 
-import org.apache.james.modules.server.MailStoreRepositoryModule;
-import org.apache.james.modules.server.MailetContainerModule;
-import org.apache.james.utils.FilteringManagementProbeImpl;
-import org.apache.james.utils.GuiceProbe;
+package org.apache.james.utils;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import java.util.Optional;
 
-public class MailetProcessingModule extends AbstractModule {
+import javax.inject.Inject;
 
-    @Override
-    protected void configure() {
-        install(new MailStoreRepositoryModule());
-        install(new MailetContainerModule());
+import org.apache.james.core.Username;
+import org.apache.james.jmap.api.filtering.FilteringManagement;
+import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.api.filtering.Version;
 
-        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(FilteringManagementProbeImpl.class);
+import reactor.core.publisher.Mono;
+
+public class FilteringManagementProbeImpl implements GuiceProbe {
+
+    private final FilteringManagement filteringManagement;
+
+    @Inject
+    public FilteringManagementProbeImpl(FilteringManagement filteringManagement) {
+        this.filteringManagement = filteringManagement;
     }
-    
+
+    public void defineRulesForUser(Username username, Optional<Version> ifInState, Rule... rules) {
+        Mono.from(filteringManagement.defineRulesForUser(username, ifInState, rules)).block();
+    }
 }

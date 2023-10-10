@@ -1037,65 +1037,6 @@ class JMAPFilteringTest {
     }
 
     @Test
-    void actionShouldSupportForward(JMAPFilteringTestSystem testSystem) throws Exception {
-        ImmutableList<MailAddress> forwardedMailAddresses = ImmutableList.of("abc@example.com")
-            .stream()
-            .map(Throwing.function(MailAddress::new))
-            .collect(ImmutableList.toImmutableList());
-        Rule.Action.Forward forward = Rule.Action.Forward.of(forwardedMailAddresses, true);
-
-        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME)))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()),
-                    false,
-                    false,
-                    false,
-                    ImmutableList.of(),
-                    Optional.of(forward)))
-                .build())).block();
-
-        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS));
-
-        testSystem.getJmapFiltering().service(mail);
-
-        assertThat(mail.getRecipients()).contains(new MailAddress(RECIPIENT_1));
-        assertThat(mail.getRecipients()).containsAll(forwardedMailAddresses);
-    }
-
-    @Test
-    void actionForwardShouldNotKeepACopyWhenKeepACopyIsFalse(JMAPFilteringTestSystem testSystem) throws Exception {
-        ImmutableList<MailAddress> forwardedMailAddresses = ImmutableList.of("abc@example.com")
-            .stream()
-            .map(Throwing.function(MailAddress::new))
-            .collect(ImmutableList.toImmutableList());
-        Rule.Action.Forward forward = Rule.Action.Forward.of(forwardedMailAddresses, false);
-
-        Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, USER_2_USERNAME)))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()),
-                    false,
-                    false,
-                    false,
-                    ImmutableList.of(),
-                    Optional.of(forward)))
-                .build())).block();
-
-        FakeMail mail = testSystem.asMail(mimeMessageBuilder().addHeader(FROM.asString(), USER_2_ADDRESS));
-
-        testSystem.getJmapFiltering().service(mail);
-
-        assertThat(mail.getRecipients()).doesNotContain(new MailAddress(RECIPIENT_1));
-    }
-
-    @Test
     void actionShouldCombineFlags(JMAPFilteringTestSystem testSystem) throws Exception {
         Mono.from(testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME,
             Optional.empty(),
