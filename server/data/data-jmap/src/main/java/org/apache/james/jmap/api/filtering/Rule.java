@@ -330,6 +330,53 @@ public class Rule {
             }
         }
 
+        public static class Builder {
+            private AppendInMailboxes appendInMailboxes;
+            private boolean markAsSeen;
+            private boolean markAsImportant;
+            private boolean reject;
+            private List<String> withKeywords;
+            private Forward forward;
+
+            public Builder setAppendInMailboxes(AppendInMailboxes appendInMailboxes) {
+                this.appendInMailboxes = appendInMailboxes;
+                return this;
+            }
+
+            public Builder setMarkAsSeen(boolean markAsSeen) {
+                this.markAsSeen = markAsSeen;
+                return this;
+            }
+
+            public Builder setMarkAsImportant(boolean markAsImportant) {
+                this.markAsImportant = markAsImportant;
+                return this;
+            }
+
+            public Builder setReject(boolean reject) {
+                this.reject = reject;
+                return this;
+            }
+
+            public Builder setWithKeywords(List<String> withKeywords) {
+                this.withKeywords = withKeywords;
+                return this;
+            }
+
+            public Builder setForward(Forward forward) {
+                this.forward = forward;
+                return this;
+            }
+
+            public Action build() {
+                return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, Optional.ofNullable(forward));
+            }
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
         public static Action of(AppendInMailboxes appendInMailboxes) {
             return new Action(appendInMailboxes, false, false, false, ImmutableList.of(), Optional.empty());
         }
@@ -348,7 +395,7 @@ public class Rule {
         private final boolean markAsImportant;
         private final boolean reject;
         private final List<String> withKeywords;
-        private Optional<Forward> forward;
+        private final Optional<Forward> forward;
 
         private Action(AppendInMailboxes appendInMailboxes, boolean markAsSeen, boolean markAsImportant,
                        boolean reject, List<String> withKeywords, Optional<Forward> forward) {
