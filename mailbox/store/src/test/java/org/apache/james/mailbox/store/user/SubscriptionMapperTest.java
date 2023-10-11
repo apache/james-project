@@ -30,12 +30,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class SubscriptionMapperTest {
-    private static final Username USER_1 = Username.of("user1");
-    private static final Username USER_2 = Username.of("user2");
+    private static final Username USER_1 = Username.of("user1@domain1.tld");
+    private static final Username USER_2 = Username.of("user2@domain2.tld");
     private static final String MAILBOX_1 = "mailbox1";
     private static final String MAILBOX_2 = "mailbox2";
 
-    private SubscriptionMapper testee;
+    protected SubscriptionMapper testee;
 
     protected abstract SubscriptionMapper createSubscriptionMapper();
 

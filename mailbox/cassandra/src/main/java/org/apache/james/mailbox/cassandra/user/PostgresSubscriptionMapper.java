@@ -35,10 +35,10 @@ import reactor.core.publisher.Mono;
 public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
 
-    private final Mono<PostgresqlConnection> connection;
+    private final PostgresConnectionResolver connectionResolver;
 
-    public PostgresSubscriptionMapper(PostgresqlConnectionFactory connectionFactory) {
-        this.connection = connectionFactory.create();
+    public PostgresSubscriptionMapper(PostgresConnectionResolver connectionResolver) {
+        this.connectionResolver = connectionResolver;
     }
 
     @Override
@@ -58,7 +58,8 @@ public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
     @Override
     public Mono<Void> saveReactive(Subscription subscription) {
-        return connection.flatMapMany(c -> c.createStatement("INSERT INTO subscription (username, mailbox) VALUES ($1, $2) " +
+        return getConnection(subscription.getUser())
+            .flatMapMany(c -> c.createStatement("INSERT INTO subscription (username, mailbox) VALUES ($1, $2) " +
                     "ON CONFLICT (username, mailbox) DO NOTHING")
                 .bind("$1", subscription.getUser().asString())
                 .bind("$2", subscription.getMailbox())
@@ -70,7 +71,8 @@ public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
     @Override
     public Flux<Subscription> findSubscriptionsForUserReactive(Username user) {
-        return connection.flatMapMany(c -> c.createStatement("SELECT * FROM subscription WHERE username = $1")
+        return getConnection(user)
+            .flatMapMany(c -> c.createStatement("SELECT * FROM subscription WHERE username = $1")
                 .bind("$1", user.asString())
                 .execute())
             .flatMap(result -> result.map((row, rowMetadata) -> new Subscription(user, row.get("mailbox", String.class))));
@@ -78,12 +80,17 @@ public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
     @Override
     public Mono<Void> deleteReactive(Subscription subscription) {
-        return connection.flatMapMany(c -> c.createStatement("DELETE FROM subscription WHERE username = $1 AND mailbox = $2")
+        return getConnection(subscription.getUser())
+            .flatMapMany(c -> c.createStatement("DELETE FROM subscription WHERE username = $1 AND mailbox = $2")
                 .bind("$1", subscription.getUser().asString())
                 .bind("$2", subscription.getMailbox())
                 .execute())
             .flatMap(Result::getRowsUpdated)
             .then();
+    }
+
+    private Mono<PostgresqlConnection> getConnection(Username username) {
+        return Mono.from(connectionResolver.resolver(username.getDomainPart().orElse(null)));
     }
 
 }
