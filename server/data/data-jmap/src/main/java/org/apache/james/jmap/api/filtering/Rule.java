@@ -24,10 +24,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -288,6 +290,11 @@ public class Rule {
         public static class Forward {
             public static Forward of(ImmutableList<MailAddress> addresses, boolean keepACopy) {
                 return new Forward(addresses, keepACopy);
+            }
+
+            public static Forward of(List<String> addresses, boolean keepACopy) {
+                return new Forward(addresses.stream().map(Throwing.function(MailAddress::new)).collect(ImmutableList.toImmutableList()),
+                    keepACopy);
             }
 
             private final ImmutableList<MailAddress> addresses;
