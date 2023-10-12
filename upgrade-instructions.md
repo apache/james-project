@@ -24,7 +24,23 @@ Change list:
  - [Improve CassandraThreadIdGuessingAlgorithm](#improve-cassandrathreadidguessingalgorithm)
  - [Set up TTL on the mailbox_change and email_change tables](#set-up-ttl-on-the-mailboxchange-and-emailchange-tables)
  - [Change compaction strategy of blob_cache table](#change-compaction-strategy-of-blobcache-table)
+ - [RRT forwards now rewrite senders](#rrt-forwards-now-rewrite-senders)
 
+### RRT forwards now rewrite senders
+
+Date: 09/10/2023
+JIRA: https://issues.apache.org/jira/browse/JAMES-3944
+
+In order to have valid SPF, DKIM configuration upon users forwards for mails sent from external address forwarded
+to external addresses, James now rewrite the sender to the user owning the forward.
+
+This behaviour can be disabled via the RecipientRewriteTable mailet configuration:
+
+```
+<mailet match="All" class="RecipientRewriteTable">
+    <rewriteSenderUponForward>false</rewriteSenderUponForward>
+<mailet/>>
+```
 
 ### Change compaction strategy of blob_cache table
 Date: 18/09/2023

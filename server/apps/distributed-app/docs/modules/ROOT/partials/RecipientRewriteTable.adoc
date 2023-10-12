@@ -12,3 +12,8 @@ Example:
    <errorProcessor>rrt-errors</errorProcessor>
  </mailet>
 ....
+
+The *rewriteSenderUponForward* option (default to true) can be used to prevent senders to be rewritten upon forwards in the transport envelope
+(JAMES 3.8.0 default behaviour). *WARNING*: Please note that not rewriting the sender will cause issues forwarding emails
+from external senders to external addresses as the DKIM and SPF records will not be matching the ones of the sending
+domain.

@@ -31,6 +31,7 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.DelegationStore;
@@ -132,6 +133,10 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     @Override
     public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
         recipientRewriteTable.addDomainAliasMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(deliveryDomain));
+    }
+
+    public void addMapping(MappingSource source, Mapping mapping) throws Exception {
+        recipientRewriteTable.addMapping(source, mapping);
     }
 
     @Override

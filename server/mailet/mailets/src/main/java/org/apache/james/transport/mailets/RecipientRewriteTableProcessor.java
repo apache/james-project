@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +45,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
@@ -66,6 +68,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
+    private static final boolean REWRITE_SENDER_UPON_FORWARD = true;
 
     private static class Decision {
         private final MailAddress originalAddress;
@@ -156,17 +159,28 @@ public class RecipientRewriteTableProcessor {
     private final MailetContext mailetContext;
     private final Supplier<Domain> defaultDomainSupplier;
     private final ProcessingState errorProcessor;
+    private final boolean rewriteSenderUponForward;
+    private final EnumSet<Mapping.Type> mappingTypes;
 
-    public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext, ProcessingState errorProcessor) {
+    public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList,
+                                          MailetContext mailetContext, ProcessingState errorProcessor, boolean rewriteSenderUponForward) {
         this.virtualTableStore = virtualTableStore;
         this.mailetContext = mailetContext;
         this.defaultDomainSupplier = MemoizedSupplier.of(
             Throwing.supplier(() -> getDefaultDomain(domainList)).sneakyThrow());
         this.errorProcessor = errorProcessor;
+        this.rewriteSenderUponForward = rewriteSenderUponForward;
+        if (rewriteSenderUponForward) {
+            EnumSet<Mapping.Type> types = EnumSet.allOf(Mapping.Type.class);
+            types.remove(Mapping.Type.Forward);
+            mappingTypes = types;
+        } else {
+            mappingTypes = EnumSet.allOf(Mapping.Type.class);
+        }
     }
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
-        this(virtualTableStore, domainList, mailetContext, new ProcessingState(Mail.ERROR));
+        this(virtualTableStore, domainList, mailetContext, new ProcessingState(Mail.ERROR), !REWRITE_SENDER_UPON_FORWARD);
     }
 
     private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
@@ -196,6 +210,77 @@ public class RecipientRewriteTableProcessor {
                 "recipientsBeforeRewrite", StringUtils.join(recipientsBeforeRecipientsRewrite),
                 "recipientsAfterRewrite", StringUtils.join(recipientsAfterRecipientsRewrite))))
             .log("Recipients rewritten.");
+
+        processForwards(mail);
+    }
+
+    interface ForwardDecision {
+        static ForwardDecision removeRecipient(MailAddress recipient) {
+            return mail -> mail.setRecipients(mail.getRecipients()
+                .stream()
+                .filter(r -> !r.equals(recipient))
+                .collect(ImmutableList.toImmutableList()));
+        }
+
+        static ForwardDecision sendACopy(MailetContext context, MailAddress originalRecipient, List<MailAddress> forwards) {
+            return mail -> {
+                MailImpl copy = MailImpl.duplicate(mail);
+                try {
+                    copy.setSender(originalRecipient);
+                    copy.setRecipients(forwards);
+                    context.sendMail(copy);
+
+                    AuditTrail.entry()
+                        .protocol("mailetcontainer")
+                        .action("RecipientRewrite")
+                        .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                            "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                                .map(Throwing.function(MimeMessage::getMessageID))
+                                .orElse(""),
+                            "sender", mail.getMaybeSender().asString(),
+                            "forwardedMailId", copy.getName(),
+                            "forwardedMailSender", originalRecipient.asString(),
+                            "forwardedMailRecipient", StringUtils.join(forwards))))
+                        .log("Mail forwarded.");
+                } finally {
+                    LifecycleUtil.dispose(copy);
+                }
+            };
+        }
+        
+        void apply(Mail mail) throws Exception;
+    }
+
+    public void processForwards(Mail mail) throws MessagingException {
+        if (rewriteSenderUponForward) {
+            mail.getRecipients()
+                .stream()
+                .flatMap(Throwing.function(this::processForward))
+                .forEach(Throwing.consumer(decision -> decision.apply(mail)));
+        }
+    }
+
+    private Stream<ForwardDecision> processForward(MailAddress recipient) throws RecipientRewriteTableException {
+        ImmutableSet<Mapping> forwards = virtualTableStore.getStoredMappings(MappingSource.fromMailAddress(recipient))
+            .select(Mapping.Type.Forward)
+            .asStream()
+            .collect(ImmutableSet.toImmutableSet());
+
+        if (forwards.isEmpty()) {
+            return Stream.of();
+        }
+        Mapping localCopyMapping = Mapping.forward(recipient.asString());
+        boolean localCopy = forwards.contains(localCopyMapping);
+        List<MailAddress> forwardedRecipients = forwards.stream()
+            .filter(mapping -> !mapping.equals(localCopyMapping)) // remove the local copy
+            .flatMap(mapping -> mapping.asMailAddress().stream())
+            .collect(ImmutableList.toImmutableList());
+
+        if (localCopy) {
+            return Stream.of(ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients));
+        }
+        return Stream.of(ForwardDecision.removeRecipient(recipient),
+            ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients));
     }
 
     private void applyDecisionOnDSNParameters(Mail mail, List<Decision> decisions) {
@@ -246,7 +331,7 @@ public class RecipientRewriteTableProcessor {
 
     private Decision executeRrtForRecipient(Mail mail, MailAddress recipient) {
         try {
-            Mappings mappings = virtualTableStore.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain());
+            Mappings mappings = virtualTableStore.getResolvedMappings(recipient.getLocalPart(), recipient.getDomain(), mappingTypes);
 
             if (mappings != null && !mappings.isEmpty()) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail, recipient);
