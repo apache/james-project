@@ -24,12 +24,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -371,6 +369,10 @@ public class Rule {
             }
 
             public Action build() {
+                Preconditions.checkNotNull(appendInMailboxes, "appendInMailboxes should not be null");
+                Preconditions.checkNotNull(withKeywords, "withKeywords should not be null");
+                Preconditions.checkNotNull(forward, "forward should not be null");
+
                 return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward);
             }
         }
