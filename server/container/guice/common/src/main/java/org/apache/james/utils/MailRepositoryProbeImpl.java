@@ -20,6 +20,7 @@
 package org.apache.james.utils;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -28,6 +29,7 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class MailRepositoryProbeImpl implements GuiceProbe {
@@ -54,6 +56,12 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
         return ImmutableList.copyOf(
             repositoryStore.select(url)
                 .list());
+    }
+
+    public Stream<Mail> listMails(MailRepositoryUrl url) throws Exception {
+        return listMailKeys(url)
+            .stream()
+            .map(Throwing.function(key -> getMail(url, key)));
     }
 
     public Mail getMail(MailRepositoryUrl url, MailKey key) throws Exception {

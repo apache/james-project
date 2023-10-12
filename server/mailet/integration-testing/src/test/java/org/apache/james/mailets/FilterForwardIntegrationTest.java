@@ -24,8 +24,6 @@ import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.FROM;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.util.Optional;
@@ -33,19 +31,30 @@ import java.util.Optional;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.jmap.mailet.filter.JMAPFiltering;
+import org.apache.james.mailets.configuration.CommonProcessors;
+import org.apache.james.mailets.configuration.MailetConfiguration;
+import org.apache.james.mailets.configuration.MailetContainer;
+import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.transport.mailets.ToRepository;
+import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FilteringManagementProbeImpl;
+import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
-import org.apache.james.utils.TestIMAPClient;
+import org.apache.mailet.Mail;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class FilterForwardIntegrationTest {
@@ -53,18 +62,29 @@ public class FilterForwardIntegrationTest {
     private static final Username ALICE = Username.of("alice@" + DEFAULT_DOMAIN);
     private static final Username BOB = Username.of("bob@" + DEFAULT_DOMAIN);
     private static final Username CEDRIC = Username.of("cedric@" + DEFAULT_DOMAIN);
-
+    private static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/custom/");
     private TemporaryJamesServer jamesServer;
     private FilteringManagementProbeImpl filteringManagementProbe;
+    private MailRepositoryProbeImpl mailRepositoryProbe;
 
     @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @RegisterExtension
-    public TestIMAPClient testIMAPClient = new TestIMAPClient();
 
     @BeforeEach
     void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(ProcessorConfiguration.root()
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(JMAPFiltering.class))
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString())))
+                .putProcessor(CommonProcessors.error())
+                .putProcessor(CommonProcessors.transport())
+                .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
 
         jamesServer.start();
@@ -75,6 +95,8 @@ public class FilterForwardIntegrationTest {
         dataProbe.addUser(ALICE.asString(), PASSWORD);
         dataProbe.addUser(BOB.asString(), PASSWORD);
         dataProbe.addUser(CEDRIC.asString(), PASSWORD);
+
+        mailRepositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         filteringManagementProbe = jamesServer.getProbe(FilteringManagementProbeImpl.class);
     }
@@ -94,24 +116,26 @@ public class FilterForwardIntegrationTest {
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
                 .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, ALICE.asString())))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()),
-                    false,
-                    false,
-                    false,
-                    ImmutableList.of(),
-                    Optional.of(forward)))
+                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
+                    .setWithKeywords(ImmutableList.of())
+                    .setForward(Optional.of(forward))
+                    .build())
                 .build());
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(ALICE.asString(), PASSWORD)
             .sendMessage(ALICE.asString(), BOB.asString());
 
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(CEDRIC, PASSWORD)
-            .select(TestIMAPClient.INBOX)
-            .awaitMessage(awaitAtMostOneMinute);
-        assertThat(testIMAPClient.readFirstMessage()).isNotNull();
-        assertThat(testIMAPClient.readFirstMessageHeaders()).contains("Return-Path: <" + BOB.asString() + ">");
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            Mail mail1 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(CEDRIC.asMailAddress())))
+                .findAny().get();
+
+            softly.assertThat(mail1.getRecipients()).containsOnly(CEDRIC.asMailAddress());
+            softly.assertThat(mail1.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
+        }));
     }
 
     @Test
@@ -124,23 +148,25 @@ public class FilterForwardIntegrationTest {
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
                 .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, ALICE.asString())))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()),
-                    false,
-                    false,
-                    false,
-                    ImmutableList.of(),
-                    Optional.of(forward)))
+                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
+                    .setWithKeywords(ImmutableList.of())
+                    .setForward(Optional.of(forward))
+                    .build())
                 .build());
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(ALICE.asString(), PASSWORD)
             .sendMessage(ALICE.asString(), BOB.asString());
 
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(BOB, PASSWORD)
-            .select(TestIMAPClient.INBOX)
-            .awaitMessage(awaitAtMostOneMinute);
-        assertThat(testIMAPClient.readFirstMessage()).isNotNull();
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            Mail mail1 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(BOB.asMailAddress())))
+                .findAny().get();
+
+            softly.assertThat(mail1.getRecipients()).containsOnly(BOB.asMailAddress());
+        }));
     }
 
     @Test
@@ -153,22 +179,22 @@ public class FilterForwardIntegrationTest {
                 .id(Rule.Id.of("1"))
                 .name("rule 1")
                 .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, ALICE.asString())))
-                .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()),
-                    false,
-                    false,
-                    false,
-                    ImmutableList.of(),
-                    Optional.of(forward)))
+                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
+                    .setWithKeywords(ImmutableList.of())
+                    .setForward(Optional.of(forward))
+                    .build())
                 .build());
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(ALICE.asString(), PASSWORD)
             .sendMessage(ALICE.asString(), BOB.asString());
 
-        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(BOB, PASSWORD)
-            .select(TestIMAPClient.INBOX)
-            .awaitNoMessage(awaitAtMostOneMinute);
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .anyMatch(Throwing.predicate(mail -> mail.getRecipients().contains(BOB.asMailAddress())))).isFalse();
+        }));
     }
 
 

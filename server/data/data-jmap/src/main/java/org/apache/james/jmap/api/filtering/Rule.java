@@ -288,19 +288,14 @@ public class Rule {
         }
 
         public static class Forward {
-            public static Forward of(ImmutableList<MailAddress> addresses, boolean keepACopy) {
-                return new Forward(addresses, keepACopy);
-            }
-
-            public static Forward of(List<String> addresses, boolean keepACopy) {
-                return new Forward(addresses.stream().map(Throwing.function(MailAddress::new)).collect(ImmutableList.toImmutableList()),
-                    keepACopy);
+            public static Forward of(List<MailAddress> addresses, boolean keepACopy) {
+                return new Forward(ImmutableList.copyOf(addresses), keepACopy);
             }
 
             private final ImmutableList<MailAddress> addresses;
             private final boolean keepACopy;
 
-            public Forward(ImmutableList<MailAddress> addresses, boolean keepACopy) {
+            private Forward(ImmutableList<MailAddress> addresses, boolean keepACopy) {
                 this.addresses = addresses;
                 this.keepACopy = keepACopy;
             }
@@ -343,7 +338,7 @@ public class Rule {
             private boolean markAsImportant;
             private boolean reject;
             private List<String> withKeywords;
-            private Forward forward;
+            private Optional<Forward> forward;
 
             public Builder setAppendInMailboxes(AppendInMailboxes appendInMailboxes) {
                 this.appendInMailboxes = appendInMailboxes;
@@ -370,13 +365,13 @@ public class Rule {
                 return this;
             }
 
-            public Builder setForward(Forward forward) {
+            public Builder setForward(Optional<Forward> forward) {
                 this.forward = forward;
                 return this;
             }
 
             public Action build() {
-                return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, Optional.ofNullable(forward));
+                return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward);
             }
         }
 
