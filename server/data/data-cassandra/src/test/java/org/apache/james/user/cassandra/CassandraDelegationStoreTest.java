@@ -19,13 +19,19 @@
 
 package org.apache.james.user.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.DelegationStoreContract;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraDelegationStoreTest implements DelegationStoreContract {
     @RegisterExtension
@@ -52,5 +58,15 @@ public class CassandraDelegationStoreTest implements DelegationStoreContract {
         } catch (UsersRepositoryException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void virtualUsersShouldNotBeListed() {
+        addUser(BOB);
+
+        Mono.from(testee().addAuthorizedUser(ALICE).forUser(BOB)).block();
+
+        assertThat(cassandraUsersDAO.listReactive().collectList().block())
+            .containsOnly(BOB);
     }
 }
