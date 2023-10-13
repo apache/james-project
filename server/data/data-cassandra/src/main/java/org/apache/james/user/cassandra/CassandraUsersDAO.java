@@ -52,7 +52,6 @@ import org.reactivestreams.Publisher;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
-import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
