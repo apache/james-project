@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ResolvedBucketName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -73,7 +74,7 @@ class BucketNameResolverTest {
                 .namespace(BucketName.of("namespace"))
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("bucketName")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("bucketName")))
                 .contains(BucketName.of("bucketName"));
         }
 
@@ -84,7 +85,7 @@ class BucketNameResolverTest {
                 .namespace(BucketName.of("namespace"))
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("namespace")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("namespace")))
                 .contains(BucketName.of("namespace"));
         }
     }
@@ -122,7 +123,7 @@ class BucketNameResolverTest {
                 .noNamespace()
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("bucketPrefix-bucketName")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("bucketPrefix-bucketName")))
                 .contains(BucketName.of("bucketName"));
         }
 
@@ -133,7 +134,7 @@ class BucketNameResolverTest {
                 .noNamespace()
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("bucketName")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("bucketName")))
                 .isEmpty();
         }
     }
@@ -171,7 +172,7 @@ class BucketNameResolverTest {
                 .noNamespace()
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("bucketName")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("bucketName")))
                 .contains(BucketName.of("bucketName"));
         }
     }
@@ -221,7 +222,7 @@ class BucketNameResolverTest {
                 .namespace(BucketName.of("namespace"))
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("bucketName")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("bucketName")))
                 .isEmpty();
         }
 
@@ -232,7 +233,7 @@ class BucketNameResolverTest {
                 .namespace(BucketName.of("namespace"))
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("bucketPrefix-bucketName")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("bucketPrefix-bucketName")))
                 .contains(BucketName.of("bucketName"));
         }
 
@@ -243,7 +244,7 @@ class BucketNameResolverTest {
                 .namespace(BucketName.of("namespace"))
                 .build();
 
-            assertThat(resolver.unresolve(BucketName.of("namespace")))
+            assertThat(resolver.unresolve(ResolvedBucketName.of("namespace")))
                 .contains(BucketName.of("namespace"));
         }
     }

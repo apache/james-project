@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.james.blob.api.BucketName;
 
 import com.google.common.base.Preconditions;
+import org.apache.james.blob.api.ResolvedBucketName;
 
 public class BucketNameResolver {
     static class Builder {
@@ -84,20 +85,20 @@ public class BucketNameResolver {
         this.prefix = prefix;
     }
 
-    BucketName resolve(BucketName bucketName) {
+    ResolvedBucketName resolve(BucketName bucketName) {
         Preconditions.checkNotNull(bucketName);
 
         if (isNameSpace(bucketName)) {
-            return bucketName;
+            return ResolvedBucketName.of(bucketName.asString());
         }
         return prefix
-            .map(bucketPrefix -> BucketName.of(bucketPrefix + bucketName.asString()))
-            .orElse(bucketName);
+            .map(bucketPrefix -> ResolvedBucketName.of(bucketPrefix + bucketName.asString()))
+            .orElse(ResolvedBucketName.of(bucketName.asString()));
     }
 
-    Optional<BucketName> unresolve(BucketName bucketName) {
+    Optional<BucketName> unresolve(ResolvedBucketName bucketName) {
         if (isNameSpace(bucketName)) {
-            return Optional.of(bucketName);
+            return Optional.of(BucketName.of(bucketName.asString()));
         }
 
         return prefix.map(p -> {
@@ -105,12 +106,18 @@ public class BucketNameResolver {
                 return Optional.of(BucketName.of(bucketName.asString().substring(p.length())));
             }
             return Optional.<BucketName>empty();
-        }).orElse(Optional.of(bucketName));
+        }).orElse(Optional.of(BucketName.of(bucketName.asString())));
     }
 
     private boolean isNameSpace(BucketName bucketName) {
         return namespace
-            .map(existingNamespace -> existingNamespace.equals(bucketName))
+            .map(existingNamespace -> existingNamespace.asString().equals(bucketName.asString()))
+            .orElse(false);
+    }
+
+    private boolean isNameSpace(ResolvedBucketName bucketName) {
+        return namespace
+            .map(existingNamespace -> existingNamespace.asString().equals(bucketName.asString()))
             .orElse(false);
     }
 }
