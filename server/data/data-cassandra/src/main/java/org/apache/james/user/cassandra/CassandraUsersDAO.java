@@ -199,21 +199,18 @@ public class CassandraUsersDAO implements UsersDAO {
         }
     }
 
-    public Mono<Void> addAuthorizedUsers(Username baseUser, Username userWithAccess) {
-        return exist(userWithAccess)
-            .flatMap(targetUserExists -> {
-                BatchStatementBuilder batchBuilder = new BatchStatementBuilder(BatchType.LOGGED);
-                batchBuilder.addStatement(addAuthorizedUsersStatement.bind()
-                    .setString(NAME, baseUser.asString())
-                    .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class));
-                if (targetUserExists) {
-                    batchBuilder.addStatement(addDelegatedToUsersStatement.bind()
-                        .setString(NAME, userWithAccess.asString())
-                        .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class));
-                }
+    public Mono<Void> addAuthorizedUsers(Username baseUser, Username userWithAccess, boolean targetUserExists) {
+        BatchStatementBuilder batchBuilder = new BatchStatementBuilder(BatchType.LOGGED);
+        batchBuilder.addStatement(addAuthorizedUsersStatement.bind()
+            .setString(NAME, baseUser.asString())
+            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class));
+        if (targetUserExists) {
+            batchBuilder.addStatement(addDelegatedToUsersStatement.bind()
+                .setString(NAME, userWithAccess.asString())
+                .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class));
+        }
 
-                return executor.executeVoid(batchBuilder.build());
-            });
+        return executor.executeVoid(batchBuilder.build());
     }
 
     public Mono<Void> removeAuthorizedUser(Username baseUser, Username userWithAccess) {

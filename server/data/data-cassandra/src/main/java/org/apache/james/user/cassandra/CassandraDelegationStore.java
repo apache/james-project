@@ -20,17 +20,39 @@
 package org.apache.james.user.cassandra;
 
 import javax.inject.Inject;
+import reactor.core.publisher.Mono;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
+import org.apache.james.user.api.UsersRepository;
 import org.reactivestreams.Publisher;
 
 public class CassandraDelegationStore implements DelegationStore {
+    public interface UserExistencePredicate {
+        Mono<Boolean> exists(Username username);
+    }
+
+    public static class UserExistencePredicateImplementation implements  UserExistencePredicate {
+        private final UsersRepository usersRepository;
+
+        @Inject
+        UserExistencePredicateImplementation(UsersRepository usersRepository) {
+            this.usersRepository = usersRepository;
+        }
+
+        @Override
+        public Mono<Boolean> exists(Username username) {
+            return Mono.from(usersRepository.containsReactive(username));
+        }
+    }
+
     private final CassandraUsersDAO cassandraUsersDAO;
+    private final UserExistencePredicate userExistencePredicate;
 
     @Inject
-    public CassandraDelegationStore(CassandraUsersDAO cassandraUsersDAO) {
+    public CassandraDelegationStore(CassandraUsersDAO cassandraUsersDAO, UserExistencePredicate userExistencePredicate) {
         this.cassandraUsersDAO = cassandraUsersDAO;
+        this.userExistencePredicate = userExistencePredicate;
     }
 
     @Override
@@ -45,7 +67,8 @@ public class CassandraDelegationStore implements DelegationStore {
 
     @Override
     public Publisher<Void> addAuthorizedUser(Username baseUser, Username userWithAccess) {
-        return cassandraUsersDAO.addAuthorizedUsers(baseUser, userWithAccess);
+        return userExistencePredicate.exists(userWithAccess)
+            .flatMap(targetUserExists -> cassandraUsersDAO.addAuthorizedUsers(baseUser, userWithAccess, targetUserExists));
     }
 
     @Override

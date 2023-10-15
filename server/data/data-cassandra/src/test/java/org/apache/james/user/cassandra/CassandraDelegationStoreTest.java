@@ -30,7 +30,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraDelegationStoreTest implements DelegationStoreContract {
@@ -43,7 +42,7 @@ public class CassandraDelegationStoreTest implements DelegationStoreContract {
     @BeforeEach
     void setUp() {
         cassandraUsersDAO = new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf());
-        testee = new CassandraDelegationStore(cassandraUsersDAO);
+        testee = new CassandraDelegationStore(cassandraUsersDAO, any -> Mono.just(true));
     }
 
     @Override
@@ -62,6 +61,7 @@ public class CassandraDelegationStoreTest implements DelegationStoreContract {
 
     @Test
     void virtualUsersShouldNotBeListed() {
+        testee = new CassandraDelegationStore(cassandraUsersDAO, any -> Mono.just(false));
         addUser(BOB);
 
         Mono.from(testee().addAuthorizedUser(ALICE).forUser(BOB)).block();
