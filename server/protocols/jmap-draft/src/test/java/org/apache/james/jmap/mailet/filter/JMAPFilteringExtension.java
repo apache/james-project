@@ -23,6 +23,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_MAILBOX_1;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_1_ADDRESS;
+import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,12 +46,14 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.mailet.MailetConfig;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 
@@ -133,13 +136,14 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
     private JMAPFilteringTestSystem testSystem;
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) {
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
         FilteringManagement filteringManagement = new EventSourcingFilteringManagement(new InMemoryEventStore());
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         ActionApplier.Factory actionApplierFactory = ActionApplier.factory(mailboxManager, new InMemoryId.Factory());
 
         JMAPFiltering jmapFiltering = new JMAPFiltering(filteringManagement, usersRepository, actionApplierFactory);
+        jmapFiltering.init(mock(MailetConfig.class));
 
         testSystem = new JMAPFilteringTestSystem(jmapFiltering, filteringManagement, mailboxManager);
     }
