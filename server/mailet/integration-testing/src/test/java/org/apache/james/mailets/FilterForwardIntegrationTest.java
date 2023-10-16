@@ -43,6 +43,7 @@ import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FilteringManagementProbeImpl;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
@@ -56,6 +57,7 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.multibindings.Multibinder;
 
 public class FilterForwardIntegrationTest {
 
@@ -73,6 +75,7 @@ public class FilterForwardIntegrationTest {
     @BeforeEach
     void setup(@TempDir File temporaryFolder) throws Exception {
         jamesServer = TemporaryJamesServer.builder()
+            .withOverrides(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(FilteringManagementProbeImpl.class))
             .withMailetContainer(MailetContainer.builder()
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
