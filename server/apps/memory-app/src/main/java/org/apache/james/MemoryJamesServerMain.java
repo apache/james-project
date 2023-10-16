@@ -50,7 +50,6 @@ import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
-import org.apache.james.modules.server.JMAPFilteringModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.JmapTasksModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
@@ -131,8 +130,7 @@ public class MemoryJamesServerMain implements JamesServerMain {
         new MemoryEventStoreModule(),
         new MemoryMailboxModule(),
         new MemoryMailQueueModule(),
-        new TaskManagerModule(),
-        new JMAPFilteringModule());
+        new TaskManagerModule());
 
     public static final Module SMTP_ONLY_MODULE = Modules.combine(
         MemoryJamesServerMain.IN_MEMORY_SERVER_MODULE,
