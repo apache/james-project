@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules;
 
-import org.apache.james.modules.server.MailStoreRepositoryModule;
-import org.apache.james.modules.server.MailetContainerModule;
+package org.apache.james.modules.server;
+
+import org.apache.james.utils.FilteringManagementProbeImpl;
+import org.apache.james.utils.GuiceProbe;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-public class MailetProcessingModule extends AbstractModule {
+public class JMAPFilteringModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new MailStoreRepositoryModule());
-        install(new MailetContainerModule());
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(FilteringManagementProbeImpl.class);
     }
-    
 }
