@@ -462,7 +462,7 @@ public class Rule {
                 .add("markAsSeen", markAsSeen)
                 .add("reject", reject)
                 .add("withKeywords", withKeywords)
-                .add("withKeywords", forward)
+                .add("forward", forward)
                 .toString();
         }
     }
