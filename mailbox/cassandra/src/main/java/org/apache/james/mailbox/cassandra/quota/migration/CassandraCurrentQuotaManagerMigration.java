@@ -43,7 +43,7 @@ public class CassandraCurrentQuotaManagerMigration implements Migration {
     public CassandraCurrentQuotaManagerMigration(UsersRepository usersRepository,
                                                  UserQuotaRootResolver userQuotaRootResolver,
                                                  @Named("old") CurrentQuotaManager oldCurrentQuotaManager,
-                                                 CurrentQuotaManager newCurrentQuotaManager) {
+                                                 @Named("new") CurrentQuotaManager newCurrentQuotaManager) {
         this.usersRepository = usersRepository;
         this.userQuotaRootResolver = userQuotaRootResolver;
         this.oldCurrentQuotaManager = oldCurrentQuotaManager;
