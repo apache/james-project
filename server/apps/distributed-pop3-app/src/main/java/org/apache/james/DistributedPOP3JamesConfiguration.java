@@ -141,9 +141,11 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
 
             VaultConfiguration vaultConfiguration = this.vaultConfiguration.orElseGet(() -> {
                 try {
-                    return VaultConfiguration.from(configurationProvider.getConfiguration("deletedMessageVault"));
-                } catch (ConfigurationException e) {
+                    return VaultConfiguration.from(propertiesProvider.getConfiguration("deletedMessageVault"));
+                } catch (FileNotFoundException e) {
                     return VaultConfiguration.DEFAULT;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
                 }
             });
 
