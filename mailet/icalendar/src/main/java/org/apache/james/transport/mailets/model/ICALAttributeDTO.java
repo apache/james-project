@@ -47,17 +47,14 @@ public class ICALAttributeDTO {
             Optional<String> dtstamp = optionalOf(vevent.getDateStamp());
 
             Preconditions.checkNotNull(ical);
-            Preconditions.checkState(uid.isPresent(), "uid is a compulsory property of an ICAL object");
-            Preconditions.checkState(method.isPresent(), "method is a compulsory property of an ICAL object");
-            Preconditions.checkState(dtstamp.isPresent(), "dtstamp is a compulsory property of an ICAL object");
 
             return sender -> recipient -> replyTo ->
                     new ICALAttributeDTO(
                             ical,
-                            uid.get(), sender.asString(),
+                            uid, sender.asString(),
                             recipient.asString(),
                             replyTo.asString(),
-                            dtstamp.get(), method.get(), sequence,
+                            dtstamp, method, sequence,
                             recurrenceId);
         }
 
@@ -89,14 +86,14 @@ public class ICALAttributeDTO {
     private final String sender;
     private final String recipient;
     private final String replyTo;
-    private final String uid;
-    private final String dtstamp;
-    private final String method;
+    private final Optional<String> uid;
+    private final Optional<String> dtstamp;
+    private final Optional<String> method;
     private final Optional<String> sequence;
     private final Optional<String> recurrenceId;
 
-    private ICALAttributeDTO(String ical, String uid, String sender, String recipient, String replyTo, String dtstamp,
-                             String method, Optional<String> sequence, Optional<String> recurrenceId) {
+    private ICALAttributeDTO(String ical, Optional<String> uid, String sender, String recipient, String replyTo, Optional<String> dtstamp,
+                             Optional<String> method, Optional<String> sequence, Optional<String> recurrenceId) {
         this.ical = ical;
         this.sender = sender;
         this.recipient = recipient;
@@ -124,15 +121,15 @@ public class ICALAttributeDTO {
         return replyTo;
     }
 
-    public String getUid() {
+    public Optional<String> getUid() {
         return uid;
     }
 
-    public String getDtstamp() {
+    public Optional<String> getDtstamp() {
         return dtstamp;
     }
 
-    public String getMethod() {
+    public Optional<String> getMethod() {
         return method;
     }
 
