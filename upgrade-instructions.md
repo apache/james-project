@@ -105,7 +105,7 @@ In order to upgrade to the latest Quota data model, one need to enable quota com
 quota.compatibility.mode=true
 ```
 
-This is required for going from Cassandra schema version 12 -> 13.
+This is required for going from Cassandra schema version 12 -> 15.
 
 then run the migration: https://james.apache.org/server/manage-webadmin.html#Cassandra_Schema_upgrades
 
