@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
-import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -487,7 +486,7 @@ public class ICALToJsonAttributeTest {
         testee.init(FakeMailetConfig.builder().build());
 
         AttributeValue<byte[]> ics = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting.ics"));
-        AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_uid.ics"));
+        AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/no_event.ics"));
         AttributeValue<Object> calendar = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics.getValue())));
         AttributeValue<Object> calendar2 = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
         Map<String, AttributeValue<?>> icals = ImmutableMap.of("key", calendar, "key2", calendar2);
@@ -520,6 +519,123 @@ public class ICALToJsonAttributeTest {
                         "\"recurrence-id\": null" +
                         "}");
                 });
+    }
+
+    @Test
+    void serviceShouldNotFailUponMissingUid() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_uid.ics"));
+        AttributeValue<Object> calendar2 = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
+        Map<String, AttributeValue<?>> icals = ImmutableMap.of("key2", calendar2);
+        Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key2", ics2);
+        MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .sender(SENDER)
+            .recipient(recipient)
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.of(icals)))
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(rawIcals)))
+            .build();
+
+        testee.service(mail);
+
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+            .isPresent()
+            .hasValueSatisfying(jsons -> {
+                assertThat(jsons).hasSize(1);
+                List<String> actual = toSortedValueList(jsons);
+
+                assertThatJson(actual.get(0)).isEqualTo("{" +
+                    "\"ical\": \"" + toJsonValue(ics2.getValue()) + "\"," +
+                    "\"sender\": \"" + SENDER.asString() + "\"," +
+                    "\"recipient\": \"" + recipient.asString() + "\"," +
+                    "\"replyTo\": \"" + SENDER.asString() + "\"," +
+                    "\"uid\": null," +
+                    "\"sequence\": \"0\"," +
+                    "\"dtstamp\": \"20170103T103250Z\"," +
+                    "\"method\": \"REQUEST\"," +
+                    "\"recurrence-id\": null" +
+                    "}");
+            });
+    }
+
+    @Test
+    void serviceShouldNotFailUponMissingMethod() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_method.ics"));
+        AttributeValue<Object> calendar2 = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
+        Map<String, AttributeValue<?>> icals = ImmutableMap.of("key2", calendar2);
+        Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key2", ics2);
+        MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .sender(SENDER)
+            .recipient(recipient)
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.of(icals)))
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(rawIcals)))
+            .build();
+
+        testee.service(mail);
+
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+            .isPresent()
+            .hasValueSatisfying(jsons -> {
+                assertThat(jsons).hasSize(1);
+                List<String> actual = toSortedValueList(jsons);
+
+                assertThatJson(actual.get(0)).isEqualTo("{" +
+                    "\"ical\": \"" + toJsonValue(ics2.getValue()) + "\"," +
+                    "\"sender\": \"" + SENDER.asString() + "\"," +
+                    "\"recipient\": \"" + recipient.asString() + "\"," +
+                    "\"replyTo\": \"" + SENDER.asString() + "\"," +
+                    "\"uid\": \"f1514f44bf39311568d64072ac247c17656ceafde3b4b3eba961c8c5184cdc6ee047feb2aab16e43439a608f28671ab7c10e754c301b1e32001ad51dd20eac2fc7af20abf4093bbe\"," +
+                    "\"sequence\": \"0\"," +
+                    "\"dtstamp\": \"20170103T103250Z\"," +
+                    "\"method\": null," +
+                    "\"recurrence-id\": null" +
+                    "}");
+            });
+    }
+
+    @Test
+    void serviceShouldNotFailUponMissingDtStamp() throws Exception {
+        testee.init(FakeMailetConfig.builder().build());
+
+        AttributeValue<byte[]> ics2 = AttributeValue.of(ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_dtstamp.ics"));
+        AttributeValue<Object> calendar2 = AttributeValue.ofUnserializable(new CalendarBuilder().build(new ByteArrayInputStream(ics2.getValue())));
+        Map<String, AttributeValue<?>> icals = ImmutableMap.of("key2", calendar2);
+        Map<String, AttributeValue<?>> rawIcals = ImmutableMap.of("key2", ics2);
+        MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
+        Mail mail = FakeMail.builder()
+            .name("mail")
+            .sender(SENDER)
+            .recipient(recipient)
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_SOURCE, AttributeValue.of(icals)))
+            .attribute(new Attribute(ICALToJsonAttribute.DEFAULT_RAW_SOURCE, AttributeValue.ofAny(rawIcals)))
+            .build();
+
+        testee.service(mail);
+
+        assertThat(AttributeUtils.getValueAndCastFromMail(mail, ICALToJsonAttribute.DEFAULT_DESTINATION, MAP_STRING_BYTES_CLASS))
+            .isPresent()
+            .hasValueSatisfying(jsons -> {
+                assertThat(jsons).hasSize(1);
+                List<String> actual = toSortedValueList(jsons);
+
+                assertThatJson(actual.get(0)).isEqualTo("{" +
+                    "\"ical\": \"" + toJsonValue(ics2.getValue()) + "\"," +
+                    "\"sender\": \"" + SENDER.asString() + "\"," +
+                    "\"recipient\": \"" + recipient.asString() + "\"," +
+                    "\"replyTo\": \"" + SENDER.asString() + "\"," +
+                    "\"uid\": \"f1514f44bf39311568d640727cff54e819573448d09d2e5677987ff29caa01a9e047feb2aab16e43439a608f28671ab7c10e754ce92be513f8e04ae9ff15e65a9819cf285a6962bc\"," +
+                    "\"sequence\": \"0\"," +
+                    "\"dtstamp\": null," +
+                    "\"method\": \"REQUEST\"," +
+                    "\"recurrence-id\": null" +
+                    "}");
+            });
     }
 
     @Test

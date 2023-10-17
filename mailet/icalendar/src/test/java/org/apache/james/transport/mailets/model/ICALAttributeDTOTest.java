@@ -20,7 +20,6 @@
 package org.apache.james.transport.mailets.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 
@@ -78,51 +77,51 @@ class ICALAttributeDTOTest {
     }
 
     @Test
-    void buildShouldThrowOnCalendarWithoutDtstamp() throws Exception {
-        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_dtstamp.ics");
-        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
-
-        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
-        MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
-
-        assertThatThrownBy(() -> ICALAttributeDTO.builder()
-                .from(calendar, ics)
-                .sender(sender)
-                .recipient(recipient)
-                .replyTo(sender))
-            .isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    void buildShouldThrowOnCalendarWithoutUid() throws Exception {
+    void dtoShouldNotFailUponMissingUid() throws Exception {
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_uid.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
+        ICALAttributeDTO ical = ICALAttributeDTO.builder()
+            .from(calendar, ics)
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
 
-        assertThatThrownBy(() -> ICALAttributeDTO.builder()
-                .from(calendar, ics)
-                .sender(sender)
-                .recipient(recipient)
-                .replyTo(sender))
-            .isInstanceOf(IllegalStateException.class);
+        assertThat(ical.getUid()).isEmpty();
     }
 
     @Test
-    void buildShouldThrowOnCalendarWithoutMethod() throws Exception {
+    void dtoShouldNotFailUponMissingMethod() throws Exception {
         byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_method.ics");
         Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
 
         MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
         MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
+        ICALAttributeDTO ical = ICALAttributeDTO.builder()
+            .from(calendar, ics)
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
 
-        assertThatThrownBy(() -> ICALAttributeDTO.builder()
-                .from(calendar, ics)
-                .sender(sender)
-                .recipient(recipient)
-                .replyTo(sender))
-            .isInstanceOf(IllegalStateException.class);
+        assertThat(ical.getMethod()).isEmpty();
+    }
+
+    @Test
+    void dtoShouldNotFailUponMissingDtStamp() throws Exception {
+        byte[] ics = ClassLoaderUtils.getSystemResourceAsByteArray("ics/meeting_without_dtstamp.ics");
+        Calendar calendar = new CalendarBuilder().build(new ByteArrayInputStream(ics));
+
+        MailAddress recipient = MailAddressFixture.ANY_AT_JAMES;
+        MailAddress sender = MailAddressFixture.OTHER_AT_JAMES;
+        ICALAttributeDTO ical = ICALAttributeDTO.builder()
+            .from(calendar, ics)
+            .sender(sender)
+            .recipient(recipient)
+            .replyTo(sender);
+
+        assertThat(ical.getDtstamp()).isEmpty();
     }
 
     @Test
