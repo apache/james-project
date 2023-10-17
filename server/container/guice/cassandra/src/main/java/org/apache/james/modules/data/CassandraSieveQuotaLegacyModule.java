@@ -22,12 +22,14 @@ package org.apache.james.modules.data;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAO;
 import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV1;
+import org.apache.james.sieve.cassandra.CassandraSieveQuotaDAOV2;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
+@Deprecated() // To be removed after release 3.9.0
 public class CassandraSieveQuotaLegacyModule extends AbstractModule {
 
     @Override
@@ -35,6 +37,7 @@ public class CassandraSieveQuotaLegacyModule extends AbstractModule {
         bind(CassandraSieveQuotaDAOV1.class).in(Scopes.SINGLETON);
         bind(CassandraSieveQuotaDAO.class).to(CassandraSieveQuotaDAOV1.class);
         bind(CassandraSieveQuotaDAO.class).annotatedWith(Names.named("old")).to(CassandraSieveQuotaDAOV1.class);
+        bind(CassandraSieveQuotaDAO.class).annotatedWith(Names.named("new")).to(CassandraSieveQuotaDAOV2.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.sieve.cassandra.CassandraSieveQuotaModule.MODULE);

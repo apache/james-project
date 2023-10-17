@@ -36,7 +36,7 @@ public class SieveQuotaMigration implements Migration {
     private final CassandraSieveQuotaDAO newDAO;
 
     @Inject
-    public SieveQuotaMigration(UsersRepository usersRepository, @Named("old") CassandraSieveQuotaDAO oldDAO, CassandraSieveQuotaDAO newDAO) {
+    public SieveQuotaMigration(UsersRepository usersRepository, @Named("old") CassandraSieveQuotaDAO oldDAO, @Named("new") CassandraSieveQuotaDAO newDAO) {
         this.usersRepository = usersRepository;
         this.oldDAO = oldDAO;
         this.newDAO = newDAO;
