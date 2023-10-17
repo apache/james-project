@@ -30,13 +30,6 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
@@ -64,6 +57,14 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 import io.restassured.http.ContentType;
 
@@ -129,13 +130,13 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
     private static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
     @Test
-    void getCurrentVersionShouldReturnNullForCurrentVersionAsBeginning() {
+    void getCurrentVersionShouldReturnMaxVersionForCurrentVersionWhenFirstRun() {
         when()
             .get(VERSION)
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(JSON_CONTENT_TYPE)
-            .body(is("{\"version\":14}"));
+            .body(is("{\"version\":" + CassandraSchemaVersionManager.MAX_VERSION.getValue() + "}"));
     }
 
     @Test
