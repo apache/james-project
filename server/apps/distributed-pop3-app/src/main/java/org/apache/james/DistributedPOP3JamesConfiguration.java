@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -148,9 +149,11 @@ public class DistributedPOP3JamesConfiguration implements Configuration {
 
             boolean quotaCompatibilityMode = this.quotaCompatibilityMode.orElseGet(() -> {
                 try {
-                    return configurationProvider.getConfiguration("cassandra").getBoolean("quota.compatibility.mode", false);
-                } catch (ConfigurationException e) {
+                    return propertiesProvider.getConfiguration("cassandra").getBoolean("quota.compatibility.mode", false);
+                } catch (FileNotFoundException e) {
                     return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
                 }
             });
 
