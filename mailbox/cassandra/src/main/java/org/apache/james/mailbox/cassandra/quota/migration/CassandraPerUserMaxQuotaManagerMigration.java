@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.cassandra.quota.migration;
 
 import java.util.List;
 
@@ -50,7 +50,7 @@ public class CassandraPerUserMaxQuotaManagerMigration implements Migration {
 
     @Inject
     public CassandraPerUserMaxQuotaManagerMigration(UsersRepository usersRepository, DomainList domainDao,
-                                                    @Named("old") MaxQuotaManager oldMaxQuotaManager, MaxQuotaManager newMaxQuotaManager,
+                                                    @Named("old") MaxQuotaManager oldMaxQuotaManager, @Named("new")  MaxQuotaManager newMaxQuotaManager,
                                                     UserQuotaRootResolver userQuotaRootResolver) {
         this.usersRepository = usersRepository;
         this.domainDao = domainDao;
