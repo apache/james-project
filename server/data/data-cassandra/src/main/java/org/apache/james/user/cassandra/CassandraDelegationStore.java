@@ -20,12 +20,13 @@
 package org.apache.james.user.cassandra;
 
 import javax.inject.Inject;
-import reactor.core.publisher.Mono;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.UsersRepository;
 import org.reactivestreams.Publisher;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraDelegationStore implements DelegationStore {
     public interface UserExistencePredicate {
