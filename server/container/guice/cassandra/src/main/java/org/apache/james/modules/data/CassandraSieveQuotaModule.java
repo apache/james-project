@@ -33,5 +33,6 @@ public class CassandraSieveQuotaModule extends AbstractModule {
         bind(CassandraSieveQuotaDAOV2.class).in(Scopes.SINGLETON);
         bind(CassandraSieveQuotaDAO.class).to(CassandraSieveQuotaDAOV2.class);
         bind(CassandraSieveQuotaDAO.class).annotatedWith(Names.named("old")).to(FakeSieveQuotaDAO.class);
+        bind(CassandraSieveQuotaDAO.class).annotatedWith(Names.named("new")).to(CassandraSieveQuotaDAOV2.class);
     }
 }
