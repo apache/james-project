@@ -85,9 +85,11 @@ public class CassandraPerUserMaxQuotaManagerMigration implements Migration {
 
     private Mono<Void> migrateUserQuotaLimit(QuotaRoot quotaRoot) {
         return Mono.from(oldMaxQuotaManager.listMaxMessagesDetailsReactive(quotaRoot))
+            .filter(map -> map.containsKey(Quota.Scope.User))
             .map(map -> map.get(Quota.Scope.User))
             .flatMap(quotaCountLimit -> Mono.from(newMaxQuotaManager.setMaxMessageReactive(quotaRoot, quotaCountLimit)))
             .then(Mono.from(oldMaxQuotaManager.listMaxStorageDetailsReactive(quotaRoot))
+                .filter(map -> map.containsKey(Quota.Scope.User))
                 .map(map -> map.get(Quota.Scope.User))
                 .flatMap(quotaSizeLimit -> Mono.from(newMaxQuotaManager.setMaxStorageReactive(quotaRoot, quotaSizeLimit))));
     }
