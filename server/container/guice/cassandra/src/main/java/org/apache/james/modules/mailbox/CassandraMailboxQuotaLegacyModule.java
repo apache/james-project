@@ -37,11 +37,13 @@ public class CassandraMailboxQuotaLegacyModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CassandraCurrentQuotaManagerV1.class).in(Scopes.SINGLETON);
+        bind(CassandraCurrentQuotaManagerV2.class).in(Scopes.SINGLETON);
         bind(CurrentQuotaManager.class).to(CassandraCurrentQuotaManagerV1.class);
         bind(CurrentQuotaManager.class).annotatedWith(Names.named("old")).to(CassandraCurrentQuotaManagerV1.class);
         bind(CurrentQuotaManager.class).annotatedWith(Names.named("new")).to(CassandraCurrentQuotaManagerV2.class);
 
         bind(CassandraPerUserMaxQuotaManagerV1.class).in(Scopes.SINGLETON);
+        bind(CassandraPerUserMaxQuotaManagerV2.class).in(Scopes.SINGLETON);
         bind(MaxQuotaManager.class).to(CassandraPerUserMaxQuotaManagerV1.class);
         bind(MaxQuotaManager.class).annotatedWith(Names.named("old")).to(CassandraPerUserMaxQuotaManagerV1.class);
         bind(MaxQuotaManager.class).annotatedWith(Names.named("new")).to(CassandraPerUserMaxQuotaManagerV2.class);

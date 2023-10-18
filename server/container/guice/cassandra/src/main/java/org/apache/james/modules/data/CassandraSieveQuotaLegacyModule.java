@@ -35,6 +35,7 @@ public class CassandraSieveQuotaLegacyModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(CassandraSieveQuotaDAOV1.class).in(Scopes.SINGLETON);
+        bind(CassandraSieveQuotaDAOV2.class).in(Scopes.SINGLETON);
         bind(CassandraSieveQuotaDAO.class).to(CassandraSieveQuotaDAOV1.class);
         bind(CassandraSieveQuotaDAO.class).annotatedWith(Names.named("old")).to(CassandraSieveQuotaDAOV1.class);
         bind(CassandraSieveQuotaDAO.class).annotatedWith(Names.named("new")).to(CassandraSieveQuotaDAOV2.class);
