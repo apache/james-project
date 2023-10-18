@@ -26,19 +26,17 @@ import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
-import io.r2dbc.postgresql.PostgresqlConnectionFactory;
-import io.r2dbc.postgresql.api.PostgresqlConnection;
+import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
+    private final Mono<Connection> connectionPublisher;
 
-    private final PostgresConnectionResolver connectionResolver;
-
-    public PostgresSubscriptionMapper(PostgresConnectionResolver connectionResolver) {
-        this.connectionResolver = connectionResolver;
+    public PostgresSubscriptionMapper(Mono<Connection> connectionPublisher) {
+        this.connectionPublisher = connectionPublisher;
     }
 
     @Override
@@ -58,7 +56,7 @@ public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
     @Override
     public Mono<Void> saveReactive(Subscription subscription) {
-        return getConnection(subscription.getUser())
+        return connectionPublisher
             .flatMapMany(c -> c.createStatement("INSERT INTO subscription (username, mailbox) VALUES ($1, $2) " +
                     "ON CONFLICT (username, mailbox) DO NOTHING")
                 .bind("$1", subscription.getUser().asString())
@@ -71,7 +69,7 @@ public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
     @Override
     public Flux<Subscription> findSubscriptionsForUserReactive(Username user) {
-        return getConnection(user)
+        return connectionPublisher
             .flatMapMany(c -> c.createStatement("SELECT * FROM subscription WHERE username = $1")
                 .bind("$1", user.asString())
                 .execute())
@@ -80,17 +78,13 @@ public class PostgresSubscriptionMapper implements SubscriptionMapper {
 
     @Override
     public Mono<Void> deleteReactive(Subscription subscription) {
-        return getConnection(subscription.getUser())
+        return connectionPublisher
             .flatMapMany(c -> c.createStatement("DELETE FROM subscription WHERE username = $1 AND mailbox = $2")
                 .bind("$1", subscription.getUser().asString())
                 .bind("$2", subscription.getMailbox())
                 .execute())
             .flatMap(Result::getRowsUpdated)
             .then();
-    }
-
-    private Mono<PostgresqlConnection> getConnection(Username username) {
-        return Mono.from(connectionResolver.resolver(username.getDomainPart().orElse(null)));
     }
 
 }

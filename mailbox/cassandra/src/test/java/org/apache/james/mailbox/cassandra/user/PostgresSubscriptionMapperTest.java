@@ -33,11 +33,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
+import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import org.apache.james.mailbox.cassandra.user.PostgresConnectionResolver.PostgresConnectionResolverDefault;
 
 @Testcontainers
 public class PostgresSubscriptionMapperTest extends SubscriptionMapperTest {
@@ -81,6 +81,6 @@ public class PostgresSubscriptionMapperTest extends SubscriptionMapperTest {
     }
 
     protected SubscriptionMapper createSubscriptionMapper() {
-        return new PostgresSubscriptionMapper(new PostgresConnectionResolverDefault(postgresqlConnectionFactory));
+        return new PostgresSubscriptionMapper(postgresqlConnectionFactory.create().map(PostgresqlConnection.class::cast));
     }
 }
