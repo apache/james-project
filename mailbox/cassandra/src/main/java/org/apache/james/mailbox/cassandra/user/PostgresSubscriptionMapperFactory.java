@@ -44,8 +44,7 @@ public class PostgresSubscriptionMapperFactory implements SubscriptionMapperFact
     public Mono<PostgresSubscriptionMapper> getSubscriptionMapperReactive(MailboxSession session) {
         Preconditions.checkState(session.getUser().hasDomainPart(), "Username %s should have a domain part", session.getUser());
 
-        return Mono.justOrEmpty(session.getUser().getDomainPart())
-            .map(domain -> Mono.from(connectionResolver.resolver(domain))
+        return Mono.just(Mono.from(connectionResolver.resolver(session))
                 .map(connection -> (Connection) connection))
             .map(PostgresSubscriptionMapper::new);
     }
@@ -53,7 +52,6 @@ public class PostgresSubscriptionMapperFactory implements SubscriptionMapperFact
     public Mono<Void> endProcessingRequest(MailboxSession session) {
         Preconditions.checkState(session.getUser().hasDomainPart(), "Username %s should have a domain part", session.getUser());
 
-        return Mono.justOrEmpty(session.getUser().getDomainPart())
-            .flatMap(domain -> Mono.from(connectionResolver.release(domain)));
+        return Mono.from(connectionResolver.release(session));
     }
 }

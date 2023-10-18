@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import org.apache.james.core.Domain;
+import org.apache.james.mailbox.MailboxSession;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +41,9 @@ import reactor.core.publisher.Mono;
 
 public interface PostgresConnectionResolver {
 
-    Publisher<? extends Connection> resolver(Domain domain);
+    Publisher<? extends Connection> resolver(MailboxSession mailboxSession);
 
-    default Publisher<Void> release(Domain domain) {
+    default Publisher<Void> release(MailboxSession mailboxSession) {
         return Mono.empty();
     }
 
@@ -64,8 +65,8 @@ public interface PostgresConnectionResolver {
         }
 
         @Override
-        public Mono<? extends Connection> resolver(Domain domain) {
-            return Mono.justOrEmpty(domain)
+        public Mono<? extends Connection> resolver(MailboxSession mailboxSession) {
+            return Mono.justOrEmpty(mailboxSession.getUser().getDomainPart())
                 .flatMap(domainValue -> Mono.fromCallable(() -> dataSource.get(domainValue))
                     .switchIfEmpty(create(domainValue)))
                 .switchIfEmpty(defaultConnection);
@@ -93,7 +94,7 @@ public interface PostgresConnectionResolver {
         }
 
         @Override
-        public Mono<PostgresqlConnection> resolver(Domain domain) {
+        public Mono<PostgresqlConnection> resolver(MailboxSession mailboxSession) {
             return singletonConnection;
         }
     }
@@ -103,7 +104,7 @@ public interface PostgresConnectionResolver {
 
         private final ConnectionPool connectionPool;
 
-        private final Map<String, Connection> mapConnectionLookup;
+        private final Map<MailboxSession.SessionId, Connection> mapConnectionLookup;
 
         public PostgresConnectionPoolResolver(ConnectionPoolConfiguration poolConfiguration) {
             this.connectionPool = new ConnectionPool(poolConfiguration);
@@ -112,15 +113,15 @@ public interface PostgresConnectionResolver {
         }
 
         @Override
-        public Mono<? extends Connection> resolver(Domain domain) {
-            return Mono.fromCallable(() -> mapConnectionLookup.get(domain.asString()))
-                .switchIfEmpty(createPooledConnection(domain)
-                    .doOnSuccess(connection -> mapConnectionLookup.put(domain.asString(), connection)));
+        public Mono<? extends Connection> resolver(MailboxSession mailboxSession) {
+            return Mono.fromCallable(() -> mapConnectionLookup.get(mailboxSession.getSessionId()))
+                .switchIfEmpty(createPooledConnection(mailboxSession.getUser().getDomainPart().get())
+                    .doOnSuccess(connection -> mapConnectionLookup.put(mailboxSession.getSessionId(), connection)));
         }
 
         @Override
-        public Mono<Void> release(Domain domain) {
-            return Mono.fromCallable(() -> mapConnectionLookup.get(domain.asString()))
+        public Mono<Void> release(MailboxSession mailboxSession) {
+            return Mono.fromCallable(() -> mapConnectionLookup.get(mailboxSession.getSessionId()))
                 .flatMap(release());
         }
 

@@ -23,9 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.cassandra.user.PostgresConnectionResolver.PostgresRLSConnectionResolver;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
@@ -112,9 +110,10 @@ public class PostgresRLSSubscriptionMapperTest extends SubscriptionMapperTest {
     }
 
     protected SubscriptionMapper createSubscriptionMapper() {
-        return new PostgresSubscriptionMapper(new PostgresRLSConnectionResolver(postgresqlConnectionFactory)
-            .resolver(Domain.of("domain.tld"))
-            .map(c -> (Connection) c));
+        return null; //todo
+//        return new PostgresSubscriptionMapper(new PostgresRLSConnectionResolver(postgresqlConnectionFactory)
+//            .resolver(Domain.of("domain.tld"))
+//            .map(c -> (Connection) c));
     }
 
     @Test

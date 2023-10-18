@@ -34,12 +34,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -47,9 +49,11 @@ import org.testcontainers.junit.jupiter.Container;
 
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
+import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -66,9 +70,36 @@ public class PostgresConnectionPoolTest {
         .withPassword(DB_PASSWORD)
         .withInitScript("postgres-subscription-init.sql");
 
+    private static final AtomicInteger sessionCounter = new AtomicInteger(1);
+
     @BeforeAll
     static void beforeAll() {
         // System.out.println("Postgres port: " + container.getMappedPort(5432));
+        Flux.usingWhen(
+                getConnectionFactory().create(),
+                connection -> Mono
+                    .from(connection.createStatement("CREATE TABLE IF NOT EXISTS subscription " +
+                        "( " +
+                        "    username varchar(255) not null, " +
+                        "    mailbox  varchar(500) not null, " +
+                        "    domain varchar(255) not null DEFAULT current_setting('app.current_domain')::text, " +
+                        "    constraint usenrame_mailbox_pk unique (username, mailbox) " +
+                        ");").execute())
+                    .map(Result::getRowsUpdated),
+                Connection::close)
+            .blockFirst();
+    }
+
+    @BeforeEach
+    void beforeEach() {
+        // clean data with superuser
+        Flux.usingWhen(
+                getConnectionFactory().create(),
+                connection -> Mono
+                    .from(connection.createStatement("DELETE FROM subscription ").execute())
+                    .map(Result::getRowsUpdated),
+                Connection::close)
+            .blockFirst();
     }
 
     private static ConnectionFactory getConnectionFactory() {
@@ -86,6 +117,7 @@ public class PostgresConnectionPoolTest {
     private MailboxSession getMockSession(Username username) {
         MailboxSession mailboxSession = mock(MailboxSession.class);
         when(mailboxSession.getUser()).thenReturn(username);
+        when(mailboxSession.getSessionId()).thenReturn(MailboxSession.SessionId.of(sessionCounter.getAndIncrement()));
         return mailboxSession;
     }
 
