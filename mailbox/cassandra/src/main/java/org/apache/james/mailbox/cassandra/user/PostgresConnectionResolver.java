@@ -19,23 +19,38 @@
 
 package org.apache.james.mailbox.cassandra.user;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import org.apache.james.core.Domain;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.r2dbc.pool.ConnectionPool;
+import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
+import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Mono;
 
 public interface PostgresConnectionResolver {
 
-    Publisher<PostgresqlConnection> resolver(Domain domain);
+    Publisher<? extends Connection> resolver(Domain domain);
+
+    default Publisher<Void> release(Domain domain) {
+        return Mono.empty();
+    }
 
 
+    /**
+     * @deprecated use {@link PostgresConnectionPoolResolver}
+     */
+    @Deprecated
     class PostgresRLSConnectionResolver implements PostgresConnectionResolver {
         private static final Logger LOGGER = LoggerFactory.getLogger(PostgresRLSConnectionResolver.class);
 
@@ -49,7 +64,7 @@ public interface PostgresConnectionResolver {
         }
 
         @Override
-        public Mono<PostgresqlConnection> resolver(Domain domain) {
+        public Mono<? extends Connection> resolver(Domain domain) {
             return Mono.justOrEmpty(domain)
                 .flatMap(domainValue -> Mono.fromCallable(() -> dataSource.get(domainValue))
                     .switchIfEmpty(create(domainValue)))
@@ -80,6 +95,55 @@ public interface PostgresConnectionResolver {
         @Override
         public Mono<PostgresqlConnection> resolver(Domain domain) {
             return singletonConnection;
+        }
+    }
+
+    class PostgresConnectionPoolResolver implements PostgresConnectionResolver, Closeable {
+        private static final Logger LOGGER = LoggerFactory.getLogger(PostgresConnectionPoolResolver.class);
+
+        private final ConnectionPool connectionPool;
+
+        private final Map<String, Connection> mapConnectionLookup;
+
+        public PostgresConnectionPoolResolver(ConnectionPoolConfiguration poolConfiguration) {
+            this.connectionPool = new ConnectionPool(poolConfiguration);
+
+            this.mapConnectionLookup = new HashMap<>();
+        }
+
+        @Override
+        public Mono<? extends Connection> resolver(Domain domain) {
+            return Mono.fromCallable(() -> mapConnectionLookup.get(domain.asString()))
+                .switchIfEmpty(createPooledConnection(domain)
+                    .doOnSuccess(connection -> mapConnectionLookup.put(domain.asString(), connection)));
+        }
+
+        @Override
+        public Mono<Void> release(Domain domain) {
+            return Mono.fromCallable(() -> mapConnectionLookup.get(domain.asString()))
+                .flatMap(release());
+        }
+
+        private Mono<Connection> createPooledConnection(Domain domain) {
+            return connectionPool.create()
+                .doOnNext(e -> System.out.println("connection has been created, " + e.hashCode()))
+                .flatMap(pooledConnection ->
+                    Mono.from(pooledConnection.createStatement("SET app.current_domain TO '" + domain.asString() + "'")
+                            .execute())
+                        .thenReturn(pooledConnection));
+        }
+
+        private static Function<Connection, Mono<Void>> release() {
+            return connection -> Mono.from(connection.createStatement("RESET app.current_domain").execute())
+                .doOnSuccess(e -> {
+                    LOGGER.debug("connection has been released, {}", e.hashCode());
+                })
+                .then(Mono.from(connection.close()));
+        }
+
+        @Override
+        public void close() throws IOException {
+            connectionPool.dispose();
         }
     }
 
