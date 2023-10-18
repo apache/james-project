@@ -127,7 +127,9 @@ class MailboxSubscriptionListenerTest {
         subscriptionManager.unsubscribe(bobSession, PARENT1_CHILD1_CHILD1);
         testee.event(parent1Child1Child1MailboxUnsubscribedEvent);
 
-        assertThat(subscriptionManager.subscriptions(bobSession)).containsOnly(PARENT1_CHILD1_CHILD2);
+        assertThat(subscriptionManager.subscriptions(bobSession)).containsOnly(PARENT1_CHILD1_CHILD2,
+            new MailboxPath("namespace", BOB, "parent1"),
+            new MailboxPath("namespace", BOB, "parent1.child1"));
     }
 
     @Test

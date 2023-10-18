@@ -340,8 +340,7 @@ public class StoreMailboxManager implements MailboxManager {
         LOGGER.debug("createMailbox {}", mailboxPath);
 
         return assertMailboxPathBelongToUserReactive(mailboxSession, mailboxPath)
-            .then(doCreateMailboxReactive(mailboxPath, mailboxSession))
-            .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any));
+            .then(doCreateMailboxReactive(mailboxPath, createOption, mailboxSession));
     }
 
     private Mono<Void> createSubscriptionIfNeeded(MailboxPath mailboxPath, CreateOption createOption, MailboxSession session) {
@@ -352,7 +351,7 @@ public class StoreMailboxManager implements MailboxManager {
         return Mono.empty();
     }
 
-    private Mono<MailboxId> doCreateMailboxReactive(MailboxPath mailboxPath, MailboxSession mailboxSession) {
+    private Mono<MailboxId> doCreateMailboxReactive(MailboxPath mailboxPath, CreateOption createOption, MailboxSession mailboxSession) {
         if (mailboxPath.getName().isEmpty()) {
             LOGGER.warn("Ignoring mailbox with empty name");
             return Mono.empty();
@@ -366,7 +365,7 @@ public class StoreMailboxManager implements MailboxManager {
                         if (exists) {
                             return Mono.error(new MailboxExistsException(sanitizedMailboxPath.asString()));
                         } else {
-                            return createMailboxesForPath(mailboxSession, sanitizedMailboxPath).takeLast(1).next();
+                            return createMailboxesForPath(mailboxSession, createOption, sanitizedMailboxPath).takeLast(1).next();
                         }
                     })
                     .retryWhen(Retry.backoff(5, Duration.ofMillis(100))
@@ -379,7 +378,7 @@ public class StoreMailboxManager implements MailboxManager {
         }
     }
 
-    private Flux<MailboxId> createMailboxesForPath(MailboxSession mailboxSession, MailboxPath sanitizedMailboxPath) {
+    private Flux<MailboxId> createMailboxesForPath(MailboxSession mailboxSession, CreateOption createOption, MailboxPath sanitizedMailboxPath) {
         // Create parents first
         // If any creation fails then the mailbox will not be created
         // TODO: transaction
@@ -387,21 +386,21 @@ public class StoreMailboxManager implements MailboxManager {
         boolean isRootPath = intermediatePaths.size() == 1;
 
         return Flux.fromIterable(intermediatePaths)
-            .concatMap(path -> manageMailboxCreation(mailboxSession, isRootPath, path));
+            .concatMap(path -> manageMailboxCreation(mailboxSession, isRootPath, path, createOption));
     }
 
-    private Mono<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailboxPath)  {
+    private Mono<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailboxPath, CreateOption createOption)  {
         if (mailboxPath.isInbox()) {
             return Mono.from(hasInbox(mailboxSession))
                 .flatMap(hasInbox -> {
                     if (hasInbox) {
                         return duplicatedINBOXCreation(isRootPath, mailboxPath);
                     }
-                    return performConcurrentMailboxCreation(mailboxSession, MailboxPath.inbox(mailboxSession));
+                    return performConcurrentMailboxCreation(mailboxSession, MailboxPath.inbox(mailboxSession), createOption);
                 });
         }
 
-        return performConcurrentMailboxCreation(mailboxSession, mailboxPath);
+        return performConcurrentMailboxCreation(mailboxSession, mailboxPath, createOption);
     }
 
 
@@ -413,7 +412,7 @@ public class StoreMailboxManager implements MailboxManager {
         return Mono.empty();
     }
 
-    private Mono<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath) {
+    private Mono<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath, CreateOption createOption) {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         return Mono.from(locker.executeReactiveWithLockReactive(mailboxPath,
             mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
@@ -429,7 +428,8 @@ public class StoreMailboxManager implements MailboxManager {
                 .onErrorResume(MailboxExistsException.class, e -> {
                     LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
                     return Mono.empty();
-                })), MailboxPathLocker.LockType.Write));
+                })), MailboxPathLocker.LockType.Write))
+            .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any));
     }
 
     private Mono<Void> assertMailboxPathBelongToUserReactive(MailboxSession mailboxSession, MailboxPath mailboxPath) {
