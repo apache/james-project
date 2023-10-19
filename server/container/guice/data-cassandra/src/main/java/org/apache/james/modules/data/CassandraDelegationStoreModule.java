@@ -41,6 +41,7 @@ public class CassandraDelegationStoreModule extends AbstractModule {
     @Override
     public void configure() {
         bind(DelegationStore.class).to(CassandraDelegationStore.class);
+        bind(CassandraDelegationStore.UserExistencePredicate.class).to(CassandraDelegationStore.UserExistencePredicateImplementation.class);
         bind(Authorizator.class).to(DelegationStoreAuthorizator.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);

@@ -19,13 +19,18 @@
 
 package org.apache.james.user.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.DelegationStoreContract;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraDelegationStoreTest implements DelegationStoreContract {
     @RegisterExtension
@@ -37,7 +42,7 @@ public class CassandraDelegationStoreTest implements DelegationStoreContract {
     @BeforeEach
     void setUp() {
         cassandraUsersDAO = new CassandraUsersDAO(cassandraCluster.getCassandraCluster().getConf());
-        testee = new CassandraDelegationStore(cassandraUsersDAO);
+        testee = new CassandraDelegationStore(cassandraUsersDAO, any -> Mono.just(true));
     }
 
     @Override
@@ -52,5 +57,16 @@ public class CassandraDelegationStoreTest implements DelegationStoreContract {
         } catch (UsersRepositoryException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void virtualUsersShouldNotBeListed() {
+        testee = new CassandraDelegationStore(cassandraUsersDAO, any -> Mono.just(false));
+        addUser(BOB);
+
+        Mono.from(testee().addAuthorizedUser(ALICE).forUser(BOB)).block();
+
+        assertThat(cassandraUsersDAO.listReactive().collectList().block())
+            .containsOnly(BOB);
     }
 }

@@ -52,7 +52,6 @@ import org.reactivestreams.Publisher;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BatchStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.BatchType;
-import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -200,15 +199,16 @@ public class CassandraUsersDAO implements UsersDAO {
         }
     }
 
-    public Mono<Void> addAuthorizedUsers(Username baseUser, Username userWithAccess) {
+    public Mono<Void> addAuthorizedUsers(Username baseUser, Username userWithAccess, boolean targetUserExists) {
         BatchStatementBuilder batchBuilder = new BatchStatementBuilder(BatchType.LOGGED);
-        BoundStatement addAuthorizedStatement = addAuthorizedUsersStatement.bind()
+        batchBuilder.addStatement(addAuthorizedUsersStatement.bind()
             .setString(NAME, baseUser.asString())
-            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class);
-        batchBuilder.addStatement(addAuthorizedStatement);
-        batchBuilder.addStatement(addDelegatedToUsersStatement.bind()
-            .setString(NAME, userWithAccess.asString())
-            .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class));
+            .setSet(AUTHORIZED_USERS, ImmutableSet.of(userWithAccess.asString()), String.class));
+        if (targetUserExists) {
+            batchBuilder.addStatement(addDelegatedToUsersStatement.bind()
+                .setString(NAME, userWithAccess.asString())
+                .setSet(DELEGATED_USERS, ImmutableSet.of(baseUser.asString()), String.class));
+        }
 
         return executor.executeVoid(batchBuilder.build());
     }
