@@ -31,6 +31,9 @@ import com.google.common.base.Strings;
  * @since Mailet API v3.2
  */
 public class AttributeName {
+
+    public static final AttributeName FORWARDED_MAIL_ADDRESSES_ATTRIBUTE_NAME = AttributeName.of("forwarded.mail.addresses");
+
     private final String name;
 
     public static AttributeName of(String name) {

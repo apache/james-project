@@ -50,6 +50,9 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
 import org.apache.james.util.MemoizedSupplier;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.DsnParameters;
 import org.apache.mailet.DsnParameters.RecipientDsnParameters;
 import org.apache.mailet.Mail;
@@ -226,8 +229,21 @@ public class RecipientRewriteTableProcessor {
             return mail -> {
                 MailImpl copy = MailImpl.duplicate(mail);
                 try {
+                    Optional<Attribute> attribute = copy.getAttribute(AttributeName.FORWARDED_MAIL_ADDRESSES_ATTRIBUTE_NAME);
+                    if (attribute.isPresent()) {
+                        Set<MailAddress> forwardedMailAddresses = getForwardedMailAddresses(attribute);
+                        List<MailAddress> newForwards = getNewForwards(forwards, forwardedMailAddresses);
+                        if (newForwards.isEmpty()) {
+                            return;
+                        } else {
+                            copy.setAttribute(createAttribute(forwardedMailAddresses, newForwards));
+                            copy.setRecipients(newForwards);
+                        }
+                    } else {
+                        copy.setAttribute(createAttribute(forwards));
+                        copy.setRecipients(forwards);
+                    }
                     copy.setSender(originalRecipient);
-                    copy.setRecipients(forwards);
                     context.sendMail(copy);
 
                     AuditTrail.entry()
@@ -247,7 +263,35 @@ public class RecipientRewriteTableProcessor {
                 }
             };
         }
-        
+
+        private static Attribute createAttribute(List<MailAddress> forwards) {
+            return new Attribute(AttributeName.FORWARDED_MAIL_ADDRESSES_ATTRIBUTE_NAME,
+                AttributeValue.of(forwards.stream().map(mailAddress -> AttributeValue.of(mailAddress.asString())).collect(ImmutableList.toImmutableList())));
+        }
+
+        private static Attribute createAttribute(Set<MailAddress> forwardedMailAddresses, List<MailAddress> newForwards) {
+            return new Attribute(AttributeName.FORWARDED_MAIL_ADDRESSES_ATTRIBUTE_NAME,
+                AttributeValue.of(Stream.concat(forwardedMailAddresses.stream(), newForwards.stream())
+                    .map(mailAddress -> AttributeValue.of(mailAddress.asString()))
+                    .collect(ImmutableList.toImmutableList())));
+        }
+
+        private static List<MailAddress> getNewForwards(List<MailAddress> forwards, Set<MailAddress> forwardedMailAddresses) {
+            List<MailAddress> newForwards = forwards.stream()
+                .filter(mailAddress -> !forwardedMailAddresses.contains(mailAddress))
+                .collect(ImmutableList.toImmutableList());
+            return newForwards;
+        }
+
+        private static Set<MailAddress> getForwardedMailAddresses(Optional<Attribute> attribute) {
+            Collection<AttributeValue> attributeValues = (Collection<AttributeValue>) attribute.get().getValue().getValue();
+            Set<MailAddress> forwardedMailAddresses = attributeValues
+                .stream()
+                .map(Throwing.function(attributeValue -> new MailAddress((String) attributeValue.getValue())))
+                .collect(ImmutableSet.toImmutableSet());
+            return forwardedMailAddresses;
+        }
+
         void apply(Mail mail) throws Exception;
     }
 
