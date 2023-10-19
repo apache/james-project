@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -62,6 +63,11 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
         return listMailKeys(url)
             .stream()
             .map(Throwing.function(key -> getMail(url, key)));
+    }
+
+    public List<Mail> listMails(MailRepositoryUrl url, MailAddress recipient) throws Exception {
+        return listMails(url).filter(Throwing.predicate(mail -> mail.getRecipients().contains(recipient)))
+            .collect(ImmutableList.toImmutableList());
     }
 
     public Mail getMail(MailRepositoryUrl url, MailKey key) throws Exception {

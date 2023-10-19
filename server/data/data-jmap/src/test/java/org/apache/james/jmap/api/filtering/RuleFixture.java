@@ -41,11 +41,11 @@ public interface RuleFixture {
         true,
         true,
         ImmutableList.of("abc"),
-        Optional.of(Rule.Action.Forward.of(ImmutableList.of("abc@example.com")
+        Optional.of(Rule.Action.Forward.to(ImmutableList.of("abc@example.com")
                 .stream()
                 .map(Throwing.function(MailAddress::new))
-                .collect(ImmutableList.toImmutableList()),
-            true)));
+                .collect(ImmutableList.toImmutableList()))
+            .keepACopy()));
     Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(CONDITION).action(ACTION);
     Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
     Rule RULE_1_MODIFIED = Rule.builder()

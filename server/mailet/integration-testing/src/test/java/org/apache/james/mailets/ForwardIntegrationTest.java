@@ -311,7 +311,7 @@ public class ForwardIntegrationTest {
     }
 
     @Test
-    void forwardShouldSplitLocalCopy() throws Exception {
+    void forwardShouldHandleLocalCopy() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(BOB),
                 Mapping.forward(DELPHINE.asString()));
@@ -323,19 +323,13 @@ public class ForwardIntegrationTest {
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, BOB.asString());
 
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             Mail forwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(DELPHINE.asMailAddress())))
                 .findAny().get();
-            Mail localCopy = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(BOB.asMailAddress())))
-                .findAny().get();
-            softly.assertThat(forwardedMail.getRecipients()).containsOnly(DELPHINE.asMailAddress());
+            softly.assertThat(forwardedMail.getRecipients()).containsOnly(DELPHINE.asMailAddress(), BOB.asMailAddress());
             softly.assertThat(forwardedMail.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
-            softly.assertThat(localCopy.getRecipients()).containsOnly(BOB.asMailAddress());
-            softly.assertThat(localCopy.getMaybeSender().asOptional()).contains(new MailAddress(FROM));
         }));
     }
 

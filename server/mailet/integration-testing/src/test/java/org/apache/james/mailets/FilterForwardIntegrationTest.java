@@ -26,11 +26,11 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 
 import java.io.File;
-import java.util.Optional;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.api.filtering.Rule.Action;
+import org.apache.james.jmap.api.filtering.Rule.Action.Forward;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -56,15 +56,24 @@ import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.multibindings.Multibinder;
 
 public class FilterForwardIntegrationTest {
 
     private static final Username ALICE = Username.of("alice@" + DEFAULT_DOMAIN);
+    public static final Rule.ConditionGroup CONDITION_GROUP = Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, ALICE.asString()));
     private static final Username BOB = Username.of("bob@" + DEFAULT_DOMAIN);
     private static final Username CEDRIC = Username.of("cedric@" + DEFAULT_DOMAIN);
     private static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/custom/");
+
+    private static Rule.Builder asRule(Action.Forward forward) {
+        return Rule.builder()
+            .id(Rule.Id.of("1"))
+            .name("rule 1")
+            .conditionGroup(CONDITION_GROUP)
+            .action(Action.builder().setForward(forward));
+    }
+
     private TemporaryJamesServer jamesServer;
     private FilteringManagementProbeImpl filteringManagementProbe;
     private MailRepositoryProbeImpl mailRepositoryProbe;
@@ -111,82 +120,7 @@ public class FilterForwardIntegrationTest {
 
     @Test
     void forwardShouldWork() throws Exception {
-        ImmutableList<MailAddress> forwardedMailAddresses = ImmutableList.of(CEDRIC.asMailAddress());
-        Rule.Action.Forward forward = Rule.Action.Forward.of(forwardedMailAddresses, true);
-        filteringManagementProbe.defineRulesForUser(BOB,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, ALICE.asString())))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(forward))
-                    .build())
-                .build());
-
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .authenticate(ALICE.asString(), PASSWORD)
-            .sendMessage(ALICE.asString(), BOB.asString());
-
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
-
-        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            Mail mail1 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(CEDRIC.asMailAddress())))
-                .findAny().get();
-
-            softly.assertThat(mail1.getRecipients()).containsOnly(CEDRIC.asMailAddress());
-            softly.assertThat(mail1.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
-        }));
-    }
-
-    @Test
-    void forwardShouldKeepACopy() throws Exception {
-        ImmutableList<MailAddress> forwardedMailAddresses = ImmutableList.of(CEDRIC.asMailAddress());
-        Rule.Action.Forward forward = Rule.Action.Forward.of(forwardedMailAddresses, true);
-        filteringManagementProbe.defineRulesForUser(BOB,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, ALICE.asString())))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(forward))
-                    .build())
-                .build());
-
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .authenticate(ALICE.asString(), PASSWORD)
-            .sendMessage(ALICE.asString(), BOB.asString());
-
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
-
-        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            Mail mail1 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(BOB.asMailAddress())))
-                .findAny().get();
-
-            softly.assertThat(mail1.getRecipients()).containsOnly(BOB.asMailAddress());
-        }));
-    }
-
-    @Test
-    void forwardShouldNotKeepACopyWhenKeepACopyIsFalse() throws Exception {
-        ImmutableList<MailAddress> forwardedMailAddresses = ImmutableList.of(CEDRIC.asMailAddress());
-        Rule.Action.Forward forward = Rule.Action.Forward.of(forwardedMailAddresses, false);
-        filteringManagementProbe.defineRulesForUser(BOB,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, CONTAINS, ALICE.asString())))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(forward))
-                    .build())
-                .build());
+        filteringManagementProbe.defineRulesForUser(BOB, asRule(Forward.to(CEDRIC.asMailAddress()).keepACopy()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(ALICE.asString(), PASSWORD)
@@ -195,10 +129,25 @@ public class FilterForwardIntegrationTest {
         Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            softly.assertThat(mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .anyMatch(Throwing.predicate(mail -> mail.getRecipients().contains(BOB.asMailAddress())))).isFalse();
+            Mail mail1 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .findAny().get();
+
+            softly.assertThat(mail1.getRecipients()).containsOnly(BOB.asMailAddress(), CEDRIC.asMailAddress());
+            softly.assertThat(mail1.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
         }));
     }
 
+    @Test
+    void forwardShouldNotKeepACopyWhenKeepACopyIsFalse() throws Exception {
+        filteringManagementProbe.defineRulesForUser(BOB, asRule(Forward.to(CEDRIC.asMailAddress()).withoutACopy()));
 
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(ALICE.asString(), PASSWORD)
+            .sendMessage(ALICE.asString(), BOB.asString());
+
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> softly.assertThat(mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+            .anyMatch(Throwing.predicate(mail -> mail.getRecipients().contains(BOB.asMailAddress())))).isFalse()));
+    }
 }
