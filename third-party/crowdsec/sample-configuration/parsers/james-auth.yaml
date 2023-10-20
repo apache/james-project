@@ -1,0 +1,25 @@
+onsuccess: next_stage
+debug: true
+filter: "evt.Parsed.program == 'james'"
+name: linagora/james-connect-security-log
+description: "Parser for James Connect Security Log"
+
+pattern_syntax:
+  JAMES_AUTH_FAIL: 'User %{DATA:user} failed authentication'
+nodes:
+  - grok:
+      name: "JAMES_AUTH_FAIL"
+      apply_on: message
+      statics:
+        - meta: log_type
+          value: james_failed-auth
+        - meta: timestamp
+          expression: evt.Parsed.timestamp
+        - meta: level
+          expression: evt.Parsed.level
+        - meta: source_ip
+          expression: evt.Parsed.mdc_ip
+        - meta: host
+          expression: evt.Parsed.mdc_host
+        - meta: user
+          expression: evt.Parsed.user

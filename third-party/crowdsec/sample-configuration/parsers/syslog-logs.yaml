@@ -1,0 +1,71 @@
+#If it's syslog, we are going to extract progname from it
+filter: "evt.Line.Labels.type == 'syslog'"
+onsuccess: next_stage
+pattern_syntax:
+  RAW_SYSLOG_PREFIX: '^<%{NUMBER:stuff1}>%{NUMBER:stuff2} %{SYSLOGBASE2} %{DATA:program} %{NUMBER:pid}'
+  RAW_SYSLOG_META: '\[meta sequenceId="%{NOTDQUOTE:seq_id}"\]'
+name: crowdsecurity/syslog-logs
+nodes:
+  - grok:
+      #this is a named regular expression. grok patterns can be kept into separate files for readability
+      pattern: "^%{SYSLOGLINE}" 
+      #This is the field of the `Event` to which the regexp should be applied
+      apply_on: Line.Raw
+  - grok:
+      #a second pattern for unparsed syslog lines, as saw in opnsense
+      pattern: '%{RAW_SYSLOG_PREFIX} - %{RAW_SYSLOG_META} %{GREEDYDATA:message}'
+      apply_on: Line.Raw
+#if the node was successfull, statics will be applied.
+statics:
+  - meta: machine
+    expression: evt.Parsed.logsource
+  - parsed: "logsource"
+    value: "syslog"
+# syslog date can be in two different fields (one of hte assignment will fail)
+  - target: evt.StrTime
+    expression: evt.Parsed.timestamp
+  - target: evt.StrTime
+    expression: evt.Parsed.timestamp8601
+  - meta: datasource_path
+    expression: evt.Line.Src
+  - meta: datasource_type
+    expression: evt.Line.Module
+---
+#if it's not syslog, the type is the progname
+filter: "evt.Line.Labels.type != 'syslog'"
+onsuccess: next_stage
+name: crowdsecurity/non-syslog
+debug: true
+statics:
+  - parsed: json_parsed
+    expression: UnmarshalJSON(evt.Line.Raw, evt.Unmarshaled, "message")
+  - parsed: program
+    expression: evt.Line.Labels.type
+  - parsed: timestamp
+    expression: evt.Unmarshaled.message.timestamp
+  - parsed: level
+    expression: evt.Unmarshaled.message.level
+  - parsed: thread
+    expression: evt.Unmarshaled.message.thread
+  - parsed: mdc_protocol
+    expression: evt.Unmarshaled.message.mdc.protocol
+  - parsed: mdc_ip
+    expression: evt.Unmarshaled.message.mdc.ip
+  - parsed: mdc_host
+    expression: evt.Unmarshaled.message.mdc.host
+  - parsed: mdc_action
+    expression: evt.Unmarshaled.message.mdc.action
+  - parsed: mdc_sessionId
+    expression: evt.Unmarshaled.message.mdc.sessionId
+  - parsed: mdc_user
+    expression: evt.Unmarshaled.message.mdc.user
+  - parsed: logger
+    expression: evt.Unmarshaled.message.logger
+  - parsed: message
+    expression: evt.Unmarshaled.message.message
+  - parsed: context
+    expression: evt.Unmarshaled.message.context
+  - meta: datasource_path
+    expression: evt.Line.Src
+  - meta: datasource_type
+    expression: evt.Line.Module

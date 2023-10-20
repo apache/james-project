@@ -1,0 +1,5 @@
+source: docker
+container_name:
+ - james
+labels:
+  type: james

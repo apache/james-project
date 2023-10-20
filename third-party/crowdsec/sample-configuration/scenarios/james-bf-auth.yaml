@@ -1,0 +1,14 @@
+type: leaky
+name: crowdsecurity/james
+debug: true
+description: "Detect login james bruteforce"
+filter: "evt.Meta.log_type == 'james_failed-auth'"
+leakspeed: "1m"
+capacity: 5
+groupby: evt.Meta.source_ip
+blackhole: 1m
+reprocess: true
+labels:
+ service: ssh
+ type: bruteforce
+ remediation: true
