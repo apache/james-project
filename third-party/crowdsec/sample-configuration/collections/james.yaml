@@ -1,0 +1,6 @@
+parsers:
+  - crowdsecurity/syslog-logs
+  - linagora/james-connect-security-log
+scenarios:
+  - crowdsecurity/james
+author: linagora

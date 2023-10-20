@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+
+  james:
+    image: apache/james:memory-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    networks:
+      - james
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.5.4
+    container_name: crowdsec
+    restart: always
+    volumes:
+      - ./sample-configuration/logback.xml:/root/conf/logback.xml
+      - ./sample-configuration/acquis.yaml:/etc/crowdsec/acquis.yaml
+      - ./sample-configuration/parsers/syslog-logs.yaml:/etc/crowdsec/parsers/s00-raw/syslog-logs.yaml
+      - ./sample-configuration/parsers/james-auth.yaml:/etc/crowdsec/parsers/s01-parse/james-auth.yaml
+      - ./sample-configuration/scenarios:/etc/crowdsec/scenarios
+      - ./sample-configuration/collections:/etc/crowdsec/collections
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8082:8080"
+      - "6061:6060"
+    networks:
+      - james
+networks:
+  james:
