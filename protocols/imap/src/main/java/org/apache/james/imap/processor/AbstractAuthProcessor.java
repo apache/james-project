@@ -148,6 +148,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 .sessionId(() -> session.sessionId().asString())
                 .protocol("IMAP")
                 .action("AUTH")
+                .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
                 .parameters(() -> ImmutableMap.of("delegatorUser", mailboxSession.getUser().asString()))
                 .log("IMAP Authentication with delegation succeeded.");
             okComplete(request, responder);
@@ -157,6 +158,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                 .username(authenticateUser::asString)
                 .protocol("IMAP")
                 .action("AUTH")
+                .remoteIP(() -> Optional.ofNullable(session.getRemoteAddress()))
                 .parameters(() -> ImmutableMap.of("delegatorUser", delegatorUser.asString()))
                 .log("IMAP Authentication with delegation failed because of bad credentials.");
             manageFailureCount(session, request, responder);

@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.api.process;
 
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
@@ -237,6 +238,11 @@ public interface ImapSession extends CommandDetectionSession {
     boolean isPlainAuthEnabled();
 
     boolean supportsOAuth();
+
+    /**
+     * Return the {@link InetSocketAddress} of the remote peer
+     */
+    InetSocketAddress getRemoteAddress();
 
     Optional<OidcSASLConfiguration> oidcSaslConfiguration();
 

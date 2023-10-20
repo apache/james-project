@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -273,6 +274,11 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public boolean supportsOAuth() {
         return supportsOAuth;
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return (InetSocketAddress) channel.remoteAddress();
     }
 
     @Override
