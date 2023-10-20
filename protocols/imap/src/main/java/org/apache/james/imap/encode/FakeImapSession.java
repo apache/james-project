@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.encode;
 
+import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -178,6 +179,11 @@ public class FakeImapSession implements ImapSession {
     @Override
     public boolean supportsOAuth() {
         return false;
+    }
+
+    @Override
+    public InetSocketAddress getRemoteAddress() {
+        return null;
     }
 
     @Override
