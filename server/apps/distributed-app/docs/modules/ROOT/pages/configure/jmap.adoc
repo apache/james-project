@@ -98,6 +98,10 @@ systems with filters already defined would result in those filters to be not rea
 
 | delay.sends.enabled
 | Optional boolean. Defaults to false. Whether to support or not the delay send with JMAP protocol.
+
+| disabled.capabilities
+| Optional, defaults to empty. Coma separated list of JMAP capabilities to reject.
+This allows to prevent users from using some specific JMAP extensions.
 |===
 
 == Wire tapping
