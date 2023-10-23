@@ -8,6 +8,8 @@ services:
     hostname: james.local
     command:
       - --generate-keystore
+    volumes:
+      - ./sample-configuration/logback.xml:/root/conf/logback.xml
     networks:
       - james
     ports:
@@ -24,7 +26,6 @@ services:
     container_name: crowdsec
     restart: always
     volumes:
-      - ./sample-configuration/logback.xml:/root/conf/logback.xml
       - ./sample-configuration/acquis.yaml:/etc/crowdsec/acquis.yaml
       - ./sample-configuration/parsers/syslog-logs.yaml:/etc/crowdsec/parsers/s00-raw/syslog-logs.yaml
       - ./sample-configuration/parsers/james-auth.yaml:/etc/crowdsec/parsers/s01-parse/james-auth.yaml

@@ -2,5 +2,5 @@ parsers:
   - crowdsecurity/syslog-logs
   - linagora/james-connect-security-log
 scenarios:
-  - crowdsecurity/james
+  - linagora/james-bf-auth
 author: linagora

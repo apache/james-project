@@ -1,5 +1,5 @@
 type: leaky
-name: crowdsecurity/james
+name: linagora/james-bf-auth
 debug: true
 description: "Detect login james bruteforce"
 filter: "evt.Meta.log_type == 'imap-auth-fail' || evt.Meta.log_type == 'smtp-auth-fail'"
