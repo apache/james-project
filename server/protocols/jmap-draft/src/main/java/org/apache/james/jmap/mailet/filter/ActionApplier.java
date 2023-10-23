@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.mailet.filter;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -41,9 +39,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
-import org.apache.mailet.Attribute;
-import org.apache.mailet.AttributeName;
-import org.apache.mailet.AttributeValue;
+import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.StorageDirective;
@@ -110,31 +106,46 @@ public class ActionApplier {
     }
 
     public void apply(Stream<Rule.Action> actions) {
-        actions.forEach(Throwing.consumer(this::addStorageDirective));
+        actions.forEach(Throwing.consumer(this::applyAction));
     }
 
-    private void addStorageDirective(Rule.Action action) throws MessagingException {
-        if (action.isReject()) {
-            mail.setRecipients(mail.getRecipients().stream()
-                .filter(recipient -> !recipient.equals(mailAddress))
-                .collect(ImmutableList.toImmutableList()));
-            return;
+    private void applyAction(Rule.Action action) throws MessagingException {
+        applyReject(action);
+        if (!action.isReject()) {
+            applyForward(action);
+            boolean localCopy = action.getForward()
+                .map(Rule.Action.Forward::isKeepACopy)
+                .orElse(true);
+            if (localCopy) {
+                applyStorageDirective(action);
+            }
         }
+    }
+
+    private void applyReject(Rule.Action action) {
+        if (action.isReject()) {
+            removeFromRecipients();
+        }
+    }
+
+    private void applyForward(Rule.Action action) throws MessagingException {
         if (action.getForward().isPresent()) {
             Rule.Action.Forward forward = action.getForward().get();
             if (!forward.isKeepACopy()) {
-                mail.setRecipients(mail.getRecipients().stream()
-                    .filter(recipient -> !recipient.equals(mailAddress))
-                    .collect(ImmutableList.toImmutableList()));
+                removeFromRecipients();
             }
-            sendACopy(mailetContext, mailAddress, forward.getAddresses());
-            return;
+            sendACopy(mailetContext, mailAddress, ImmutableSet.copyOf(forward.getAddresses()));
         }
-        Optional<ImmutableList<String>> targetMailboxes = Optional.of(action.getAppendInMailboxes().getMailboxIds()
-            .stream()
-            .flatMap(this::asMailboxName)
-            .collect(ImmutableList.toImmutableList()))
-            .filter(mailboxes -> !mailboxes.isEmpty());
+    }
+
+    private void removeFromRecipients() {
+        mail.setRecipients(mail.getRecipients().stream()
+            .filter(recipient -> !recipient.equals(mailAddress))
+            .collect(ImmutableList.toImmutableList()));
+    }
+
+    private void applyStorageDirective(Rule.Action action) {
+        Optional<ImmutableList<String>> targetMailboxes = computeTargetMailboxes(action);
 
         StorageDirective.Builder storageDirective = StorageDirective.builder();
         targetMailboxes.ifPresent(storageDirective::targetFolders);
@@ -146,6 +157,14 @@ public class ActionApplier {
             .map(a -> a.encodeAsAttributes(username))
             .orElse(Stream.of())
             .forEach(mail::setAttribute);
+    }
+
+    private Optional<ImmutableList<String>> computeTargetMailboxes(Rule.Action action) {
+        return Optional.of(action.getAppendInMailboxes().getMailboxIds()
+                .stream()
+                .flatMap(this::asMailboxName)
+                .collect(ImmutableList.toImmutableList()))
+            .filter(mailboxes -> !mailboxes.isEmpty());
     }
 
     private Stream<String> asMailboxName(String mailboxIdString) {
@@ -165,68 +184,38 @@ public class ActionApplier {
         }
     }
 
-    private void sendACopy(MailetContext context, MailAddress originalRecipient, List<MailAddress> forwards) throws MessagingException {
-        MailImpl copy = MailImpl.duplicate(mail);
-        try {
-            Optional<Attribute> attribute = copy.getAttribute(AttributeName.FORWARDED_MAIL_ADDRESSES_ATTRIBUTE_NAME);
-            if (attribute.isPresent()) {
-                Set<MailAddress> forwardedMailAddresses = getForwardedMailAddresses(attribute);
-                List<MailAddress> newForwards = getNewForwards(forwards, forwardedMailAddresses);
-                if (newForwards.isEmpty()) {
-                    return;
-                } else {
-                    copy.setAttribute(createAttribute(forwardedMailAddresses, newForwards));
-                    copy.setRecipients(newForwards);
-                }
-            } else {
-                copy.setAttribute(createAttribute(forwards));
-                copy.setRecipients(forwards);
-            }
-            copy.setSender(originalRecipient);
-            context.sendMail(copy);
+    private void sendACopy(MailetContext context, MailAddress originalRecipient, Set<MailAddress> forwards) throws MessagingException {
+        Set<MailAddress> recordedRecipients = LoopPrevention.retrieveRecordedRecipients(mail);
+        Set<MailAddress> newRecipients = LoopPrevention.nonRecordedRecipients(forwards, recordedRecipients);
 
-            AuditTrail.entry()
-                .protocol("mailetcontainer")
-                .action("JMAPFiltering")
-                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
-                    "mimeMessageId", Optional.ofNullable(mail.getMessage())
-                        .map(Throwing.function(MimeMessage::getMessageID))
-                        .orElse(""),
-                    "sender", mail.getMaybeSender().asString(),
-                    "forwardedMailId", copy.getName(),
-                    "forwardedMailSender", originalRecipient.asString(),
-                    "forwardedMailRecipient", StringUtils.join(forwards))))
-                .log("Mail forwarded.");
-        } finally {
-            LifecycleUtil.dispose(copy);
+        if (!newRecipients.isEmpty()) {
+            MailImpl copy = MailImpl.duplicate(mail);
+            try {
+                copy.setSender(originalRecipient);
+                copy.setRecipients(newRecipients);
+                LoopPrevention.recordRecipients(copy, recordedRecipients, newRecipients);
+
+                context.sendMail(copy);
+
+                recordInAuditTrail(copy);
+            } finally {
+                LifecycleUtil.dispose(copy);
+            }
         }
     }
 
-    private Attribute createAttribute(List<MailAddress> forwards) {
-        return new Attribute(AttributeName.FORWARDED_MAIL_ADDRESSES_ATTRIBUTE_NAME,
-            AttributeValue.of(forwards.stream().map(mailAddress -> AttributeValue.of(mailAddress.asString())).collect(ImmutableList.toImmutableList())));
-    }
-
-    private Attribute createAttribute(Set<MailAddress> forwardedMailAddresses, List<MailAddress> newForwards) {
-        return new Attribute(AttributeName.FORWARDED_MAIL_ADDRESSES_ATTRIBUTE_NAME,
-            AttributeValue.of(Stream.concat(forwardedMailAddresses.stream(), newForwards.stream())
-                .map(mailAddress -> AttributeValue.of(mailAddress.asString()))
-                .collect(ImmutableList.toImmutableList())));
-    }
-
-    private List<MailAddress> getNewForwards(List<MailAddress> forwards, Set<MailAddress> forwardedMailAddresses) {
-        List<MailAddress> newForwards = forwards.stream()
-            .filter(mailAddress -> !forwardedMailAddresses.contains(mailAddress))
-            .collect(ImmutableList.toImmutableList());
-        return newForwards;
-    }
-
-    private Set<MailAddress> getForwardedMailAddresses(Optional<Attribute> attribute) {
-        Collection<AttributeValue> attributeValues = (Collection<AttributeValue>) attribute.get().getValue().getValue();
-        Set<MailAddress> forwardedMailAddresses = attributeValues
-            .stream()
-            .map(Throwing.function(attributeValue -> new MailAddress((String) attributeValue.getValue())))
-            .collect(ImmutableSet.toImmutableSet());
-        return forwardedMailAddresses;
+    private void recordInAuditTrail(MailImpl copy) {
+        AuditTrail.entry()
+            .protocol("mailetcontainer")
+            .action("JMAPFiltering")
+            .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function(MimeMessage::getMessageID))
+                    .orElse(""),
+                "sender", mail.getMaybeSender().asString(),
+                "forwardedMailId", copy.getName(),
+                "forwardedMailSender", copy.getMaybeSender().asString(),
+                "forwardedMailRecipient", StringUtils.join(copy.getRecipients()))))
+            .log("Mail forwarded.");
     }
 }

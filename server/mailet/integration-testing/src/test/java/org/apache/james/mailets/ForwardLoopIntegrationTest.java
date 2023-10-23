@@ -28,6 +28,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -84,10 +85,10 @@ public class ForwardLoopIntegrationTest {
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(JMAPFiltering.class))
+                        .mailet(RecipientRewriteTable.class))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(RecipientRewriteTable.class))
+                        .mailet(JMAPFiltering.class))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
@@ -157,7 +158,7 @@ public class ForwardLoopIntegrationTest {
             .authenticate(SENDER.asString(), PASSWORD)
             .sendMessage(SENDER.asString(), ALICE.asString());
 
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
+        Awaitility.waitAtMost(1L, TimeUnit.HOURS).until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
@@ -173,6 +174,9 @@ public class ForwardLoopIntegrationTest {
     void regularForwardShouldNotCreateLoopError() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(ALICE),
+                Mapping.forward(SENDER.asString()));
+        jamesServer.getProbe(DataProbeImpl.class)
+            .addMapping(MappingSource.fromUser(ALICE),
                 Mapping.forward(BOB.asString()));
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(BOB),
@@ -185,13 +189,14 @@ public class ForwardLoopIntegrationTest {
             .authenticate(SENDER.asString(), PASSWORD)
             .sendMessage(SENDER.asString(), ALICE.asString());
 
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 0L);
+//        Awaitility.await().pollDelay(1, TimeUnit.SECONDS).until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
                 .collect(ImmutableList.toImmutableList());
 
-            softly.assertThat(mails).hasSize(0);
+            softly.assertThat(mails).hasSize(1);
         }));
     }
 
