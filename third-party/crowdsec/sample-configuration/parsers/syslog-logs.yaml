@@ -8,7 +8,7 @@ name: crowdsecurity/syslog-logs
 nodes:
   - grok:
       #this is a named regular expression. grok patterns can be kept into separate files for readability
-      pattern: "^%{SYSLOGLINE}" 
+      pattern: "^%{SYSLOGLINE}"
       #This is the field of the `Event` to which the regexp should be applied
       apply_on: Line.Raw
   - grok:
@@ -21,7 +21,7 @@ statics:
     expression: evt.Parsed.logsource
   - parsed: "logsource"
     value: "syslog"
-# syslog date can be in two different fields (one of hte assignment will fail)
+  # syslog date can be in two different fields (one of hte assignment will fail)
   - target: evt.StrTime
     expression: evt.Parsed.timestamp
   - target: evt.StrTime
@@ -59,6 +59,10 @@ statics:
     expression: evt.Unmarshaled.message.mdc.sessionId
   - parsed: mdc_user
     expression: evt.Unmarshaled.message.mdc.user
+  - parsed: mdc_remoteIP
+    expression: evt.Unmarshaled.message.mdc.remoteIP
+  - parsed: mdc_username
+    expression: evt.Unmarshaled.message.mdc.username
   - parsed: logger
     expression: evt.Unmarshaled.message.logger
   - parsed: message
