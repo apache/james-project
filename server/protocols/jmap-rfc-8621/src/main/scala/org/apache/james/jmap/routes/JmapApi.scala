@@ -21,7 +21,7 @@ package org.apache.james.jmap.routes
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{CapabilityFactory, ErrorCode, Invocation, MissingCapabilityException, RequestObject, ResponseObject}
+import org.apache.james.jmap.core.{CapabilityFactory, ErrorCode, Invocation, JmapRfc8621Configuration, MissingCapabilityException, RequestObject, ResponseObject}
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.mailbox.MailboxSession
 import org.slf4j.{Logger, LoggerFactory}
@@ -34,13 +34,13 @@ object JMAPApi {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[JMAPApi])
 }
 
-class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifier]) {
+class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifier], configuration: JmapRfc8621Configuration) {
 
   private val methodsByName: Map[MethodName, Method] = methods.map(method => method.methodName -> method).toMap
 
   @Inject
-  def this(javaMethods: java.util.Set[Method], supportedCapabilities: java.util.Set[CapabilityFactory]) = {
-    this(javaMethods.asScala.toSet, supportedCapabilities.asScala.map(x => x.id()).toSet)
+  def this(javaMethods: java.util.Set[Method], supportedCapabilities: java.util.Set[CapabilityFactory], configuration: JmapRfc8621Configuration) = {
+    this(javaMethods.asScala.toSet, supportedCapabilities.asScala.map(x => x.id()).toSet, configuration)
   }
 
   def process(requestObject: RequestObject,
@@ -91,7 +91,7 @@ class JMAPApi (methods: Set[Method], defaultCapabilities: Set[CapabilityIdentifi
       .onErrorResume(throwable => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.ServerFail, throwable.getMessage, invocation.invocation.methodCallId), invocation.processingContext)))
 
   private def validateCapabilities(capabilities: Set[CapabilityIdentifier], requiredCapabilities: Set[CapabilityIdentifier]): Either[MissingCapabilityException, Unit] = {
-    val missingCapabilities = requiredCapabilities -- capabilities
+    val missingCapabilities = (requiredCapabilities -- capabilities) ++ configuration.disabledCapabilities.intersect(capabilities)
     if (missingCapabilities.nonEmpty) {
       Left(MissingCapabilityException(s"Missing capability(ies): ${missingCapabilities.mkString(", ")}"))
     } else {

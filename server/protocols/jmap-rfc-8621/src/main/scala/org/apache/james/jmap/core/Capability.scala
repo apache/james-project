@@ -45,6 +45,13 @@ case class MissingCapabilityException(description: String) extends CapabilityVal
 
 object CapabilityIdentifier {
   type CapabilityIdentifier = String Refined Uri
+
+  def parse(string: String): Either[IllegalArgumentException, CapabilityIdentifier] =
+    refined.refineV[Uri](string) match {
+      case Right(value) => Right(value)
+      case Left(error) => Left(new IllegalArgumentException(error))
+    }
+
   val JMAP_CORE: CapabilityIdentifier = "urn:ietf:params:jmap:core"
   val JMAP_MAIL: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
   val JMAP_VACATION_RESPONSE: CapabilityIdentifier = "urn:ietf:params:jmap:vacationresponse"

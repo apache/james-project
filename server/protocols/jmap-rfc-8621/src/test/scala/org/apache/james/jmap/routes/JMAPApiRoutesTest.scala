@@ -78,7 +78,8 @@ object JMAPApiRoutesTest {
   private val userProvisionner: UserProvisioning = new UserProvisioning(usersRepository, new RecordingMetricFactory)
   private val JMAP_METHODS: Set[Method] = Set(new CoreEchoMethod)
 
-  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(JMAP_METHODS, DefaultCapabilities.supported(JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")).map(_.id())))
+  private val configuration: JmapRfc8621Configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")
+  private val JMAP_API_ROUTE: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(JMAP_METHODS, DefaultCapabilities.supported(configuration).map(_.id()), configuration))
   private val ROUTES_HANDLER: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, JMAP_API_ROUTE))
 
   private val userBase64String: String = Base64.getEncoder.encodeToString("user1:password".getBytes(StandardCharsets.UTF_8))
@@ -442,7 +443,8 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     when(mockCoreEchoMethod.requiredCapabilities).thenReturn(Set(JMAP_CORE))
 
     val methods: Set[Method] = Set(mockCoreEchoMethod)
-    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(methods, DefaultCapabilities.supported(JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")).map(_.id())))
+    val jmapRfc8621Configuration = JmapRfc8621Configuration("http://127.0.0.1", "ws://127.0.0.1")
+    val apiRoute: JMAPApiRoutes = new JMAPApiRoutes(AUTHENTICATOR, userProvisionner, new JMAPApi(methods, DefaultCapabilities.supported(jmapRfc8621Configuration).map(_.id()), jmapRfc8621Configuration))
     val routesHandler: ImmutableSet[JMAPRoutesHandler] = ImmutableSet.of(new JMAPRoutesHandler(Version.RFC8621, apiRoute))
 
     val versionParser: VersionParser = new VersionParser(SUPPORTED_VERSIONS, JMAPConfiguration.DEFAULT)
