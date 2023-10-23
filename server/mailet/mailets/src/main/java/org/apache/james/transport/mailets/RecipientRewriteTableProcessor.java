@@ -244,7 +244,7 @@ public class RecipientRewriteTableProcessor {
             try {
                 copy.setSender(originalRecipient);
                 copy.setRecipients(newRecipients);
-                LoopPrevention.recordRecipients(copy, recordedRecipients, newRecipients);
+                LoopPrevention.recordRecipients(copy, recordedRecipients, newRecipients, originalRecipient);
 
                 context.sendMail(copy);
 

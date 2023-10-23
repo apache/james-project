@@ -36,10 +36,14 @@ public class LoopPrevention {
         return Sets.difference(recipients, recordedRecipients);
     }
 
-    public static void recordRecipients(Mail mail, Set<MailAddress> recordedRecipients, Set<MailAddress> recipients) {
+    public static void recordRecipients(Mail mail,
+                                        Set<MailAddress> recordedRecipients,
+                                        Set<MailAddress> newRecipients,
+                                        MailAddress originalRecipient) {
         mail.setAttribute(createAttribute(ImmutableSet.<MailAddress>builder()
             .addAll(recordedRecipients)
-            .addAll(recipients)
+            .addAll(newRecipients)
+            .add(originalRecipient)
             .build()));
     }
 
