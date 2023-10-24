@@ -85,7 +85,7 @@ object JmapRfc8621Configuration {
       disabledCapabilities = Optional.ofNullable(configuration.getList(classOf[String], DISABLED_CAPABILITIES, null))
         .orElse(ImmutableList.of())
         .asScala
-        .map(s => CapabilityIdentifier.parse(s).toOption.get)
+        .flatMap(s => CapabilityIdentifier.parse(s).toOption)
         .toSet)
   }
 }
