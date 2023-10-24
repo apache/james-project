@@ -19,12 +19,33 @@
 
 package org.apache.james.jmap.api.filtering;
 
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.james.core.MailAddress;
+import org.apache.james.jmap.api.model.EmailAddress;
+
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public interface RuleFixture {
     String NAME = "a name";
     Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
-    Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"), true, true, true, ImmutableList.of("abc"));
+    Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"),
+        true,
+        true,
+        true,
+        ImmutableList.of("abc"));
+    Rule.Action ACTION_2 = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"),
+        true,
+        true,
+        true,
+        ImmutableList.of("abc"),
+        Optional.of(Rule.Action.Forward.of(ImmutableList.of("abc@example.com")
+                .stream()
+                .map(Throwing.function(MailAddress::new))
+                .collect(ImmutableList.toImmutableList()),
+            true)));
     Rule.Builder RULE_BUILDER = Rule.builder().name(NAME).conditionGroup(CONDITION).action(ACTION);
     Rule RULE_1 = RULE_BUILDER.id(Rule.Id.of("1")).build();
     Rule RULE_1_MODIFIED = Rule.builder()
@@ -35,6 +56,12 @@ public interface RuleFixture {
         .build();
     Rule RULE_2 = RULE_BUILDER.id(Rule.Id.of("2")).build();
     Rule RULE_3 = RULE_BUILDER.id(Rule.Id.of("3")).build();
+    Rule RULE_4 = Rule.builder()
+        .conditionGroup(CONDITION)
+        .action(ACTION_2)
+        .id(Rule.Id.of("1"))
+        .name(NAME)
+        .build();
 
     Rule RULE_TO = Rule.builder()
         .id(Rule.Id.of("id-to"))
@@ -76,4 +103,43 @@ public interface RuleFixture {
             "A value to match 4"))
         .build();
 
+    Rule RULE_TO_2 = Rule.builder()
+        .id(Rule.Id.of("id-to"))
+        .name(NAME)
+        .action(ACTION_2)
+        .conditionGroup(Rule.Condition.of(
+            Rule.Condition.Field.TO,
+            Rule.Condition.Comparator.EXACTLY_EQUALS,
+            "A value to match 1"))
+        .build();
+
+    Rule RULE_SUBJECT_2 = Rule.builder()
+        .id(Rule.Id.of("id-subject"))
+        .name(NAME)
+        .action(ACTION_2)
+        .conditionGroup(Rule.Condition.of(
+            Rule.Condition.Field.SUBJECT,
+            Rule.Condition.Comparator.NOT_CONTAINS,
+            "A value to match 2"))
+        .build();
+
+    Rule RULE_RECIPIENT_2 = Rule.builder()
+        .id(Rule.Id.of("id-rcpt"))
+        .name(NAME)
+        .action(ACTION_2)
+        .conditionGroup(Rule.Condition.of(
+            Rule.Condition.Field.RECIPIENT,
+            Rule.Condition.Comparator.NOT_EXACTLY_EQUALS,
+            "A value to match 3"))
+        .build();
+
+    Rule RULE_FROM_2 = Rule.builder()
+        .id(Rule.Id.of("id-from"))
+        .name(NAME)
+        .action(ACTION_2)
+        .conditionGroup(Rule.Condition.of(
+            Rule.Condition.Field.FROM,
+            Rule.Condition.Comparator.CONTAINS,
+            "A value to match 4"))
+        .build();
 }

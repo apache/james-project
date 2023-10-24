@@ -19,26 +19,36 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.server.core.MailImpl;
+import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetContext;
 import org.apache.mailet.StorageDirective;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class ActionApplier {
     public static final Logger LOGGER = LoggerFactory.getLogger(ActionApplier.class);
@@ -65,14 +75,15 @@ public class ActionApplier {
                 this.mail = mail;
             }
 
-            public ActionApplier forRecipient(MailAddress mailAddress, Username username) {
-                return new ActionApplier(mailboxManager, mailboxIdFactory, mail, mailAddress, username);
+            public ActionApplier forRecipient(MailetContext mailetContext, MailAddress mailAddress, Username username) {
+                return new ActionApplier(mailboxManager, mailboxIdFactory, mailetContext, mail, mailAddress, username);
             }
         }
     }
 
     private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
+    private final MailetContext mailetContext;
     private final Mail mail;
     private final MailAddress mailAddress;
     private final Username username;
@@ -82,23 +93,35 @@ public class ActionApplier {
         return new Factory(mailboxManager, mailboxIdFactory);
     }
 
-    private ActionApplier(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, Mail mail, MailAddress mailAddress, Username username) {
+    private ActionApplier(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, MailetContext mailetContext,
+                          Mail mail, MailAddress mailAddress, Username username) {
         this.mailboxManager = mailboxManager;
         this.mailboxIdFactory = mailboxIdFactory;
+        this.mailetContext = mailetContext;
         this.mail = mail;
         this.mailAddress = mailAddress;
         this.username = username;
     }
 
     public void apply(Stream<Rule.Action> actions) {
-        actions.forEach(this::addStorageDirective);
+        actions.forEach(Throwing.consumer(this::addStorageDirective));
     }
 
-    private void addStorageDirective(Rule.Action action) {
+    private void addStorageDirective(Rule.Action action) throws MessagingException {
         if (action.isReject()) {
             mail.setRecipients(mail.getRecipients().stream()
                 .filter(recipient -> !recipient.equals(mailAddress))
                 .collect(ImmutableList.toImmutableList()));
+            return;
+        }
+        if (action.getForward().isPresent()) {
+            Rule.Action.Forward forward = action.getForward().get();
+            if (!forward.isKeepACopy()) {
+                mail.setRecipients(mail.getRecipients().stream()
+                    .filter(recipient -> !recipient.equals(mailAddress))
+                    .collect(ImmutableList.toImmutableList()));
+            }
+            sendACopy(mailetContext, mailAddress, forward.getAddresses());
             return;
         }
         Optional<ImmutableList<String>> targetMailboxes = Optional.of(action.getAppendInMailboxes().getMailboxIds()
@@ -133,6 +156,30 @@ public class ActionApplier {
         } catch (Exception e) {
             LOGGER.error("Unexpected failure while resolving mailbox name for {}", mailboxIdString, e);
             return Stream.empty();
+        }
+    }
+
+    private void sendACopy(MailetContext context, MailAddress originalRecipient, List<MailAddress> forwards) throws MessagingException {
+        MailImpl copy = MailImpl.duplicate(mail);
+        try {
+            copy.setSender(originalRecipient);
+            copy.setRecipients(forwards);
+            context.sendMail(copy);
+
+            AuditTrail.entry()
+                .protocol("mailetcontainer")
+                .action("JMAPFiltering")
+                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                    "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                        .map(Throwing.function(MimeMessage::getMessageID))
+                        .orElse(""),
+                    "sender", mail.getMaybeSender().asString(),
+                    "forwardedMailId", copy.getName(),
+                    "forwardedMailSender", originalRecipient.asString(),
+                    "forwardedMailRecipient", StringUtils.join(forwards))))
+                .log("Mail forwarded.");
+        } finally {
+            LifecycleUtil.dispose(copy);
         }
     }
 }

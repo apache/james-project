@@ -21,10 +21,15 @@ package org.apache.james.jmap.cassandra.filtering;
 
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_4;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_FROM;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_FROM_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_RECIPIENT;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_RECIPIENT_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO_2;
 import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT;
 import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,10 +54,12 @@ class DTOTest {
     static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");
     static final String EVENT_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/event-v2.json");
     static final String EVENT_JSON_3 = ClassLoaderUtils.getSystemResourceAsString("json/event-v3.json");
+    static final String EVENT_JSON_4 = ClassLoaderUtils.getSystemResourceAsString("json/event-v4.json");
     static final String EVENT_EMPTY_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventEmpty.json");
     static final String EVENT_COMPLEX_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex.json");
     static final String EVENT_COMPLEX_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex-v2.json");
     static final String EVENT_COMPLEX_JSON_3 = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex-v3.json");
+    static final String EVENT_COMPLEX_JSON_4 = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex-v4.json");
 
     static final RuleSetDefined SIMPLE_RULE = new RuleSetDefined(
                     new FilteringAggregateId(Username.of("Bart")),
@@ -74,13 +81,41 @@ class DTOTest {
                     ImmutableSet.of(Rule.Id.of("abdcd")),
                     ImmutableList.of(RULE_SUBJECT));
 
+    static final RuleSetDefined SIMPLE_RULE_2 = new RuleSetDefined(
+        new FilteringAggregateId(Username.of("Bart")),
+        EventId.first(),
+        ImmutableList.of(RULE_4));
+    static final RuleSetDefined COMPLEX_RULE_2 =  new RuleSetDefined(
+        new FilteringAggregateId(Username.of("Bart")),
+        EventId.first(),
+        ImmutableList.of(RULE_FROM_2, RULE_RECIPIENT_2, RULE_SUBJECT_2, RULE_TO_2));
+    static final IncrementalRuleChange INCREMENT_2 =  new IncrementalRuleChange(
+        new FilteringAggregateId(Username.of("Bart")),
+        EventId.first(),
+        ImmutableList.of(RULE_FROM_2, RULE_TO_2),
+        ImmutableList.of(RULE_RECIPIENT_2),
+        ImmutableSet.of(Rule.Id.of("abdcd")),
+        ImmutableList.of(RULE_SUBJECT_2));
+
     @Test
     void shouldSerializeRule() throws Exception {
         JsonSerializationVerifier.dtoModule(FILTERING_RULE_SET_DEFINED)
             .testCase(EMPTY_RULE, EVENT_EMPTY_JSON)
-            .testCase(SIMPLE_RULE, EVENT_JSON_3)
-            .testCase(COMPLEX_RULE, EVENT_COMPLEX_JSON_3)
+            .testCase(SIMPLE_RULE_2, EVENT_JSON_4)
+            .testCase(COMPLEX_RULE_2, EVENT_COMPLEX_JSON_4)
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeV3() {
+        JsonGenericSerializer<RuleSetDefined, FilteringRuleSetDefinedDTO> serializer = JsonGenericSerializer
+            .forModules(FILTERING_RULE_SET_DEFINED)
+            .withoutNestedType();
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(serializer.deserialize(EVENT_JSON_3)).isEqualToComparingFieldByFieldRecursively(SIMPLE_RULE);
+            softly.assertThat(serializer.deserialize(EVENT_COMPLEX_JSON_3)).isEqualToComparingFieldByFieldRecursively(COMPLEX_RULE);
+        }));
     }
 
     @Test
@@ -110,8 +145,18 @@ class DTOTest {
     @Test
     void shouldSerializeIncrements() throws Exception {
         JsonSerializationVerifier.dtoModule(FILTERING_INCREMENT)
-            .testCase(INCREMENT, ClassLoaderUtils.getSystemResourceAsString("json/increment-v3.json"))
+            .testCase(INCREMENT_2, ClassLoaderUtils.getSystemResourceAsString("json/increment-v4.json"))
             .verify();
+    }
+
+    @Test
+    void shouldDeserializeV3ForIncrements() throws Exception {
+        JsonGenericSerializer<IncrementalRuleChange, FilteringIncrementalRuleChangeDTO> serializer = JsonGenericSerializer
+            .forModules(FILTERING_INCREMENT)
+            .withoutNestedType();
+
+        assertThat(serializer.deserialize(ClassLoaderUtils.getSystemResourceAsString("json/increment-v3.json")))
+            .isEqualToComparingFieldByFieldRecursively(INCREMENT);
     }
 
     @Test
