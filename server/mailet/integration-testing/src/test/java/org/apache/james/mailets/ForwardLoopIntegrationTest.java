@@ -27,11 +27,11 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.api.filtering.Rule.Action;
+import org.apache.james.jmap.api.filtering.Rule.Action.Forward;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -39,7 +39,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.transport.mailets.RecipientRewriteTable;
@@ -71,12 +70,23 @@ public class ForwardLoopIntegrationTest {
     private static final Username BOB = Username.of("bob@" + DEFAULT_DOMAIN);
     private static final Username CEDRIC = Username.of("cedric@" + DEFAULT_DOMAIN);
     private static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("memory://var/mail/custom/");
+    public static final Rule.ConditionGroup CONDITION_GROUP = Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, NOT_CONTAINS, "AAA"));
+
+    private static Rule.Builder asRule(Action.Forward forward) {
+        return Rule.builder()
+            .id(Rule.Id.of("1"))
+            .name("rule 1")
+            .conditionGroup(CONDITION_GROUP)
+            .action(Action.builder().setForward(forward));
+    }
+
     private TemporaryJamesServer jamesServer;
     private FilteringManagementProbeImpl filteringManagementProbe;
     private MailRepositoryProbeImpl mailRepositoryProbe;
 
     @RegisterExtension
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
+    private DataProbeImpl dataProbe;
 
     @BeforeEach
     void setup(@TempDir File temporaryFolder) throws Exception {
@@ -101,7 +111,7 @@ public class ForwardLoopIntegrationTest {
 
         jamesServer.start();
 
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
 
         dataProbe.addUser(SENDER.asString(), PASSWORD);
@@ -121,39 +131,9 @@ public class ForwardLoopIntegrationTest {
 
     @Test
     void filterForwardShouldNotCreateLoopError() throws Exception {
-        filteringManagementProbe.defineRulesForUser(ALICE,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, NOT_CONTAINS, "AAA")))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(Rule.Action.Forward.of(ImmutableList.of(BOB.asMailAddress()), true)))
-                    .build())
-                .build());
-        filteringManagementProbe.defineRulesForUser(BOB,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, NOT_CONTAINS, "AAA")))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(Rule.Action.Forward.of(ImmutableList.of(CEDRIC.asMailAddress()), false)))
-                    .build())
-                .build());
-        filteringManagementProbe.defineRulesForUser(CEDRIC,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, NOT_CONTAINS, "AAA")))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(Rule.Action.Forward.of(ImmutableList.of(ALICE.asMailAddress()), false)))
-                    .build())
-                .build());
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).keepACopy()));
+        filteringManagementProbe.defineRulesForUser(BOB, asRule(Forward.to(CEDRIC.asMailAddress()).withoutACopy()));
+        filteringManagementProbe.defineRulesForUser(CEDRIC, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(SENDER.asString(), PASSWORD)
@@ -173,18 +153,10 @@ public class ForwardLoopIntegrationTest {
 
     @Test
     void regularForwardShouldNotCreateLoopError() throws Exception {
-        jamesServer.getProbe(DataProbeImpl.class)
-            .addMapping(MappingSource.fromUser(ALICE),
-                Mapping.forward(SENDER.asString()));
-        jamesServer.getProbe(DataProbeImpl.class)
-            .addMapping(MappingSource.fromUser(ALICE),
-                Mapping.forward(BOB.asString()));
-        jamesServer.getProbe(DataProbeImpl.class)
-            .addMapping(MappingSource.fromUser(BOB),
-                Mapping.forward(CEDRIC.asString()));
-        jamesServer.getProbe(DataProbeImpl.class)
-            .addMapping(MappingSource.fromUser(CEDRIC),
-                Mapping.forward(ALICE.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(SENDER.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(BOB.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(CEDRIC), Mapping.forward(ALICE.asString()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(SENDER.asString(), PASSWORD)
@@ -203,31 +175,9 @@ public class ForwardLoopIntegrationTest {
 
     @Test
     void forwardShouldNotCreateLoopErrorWhenFilterForwardAndRegularForwardWorkTogether() throws Exception {
-        filteringManagementProbe.defineRulesForUser(ALICE,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, NOT_CONTAINS, "AAA")))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(Rule.Action.Forward.of(ImmutableList.of(BOB.asMailAddress()), true)))
-                    .build())
-                .build());
-        jamesServer.getProbe(DataProbeImpl.class)
-            .addMapping(MappingSource.fromUser(BOB),
-                Mapping.forward(CEDRIC.asString()));
-        filteringManagementProbe.defineRulesForUser(CEDRIC,
-            Optional.empty(),
-            Rule.builder()
-                .id(Rule.Id.of("1"))
-                .name("rule 1")
-                .conditionGroup(Rule.ConditionGroup.of(Rule.ConditionCombiner.AND, Rule.Condition.of(FROM, NOT_CONTAINS, "AAA")))
-                .action(Rule.Action.builder().setAppendInMailboxes(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of()))
-                    .setWithKeywords(ImmutableList.of())
-                    .setForward(Optional.of(Rule.Action.Forward.of(ImmutableList.of(ALICE.asMailAddress()), false)))
-                    .build())
-                .build());
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).keepACopy()));
+        dataProbe.addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
+        filteringManagementProbe.defineRulesForUser(CEDRIC, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(SENDER.asString(), PASSWORD)
@@ -244,5 +194,4 @@ public class ForwardLoopIntegrationTest {
             softly.assertThat(mails.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
         }));
     }
-
 }

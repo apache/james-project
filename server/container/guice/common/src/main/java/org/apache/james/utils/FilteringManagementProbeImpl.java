@@ -20,7 +20,9 @@
 package org.apache.james.utils;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableList;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -41,5 +43,12 @@ public class FilteringManagementProbeImpl implements GuiceProbe {
 
     public void defineRulesForUser(Username username, Optional<Version> ifInState, Rule... rules) {
         Mono.from(filteringManagement.defineRulesForUser(username, ifInState, rules)).block();
+    }
+
+    public void defineRulesForUser(Username username, Rule.Builder... rules) {
+        Optional<Version> noVersion = Optional.empty();
+        Mono.from(filteringManagement.defineRulesForUser(username, Stream.of(rules)
+            .map(Rule.Builder::build)
+            .collect(ImmutableList.toImmutableList()), noVersion)).block();
     }
 }

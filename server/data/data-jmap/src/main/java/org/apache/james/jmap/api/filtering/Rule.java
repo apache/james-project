@@ -286,6 +286,27 @@ public class Rule {
         }
 
         public static class Forward {
+            @FunctionalInterface
+            public interface RequireLocalCopy {
+                Forward keepACopy(boolean value);
+
+                default Forward keepACopy() {
+                    return keepACopy(true);
+                }
+
+                default Forward withoutACopy() {
+                    return keepACopy(false);
+                }
+            }
+
+            public static RequireLocalCopy to(Collection<MailAddress> addresses) {
+                return keepACopy -> new Forward(ImmutableList.copyOf(addresses), keepACopy);
+            }
+
+            public static RequireLocalCopy to(MailAddress... addresses) {
+                return keepACopy -> new Forward(ImmutableList.copyOf(addresses), keepACopy);
+            }
+
             public static Forward of(List<MailAddress> addresses, boolean keepACopy) {
                 return new Forward(ImmutableList.copyOf(addresses), keepACopy);
             }
@@ -365,6 +386,11 @@ public class Rule {
 
             public Builder setForward(Optional<Forward> forward) {
                 this.forward = forward;
+                return this;
+            }
+
+            public Builder setForward(Forward forward) {
+                this.forward = Optional.of(forward);
                 return this;
             }
 
@@ -496,6 +522,11 @@ public class Rule {
 
         public Builder action(Action action) {
             this.action = action;
+            return this;
+        }
+
+        public Builder action(Action.Builder action) {
+            this.action = action.build();
             return this;
         }
 
