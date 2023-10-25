@@ -30,41 +30,72 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class LoopPrevention {
+    public static class RecordedRecipients {
+        public static final RecordedRecipients NO_RECORDED_RECIPIENTS = new RecordedRecipients(ImmutableSet.of());
+
+        public static RecordedRecipients fromMail(Mail mail) {
+            return mail.getAttribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME)
+                .map(RecordedRecipients::fromAttribute)
+                .orElse(NO_RECORDED_RECIPIENTS);
+        }
+
+        public static RecordedRecipients fromAttribute(Attribute attribute) {
+            Collection<AttributeValue> attributeValues = (Collection<AttributeValue>) attribute.getValue().getValue();
+            return new RecordedRecipients(attributeValues
+                .stream()
+                .map(Throwing.function(attributeValue -> new MailAddress((String) attributeValue.getValue())))
+                .collect(ImmutableSet.toImmutableSet()));
+        }
+
+        private final Set<MailAddress> recipients;
+
+        public RecordedRecipients(Set<MailAddress> recipients) {
+            this.recipients = recipients;
+        }
+
+        public RecordedRecipients(MailAddress... recipients) {
+            this.recipients = ImmutableSet.copyOf(recipients);
+        }
+
+        public Set<MailAddress> getRecipients() {
+            return recipients;
+        }
+
+        public Set<MailAddress> nonRecordedRecipients(Collection<MailAddress> recipients) {
+            return Sets.difference(ImmutableSet.copyOf(recipients), this.recipients);
+        }
+
+        public Set<MailAddress> nonRecordedRecipients(MailAddress... recipients) {
+            return nonRecordedRecipients(ImmutableSet.copyOf(recipients));
+        }
+
+        public RecordedRecipients merge(RecordedRecipients other) {
+            return new RecordedRecipients(ImmutableSet.<MailAddress>builder()
+                .addAll(recipients)
+                .addAll(other.recipients)
+                .build());
+        }
+
+        public RecordedRecipients merge(Collection<MailAddress> other) {
+            return merge(new RecordedRecipients(ImmutableSet.copyOf(other)));
+        }
+
+        public RecordedRecipients merge(MailAddress... other) {
+            return merge(ImmutableSet.copyOf(other));
+        }
+
+        public Attribute asAttribute() {
+            return new Attribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME,
+                AttributeValue.of(recipients.stream()
+                    .map(mailAddress -> AttributeValue.of(mailAddress.asString()))
+                    .collect(ImmutableList.toImmutableList())));
+        }
+
+        public void recordOn(Mail mail) {
+            mail.setAttribute(asAttribute());
+        }
+    }
+
     public static final AttributeName RECORDED_RECIPIENTS_ATTRIBUTE_NAME = AttributeName.of("loop.prevention.recorded.recipients");
 
-    public static Set<MailAddress> nonRecordedRecipients(Set<MailAddress> recipients, Set<MailAddress> recordedRecipients) {
-        return Sets.difference(recipients, recordedRecipients);
-    }
-
-    public static void recordRecipients(Mail mail,
-                                        Set<MailAddress> recordedRecipients,
-                                        Set<MailAddress> newRecipients,
-                                        MailAddress originalRecipient) {
-        mail.setAttribute(createAttribute(ImmutableSet.<MailAddress>builder()
-            .addAll(recordedRecipients)
-            .addAll(newRecipients)
-            .add(originalRecipient)
-            .build()));
-    }
-
-    public static Set<MailAddress> retrieveRecordedRecipients(Mail mail) {
-        return mail.getAttribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME)
-            .map(LoopPrevention::retrieveRecordedRecipients)
-            .orElse(ImmutableSet.of());
-    }
-
-    private static Attribute createAttribute(Collection<MailAddress> mailAddresses) {
-        return new Attribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME,
-            AttributeValue.of(mailAddresses.stream()
-                .map(mailAddress -> AttributeValue.of(mailAddress.asString()))
-                .collect(ImmutableList.toImmutableList())));
-    }
-
-    private static Set<MailAddress> retrieveRecordedRecipients(Attribute attribute) {
-        Collection<AttributeValue> attributeValues = (Collection<AttributeValue>) attribute.getValue().getValue();
-        return attributeValues
-            .stream()
-            .map(Throwing.function(attributeValue -> new MailAddress((String) attributeValue.getValue())))
-            .collect(ImmutableSet.toImmutableSet());
-    }
 }

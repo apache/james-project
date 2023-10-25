@@ -225,8 +225,8 @@ public class RecipientRewriteTableProcessor {
 
         static ForwardDecision sendACopy(MailetContext context, MailAddress originalRecipient, List<MailAddress> forwards) {
             return mail -> {
-                Set<MailAddress> recordedRecipients = LoopPrevention.retrieveRecordedRecipients(mail);
-                Set<MailAddress> newRecipients = LoopPrevention.nonRecordedRecipients(ImmutableSet.copyOf(forwards), recordedRecipients);
+                LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
+                Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forwards);
 
                 if (!newRecipients.isEmpty()) {
                     sendACopy(context, originalRecipient, forwards, mail, recordedRecipients, newRecipients);
@@ -238,13 +238,13 @@ public class RecipientRewriteTableProcessor {
                                       MailAddress originalRecipient,
                                       List<MailAddress> forwards,
                                       Mail mail,
-                                      Set<MailAddress> recordedRecipients,
+                                      LoopPrevention.RecordedRecipients recordedRecipients,
                                       Set<MailAddress> newRecipients) throws MessagingException {
             MailImpl copy = MailImpl.duplicate(mail);
             try {
                 copy.setSender(originalRecipient);
                 copy.setRecipients(newRecipients);
-                LoopPrevention.recordRecipients(copy, recordedRecipients, newRecipients, originalRecipient);
+                recordedRecipients.merge(newRecipients).recordOn(mail);
 
                 context.sendMail(copy);
 

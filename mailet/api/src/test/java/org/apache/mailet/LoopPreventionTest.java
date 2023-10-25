@@ -44,20 +44,18 @@ public class LoopPreventionTest {
 
     @Test
     void nonRecordedRecipientsShouldWork() throws Exception {
-        Set<MailAddress> recipients = ImmutableSet.of(ALICE.asMailAddress(), BOB.asMailAddress());
-        Set<MailAddress> recordedRecipients = ImmutableSet.of(BOB.asMailAddress());
-
-        assertThat(LoopPrevention.nonRecordedRecipients(recipients, recordedRecipients))
-            .containsAll(ImmutableSet.of(ALICE.asMailAddress()));
+        assertThat(new LoopPrevention.RecordedRecipients(BOB.asMailAddress())
+            .nonRecordedRecipients(ALICE.asMailAddress(), BOB.asMailAddress()))
+            .containsOnly(ALICE.asMailAddress());
     }
 
     @Test
     void recordedRecipientsShouldWork() throws Exception {
-        Mail mail =  mock(Mail.class);
+        Mail mail = mock(Mail.class);
 
-        Set<MailAddress> recordedRecipients = ImmutableSet.of(ALICE.asMailAddress());
-        Set<MailAddress> newRecipients = ImmutableSet.of(BOB.asMailAddress());
-        LoopPrevention.recordRecipients(mail, recordedRecipients, newRecipients, CEDRIC.asMailAddress());
+        new LoopPrevention.RecordedRecipients(ALICE.asMailAddress(), BOB.asMailAddress())
+            .merge(CEDRIC.asMailAddress())
+            .recordOn(mail);
 
         Attribute attribute = new Attribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME,
             AttributeValue.of(ImmutableList.of(AttributeValue.of(ALICE.asString()),
@@ -68,8 +66,8 @@ public class LoopPreventionTest {
     }
 
     @Test
-    void retrieveRecordedRecipientsShouldWork() throws Exception {
-        Mail mail =  mock(Mail.class);
+    void fromMailShouldRetrieveRecordedRecipients() throws Exception {
+        Mail mail = mock(Mail.class);
 
         Attribute attribute = new Attribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME,
             AttributeValue.of(ImmutableList.of(AttributeValue.of(ALICE.asString()))));
@@ -77,7 +75,8 @@ public class LoopPreventionTest {
         when(mail.getAttribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME))
             .thenReturn(Optional.of(attribute));
 
-        assertThat(LoopPrevention.retrieveRecordedRecipients(mail)).containsAll(ImmutableSet.of(ALICE.asMailAddress()));
+        assertThat(LoopPrevention.RecordedRecipients.fromMail(mail).getRecipients())
+            .containsOnly(ALICE.asMailAddress());
     }
 
     @Test
@@ -87,7 +86,8 @@ public class LoopPreventionTest {
         when(mail.getAttribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME))
             .thenReturn(Optional.empty());
 
-        assertThat(LoopPrevention.retrieveRecordedRecipients(mail)).containsAll(ImmutableSet.of());
+        assertThat(LoopPrevention.RecordedRecipients.fromMail(mail).getRecipients())
+            .isEmpty();
     }
 
 }

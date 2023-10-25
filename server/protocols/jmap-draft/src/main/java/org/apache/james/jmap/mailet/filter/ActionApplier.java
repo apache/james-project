@@ -185,15 +185,15 @@ public class ActionApplier {
     }
 
     private void sendACopy(MailetContext context, MailAddress originalRecipient, Set<MailAddress> forwards) throws MessagingException {
-        Set<MailAddress> recordedRecipients = LoopPrevention.retrieveRecordedRecipients(mail);
-        Set<MailAddress> newRecipients = LoopPrevention.nonRecordedRecipients(forwards, recordedRecipients);
+        LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
+        Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forwards);
 
         if (!newRecipients.isEmpty()) {
             MailImpl copy = MailImpl.duplicate(mail);
             try {
                 copy.setSender(originalRecipient);
                 copy.setRecipients(newRecipients);
-                LoopPrevention.recordRecipients(copy, recordedRecipients, newRecipients, originalRecipient);
+                recordedRecipients.merge(newRecipients).recordOn(mail);
 
                 context.sendMail(copy);
 
