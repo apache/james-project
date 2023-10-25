@@ -390,14 +390,20 @@ public class Rule {
             }
 
             public Builder setForward(Forward forward) {
-                this.forward = Optional.of(forward);
+                this.forward = Optional.ofNullable(forward);
                 return this;
             }
 
             public Action build() {
-                Preconditions.checkNotNull(appendInMailboxes, "appendInMailboxes should not be null");
-                Preconditions.checkNotNull(withKeywords, "withKeywords should not be null");
-                Preconditions.checkNotNull(forward, "forward should not be null");
+                if (Objects.isNull(appendInMailboxes)) {
+                    appendInMailboxes = Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of());
+                }
+                if (Objects.isNull(withKeywords)) {
+                    withKeywords = ImmutableList.of();
+                }
+                if (Objects.isNull(forward)) {
+                    forward = Optional.empty();
+                }
 
                 return new Action(appendInMailboxes, markAsSeen, markAsImportant, reject, withKeywords, forward);
             }

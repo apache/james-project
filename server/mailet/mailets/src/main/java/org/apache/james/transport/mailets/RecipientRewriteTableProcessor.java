@@ -223,35 +223,25 @@ public class RecipientRewriteTableProcessor {
                 .collect(ImmutableList.toImmutableList()));
         }
 
-        static ForwardDecision sendACopy(MailetContext context, MailAddress originalRecipient, List<MailAddress> forwards) {
+        static ForwardDecision sendACopy(MailetContext context,
+                                         MailAddress originalRecipient,
+                                         List<MailAddress> forwards,
+                                         LoopPrevention.RecordedRecipients recordedRecipients,
+                                         Set<MailAddress> newRecipients) {
             return mail -> {
-                LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
-                Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forwards);
+                MailImpl copy = MailImpl.duplicate(mail);
+                try {
+                    copy.setSender(originalRecipient);
+                    copy.setRecipients(newRecipients);
+                    recordedRecipients.mergeIfEmpty(originalRecipient).merge(newRecipients).recordOn(copy);
 
-                if (!newRecipients.isEmpty()) {
-                    sendACopy(context, originalRecipient, forwards, mail, recordedRecipients, newRecipients);
+                    context.sendMail(copy);
+
+                    recordInAuditTrail(mail, copy, originalRecipient, forwards);
+                } finally {
+                    LifecycleUtil.dispose(copy);
                 }
             };
-        }
-
-        private static void sendACopy(MailetContext context,
-                                      MailAddress originalRecipient,
-                                      List<MailAddress> forwards,
-                                      Mail mail,
-                                      LoopPrevention.RecordedRecipients recordedRecipients,
-                                      Set<MailAddress> newRecipients) throws MessagingException {
-            MailImpl copy = MailImpl.duplicate(mail);
-            try {
-                copy.setSender(originalRecipient);
-                copy.setRecipients(newRecipients);
-                recordedRecipients.merge(newRecipients).recordOn(mail);
-
-                context.sendMail(copy);
-
-                recordInAuditTrail(mail, copy, originalRecipient, forwards);
-            } finally {
-                LifecycleUtil.dispose(copy);
-            }
         }
 
         private static void recordInAuditTrail(Mail mail, MailImpl copy, MailAddress originalRecipient, List<MailAddress> forwards) {
@@ -272,36 +262,50 @@ public class RecipientRewriteTableProcessor {
         void apply(Mail mail) throws Exception;
     }
 
-    public void processForwards(Mail mail) throws MessagingException {
+    public void processForwards(Mail mail) {
         if (rewriteSenderUponForward) {
+            LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
             mail.getRecipients()
                 .stream()
-                .flatMap(Throwing.function(this::processForward))
+                .flatMap(Throwing.function(mailAddress -> processForward(mailAddress, recordedRecipients)))
                 .forEach(Throwing.consumer(decision -> decision.apply(mail)));
         }
     }
 
-    private Stream<ForwardDecision> processForward(MailAddress recipient) throws RecipientRewriteTableException {
-        ImmutableSet<Mapping> forwards = virtualTableStore.getStoredMappings(MappingSource.fromMailAddress(recipient))
-            .select(Mapping.Type.Forward)
-            .asStream()
-            .collect(ImmutableSet.toImmutableSet());
-
+    private Stream<ForwardDecision> processForward(MailAddress recipient, LoopPrevention.RecordedRecipients recordedRecipients) throws RecipientRewriteTableException {
+        ImmutableSet<Mapping> forwards = getForwards(recipient);
         if (forwards.isEmpty()) {
             return Stream.of();
         }
         Mapping localCopyMapping = Mapping.forward(recipient.asString());
         boolean localCopy = forwards.contains(localCopyMapping);
-        List<MailAddress> forwardedRecipients = forwards.stream()
+        List<MailAddress> forwardedRecipients = getForwardedMailAddressesWithLocalCopyExcluded(forwards, localCopyMapping);
+
+        Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(ImmutableSet.copyOf(forwardedRecipients));
+        boolean shouldMailBeForwarded = !newRecipients.isEmpty();
+
+        if (localCopy && shouldMailBeForwarded) {
+            return Stream.of(ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients, recordedRecipients, newRecipients));
+        }
+        if (!shouldMailBeForwarded) {
+            return Stream.of();
+        }
+        return Stream.of(ForwardDecision.removeRecipient(recipient),
+            ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients, recordedRecipients, newRecipients));
+    }
+
+    private List<MailAddress> getForwardedMailAddressesWithLocalCopyExcluded(ImmutableSet<Mapping> forwards, Mapping localCopyMapping) {
+        return forwards.stream()
             .filter(mapping -> !mapping.equals(localCopyMapping)) // remove the local copy
             .flatMap(mapping -> mapping.asMailAddress().stream())
             .collect(ImmutableList.toImmutableList());
+    }
 
-        if (localCopy) {
-            return Stream.of(ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients));
-        }
-        return Stream.of(ForwardDecision.removeRecipient(recipient),
-            ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients));
+    private ImmutableSet<Mapping> getForwards(MailAddress recipient) throws RecipientRewriteTableException {
+        return virtualTableStore.getStoredMappings(MappingSource.fromMailAddress(recipient))
+            .select(Mapping.Type.Forward)
+            .asStream()
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private void applyDecisionOnDSNParameters(Mail mail, List<Decision> decisions) {

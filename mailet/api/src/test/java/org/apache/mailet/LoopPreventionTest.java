@@ -26,14 +26,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import java.util.Set;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class LoopPreventionTest {
 

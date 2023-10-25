@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -131,7 +132,7 @@ public class ForwardLoopIntegrationTest {
 
     @Test
     void filterForwardShouldNotCreateLoopError() throws Exception {
-        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).keepACopy()));
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).withoutACopy()));
         filteringManagementProbe.defineRulesForUser(BOB, asRule(Forward.to(CEDRIC.asMailAddress()).withoutACopy()));
         filteringManagementProbe.defineRulesForUser(CEDRIC, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
 
@@ -144,16 +145,14 @@ public class ForwardLoopIntegrationTest {
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(ALICE.asMailAddress())))
                 .collect(ImmutableList.toImmutableList());
 
-            softly.assertThat(mails.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
+            softly.assertThat(mails.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
         }));
     }
 
     @Test
     void regularForwardShouldNotCreateLoopError() throws Exception {
-        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(SENDER.asString()));
         dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(BOB.asString()));
         dataProbe.addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
         dataProbe.addMapping(MappingSource.fromUser(CEDRIC), Mapping.forward(ALICE.asString()));
@@ -169,13 +168,13 @@ public class ForwardLoopIntegrationTest {
             List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
                 .collect(ImmutableList.toImmutableList());
 
-            softly.assertThat(mails.get(0).getRecipients()).containsOnly(SENDER.asMailAddress());
+            softly.assertThat(mails.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
         }));
     }
 
     @Test
     void forwardShouldNotCreateLoopErrorWhenFilterForwardAndRegularForwardWorkTogether() throws Exception {
-        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).keepACopy()));
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).withoutACopy()));
         dataProbe.addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
         filteringManagementProbe.defineRulesForUser(CEDRIC, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
 
@@ -188,10 +187,9 @@ public class ForwardLoopIntegrationTest {
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .filter(Throwing.predicate(mail -> mail.getRecipients().contains(ALICE.asMailAddress())))
                 .collect(ImmutableList.toImmutableList());
 
-            softly.assertThat(mails.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
+            softly.assertThat(mails.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
         }));
     }
 }

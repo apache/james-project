@@ -106,17 +106,14 @@ public class ActionApplier {
     }
 
     public void apply(Stream<Rule.Action> actions) {
-        actions.forEach(Throwing.consumer(this::applyAction));
+        actions.forEach(this::applyAction);
     }
 
-    private void applyAction(Rule.Action action) throws MessagingException {
+    private void applyAction(Rule.Action action) {
         applyReject(action);
         if (!action.isReject()) {
-            applyForward(action);
-            boolean localCopy = action.getForward()
-                .map(Rule.Action.Forward::isKeepACopy)
-                .orElse(true);
-            if (localCopy) {
+            boolean keepLocalCopy = applyForward(action);
+            if (keepLocalCopy) {
                 applyStorageDirective(action);
             }
         }
@@ -128,14 +125,24 @@ public class ActionApplier {
         }
     }
 
-    private void applyForward(Rule.Action action) throws MessagingException {
-        if (action.getForward().isPresent()) {
-            Rule.Action.Forward forward = action.getForward().get();
-            if (!forward.isKeepACopy()) {
-                removeFromRecipients();
+    /**
+     * @return a boolean value to show if a local copy should be kept or not
+     */
+    private boolean applyForward(Rule.Action action) {
+        return action.getForward().map(Throwing.function(forward -> {
+            LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
+            Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(ImmutableSet.copyOf(forward.getAddresses()));
+            boolean shouldMailBeForwarded = !newRecipients.isEmpty();
+            if (shouldMailBeForwarded) {
+                sendACopy(mailetContext, mailAddress, recordedRecipients, newRecipients);
             }
-            sendACopy(mailetContext, mailAddress, ImmutableSet.copyOf(forward.getAddresses()));
-        }
+            if (!forward.isKeepACopy() && shouldMailBeForwarded) {
+                removeFromRecipients();
+                return false;
+            } else {
+                return true;
+            }
+        })).orElse(false);
     }
 
     private void removeFromRecipients() {
@@ -184,23 +191,21 @@ public class ActionApplier {
         }
     }
 
-    private void sendACopy(MailetContext context, MailAddress originalRecipient, Set<MailAddress> forwards) throws MessagingException {
-        LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
-        Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forwards);
+    private void sendACopy(MailetContext context,
+                           MailAddress originalRecipient,
+                           LoopPrevention.RecordedRecipients recordedRecipients,
+                           Set<MailAddress> newRecipients) throws MessagingException {
+        MailImpl copy = MailImpl.duplicate(mail);
+        try {
+            copy.setSender(originalRecipient);
+            copy.setRecipients(newRecipients);
+            recordedRecipients.mergeIfEmpty(originalRecipient).merge(newRecipients).recordOn(copy);
 
-        if (!newRecipients.isEmpty()) {
-            MailImpl copy = MailImpl.duplicate(mail);
-            try {
-                copy.setSender(originalRecipient);
-                copy.setRecipients(newRecipients);
-                recordedRecipients.merge(newRecipients).recordOn(mail);
+            context.sendMail(copy);
 
-                context.sendMail(copy);
-
-                recordInAuditTrail(copy);
-            } finally {
-                LifecycleUtil.dispose(copy);
-            }
+            recordInAuditTrail(copy);
+        } finally {
+            LifecycleUtil.dispose(copy);
         }
     }
 

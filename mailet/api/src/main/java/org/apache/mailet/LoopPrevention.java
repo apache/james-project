@@ -84,6 +84,14 @@ public class LoopPrevention {
             return merge(ImmutableSet.copyOf(other));
         }
 
+        public RecordedRecipients mergeIfEmpty(MailAddress... other) {
+            if (recipients.isEmpty()) {
+                return merge(ImmutableSet.copyOf(other));
+            } else {
+                return this;
+            }
+        }
+
         public Attribute asAttribute() {
             return new Attribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME,
                 AttributeValue.of(recipients.stream()
