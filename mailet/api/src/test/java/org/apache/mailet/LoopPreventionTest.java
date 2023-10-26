@@ -31,7 +31,6 @@ import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class LoopPreventionTest {
 
@@ -43,7 +42,7 @@ public class LoopPreventionTest {
     @Test
     void nonRecordedRecipientsShouldWork() throws Exception {
         assertThat(new LoopPrevention.RecordedRecipients(BOB.asMailAddress())
-            .nonRecordedRecipients(ImmutableSet.of(ALICE.asMailAddress(), BOB.asMailAddress())))
+            .nonRecordedRecipients(ALICE.asMailAddress(), BOB.asMailAddress()))
             .containsOnly(ALICE.asMailAddress());
     }
 
