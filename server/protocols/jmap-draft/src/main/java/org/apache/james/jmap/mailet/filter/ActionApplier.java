@@ -50,7 +50,6 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 
 public class ActionApplier {
     public static final Logger LOGGER = LoggerFactory.getLogger(ActionApplier.class);
@@ -131,7 +130,7 @@ public class ActionApplier {
     private boolean applyForward(Rule.Action action) {
         return action.getForward().map(Throwing.function(forward -> {
             LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
-            Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(ImmutableSet.copyOf(forward.getAddresses()));
+            Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forward.getAddresses());
             boolean shouldMailBeForwarded = !newRecipients.isEmpty();
             if (shouldMailBeForwarded) {
                 sendACopy(mailetContext, mailAddress, recordedRecipients, newRecipients);

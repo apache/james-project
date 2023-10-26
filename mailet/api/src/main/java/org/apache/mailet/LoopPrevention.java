@@ -65,10 +65,6 @@ public class LoopPrevention {
             return Sets.difference(ImmutableSet.copyOf(recipients), this.recipients);
         }
 
-        public Set<MailAddress> nonRecordedRecipients(MailAddress... recipients) {
-            return nonRecordedRecipients(ImmutableSet.copyOf(recipients));
-        }
-
         public RecordedRecipients merge(RecordedRecipients other) {
             return new RecordedRecipients(ImmutableSet.<MailAddress>builder()
                 .addAll(recipients)

@@ -225,7 +225,6 @@ public class RecipientRewriteTableProcessor {
 
         static ForwardDecision sendACopy(MailetContext context,
                                          MailAddress originalRecipient,
-                                         List<MailAddress> forwards,
                                          LoopPrevention.RecordedRecipients recordedRecipients,
                                          Set<MailAddress> newRecipients) {
             return mail -> {
@@ -237,14 +236,14 @@ public class RecipientRewriteTableProcessor {
 
                     context.sendMail(copy);
 
-                    recordInAuditTrail(mail, copy, originalRecipient, forwards);
+                    recordInAuditTrail(mail, copy, originalRecipient);
                 } finally {
                     LifecycleUtil.dispose(copy);
                 }
             };
         }
 
-        private static void recordInAuditTrail(Mail mail, MailImpl copy, MailAddress originalRecipient, List<MailAddress> forwards) {
+        private static void recordInAuditTrail(Mail mail, MailImpl copy, MailAddress originalRecipient) {
             AuditTrail.entry()
                 .protocol("mailetcontainer")
                 .action("RecipientRewrite")
@@ -255,7 +254,7 @@ public class RecipientRewriteTableProcessor {
                     "sender", mail.getMaybeSender().asString(),
                     "forwardedMailId", copy.getName(),
                     "forwardedMailSender", originalRecipient.asString(),
-                    "forwardedMailRecipient", StringUtils.join(forwards))))
+                    "forwardedMailRecipient", StringUtils.join(copy.getRecipients()))))
                 .log("Mail forwarded.");
         }
 
@@ -278,20 +277,39 @@ public class RecipientRewriteTableProcessor {
             return Stream.of();
         }
         Mapping localCopyMapping = Mapping.forward(recipient.asString());
-        boolean localCopy = forwards.contains(localCopyMapping);
+        boolean doForwardsContainLocalCopy = forwards.contains(localCopyMapping);
         List<MailAddress> forwardedRecipients = getForwardedMailAddressesWithLocalCopyExcluded(forwards, localCopyMapping);
 
-        Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(ImmutableSet.copyOf(forwardedRecipients));
+        Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forwardedRecipients);
         boolean shouldMailBeForwarded = !newRecipients.isEmpty();
 
-        if (localCopy && shouldMailBeForwarded) {
-            return Stream.of(ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients, recordedRecipients, newRecipients));
-        }
+        return Stream.of(localCopyDecision(doForwardsContainLocalCopy, shouldMailBeForwarded, recipient),
+                forwardDecision(shouldMailBeForwarded, mailetContext, recipient, recordedRecipients, newRecipients))
+            .flatMap(Optional::stream);
+    }
+
+    private Optional<ForwardDecision> localCopyDecision(boolean doForwardsContainLocalCopy,
+                                                        boolean shouldMailBeForwarded,
+                                                        MailAddress recipient) {
         if (!shouldMailBeForwarded) {
-            return Stream.of();
+            return Optional.empty();
+        } else if (doForwardsContainLocalCopy) {
+            return Optional.empty();
+        } else {
+            return Optional.of(ForwardDecision.removeRecipient(recipient));
         }
-        return Stream.of(ForwardDecision.removeRecipient(recipient),
-            ForwardDecision.sendACopy(mailetContext, recipient, forwardedRecipients, recordedRecipients, newRecipients));
+    }
+
+    private Optional<ForwardDecision> forwardDecision(boolean shouldMailBeForwarded,
+                                                      MailetContext context,
+                                                      MailAddress originalRecipient,
+                                                      LoopPrevention.RecordedRecipients recordedRecipients,
+                                                      Set<MailAddress> newRecipients) {
+        if (shouldMailBeForwarded) {
+            return Optional.of(ForwardDecision.sendACopy(context, originalRecipient, recordedRecipients, newRecipients));
+        } else {
+            return Optional.empty();
+        }
     }
 
     private List<MailAddress> getForwardedMailAddressesWithLocalCopyExcluded(ImmutableSet<Mapping> forwards, Mapping localCopyMapping) {
