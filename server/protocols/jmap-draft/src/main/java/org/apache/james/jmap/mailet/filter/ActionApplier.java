@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableSet;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -108,14 +109,14 @@ public class ActionApplier {
         actions.forEach(this::applyAction);
     }
 
+    private boolean shouldProcessingContinue() {
+        return mail.getRecipients().contains(mailAddress);
+    }
+
     private void applyAction(Rule.Action action) {
         applyReject(action);
-        if (!action.isReject()) {
-            boolean keepLocalCopy = applyForward(action);
-            if (keepLocalCopy) {
-                applyStorageDirective(action);
-            }
-        }
+        applyForward(action);
+        applyStorageDirective(action);
     }
 
     private void applyReject(Rule.Action action) {
@@ -127,21 +128,33 @@ public class ActionApplier {
     /**
      * @return a boolean value to show if a local copy should be kept or not
      */
-    private boolean applyForward(Rule.Action action) {
-        return action.getForward().map(Throwing.function(forward -> {
-            LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
-            Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forward.getAddresses());
-            boolean shouldMailBeForwarded = !newRecipients.isEmpty();
-            if (shouldMailBeForwarded) {
-                sendACopy(mailetContext, mailAddress, recordedRecipients, newRecipients);
-            }
-            if (!forward.isKeepACopy() && shouldMailBeForwarded) {
-                removeFromRecipients();
-                return false;
-            } else {
-                return true;
-            }
-        })).orElse(false);
+    private void applyForward(Rule.Action action) {
+        action.getForward()
+            .filter(any -> shouldProcessingContinue())
+            .ifPresent(Throwing.consumer(forward -> {
+                LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
+
+                if (recordedRecipients.getRecipients().contains(mailAddress)) {
+                    // Forward is already processed. Do not do it again.
+                    return;
+                }
+
+                Set<MailAddress> newRecipients = getNewRecipients(forward, recordedRecipients);
+                if (!newRecipients.isEmpty()) {
+                    removeFromRecipients();
+                    sendACopy(mailetContext, mailAddress, recordedRecipients, newRecipients);
+                }
+            }));
+    }
+
+
+    private Set<MailAddress> getNewRecipients(Rule.Action.Forward forward, LoopPrevention.RecordedRecipients recordedRecipients) {
+        ImmutableSet.Builder<MailAddress> newRecipientsBuilder = ImmutableSet.<MailAddress>builder()
+            .addAll(recordedRecipients.nonRecordedRecipients(forward.getAddresses()));
+        if (forward.isKeepACopy()) {
+            newRecipientsBuilder.add(mailAddress);
+        }
+        return newRecipientsBuilder.build();
     }
 
     private void removeFromRecipients() {
@@ -151,18 +164,20 @@ public class ActionApplier {
     }
 
     private void applyStorageDirective(Rule.Action action) {
-        Optional<ImmutableList<String>> targetMailboxes = computeTargetMailboxes(action);
+        if (shouldProcessingContinue()) {
+            Optional<ImmutableList<String>> targetMailboxes = computeTargetMailboxes(action);
 
-        StorageDirective.Builder storageDirective = StorageDirective.builder();
-        targetMailboxes.ifPresent(storageDirective::targetFolders);
-        storageDirective
-            .seen(Optional.of(action.isMarkAsSeen()).filter(seen -> seen))
-            .important(Optional.of(action.isMarkAsImportant()).filter(seen -> seen))
-            .keywords(Optional.of(action.getWithKeywords()).filter(c -> !c.isEmpty()))
-            .buildOptional()
-            .map(a -> a.encodeAsAttributes(username))
-            .orElse(Stream.of())
-            .forEach(mail::setAttribute);
+            StorageDirective.Builder storageDirective = StorageDirective.builder();
+            targetMailboxes.ifPresent(storageDirective::targetFolders);
+            storageDirective
+                .seen(Optional.of(action.isMarkAsSeen()).filter(seen -> seen))
+                .important(Optional.of(action.isMarkAsImportant()).filter(seen -> seen))
+                .keywords(Optional.of(action.getWithKeywords()).filter(c -> !c.isEmpty()))
+                .buildOptional()
+                .map(a -> a.encodeAsAttributes(username))
+                .orElse(Stream.of())
+                .forEach(mail::setAttribute);
+        }
     }
 
     private Optional<ImmutableList<String>> computeTargetMailboxes(Rule.Action action) {
@@ -198,7 +213,7 @@ public class ActionApplier {
         try {
             copy.setSender(originalRecipient);
             copy.setRecipients(newRecipients);
-            recordedRecipients.mergeIfEmpty(originalRecipient).merge(newRecipients).recordOn(copy);
+            recordedRecipients.merge(originalRecipient).recordOn(copy);
 
             context.sendMail(copy);
 
