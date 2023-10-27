@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.management.MBeanServer;
@@ -50,6 +51,7 @@ import javax.management.remote.JMXServiceURL;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.FunctionalUtils;
@@ -159,8 +161,8 @@ public class JMXServer implements Startable {
     }
 
     private void generateJMXPasswordFileIfNeed() {
-        if (Boolean.parseBoolean(System.getProperty(JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY_KEY, JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE))
-            && !existJmxPasswordFile()) {
+        boolean shouldCreateJMXPasswordFile = Boolean.parseBoolean(System.getProperty(JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY_KEY, JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE));
+        if (shouldCreateJMXPasswordFile && !existJmxPasswordFile()) {
             generateJMXPasswordFile();
         }
     }
@@ -170,6 +172,7 @@ public class JMXServer implements Startable {
     }
 
     private void generateJMXPasswordFile() {
+        Preconditions.checkState(!SystemUtils.IS_OS_WINDOWS, "Generating JMX password file is not supported on Windows");
         try {
             File passwordFile = new File(jmxPasswordFilePath);
             if (!passwordFile.exists()) {
