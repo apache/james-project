@@ -138,6 +138,10 @@
 
                     <dt><strong>delay.sends.enabled</strong></dt>
                     <dd>Optional boolean. Defaults to false. Whether to support or not the delay send with JMAP protocol. </dd>
+
+                    <dt><strong>disabled.capabilities</strong></dt>
+                    <dd>Optional, defaults to empty. Coma separated list of JMAP capabilities to reject.
+                        This allows to prevent users from using some specific JMAP extensions.</dd>
                 </dl>
 
             </subsection>

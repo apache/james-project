@@ -22,11 +22,14 @@ package org.apache.james.jmap.core
 import java.net.URI
 import java.util.Optional
 
+import com.google.common.collect.ImmutableList
 import org.apache.commons.configuration2.Configuration
+import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
 import org.apache.james.util.Size
 
+import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object JmapConfigProperties {
@@ -40,6 +43,7 @@ object JmapConfigProperties {
   val DYNAMIC_JMAP_PREFIX_RESOLUTION_ENABLED_PROPERTY: String = "dynamic.jmap.prefix.resolution.enabled"
   val DELAY_SENDS_ENABLED: String = "delay.sends.enabled"
   val AUTHENTICATION_STRATEGIES: String = "authentication.strategy.rfc8621"
+  val DISABLED_CAPABILITIES: String = "disabled.capabilities"
   val JMAP_UPLOAD_QUOTA_LIMIT_PROPERTY: String = "upload.quota.limit"
 }
 
@@ -56,7 +60,7 @@ object JmapRfc8621Configuration {
     websocketPrefixString = WEBSOCKET_URL_PREFIX_DEFAULT,
     maxUploadSize = UPLOAD_LIMIT_DEFAULT)
 
-  def from(configuration: Configuration): JmapRfc8621Configuration =
+  def from(configuration: Configuration): JmapRfc8621Configuration = {
     JmapRfc8621Configuration(
       urlPrefixString = Option(configuration.getString(URL_PREFIX_PROPERTY)).getOrElse(URL_PREFIX_DEFAULT),
       websocketPrefixString = Option(configuration.getString(WEBSOCKET_URL_PREFIX_PROPERTY)).getOrElse(WEBSOCKET_URL_PREFIX_DEFAULT),
@@ -77,7 +81,13 @@ object JmapRfc8621Configuration {
       maxTimeoutSeconds = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_TIMEOUT_SECONDS_PROPERTY, null)).map(Integer2int).toScala,
       maxConnections = Optional.ofNullable(configuration.getInteger(WEB_PUSH_MAX_CONNECTIONS_PROPERTY, null)).map(Integer2int).toScala,
       preventServerSideRequestForgery = Optional.ofNullable(configuration.getBoolean(WEB_PUSH_PREVENT_SERVER_SIDE_REQUEST_FORGERY, null)).orElse(true),
-      authenticationStrategies = Optional.ofNullable(configuration.getList(classOf[String], AUTHENTICATION_STRATEGIES, null)).toScala)
+      authenticationStrategies = Optional.ofNullable(configuration.getList(classOf[String], AUTHENTICATION_STRATEGIES, null)).toScala,
+      disabledCapabilities = Optional.ofNullable(configuration.getList(classOf[String], DISABLED_CAPABILITIES, null))
+        .orElse(ImmutableList.of())
+        .asScala
+        .flatMap(s => CapabilityIdentifier.parse(s).toOption)
+        .toSet)
+  }
 }
 
 case class JmapRfc8621Configuration(urlPrefixString: String,
@@ -90,7 +100,8 @@ case class JmapRfc8621Configuration(urlPrefixString: String,
                                     maxTimeoutSeconds: Option[Int] = None,
                                     maxConnections: Option[Int] = None,
                                     authenticationStrategies: Option[java.util.List[String]] = None,
-                                    preventServerSideRequestForgery: Boolean = true) {
+                                    preventServerSideRequestForgery: Boolean = true,
+                                    disabledCapabilities: Set[CapabilityIdentifier] = Set()) {
 
   val webPushConfiguration: PushClientConfiguration = PushClientConfiguration(
     maxTimeoutSeconds = maxTimeoutSeconds,
