@@ -59,6 +59,10 @@ statics:
     expression: evt.Unmarshaled.message.mdc.sessionId
   - parsed: mdc_user
     expression: evt.Unmarshaled.message.mdc.user
+  - parsed: mdc_remoteIP
+    expression: evt.Unmarshaled.message.mdc.remoteIP
+  - parsed: mdc_username
+    expression: evt.Unmarshaled.message.mdc.username
   - parsed: logger
     expression: evt.Unmarshaled.message.logger
   - parsed: message

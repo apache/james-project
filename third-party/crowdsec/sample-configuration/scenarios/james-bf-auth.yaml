@@ -1,8 +1,8 @@
 type: leaky
-name: crowdsecurity/james
+name: apache-james/bf-auth
 debug: true
 description: "Detect login james bruteforce"
-filter: "evt.Meta.log_type == 'james_failed-auth'"
+filter: "evt.Meta.log_type == 'imap-auth-fail' || evt.Meta.log_type == 'smtp-auth-fail'"
 leakspeed: "1m"
 capacity: 5
 groupby: evt.Meta.source_ip
