@@ -52,6 +52,10 @@ public class BlobStoreConfiguration {
             return implementation(BlobStoreImplName.CASSANDRA);
         }
 
+        default RequireCache file() {
+            return implementation(BlobStoreImplName.FILE);
+        }
+
         default RequireCache s3() {
             return implementation(BlobStoreImplName.S3);
         }
@@ -103,6 +107,7 @@ public class BlobStoreConfiguration {
 
     public enum BlobStoreImplName {
         CASSANDRA("cassandra"),
+        FILE("file"),
         S3("s3");
 
         static String supportedImplNames() {
