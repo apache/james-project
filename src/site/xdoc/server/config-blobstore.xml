@@ -46,6 +46,8 @@
                 <dt><strong>implementation</strong></dt>
                 <dd>cassandra: use cassandra based BlobStore</dd>
                 <dd>s3: use AWS S3 based BlobStore</dd>
+                <dd>file: (experimental) use directly the file system. Useful for legacy architecture based on shared ISCI SANs and/or
+                distributed file system with no object store available.</dd>
                 <dd><b>WARNING</b>: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
                     alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
                 </dd>

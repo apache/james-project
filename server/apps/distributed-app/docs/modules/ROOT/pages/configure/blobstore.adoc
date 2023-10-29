@@ -21,6 +21,8 @@ in GIT to get some examples and hints.
 
 * cassandra: use cassandra based BlobStore
 * objectstorage: use Swift/AWS S3 based BlobStore
+* file: (experimental) use directly the file system. Useful for legacy architecture based on shared ISCI SANs and/or
+ distributed file system with no object store available.
 
 WARNING: JAMES-3591 Cassandra is not made to store large binary content, its use will be suboptimal compared to
 Alternatives (namely S3 compatible BlobStores backed by for instance S3, MinIO or Ozone)
