@@ -21,6 +21,7 @@ package org.apache.james.lmtpserver.hook;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -33,6 +34,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -48,8 +50,6 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.AuditTrail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -79,7 +79,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
             mailboxManager.startProcessingRequest(mailboxSession);
 
             // create inbox if not exist
-            if (!Mono.from(mailboxManager.mailboxExists(inbox, mailboxSession)).block()) {
+            if (Boolean.FALSE.equals(Mono.from(mailboxManager.mailboxExists(inbox, mailboxSession)).block())) {
                 Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
                 LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }
@@ -105,6 +105,13 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 .smtpReturnCode(SMTPRetCode.MAIL_OK)
                 .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received <" + recipient.asString() + ">")
                 .build();
+        } catch (OverQuotaException e) {
+            LOGGER.info("{} is over quota", recipient);
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.denySoft())
+                .smtpReturnCode(SMTPRetCode.QUOTA_EXCEEDED)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.MAILBOX_FULL) + " Over Quota error when delivering message to <" + recipient + ">")
+                .build();
         } catch (MailboxException | UsersRepositoryException e) {
             LOGGER.error("Unexpected error handling DATA stream", e);
             return HookResult.builder()
@@ -125,7 +132,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 .sessionId(session::getSessionID)
                 .protocol("LMTP")
                 .action("Deliver mail")
-                .parameters(() -> ImmutableMap.of("mailId", readOnlyMailEnvelope.getMailId(),
+                .parameters(() -> Map.of("mailId", readOnlyMailEnvelope.getMailId(),
                     "mimeMessageId", readOnlyMailEnvelope.getMimeMessageId().orElse(""),
                     "sender", readOnlyMailEnvelope.getMaybeSender().asString(),
                     "recipient", recipient.asString()))
