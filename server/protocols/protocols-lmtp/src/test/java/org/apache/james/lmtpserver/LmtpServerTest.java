@@ -26,6 +26,9 @@ import static org.apache.mailet.DsnParameters.Notify.FAILURE;
 import static org.apache.mailet.DsnParameters.Notify.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -41,6 +44,8 @@ import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -50,6 +55,8 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -82,6 +89,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.inject.name.Names;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class LmtpServerTest {
     static class RecordingMailProcessor implements MailProcessor {
@@ -397,6 +405,58 @@ class LmtpServerTest {
             assertThat(new String(dataResponse, StandardCharsets.UTF_8))
                 .contains("451 4.0.0 Temporary error deliver message <bob@examplebis.local>\r\n" +
                     "451 4.0.0 Temporary error deliver message <cedric@examplebis.local>");
+        }
+    }
+
+    @Nested
+    class ThrowingOverQuotaExceptionTest {
+        private InMemoryMailboxManager mailboxManager;
+
+        @BeforeEach
+        void setUp()  throws Exception {
+            mailboxManager = mock(InMemoryMailboxManager.class);
+
+            lmtpServerFactory = createLMTPServer(createMockProtocolHandlerLoaderBase()
+                .put(binder -> binder.bind(MailboxManager.class).annotatedWith(Names.named("mailboxmanager")).toInstance(mailboxManager))
+                .build(), "lmtpnormaldsn.xml");
+        }
+
+        @Test
+        void shouldHandleOverQuotaException() throws Exception {
+            MessageManager messageManager = mock(MessageManager.class);
+            MailboxSession mailboxSession = mock(MailboxSession.class);
+
+            when(mailboxManager.createSystemSession(any(Username.class))).thenReturn(mailboxSession);
+            when(mailboxManager.mailboxExists(any(), any())).thenReturn(Mono.just(true));
+            when(mailboxManager.getMailbox(any(MailboxPath.class), any())).thenReturn(messageManager);
+            when(messageManager.appendMessage(any(), any(MailboxSession.class)))
+                .thenThrow(new OverQuotaException("You have exceeded your quota", QuotaCountLimit.count(0),
+                    QuotaCountUsage.count(0)));
+
+            SocketChannel server = SocketChannel.open();
+            server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
+            readBytes(server);
+
+            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("RCPT TO: <bob@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("RCPT TO: <cedric@examplebis.local>\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server);
+            server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+            readBytes(server); // needed to synchronize
+            server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+            byte[] dataResponse = readBytes(server);
+            server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+                .contains("552 5.2.2 Over Quota error when delivering message to <bob@examplebis.local>\r\n" +
+                    "552 5.2.2 Over Quota error when delivering message to <cedric@examplebis.local>");
         }
     }
 
