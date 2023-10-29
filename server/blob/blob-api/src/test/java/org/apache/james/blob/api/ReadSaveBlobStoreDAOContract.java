@@ -320,8 +320,11 @@ public interface ReadSaveBlobStoreDAOContract {
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
         Mono.from(store.save(TEST_BUCKET_NAME, OTHER_TEST_BLOB_ID, ByteSource.wrap(ELEVEN_KILOBYTES))).block();
 
-        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME)).collectList().block())
-            .containsOnly(TEST_BLOB_ID, OTHER_TEST_BLOB_ID);
+        assertThat(Flux.from(testee().listBlobs(TEST_BUCKET_NAME))
+            .map(BlobId::asString)
+            .collectList()
+            .block())
+            .containsOnly(TEST_BLOB_ID.asString(), OTHER_TEST_BLOB_ID.asString());
     }
 
     static Stream<Arguments> blobs() {
