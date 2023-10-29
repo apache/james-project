@@ -29,6 +29,7 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.ObjectStorageHealthCheck;
 import org.apache.james.blob.cassandra.CassandraBlobStoreDAO;
 import org.apache.james.blob.cassandra.cache.CachedBlobStore;
+import org.apache.james.blob.file.FileBlobStoreDAO;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreDAO;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.blobstore.validation.BlobStoreConfigurationValidationStartUpCheck.StorageStrategySupplier;
@@ -72,6 +73,15 @@ public class BlobStoreModulesChooser {
 
             bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(S3BlobStoreDAO.class);
             Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(ObjectStorageHealthCheck.class);
+        }
+    }
+
+    static class FileBlobStoreDAODeclarationModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            install(new CassandraBucketModule());
+
+            bind(BlobStoreDAO.class).annotatedWith(Names.named(UNENCRYPTED)).to(FileBlobStoreDAO.class);
         }
     }
 
@@ -119,6 +129,8 @@ public class BlobStoreModulesChooser {
                 return new CassandraBlobStoreDAODeclarationModule();
             case S3:
                 return new ObjectStorageBlobStoreDAODeclarationModule();
+            case FILE:
+                return new FileBlobStoreDAODeclarationModule();
             default:
                 throw new RuntimeException("Unsupported blobStore implementation " + implementation);
         }

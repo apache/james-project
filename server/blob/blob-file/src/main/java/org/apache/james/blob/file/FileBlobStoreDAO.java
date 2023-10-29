@@ -34,6 +34,8 @@ import java.nio.file.NoSuchFileException;
 import java.time.Duration;
 import java.util.Collection;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -58,6 +60,7 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     private final File root;
     private final  BlobId.Factory blobIdFactory;
 
+    @Inject
     public FileBlobStoreDAO(FileSystem fileSystem, BlobId.Factory blobIdFactory) throws FileNotFoundException {
         root = fileSystem.getFile("file://var/blob");
         this.blobIdFactory = blobIdFactory;
