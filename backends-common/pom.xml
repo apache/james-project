@@ -37,6 +37,7 @@
         <module>cassandra</module>
         <module>jpa</module>
         <module>opensearch</module>
+        <module>postgres</module>
         <module>pulsar</module>
         <module>rabbitmq</module>
         <module>redis</module>
