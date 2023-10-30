@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.james.util.Host;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -35,7 +36,7 @@ public class JmxConfiguration {
     public static final int DEFAULT_PORT = 9999;
     public static final boolean ENABLED = true;
     public static final String JMX_CREDENTIAL_GENERATION_ENABLE_PROPERTY_KEY = "james.jmx.credential.generation";
-    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE = "true";
+    public static final String JMX_CREDENTIAL_GENERATION_ENABLE_DEFAULT_VALUE = Boolean.valueOf(!SystemUtils.IS_OS_WINDOWS).toString();
     public static final String PASSWORD_FILE_NAME = "jmxremote.password";
     public static final String ACCESS_FILE_NAME = "jmxremote.access";
     public static final String JAMES_ADMIN_USER_DEFAULT = "james-admin";
