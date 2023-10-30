@@ -51,14 +51,14 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Long> spaceUsedBy(Username username) {
-        CassandraQuotaCurrentValueDao.QuotaKey quotaKey = asQuotaKey(username);
+        QuotaCurrentValue.Key quotaKey = asQuotaKey(username);
 
         return currentValueDao.getQuotaCurrentValue(quotaKey).map(QuotaCurrentValue::getCurrentValue)
             .switchIfEmpty(Mono.just(0L));
     }
 
-    private CassandraQuotaCurrentValueDao.QuotaKey asQuotaKey(Username username) {
-        return CassandraQuotaCurrentValueDao.QuotaKey.of(
+    private QuotaCurrentValue.Key asQuotaKey(Username username) {
+        return QuotaCurrentValue.Key.of(
             QUOTA_COMPONENT,
             username.asString(),
             QuotaType.SIZE);
@@ -66,7 +66,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> updateSpaceUsed(Username username, long spaceUsed) {
-        CassandraQuotaCurrentValueDao.QuotaKey quotaKey = asQuotaKey(username);
+        QuotaCurrentValue.Key quotaKey = asQuotaKey(username);
 
         return currentValueDao.deleteQuotaCurrentValue(quotaKey)
             .then(currentValueDao.increase(quotaKey, spaceUsed));
@@ -93,7 +93,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> removeQuota() {
-        return limitDao.deleteQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(QUOTA_COMPONENT, QuotaScope.GLOBAL, GLOBAL, QuotaType.SIZE));
+        return limitDao.deleteQuotaLimit(QuotaLimit.QuotaLimitKey.of(QUOTA_COMPONENT, QuotaScope.GLOBAL, GLOBAL, QuotaType.SIZE));
     }
 
     @Override
@@ -117,7 +117,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> removeQuota(Username username) {
-        return limitDao.deleteQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(
+        return limitDao.deleteQuotaLimit(QuotaLimit.QuotaLimitKey.of(
             QUOTA_COMPONENT, QuotaScope.USER, username.asString(), QuotaType.SIZE));
     }
 

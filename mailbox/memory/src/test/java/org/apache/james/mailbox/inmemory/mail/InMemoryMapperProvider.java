@@ -90,7 +90,7 @@ public class InMemoryMapperProvider implements MapperProvider {
     }
 
     @Override
-    public MessageUid generateMessageUid() {
+    public MessageUid generateMessageUid(Mailbox mailbox) {
         return messageUidProvider.next();
     }
 
@@ -119,13 +119,13 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public ModSeq generateModSeq(Mailbox mailbox) throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
+        return inMemoryMailboxSessionMapperFactory.getModSeqProvider(null)
                 .nextModSeq(mailbox);
     }
 
     @Override
     public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
+        return inMemoryMailboxSessionMapperFactory.getModSeqProvider(null)
             .highestModSeq(mailbox);
     }
 

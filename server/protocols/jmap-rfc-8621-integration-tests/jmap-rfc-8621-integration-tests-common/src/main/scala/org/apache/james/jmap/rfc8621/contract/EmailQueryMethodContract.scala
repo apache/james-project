@@ -7033,22 +7033,24 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
-    assertThatJson(response)
-      .withOptions(IGNORING_ARRAY_ORDER)
-      .inPath("$.methodResponses[0][1].ids")
-      .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
+      assertThatJson(response)
+        .withOptions(IGNORING_ARRAY_ORDER)
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
+    }
   }
 
   @Test

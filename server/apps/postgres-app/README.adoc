@@ -1,0 +1,157 @@
+= Guice-Postgres Server How-to
+
+This server targets reactive James deployments with postgresql database.
+
+== Requirements
+
+* Java 11 SDK
+
+=== With Postgresql only
+
+Firstly, create your own user network on Docker for the James environment:
+
+    $ docker network create --driver bridge james
+
+Third party compulsory dependencies:
+
+* Postgresql 16.0
+
+[source]
+----
+$ docker run -d --network james -p 5432:5432 --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.0
+----
+
+=== Distributed version
+
+Here you have the choice of using other third party softwares to handle object data storage, search indexing and event bus.
+
+For now, dependencies supported are:
+
+* OpenSearch 2.8.0
+
+[source]
+----
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.8.0
+----
+
+* Zenko Cloudserver or AWS S3
+
+[source]
+----
+$ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 registry.scality.com/cloudserver/cloudserver:8.7.25
+----
+
+* RabbitMQ 3.12.1
+
+[source]
+----
+$ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.12.1-management
+----
+
+== Running manually
+
+=== Running with Postgresql only
+
+To run James manually, you have to create a directory containing required configuration files.
+
+James requires the configuration to be in a subfolder of working directory that is called
+**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration)
+is provided with some default values you may need to replace. You will need to update its content to match your needs.
+
+Also you might need to add the files like in the
+[sample directory](https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration-single)
+to not have OpenSearch indexing enabled by default for the search.
+
+You also need to generate a keystore with the following command:
+
+[source]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+Once everything is set up, you just have to run the jar with:
+
+[source]
+----
+$ java -Dworking.directory=. -Djdk.tls.ephemeralDHKeySize=2048 -Dlogback.configurationFile=conf/logback.xml -jar james-server-postgres-app.jar
+----
+
+In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument
+`--generate-keystore` when running, James will auto-generate keystore file with the default setting that is declared in
+`jmap.properties` (tls.keystoreURL, tls.secret).
+
+[source]
+----
+$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar james-server-postgres-app.jar --generate-keystore
+----
+
+Note that binding ports below 1024 requires administrative rights.
+
+=== Running distributed
+
+If you want to use the distributed version of James Postgres app, you will need to add configuration in the **conf** folder like in the
+[sample directory](https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration-distributed).
+
+Then you need to generate the keystore, rebuild the application jar and run it like above.
+
+== Docker compose
+
+To import the image locally:
+
+[source]
+----
+docker image load -i target/jib-image.tar
+----
+
+=== With Postgresql only
+
+We have a docker compose for running James Postgresql app alongside Postgresql. To run it, simply type:
+
+....
+docker compose up -d
+....
+
+=== Distributed
+
+We also have a distributed version of the James postgresql app with:
+
+- OpenSearch as a search indexer
+- S3 as the object storage
+- RabbitMQ as the event bus
+
+To run it, simply type:
+
+....
+docker compose -f docker-compose-distributed.yml up -d
+....
+
+== Administration Operations
+=== Clean up data
+
+To clean up some specific data, that will never be used again after a long time, you can execute the SQL queries `clean_up.sql`.
+The never used data are:
+- mailbox_change
+- email_change
+- vacation_notification_registry
+
+## Development
+
+### How to track the stats of the statement execution
+
+Using the [`pg_stat_statements` extension](https://www.postgresql.org/docs/current/pgstatstatements.html), you can track the stats of the statement execution. To install it, you can execute the following SQL query:
+
+```sql
+create extension if not exists pg_stat_statements;
+alter system set shared_preload_libraries='pg_stat_statements';
+
+-- restart postgres
+-- optional
+alter system set pg_stat_statements.max = 100000;
+alter system set pg_stat_statements.track = 'all';
+```
+
+Then you can query the stats of the statement execution by executing the following SQL query:
+
+```sql
+select query, mean_exec_time, total_exec_time, calls from pg_stat_statements order by total_exec_time desc;
+```

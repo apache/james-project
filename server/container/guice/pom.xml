@@ -37,6 +37,7 @@
         <module>blob/deduplication-gc</module>
         <module>blob/export</module>
         <module>blob/memory</module>
+        <module>blob/postgres</module>
         <module>blob/s3</module>
         <module>cassandra</module>
         <module>common</module>
@@ -49,6 +50,7 @@
         <module>mailbox</module>
         <module>mailbox-jpa</module>
         <module>mailbox-plugin-deleted-messages-vault</module>
+        <module>mailbox-postgres</module>
         <module>mailet</module>
         <module>mailrepository-blob</module>
         <module>mailrepository-cassandra</module>
@@ -56,6 +58,7 @@
         <module>memory</module>
         <module>onami</module>
         <module>opensearch</module>
+        <module>postgres-common</module>
         <module>protocols/imap</module>
         <module>protocols/jmap</module>
         <module>protocols/lmtp</module>
@@ -77,6 +80,7 @@
         <module>queue/rabbitmq</module>
         <module>sieve-file</module>
         <module>sieve-jpa</module>
+        <module>sieve-postgres</module>
         <module>testing</module>
         <module>utils</module>
     </modules>
@@ -152,6 +156,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-mailbox-postgres</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-mailet</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -172,6 +181,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-opensearch</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-pop</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -183,6 +198,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-sieve-jpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-sieve-postgres</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -248,6 +268,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-postgres-common-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-postgres-common-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>mailrepository-blob</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -280,6 +311,12 @@
                 <groupId>${james.groupId}</groupId>
                 <artifactId>queue-rabbitmq-guice</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>queue-rabbitmq-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>com.linagora</groupId>

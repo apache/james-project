@@ -34,6 +34,7 @@
         <module>distributed-jmap-rfc-8621-integration-tests</module>
         <module>jmap-rfc-8621-integration-tests-common</module>
         <module>memory-jmap-rfc-8621-integration-tests</module>
+        <module>postgres-jmap-rfc-8621-integration-tests</module>
     </modules>
 
     <dependencyManagement>
