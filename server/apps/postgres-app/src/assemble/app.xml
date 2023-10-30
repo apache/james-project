@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed  under the  License is distributed on an "AS IS" BASIS,
+WITHOUT  WARRANTIES OR CONDITIONS  OF ANY KIND, either  express  or
+implied.
+
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>app</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+
+    <fileSets>
+        <!-- include README -->
+        <fileSet>
+            <directory>.</directory>
+            <directoryMode>0755</directoryMode>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>README*</include>
+            </includes>
+        </fileSet>
+        <!-- include configs -->
+        <fileSet>
+            <directory>sample-configuration</directory>
+            <directoryMode>0755</directoryMode>
+            <outputDirectory>conf</outputDirectory>
+            <!-- set some sane security defaults for config files -->
+            <fileMode>0600</fileMode>
+        </fileSet>
+        <!-- include stuff from jar plugin -->
+        <fileSet>
+            <directory>target/james-server-jpa-app.lib</directory>
+            <outputDirectory>/james-server-jpa-app.lib</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0600</fileMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+    <files>
+        <file>
+            <source>src/assemble/license-for-binary.txt</source>
+            <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
+            <destName>LICENSE</destName>
+            <lineEnding>crlf</lineEnding>
+        </file>
+        <file>
+            <source>README.adoc</source>
+            <outputDirectory>/</outputDirectory>
+            <fileMode>0644</fileMode>
+            <lineEnding>crlf</lineEnding>
+        </file>
+        <file>
+            <source>src/assemble/extensions-jars.txt</source>
+            <outputDirectory>/extensions-jars</outputDirectory>
+            <fileMode>0644</fileMode>
+            <lineEnding>crlf</lineEnding>
+            <destName>README.md</destName>
+        </file>
+        <file>
+            <source>target/james-server-postgres-app.jar</source>
+            <outputDirectory>/</outputDirectory>
+            <fileMode>0755</fileMode>
+            <destName>james-server-postgres-app.jar</destName>
+        </file>
+    </files>
+</assembly>

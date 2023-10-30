@@ -1,0 +1,19 @@
+{
+  "name": "POP3 Plugin",
+  "id": "pop3",
+  "instrumentation": [
+    {
+      "className": "org.apache.james.protocols.pop3.core.AbstractPOP3CommandHandler",
+      "methodName": "onCommand",
+      "methodParameterTypes": [
+        ".."
+      ],
+      "captureKind": "transaction",
+      "transactionType": "POP3",
+      "transactionNameTemplate": "POP3 Command: {{this.class.name}}",
+      "alreadyInTransactionBehavior": "capture-trace-entry",
+      "traceEntryMessageTemplate": "{{this.class.name}}.{{methodName}}",
+      "timerName": "pop3Timer"
+    }
+  ]
+}

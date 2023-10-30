@@ -1,0 +1,29 @@
+version: '3'
+
+# In order to start James Postgres app on top of mariaDB:
+# 1. Download the driver: `wget https://jdbc.postgresql.org/download/postgresql-42.5.4.jar`
+# 2. Generate the keystore with the default password `james72laBalle`: `keytool -genkey -alias james -keyalg RSA -keystore keystore`
+# 3. Start Postgres: `docker-compose up -d postgres`
+# 4. Start James: `docker-compose up james`
+
+services:
+
+  james:
+    depends_on:
+      - postgres
+    image: apache/james:postgres-latest
+    container_name: james
+    hostname: james.local
+    volumes:
+      - $PWD/postgresql-42.5.4.jar:/root/libs/postgresql-42.5.4.jar
+      - $PWD/sample-configuration/james-database-postgres.properties:/root/conf/james-database.properties
+      - $PWD/src/test/resources/keystore:/root/conf/keystore
+
+  postgres:
+    image: postgres:16.0
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=james
+      - POSTGRES_USER=james
+      - POSTGRES_PASSWORD=secret1

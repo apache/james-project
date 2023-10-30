@@ -1,0 +1,145 @@
+= Guice-Postgres Server How-to
+
+// TODO: rewrite this doc by using Postgres instead of JPA
+This server target single node James deployments. By default, the derby database is used.
+
+== Requirements
+
+ * Java 11 SDK
+
+== Running
+
+To run james, you have to create a directory containing required configuration files.
+
+James requires the configuration to be in a subfolder of working directory that is called
+**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/jpa-guice/sample-configuration)
+is provided with some default values you may need to replace. You will need to update its content to match your needs.
+
+You also need to generate a keystore with the following command:
+
+[source]
+----
+$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
+----
+
+Once everything is set up, you just have to run the jar with:
+
+[source]
+----
+$ java -javaagent:james-server-postgres-app.lib/openjpa-3.1.2.jar \
+  -Dworking.directory=. \
+  -Djdk.tls.ephemeralDHKeySize=2048 \
+  -Dlogback.configurationFile=conf/logback.xml \
+  -jar james-server-postgres-app.jar
+----
+
+Note that binding ports below 1024 requires administrative rights.
+
+== Docker distribution
+
+To import the image locally:
+
+[source]
+----
+docker image load -i target/jib-image.tar
+----
+
+Then run it:
+
+[source]
+----
+docker run apache/james:jpa-latest
+----
+
+Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags)
+to pass extra JVM flags. For instance:
+
+[source]
+----
+docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:jpa-latest
+----
+
+For security reasons you are required to generate your own keystore, that you can mount into the container via a volume:
+
+[source]
+----
+keytool -genkey -alias james -keyalg RSA -keystore keystore
+docker run -v $PWD/keystore:/root/conf/keystore apache/james:jpa-latest
+----
+
+In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `--generate-keystore` when running,
+James will auto-generate keystore file with the default setting that is declared in `jmap.properties` (tls.keystoreURL, tls.secret)
+
+[source]
+----
+docker run --network james apache/james:jpa-latest --generate-keystore
+----
+
+[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
+Disabled by default, its java agent can easily be enabled:
+
+
+[source]
+----
+docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:jpa-latest
+----
+
+The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
+
+
+[source]
+----
+docker exec CONTAINER-ID james-cli ListDomains
+----
+
+Note that you can create a domain via an environment variable. This domain will be created upon James start:
+
+[source]
+----
+--environment DOMAIN=domain.tld
+----
+
+
+=== Using alternative JDBC drivers
+
+==== Using alternative JDBC drivers with the ZIP package
+
+We will need to add the driver JAR on the classpath.
+
+This can be done with the following command:
+
+....
+java \
+   -javaagent:james-server-postgres-app.lib/openjpa-3.2.0.jar \
+   -Dworking.directory=. \
+   -Djdk.tls.ephemeralDHKeySize=2048 \
+   -Dlogback.configurationFile=conf/logback.xml \
+   -cp "james-server-postgres-app.jar:james-server-postgres-app.lib/*:jdbc-driver.jar" \
+   org.apache.james.JPAJamesServerMain
+....
+
+With `jdbc-driver.jar` being the JAR file of your driver, placed in the current directory.
+
+==== Using alternative JDBC drivers with docker
+
+In `james-database.properties`, one can specify any JDBC driver on the class path.
+
+With docker, such drivers can be added to the classpath by placing the driver JAR in a volume
+and mounting it within `/root/libs` directory.
+
+We do ship a [docker-compose](https://github.com/apache/james-project/blob/master/server/apps/jpa-smtp-app/docker-compose.yml)
+file demonstrating James JPA app usage with MariaDB. In order to run it:
+
+....
+# 1. Download the driver:
+wget https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.2/mariadb-java-client-2.7.2.jar
+
+# 2. Generate the keystore with the default password `james72laBalle`:
+keytool -genkey -alias james -keyalg RSA -keystore keystore
+
+# 3. Start MariaDB
+docker-compose up -d mariadb
+
+# 4. Start James
+docker-compose up james
+....
