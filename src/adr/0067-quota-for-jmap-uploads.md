@@ -6,7 +6,7 @@ Date: 2023-08-17
 
 Accepted (lazy consensus).
 
-Not implemented yet.
+Implemented.
 
 Overrides [ADR-48 Cleaup JMAP uploads](0048-cleanup-jmap-uploads.md).
 
