@@ -6,7 +6,7 @@ Date: 2023-08-18
 
 Accepted (lazy consensus).
 
-Not implemented yet.
+Implemented.
 
 ## Context
 
