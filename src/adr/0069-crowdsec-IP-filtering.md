@@ -17,7 +17,7 @@ Currently, there is no mechanism to check harmful IP addresses implementing atta
 
 ## Decision 
 
-To that end, James is integrated with [Crowdsec](https://www.crowdsec.net/). Crowdsec will check James logs, based on defined scenarios, Crowdsec can detect malevolent behaviors, and block them from accessing James at various levels (infrastructural, system, applicative). For basic, we implement Crowdsec to detect at system level.
+To that end, James is integrated with [Crowdsec](https://www.crowdsec.net/). Crowdsec will check James logs, based on defined scenarios, Crowdsec can detect malevolent behaviors, and block them from accessing James at various levels (infrastructural, system, applicative). For basic, we implement Crowdsec to detect at application level.
 
 A quick introduction about Crowdsec:
 
