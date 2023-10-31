@@ -50,6 +50,7 @@
         <module>mailbox</module>
         <module>mailbox-jpa</module>
         <module>mailbox-plugin-deleted-messages-vault</module>
+        <module>mailbox-postgres</module>
         <module>mailet</module>
         <module>mailrepository-blob</module>
         <module>mailrepository-cassandra</module>
@@ -159,6 +160,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-mailbox-postgres</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-mailet</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -250,6 +256,17 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-jpa-common-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-postgres-common-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-postgres-common-guice</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
