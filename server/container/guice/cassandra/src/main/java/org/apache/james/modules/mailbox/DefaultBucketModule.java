@@ -25,7 +25,7 @@ import org.apache.james.blob.api.BucketName;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-public class CassandraBucketModule extends AbstractModule {
+public class DefaultBucketModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(BucketName.class)
