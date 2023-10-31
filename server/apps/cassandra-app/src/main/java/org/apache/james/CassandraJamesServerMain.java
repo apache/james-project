@@ -41,13 +41,13 @@ import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.data.CassandraVacationModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
 import org.apache.james.modules.mailbox.CassandraBlobStoreDependenciesModule;
-import org.apache.james.modules.mailbox.CassandraBucketModule;
 import org.apache.james.modules.mailbox.CassandraDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
 import org.apache.james.modules.mailbox.CassandraMailboxQuotaLegacyModule;
 import org.apache.james.modules.mailbox.CassandraMailboxQuotaModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
+import org.apache.james.modules.mailbox.DefaultBucketModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.mailrepository.CassandraMailRepositoryModule;
 import org.apache.james.modules.metrics.CassandraMetricsModule;
@@ -171,7 +171,7 @@ public class CassandraJamesServerMain implements JamesServerMain {
 
     protected static final Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
         new MailetProcessingModule(),
-        new CassandraBucketModule(),
+        new DefaultBucketModule(),
         new CassandraBlobStoreModule(),
         REQUIRE_TASK_MANAGER_MODULE,
         new TaskManagerModule(),

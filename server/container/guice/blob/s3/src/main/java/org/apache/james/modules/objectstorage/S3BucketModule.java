@@ -28,7 +28,7 @@ import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 
-public class DefaultBucketModule extends AbstractModule {
+public class S3BucketModule extends AbstractModule {
     @Provides
     @Singleton
     private BucketName defaultBucket(S3BlobStoreConfiguration s3BlobStoreConfiguration) {

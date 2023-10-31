@@ -33,8 +33,8 @@ import org.apache.james.modules.data.JPAUsersRepositoryModule;
 import org.apache.james.modules.data.MemoryDelegationStoreModule;
 import org.apache.james.modules.mailbox.BlobStoreAPIModule;
 import org.apache.james.modules.mailrepository.BlobstoreMailRepositoryModule;
-import org.apache.james.modules.objectstorage.DefaultBucketModule;
 import org.apache.james.modules.objectstorage.S3BlobStoreModule;
+import org.apache.james.modules.objectstorage.S3BucketModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.DataRoutesModules;
@@ -69,7 +69,7 @@ public class Main implements JamesServerMain {
     private static final Module BLOB_MODULE = Modules.combine(
             new BlobStoreAPIModule(),
             new S3BlobStoreModule(),
-            new DefaultBucketModule(),
+            new S3BucketModule(),
             binder -> {
                 binder.bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class);
                 binder.bind(BlobStore.class)
