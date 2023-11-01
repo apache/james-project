@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
@@ -42,6 +43,7 @@ public class FetchData {
         private boolean setSeen = false;
         private long changedSince = -1;
         private boolean vanished;
+        private Optional<PartialRange> partialRange = Optional.empty();
 
         public Builder fetch(Item item) {
             itemToFetch.add(item);
@@ -60,6 +62,11 @@ public class FetchData {
         public Builder changedSince(long changedSince) {
             this.changedSince = changedSince;
             return fetch(Item.MODSEQ);
+        }
+
+        public Builder partial(PartialRange partialRange) {
+            this.partialRange = Optional.of(partialRange);
+            return this;
         }
 
         /**
@@ -89,7 +96,7 @@ public class FetchData {
         }
 
         public FetchData build() {
-            return new FetchData(itemToFetch, bodyElements.build(), setSeen, changedSince, vanished);
+            return new FetchData(itemToFetch, bodyElements.build(), partialRange, setSeen, changedSince, vanished);
         }
     }
 
@@ -115,13 +122,15 @@ public class FetchData {
 
     private final EnumSet<Item> itemToFetch;
     private final ImmutableSet<BodyFetchElement> bodyElements;
+    private final Optional<PartialRange> partialRange;
     private final boolean setSeen;
     private final long changedSince;
     private final boolean vanished;
 
-    private FetchData(EnumSet<Item> itemToFetch, ImmutableSet<BodyFetchElement> bodyElements, boolean setSeen, long changedSince, boolean vanished) {
+    private FetchData(EnumSet<Item> itemToFetch, ImmutableSet<BodyFetchElement> bodyElements, Optional<PartialRange> partialRange, boolean setSeen, long changedSince, boolean vanished) {
         this.itemToFetch = itemToFetch;
         this.bodyElements = bodyElements;
+        this.partialRange = partialRange;
         this.setSeen = setSeen;
         this.changedSince = changedSince;
         this.vanished = vanished;
@@ -142,7 +151,11 @@ public class FetchData {
     public long getChangedSince() {
         return changedSince;
     }
-    
+
+    public Optional<PartialRange> getPartialRange() {
+        return partialRange;
+    }
+
     /**
      * Return true if the VANISHED FETCH modifier was used as stated in <code>QRESYNC<code> extension
      */
