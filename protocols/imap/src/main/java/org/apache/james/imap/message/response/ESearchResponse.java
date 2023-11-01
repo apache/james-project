@@ -20,9 +20,11 @@
 package org.apache.james.imap.message.response;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.PartialRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.ModSeq;
@@ -32,12 +34,15 @@ public class ESearchResponse implements ImapResponseMessage {
     private final long maxUid;
     private final long count;
     private final IdRange[] all;
+    private final IdRange[] partialUids;
     private final Tag tag;
     private final boolean useUid;
     private final List<SearchResultOption> options;
     private final ModSeq highestModSeq;
+    private final Optional<PartialRange> partialRange;
 
-    public ESearchResponse(long minUid, long maxUid, long count, IdRange[] all, ModSeq highestModSeq, Tag tag, boolean useUid, List<SearchResultOption> options) {
+    public ESearchResponse(long minUid, long maxUid, long count, IdRange[] all, IdRange[] partialUids, ModSeq highestModSeq, Tag tag, boolean useUid, List<SearchResultOption> options, Optional<PartialRange> partialRange) {
+        this.partialUids = partialUids;
         this.options = options;
         this.minUid = minUid;
         this.maxUid = maxUid;
@@ -46,8 +51,13 @@ public class ESearchResponse implements ImapResponseMessage {
         this.tag = tag;
         this.useUid = useUid;
         this.highestModSeq = highestModSeq;
+        this.partialRange = partialRange;
     }
-    
+
+    public IdRange[] getPartialUids() {
+        return partialUids;
+    }
+
     public final long getCount() {
         return count;
     }
@@ -63,7 +73,11 @@ public class ESearchResponse implements ImapResponseMessage {
     public IdRange[] getAll() {
         return all;
     }
-    
+
+    public Optional<PartialRange> getPartialRange() {
+        return partialRange;
+    }
+
     public Tag getTag() {
         return tag;
     }

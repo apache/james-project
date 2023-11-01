@@ -83,7 +83,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchProcessor.class);
 
     protected static final String SEARCH_MODSEQ = "SEARCH_MODSEQ";
-    private static final List<Capability> CAPS = ImmutableList.of(Capability.of("WITHIN"), Capability.of("ESEARCH"), Capability.of("SEARCHRES"));
+    private static final List<Capability> CAPS = ImmutableList.of(Capability.of("WITHIN"),
+        Capability.of("ESEARCH"),
+        Capability.of("SEARCHRES"),
+        Capability.of("PARTIAL"));
 
     @Inject
     public SearchProcessor(MailboxManager mailboxManager, StatusResponseFactory factory,
@@ -166,7 +169,11 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     private ImapResponseMessage handleResultOptions(SearchRequest request, ImapSession session, ModSeq highestModSeq, LongList ids) {
         List<SearchResultOption> resultOptions = request.getSearchOperation().getResultOptions();
 
-        IdRange[] idRanges = asRanges(ids);
+        IdRange[] idRanges = asRanges(
+            request.getSearchOperation()
+                .getPartialRange()
+                .map(partialRange -> partialRange.filter(ids))
+                .orElse(ids));
 
         boolean esearch = false;
         for (SearchResultOption resultOption : resultOptions) {
@@ -188,7 +195,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
             // Save the sequence-set for later usage. This is part of SEARCHRES
             if (resultOptions.contains(SearchResultOption.SAVE)) {
-                if (resultOptions.contains(SearchResultOption.ALL) || resultOptions.contains(SearchResultOption.COUNT)) {
+                if (resultOptions.contains(SearchResultOption.ALL) || resultOptions.contains(SearchResultOption.COUNT) || resultOptions.contains(SearchResultOption.PARTIAL)) {
                     // if the options contain ALL or COUNT we need to save the complete sequence-set
                     SearchResUtil.saveSequenceSet(session, idRanges);
                 } else {
@@ -204,12 +211,28 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                     SearchResUtil.saveSequenceSet(session, savedRanges.toArray(IdRange[]::new));
                 }
             }
-            return new ESearchResponse(min, max, count, idRanges, highestModSeq, request.getTag(), request.isUseUids(), resultOptions);
+            return new ESearchResponse(min, max, count,
+                allRange(resultOptions, idRanges),
+                partialRange(resultOptions, idRanges), highestModSeq, request.getTag(), request.isUseUids(), resultOptions, request.getSearchOperation().getPartialRange());
         } else {
             // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
             SearchResUtil.saveSequenceSet(session, idRanges);
             return new SearchResponse(ids, highestModSeq);
         }
+    }
+
+    private IdRange[] allRange(List<SearchResultOption> resultOptions, IdRange[] idRanges) {
+        if (resultOptions.contains(SearchResultOption.PARTIAL)) {
+            return null;
+        }
+        return idRanges;
+    }
+
+    private IdRange[] partialRange(List<SearchResultOption> resultOptions, IdRange[] idRanges) {
+        if (resultOptions.contains(SearchResultOption.PARTIAL)) {
+            return idRanges;
+        }
+        return null;
     }
 
     /**
