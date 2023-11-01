@@ -33,8 +33,9 @@ Set up a new maven project dedicated to Crowdsec extension. This allows to be em
 using the external-jar loading mechanism. With this way, the extension could be dropped in one's James installation, and not a runtime dependency.
 
 ### How does Crowdsec apply?
-- Crowdsec will analyze logs from James, then based on their patterns in parsers, it can detect each behavior in James. 
-- Scenarios are YAML files that allow to detect a specific behavior, usually an attack. With James, we have `james-bf-auth`, `dictionary-attack` scenario.![img.png](img/adr-69-scenario-diagram.png)
+- Many attacks on James via IMAP, SMTP, JMAP can be detected by Crowdsec
+- Crowdsec analyzes logs from James, then based on their patterns in parsers, it can detect each behavior in James. 
+- Scenarios are YAML files that allow to detect a specific behavior, usually an attack. With James, we detect bruteforce login attack and Dictionary attack.![img.png](img/adr-69-scenario-diagram.png)
 - Each line log is an event in Crowdsec. If an event triggers the condition in Crowdsec, Crowdsec will send an alert to the Local API, and make a decision (ban)
 - James connects to Crowdsec via https protocol with reactor http client to query the decision from Crowdsec
 
