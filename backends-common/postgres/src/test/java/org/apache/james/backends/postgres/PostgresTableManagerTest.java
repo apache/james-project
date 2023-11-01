@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -83,11 +84,11 @@ public class PostgresTableManagerTest {
         String tableName = "tableName1";
 
         PostgresTable table = PostgresTable.name(tableName)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .build();
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
+
         PostgresModule module = PostgresModule.table(table);
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
@@ -107,15 +108,13 @@ public class PostgresTableManagerTest {
         String tableName1 = "tableName1";
 
         PostgresTable table1 = PostgresTable.name(tableName1)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName1)
-                .column("columA", SQLDataType.UUID.notNull()))
-            .build();
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("columA", SQLDataType.UUID.notNull()));
 
         String tableName2 = "tableName2";
         PostgresTable table2 = PostgresTable.name(tableName2)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName2)
-                .column("columB", SQLDataType.INTEGER))
-            .build();
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("columB", SQLDataType.INTEGER));
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1, table2));
 
@@ -135,9 +134,8 @@ public class PostgresTableManagerTest {
         String tableName1 = "tableName1";
 
         PostgresTable table1 = PostgresTable.name(tableName1)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName1)
-                .column("columA", SQLDataType.UUID.notNull()))
-            .build();
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("columA", SQLDataType.UUID.notNull()));
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
 
@@ -152,18 +150,16 @@ public class PostgresTableManagerTest {
     void initializeTableShouldNotChangeTableStructureOfExistTable() {
         String tableName1 = "tableName1";
         PostgresTable table1 = PostgresTable.name(tableName1)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName1)
-                .column("columA", SQLDataType.UUID.notNull()))
-            .build();
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("columA", SQLDataType.UUID.notNull()));
 
         tableManagerFactory.apply(PostgresModule.table(table1))
             .initializeTables()
             .block();
 
         PostgresTable table1Changed = PostgresTable.name(tableName1)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName1)
-                .column("columB", SQLDataType.INTEGER))
-            .build();
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("columB", SQLDataType.INTEGER));
 
         tableManagerFactory.apply(PostgresModule.table(table1Changed))
             .initializeTables()
@@ -179,21 +175,19 @@ public class PostgresTableManagerTest {
         String tableName = "tb_test_1";
 
         PostgresTable table = PostgresTable.name(tableName)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull())
-            )
-            .build();
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
-            .createIndexStep(dsl -> dsl.createIndex(indexName)
+            .createIndexStep((dsl, idn) -> dsl.createIndex(idn)
                 .on(DSL.table(tableName), DSL.field("colum1").asc()));
 
         PostgresModule module = PostgresModule.builder()
-            .table(table)
-            .index(index)
+            .addTable(table)
+            .addIndex(index)
             .build();
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
@@ -213,26 +207,24 @@ public class PostgresTableManagerTest {
         String tableName = "tb_test_1";
 
         PostgresTable table = PostgresTable.name(tableName)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull())
-            )
-            .build();
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
 
         String indexName1 = "idx_test_1";
         PostgresIndex index1 = PostgresIndex.name(indexName1)
-            .createIndexStep(dsl -> dsl.createIndex(indexName1)
+            .createIndexStep((dsl, idn) -> dsl.createIndex(idn)
                 .on(DSL.table(tableName), DSL.field("colum1").asc()));
 
         String indexName2 = "idx_test_2";
         PostgresIndex index2 = PostgresIndex.name(indexName2)
-            .createIndexStep(dsl -> dsl.createIndex(indexName2)
+            .createIndexStep((dsl, idn) -> dsl.createIndex(idn)
                 .on(DSL.table(tableName), DSL.field("colum2").desc()));
 
         PostgresModule module = PostgresModule.builder()
-            .table(table)
-            .index(index1, index2)
+            .addTable(table)
+            .addIndex(index1, index2)
             .build();
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
@@ -252,21 +244,19 @@ public class PostgresTableManagerTest {
         String tableName = "tb_test_1";
 
         PostgresTable table = PostgresTable.name(tableName)
-            .creteTableStep(dslContext -> dslContext.createTable(tableName)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull())
-            )
-            .build();
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
-            .createIndexStep(dsl -> dsl.createIndex(indexName)
+            .createIndexStep((dsl, idn) -> dsl.createIndex(idn)
                 .on(DSL.table(tableName), DSL.field("colum1").asc()));
 
         PostgresModule module = PostgresModule.builder()
-            .table(table)
-            .index(index)
+            .addTable(table)
+            .addIndex(index)
             .build();
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
@@ -277,6 +267,49 @@ public class PostgresTableManagerTest {
 
         assertThatCode(() -> testee.initializeTableIndexes().block())
             .doesNotThrowAnyException();
+    }
+
+    @Test
+    void truncateShouldEmptyTableData() {
+        // Given table tbn1
+        String tableName1 = "tbn1";
+        PostgresTable table1 = PostgresTable.name(tableName1)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("column1", SQLDataType.INTEGER.notNull()));
+
+        PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
+        testee.initializeTables()
+            .block();
+
+        // insert data
+        Flux.usingWhen(connectionFactory.create(),
+                connection -> Flux.range(0, 10)
+                    .flatMap(i -> Mono.from(connection.createStatement("INSERT INTO " + tableName1 + " (column1) VALUES ($1);")
+                            .bind("$1", i)
+                            .execute())
+                        .flatMap(PostgresqlResult::getRowsUpdated))
+                    .last(),
+                Connection::close)
+            .collectList()
+            .block();
+
+
+        Supplier<Long> getTotalRecordInDB = () -> Flux.usingWhen(connectionFactory.create(),
+                connection -> Mono.from(connection.createStatement("select count(*) FROM " + tableName1)
+                        .execute())
+                    .flatMapMany(result ->
+                        result.map((row, rowMetadata) -> row.get("count", Long.class))),
+                Connection::close)
+            .last()
+            .block();
+
+        assertThat(getTotalRecordInDB.get()).isEqualTo(10L);
+
+        // When truncate table
+        testee.truncate().block();
+
+        // Then table is empty
+        assertThat(getTotalRecordInDB.get()).isEqualTo(0L);
     }
 
 

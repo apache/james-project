@@ -24,15 +24,24 @@ import java.util.function.Function;
 import org.jooq.DDLQuery;
 import org.jooq.DSLContext;
 
+import com.google.common.base.Preconditions;
+
 public class PostgresIndex {
 
     @FunctionalInterface
     public interface RequireCreateIndexStep {
-        PostgresIndex createIndexStep(Function<DSLContext, DDLQuery> createIndexStep);
+        PostgresIndex createIndexStep(CreateIndexFunction createIndexFunction);
+    }
+
+    @FunctionalInterface
+    public interface CreateIndexFunction {
+        DDLQuery createIndex(DSLContext dsl, String indexName);
     }
 
     public static RequireCreateIndexStep name(String indexName) {
-        return createIndexStep -> new PostgresIndex(indexName, createIndexStep);
+        Preconditions.checkNotNull(indexName);
+
+        return createIndexFunction -> new PostgresIndex(indexName, dsl -> createIndexFunction.createIndex(dsl, indexName));
     }
 
     private final String name;
@@ -41,10 +50,6 @@ public class PostgresIndex {
     private PostgresIndex(String name, Function<DSLContext, DDLQuery> createIndexStepFunction) {
         this.name = name;
         this.createIndexStepFunction = createIndexStepFunction;
-    }
-
-    public PostgresIndex build() {
-        return new PostgresIndex(name, createIndexStepFunction);
     }
 
     public String getName() {

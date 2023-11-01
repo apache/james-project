@@ -73,30 +73,30 @@ public interface PostgresModule {
             tableIndexes = ImmutableList.builder();
         }
 
-        public Builder table(PostgresTable... table) {
+        public Builder addTable(PostgresTable... table) {
             tables.add(table);
             return this;
         }
 
-        public Builder index(PostgresIndex... index) {
+        public Builder addIndex(PostgresIndex... index) {
             tableIndexes.add(index);
             return this;
         }
 
-        public Builder tables(List<PostgresTable> tables) {
+        public Builder addTable(List<PostgresTable> tables) {
             this.tables.addAll(tables);
             return this;
         }
 
-        public Builder indexes(List<PostgresIndex> indexes) {
+        public Builder addIndex(List<PostgresIndex> indexes) {
             this.tableIndexes.addAll(indexes);
             return this;
         }
 
         public Builder modules(List<PostgresModule> modules) {
             modules.forEach(module -> {
-                tables(module.tables());
-                indexes(module.tableIndexes());
+                addTable(module.tables());
+                addIndex(module.tableIndexes());
             });
             return this;
         }
@@ -116,13 +116,13 @@ public interface PostgresModule {
 
     static PostgresModule table(PostgresTable... tables) {
         return builder()
-            .tables(ImmutableList.copyOf(tables))
+            .addTable(ImmutableList.copyOf(tables))
             .build();
     }
 
     static PostgresModule tableIndex(PostgresIndex... tableIndexes) {
         return builder()
-            .indexes(ImmutableList.copyOf(tableIndexes))
+            .addIndex(ImmutableList.copyOf(tableIndexes))
             .build();
     }
 

@@ -24,15 +24,25 @@ import java.util.function.Function;
 import org.jooq.DDLQuery;
 import org.jooq.DSLContext;
 
+import com.google.common.base.Preconditions;
+
 public class PostgresTable {
 
     @FunctionalInterface
     public interface RequireCreateTableStep {
-        PostgresTable creteTableStep(Function<DSLContext, DDLQuery> createTableStep);
+        PostgresTable createTableStep(CreateTableFunction createTableFunction);
+    }
+
+
+    @FunctionalInterface
+    public interface CreateTableFunction {
+        DDLQuery createTable(DSLContext dsl, String tableName);
     }
 
     public static RequireCreateTableStep name(String tableName) {
-        return creteTableStep -> new PostgresTable(tableName, creteTableStep);
+        Preconditions.checkNotNull(tableName);
+
+        return createTableFunction -> new PostgresTable(tableName, dsl -> createTableFunction.createTable(dsl, tableName));
     }
 
     private final String name;
@@ -43,9 +53,6 @@ public class PostgresTable {
         this.createTableStepFunction = createTableStepFunction;
     }
 
-    public PostgresTable build() {
-        return new PostgresTable(name, createTableStepFunction);
-    }
 
     public String getName() {
         return name;
