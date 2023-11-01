@@ -69,6 +69,7 @@
        <li>IMAP4 Extension for Returning MYRIGHTS Information in Extended LIST (https://www.rfc-editor.org/rfc/rfc8440.html)</li>
        <li>IMAP LIST Extension for Special-Use Mailboxes (https://www.rfc-editor.org/rfc/rfc6154.html)</li>
        <li>SAVEDATE Extension (https://www.rfc-editor.org/rfc/rfc8514.html)</li>
+       <li>IMAP PARTIAL Extension for Paged SEARCH and FETCH (https://www.rfc-editor.org/rfc/rfc9394.html)</li>
      </ul>
      <p>We follow RFC2683 recommendations for our implementations:</p>
      <ul>

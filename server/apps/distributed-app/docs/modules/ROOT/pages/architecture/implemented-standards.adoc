@@ -74,6 +74,7 @@ The following IMAP specifications are implemented:
  - link:https://www.rfc-editor.org/rfc/rfc8440.html[RFC-8440] IMAP4 Extension for Returning MYRIGHTS Information in Extended LIST
  - link:https://www.rfc-editor.org/rfc/rfc8440.html[RFC-6154] IMAP LIST Extension for Special-Use Mailboxes
  - link:https://www.rfc-editor.org/rfc/rfc8514.html[RFC-8514] IMAP SAVEDATE Extension
+ - link:https://www.rfc-editor.org/rfc/rfc8514.html[RFC-9394] IMAP PARTIAL Extension for Paged SEARCH and FETCH
 
 Partially implemented specifications:
 
