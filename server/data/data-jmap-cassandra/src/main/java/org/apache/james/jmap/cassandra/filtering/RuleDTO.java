@@ -28,6 +28,8 @@ import org.apache.james.jmap.api.filtering.Rule;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -237,7 +239,7 @@ public class RuleDTO {
                          @JsonProperty("seen") boolean seen,
                          @JsonProperty("important") boolean important,
                          @JsonProperty("reject") boolean reject,
-                         @JsonProperty("keywords") List<String> keyworkds,
+                         @JsonProperty("keywords") @JsonSetter(nulls = Nulls.AS_EMPTY)  List<String> keyworkds,
                          @JsonProperty("forwardTo") Optional<ForwardDTO> forwardTo) {
             this.appendIn = appendIn;
             this.keyworkds = keyworkds;
