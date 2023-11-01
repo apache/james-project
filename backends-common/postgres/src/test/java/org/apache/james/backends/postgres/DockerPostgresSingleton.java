@@ -17,42 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.postgres.utils;
+package org.apache.james.backends.postgres;
 
-import javax.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.output.OutputFrame;
 
-import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
-import org.jooq.conf.Settings;
-import org.jooq.impl.DSL;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import io.r2dbc.spi.Connection;
-import reactor.core.publisher.Mono;
-
-public class PostgresExecutor {
-
-    private static final SQLDialect PGSQL_DIALECT = SQLDialect.POSTGRES;
-    private static final Settings SETTINGS = new Settings()
-        .withRenderFormatted(true);
-    private final Mono<Connection> connection;
-
-    @Inject
-    public PostgresExecutor(Mono<Connection> connection) {
-        this.connection = connection;
+public class DockerPostgresSingleton {
+    private static void displayDockerLog(OutputFrame outputFrame) {
+        LOGGER.info(outputFrame.getUtf8String().trim());
     }
 
-    public Mono<DSLContext> dslContext() {
-        return connection.map(con -> DSL.using(con, PGSQL_DIALECT, SETTINGS));
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(DockerPostgresSingleton.class);
+    public static final PostgreSQLContainer SINGLETON = PostgresFixture.PG_CONTAINER.get()
+        .withLogConsumer(DockerPostgresSingleton::displayDockerLog);
 
-    public Mono<Connection> connection() {
-        return connection;
-    }
-
-    @VisibleForTesting
-    public Mono<Void> dispose() {
-        return connection.flatMap(con -> Mono.from(con.close()));
+    static {
+        SINGLETON.start();
     }
 }
