@@ -14,8 +14,7 @@
       "action": {
         "appendIn": {
           "mailboxIds":["mbx1"]
-        },
-        "keyworkds":[]
+        }
       }
     },
     {
@@ -29,8 +28,7 @@
       "action": {
         "appendIn": {
           "mailboxIds":["mbx1"]
-        },
-        "keyworkds":[]
+        }
       }
     },
     {
@@ -44,8 +42,7 @@
       "action": {
         "appendIn": {
           "mailboxIds":["mbx1"]
-        },
-        "keyworkds":[]
+        }
       }
     },
     {
@@ -59,8 +56,7 @@
       "action": {
         "appendIn": {
           "mailboxIds":["mbx1"]
-        },
-        "keyworkds":[]
+        }
       }
     }
   ]

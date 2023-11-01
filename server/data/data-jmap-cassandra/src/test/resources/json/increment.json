@@ -7,25 +7,25 @@
     "id":"id-from",
     "name":"a name",
     "condition":{"field":"from","comparator":"contains","value":"A value to match 4"},
-    "action":{"appendIn":{"mailboxIds":["mbx1"]},"keyworkds":[]}
+    "action":{"appendIn":{"mailboxIds":["mbx1"]}}
     },
     {
       "id":"id-to",
       "name":"a name",
       "condition":{"field":"to","comparator":"exactly-equals","value":"A value to match 1"},
-      "action":{"appendIn":{"mailboxIds":["mbx1"]},"keyworkds":[]}
+      "action":{"appendIn":{"mailboxIds":["mbx1"]}}
     }],
   "postpended":[{
     "id":"id-rcpt",
     "name":"a name",
     "condition":{"field":"recipient","comparator":"not-exactly-equals","value":"A value to match 3"},
-    "action":{"appendIn":{"mailboxIds":["mbx1"]},"keyworkds":[]}
+    "action":{"appendIn":{"mailboxIds":["mbx1"]}}
   }],
   "updated":[{
     "id":"id-subject",
     "name":"a name",
     "condition":{"field":"subject","comparator":"not-contains","value":"A value to match 2"},
-    "action":{"appendIn":{"mailboxIds":["mbx1"]},"keyworkds":[]}
+    "action":{"appendIn":{"mailboxIds":["mbx1"]}}
   }],
   "deleted":["abdcd"]
 }
