@@ -1,8 +1,8 @@
 onsuccess: next_stage
 debug: true
 filter: "evt.Parsed.program == 'james'"
-name: linagora/james-connect-security-log
-description: "Parser for James Connect Security Log"
+name: linagora/james-auth
+description: "Parser for James IMAP and SMTP authentication "
 
 pattern_syntax:
   IMAP_AUTH_FAIL_BAD_CREDENTIALS: 'IMAP Authentication failed%{DATA:data}because of bad credentials.'
@@ -10,7 +10,6 @@ pattern_syntax:
   IMAP_AUTH_FAIL_NO_EXISTING_DELEGATION: 'IMAP Authentication with delegation failed%{DATA:data}because of non existing delegation.'
 
   SMTP_AUTH_FAIL: 'SMTP Authentication%{DATA:data}failed.'
-  DICTIONARY_ATTACK: 'Rejected message. Unknown user: %{EMAILADDRESS:rcpt}'
 nodes:
   - grok:
       name: "IMAP_AUTH_FAIL_BAD_CREDENTIALS"
@@ -74,19 +73,3 @@ nodes:
           expression: evt.Parsed.mdc_remoteIP
         - meta: user
           expression: evt.Parsed.mdc_username
-  - grok:
-      name: "DICTIONARY_ATTACK"
-      apply_on: message
-      statics:
-        - meta: log_type
-          value: dictionary-attack
-        - meta: timestamp
-          expression: evt.Parsed.timestamp
-        - meta: level
-          expression: evt.Parsed.level
-        - meta: source_ip
-          expression: evt.Parsed.mdc_ip
-        - meta: user
-          expression: evt.Parsed.mdc_user
-        - meta: rcpt
-          expression: evt.Parsed.rcpt

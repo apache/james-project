@@ -1,0 +1,25 @@
+onsuccess: next_stage
+debug: true
+filter: "evt.Parsed.program == 'james'"
+name: linagora/james-dictionary-attack
+description: "Parser for James dictionary attack"
+
+pattern_syntax:
+  DICTIONARY_ATTACK: 'Rejected message. Unknown user: %{EMAILADDRESS:rcpt}'
+nodes:
+  - grok:
+      name: "DICTIONARY_ATTACK"
+      apply_on: message
+      statics:
+        - meta: log_type
+          value: dictionary-attack
+        - meta: timestamp
+          expression: evt.Parsed.timestamp
+        - meta: level
+          expression: evt.Parsed.level
+        - meta: source_ip
+          expression: evt.Parsed.mdc_ip
+        - meta: user
+          expression: evt.Parsed.mdc_user
+        - meta: rcpt
+          expression: evt.Parsed.rcpt
