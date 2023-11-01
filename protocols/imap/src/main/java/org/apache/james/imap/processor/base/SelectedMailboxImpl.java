@@ -191,6 +191,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     @Override
+    public List<MessageUid> allUids() {
+        return uidMsnConverter.allUids();
+    }
+
+    @Override
     public Mono<Void> deselect() {
         return Mono.from(
             Optional.ofNullable(registration.get())

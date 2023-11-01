@@ -27,6 +27,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -166,6 +167,18 @@ public class UidMsnConverter {
             return Optional.empty();
         }
         return getUid(getLastMsn());
+    }
+
+    public synchronized List<MessageUid> allUids() {
+        if (usesInts) {
+            return uidsAsInts.intStream()
+                .mapToObj(MessageUid::of)
+                .collect(ImmutableList.toImmutableList());
+        } else {
+            return uids.longStream()
+                .mapToObj(MessageUid::of)
+                .collect(ImmutableList.toImmutableList());
+        }
     }
 
     public synchronized Optional<MessageUid> getFirstUid() {

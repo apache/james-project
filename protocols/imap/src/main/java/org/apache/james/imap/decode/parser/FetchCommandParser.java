@@ -114,6 +114,10 @@ public class FetchCommandParser extends AbstractUidCommandParser {
             request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CHANGEDSINCE));
             fetch.changedSince(request.number(true));
             return true;
+        case 'P':
+            request.consumeWord(StringMatcherCharacterValidator.ignoreCase("PARTIAL"));
+            fetch.partial(request.parsePartialRange());
+            return true;
         case 'V':
             // Check for the VANISHED option which is part of QRESYNC
             request.consumeWord(StringMatcherCharacterValidator.ignoreCase(VANISHED), true);

@@ -49,6 +49,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MailboxMetaData;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -62,8 +63,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -169,24 +173,38 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder());
         FetchGroup resultToFetch = FetchDataConverter.getFetchGroup(fetch);
 
-        return Flux.fromIterable(ranges)
-            .concatMap(range -> {
-                if (fetch.isOnlyFlags()) {
-                    return processMessageRangeForFlags(selected, mailbox, fetch, mailboxSession, responder, builder, range);
-                } else {
+        if (fetch.isOnlyFlags()) {
+            return Flux.fromIterable(consolidate(selected, ranges, fetch))
+                .concatMap(range -> Flux.from(mailbox.listMessagesMetadata(range, mailboxSession)))
+                .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+                .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
+                .doOnNext(responder::respond)
+                .then();
+        } else {
+            return Flux.fromIterable(consolidate(selected, ranges, fetch))
+                .concatMap(range -> {
                     auditTrail(mailbox, mailboxSession, resultToFetch, range);
-                    return processMessageRange(selected, mailbox, fetch, mailboxSession, responder, builder, resultToFetch, range);
-                }
-            })
-            .then();
+                    return Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession))
+                        .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+                        .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
+                        .doOnNext(responder::respond)
+                        .then();
+                })
+                .then();
+        }
     }
 
-    private Mono<Void> processMessageRangeForFlags(SelectedMailbox selected, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, MessageRange range) {
-        return Flux.from(mailbox.listMessagesMetadata(range, mailboxSession))
-            .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
-            .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
-            .doOnNext(responder::respond)
-            .then();
+    List<MessageRange> consolidate(SelectedMailbox selected, List<MessageRange> ranges, FetchData fetchData) {
+        if (fetchData.getPartialRange().isEmpty()) {
+            return ranges;
+        }
+        LongList longs = new LongArrayList();
+        selected.allUids()
+            .stream()
+            .filter(uid -> ranges.stream().anyMatch(range -> range.includes(uid)))
+            .forEach(uid -> longs.add(uid.asLong()));
+        LongList filter = fetchData.getPartialRange().get().filter(longs);
+        return MessageRange.toRanges(filter.longStream().mapToObj(MessageUid::of).collect(ImmutableList.toImmutableList()));
     }
 
     private Mono<FetchResponse> toResponse(MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, FetchResponseBuilder builder, SelectedMailbox selected, org.apache.james.mailbox.model.ComposedMessageIdWithMetaData result) {
@@ -224,14 +242,6 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             return ReactorUtils.logAsMono(() -> LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e))
                 .then(Mono.empty());
         }
-    }
-
-    private Mono<Void> processMessageRange(SelectedMailbox selected, MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, Responder responder, FetchResponseBuilder builder, FetchGroup resultToFetch, MessageRange range) {
-        return Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession))
-            .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
-            .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
-            .doOnNext(responder::respond)
-            .then();
     }
 
     private static void auditTrail(MessageManager mailbox, MailboxSession mailboxSession, FetchGroup resultToFetch, MessageRange range) {

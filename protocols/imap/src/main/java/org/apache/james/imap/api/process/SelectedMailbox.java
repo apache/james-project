@@ -20,6 +20,7 @@
 package org.apache.james.imap.api.process;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -173,6 +174,8 @@ public interface SelectedMailbox {
      * empty
      */
     Optional<MessageUid> getLastUid();
+
+    List<MessageUid> allUids();
     
     /**
      * Return all applicable Flags for the selected mailbox
