@@ -28,11 +28,13 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.PartialRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
@@ -1018,8 +1020,10 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     /**
      * Parse the {@link SearchResultOption}'s which are used for ESEARCH
      */
-    List<SearchResultOption> parseOptions(ImapRequestLineReader reader) throws DecodingException {
+    Pair<List<SearchResultOption>, Optional<PartialRange>> parseOptions(ImapRequestLineReader reader) throws DecodingException {
         List<SearchResultOption> options = new ArrayList<>();
+        Optional<PartialRange> partialRange = Optional.empty();
+
         reader.consumeChar('(');
         reader.nextWordChar();
         
@@ -1055,6 +1059,17 @@ public class SearchCommandParser extends AbstractUidCommandParser {
                 }
                 break;
             // Check for SAVE options which is part of the SEARCHRES extension
+            case 'P':
+                nextIsA(reader);
+                nextIsR(reader);
+                nextIsT(reader);
+                nextIsI(reader);
+                nextIsA(reader);
+                nextIsL(reader);
+                options.add(SearchResultOption.PARTIAL);
+
+                partialRange = Optional.of(reader.parsePartialRange());
+                break;
             case 'S':
                 nextIsA(reader);
                 nextIsV(reader);
@@ -1072,14 +1087,14 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         if (options.isEmpty()) {
             options.add(SearchResultOption.ALL);
         }
-        return options;
+        return Pair.of(options, partialRange);
     }
     
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         try {
             SearchKey recent = null;
-            List<SearchResultOption> options = null;
+            Pair<List<SearchResultOption>, Optional<PartialRange>> options = null;
             int c = ImapRequestLineReader.cap(request.nextWordChar());
             if (c == 'R') {
                 // if we found a R its either RECENT or RETURN so consume it
@@ -1123,10 +1138,10 @@ public class SearchCommandParser extends AbstractUidCommandParser {
             
             
             if (options == null) {
-                options = new ArrayList<>();
+                options = Pair.of(new ArrayList<>(), Optional.empty());
             }
 
-            return new SearchRequest(new SearchOperation(finalKey, options), useUids, tag);
+            return new SearchRequest(new SearchOperation(finalKey, options.getLeft(), options.getRight()), useUids, tag);
         } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
             LOGGER.debug("Unable to decode request", e);
             return unsupportedCharset(tag);

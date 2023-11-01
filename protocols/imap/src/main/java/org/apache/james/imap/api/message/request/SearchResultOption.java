@@ -48,5 +48,10 @@ public enum SearchResultOption {
      * 
      * See RFC5182 2.4. Interaction with ESEARCH Extension
      */
-    SAVE
+    SAVE,
+
+    /**
+     * See RFC-9394
+     */
+    PARTIAL
 }

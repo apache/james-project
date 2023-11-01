@@ -45,6 +45,7 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.PartialRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.process.ImapSession;
@@ -147,6 +148,19 @@ public abstract class ImapRequestLineReader {
         @Override
         public boolean isValid(char chr) {
             return (isDigit(chr) || chr == ':' || chr == '*' || chr == ',');
+        }
+
+        private boolean isDigit(char chr) {
+            return '0' <= chr && chr <= '9';
+        }
+    }
+
+    public static class PartialRangeCharValidator implements CharacterValidator {
+        public static CharacterValidator INSTANCE = new PartialRangeCharValidator();
+
+        @Override
+        public boolean isValid(char chr) {
+            return (isDigit(chr) || chr == ':' || chr == '-');
         }
 
         private boolean isDigit(char chr) {
@@ -921,6 +935,20 @@ public abstract class ImapRequestLineReader {
         // See IMAP-211
         List<UidRange> merged = UidRange.mergeRanges(rangeList);
         return merged.toArray(UidRange[]::new);
+    }
+
+    public PartialRange parsePartialRange() throws DecodingException {
+        String nextWord = consumeWord(PartialRangeCharValidator.INSTANCE, true);
+
+        if (!nextWord.contains(":")) {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "PartialRange should contain ':'");
+        }
+
+        String lowValString = nextWord.substring(0, nextWord.indexOf(':'));
+        String upValString = nextWord.substring(nextWord.indexOf(':') + 1);
+
+        return new PartialRange(Long.parseLong(lowValString),
+            Long.parseLong(upValString));
     }
     
     /**

@@ -20,6 +20,9 @@
 package org.apache.james.imap.api.message.request;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.apache.james.imap.api.message.PartialRange;
 
 import com.google.common.base.MoreObjects;
 
@@ -27,16 +30,22 @@ public final class SearchOperation {
 
     private final SearchKey key;
     private final List<SearchResultOption> options;
+    private final Optional<PartialRange> partialRange;
 
-    public SearchOperation(SearchKey key, List<SearchResultOption> options) {
+    public SearchOperation(SearchKey key, List<SearchResultOption> options, Optional<PartialRange> partialRange) {
         this.key = key;
         this.options = options;
+        this.partialRange = partialRange;
     }
     
     public SearchKey getSearchKey() {
         return key;
     }
-    
+
+    public Optional<PartialRange> getPartialRange() {
+        return partialRange;
+    }
+
     public List<SearchResultOption> getResultOptions() {
         return options;
     }

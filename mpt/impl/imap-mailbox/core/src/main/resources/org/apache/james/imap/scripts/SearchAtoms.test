@@ -1924,5 +1924,25 @@ S: \* SEARCH
 S: A150 OK SEARCH completed\.
 # We expect no modseq to be over 1500, hence we expect an empty result.
 
-C: A151 DELETE testmailbox
-S: A151 OK DELETE completed\.
+# See https://www.rfc-editor.org/rfc/rfc9394.html
+C: A152 UID SEARCH RETURN (PARTIAL 1:5) UNFLAGGED
+S: \* ESEARCH \(TAG "A152"\) UID PARTIAL \(1:5 10:14\)
+S: A152 OK SEARCH completed\.
+
+C: A153 UID SEARCH RETURN (PARTIAL -1:-5) UNFLAGGED
+S: \* ESEARCH \(TAG "A153"\) UID PARTIAL \(-1:-5 15:19\)
+S: A153 OK SEARCH completed\.
+
+C: A154 UID SEARCH RETURN (PARTIAL 50:100) UNFLAGGED
+S: \* ESEARCH \(TAG \"A154\"\) UID PARTIAL \(50:100 NIL\)
+S: A154 OK SEARCH completed\.
+
+C: A155 UID SEARCH RETURN (PARTIAL -50:-100) UNFLAGGED
+S: \* ESEARCH \(TAG \"A155\"\) UID PARTIAL \(-50:-100 NIL\)
+S: A155 OK SEARCH completed\.
+
+C: A156 UID SEARCH RETURN (PARTIAL 1:-100) UNFLAGGED
+S: A156 BAD UID failed. Illegal arguments.
+
+C: A157 DELETE testmailbox
+S: A157 OK DELETE completed\.

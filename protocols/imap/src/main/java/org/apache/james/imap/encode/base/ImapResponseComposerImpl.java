@@ -368,6 +368,9 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
 
     @Override
     public ImapResponseComposer sequenceSet(IdRange[] ranges) throws IOException {
+        if (ranges.length == 0) {
+            return message("NIL");
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < ranges.length; i++) {
             IdRange range = ranges[i];

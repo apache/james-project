@@ -787,6 +787,6 @@ class SearchCommandParserSearchKeyTest {
                 new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
-        return parser.parseOptions(reader);
+        return parser.parseOptions(reader).getLeft();
     }
 }

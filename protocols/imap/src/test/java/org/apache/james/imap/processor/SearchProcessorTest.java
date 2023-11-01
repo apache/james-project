@@ -502,7 +502,7 @@ class SearchProcessorTest {
         when(selectedMailbox.getApplicableFlags()).thenReturn(new Flags());
         when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);
 
-        SearchRequest message = new SearchRequest(new SearchOperation(key, new ArrayList<>()), false, TAG);
+        SearchRequest message = new SearchRequest(new SearchOperation(key, new ArrayList<>(), Optional.empty()), false, TAG);
         processor.processRequest(message, session, responder);
     }
 

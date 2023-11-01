@@ -28,6 +28,8 @@ import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.message.response.ESearchResponse;
 import org.apache.james.mailbox.ModSeq;
 
+import com.github.fge.lambdas.Throwing;
+
 /**
  * Encoders IMAP4rev1 <code>ESEARCH</code> responses.
  */
@@ -44,6 +46,7 @@ public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchRespon
         long max = response.getMaxUid();
         long count = response.getCount();
         IdRange[] all = response.getAll();
+        IdRange[] partialUids = response.getPartialUids();
         boolean useUid = response.getUseUid();
         ModSeq highestModSeq = response.getHighestModSeq();
         List<SearchResultOption> options = response.getSearchResultOptions();
@@ -60,6 +63,16 @@ public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchRespon
         }
         if (options.contains(SearchResultOption.COUNT)) {
             composer.message(SearchResultOption.COUNT.name()).message(count);
+        }
+        if (options.contains(SearchResultOption.PARTIAL)) {
+            composer.message(SearchResultOption.PARTIAL.name());
+            composer.openParen();
+            response.getPartialRange()
+                .ifPresent(Throwing.consumer(partialRange ->
+                    composer.message(partialRange.getLowVal() + ":" + partialRange.getUpVal())));
+            composer.sequenceSet(partialUids);
+            composer.closeParen();
+
         }
         if (all != null && all.length > 0 && options.contains(SearchResultOption.ALL)) {
             composer.message(SearchResultOption.ALL.name());
