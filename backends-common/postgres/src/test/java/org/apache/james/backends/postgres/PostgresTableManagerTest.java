@@ -30,54 +30,19 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
-import io.r2dbc.postgresql.PostgresqlConnectionFactory;
-import io.r2dbc.postgresql.api.PostgresqlResult;
-import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Testcontainers
-public class PostgresTableManagerTest {
+class PostgresTableManagerTest {
 
-    @Container
-    private static final GenericContainer<?> pgContainer = PostgresFixture.PG_CONTAINER.get();
+    @RegisterExtension
+    static PostgresExtension postgresExtension = new PostgresExtension();
 
-    private PostgresqlConnectionFactory connectionFactory;
-
-    @BeforeEach
-    void beforeAll() {
-        connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-            .host(pgContainer.getHost())
-            .port(pgContainer.getMappedPort(PostgresFixture.PORT))
-            .username(PostgresFixture.Database.DB_USER)
-            .password(PostgresFixture.Database.DB_PASSWORD)
-            .database(PostgresFixture.Database.DB_NAME)
-            .schema(PostgresFixture.Database.SCHEMA)
-            .build());
-    }
-
-    @AfterEach
-    void afterEach() {
-        // clean data
-        Flux.usingWhen(connectionFactory.create(),
-                connection -> Mono.from(connection.createStatement("DROP SCHEMA " + PostgresFixture.Database.SCHEMA + " CASCADE").execute())
-                    .then(Mono.from(connection.createStatement("CREATE SCHEMA " + PostgresFixture.Database.SCHEMA).execute()))
-                    .flatMap(PostgresqlResult::getRowsUpdated),
-                Connection::close)
-            .collectList()
-            .block();
-    }
-
-    Function<PostgresModule, PostgresTableManager> tableManagerFactory = module -> new PostgresTableManager(new PostgresExecutor(connectionFactory.create()
-        .map(c -> c)), module);
+    Function<PostgresModule, PostgresTableManager> tableManagerFactory =
+        module -> new PostgresTableManager(new PostgresExecutor(postgresExtension.getConnection()), module);
 
     @Test
     void initializeTableShouldSuccessWhenModuleHasSingleTable() {
@@ -198,7 +163,7 @@ public class PostgresTableManagerTest {
 
         testee.initializeTableIndexes().block();
 
-        List<Pair<String, String>> listIndexes = listIndexes();
+        List<Pair<String, String>> listIndexes = listIndexToTableMappings();
 
         assertThat(listIndexes)
             .contains(Pair.of(indexName, tableName));
@@ -236,7 +201,7 @@ public class PostgresTableManagerTest {
 
         testee.initializeTableIndexes().block();
 
-        List<Pair<String, String>> listIndexes = listIndexes();
+        List<Pair<String, String>> listIndexes = listIndexToTableMappings();
 
         assertThat(listIndexes)
             .contains(Pair.of(indexName1, tableName), Pair.of(indexName2, tableName));
@@ -286,24 +251,21 @@ public class PostgresTableManagerTest {
             .block();
 
         // insert data
-        Flux.usingWhen(connectionFactory.create(),
-                connection -> Flux.range(0, 10)
-                    .flatMap(i -> Mono.from(connection.createStatement("INSERT INTO " + tableName1 + " (column1) VALUES ($1);")
-                            .bind("$1", i)
-                            .execute())
-                        .flatMap(PostgresqlResult::getRowsUpdated))
-                    .last(),
-                Connection::close)
+        postgresExtension.getConnection()
+            .flatMapMany(connection -> Flux.range(0, 10)
+                .flatMap(i -> Mono.from(connection.createStatement("INSERT INTO " + tableName1 + " (column1) VALUES ($1);")
+                    .bind("$1", i)
+                    .execute())
+                    .flatMap(result -> Mono.from(result.getRowsUpdated())))
+                .last())
             .collectList()
             .block();
 
-
-        Supplier<Long> getTotalRecordInDB = () -> Flux.usingWhen(connectionFactory.create(),
-                connection -> Mono.from(connection.createStatement("select count(*) FROM " + tableName1)
-                        .execute())
-                    .flatMapMany(result ->
-                        result.map((row, rowMetadata) -> row.get("count", Long.class))),
-                Connection::close)
+        Supplier<Long> getTotalRecordInDB = () -> postgresExtension.getConnection()
+            .flatMapMany(connection -> Mono.from(connection.createStatement("select count(*) FROM " + tableName1)
+                    .execute())
+                .flatMapMany(result ->
+                    result.map((row, rowMetadata) -> row.get("count", Long.class))))
             .last()
             .block();
 
@@ -339,16 +301,15 @@ public class PostgresTableManagerTest {
                 Pair.of("clm2", "character varying"),
                 Pair.of("domain", "character varying"));
 
-        List<Pair<String, Boolean>> pgClassCheckResult = Flux.usingWhen(connectionFactory.create(),
-                connection -> Mono.from(connection.createStatement("select relname, relrowsecurity " +
-                            "from pg_class " +
-                            "where oid = 'tbn1'::regclass;;")
-                        .execute())
-                    .flatMapMany(result ->
-                        result.map((row, rowMetadata) ->
-                            Pair.of(row.get("relname", String.class),
-                                row.get("relrowsecurity", Boolean.class)))),
-                Connection::close)
+        List<Pair<String, Boolean>> pgClassCheckResult = postgresExtension.getConnection()
+            .flatMapMany(connection -> Mono.from(connection.createStatement("select relname, relrowsecurity " +
+                    "from pg_class " +
+                    "where oid = 'tbn1'::regclass;;")
+                .execute())
+                .flatMapMany(result ->
+                    result.map((row, rowMetadata) ->
+                        Pair.of(row.get("relname", String.class),
+                            row.get("relrowsecurity", Boolean.class)))))
             .collectList()
             .block();
 
@@ -357,30 +318,25 @@ public class PostgresTableManagerTest {
                 Pair.of("tbn1", true));
     }
 
-
     private List<Pair<String, String>> getColumnNameAndDataType(String tableName) {
-        return Flux.usingWhen(connectionFactory.create(),
-                connection -> Mono.from(connection.createStatement("SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1;")
-                        .bind("$1", tableName)
-                        .execute())
-                    .flatMapMany(result ->
-                        result.map((row, rowMetadata) ->
-                            Pair.of(row.get("column_name", String.class),
-                                row.get("data_type", String.class)))),
-                Connection::close)
+        return postgresExtension.getConnection()
+            .flatMapMany(connection -> Flux.from(Mono.from(connection.createStatement("SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = $1;")
+                    .bind("$1", tableName)
+                    .execute())
+                .flatMapMany(result -> result.map((row, rowMetadata) ->
+                    Pair.of(row.get("column_name", String.class), row.get("data_type", String.class))))))
             .collectList()
             .block();
     }
 
     // return list<pair<indexName, tableName>>
-    private List<Pair<String, String>> listIndexes() {
-        return Flux.usingWhen(connectionFactory.create(),
-                connection -> Mono.from(connection.createStatement("SELECT indexname, tablename FROM pg_indexes;")
-                        .execute())
-                    .flatMapMany(result ->
-                        result.map((row, rowMetadata) ->
-                            Pair.of(row.get("indexname", String.class), row.get("tablename", String.class)))),
-                Connection::close)
+    private List<Pair<String, String>> listIndexToTableMappings() {
+        return postgresExtension.getConnection()
+            .flatMapMany(connection -> Mono.from(connection.createStatement("SELECT indexname, tablename FROM pg_indexes;")
+                    .execute())
+                .flatMapMany(result ->
+                    result.map((row, rowMetadata) ->
+                        Pair.of(row.get("indexname", String.class), row.get("tablename", String.class)))))
             .collectList()
             .block();
     }
