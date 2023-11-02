@@ -19,9 +19,12 @@
 
 package org.apache.james.backends.postgres.utils;
 
+import java.util.function.Function;
+
 import javax.inject.Inject;
 
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
@@ -29,6 +32,7 @@ import org.jooq.impl.DSL;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.r2dbc.spi.Connection;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresExecutor {
@@ -45,6 +49,17 @@ public class PostgresExecutor {
 
     public Mono<DSLContext> dslContext() {
         return connection.map(con -> DSL.using(con, PGSQL_DIALECT, SETTINGS));
+    }
+
+    public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
+        return dslContext()
+            .flatMap(queryFunction)
+            .then();
+    }
+
+    public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
+        return dslContext()
+            .flatMapMany(queryFunction);
     }
 
     public Mono<Connection> connection() {
