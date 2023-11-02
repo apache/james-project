@@ -44,4 +44,8 @@ public class PostgresExecutor {
     public Mono<DSLContext> dslContext() {
         return connection.map(con -> DSL.using(con, PGSQL_DIALECT, SETTINGS));
     }
+
+    public Mono<Connection> connection() {
+        return connection;
+    }
 }

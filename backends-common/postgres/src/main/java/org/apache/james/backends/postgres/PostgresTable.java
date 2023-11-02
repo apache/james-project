@@ -30,7 +30,7 @@ public class PostgresTable {
 
     @FunctionalInterface
     public interface RequireCreateTableStep {
-        PostgresTable createTableStep(CreateTableFunction createTableFunction);
+        RequireRowLevelSecurity createTableStep(CreateTableFunction createTableFunction);
     }
 
 
@@ -39,17 +39,32 @@ public class PostgresTable {
         DDLQuery createTable(DSLContext dsl, String tableName);
     }
 
+    @FunctionalInterface
+    public interface RequireRowLevelSecurity {
+        PostgresTable enableRLS(boolean enableRowLevelSecurity);
+
+        default PostgresTable noRLS() {
+            return enableRLS(false);
+        }
+
+        default PostgresTable enableRLS() {
+            return enableRLS(true);
+        }
+    }
+
     public static RequireCreateTableStep name(String tableName) {
         Preconditions.checkNotNull(tableName);
 
-        return createTableFunction -> new PostgresTable(tableName, dsl -> createTableFunction.createTable(dsl, tableName));
+        return createTableFunction -> enableRLS -> new PostgresTable(tableName, enableRLS, dsl -> createTableFunction.createTable(dsl, tableName));
     }
 
     private final String name;
+    private final boolean enableRowLevelSecurity;
     private final Function<DSLContext, DDLQuery> createTableStepFunction;
 
-    private PostgresTable(String name, Function<DSLContext, DDLQuery> createTableStepFunction) {
+    private PostgresTable(String name, boolean enableRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction) {
         this.name = name;
+        this.enableRowLevelSecurity = enableRowLevelSecurity;
         this.createTableStepFunction = createTableStepFunction;
     }
 
@@ -62,4 +77,7 @@ public class PostgresTable {
         return createTableStepFunction;
     }
 
+    public boolean isEnableRowLevelSecurity() {
+        return enableRowLevelSecurity;
+    }
 }

@@ -87,7 +87,8 @@ public class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()))
+            .noRLS();
 
         PostgresModule module = PostgresModule.table(table);
 
@@ -109,12 +110,12 @@ public class PostgresTableManagerTest {
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull()));
+                .column("columA", SQLDataType.UUID.notNull())).noRLS();
 
         String tableName2 = "tableName2";
         PostgresTable table2 = PostgresTable.name(tableName2)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columB", SQLDataType.INTEGER));
+                .column("columB", SQLDataType.INTEGER)).noRLS();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1, table2));
 
@@ -135,7 +136,7 @@ public class PostgresTableManagerTest {
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull()));
+                .column("columA", SQLDataType.UUID.notNull())).noRLS();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
 
@@ -151,7 +152,7 @@ public class PostgresTableManagerTest {
         String tableName1 = "tableName1";
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull()));
+                .column("columA", SQLDataType.UUID.notNull())).noRLS();
 
         tableManagerFactory.apply(PostgresModule.table(table1))
             .initializeTables()
@@ -159,7 +160,7 @@ public class PostgresTableManagerTest {
 
         PostgresTable table1Changed = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columB", SQLDataType.INTEGER));
+                .column("columB", SQLDataType.INTEGER)).noRLS();
 
         tableManagerFactory.apply(PostgresModule.table(table1Changed))
             .initializeTables()
@@ -178,7 +179,8 @@ public class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()))
+            .noRLS();
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
@@ -210,7 +212,8 @@ public class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()))
+            .noRLS();
 
         String indexName1 = "idx_test_1";
         PostgresIndex index1 = PostgresIndex.name(indexName1)
@@ -247,7 +250,8 @@ public class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
-                .column("colum3", SQLDataType.VARCHAR(255).notNull()));
+                .column("colum3", SQLDataType.VARCHAR(255).notNull()))
+            .noRLS();
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
@@ -275,7 +279,7 @@ public class PostgresTableManagerTest {
         String tableName1 = "tbn1";
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("column1", SQLDataType.INTEGER.notNull()));
+                .column("column1", SQLDataType.INTEGER.notNull())).noRLS();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
         testee.initializeTables()
@@ -310,6 +314,47 @@ public class PostgresTableManagerTest {
 
         // Then table is empty
         assertThat(getTotalRecordInDB.get()).isEqualTo(0L);
+    }
+
+    @Test
+    void createTableShouldSucceedWhenEnableRLS() {
+        String tableName = "tbn1";
+
+        PostgresTable table = PostgresTable.name(tableName)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("clm1", SQLDataType.UUID.notNull())
+                .column("clm2", SQLDataType.VARCHAR(255).notNull()))
+            .enableRLS();
+
+        PostgresModule module = PostgresModule.table(table);
+
+        PostgresTableManager testee = tableManagerFactory.apply(module);
+
+        testee.initializeTables()
+            .block();
+
+        assertThat(getColumnNameAndDataType(tableName))
+            .containsExactlyInAnyOrder(
+                Pair.of("clm1", "uuid"),
+                Pair.of("clm2", "character varying"),
+                Pair.of("domain", "character varying"));
+
+        List<Pair<String, Boolean>> pgClassCheckResult = Flux.usingWhen(connectionFactory.create(),
+                connection -> Mono.from(connection.createStatement("select relname, relrowsecurity " +
+                            "from pg_class " +
+                            "where oid = 'tbn1'::regclass;;")
+                        .execute())
+                    .flatMapMany(result ->
+                        result.map((row, rowMetadata) ->
+                            Pair.of(row.get("relname", String.class),
+                                row.get("relrowsecurity", Boolean.class)))),
+                Connection::close)
+            .collectList()
+            .block();
+
+        assertThat(pgClassCheckResult)
+            .containsExactlyInAnyOrder(
+                Pair.of("tbn1", true));
     }
 
 

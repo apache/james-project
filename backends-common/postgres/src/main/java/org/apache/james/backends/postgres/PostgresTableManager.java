@@ -24,6 +24,7 @@ import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,16 +42,36 @@ public class PostgresTableManager {
         return postgresExecutor.dslContext()
             .flatMap(dsl -> Flux.fromIterable(module.tables())
                 .flatMap(table -> Mono.from(table.getCreateTableStepFunction().apply(dsl))
+                    .then(alterTableEnableRLSIfNeed(table))
                     .doOnSuccess(any -> LOGGER.info("Table {} created", table.getName()))
                     .onErrorResume(DataAccessException.class, exception -> {
                         if (exception.getMessage().contains(String.format("\"%s\" already exists", table.getName()))) {
-                            LOGGER.info("Table {} already exists", table.getName());
                             return Mono.empty();
                         }
                         return Mono.error(exception);
                     })
                     .doOnError(e -> LOGGER.error("Error while creating table {}", table.getName(), e)))
                 .then());
+    }
+
+    private Mono<Void> alterTableEnableRLSIfNeed(PostgresTable table) {
+        if (table.isEnableRowLevelSecurity()) {
+            return alterTableEnableRLS(table);
+        }
+        return Mono.empty();
+    }
+
+    public Mono<Void> alterTableEnableRLS(PostgresTable table) {
+        return postgresExecutor.connection()
+            .flatMapMany(con -> con.createStatement(getAlterRLSStatement(table.getName())).execute())
+            .flatMap(Result::getRowsUpdated)
+            .then();
+    }
+
+    private String getAlterRLSStatement(String tableName) {
+        return "SET app.current_domain = ''; ALTER TABLE " + tableName + " ADD DOMAIN varchar(255) not null DEFAULT current_setting('app.current_domain')::text;" +
+            "ALTER TABLE " + tableName + " ENABLE ROW LEVEL SECURITY; " +
+            "CREATE POLICY DOMAIN_" + tableName + "_POLICY ON " + tableName + " USING (DOMAIN = current_setting('app.current_domain')::text);";
     }
 
     public Mono<Void> truncate() {
@@ -69,7 +90,6 @@ public class PostgresTableManager {
                     .doOnSuccess(any -> LOGGER.info("Index {} created", index.getName()))
                     .onErrorResume(DataAccessException.class, exception -> {
                         if (exception.getMessage().contains(String.format("\"%s\" already exists", index.getName()))) {
-                            LOGGER.info("Index {} already exists", index.getName());
                             return Mono.empty();
                         }
                         return Mono.error(exception);
