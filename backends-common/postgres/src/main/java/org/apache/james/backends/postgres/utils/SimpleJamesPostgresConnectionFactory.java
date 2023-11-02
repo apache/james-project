@@ -30,24 +30,36 @@ import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import reactor.core.publisher.Mono;
 
+// TODO handle case getConnection is called more than once at the same time
 public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnectionFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleJamesPostgresConnectionFactory.class);
 
     private final Map<Domain, PostgresqlConnection> mapDomainToConnection = new ConcurrentHashMap<>();
     private final PostgresqlConnectionFactory connectionFactory;
-    private final Mono<PostgresqlConnection> defaultConnection;
+    private PostgresqlConnection defaultConnection;
 
     public SimpleJamesPostgresConnectionFactory(PostgresqlConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
-        this.defaultConnection = connectionFactory.create();
     }
 
     @Override
     public Mono<? extends PostgresqlConnection> getConnection(Domain domain) {
-        return Mono.justOrEmpty(domain)
+        return Mono.just(domain)
             .flatMap(domainValue -> Mono.fromCallable(() -> mapDomainToConnection.get(domainValue))
-                .switchIfEmpty(create(domainValue)))
-            .switchIfEmpty(defaultConnection);
+                .switchIfEmpty(create(domainValue)));
+    }
+
+    public Mono<? extends PostgresqlConnection> getConnection() {
+        return Mono.justOrEmpty(defaultConnection)
+            .switchIfEmpty(createDefault());
+    }
+
+    private Mono<PostgresqlConnection> createDefault() {
+        return connectionFactory.create()
+            .doOnError(e -> LOGGER.error("Error while creating default connection", e))
+            .doOnSuccess(postgresqlConnection -> {
+                defaultConnection = postgresqlConnection;
+            });
     }
 
     private Mono<PostgresqlConnection> create(Domain domain) {

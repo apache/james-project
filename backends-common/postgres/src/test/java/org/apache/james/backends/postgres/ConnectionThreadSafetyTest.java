@@ -21,6 +21,7 @@ package org.apache.james.backends.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.core.Domain;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
@@ -45,6 +47,7 @@ public class ConnectionThreadSafetyTest {
     static final String DB_NAME = "james-db";
     static final String DB_USER = "james";
     static final String DB_PASSWORD = "1";
+    static final int NUMBER_OF_THREAD = 200;
     static final String CREATE_TABLE_STATEMENT = "CREATE TABLE IF NOT EXISTS person (\n" +
         "\tid serial PRIMARY KEY,\n" +
         "\tname VARCHAR ( 50 ) UNIQUE NOT NULL\n" +
@@ -79,41 +82,39 @@ public class ConnectionThreadSafetyTest {
     }
 
     @Test
-    void test() throws Exception {
+    void connectionShouldWorkWellWhenItIsUsedByMultipleThreads() throws Exception {
         createData();
 
         PostgresqlConnection connection = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
 
         List<String> actual = new Vector<>();
-        for (int i=1; i<=200; i++) {
-            final int count = i;
-            Thread thread = new Thread(() -> {
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
                 connection.createStatement("SELECT id, name FROM PERSON WHERE id = $1")
-                    .bind("$1", count)
+                    .bind("$1", threadNumber)
                     .execute()
                     .flatMap(result -> result.map((row, rowMetadata) -> row.get("id", Long.class) + "|" + row.get("name", String.class)))
                     .doOnNext(s -> actual.add(s))
                     .collect(Collectors.toUnmodifiableList())
                     .block();
-            });
-            thread.start();
-            thread.join();
-        }
+            }).threadCount(NUMBER_OF_THREAD)
+            .operationCount(1)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         List<String> expected = new ArrayList<>();
-        for (int i=1; i<=200; i++) {
+        for (int i=0; i<NUMBER_OF_THREAD; i++) {
             expected.add(i+"|Peter"+i);
         }
 
         assertThat(expected).containsExactlyInAnyOrderElementsOf(actual);
     }
 
-    private static void createData() {
+    private void createData() {
         PostgresqlConnection connection = connectionFactory.create().block();
-        for (int i=1; i<=200; i++) {
-            final int count = i;
-            connection.createStatement("INSERT INTO person (name) VALUES ($1)")
-                .bind("$1", "Peter"+count)
+        for (int i=0; i<NUMBER_OF_THREAD; i++) {
+            connection.createStatement("INSERT INTO person (id, name) VALUES ($1, $2)")
+                .bind("$1", i)
+                .bind("$2", "Peter"+i)
                 .execute().flatMap(PostgresqlResult::getRowsUpdated)
                 .collect(Collectors.toUnmodifiableList()).block();
         }

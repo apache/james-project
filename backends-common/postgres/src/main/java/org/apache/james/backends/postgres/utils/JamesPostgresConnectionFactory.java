@@ -21,9 +21,11 @@ package org.apache.james.backends.postgres.utils;
 
 import org.apache.james.core.Domain;
 
-import io.r2dbc.spi.Connection;
+import io.r2dbc.postgresql.api.PostgresqlConnection;
 import reactor.core.publisher.Mono;
 
 public interface JamesPostgresConnectionFactory {
-    Mono<? extends Connection> getConnection(Domain domain);
+    Mono<? extends PostgresqlConnection> getConnection(Domain domain);
+
+    Mono<? extends PostgresqlConnection> getConnection();
 }
