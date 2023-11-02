@@ -17,7 +17,7 @@ Currently, there is no mechanism to check harmful IP addresses implementing atta
 
 ## Decision 
 
-To that end, James is integrated with [Crowdsec](https://www.crowdsec.net/). Crowdsec will check James logs, based on defined scenarios, Crowdsec can detect malevolent behaviors, and block them from accessing James at various levels (infrastructural, system, applicative). For basic, we implement Crowdsec to detect at application level.
+To that end, we will integrate James with [Crowdsec](https://www.crowdsec.net/). Crowdsec will check James logs, based on defined scenarios, Crowdsec can detect malevolent behaviors, and block them from accessing James at various levels (infrastructure - firewall, system, applicative). To ease end user configuration, and propose a bundled experience independent from end user infrastructure, we implement Crowdsec remediations at application level. Willing users can very well set up remediations based on their underlying infrastructure.
 
 A quick introduction about Crowdsec:
 
@@ -42,11 +42,13 @@ using the external-jar loading mechanism. With this way, the extension could be 
 ## Consequences
 
 - James will be more secure by blocking threats at various levels (applicative, system, infrastructural).
-- We can document and share Crowdsec scenario thus allowing users to benefit from each other decisions. Also we can get dangerous IP detected by community via using Central API 
+- We can document and share Crowdsec scenario thus allowing users to benefit from each other decisions. Also we can get dangerous IP detected by community via using Central API
+- Crowdsec natively supports distributed deployments (reference: ) by setting up an agent per node gathering logs of local containers and forwarding them to the crowdsec API that decides if remediations should be applied. 
+- This architecture is not horizontally scalable in itself but should already be able to analyse over 1000 relevant logs per seconds (metric obtained by discussing with Crowdsec team), which should allow leveraging very large scale James deployments.
 
 ## Alternatives
 
-- Fail2ban can detect these attacks, however it is complex to setup in a distributed system.
+- Fail2ban can detect these attacks, however it is complex to setup in a distributed system and very related to the underlying architecture thus hard to document within the community.
 - Fail2ban do not permit sharing with peers the underlying blocked data.
 
 ## References
