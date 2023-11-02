@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.mailet.filter;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -39,6 +39,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.AuditTrail;
+import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.StorageDirective;
@@ -49,6 +50,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 public class ActionApplier {
     public static final Logger LOGGER = LoggerFactory.getLogger(ActionApplier.class);
@@ -104,42 +106,86 @@ public class ActionApplier {
     }
 
     public void apply(Stream<Rule.Action> actions) {
-        actions.forEach(Throwing.consumer(this::addStorageDirective));
+        actions.forEach(this::applyAction);
     }
 
-    private void addStorageDirective(Rule.Action action) throws MessagingException {
-        if (action.isReject()) {
-            mail.setRecipients(mail.getRecipients().stream()
-                .filter(recipient -> !recipient.equals(mailAddress))
-                .collect(ImmutableList.toImmutableList()));
-            return;
-        }
-        if (action.getForward().isPresent()) {
-            Rule.Action.Forward forward = action.getForward().get();
-            if (!forward.isKeepACopy()) {
-                mail.setRecipients(mail.getRecipients().stream()
-                    .filter(recipient -> !recipient.equals(mailAddress))
-                    .collect(ImmutableList.toImmutableList()));
-            }
-            sendACopy(mailetContext, mailAddress, forward.getAddresses());
-            return;
-        }
-        Optional<ImmutableList<String>> targetMailboxes = Optional.of(action.getAppendInMailboxes().getMailboxIds()
-            .stream()
-            .flatMap(this::asMailboxName)
-            .collect(ImmutableList.toImmutableList()))
-            .filter(mailboxes -> !mailboxes.isEmpty());
+    private boolean shouldProcessingContinue() {
+        return mail.getRecipients().contains(mailAddress);
+    }
 
-        StorageDirective.Builder storageDirective = StorageDirective.builder();
-        targetMailboxes.ifPresent(storageDirective::targetFolders);
-        storageDirective
-            .seen(Optional.of(action.isMarkAsSeen()).filter(seen -> seen))
-            .important(Optional.of(action.isMarkAsImportant()).filter(seen -> seen))
-            .keywords(Optional.of(action.getWithKeywords()).filter(c -> !c.isEmpty()))
-            .buildOptional()
-            .map(a -> a.encodeAsAttributes(username))
-            .orElse(Stream.of())
-            .forEach(mail::setAttribute);
+    private void applyAction(Rule.Action action) {
+        applyReject(action);
+        applyForward(action);
+        applyStorageDirective(action);
+    }
+
+    private void applyReject(Rule.Action action) {
+        if (action.isReject()) {
+            removeFromRecipients();
+        }
+    }
+
+    /**
+     * @return a boolean value to show if a local copy should be kept or not
+     */
+    private void applyForward(Rule.Action action) {
+        action.getForward()
+            .filter(any -> shouldProcessingContinue())
+            .ifPresent(Throwing.consumer(forward -> {
+                LoopPrevention.RecordedRecipients recordedRecipients = LoopPrevention.RecordedRecipients.fromMail(mail);
+
+                if (recordedRecipients.getRecipients().contains(mailAddress)) {
+                    // Forward is already processed. Do not do it again.
+                    return;
+                }
+
+                Set<MailAddress> newRecipients = getNewRecipients(forward, recordedRecipients);
+                if (!newRecipients.isEmpty()) {
+                    removeFromRecipients();
+                    sendACopy(mailetContext, mailAddress, recordedRecipients, newRecipients);
+                }
+            }));
+    }
+
+
+    private Set<MailAddress> getNewRecipients(Rule.Action.Forward forward, LoopPrevention.RecordedRecipients recordedRecipients) {
+        ImmutableSet.Builder<MailAddress> newRecipientsBuilder = ImmutableSet.<MailAddress>builder()
+            .addAll(recordedRecipients.nonRecordedRecipients(forward.getAddresses()));
+        if (forward.isKeepACopy()) {
+            newRecipientsBuilder.add(mailAddress);
+        }
+        return newRecipientsBuilder.build();
+    }
+
+    private void removeFromRecipients() {
+        mail.setRecipients(mail.getRecipients().stream()
+            .filter(recipient -> !recipient.equals(mailAddress))
+            .collect(ImmutableList.toImmutableList()));
+    }
+
+    private void applyStorageDirective(Rule.Action action) {
+        if (shouldProcessingContinue()) {
+            Optional<ImmutableList<String>> targetMailboxes = computeTargetMailboxes(action);
+
+            StorageDirective.Builder storageDirective = StorageDirective.builder();
+            targetMailboxes.ifPresent(storageDirective::targetFolders);
+            storageDirective
+                .seen(Optional.of(action.isMarkAsSeen()).filter(seen -> seen))
+                .important(Optional.of(action.isMarkAsImportant()).filter(seen -> seen))
+                .keywords(Optional.of(action.getWithKeywords()).filter(c -> !c.isEmpty()))
+                .buildOptional()
+                .map(a -> a.encodeAsAttributes(username))
+                .orElse(Stream.of())
+                .forEach(mail::setAttribute);
+        }
+    }
+
+    private Optional<ImmutableList<String>> computeTargetMailboxes(Rule.Action action) {
+        return Optional.of(action.getAppendInMailboxes().getMailboxIds()
+                .stream()
+                .flatMap(this::asMailboxName)
+                .collect(ImmutableList.toImmutableList()))
+            .filter(mailboxes -> !mailboxes.isEmpty());
     }
 
     private Stream<String> asMailboxName(String mailboxIdString) {
@@ -159,27 +205,36 @@ public class ActionApplier {
         }
     }
 
-    private void sendACopy(MailetContext context, MailAddress originalRecipient, List<MailAddress> forwards) throws MessagingException {
+    private void sendACopy(MailetContext context,
+                           MailAddress originalRecipient,
+                           LoopPrevention.RecordedRecipients recordedRecipients,
+                           Set<MailAddress> newRecipients) throws MessagingException {
         MailImpl copy = MailImpl.duplicate(mail);
         try {
             copy.setSender(originalRecipient);
-            copy.setRecipients(forwards);
+            copy.setRecipients(newRecipients);
+            recordedRecipients.merge(originalRecipient).recordOn(copy);
+
             context.sendMail(copy);
 
-            AuditTrail.entry()
-                .protocol("mailetcontainer")
-                .action("JMAPFiltering")
-                .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
-                    "mimeMessageId", Optional.ofNullable(mail.getMessage())
-                        .map(Throwing.function(MimeMessage::getMessageID))
-                        .orElse(""),
-                    "sender", mail.getMaybeSender().asString(),
-                    "forwardedMailId", copy.getName(),
-                    "forwardedMailSender", originalRecipient.asString(),
-                    "forwardedMailRecipient", StringUtils.join(forwards))))
-                .log("Mail forwarded.");
+            recordInAuditTrail(copy);
         } finally {
             LifecycleUtil.dispose(copy);
         }
+    }
+
+    private void recordInAuditTrail(MailImpl copy) {
+        AuditTrail.entry()
+            .protocol("mailetcontainer")
+            .action("JMAPFiltering")
+            .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function(MimeMessage::getMessageID))
+                    .orElse(""),
+                "sender", mail.getMaybeSender().asString(),
+                "forwardedMailId", copy.getName(),
+                "forwardedMailSender", copy.getMaybeSender().asString(),
+                "forwardedMailRecipient", StringUtils.join(copy.getRecipients()))))
+            .log("Mail forwarded.");
     }
 }

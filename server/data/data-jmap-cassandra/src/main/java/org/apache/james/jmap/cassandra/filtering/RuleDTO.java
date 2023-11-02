@@ -200,10 +200,10 @@ public class RuleDTO {
             }
 
             public Rule.Action.Forward toForward() {
-                return Rule.Action.Forward.of(addresses.stream()
-                        .map(Throwing.function(MailAddress::new))
-                        .collect(ImmutableList.toImmutableList()),
-                    keepACopy);
+                return Rule.Action.Forward.to(addresses.stream()
+                    .map(Throwing.function(MailAddress::new))
+                    .collect(ImmutableList.toImmutableList()))
+                    .keepACopy(keepACopy);
             }
 
             @Override
