@@ -64,7 +64,7 @@ public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnec
 
     private Mono<PostgresqlConnection> create(Domain domain) {
         return connectionFactory.create()
-            .flatMap(connection -> connection.createStatement("SET app.current_domain TO '" + domain.asString() + "'") // It should be set value via Bind, but it doesn't work
+            .flatMap(connection -> connection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + domain.asString() + "'") // It should be set value via Bind, but it doesn't work
                 .execute()
                 .then()
                 .doOnError(e -> LOGGER.error("Error while creating connection for domain {}", domain, e))

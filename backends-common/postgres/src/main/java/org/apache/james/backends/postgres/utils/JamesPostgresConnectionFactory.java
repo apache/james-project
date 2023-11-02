@@ -25,6 +25,8 @@ import io.r2dbc.postgresql.api.PostgresqlConnection;
 import reactor.core.publisher.Mono;
 
 public interface JamesPostgresConnectionFactory {
+    String DOMAIN_ATTRIBUTE = "app.current_domain";
+
     Mono<? extends PostgresqlConnection> getConnection(Domain domain);
 
     Mono<? extends PostgresqlConnection> getConnection();

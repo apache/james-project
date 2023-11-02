@@ -56,4 +56,17 @@ public abstract class JamesPostgresConnectionFactoryTest {
         assertThat(actual).isEqualTo("1");
     }
 
+    @Test
+    void getConnectionShouldSetCurrentDomainAttribute() {
+        Domain domain = Domain.of("james");
+        PostgresqlConnection connection = jamesPostgresConnectionFactory().getConnection(domain).block();
+        String actual = connection.createStatement("show " + JamesPostgresConnectionFactory.DOMAIN_ATTRIBUTE)
+            .execute()
+            .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
+            .collect(Collectors.toUnmodifiableList())
+            .block().get(0);
+
+        assertThat(actual).isEqualTo(domain.asString());
+    }
+
 }
