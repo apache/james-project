@@ -15,9 +15,13 @@ to do so might result in *information disclosure*.
  - *Email forgery*. An attacker might craft an email on the behalf of legitimate users.
  - Email protocols allow user to authenticate and thus can be used as *oracles* to guess user passwords.
  - *Spam*. Non legitimate traffic can be a real burden to your users.
+ - *Phishing*: Crafted emails that tricks the user into doing unintended actions.
+ - *Viruses*: An attacker sends an attachment that contains an exploit that could run if a user opens it.
  - *Denial of service*: A small request may result in a very large response and require considerable work on the server...
  - *Denial of service*: A malicious JMAP client may use the JMAP push subscription to attempt to flood a third party
 server with requests, creating a denial-of-service attack and masking the attacker’s true identity.
+ - *Dictionary Harvest Attacks*: An attacker can rely on SMTP command reply code to know if a user exists or not. This
+ can be used to obtain the list of local users and later use those address as targets for other attacks.
 
 == Best practices
 
@@ -77,8 +81,9 @@ using `auth.plainAuthEnabled=false`.
 
  - 3. Set up reasonable xref:operate/webadmin.adoc#_administrating_quotas[storage quota] for your users.
 
- - 4. We recommend setting up anti-spam and anti-virus solutions. James comes with some xref:configure/spam.adoc[Rspams and SpamAssassin]
-integration, and some experimental, insufficiently tested xref:configure/mailets.adoc#_clamavscan[ClamAV] tooling exists.
+ - 4. We recommend setting up anti-spam and anti-virus solutions. James comes with some xref:configure/spam.adoc[Rspamd and SpamAssassin]
+integration, and some xref:configure/mailets.adoc#_clamavscan[ClamAV] tooling exists.
+Rspamd supports anti-phishing modules.
 Filtering with third party systems upstream is also possible.
 
  - 5. In order to limit your attack surface, disable protocols you or your users do not use. This includes the JMAP protocol,
