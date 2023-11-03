@@ -170,4 +170,10 @@ with an exclusive consumer.
 Disable with caution (this only makes sense in a distributed setup where other nodes consume tasks).
 Defaults to true.
 
+Limitation: Sometimes, some tasks running on James can be very heavy and take a couple of hours to complete.
+If other tasks are being triggered meanwhile on WebAdmin, they go on the TaskManagerWorkQueue and James unack them,
+telling RabbitMQ it will consume them later. If they don't get consumed before the consumer timeout setup in
+RabbitMQ (default being 30 minutes), RabbitMQ closes the channel on an exception. It is thus advised to declare a
+longer timeout in rabbitmq.conf. More https://www.rabbitmq.com/consumers.html#acknowledgement-timeout[here].
+
 |===
