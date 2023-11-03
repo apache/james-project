@@ -27,11 +27,13 @@ import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.KeyReconnectionHandler;
+import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
@@ -77,6 +79,12 @@ public class JMAPEventBusModule extends AbstractModule {
     @ProvidesIntoSet
     SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(@Named(InjectionKeys.JMAP) EventBusId eventBusId, RabbitMQConfiguration configuration) {
         return new KeyReconnectionHandler(JMAP_NAMING_STRATEGY, eventBusId, configuration);
+    }
+
+    @ProvidesIntoSet
+    HealthCheck healthCheck(@Named(InjectionKeys.JMAP) RabbitMQEventBus eventBus,
+                            SimpleConnectionPool connectionPool) {
+        return new RabbitEventBusConsumerHealthCheck(eventBus, JMAP_NAMING_STRATEGY, connectionPool);
     }
 
     @Provides

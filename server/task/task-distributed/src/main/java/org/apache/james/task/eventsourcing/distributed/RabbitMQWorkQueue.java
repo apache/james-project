@@ -143,13 +143,8 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     @Override
     public void restart() {
-        Disposable previousWorkQueueHandler = receiverHandle;
-        consumeWorkqueue();
-        previousWorkQueueHandler.dispose();
-
-        Disposable previousCancelHandler = this.cancelRequestListenerHandle;
-        registerCancelRequestsListener(cancelRequestQueueName.asString());
-        previousCancelHandler.dispose();
+        closeRabbitResources();
+        start();
     }
 
     private void consumeWorkqueue() {
@@ -271,6 +266,10 @@ public class RabbitMQWorkQueue implements WorkQueue {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        closeRabbitResources();
+    }
+
+    private void closeRabbitResources() {
         Optional.ofNullable(receiverHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(cancelRequestListenerHandle).ifPresent(Disposable::dispose);
