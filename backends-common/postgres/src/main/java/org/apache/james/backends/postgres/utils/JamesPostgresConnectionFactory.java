@@ -19,15 +19,19 @@
 
 package org.apache.james.backends.postgres.utils;
 
+import java.util.Optional;
+
 import org.apache.james.core.Domain;
 
-import io.r2dbc.postgresql.api.PostgresqlConnection;
+import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Mono;
 
 public interface JamesPostgresConnectionFactory {
     String DOMAIN_ATTRIBUTE = "app.current_domain";
 
-    Mono<? extends PostgresqlConnection> getConnection(Domain domain);
+    default Mono<? extends Connection> getConnection(Domain domain) {
+        return getConnection(Optional.ofNullable(domain));
+    }
 
-    Mono<? extends PostgresqlConnection> getConnection();
+    Mono<? extends Connection> getConnection(Optional<Domain> domain);
 }

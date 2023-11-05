@@ -21,18 +21,25 @@ package org.apache.james.backends.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.core.Domain;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
+import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -44,7 +51,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
     static final String DB_PASSWORD = "1";
 
     @Container
-    static final GenericContainer<?> container = new PostgreSQLContainer("postgres:11.1")
+    static final PostgreSQLContainer<?> container = new PostgreSQLContainer("postgres:16.0")
         .withDatabaseName(DB_NAME)
         .withUsername(DB_USER)
         .withPassword(DB_PASSWORD);
@@ -71,30 +78,65 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
     }
 
     @Test
-    void factoryShouldCreateCorrectNumberOfConnection() {
-        // create 50 connection
+    void factoryShouldCreateCorrectNumberOfConnections() {
+        PostgresqlConnection connection = connectionFactory.create().block();
+        Integer previousDbActiveNumberOfConnections = getNumberOfConnections(connection);
+
+        // create 50 connections
         Flux.range(1, 50)
             .flatMap(i -> jamesPostgresConnectionFactory.getConnection(Domain.of("james"+i)))
             .last()
             .block();
 
-        Integer dbActiveConnectionNumber = Mono.from(connectionFactory.create())
-            .flatMap(connection -> Mono.from(connection.createStatement("SELECT count(*) from pg_stat_activity where usename = $1;")
-                .bind("$1", DB_USER)
-                .execute()))
-            .flatMap(result -> Mono.from(result.map((row, rowMetadata) -> row.get(0, Integer.class))))
-            .block();
+        Integer dbActiveNumberOfConnections = getNumberOfConnections(connection);
 
-        // It should be 51 connections to the DB plus one connection to check number of connection
-        assertThat(dbActiveConnectionNumber).isEqualTo(52);
+        assertThat(dbActiveNumberOfConnections - previousDbActiveNumberOfConnections).isEqualTo(50);
+    }
+
+    @Nullable
+    private static Integer getNumberOfConnections(PostgresqlConnection connection) {
+        return Mono.from(connection.createStatement("SELECT count(*) from pg_stat_activity where usename = $1;")
+            .bind("$1", DB_USER)
+            .execute()).flatMap(result -> Mono.from(result.map((row, rowMetadata) -> row.get(0, Integer.class)))).block();
     }
 
     @Test
     void factoryShouldNotCreateNewConnectionWhenDomainsAreTheSame() {
-        Connection connectionOne = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
-        Connection connectionTwo = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
+        Domain domain = Domain.of("james");
+        Connection connectionOne = jamesPostgresConnectionFactory.getConnection(domain).block();
+        Connection connectionTwo = jamesPostgresConnectionFactory.getConnection(domain).block();
 
         assertThat(connectionOne == connectionTwo).isTrue();
+    }
+
+    @Test
+    void factoryShouldNotCreateNewConnectionWhenDomainsAreTheSameAndRequestsAreFromDifferentThreads() throws Exception {
+        Set<Connection> connectionSet = ConcurrentHashMap.newKeySet();
+
+        ConcurrentTestRunner.builder()
+            .reactorOperation((threadNumber, step) -> jamesPostgresConnectionFactory.getConnection(Domain.of("james"))
+                .doOnNext(connectionSet::add)
+                .then())
+            .threadCount(100)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(connectionSet).hasSize(1);
+    }
+
+    @Test
+    void factoryShouldCreateOnlyOneDefaultConnection() throws Exception {
+        Set<PostgresqlConnection> connectionSet = ConcurrentHashMap.newKeySet();
+
+        ConcurrentTestRunner.builder()
+            .reactorOperation((threadNumber, step) -> jamesPostgresConnectionFactory.getConnection(Optional.empty())
+                .doOnNext(connectionSet::add)
+                .then())
+            .threadCount(100)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(connectionSet).hasSize(1);
     }
 
 }

@@ -20,13 +20,17 @@
 package org.apache.james.backends.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import java.util.stream.Collectors;
+
+import java.util.Optional;
 
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
 
-import io.r2dbc.postgresql.api.PostgresqlConnection;
+import com.google.common.collect.ImmutableList;
+
+import io.r2dbc.spi.Connection;
+import reactor.core.publisher.Flux;
 
 public abstract class JamesPostgresConnectionFactoryTest {
 
@@ -34,11 +38,11 @@ public abstract class JamesPostgresConnectionFactoryTest {
 
     @Test
     void getConnectionShouldWork() {
-        PostgresqlConnection connection = jamesPostgresConnectionFactory().getConnection().block();
-        String actual = connection.createStatement("SELECT 1")
-            .execute()
+        Connection connection = jamesPostgresConnectionFactory().getConnection(Optional.empty()).block();
+        String actual = Flux.from(connection.createStatement("SELECT 1")
+                .execute())
             .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
-            .collect(Collectors.toUnmodifiableList())
+            .collect(ImmutableList.toImmutableList())
             .block().get(0);
 
         assertThat(actual).isEqualTo("1");
@@ -46,11 +50,11 @@ public abstract class JamesPostgresConnectionFactoryTest {
 
     @Test
     void getConnectionWithDomainShouldWork() {
-        PostgresqlConnection connection = jamesPostgresConnectionFactory().getConnection(Domain.of("james")).block();
-        String actual = connection.createStatement("SELECT 1")
-            .execute()
+        Connection connection = jamesPostgresConnectionFactory().getConnection(Domain.of("james")).block();
+        String actual = Flux.from(connection.createStatement("SELECT 1")
+                .execute())
             .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
-            .collect(Collectors.toUnmodifiableList())
+            .collect(ImmutableList.toImmutableList())
             .block().get(0);
 
         assertThat(actual).isEqualTo("1");
@@ -59,11 +63,11 @@ public abstract class JamesPostgresConnectionFactoryTest {
     @Test
     void getConnectionShouldSetCurrentDomainAttribute() {
         Domain domain = Domain.of("james");
-        PostgresqlConnection connection = jamesPostgresConnectionFactory().getConnection(domain).block();
-        String actual = connection.createStatement("show " + JamesPostgresConnectionFactory.DOMAIN_ATTRIBUTE)
-            .execute()
+        Connection connection = jamesPostgresConnectionFactory().getConnection(domain).block();
+        String actual = Flux.from(connection.createStatement("show " + JamesPostgresConnectionFactory.DOMAIN_ATTRIBUTE)
+            .execute())
             .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
-            .collect(Collectors.toUnmodifiableList())
+            .collect(ImmutableList.toImmutableList())
             .block().get(0);
 
         assertThat(actual).isEqualTo(domain.asString());
