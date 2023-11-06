@@ -101,7 +101,7 @@ public class ConnectionThreadSafetyTest {
     }
 
     @Test
-    void connectionShouldWorkWellWhenItIsUsedByMultipleThreads() throws Exception {
+    void connectionShouldWorkWellWhenItIsUsedByMultipleThreadsAndAllQueriesAreSelect() throws Exception {
         createData(NUMBER_OF_THREAD);
 
         Connection connection = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
@@ -115,6 +115,22 @@ public class ConnectionThreadSafetyTest {
             .operationCount(1)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
+        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(NUMBER_OF_THREAD).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
+
+        assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    void connectionShouldWorkWellWhenItIsUsedByMultipleThreadsAndAllQueriesAreInsert() throws Exception {
+        Connection connection = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
+
+        ConcurrentTestRunner.builder()
+            .reactorOperation((threadNumber, step) -> createData(connection, threadNumber))
+            .threadCount(NUMBER_OF_THREAD)
+            .operationCount(1)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        List<String> actual = getData(0, NUMBER_OF_THREAD);
         Set<String> expected = Stream.iterate(0, i -> i + 1).limit(NUMBER_OF_THREAD).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
 
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
@@ -141,7 +157,7 @@ public class ConnectionThreadSafetyTest {
             .operationCount(1)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        List<String> actualInsert = getData();
+        List<String> actualInsert = getData(50, 100);
 
         Set<String> expectedSelect = Stream.iterate(0, i -> i + 1).limit(50).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
         Set<String> expectedInsert = Stream.iterate(50, i -> i + 1).limit(50).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
@@ -167,10 +183,10 @@ public class ConnectionThreadSafetyTest {
             .then();
     }
 
-    private List<String> getData() {
+    private List<String> getData(int lowerBound, int upperBound) {
         return Flux.from(postgresqlConnection.createStatement("SELECT id, name FROM person WHERE id >= $1 AND id < $2")
-                .bind("$1", 50)
-                .bind("$2", 100)
+                .bind("$1", lowerBound)
+                .bind("$2", upperBound)
                 .execute())
             .flatMap(result -> result.map((row, rowMetadata) -> row.get("id", Long.class) + "|" + row.get("name", String.class)))
             .collect(ImmutableList.toImmutableList()).block();
