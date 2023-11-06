@@ -39,7 +39,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-class JPAJamesServerTest implements JamesServerConcreteContract {
+class PostgresJamesServerTest implements JamesServerConcreteContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
