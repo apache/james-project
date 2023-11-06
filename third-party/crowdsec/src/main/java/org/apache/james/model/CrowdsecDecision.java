@@ -57,6 +57,34 @@ public class CrowdsecDecision {
         this.duration = duration;
     }
 
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    public String getScenario() {
+        return scenario;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
     public final boolean equals(Object o) {
         if (!(o instanceof CrowdsecDecision)) {
             return false;
