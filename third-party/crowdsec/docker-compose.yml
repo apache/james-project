@@ -14,6 +14,7 @@ services:
       - ./sample-configuration/extensions.properties:/root/conf/extensions.properties
       - ./sample-configuration/smtpserver.xml:/root/conf/smtpserver.xml
       - ./sample-configuration/crowdsec.properties:/root/conf/crowdsec.properties
+      - ./sample-configuration/imapserver.xml:/root/conf/imapserver.xml
     networks:
       - james
     ports:
@@ -37,8 +38,8 @@ services:
       - ./sample-configuration/collections:/etc/crowdsec/collections
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - "8082:8080"
-      - "6061:6060"
+      - "8080:8080"
+      - "6060:6060"
     networks:
       - james
 networks:

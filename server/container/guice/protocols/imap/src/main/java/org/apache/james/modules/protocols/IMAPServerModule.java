@@ -30,6 +30,7 @@ import org.apache.james.ProtocolConfigurationSanitizer;
 import org.apache.james.RunArguments;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.imap.ImapSuite;
+import org.apache.james.imap.api.ConnectionCheckFactory;
 import org.apache.james.imap.api.display.Localizer;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.DefaultMailboxTyper;
@@ -103,6 +104,7 @@ public class IMAPServerModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(ImapGuiceProbe.class);
 
         Multibinder.newSetBinder(binder(), CertificateReloadable.Factory.class).addBinding().to(IMAPServerFactory.class);
+        bind(ConnectionCheckFactory.class).to(ConnectionCheckFactoryImpl.class);
     }
 
     @Provides
@@ -111,8 +113,9 @@ public class IMAPServerModule extends AbstractModule {
                                            GuiceGenericLoader loader,
                                            StatusResponseFactory statusResponseFactory,
                                            MetricFactory metricFactory,
-                                           GaugeRegistry gaugeRegistry) {
-        return new IMAPServerFactory(fileSystem, imapSuiteLoader(loader, statusResponseFactory), metricFactory, gaugeRegistry);
+                                           GaugeRegistry gaugeRegistry,
+                                           ConnectionCheckFactory connectionCheckFactory) {
+        return new IMAPServerFactory(fileSystem, imapSuiteLoader(loader, statusResponseFactory), metricFactory, gaugeRegistry, connectionCheckFactory);
     }
 
     DefaultProcessor provideClassImapProcessors(ImapPackage imapPackage, GuiceGenericLoader loader, StatusResponseFactory statusResponseFactory) {

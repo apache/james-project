@@ -42,6 +42,7 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -69,6 +70,7 @@ import org.apache.commons.net.imap.AuthenticatingIMAPClient;
 import org.apache.commons.net.imap.IMAPReply;
 import org.apache.commons.net.imap.IMAPSClient;
 import org.apache.james.core.Username;
+import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.base.AbstractProcessor;
@@ -111,6 +113,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.sun.mail.imap.IMAPFolder;
 
 import ch.qos.logback.classic.Logger;
@@ -148,6 +151,7 @@ class IMAPServerTest {
         memoryIntegrationResources = inMemoryIntegrationResources;
 
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
+        Set<ConnectionCheck> connectionChecks = defaultConnectionChecks();
         IMAPServer imapServer = new IMAPServer(
             DefaultImapDecoderFactory.createDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
@@ -162,7 +166,7 @@ class IMAPServerTest {
                 memoryIntegrationResources.getQuotaRootResolver(),
                 metricFactory),
             new ImapMetrics(metricFactory),
-            new NoopGaugeRegistry());
+            new NoopGaugeRegistry(), connectionChecks);
 
         FileSystemImpl fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
         imapServer.setFileSystem(fileSystem);
@@ -172,7 +176,6 @@ class IMAPServerTest {
 
         return imapServer;
     }
-
     private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         authenticator = new FakeAuthenticator();
         authenticator.addUser(USER, USER_PASS);
@@ -195,6 +198,59 @@ class IMAPServerTest {
 
     private IMAPServer createImapServer(String configurationFile) throws Exception {
         return createImapServer(ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream(configurationFile)));
+    }
+
+    private Set<ConnectionCheck> defaultConnectionChecks() {
+        return ImmutableSet.of(new IpConnectionCheck());
+    }
+
+    @Nested
+    class ConnectionCheckTest {
+
+        IMAPServer imapServer;
+        private final IpConnectionCheck ipConnectionCheck = new IpConnectionCheck();
+        private int port;
+
+        @BeforeEach
+        void beforeEach() throws Exception {
+            HierarchicalConfiguration<ImmutableNode> config = ConfigLoader.getConfig(ClassLoaderUtils.getSystemResourceAsSharedStream("imapServerImapConnectCheck.xml"));
+            imapServer = createImapServer(config);
+            port = imapServer.getListenAddresses().get(0).getPort();
+        }
+
+        @AfterEach
+        void tearDown() {
+            imapServer.destroy();
+        }
+
+        @Test
+        void banIpWhenBannedIpConnect() {
+            imapServer.getConnectionChecks().stream()
+                .filter(check -> check instanceof IpConnectionCheck)
+                .map(check -> (IpConnectionCheck) check)
+                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.1")));
+
+            assertThatThrownBy(() -> testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE));
+        }
+
+        @Test
+        void allowConnectWithUnbannedIp() throws IOException {
+            imapServer.getConnectionChecks().stream()
+                .filter(check -> check instanceof IpConnectionCheck)
+                .map(check -> (IpConnectionCheck) check)
+                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of("127.0.0.2")));
+
+            testIMAPClient.connect("127.0.0.1", port)
+                .login(USER.asString(), USER_PASS)
+                .append("INBOX", SMALL_MESSAGE);
+
+            assertThat(testIMAPClient
+                .select("INBOX")
+                .readFirstMessage())
+                .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
+        }
     }
 
     @Nested
@@ -492,6 +548,10 @@ class IMAPServerTest {
 
     @Nested
     class Proxy {
+        private static final String CLIENT_IP = "255.255.255.254";
+        private static final String PROXY_IP = "255.255.255.255";
+        private static final String RANDOM_IP = "127.0.0.2";
+
         IMAPServer imapServer;
         private SocketChannel clientConnection;
 
@@ -512,10 +572,57 @@ class IMAPServerTest {
             imapServer.destroy();
         }
 
+        private void addBannedIps(String clientIp) {
+            imapServer.getConnectionChecks().stream()
+                .filter(check -> check instanceof IpConnectionCheck)
+                .map(check -> (IpConnectionCheck) check)
+                .forEach(ipCheck -> ipCheck.setBannedIps(Set.of(clientIp)));
+        }
+
         @Test
         void shouldNotFailOnProxyInformation() throws Exception {
             clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
-                "TCP4", "255.255.255.254", "255.255.255.255", 65535, 65535,
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+
+            assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
+                .startsWith("a0 OK");
+        }
+
+        @Test
+        void shouldDetectAndBanByClientIP() throws IOException {
+            addBannedIps(CLIENT_IP);
+
+            // WHEN connect as CLIENT_IP to PROXY_DESTINATION via PROXY_IP
+            clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+
+            // THEN LOGIN should be rejected
+            assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
+                .doesNotStartWith("a0 OK");
+        }
+
+        @Test
+        void shouldNotBanByProxyIP() throws IOException {
+            // GIVEN somehow PROXY_IP has been banned by mistake
+            addBannedIps(PROXY_IP);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
+                USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+
+            // THEN CLIENT_IP still can connect
+            assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
+                .startsWith("a0 OK");
+        }
+
+        @Test
+        void clientUsageShouldBeNormalWhenClientIPIsNotBanned() throws IOException {
+            addBannedIps(RANDOM_IP);
+
+            clientConnection.write(ByteBuffer.wrap(String.format("PROXY %s %s %s %d %d\r\na0 LOGIN %s %s\r\n",
+                "TCP4", CLIENT_IP, PROXY_IP, 65535, 65535,
                 USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(clientConnection), StandardCharsets.US_ASCII))
