@@ -23,3 +23,24 @@ Custom configuration can be obtained through `ImapConfiguration` class via the `
 A full working example is available link:https://github.com/apache/james-project/tree/master/examples/custom-imap[here].
 
 See this page for xref:configure/imap.adoc#_extending_imap[more details on configuring IMAP extensions].
+
+== IMAP additional Connection Checks
+
+James allows defining your own additional connection checks to guarantee that the connecting IP is secured.
+
+A custom connection check should implement the following functional interface:
+```
+@FunctionalInterface
+public interface ConnectionCheck {
+    Publisher<Void> validate(InetSocketAddress remoteAddress);
+}
+```
+
+- `validate` method is used to check the connecting IP is secured.
+
+Then the custom defined ConnectionCheck can be added in `imapserver.xml` file:
+```
+<additionalConnectionChecks>org.apache.james.CrowdsecImapConnectionCheck</additionalConnectionChecks>
+```
+
+An example for configuration is available link:https://github.com/apache/james-project/blob/master/third-party/crowdsec/sample-configuration/imapserver.xml[here].

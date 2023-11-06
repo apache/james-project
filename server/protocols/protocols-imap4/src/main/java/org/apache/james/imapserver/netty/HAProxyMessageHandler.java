@@ -22,7 +22,9 @@ package org.apache.james.imapserver.netty;
 import static org.apache.james.imapserver.netty.ImapChannelUpstreamHandler.MDC_KEY;
 
 import java.net.InetSocketAddress;
+import java.util.Set;
 
+import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.ProxyInformation;
@@ -36,11 +38,18 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.AttributeKey;
+import reactor.core.publisher.Flux;
 
 public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HAProxyMessageHandler.class);
     private static final AttributeKey<CommandDetectionSession> SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");
     public static final AttributeKey<ProxyInformation> PROXY_INFO = AttributeKey.valueOf("proxyInfo");
+
+    private final Set<ConnectionCheck> connectionChecks;
+
+    public HAProxyMessageHandler(Set<ConnectionCheck> connectionChecks) {
+        this.connectionChecks = connectionChecks;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -51,14 +60,16 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
             ImapSession imapSession = (ImapSession) pipeline.channel().attr(SESSION_ATTRIBUTE_KEY).get();
             if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
 
+                InetSocketAddress sourceIP = new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort());
                 ctx.channel().attr(PROXY_INFO).set(
                     new ProxyInformation(
-                        new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()),
+                        sourceIP,
                         new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort())));
 
                 LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
                 // Refresh MDC info to account for proxying
                 MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
+                Flux.fromIterable(connectionChecks).concatMap(connectionCheck -> connectionCheck.validate(sourceIP)).then().block();
 
                 if (imapSession != null) {
                     imapSession.setAttribute(MDC_KEY, boundMDC);

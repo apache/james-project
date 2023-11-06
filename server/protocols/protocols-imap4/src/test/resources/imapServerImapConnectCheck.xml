@@ -1,0 +1,16 @@
+
+<imapserver enabled="true">
+    <jmxName>imapserver</jmxName>
+    <bind>0.0.0.0:0</bind>
+    <connectionBacklog>200</connectionBacklog>
+    <connectionLimit>0</connectionLimit>
+    <connectionLimitPerIP>0</connectionLimitPerIP>
+    <idleTimeInterval>120</idleTimeInterval>
+    <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
+    <enableIdle>true</enableIdle>
+    <inMemorySizeLimit>64K</inMemorySizeLimit>
+    <literalSizeLimit>128K</literalSizeLimit>
+    <plainAuthDisallowed>false</plainAuthDisallowed>
+    <gracefulShutdown>false</gracefulShutdown>
+    <additionalConnectionChecks>org.apache.james.imapserver.netty.IpConnectionCheck</additionalConnectionChecks>
+</imapserver>
