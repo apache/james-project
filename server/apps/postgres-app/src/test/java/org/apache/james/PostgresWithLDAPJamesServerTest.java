@@ -19,21 +19,39 @@
 
 package org.apache.james;
 
-import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import static org.apache.james.MailsShouldBeWellReceived.JAMES_SERVER_HOST;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.LDAP;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+
+import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.data.LdapTestExtension;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.user.ldap.DockerLdapSingleton;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JPAJamesServerWithAuthenticatedDatabaseSqlValidationTest extends JPAJamesServerWithSqlValidationTest {
-
+class PostgresWithLDAPJamesServerTest {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .usersRepository(DEFAULT)
+            .usersRepository(LDAP)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.WithDatabaseAuthentication()))
+            .overrideWith(new TestJPAConfigurationModule()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .extension(new LdapTestExtension())
         .build();
+
+
+    @Test
+    void userFromLdapShouldLoginViaImapProtocol(GuiceJamesServer server) throws IOException {
+        IMAPClient imapClient = new IMAPClient();
+        imapClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort());
+
+        assertThat(imapClient.login(DockerLdapSingleton.JAMES_USER.asString(), DockerLdapSingleton.PASSWORD)).isTrue();
+    }
 }
