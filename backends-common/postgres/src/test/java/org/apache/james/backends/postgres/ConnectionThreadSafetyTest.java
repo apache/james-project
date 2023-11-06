@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
@@ -134,6 +135,34 @@ public class ConnectionThreadSafetyTest {
         Set<String> expected = Stream.iterate(0, i -> i + 1).limit(NUMBER_OF_THREAD).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
 
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @Test
+    void connectionShouldWorkWellWhenItIsUsedByMultipleThreadsAndInsertQueriesAreDuplicated() throws Exception {
+        Connection connection = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
+
+        AtomicInteger numberOfSuccess = new AtomicInteger(0);
+        AtomicInteger numberOfFail = new AtomicInteger(0);
+        ConcurrentTestRunner.builder()
+            .reactorOperation((threadNumber, step) -> createData(connection, threadNumber%10)
+                .then(Mono.fromCallable(() -> numberOfSuccess.incrementAndGet()))
+                .then()
+                .onErrorResume(throwable -> {
+                    if (throwable.getMessage().contains("duplicate key value violates unique constraint")) {
+                        numberOfFail.incrementAndGet();
+                    }
+                    return Mono.empty();
+                }))
+            .threadCount(100)
+            .operationCount(1)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        List<String> actual = getData(0, 100);
+        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(10).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
+
+        assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
+        assertThat(numberOfSuccess.get()).isEqualTo(10);
+        assertThat(numberOfFail.get()).isEqualTo(90);
     }
 
     @Test
