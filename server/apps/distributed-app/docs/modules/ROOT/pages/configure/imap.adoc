@@ -159,6 +159,8 @@ The following configuration properties are available for extensions:
 thus enable implementing new IMAP commands or replace existing IMAP processors. List of FQDNs, which can be located in
 James extensions.
 
+| additionalConnectionChecks
+| Configure (union) of additional connection checks. ConnectionCheck will check if the connection IP is secure or not.
 | customProperties
 | Properties for custom extension. Each tag is a property entry, and holds a string under the form key=value.
 |===
