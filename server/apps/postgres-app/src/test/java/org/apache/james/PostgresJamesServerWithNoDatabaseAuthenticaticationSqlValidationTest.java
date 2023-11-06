@@ -19,12 +19,20 @@
 
 package org.apache.james;
 
-import org.junit.jupiter.api.Disabled;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-abstract class JPAJamesServerWithSqlValidationTest extends JPAJamesServerTest {
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-    @Override
-    @Disabled("Failing to create the domain: duplicate with test in JPAJamesServerTest")
-    void jpaGuiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) {
-    }
+class PostgresJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest extends PostgresJamesServerWithSqlValidationTest {
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
+        PostgresJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .usersRepository(DEFAULT)
+            .build())
+        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.NoDatabaseAuthentication()))
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 }
