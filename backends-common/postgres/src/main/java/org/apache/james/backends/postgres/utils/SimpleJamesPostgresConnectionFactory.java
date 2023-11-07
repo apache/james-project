@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.Domain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,7 @@ public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnec
     private final ConnectionFactory connectionFactory;
     private final Map<Domain, Connection> mapDomainToConnection = new ConcurrentHashMap<>();
 
+    @Inject
     public SimpleJamesPostgresConnectionFactory(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }
