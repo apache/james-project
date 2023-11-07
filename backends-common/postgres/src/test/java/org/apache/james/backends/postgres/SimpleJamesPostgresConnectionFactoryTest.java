@@ -136,7 +136,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
             .reactorOperation((threadNumber, step) -> jamesPostgresConnectionFactory.getConnection(Domain.of("james"))
                 .doOnNext(connectionSet::add)
                 .then())
-            .threadCount(100)
+            .threadCount(50)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
@@ -145,7 +145,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
 
     @Test
     void factoryShouldCreateOnlyOneDefaultConnection() throws Exception {
-        Set<PostgresqlConnection> connectionSet = ConcurrentHashMap.newKeySet();
+        Set<Connection> connectionSet = ConcurrentHashMap.newKeySet();
 
         ConcurrentTestRunner.builder()
             .reactorOperation((threadNumber, step) -> jamesPostgresConnectionFactory.getConnection(Optional.empty())

@@ -29,9 +29,9 @@ import reactor.core.publisher.Mono;
 public interface JamesPostgresConnectionFactory {
     String DOMAIN_ATTRIBUTE = "app.current_domain";
 
-    default Mono<? extends Connection> getConnection(Domain domain) {
+    default Mono<Connection> getConnection(Domain domain) {
         return getConnection(Optional.ofNullable(domain));
     }
 
-    Mono<? extends Connection> getConnection(Optional<Domain> domain);
+    Mono<Connection> getConnection(Optional<Domain> domain);
 }
