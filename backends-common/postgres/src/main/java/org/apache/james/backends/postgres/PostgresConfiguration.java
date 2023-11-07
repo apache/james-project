@@ -39,7 +39,7 @@ public class PostgresConfiguration {
     public static final String DATABASE_SCHEMA_DEFAULT_VALUE = "public";
     public static final String RLS_ENABLED = "row.level.security.enabled";
 
-    static class Credential {
+    public static class Credential {
         private final String username;
         private final String password;
 
