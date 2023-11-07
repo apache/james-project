@@ -137,7 +137,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void initTablesAndIndexes() {
-        PostgresTableManager postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule);
+        PostgresTableManager postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration.rlsEnabled());
         postgresTableManager.initializeTables().block();
         postgresTableManager.initializeTableIndexes().block();
     }
