@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -71,7 +72,7 @@ public class DKIMVerify extends GenericMailet {
 
     public void service(Mail mail) throws MessagingException {
         try {
-            MimeMessage message = mail.getMessage();
+            MimeMessageWrapper message = (MimeMessageWrapper) mail.getMessage();
             List<SignatureRecord> res = verifier.verify(message, forceCRLF);
             if (res == null || res.isEmpty()) {
                 // neutral

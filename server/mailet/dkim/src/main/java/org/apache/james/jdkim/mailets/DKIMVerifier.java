@@ -31,6 +31,7 @@ import org.apache.james.jdkim.api.Headers;
 import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
+import org.apache.james.server.core.MimeMessageWrapper;
 
 public class DKIMVerifier {
     private final org.apache.james.jdkim.DKIMVerifier originalVerifier;
@@ -40,10 +41,10 @@ public class DKIMVerifier {
     }
 
     public List<SignatureRecord> verifyUsingCRLF(MimeMessage message) throws MessagingException, FailException {
-        return verify(message, true);
+        return verify((MimeMessageWrapper) message, true);
     }
 
-    public List<SignatureRecord> verify(MimeMessage message, boolean forceCRLF) throws MessagingException, FailException {
+    public List<SignatureRecord> verify(MimeMessageWrapper message, boolean forceCRLF) throws MessagingException, FailException {
         Headers headers = new MimeMessageHeaders(message);
         BodyHasher bh = originalVerifier.newBodyHasher(headers);
         try {
@@ -53,7 +54,7 @@ public class DKIMVerifier {
                 if (forceCRLF) {
                     os = new CRLFOutputStream(os);
                 }
-                message.writeTo(os);
+                message.getInputStream().transferTo(os);
             }
 
         } catch (IOException e) {

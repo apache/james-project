@@ -46,6 +46,7 @@ import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.PermFailException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.apache.james.server.core.MimeMessageWrapper;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -148,14 +149,14 @@ public class DKIMSign extends GenericMailet {
                 .newSignatureRecordTemplate(getSignatureTemplate());
         try {
             BodyHasher bhj = signer.newBodyHasher(signRecord);
-            MimeMessage message = mail.getMessage();
+            MimeMessageWrapper message = (MimeMessageWrapper) mail.getMessage();
             Headers headers = new MimeMessageHeaders(message);
             try {
                 OutputStream os = new HeaderSkippingOutputStream(bhj.getOutputStream());
                 if (forceCRLF) {
                     os = new CRLFOutputStream(os);
                 }
-                message.writeTo(os);
+                message.getInputStream().transferTo(os);
             } catch (IOException e) {
                 throw new MessagingException("Exception calculating bodyhash: " + e.getMessage(), e);
             } finally {

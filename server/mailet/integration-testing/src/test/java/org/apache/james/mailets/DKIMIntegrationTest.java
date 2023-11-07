@@ -53,6 +53,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
 class DKIMIntegrationTest {
@@ -128,7 +129,30 @@ class DKIMIntegrationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, RECIPIENT);
+            .sendMessageWithHeaders(FROM, ImmutableList.of(RECIPIENT), "Return-Path: <btellier@linagora.com>\n" +
+                "Content-Type: multipart/mixed; boundary=\"------------dsVZbfyUhMRjfuWnqQ80tHvc\"\n" +
+                "Message-ID: <a7a376a1-cadb-45bc-9deb-39f749f62b6d@linagora.com>\n" +
+                "Date: Tue, 7 Nov 2023 12:14:47 +0100\n" +
+                "MIME-Version: 1.0\n" +
+                "User-Agent: Mozilla Thunderbird\n" +
+                "Content-Language: en-US\n" +
+                "To: btellier@linagora.com\n" +
+                "From: \"btellier@linagora.com\" <btellier@linagora.com>\n" +
+                "Subject: Simple message\n" +
+                "\n" +
+                "This is a multi-part message in MIME format.\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc\n" +
+                "Content-Type: text/plain; charset=UTF-8; format=flowed\n" +
+                "Content-Transfer-Encoding: 7bit\n" +
+                "\n" +
+                "Simple body\n" +
+                "\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc\n" +
+                "Content-Type: message/rfc822; name=BNPP ADVICE LOLO.eml\n" +
+                "Content-Disposition: attachment; filename=\"BNPP.eml\"\n" +
+                "\n" +
+                "\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc--");
 
         testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(RECIPIENT, PASSWORD)
@@ -136,12 +160,57 @@ class DKIMIntegrationTest {
             .awaitMessage(awaitAtMostOneMinute);
 
         assertThat(dkimAuthResults)
-                .hasSize(1);
+            .hasSize(1);
         assertThat(dkimAuthResults.get(0))
-                .hasValueSatisfying(result -> assertThat(result).startsWith("pass"));
+            .hasValueSatisfying(result -> assertThat(result).startsWith("pass"));
 
         assertThat(testIMAPClient.readFirstMessageHeaders())
-                .contains("DKIM-Signature");
+            .contains("DKIM-Signature");
+    }
+
+    @Test
+    void dkimShouldBeResilientWhenFacedWithInvalidHeaders(@TempDir File temporaryFolder) throws Exception {
+        initJamesServer(temporaryFolder, binder -> binder.bind(PublicKeyRecordRetriever.class).toInstance(MOCK_PUBLIC_KEY_RECORD_RETRIEVER));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, ImmutableList.of(RECIPIENT), "Return-Path: <btellier@linagora.com>\n" +
+                "Content-Type: multipart/mixed; boundary=\"------------dsVZbfyUhMRjfuWnqQ80tHvc\"\n" +
+                "Message-ID: <a7a376a1-cadb-45bc-9deb-39f749f62b6d@linagora.com>\n" +
+                "Date: Tue, 7 Nov 2023 12:14:47 +0100\n" +
+                "MIME-Version: 1.0\n" +
+                "User-Agent: Mozilla Thunderbird\n" +
+                "Content-Language: en-US\n" +
+                "To: btellier@linagora.com\n" +
+                "From: \"btellier@linagora.com\" <btellier@linagora.com>\n" +
+                "Subject: Simple message\n" +
+                "\n" +
+                "This is a multi-part message in MIME format.\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc\n" +
+                "Content-Type: text/plain; charset=UTF-8; format=flowed\n" +
+                "Content-Transfer-Encoding: 7bit\n" +
+                "\n" +
+                "Simple body\n" +
+                "\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc\n" +
+                "Content-Type: message/rfc822; name=BNPP ADVICE LOLO.eml\n" +
+                "Content-Disposition: attachment; filename=\"BNPP.eml\"\n" +
+                "\n" +
+                "\n" +
+                "--------------dsVZbfyUhMRjfuWnqQ80tHvc--");
+
+        testIMAPClient.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(TestIMAPClient.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(dkimAuthResults)
+            .hasSize(1);
+        assertThat(dkimAuthResults.get(0))
+            .hasValueSatisfying(result -> assertThat(result).startsWith("pass"));
+
+        assertThat(testIMAPClient.readFirstMessageHeaders())
+            .contains("DKIM-Signature");
     }
 
     @Test
