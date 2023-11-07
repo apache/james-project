@@ -23,15 +23,16 @@ import static org.apache.james.mailbox.jpa.user.PostgresSubscriptionTable.MAILBO
 import static org.apache.james.mailbox.jpa.user.PostgresSubscriptionTable.TABLE_NAME;
 import static org.apache.james.mailbox.jpa.user.PostgresSubscriptionTable.USER;
 
-import org.apache.james.backends.postgres.PostgresDAO;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PostgresSubscriptionDAO extends PostgresDAO {
-    protected PostgresSubscriptionDAO(PostgresExecutor executor) {
-        super(executor);
+public class PostgresSubscriptionDAO {
+    protected final PostgresExecutor executor;
+
+    public PostgresSubscriptionDAO(PostgresExecutor executor) {
+        this.executor = executor;
     }
 
     public Mono<Void> save(String username, String mailbox) {

@@ -19,11 +19,27 @@
 
 package org.apache.james.mailbox.jpa.user;
 
+import static org.apache.james.mailbox.jpa.user.PostgresSubscriptionTable.MAILBOX;
+import static org.apache.james.mailbox.jpa.user.PostgresSubscriptionTable.TABLE_NAME;
+import static org.apache.james.mailbox.jpa.user.PostgresSubscriptionTable.USER;
+
+import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresTable;
+import org.jooq.impl.DSL;
 
 public interface PostgresSubscriptionModule {
+    PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+        .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
+            .column(MAILBOX)
+            .column(USER)
+            .constraint(DSL.unique(MAILBOX, USER))))
+        .enableRowLevelSecurity();
+    PostgresIndex INDEX = PostgresIndex.name("subscription_user_index")
+        .createIndexStep((dsl, indexName) -> dsl.createIndex(indexName)
+            .on(TABLE_NAME, USER));
     PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresSubscriptionTable.TABLE)
-        .addIndex(PostgresSubscriptionTable.INDEX)
+        .addTable(TABLE)
+        .addIndex(INDEX)
         .build();
 }
