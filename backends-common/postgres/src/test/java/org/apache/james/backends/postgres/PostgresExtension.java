@@ -24,6 +24,7 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
@@ -33,15 +34,26 @@ import reactor.core.publisher.Mono;
 
 public class PostgresExtension implements GuiceModuleTestExtension {
     private final PostgresModule postgresModule;
+    private final boolean rlsEnabled;
+    private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor postgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
 
-    public PostgresExtension(PostgresModule postgresModule) {
+    public PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
         this.postgresModule = postgresModule;
+        this.rlsEnabled = rlsEnabled;
+    }
+
+    public PostgresExtension(PostgresModule postgresModule) {
+        this(postgresModule, false);
+    }
+
+    public PostgresExtension(boolean rlsEnabled) {
+        this(PostgresModule.EMPTY_MODULE, rlsEnabled);
     }
 
     public PostgresExtension() {
-        this(PostgresModule.EMPTY_MODULE);
+        this(false);
     }
 
     @Override
@@ -53,13 +65,20 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void initPostgresSession() {
-         connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-            .host(getHost())
-            .port(getMappedPort())
-            .username(PostgresFixture.Database.DB_USER)
-            .password(PostgresFixture.Database.DB_PASSWORD)
-            .database(PostgresFixture.Database.DB_NAME)
-            .schema(PostgresFixture.Database.SCHEMA)
+        postgresConfiguration = PostgresConfiguration.builder()
+            .url(String.format("postgresql://%s:%s@%s:%d", PostgresFixture.Database.DB_USER, PostgresFixture.Database.DB_PASSWORD, getHost(), getMappedPort()))
+            .databaseName(PostgresFixture.Database.DB_NAME)
+            .databaseSchema(PostgresFixture.Database.SCHEMA)
+            .rlsEnabled(rlsEnabled)
+            .build();
+
+        PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+            .host(postgresConfiguration.getUrl().getHost())
+            .port(postgresConfiguration.getUrl().getPort())
+            .username(postgresConfiguration.getCredential().getUsername())
+            .password(postgresConfiguration.getCredential().getPassword())
+            .database(postgresConfiguration.getDatabaseName())
+            .schema(postgresConfiguration.getDatabaseSchema())
             .build());
 
         postgresExecutor = new PostgresExecutor(connectionFactory.create()
@@ -94,8 +113,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     @Override
     public Module getModule() {
-        // TODO: return PostgresConfiguration bean when doing https://github.com/linagora/james-project/issues/4910
-        return GuiceModuleTestExtension.super.getModule();
+        return Modules.combine(binder -> binder.bind(PostgresConfiguration.class)
+            .toInstance(postgresConfiguration));
     }
 
     public String getHost() {
