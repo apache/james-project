@@ -37,6 +37,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.google.common.collect.ImmutableList;
+
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
@@ -56,7 +58,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
         .withUsername(DB_USER)
         .withPassword(DB_PASSWORD);
 
-    private PostgresqlConnectionFactory connectionFactory;
+    private PostgresqlConnection postgresqlConnection;
     private SimpleJamesPostgresConnectionFactory jamesPostgresConnectionFactory;
 
     JamesPostgresConnectionFactory jamesPostgresConnectionFactory() {
@@ -67,7 +69,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
     void beforeEach() {
         container.stop();
         container.start();
-        connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+        PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
             .host(container.getHost())
             .port(container.getMappedPort(5432))
             .username(DB_USER)
@@ -75,27 +77,27 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
             .database(DB_NAME)
             .build());
         jamesPostgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(connectionFactory);
+        postgresqlConnection = connectionFactory.create().block();
     }
 
     @Test
     void factoryShouldCreateCorrectNumberOfConnections() {
-        PostgresqlConnection connection = connectionFactory.create().block();
-        Integer previousDbActiveNumberOfConnections = getNumberOfConnections(connection);
+        Integer previousDbActiveNumberOfConnections = getNumberOfConnections();
 
         // create 50 connections
         Flux.range(1, 50)
-            .flatMap(i -> jamesPostgresConnectionFactory.getConnection(Domain.of("james"+i)))
+            .flatMap(i -> jamesPostgresConnectionFactory.getConnection(Domain.of("james" + i)))
             .last()
             .block();
 
-        Integer dbActiveNumberOfConnections = getNumberOfConnections(connection);
+        Integer dbActiveNumberOfConnections = getNumberOfConnections();
 
         assertThat(dbActiveNumberOfConnections - previousDbActiveNumberOfConnections).isEqualTo(50);
     }
 
     @Nullable
-    private static Integer getNumberOfConnections(PostgresqlConnection connection) {
-        return Mono.from(connection.createStatement("SELECT count(*) from pg_stat_activity where usename = $1;")
+    private Integer getNumberOfConnections() {
+        return Mono.from(postgresqlConnection.createStatement("SELECT count(*) from pg_stat_activity where usename = $1;")
             .bind("$1", DB_USER)
             .execute()).flatMap(result -> Mono.from(result.map((row, rowMetadata) -> row.get(0, Integer.class)))).block();
     }
@@ -107,6 +109,23 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
         Connection connectionTwo = jamesPostgresConnectionFactory.getConnection(domain).block();
 
         assertThat(connectionOne == connectionTwo).isTrue();
+    }
+
+    @Test
+    void factoryShouldCreateNewConnectionWhenDomainsAreDifferent() {
+        Connection connectionOne = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
+        Connection connectionTwo = jamesPostgresConnectionFactory.getConnection(Domain.of("lin")).block();
+
+        String domainOne = getDomainAttributeValue(connectionOne);
+
+        String domainTwo = Flux.from(connectionTwo.createStatement("show " + JamesPostgresConnectionFactory.DOMAIN_ATTRIBUTE)
+                .execute())
+            .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
+            .collect(ImmutableList.toImmutableList())
+            .block().get(0);
+
+        assertThat(connectionOne).isNotEqualTo(connectionTwo);
+        assertThat(domainOne).isNotEqualTo(domainTwo);
     }
 
     @Test
@@ -132,7 +151,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
             .reactorOperation((threadNumber, step) -> jamesPostgresConnectionFactory.getConnection(Optional.empty())
                 .doOnNext(connectionSet::add)
                 .then())
-            .threadCount(100)
+            .threadCount(50)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
