@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.ONE_MINUTE;
 
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -49,6 +50,7 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModule()))
+        .extension(new PostgresExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
