@@ -116,7 +116,7 @@ public class ConnectionThreadSafetyTest {
             .operationCount(1)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(NUMBER_OF_THREAD).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
+        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(NUMBER_OF_THREAD).map(i -> i + "|Peter" + i).collect(ImmutableSet.toImmutableSet());
 
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
     }
@@ -132,7 +132,7 @@ public class ConnectionThreadSafetyTest {
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         List<String> actual = getData(0, NUMBER_OF_THREAD);
-        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(NUMBER_OF_THREAD).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
+        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(NUMBER_OF_THREAD).map(i -> i + "|Peter" + i).collect(ImmutableSet.toImmutableSet());
 
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
     }
@@ -144,7 +144,7 @@ public class ConnectionThreadSafetyTest {
         AtomicInteger numberOfSuccess = new AtomicInteger(0);
         AtomicInteger numberOfFail = new AtomicInteger(0);
         ConcurrentTestRunner.builder()
-            .reactorOperation((threadNumber, step) -> createData(connection, threadNumber%10)
+            .reactorOperation((threadNumber, step) -> createData(connection, threadNumber % 10)
                 .then(Mono.fromCallable(() -> numberOfSuccess.incrementAndGet()))
                 .then()
                 .onErrorResume(throwable -> {
@@ -158,7 +158,7 @@ public class ConnectionThreadSafetyTest {
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         List<String> actual = getData(0, 100);
-        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(10).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
+        Set<String> expected = Stream.iterate(0, i -> i + 1).limit(10).map(i -> i + "|Peter" + i).collect(ImmutableSet.toImmutableSet());
 
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
         assertThat(numberOfSuccess.get()).isEqualTo(10);
@@ -174,7 +174,7 @@ public class ConnectionThreadSafetyTest {
         List<String> actualSelect = new Vector<>();
         ConcurrentTestRunner.builder()
             .reactorOperation((threadNumber, step) -> {
-                if (threadNumber<50) {
+                if (threadNumber < 50) {
                     return getData(connection, threadNumber)
                         .doOnNext(s -> actualSelect.add(s))
                         .then();
@@ -188,8 +188,8 @@ public class ConnectionThreadSafetyTest {
 
         List<String> actualInsert = getData(50, 100);
 
-        Set<String> expectedSelect = Stream.iterate(0, i -> i + 1).limit(50).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
-        Set<String> expectedInsert = Stream.iterate(50, i -> i + 1).limit(50).map(i -> i+"|Peter"+i).collect(ImmutableSet.toImmutableSet());
+        Set<String> expectedSelect = Stream.iterate(0, i -> i + 1).limit(50).map(i -> i + "|Peter" + i).collect(ImmutableSet.toImmutableSet());
+        Set<String> expectedInsert = Stream.iterate(50, i -> i + 1).limit(50).map(i -> i + "|Peter" + i).collect(ImmutableSet.toImmutableSet());
 
         assertThat(actualSelect).containsExactlyInAnyOrderElementsOf(expectedSelect);
         assertThat(actualInsert).containsExactlyInAnyOrderElementsOf(expectedInsert);
@@ -222,10 +222,10 @@ public class ConnectionThreadSafetyTest {
     }
 
     private void createData(int upperBound) {
-        for (int i=0; i<upperBound; i++) {
+        for (int i = 0; i < upperBound; i++) {
             postgresqlConnection.createStatement("INSERT INTO person (id, name) VALUES ($1, $2)")
                 .bind("$1", i)
-                .bind("$2", "Peter"+i)
+                .bind("$2", "Peter" + i)
                 .execute().flatMap(PostgresqlResult::getRowsUpdated)
                 .then()
                 .block();
