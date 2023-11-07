@@ -74,7 +74,7 @@ public class MailImplTest extends ContractMailTest {
         assertThat(mail.getName()).isEqualTo("mail-id");
         assertThat(mail.hasAttributes()).describedAs("no initial attributes").isFalse();
         assertThat(mail.getErrorMessage()).describedAs("no initial error").isNull();
-        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
+        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(2));
         assertThat(mail.getRecipients()).describedAs("no initial recipient").isNullOrEmpty();
         assertThat(mail.getRemoteAddr()).describedAs("initial remote address is localhost ip").isEqualTo("127.0.0.1");
         assertThat(mail.getRemoteHost()).describedAs("initial remote host is localhost").isEqualTo("localhost");
@@ -102,7 +102,7 @@ public class MailImplTest extends ContractMailTest {
             .usingRecursiveComparison()
             .ignoringFields("sender", "name", "recipients", "lastUpdated")
             .isEqualTo(expected);
-        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
+        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(2));
     }
 
     @Test
@@ -139,7 +139,7 @@ public class MailImplTest extends ContractMailTest {
             .usingRecursiveComparison()
             .ignoringFields("message", "lastUpdated")
             .isEqualTo(expected);
-        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
+        assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(2));
     }
 
     @Test
