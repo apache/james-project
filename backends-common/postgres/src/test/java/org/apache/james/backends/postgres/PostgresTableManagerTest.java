@@ -42,7 +42,7 @@ class PostgresTableManagerTest {
     static PostgresExtension postgresExtension = new PostgresExtension();
 
     Function<PostgresModule, PostgresTableManager> tableManagerFactory =
-        module -> new PostgresTableManager(new PostgresExecutor(postgresExtension.getConnection()), module);
+        module -> new PostgresTableManager(new PostgresExecutor(postgresExtension.getConnection()), module, true);
 
     @Test
     void initializeTableShouldSuccessWhenModuleHasSingleTable() {
@@ -279,7 +279,7 @@ class PostgresTableManagerTest {
     }
 
     @Test
-    void createTableShouldSucceedWhenEnableRLS() {
+    void createTableShouldCreateRlsColumnWhenEnableRLS() {
         String tableName = "tbn1";
 
         PostgresTable table = PostgresTable.name(tableName)
@@ -316,6 +316,28 @@ class PostgresTableManagerTest {
         assertThat(pgClassCheckResult)
             .containsExactlyInAnyOrder(
                 Pair.of("tbn1", true));
+    }
+
+    @Test
+    void createTableShouldNotCreateRlsColumnWhenDisableRLS() {
+        String tableName = "tbn1";
+
+        PostgresTable table = PostgresTable.name(tableName)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("clm1", SQLDataType.UUID.notNull())
+                .column("clm2", SQLDataType.VARCHAR(255).notNull()))
+            .enableRowLevelSecurity();
+
+        PostgresModule module = PostgresModule.table(table);
+        boolean disabledRLS = false;
+        PostgresTableManager testee = new PostgresTableManager(new PostgresExecutor(postgresExtension.getConnection()), module, disabledRLS);
+
+        testee.initializeTables()
+            .block();
+
+        Pair<String, String> rlsColumn = Pair.of("domain", "character varying");
+        assertThat(getColumnNameAndDataType(tableName))
+            .doesNotContain(rlsColumn);
     }
 
     private List<Pair<String, String>> getColumnNameAndDataType(String tableName) {

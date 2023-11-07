@@ -81,8 +81,9 @@ public class PostgresCommonModule extends AbstractModule {
     @Provides
     @Singleton
     PostgresTableManager postgresTableManager(JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
-                                              PostgresModule postgresModule) {
-        return new PostgresTableManager(jamesPostgresConnectionFactory, postgresModule);
+                                              PostgresModule postgresModule,
+                                              PostgresConfiguration postgresConfiguration) {
+        return new PostgresTableManager(jamesPostgresConnectionFactory, postgresModule, postgresConfiguration);
     }
 
     @ProvidesIntoSet
