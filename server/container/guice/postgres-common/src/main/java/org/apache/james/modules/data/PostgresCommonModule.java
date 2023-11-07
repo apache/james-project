@@ -16,25 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.modules.data;
 
-package org.apache.james;
+import java.io.FileNotFoundException;
 
-import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import javax.inject.Singleton;
 
-import org.apache.james.backends.postgres.PostgresExtension;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.backends.postgres.PostgresConfiguration;
+import org.apache.james.utils.PropertiesProvider;
 
-class PostgresJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest extends PostgresJamesServerWithSqlValidationTest {
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
-        PostgresJamesConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .usersRepository(DEFAULT)
-            .build())
-        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.NoDatabaseAuthentication()))
-        .extension(new PostgresExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+
+public class PostgresCommonModule extends AbstractModule {
+    @Provides
+    @Singleton
+    PostgresConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
+        return PostgresConfiguration.from(propertiesProvider.getConfiguration("postgres"));
+    }
 }
