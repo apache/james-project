@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.data.LdapTestExtension;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.user.ldap.DockerLdapSingleton;
@@ -44,6 +45,7 @@ class PostgresWithLDAPJamesServerTest {
             .overrideWith(new TestJPAConfigurationModule()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .extension(new LdapTestExtension())
+        .extension(new PostgresExtension())
         .build();
 
 
