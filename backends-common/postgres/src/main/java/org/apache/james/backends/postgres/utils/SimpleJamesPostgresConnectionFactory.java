@@ -62,6 +62,7 @@ public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnec
     private Mono<PostgresqlConnection> getAndSetConnection(Domain domain, PostgresqlConnection newConnection) {
         return Mono.justOrEmpty(mapDomainToConnection.putIfAbsent(domain, newConnection))
             .map(postgresqlConnection -> {
+                //close redundant connection
                 newConnection.close()
                     .doOnError(e -> LOGGER.error("Error while closing connection for domain {}", domain, e))
                     .subscribe();
