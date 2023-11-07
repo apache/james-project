@@ -19,20 +19,35 @@
 
 package org.apache.james.backends.postgres;
 
+import java.util.Optional;
+
+import javax.inject.Inject;
+
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.lifecycle.api.Startable;
 import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PostgresTableManager {
+public class PostgresTableManager implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
 
+    @Inject
+    public PostgresTableManager(JamesPostgresConnectionFactory postgresConnectionFactory, PostgresModule module) {
+        this.postgresExecutor = new PostgresExecutor(postgresConnectionFactory.getConnection(Optional.empty()));
+        this.module = module;
+    }
+
+    @VisibleForTesting
     public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
