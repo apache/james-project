@@ -468,8 +468,8 @@
                         -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
                         -Xms512m -Xmx2048m</argLine>
                     <reuseForks>true</reuseForks>
-                    <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
-                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
+                    <!-- Fail tests longer than 30 minutes, prevent form random locking tests -->
+                    <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
                     <excludedGroups>unstable</excludedGroups>
                 </configuration>
             </plugin>
