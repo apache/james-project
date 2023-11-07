@@ -24,15 +24,42 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.postgres.PostgresConfiguration;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
+
+import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
+import io.r2dbc.postgresql.PostgresqlConnectionFactory;
+import io.r2dbc.spi.ConnectionFactory;
 
 public class PostgresCommonModule extends AbstractModule {
+    @Override
+    public void configure() {
+        bind(JamesPostgresConnectionFactory.class).to(SimpleJamesPostgresConnectionFactory.class);
+
+        bind(SimpleJamesPostgresConnectionFactory.class).in(Scopes.SINGLETON);
+    }
+
     @Provides
     @Singleton
     PostgresConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
         return PostgresConfiguration.from(propertiesProvider.getConfiguration("postgres"));
+    }
+
+    @Provides
+    @Singleton
+    ConnectionFactory postgresqlConnectionFactory(PostgresConfiguration postgresConfiguration) {
+        return new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+            .host(postgresConfiguration.getUrl().getHost())
+            .port(postgresConfiguration.getUrl().getPort())
+            .username(postgresConfiguration.getCredential().getUsername())
+            .password(postgresConfiguration.getCredential().getPassword())
+            .database(postgresConfiguration.getDatabaseName())
+            .schema(postgresConfiguration.getDatabaseSchema())
+            .build());
     }
 }
