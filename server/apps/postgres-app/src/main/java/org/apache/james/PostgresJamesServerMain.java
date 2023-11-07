@@ -30,6 +30,7 @@ import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.mailbox.MemoryDeadLetterModule;
+import org.apache.james.modules.mailbox.PostgresMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
@@ -77,12 +78,13 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new SMTPServerModule(),
         WEBADMIN);
 
-    private static final Module JPA_SERVER_MODULE = Modules.combine(
+    private static final Module POSTGRES_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new NaiveDelegationStoreModule(),
         new DefaultProcessorsConfigurationProviderModule(),
         new JPADataModule(),
         new JPAMailboxModule(),
+        new PostgresMailboxModule(),
         new MailboxModule(),
         new LuceneSearchMailboxModule(),
         new NoJwtModule(),
@@ -92,8 +94,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new TaskManagerModule(),
         new MemoryDeadLetterModule());
 
-    private static final Module JPA_MODULE_AGGREGATE = Modules.combine(
-        new MailetProcessingModule(), JPA_SERVER_MODULE, PROTOCOLS);
+    private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
+        new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS);
 
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
@@ -112,7 +114,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     static GuiceJamesServer createServer(PostgresJamesConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPA_MODULE_AGGREGATE)
+            .combineWith(POSTGRES_MODULE_AGGREGATE)
             .combineWith(new UsersRepositoryModuleChooser(new JPAUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()));
     }
