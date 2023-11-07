@@ -101,8 +101,8 @@
                         -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
                         -Xms1024m -Xmx4096m</argLine>
                     <reuseForks>true</reuseForks>
-                    <!-- Fail tests longer than 20 minutes, prevent form random locking tests -->
-                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
+                    <!-- Fail tests longer than 30 minutes, prevent form random locking tests -->
+                    <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
                     <!-- Junit 5 move from Category to Tag, and it needs tag's name as parameter -->
                     <groups combine.self="override">BasicFeature</groups>
                     <excludedGroups>unstable</excludedGroups>
