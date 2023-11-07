@@ -20,6 +20,7 @@
 package org.apache.james.backends.postgres;
 
 
+import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -32,7 +33,7 @@ public interface PostgresModule {
             .build();
     }
 
-    static PostgresModule aggregateModules(List<PostgresModule> modules) {
+    static PostgresModule aggregateModules(Collection<PostgresModule> modules) {
         return builder()
             .modules(modules)
             .build();
@@ -93,7 +94,7 @@ public interface PostgresModule {
             return this;
         }
 
-        public Builder modules(List<PostgresModule> modules) {
+        public Builder modules(Collection<PostgresModule> modules) {
             modules.forEach(module -> {
                 addTable(module.tables());
                 addIndex(module.tableIndexes());
