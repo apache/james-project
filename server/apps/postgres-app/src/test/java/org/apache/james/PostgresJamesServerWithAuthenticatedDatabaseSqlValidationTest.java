@@ -21,6 +21,7 @@ package org.apache.james;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresJamesServerWithAuthenticatedDatabaseSqlValidationTest extends PostgresJamesServerWithSqlValidationTest {
@@ -34,6 +35,7 @@ class PostgresJamesServerWithAuthenticatedDatabaseSqlValidationTest extends Post
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.WithDatabaseAuthentication()))
+        .extension(new PostgresExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
