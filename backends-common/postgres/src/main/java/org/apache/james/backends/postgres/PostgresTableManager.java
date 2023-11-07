@@ -40,17 +40,22 @@ public class PostgresTableManager implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
+    private final boolean rlsEnabled;
 
     @Inject
-    public PostgresTableManager(JamesPostgresConnectionFactory postgresConnectionFactory, PostgresModule module) {
+    public PostgresTableManager(JamesPostgresConnectionFactory postgresConnectionFactory,
+                                PostgresModule module,
+                                PostgresConfiguration postgresConfiguration) {
         this.postgresExecutor = new PostgresExecutor(postgresConnectionFactory.getConnection(Optional.empty()));
         this.module = module;
+        this.rlsEnabled = postgresConfiguration.rlsEnabled();
     }
 
     @VisibleForTesting
-    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module) {
+    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, boolean rlsEnabled) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
+        this.rlsEnabled = rlsEnabled;
     }
 
     public Mono<Void> initializeTables() {
@@ -70,7 +75,7 @@ public class PostgresTableManager implements Startable {
     }
 
     private Mono<Void> alterTableEnableRLSIfNeed(PostgresTable table) {
-        if (table.isEnableRowLevelSecurity()) {
+        if (rlsEnabled && table.isEnableRowLevelSecurity()) {
             return alterTableEnableRLS(table);
         }
         return Mono.empty();
