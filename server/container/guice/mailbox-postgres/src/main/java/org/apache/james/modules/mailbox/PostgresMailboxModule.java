@@ -16,25 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.modules.mailbox;
 
-package org.apache.james;
+import org.apache.james.modules.data.PostgresCommonModule;
 
-import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
+import com.google.inject.AbstractModule;
 
-import org.apache.james.backends.postgres.PostgresExtension;
-import org.junit.jupiter.api.extension.RegisterExtension;
+public class PostgresMailboxModule extends AbstractModule {
 
-class PostgresJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest extends PostgresJamesServerWithSqlValidationTest {
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
-        PostgresJamesConfiguration.builder()
-            .workingDirectory(tmpDir)
-            .configurationFromClasspath()
-            .usersRepository(DEFAULT)
-            .build())
-        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.NoDatabaseAuthentication()))
-        .extension(new PostgresExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
+    @Override
+    protected void configure() {
+        install(new PostgresCommonModule());
+    }
+
 }
