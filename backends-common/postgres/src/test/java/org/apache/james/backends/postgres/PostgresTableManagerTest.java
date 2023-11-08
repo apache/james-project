@@ -286,7 +286,7 @@ class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("clm1", SQLDataType.UUID.notNull())
                 .column("clm2", SQLDataType.VARCHAR(255).notNull()))
-            .enableRLS();
+            .enableRowLevelSecurity();
 
         PostgresModule module = PostgresModule.table(table);
 
