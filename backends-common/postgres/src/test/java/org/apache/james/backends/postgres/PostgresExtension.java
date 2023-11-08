@@ -28,11 +28,13 @@ import com.google.inject.Module;
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.Connection;
+import io.r2dbc.spi.ConnectionFactory;
 import reactor.core.publisher.Mono;
 
 public class PostgresExtension implements GuiceModuleTestExtension {
     private final PostgresModule postgresModule;
     private PostgresExecutor postgresExecutor;
+    private PostgresqlConnectionFactory connectionFactory;
 
     public PostgresExtension(PostgresModule postgresModule) {
         this.postgresModule = postgresModule;
@@ -51,7 +53,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void initPostgresSession() {
-        PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+         connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
             .host(getHost())
             .port(getMappedPort())
             .username(PostgresFixture.Database.DB_USER)
@@ -84,6 +86,12 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         resetSchema();
     }
 
+    public void restartContainer() {
+        DockerPostgresSingleton.SINGLETON.stop();
+        DockerPostgresSingleton.SINGLETON.start();
+        initPostgresSession();
+    }
+
     @Override
     public Module getModule() {
         // TODO: return PostgresConfiguration bean when doing https://github.com/linagora/james-project/issues/4910
@@ -104,6 +112,9 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     public PostgresExecutor getPostgresExecutor() {
         return postgresExecutor;
+    }
+    public ConnectionFactory getConnectionFactory() {
+        return connectionFactory;
     }
 
     private void initTablesAndIndexes() {
