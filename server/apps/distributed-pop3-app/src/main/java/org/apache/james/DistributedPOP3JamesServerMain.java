@@ -133,7 +133,6 @@ public class DistributedPOP3JamesServerMain implements JamesServerMain {
         new SMTPServerModule(),
         WEBADMIN);
 
-
     private static final Module BLOB_MODULE = new BlobExportMechanismModule();
 
     private static final Module CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->

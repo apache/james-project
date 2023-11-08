@@ -128,7 +128,8 @@ public class CassandraUidProvider implements UidProvider {
             .switchIfEmpty(tryInsert(cassandraId))
             .switchIfEmpty(updateUid)
             .single()
-            .retryWhen(retrySpec);
+            .retryWhen(retrySpec)
+            .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()));
     }
 
     @Override
@@ -150,18 +151,21 @@ public class CassandraUidProvider implements UidProvider {
     private List<MessageUid> range(MessageUid lowerExclusive, MessageUid higherInclusive) {
         return LongStream.range(lowerExclusive.asLong() + 1, higherInclusive.asLong() + 1)
             .mapToObj(MessageUid::of)
+            .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()))
             .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     public Optional<MessageUid> lastUid(Mailbox mailbox) {
         return findHighestUid((CassandraId) mailbox.getMailboxId(), Optional.of(lwtProfile).filter(any -> cassandraConfiguration.isUidReadStrongConsistency()))
-            .blockOptional();
+            .blockOptional()
+            .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()));
     }
 
     @Override
     public Mono<Optional<MessageUid>> lastUidReactive(Mailbox mailbox) {
         return findHighestUid((CassandraId) mailbox.getMailboxId(), Optional.of(lwtProfile).filter(any -> cassandraConfiguration.isUidReadStrongConsistency()))
+            .map(uid -> uid.add(cassandraConfiguration.getUidModseqIncrement()))
             .map(Optional::of)
             .switchIfEmpty(Mono.just(Optional.empty()));
     }

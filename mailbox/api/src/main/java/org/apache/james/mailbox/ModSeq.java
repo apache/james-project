@@ -53,6 +53,10 @@ public class ModSeq implements Comparable<ModSeq> {
         return this.equals(ModSeq.first());
     }
 
+    public ModSeq add(int offset) {
+        return ModSeq.of(modSeq + offset);
+    }
+
     @Override
     public int compareTo(ModSeq o) {
         return Long.compare(modSeq, o.modSeq);

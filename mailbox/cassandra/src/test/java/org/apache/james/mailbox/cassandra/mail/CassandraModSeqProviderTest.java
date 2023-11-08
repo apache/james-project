@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +41,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.Scenario.Barrier;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
@@ -47,6 +49,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -63,7 +66,6 @@ class CassandraModSeqProviderTest {
     
     private CassandraModSeqProvider modSeqProvider;
     private Mailbox mailbox;
-
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
@@ -154,5 +156,31 @@ class CassandraModSeqProviderTest {
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(modSeqs).hasSize(100);
+    }
+
+    @Test
+    void shouldHandleOffset(CassandraCluster cassandra) throws Exception {
+        modSeqProvider = new CassandraModSeqProvider(cassandra.getConf(),
+            CassandraConfiguration.builder()
+                .uidModseqIncrement(10)
+                .build());
+
+        ModSeq modseq0 = modSeqProvider.highestModSeq(mailbox);
+        ModSeq modseq1 = modSeqProvider.nextModSeq(mailbox);
+        ModSeq modseq2 = modSeqProvider.nextModSeq(mailbox.getMailboxId());
+        ModSeq modseq3 = modSeqProvider.nextModSeqReactive(mailbox.getMailboxId()).block();
+        ModSeq modseq4 = modSeqProvider.highestModSeq(mailbox);
+        ModSeq modseq5 = modSeqProvider.highestModSeq(mailbox.getMailboxId());
+        ModSeq modseq6 = modSeqProvider.highestModSeqReactive(mailbox).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(modseq0).isEqualTo(ModSeq.of(10));
+            softly.assertThat(modseq1).isEqualTo(ModSeq.of(11));
+            softly.assertThat(modseq2).isEqualTo(ModSeq.of(12));
+            softly.assertThat(modseq3).isEqualTo(ModSeq.of(13));
+            softly.assertThat(modseq4).isEqualTo(ModSeq.of(13));
+            softly.assertThat(modseq5).isEqualTo(ModSeq.of(13));
+            softly.assertThat(modseq6).isEqualTo(ModSeq.of(13));
+        });
     }
 }

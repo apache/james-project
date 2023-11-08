@@ -83,6 +83,7 @@ public class CassandraConfiguration {
     private static final String OPTIMISTIC_CONSISTENCY_LEVEL = "optimistic.consistency.level.enabled";
     private static final String MAIL_REPOSITORY_STRONG_CONSISTENCY = "mailrepository.strong.consistency";
     private static final String ACL_ENABLED = "acl.enabled";
+    private static final String UID_MODSEQ_INCREMENT = "uid.modseq.increment";
 
     public static final CassandraConfiguration DEFAULT_CONFIGURATION = builder().build();
 
@@ -110,6 +111,7 @@ public class CassandraConfiguration {
         private Optional<Boolean> optimisticConsistencyLevel = Optional.empty();
         private Optional<Boolean> mailRepositoryStrongConsistency = Optional.empty();
         private Optional<Boolean> aclEnabled = Optional.empty();
+        private Optional<Integer> uidModseqIncrement = Optional.empty();
 
         public Builder mailboxReadStrongConsistency(boolean value) {
             this.mailboxReadStrongConsistency = Optional.of(value);
@@ -159,6 +161,17 @@ public class CassandraConfiguration {
         public Builder expungeChunkSize(int value) {
             Preconditions.checkArgument(value > 0, "expungeChunkSize needs to be strictly positive");
             this.expungeChunkSize = Optional.of(value);
+            return this;
+        }
+
+        public Builder uidModseqIncrement(int value) {
+            Preconditions.checkArgument(value > 0, "uidModseqIncrement needs to be strictly positive");
+            this.uidModseqIncrement = Optional.of(value);
+            return this;
+        }
+
+        public Builder uidModseqIncrement(Optional<Integer> value) {
+            value.ifPresent(this::uidModseqIncrement);
             return this;
         }
 
@@ -372,7 +385,8 @@ public class CassandraConfiguration {
                 mailRepositoryStrongConsistency.orElse(DEFAULT_MAIL_REPOSITORY_STRONG_CONSISTENCY),
                 uidReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY),
                 modseqReadStrongConsistency.orElse(DEFAULT_STRONG_CONSISTENCY),
-                aclEnabled.orElse(true));
+                aclEnabled.orElse(true),
+                uidModseqIncrement.orElse(0));
         }
     }
 
@@ -427,6 +441,7 @@ public class CassandraConfiguration {
             .mailRepositoryStrongConsistency(Optional.ofNullable(
                 propertiesConfiguration.getBoolean(MAIL_REPOSITORY_STRONG_CONSISTENCY, null)))
             .aclEnabled(Optional.ofNullable(propertiesConfiguration.getBoolean(ACL_ENABLED, null)))
+            .uidModseqIncrement(Optional.ofNullable(propertiesConfiguration.getInteger(UID_MODSEQ_INCREMENT, null)))
             .build();
     }
 
@@ -453,6 +468,7 @@ public class CassandraConfiguration {
     private final boolean uidReadStrongConsistency;
     private final boolean modseqReadStrongConsistency;
     private final boolean aclEnabled;
+    private final int uidModseqIncrement;
 
     @VisibleForTesting
     CassandraConfiguration(int aclMaxRetry, int expungeChunkSize,
@@ -464,7 +480,8 @@ public class CassandraConfiguration {
                            float mailboxCountersReadRepairChanceOneHundred, boolean mailboxReadStrongConsistency,
                            boolean messageReadStrongConsistency, boolean messageWriteStrongConsistency,
                            boolean optimisticConsistencyLevel, boolean mailRepositoryStrongConsistency,
-                           boolean uidReadStrongConsistency, boolean modseqReadStrongConsistency, boolean aclEnabled) {
+                           boolean uidReadStrongConsistency, boolean modseqReadStrongConsistency, boolean aclEnabled,
+                           int uidModseqIncrement) {
         this.aclMaxRetry = aclMaxRetry;
         this.expungeChunkSize = expungeChunkSize;
         this.flagsUpdateMessageIdMaxRetry = flagsUpdateMessageIdMaxRetry;
@@ -488,6 +505,7 @@ public class CassandraConfiguration {
         this.uidReadStrongConsistency = uidReadStrongConsistency;
         this.modseqReadStrongConsistency = modseqReadStrongConsistency;
         this.aclEnabled = aclEnabled;
+        this.uidModseqIncrement = uidModseqIncrement;
     }
 
     public boolean isUidReadStrongConsistency() {
@@ -582,6 +600,10 @@ public class CassandraConfiguration {
         return aclEnabled;
     }
 
+    public int getUidModseqIncrement() {
+        return uidModseqIncrement;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof CassandraConfiguration) {
@@ -609,7 +631,8 @@ public class CassandraConfiguration {
                 && Objects.equals(this.uidReadStrongConsistency, that.uidReadStrongConsistency)
                 && Objects.equals(this.modseqReadStrongConsistency, that.modseqReadStrongConsistency)
                 && Objects.equals(this.mailRepositoryStrongConsistency, that.mailRepositoryStrongConsistency)
-                && Objects.equals(this.aclEnabled, that.aclEnabled);
+                && Objects.equals(this.aclEnabled, that.aclEnabled)
+                && Objects.equals(this.uidModseqIncrement, that.uidModseqIncrement);
         }
         return false;
     }
@@ -623,7 +646,7 @@ public class CassandraConfiguration {
             consistencyLevelRegular, consistencyLevelLightweightTransaction, mailboxReadRepair,
             messageReadStrongConsistency, mailboxReadStrongConsistency, messageWriteStrongConsistency,
             optimisticConsistencyLevel, mailRepositoryStrongConsistency, uidReadStrongConsistency,
-            modseqReadStrongConsistency, aclEnabled);
+            modseqReadStrongConsistency, aclEnabled, uidModseqIncrement);
     }
 
     @Override
@@ -652,6 +675,7 @@ public class CassandraConfiguration {
             .add("modseqReadStrongConsistency", modseqReadStrongConsistency)
             .add("uidReadStrongConsistency", uidReadStrongConsistency)
             .add("aclEnabled", aclEnabled)
+            .add("uidModseqIncrement", uidModseqIncrement)
             .toString();
     }
 }
