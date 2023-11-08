@@ -144,14 +144,14 @@ public class PostgresConfiguration {
             .build();
     }
 
-    private final URI url;
+    private final URI uri;
     private final Credential credential;
     private final String databaseName;
     private final String databaseSchema;
     private final boolean rlsEnabled;
 
-    private PostgresConfiguration(URI url, Credential credential, String databaseName, String databaseSchema, boolean rlsEnabled) {
-        this.url = url;
+    private PostgresConfiguration(URI uri, Credential credential, String databaseName, String databaseSchema, boolean rlsEnabled) {
+        this.uri = uri;
         this.credential = credential;
         this.databaseName = databaseName;
         this.databaseSchema = databaseSchema;
@@ -164,7 +164,7 @@ public class PostgresConfiguration {
             PostgresConfiguration that = (PostgresConfiguration) o;
 
             return Objects.equals(this.rlsEnabled, that.rlsEnabled)
-                && Objects.equals(this.url, that.url)
+                && Objects.equals(this.uri, that.uri)
                 && Objects.equals(this.credential, that.credential)
                 && Objects.equals(this.databaseName, that.databaseName)
                 && Objects.equals(this.databaseSchema, that.databaseSchema);
@@ -174,11 +174,11 @@ public class PostgresConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(url, credential, databaseName, databaseSchema, rlsEnabled);
+        return Objects.hash(uri, credential, databaseName, databaseSchema, rlsEnabled);
     }
 
-    public URI getUrl() {
-        return url;
+    public URI getUri() {
+        return uri;
     }
 
     public Credential getCredential() {
