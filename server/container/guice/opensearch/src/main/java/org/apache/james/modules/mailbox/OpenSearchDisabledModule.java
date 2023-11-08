@@ -17,19 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules.mailbox;
 
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.apache.james.events.EventListener;
+import org.apache.james.mailbox.opensearch.events.DisabledListeningMessageSearchIndex;
+import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
-class CassandraWithTikaTest implements JamesServerConcreteContract {
-    @RegisterExtension
-    static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
-        .extension(new CassandraExtension())
-        .extension(new TikaExtension())
-        .extension(new DockerOpenSearchExtension())
-        .server(configuration -> CassandraJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJMAPServerModule()))
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
+
+public class OpenSearchDisabledModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        install(new OpenSearchMailboxConfigurationModule());
+
+        bind(DisabledListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
+        bind(MessageSearchIndex.class).to(DisabledListeningMessageSearchIndex.class);
+        bind(ListeningMessageSearchIndex.class).to(DisabledListeningMessageSearchIndex.class);
+
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
+            .addBinding()
+            .to(DisabledListeningMessageSearchIndex.class);
+    }
 }

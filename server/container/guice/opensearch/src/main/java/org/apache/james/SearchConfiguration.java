@@ -20,6 +20,8 @@
 package org.apache.james;
 
 import java.io.FileNotFoundException;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -27,12 +29,27 @@ import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 public class SearchConfiguration {
     public static final String SEARCH_CONFIGURATION_NAME = "search";
 
     public enum Implementation {
-        Scanning,
-        OpenSearch
+        Scanning("scanning"),
+        OpenSearch("opensearch"),
+        OpenSearchDisabled("opensearch-disabled");
+
+        static Optional<Implementation> parse(String value) {
+            return Stream.of(values())
+                .filter(v -> v.name.equalsIgnoreCase(value))
+                .findAny();
+        }
+
+        private final String name;
+
+        Implementation(String name) {
+            this.name = name;
+        }
     }
 
     public static SearchConfiguration parse(PropertiesProvider propertiesProvider) throws ConfigurationException {
@@ -47,16 +64,12 @@ public class SearchConfiguration {
 
     static SearchConfiguration from(Configuration configuration) throws ConfigurationException {
         String searchOption = configuration.getString("implementation", Implementation.OpenSearch.name());
-        if (searchOption.equalsIgnoreCase(Implementation.OpenSearch.name())) {
-            return openSearch();
-        }
-        if (searchOption.equalsIgnoreCase(Implementation.Scanning.name())) {
-            return scanning();
-        }
-        throw new ConfigurationException(String.format("'implementation' parameter in '%s.properties' should have '%s' or '%s' value",
-                SEARCH_CONFIGURATION_NAME,
-                Implementation.OpenSearch.name(),
-                Implementation.Scanning.name()));
+        return Implementation.parse(searchOption)
+            .map(SearchConfiguration::new)
+            .orElseThrow(() -> new ConfigurationException(String.format("'implementation' parameter in '%s.properties' should be '%s' ",
+                SEARCH_CONFIGURATION_NAME, Stream.of(Implementation.values())
+                    .map(v -> v.name)
+                    .collect(ImmutableList.toImmutableList()))));
     }
 
     public static SearchConfiguration scanning() {
@@ -65,6 +78,10 @@ public class SearchConfiguration {
 
     public static SearchConfiguration openSearch() {
         return new SearchConfiguration(Implementation.OpenSearch);
+    }
+
+    public static SearchConfiguration openSearchDisabled() {
+        return new SearchConfiguration(Implementation.OpenSearchDisabled);
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchConfiguration.class);
