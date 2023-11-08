@@ -24,6 +24,8 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.mailbox.MailboxManager;
@@ -34,6 +36,7 @@ import org.apache.james.mailbox.jpa.JpaMailboxManagerProvider;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
+import org.apache.james.mailbox.jpa.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
@@ -47,11 +50,15 @@ import org.apache.james.user.jpa.JPAUsersRepository;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
+
+    @RegisterExtension
+    static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
 
     static final DomainList NO_DOMAIN_LIST = null;
 
@@ -81,7 +88,8 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
         JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory,
             new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(entityManagerFactory),
-            jpaConfiguration);
+            jpaConfiguration,
+            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
 
         usersRepository = new JPAUsersRepository(NO_DOMAIN_LIST);
         usersRepository.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
@@ -89,7 +97,7 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
         configuration.addProperty("enableVirtualHosting", "false");
         usersRepository.configure(configuration);
 
-        mailboxManager = JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER);
+        mailboxManager = JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER, postgresExtension);
         sessionProvider = mailboxManager.getSessionProvider();
         currentQuotaManager = new JpaCurrentQuotaManager(entityManagerFactory);
 
