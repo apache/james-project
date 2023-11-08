@@ -36,6 +36,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.annotations.VisibleForTesting;
+import javax.mail.internet.MimeMessage;
 
 /**
  * This mailet verify a message using the DKIM protocol
@@ -71,7 +72,7 @@ public class DKIMVerify extends GenericMailet {
 
     public void service(Mail mail) throws MessagingException {
         try {
-            MimeMessageWrapper message = (MimeMessageWrapper) mail.getMessage();
+            MimeMessage message =  mail.getMessage();
             List<SignatureRecord> res = verifier.verify(message, forceCRLF);
             if (res == null || res.isEmpty()) {
                 // neutral
