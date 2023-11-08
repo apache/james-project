@@ -33,19 +33,15 @@ import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFac
 import org.apache.james.core.Domain;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
-import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.postgresql.api.PostgresqlResult;
 import io.r2dbc.spi.Connection;
@@ -53,38 +49,27 @@ import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Testcontainers
 public class ConnectionThreadSafetyTest {
-    static final String DB_NAME = "james-db";
-    static final String DB_USER = "james";
-    static final String DB_PASSWORD = "1";
     static final int NUMBER_OF_THREAD = 100;
     static final String CREATE_TABLE_STATEMENT = "CREATE TABLE IF NOT EXISTS person (\n" +
         "\tid serial PRIMARY KEY,\n" +
         "\tname VARCHAR ( 50 ) UNIQUE NOT NULL\n" +
         ");";
 
-    @Container
-    private static final GenericContainer<?> container = new PostgreSQLContainer("postgres:16.0")
-        .withDatabaseName(DB_NAME)
-        .withUsername(DB_USER)
-        .withPassword(DB_PASSWORD);
+    @RegisterExtension
+    static PostgresExtension postgresExtension = new PostgresExtension();
 
     private static PostgresqlConnection postgresqlConnection;
     private static SimpleJamesPostgresConnectionFactory jamesPostgresConnectionFactory;
 
     @BeforeAll
     static void beforeAll() {
-        PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-            .host(container.getHost())
-            .port(container.getMappedPort(5432))
-            .username(DB_USER)
-            .password(DB_PASSWORD)
-            .database(DB_NAME)
-            .build());
-        jamesPostgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(connectionFactory);
-        postgresqlConnection = connectionFactory.create().block();
+        jamesPostgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory());
+        postgresqlConnection = (PostgresqlConnection) postgresExtension.getConnection().block();
+    }
 
+    @BeforeEach
+    void beforeEach() {
         postgresqlConnection.createStatement(CREATE_TABLE_STATEMENT)
             .execute()
             .flatMap(PostgresqlResult::getRowsUpdated)
@@ -92,9 +77,9 @@ public class ConnectionThreadSafetyTest {
             .block();
     }
 
-    @BeforeEach
-    void beforeEach() {
-        postgresqlConnection.createStatement("TRUNCATE TABLE person")
+    @AfterEach
+    void afterEach() {
+        postgresqlConnection.createStatement("DROP TABLE person")
             .execute()
             .flatMap(PostgresqlResult::getRowsUpdated)
             .then()

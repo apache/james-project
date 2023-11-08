@@ -31,32 +31,21 @@ import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFac
 import org.apache.james.core.Domain;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
-import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
-import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.postgresql.api.PostgresqlConnection;
 import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Testcontainers
 public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConnectionFactoryTest {
-    static final String DB_NAME = "james-db";
-    static final String DB_USER = "james";
-    static final String DB_PASSWORD = "1";
-
-    @Container
-    static final PostgreSQLContainer<?> container = new PostgreSQLContainer("postgres:16.0")
-        .withDatabaseName(DB_NAME)
-        .withUsername(DB_USER)
-        .withPassword(DB_PASSWORD);
+    @RegisterExtension
+    static PostgresExtension postgresExtension = new PostgresExtension();
 
     private PostgresqlConnection postgresqlConnection;
     private SimpleJamesPostgresConnectionFactory jamesPostgresConnectionFactory;
@@ -67,17 +56,13 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
 
     @BeforeEach
     void beforeEach() {
-        container.stop();
-        container.start();
-        PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-            .host(container.getHost())
-            .port(container.getMappedPort(5432))
-            .username(DB_USER)
-            .password(DB_PASSWORD)
-            .database(DB_NAME)
-            .build());
-        jamesPostgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(connectionFactory);
-        postgresqlConnection = connectionFactory.create().block();
+        jamesPostgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory());
+        postgresqlConnection = (PostgresqlConnection) postgresExtension.getConnection().block();
+    }
+
+    @AfterEach
+    void afterEach() {
+        postgresExtension.restartContainer();
     }
 
     @Test
@@ -98,7 +83,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
     @Nullable
     private Integer getNumberOfConnections() {
         return Mono.from(postgresqlConnection.createStatement("SELECT count(*) from pg_stat_activity where usename = $1;")
-            .bind("$1", DB_USER)
+            .bind("$1", PostgresFixture.Database.DB_USER)
             .execute()).flatMap(result -> Mono.from(result.map((row, rowMetadata) -> row.get(0, Integer.class)))).block();
     }
 
