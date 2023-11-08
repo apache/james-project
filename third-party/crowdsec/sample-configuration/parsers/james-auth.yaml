@@ -1,8 +1,8 @@
 onsuccess: next_stage
 debug: true
 filter: "evt.Parsed.program == 'james'"
-name: linagora/james-connect-security-log
-description: "Parser for James Connect Security Log"
+name: linagora/james-auth
+description: "Parser for James IMAP and SMTP authentication "
 
 pattern_syntax:
   IMAP_AUTH_FAIL_BAD_CREDENTIALS: 'IMAP Authentication failed%{DATA:data}because of bad credentials.'
