@@ -25,6 +25,8 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
@@ -54,7 +56,7 @@ public class JpaMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    public static OpenJPAMailboxManager provideMailboxManager(JpaTestCluster jpaTestCluster) {
+    public static OpenJPAMailboxManager provideMailboxManager(JpaTestCluster jpaTestCluster, PostgresExtension postgresExtension) {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
 
         JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
@@ -63,7 +65,8 @@ public class JpaMailboxManagerProvider {
             .attachmentStorage(true)
             .build();
 
-        JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory), new JPAModSeqProvider(entityManagerFactory), jpaConfiguration);
+        JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory), new JPAModSeqProvider(entityManagerFactory), jpaConfiguration,
+            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
