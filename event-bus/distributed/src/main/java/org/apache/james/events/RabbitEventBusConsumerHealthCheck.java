@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
 
 public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
     public static final ComponentName COMPONENT_NAME = new ComponentName("EventbusConsumersHealthCheck");
-    public static final ComponentName COMPONENT = new ComponentName("EventbusConsumers");
+    public static final String COMPONENT = "EventbusConsumers";
 
     private final RabbitMQEventBus eventBus;
     private final NamingStrategy namingStrategy;
@@ -50,7 +50,7 @@ public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
 
     @Override
     public ComponentName componentName() {
-        return COMPONENT_NAME;
+        return new ComponentName(COMPONENT + "-" + namingStrategy.getEventBusName().value());
     }
 
     @Override
@@ -77,9 +77,9 @@ public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
 
         if (queueWithoutConsumers.isPresent()) {
             eventBus.restart();
-            return Result.degraded(COMPONENT, "No consumers on " + queueWithoutConsumers.get());
+            return Result.degraded(componentName(), "No consumers on " + queueWithoutConsumers.get());
         } else {
-            return Result.healthy(COMPONENT);
+            return Result.healthy(componentName());
         }
     }
 }
