@@ -25,6 +25,8 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.backends.jpa.JPAConfiguration;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.jpa.mail.JPAAnnotationMapper;
 import org.apache.james.mailbox.jpa.mail.JPAAttachmentMapper;
@@ -32,7 +34,8 @@ import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.jpa.mail.JPAMessageMapper;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
-import org.apache.james.mailbox.jpa.user.JPASubscriptionMapper;
+import org.apache.james.mailbox.jpa.user.PostgresSubscriptionDAO;
+import org.apache.james.mailbox.jpa.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -55,16 +58,19 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     private final JPAModSeqProvider modSeqProvider;
     private final AttachmentMapper attachmentMapper;
     private final JPAConfiguration jpaConfiguration;
+    private final JamesPostgresConnectionFactory postgresConnectionFactory;
 
     @Inject
     public JPAMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider,
-                                          JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration) {
+                                          JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration,
+                                          JamesPostgresConnectionFactory postgresConnectionFactory) {
         this.entityManagerFactory = entityManagerFactory;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         EntityManagerUtils.safelyClose(createEntityManager());
         this.attachmentMapper = new JPAAttachmentMapper(entityManagerFactory);
         this.jpaConfiguration = jpaConfiguration;
+        this.postgresConnectionFactory = postgresConnectionFactory;
     }
 
     @Override
@@ -84,7 +90,8 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) {
-        return new JPASubscriptionMapper(entityManagerFactory);
+        return new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(new PostgresExecutor(
+            postgresConnectionFactory.getConnection(session.getUser().getDomainPart()))));
     }
 
     /**
