@@ -63,8 +63,8 @@ public class PostgresCommonModule extends AbstractModule {
     @Singleton
     ConnectionFactory postgresqlConnectionFactory(PostgresConfiguration postgresConfiguration) {
         return new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-            .host(postgresConfiguration.getUrl().getHost())
-            .port(postgresConfiguration.getUrl().getPort())
+            .host(postgresConfiguration.getUri().getHost())
+            .port(postgresConfiguration.getUri().getPort())
             .username(postgresConfiguration.getCredential().getUsername())
             .password(postgresConfiguration.getCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())

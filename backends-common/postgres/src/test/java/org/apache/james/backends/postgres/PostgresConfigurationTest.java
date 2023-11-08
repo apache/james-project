@@ -59,8 +59,8 @@ class PostgresConfigurationTest {
             .url("postgresql://username:password@postgreshost:5672")
             .build();
 
-        assertThat(configuration.getUrl().getHost()).isEqualTo("postgreshost");
-        assertThat(configuration.getUrl().getPort()).isEqualTo(5672);
+        assertThat(configuration.getUri().getHost()).isEqualTo("postgreshost");
+        assertThat(configuration.getUri().getPort()).isEqualTo(5672);
         assertThat(configuration.getCredential().getUsername()).isEqualTo("username");
         assertThat(configuration.getCredential().getPassword()).isEqualTo("password");
     }

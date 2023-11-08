@@ -19,6 +19,9 @@
 
 package org.apache.james.backends.postgres;
 
+import java.net.URISyntaxException;
+
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -57,24 +60,30 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) {
+    public void beforeAll(ExtensionContext extensionContext) throws Exception {
         if (!DockerPostgresSingleton.SINGLETON.isRunning()) {
             DockerPostgresSingleton.SINGLETON.start();
         }
         initPostgresSession();
     }
 
-    private void initPostgresSession() {
+    private void initPostgresSession() throws URISyntaxException {
         postgresConfiguration = PostgresConfiguration.builder()
-            .url(String.format("postgresql://%s:%s@%s:%d", PostgresFixture.Database.DB_USER, PostgresFixture.Database.DB_PASSWORD, getHost(), getMappedPort()))
+            .url(new URIBuilder()
+                .setScheme("postgresql")
+                .setHost(getHost())
+                .setPort(getMappedPort())
+                .setUserInfo(PostgresFixture.Database.DB_USER, PostgresFixture.Database.DB_PASSWORD)
+                .build()
+                .toString())
             .databaseName(PostgresFixture.Database.DB_NAME)
             .databaseSchema(PostgresFixture.Database.SCHEMA)
             .rlsEnabled(rlsEnabled)
             .build();
 
         PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-            .host(postgresConfiguration.getUrl().getHost())
-            .port(postgresConfiguration.getUrl().getPort())
+            .host(postgresConfiguration.getUri().getHost())
+            .port(postgresConfiguration.getUri().getPort())
             .username(postgresConfiguration.getCredential().getUsername())
             .password(postgresConfiguration.getCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
@@ -105,7 +114,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         resetSchema();
     }
 
-    public void restartContainer() {
+    public void restartContainer() throws URISyntaxException {
         DockerPostgresSingleton.SINGLETON.stop();
         DockerPostgresSingleton.SINGLETON.start();
         initPostgresSession();
