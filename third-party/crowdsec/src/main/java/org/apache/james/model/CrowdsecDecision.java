@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.MoreObjects;
 
 @JsonDeserialize(
     using = CrowdsecDecisionDeserializer.class
@@ -66,11 +67,20 @@ public class CrowdsecDecision {
     }
 
     public final int hashCode() {
-        return Objects.hash(new Object[]{this.duration, this.id, this.origin, this.scenario, this.scope, this.type, this.value});
+        return Objects.hash(this.duration, this.id, this.origin, this.scenario, this.scope, this.type, this.value);
     }
 
+    @Override
     public String toString() {
-        return "CrowdsecDecision{duration=" + this.duration + ", id=" + this.id + ", origin='" + this.origin + "', scenario='" + this.scenario + "', scope='" + this.scope + "', type='" + this.type + "', value='" + this.value + "'}";
+        return MoreObjects.toStringHelper(this)
+            .add("duration", duration)
+            .add("id", id)
+            .add("origin", origin)
+            .add("scenario", scenario)
+            .add("scope", scope)
+            .add("type", type)
+            .add("value", value)
+            .toString();
     }
 
     public static class Builder {
