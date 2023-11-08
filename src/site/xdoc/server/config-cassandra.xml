@@ -132,6 +132,9 @@
         <dt><strong>mailbox.change.ttl</strong></dt>
         <dd>Optional. Duration, default to 60 days. Cassandra Time-to-live for Mailbox change records.
             Setting time-to-live to zero means refusing to use time-to-live on mailbox changes.</dd>
+        <dt><strong>uid.modseq.increment</strong></dt>
+        <dd>Optional, default to 0. Defensive value to add to uids and modseqs generated. This can be used as an heuristic to maintain
+            consistency even when consensus of Lightweight Transactions is broken, exemple during a disaster recovery process.</dd>
       </dl>
 
 

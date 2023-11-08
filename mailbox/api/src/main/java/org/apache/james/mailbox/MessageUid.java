@@ -50,6 +50,10 @@ public class MessageUid implements Comparable<MessageUid> {
     public long asLong() {
         return uid;
     }
+
+    public MessageUid add(int offset) {
+        return MessageUid.of(uid + offset);
+    }
     
     @Override
     public int hashCode() {

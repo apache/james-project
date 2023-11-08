@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -37,6 +36,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -62,7 +62,7 @@ class CassandraUidProviderTest {
     }
 
     @Test
-    void lastUidShouldRetrieveValueStoredByNextUid() throws Exception {
+    void lastUidShouldRetrieveValueStoredByNextUid() {
         int nbEntries = 100;
         Optional<MessageUid> result = uidProvider.lastUid(mailbox);
         assertThat(result).isEmpty();
@@ -85,7 +85,7 @@ class CassandraUidProviderTest {
     }
 
     @Test
-    void nextUidShouldGenerateUniqueValuesWhenParallelCalls() throws ExecutionException, InterruptedException {
+    void nextUidShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
         int threadCount = 10;
         int nbEntries = 100;
 
@@ -100,7 +100,7 @@ class CassandraUidProviderTest {
     }
 
     @Test
-    void nextUidsShouldGenerateUniqueValuesWhenParallelCalls() throws ExecutionException, InterruptedException {
+    void nextUidsShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
         int threadCount = 10;
         int nbOperations = 100;
 
@@ -112,5 +112,29 @@ class CassandraUidProviderTest {
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(messageUids).hasSize(nbOperations * 10);
+    }
+
+    @Test
+    void shouldHandleOffset(CassandraCluster cassandra) throws Exception {
+        uidProvider = new CassandraUidProvider(cassandra.getConf(),
+            CassandraConfiguration.builder()
+                .uidModseqIncrement(10)
+                .build());
+
+        Optional<MessageUid> uid0 = uidProvider.lastUid(mailbox);
+        MessageUid uid1 = uidProvider.nextUid(mailbox);
+        MessageUid uid2 = uidProvider.nextUid(mailbox.getMailboxId());
+        MessageUid uid3 = uidProvider.nextUidReactive(mailbox.getMailboxId()).block();
+        Optional<MessageUid> uid4 = uidProvider.lastUid(mailbox);
+        Optional<MessageUid> uid5 = uidProvider.lastUidReactive(mailbox).block();
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(uid0).isEmpty();
+            softly.assertThat(uid1).isEqualTo(MessageUid.of(11));
+            softly.assertThat(uid2).isEqualTo(MessageUid.of(12));
+            softly.assertThat(uid3).isEqualTo(MessageUid.of(13));
+            softly.assertThat(uid4).contains(MessageUid.of(13));
+            softly.assertThat(uid5).contains(MessageUid.of(13));
+        });
     }
 }
