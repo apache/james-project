@@ -544,7 +544,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesShouldRecordDistinctTimingsWhenRepeatAndBackendRead() {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, ELEVEN_KILOBYTES, SIZE_BASED)).block();
 
-            Duration delay = Duration.ofMillis(500);
+            Duration delay = Duration.ofMillis(1000);
             Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
                 .then(Mono.delay(delay))
                 .repeat(2)
@@ -559,7 +559,7 @@ public class CachedBlobStoreTest implements BlobStoreContract {
         void readBytesShouldRecordDistinctTimingsWhenRepeat() {
             BlobId blobId = Mono.from(testee.save(DEFAULT_BUCKETNAME, APPROXIMATELY_FIVE_KILOBYTES, SIZE_BASED)).block();
 
-            Duration delay = Duration.ofMillis(500);
+            Duration delay = Duration.ofMillis(1000);
             Mono.from(testee.readBytes(DEFAULT_BUCKETNAME, blobId, HIGH_PERFORMANCE))
                 .then(Mono.delay(delay))
                 .repeat(2)
