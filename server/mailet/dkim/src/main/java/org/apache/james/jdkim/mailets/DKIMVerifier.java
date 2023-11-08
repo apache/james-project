@@ -32,7 +32,6 @@ import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.server.core.MimeMessageInputStream;
-import org.apache.james.server.core.MimeMessageWrapper;
 
 public class DKIMVerifier {
     private final org.apache.james.jdkim.DKIMVerifier originalVerifier;

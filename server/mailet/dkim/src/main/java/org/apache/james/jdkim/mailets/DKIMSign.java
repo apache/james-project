@@ -45,7 +45,6 @@ import org.apache.james.jdkim.api.Headers;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.PermFailException;
 import org.apache.james.server.core.MimeMessageInputStream;
-import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
