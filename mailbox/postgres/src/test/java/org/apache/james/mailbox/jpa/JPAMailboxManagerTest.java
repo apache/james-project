@@ -21,15 +21,18 @@ package org.apache.james.mailbox.jpa;
 import java.util.Optional;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.jpa.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
 
@@ -39,13 +42,16 @@ class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
     class HookTests {
     }
 
+    @RegisterExtension
+    static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
+
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
     
     @Override
     protected OpenJPAMailboxManager provideMailboxManager() {
         if (!openJPAMailboxManager.isPresent()) {
-            openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER));
+            openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER, postgresExtension));
         }
         return openJPAMailboxManager.get();
     }
