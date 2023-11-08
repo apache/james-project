@@ -41,21 +41,21 @@ public class PostgresTable {
 
     @FunctionalInterface
     public interface RequireRowLevelSecurity {
-        PostgresTable enableRLS(boolean enableRowLevelSecurity);
+        PostgresTable enableRowLevelSecurity(boolean enableRowLevelSecurity);
 
         default PostgresTable noRLS() {
-            return enableRLS(false);
+            return enableRowLevelSecurity(false);
         }
 
-        default PostgresTable enableRLS() {
-            return enableRLS(true);
+        default PostgresTable enableRowLevelSecurity() {
+            return enableRowLevelSecurity(true);
         }
     }
 
     public static RequireCreateTableStep name(String tableName) {
         Preconditions.checkNotNull(tableName);
 
-        return createTableFunction -> enableRLS -> new PostgresTable(tableName, enableRLS, dsl -> createTableFunction.createTable(dsl, tableName));
+        return createTableFunction -> enableRowLevelSecurity -> new PostgresTable(tableName, enableRowLevelSecurity, dsl -> createTableFunction.createTable(dsl, tableName));
     }
 
     private final String name;
