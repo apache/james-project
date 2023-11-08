@@ -138,7 +138,9 @@ public class Mailbox {
     public boolean equals(Object obj) {
         if (obj instanceof Mailbox) {
             Mailbox o = (Mailbox)obj;
-            return Objects.equals(id, o.getMailboxId());
+            return Objects.equals(id, o.getMailboxId())
+                && Objects.equals(path, o.path)
+                && Objects.equals(uidValidity, o.uidValidity);
         }
         return false;
     }
