@@ -18,15 +18,21 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.mailbox.jpa.user.PostgresSubscriptionModule;
 import org.apache.james.modules.data.PostgresCommonModule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
 public class PostgresMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
         install(new PostgresCommonModule());
+
+        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
+        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
     }
 
 }

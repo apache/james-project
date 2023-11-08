@@ -81,7 +81,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .rlsEnabled(rlsEnabled)
             .build();
 
-        PostgresqlConnectionFactory connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+        connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
             .host(postgresConfiguration.getUri().getHost())
             .port(postgresConfiguration.getUri().getPort())
             .username(postgresConfiguration.getCredential().getUsername())
@@ -141,6 +141,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     public PostgresExecutor getPostgresExecutor() {
         return postgresExecutor;
     }
+
     public ConnectionFactory getConnectionFactory() {
         return connectionFactory;
     }
