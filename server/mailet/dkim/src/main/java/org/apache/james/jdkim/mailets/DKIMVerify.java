@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
@@ -35,7 +36,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
 import com.google.common.annotations.VisibleForTesting;
-import javax.mail.internet.MimeMessage;
 
 /**
  * This mailet verify a message using the DKIM protocol
