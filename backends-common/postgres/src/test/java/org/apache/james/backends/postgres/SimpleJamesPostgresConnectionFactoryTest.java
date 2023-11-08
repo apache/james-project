@@ -21,6 +21,7 @@ package org.apache.james.backends.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
@@ -61,7 +62,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
     }
 
     @AfterEach
-    void afterEach() {
+    void afterEach() throws URISyntaxException {
         postgresExtension.restartContainer();
     }
 
