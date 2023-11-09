@@ -27,9 +27,9 @@ import javax.inject.Inject;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
@@ -44,7 +44,6 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
  * OpenJPA implementation of MailboxManager
- *
  */
 public class OpenJPAMailboxManager extends StoreMailboxManager {
     public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(MailboxCapabilities.UserFlag,
@@ -53,7 +52,7 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
         MailboxCapabilities.Annotation);
 
     @Inject
-    public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
+    public OpenJPAMailboxManager(PostgresMailboxSessionMapperFactory mapperFactory,
                                  SessionProvider sessionProvider,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
