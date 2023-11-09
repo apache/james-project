@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa;
+package org.apache.james.mailbox.postgres;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -51,7 +51,7 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
  * JPA implementation of {@link MailboxSessionMapperFactory}
  *
  */
-public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
+public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
     private final EntityManagerFactory entityManagerFactory;
     private final JPAUidProvider uidProvider;
@@ -61,9 +61,9 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     private final JamesPostgresConnectionFactory postgresConnectionFactory;
 
     @Inject
-    public JPAMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider,
-                                          JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration,
-                                          JamesPostgresConnectionFactory postgresConnectionFactory) {
+    public PostgresMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider,
+                                               JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration,
+                                               JamesPostgresConnectionFactory postgresConnectionFactory) {
         this.entityManagerFactory = entityManagerFactory;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;

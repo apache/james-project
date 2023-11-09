@@ -31,7 +31,7 @@ import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
-import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.JpaMailboxManagerProvider;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
@@ -85,7 +85,7 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
             .driverURL("driverUrl")
             .build();
 
-        JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory,
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
             new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(entityManagerFactory),
             jpaConfiguration,

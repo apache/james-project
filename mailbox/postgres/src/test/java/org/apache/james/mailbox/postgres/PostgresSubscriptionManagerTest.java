@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa;
+package org.apache.james.mailbox.postgres;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -30,6 +30,7 @@ import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
+import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.user.PostgresSubscriptionModule;
@@ -39,7 +40,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JPASubscriptionManagerTest implements SubscriptionManagerContract {
+class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
 
     @RegisterExtension
     static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
@@ -62,7 +63,7 @@ class JPASubscriptionManagerTest implements SubscriptionManagerContract {
             .driverURL("driverUrl")
             .build();
 
-        JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory,
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
             new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(entityManagerFactory),
             jpaConfiguration,
