@@ -21,14 +21,18 @@ package org.apache.james.mailbox.jpa.mail.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.jpa.user.PostgresMailboxId;
+import org.apache.james.mailbox.jpa.PostgresMailboxId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
+import org.apache.james.mailbox.model.search.ExactName;
+import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -36,18 +40,21 @@ import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Mono;
 
 public abstract class PostgresMailboxDAOTest {
-    private static final char DELIMITER = '.';
-    private static final Mailbox EMPTY_MAILBOX = null;
+    protected static final char DELIMITER = '.';
+    protected static final Mailbox EMPTY_MAILBOX = null;
+    protected static final Username ALICE = Username.of("alice");
+    protected static final Username BOB = Username.of("bob");
+    protected static final MailboxPath ALICE_INBOX_PATH = MailboxPath.forUser(ALICE, "INBOX");
+    protected static final MailboxPath BOB_INBOX_PATH = MailboxPath.forUser(BOB, "INBOX");
+    private static final MailboxPath ALICE_INBOX_WORK_PATH = MailboxPath.forUser(ALICE, "INBOX" + DELIMITER + "work");
 
     abstract PostgresMailboxDAO postgresMailboxDAO();
 
     @Test
     void createShouldRunSuccessfully() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME");
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
 
-        MailboxId mailboxId = postgresMailboxDAO().create(mailboxPath, UidValidity.of(1L)).block().getMailboxId();
-
-        Mailbox expected = new Mailbox(mailboxPath, UidValidity.of(1L), mailboxId);
+        Mailbox expected = new Mailbox(ALICE_INBOX_PATH, UidValidity.of(1L), mailboxId);
         Mailbox actual = postgresMailboxDAO().findMailboxById(mailboxId).block();
 
         assertThat(actual).isEqualTo(expected);
@@ -55,27 +62,24 @@ public abstract class PostgresMailboxDAOTest {
 
     @Test
     void createShouldReturnExceptionWhenMailboxAlreadyExist() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME");
+        postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block();
 
-        postgresMailboxDAO().create(mailboxPath, UidValidity.of(1L)).block().getMailboxId();
-
-        String message = postgresMailboxDAO().create(mailboxPath, UidValidity.of(2L))
+        String message = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(2L))
             .map(mailbox -> "")
             .onErrorResume(throwable -> Mono.just(throwable.getMessage()))
             .block();
 
-        assertThat(message).isEqualTo("Mailbox with name=HOME already exists.");
+        assertThat(message).isEqualTo("Mailbox with name=" + ALICE_INBOX_PATH.getName() + " already exists.");
     }
 
     @Test
     void renameShouldRunSuccessfully() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME");
-        MailboxId mailboxId = postgresMailboxDAO().create(mailboxPath, UidValidity.of(1L)).block().getMailboxId();
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
 
-        MailboxPath mailboxPathTwo = new MailboxPath("BBB", Username.of("bob"), "COMPANY");
-        postgresMailboxDAO().rename(new Mailbox(mailboxPathTwo, UidValidity.of(1L), mailboxId)).block();
+        MailboxPath newMailboxPath = new MailboxPath(ALICE_INBOX_PATH.getNamespace(), ALICE_INBOX_PATH.getUser(), "ENBOX");
+        postgresMailboxDAO().rename(new Mailbox(newMailboxPath, UidValidity.of(1L), mailboxId)).block();
 
-        Mailbox expected = new Mailbox(mailboxPathTwo, UidValidity.of(1L), mailboxId);
+        Mailbox expected = new Mailbox(newMailboxPath, UidValidity.of(1L), mailboxId);
         Mailbox actual = postgresMailboxDAO().findMailboxById(mailboxId).block();
 
         assertThat(actual).isEqualTo(expected);
@@ -83,9 +87,7 @@ public abstract class PostgresMailboxDAOTest {
 
     @Test
     void deleteShouldRunSuccessfully() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME");
-
-        MailboxId mailboxId = postgresMailboxDAO().create(mailboxPath, UidValidity.of(1L)).block().getMailboxId();
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
         postgresMailboxDAO().delete(mailboxId).block();
 
         Mailbox actual = postgresMailboxDAO().findMailboxById(mailboxId).block();
@@ -95,41 +97,103 @@ public abstract class PostgresMailboxDAOTest {
 
     @Test
     void findMailboxByIdShouldReturnNullWhenNoMailboxIsFound() {
-        Mailbox actual = postgresMailboxDAO().findMailboxById(PostgresMailboxId.of(1L)).block();
+        Mailbox actual = postgresMailboxDAO().findMailboxById(PostgresMailboxId.generate()).block();
 
         assertThat(actual).isEqualTo(EMPTY_MAILBOX);
     }
 
     @Test
     void findMailboxByPathShouldRunSuccessfully() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME");
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
 
-        MailboxId mailboxId = postgresMailboxDAO().create(mailboxPath, UidValidity.of(1L)).block().getMailboxId();
-
-        Mailbox expected = new Mailbox(mailboxPath, UidValidity.of(1L), mailboxId);
-        Mailbox actual = postgresMailboxDAO().findMailboxByPath(mailboxPath).block();
+        Mailbox expected = new Mailbox(ALICE_INBOX_PATH, UidValidity.of(1L), mailboxId);
+        Mailbox actual = postgresMailboxDAO().findMailboxByPath(ALICE_INBOX_PATH).block();
 
         assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     void findMailboxByPathShouldReturnNullWhenNoMailboxIsFound() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME");
-        Mailbox actual = postgresMailboxDAO().findMailboxByPath(mailboxPath).block();
+        Mailbox actual = postgresMailboxDAO().findMailboxByPath(ALICE_INBOX_PATH).block();
 
         assertThat(actual).isEqualTo(EMPTY_MAILBOX);
     }
 
     @Test
+    void findMailboxWithPathLikeShouldReturnNonEmptyResultWhenPrefixedWildcardIsUsedAndConditionIsMatched() {
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_WORK_PATH, UidValidity.of(1L)).block().getMailboxId();
+
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(ALICE_INBOX_WORK_PATH)
+            .expression(new PrefixedWildcard("IN"))
+            .build()
+            .asUserBound();
+
+        List<Mailbox> mailboxes = postgresMailboxDAO().findMailboxWithPathLike(mailboxQuery)
+            .collectList().block();
+
+        Mailbox expected = new Mailbox(ALICE_INBOX_WORK_PATH, UidValidity.of(1L), mailboxId);
+
+        assertThat(mailboxes).containsOnly(expected);
+    }
+
+    @Test
+    void findMailboxWithPathLikeShouldReturnEmptyResultWhenPrefixedWildcardIsUsedAndConditionIsNotMatched() {
+        postgresMailboxDAO().create(ALICE_INBOX_WORK_PATH, UidValidity.of(1L)).block();
+
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(ALICE_INBOX_WORK_PATH)
+            .expression(new PrefixedWildcard("IMBOX"))
+            .build()
+            .asUserBound();
+
+        List<Mailbox> mailboxes = postgresMailboxDAO().findMailboxWithPathLike(mailboxQuery)
+            .collectList().block();
+
+        assertThat(mailboxes).isEmpty();
+    }
+
+    @Test
+    void findMailboxWithPathLikeShouldReturnNonEmptyResultWhenExactNameIsUsedAndConditionIsMatched() {
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_WORK_PATH, UidValidity.of(1L)).block().getMailboxId();
+
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(ALICE_INBOX_WORK_PATH)
+            .expression(new ExactName(ALICE_INBOX_WORK_PATH.getName()))
+            .build()
+            .asUserBound();
+
+        List<Mailbox> mailboxes = postgresMailboxDAO().findMailboxWithPathLike(mailboxQuery)
+            .collectList().block();
+
+        Mailbox expected = new Mailbox(ALICE_INBOX_WORK_PATH, UidValidity.of(1L), mailboxId);
+
+        assertThat(mailboxes).containsOnly(expected);
+    }
+
+    @Test
+    void findMailboxWithPathLikeShouldReturnEmptyResultWhenExactNameIsUsedAndConditionIsNotMatched() {
+        postgresMailboxDAO().create(ALICE_INBOX_WORK_PATH, UidValidity.of(1L)).block();
+
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(ALICE_INBOX_WORK_PATH)
+            .expression(new ExactName("IN"))
+            .build()
+            .asUserBound();
+
+        List<Mailbox> mailboxes = postgresMailboxDAO().findMailboxWithPathLike(mailboxQuery)
+            .collectList().block();
+
+        assertThat(mailboxes).isEmpty();
+    }
+
+    @Test
     void getAllShouldRunSuccessfully() {
-        MailboxPath mailboxPathOne = new MailboxPath("AAA", Username.of("alice"), "HOME");
-        MailboxId mailboxIdOne = postgresMailboxDAO().create(mailboxPathOne, UidValidity.of(1L)).block().getMailboxId();
+        MailboxId aliceMailboxId = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
+        MailboxId bobMailboxId = postgresMailboxDAO().create(BOB_INBOX_PATH, UidValidity.of(2L)).block().getMailboxId();
 
-        MailboxPath mailboxPathTwo = new MailboxPath("BBB", Username.of("bob"), "COMPANY");
-        MailboxId mailboxIdTwO = postgresMailboxDAO().create(mailboxPathTwo, UidValidity.of(2L)).block().getMailboxId();
-
-        Set<Mailbox> expected = ImmutableSet.of(new Mailbox(mailboxPathOne, UidValidity.of(1L), mailboxIdOne),
-            new Mailbox(mailboxPathTwo, UidValidity.of(2L), mailboxIdTwO));
+        Set<Mailbox> expected = ImmutableSet.of(new Mailbox(ALICE_INBOX_PATH, UidValidity.of(1L), aliceMailboxId),
+            new Mailbox(BOB_INBOX_PATH, UidValidity.of(2L), bobMailboxId));
         Set<Mailbox> actual = postgresMailboxDAO().getAll().collect(ImmutableSet.toImmutableSet()).block();
 
         assertThat(actual).containsExactlyInAnyOrderElementsOf(expected);
@@ -137,20 +201,16 @@ public abstract class PostgresMailboxDAOTest {
 
     @Test
     void hasChildrenShouldReturnTrue() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME.ONE");
-        MailboxId mailboxId = postgresMailboxDAO().create(mailboxPath, UidValidity.of(1L)).block().getMailboxId();
-
-        Mailbox mailbox = new Mailbox(new MailboxPath("AAA", Username.of("alice"), "HOME"), UidValidity.of(1L), mailboxId);
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_WORK_PATH, UidValidity.of(1L)).block().getMailboxId();
+        Mailbox mailbox = new Mailbox(ALICE_INBOX_PATH, UidValidity.of(1L), mailboxId);
 
         assertThat(postgresMailboxDAO().hasChildren(mailbox, DELIMITER).block()).isTrue();
     }
 
     @Test
     void hasChildrenShouldReturnFalse() {
-        MailboxPath mailboxPath = new MailboxPath("AAA", Username.of("alice"), "HOME");
-        MailboxId mailboxId = postgresMailboxDAO().create(mailboxPath, UidValidity.of(1L)).block().getMailboxId();
-
-        Mailbox mailbox = new Mailbox(new MailboxPath("AAA", Username.of("alice"), "HOME"), UidValidity.of(1L), mailboxId);
+        MailboxId mailboxId = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
+        Mailbox mailbox = new Mailbox(ALICE_INBOX_PATH, UidValidity.of(1L), mailboxId);
 
         assertThat(postgresMailboxDAO().hasChildren(mailbox, DELIMITER).block()).isFalse();
     }

@@ -16,69 +16,71 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa.user;
+package org.apache.james.mailbox.jpa;
 
 import java.io.Serializable;
+import java.util.Objects;
+import java.util.UUID;
 
 import org.apache.james.mailbox.model.MailboxId;
+
+import com.google.common.base.MoreObjects;
 
 public class PostgresMailboxId implements MailboxId, Serializable {
 
     public static class Factory implements MailboxId.Factory {
         @Override
         public PostgresMailboxId fromString(String serialized) {
-            return of(Long.parseLong(serialized));
+            return of(serialized);
         }
     }
 
-    public static PostgresMailboxId of(long value) {
-        return new PostgresMailboxId(value);
+    private final UUID id;
+
+    public static PostgresMailboxId generate() {
+        return of(UUID.randomUUID());
     }
 
-    private final long value;
+    public static PostgresMailboxId of(UUID id) {
+        return new PostgresMailboxId(id);
+    }
 
-    public PostgresMailboxId(long value) {
-        this.value = value;
+    public static PostgresMailboxId of(String serialized) {
+        return new PostgresMailboxId(UUID.fromString(serialized));
+    }
+
+    private PostgresMailboxId(UUID id) {
+        this.id = id;
     }
 
     @Override
     public String serialize() {
-        return String.valueOf(value);
+        return id.toString();
+    }
+
+    public UUID asUuid() {
+        return id;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof PostgresMailboxId) {
+            PostgresMailboxId other = (PostgresMailboxId) o;
+            return Objects.equals(id, other.id);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(id);
     }
 
     @Override
     public String toString() {
-        return String.valueOf(value);
-    }
-    
-    public long getRawId() {
-        return value;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (int) (value ^ (value >>> 32));
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        PostgresMailboxId other = (PostgresMailboxId) obj;
-        if (value != other.value) {
-            return false;
-        }
-        return true;
+        return MoreObjects.toStringHelper(this)
+            .add("id", id)
+            .toString();
     }
     
 }

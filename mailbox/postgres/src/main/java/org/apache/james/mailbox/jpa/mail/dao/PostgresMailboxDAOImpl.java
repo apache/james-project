@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.jpa.mail.dao;
 
-import static org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable.MAILBOX_ID;
-import static org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable.MAILBOX_NAME;
-import static org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable.MAILBOX_NAMESPACE;
-import static org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable.MAILBOX_UID_VALIDITY;
-import static org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable.TABLE_NAME;
-import static org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable.USER_NAME;
+import static org.apache.james.mailbox.jpa.mail.PostgresMailboxTable.MAILBOX_ID;
+import static org.apache.james.mailbox.jpa.mail.PostgresMailboxTable.MAILBOX_NAME;
+import static org.apache.james.mailbox.jpa.mail.PostgresMailboxTable.MAILBOX_NAMESPACE;
+import static org.apache.james.mailbox.jpa.mail.PostgresMailboxTable.MAILBOX_UID_VALIDITY;
+import static org.apache.james.mailbox.jpa.mail.PostgresMailboxTable.TABLE_NAME;
+import static org.apache.james.mailbox.jpa.mail.PostgresMailboxTable.USER_NAME;
 import static org.jooq.impl.DSL.count;
 
 import java.util.NoSuchElementException;
@@ -34,13 +34,15 @@ import javax.inject.Inject;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxExistsException;
-import org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable;
-import org.apache.james.mailbox.jpa.user.PostgresMailboxId;
+import org.apache.james.mailbox.jpa.PostgresMailboxId;
+import org.apache.james.mailbox.jpa.mail.PostgresMailboxTable;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
+import org.jooq.Record;
 import org.jooq.Record1;
 
 import com.google.common.base.Preconditions;
@@ -50,8 +52,9 @@ import reactor.core.publisher.Mono;
 
 public class PostgresMailboxDAOImpl implements PostgresMailboxDAO {
     private static final char SQL_WILDCARD_CHAR = '%';
+    private static final String DUPLICATE_VIOLATION_MESSAGE = "duplicate key value violates unique constraint";
 
-    private PostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
 
     @Inject
     public PostgresMailboxDAOImpl(PostgresExecutor postgresExecutor) {
@@ -61,18 +64,13 @@ public class PostgresMailboxDAOImpl implements PostgresMailboxDAO {
     @Override
     public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
         return postgresExecutor.dslContext()
-            .flatMapMany(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE, MAILBOX_UID_VALIDITY)
-                .values(mailboxPath.getName(), mailboxPath.getUser().asString(), mailboxPath.getNamespace(), uidValidity.asLong())
+            .flatMapMany(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, MAILBOX_ID, MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE, MAILBOX_UID_VALIDITY)
+                .values(PostgresMailboxId.generate().asUuid(), mailboxPath.getName(), mailboxPath.getUser().asString(), mailboxPath.getNamespace(), uidValidity.asLong())
                 .returningResult(MAILBOX_ID))
                 .map(record -> new Mailbox(mailboxPath, uidValidity, PostgresMailboxId.of(record.get(MAILBOX_ID)))))
             .last()
-            .onErrorResume(throwable -> {
-                if (throwable.getMessage().contains("duplicate key value violates unique constraint")) {
-                    return Mono.error(new MailboxExistsException(mailboxPath.getName()));
-                } else {
-                    return Mono.error(throwable);
-                }
-            });
+            .onErrorMap(throwable -> throwable.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
+                throwable -> new MailboxExistsException(mailboxPath.getName()));
     }
 
     @Override
@@ -85,20 +83,15 @@ public class PostgresMailboxDAOImpl implements PostgresMailboxDAO {
                 .set(USER_NAME, mailbox.getUser().asString())
                 .set(MAILBOX_NAMESPACE, mailbox.getNamespace())))
             .thenReturn(mailbox.getMailboxId())
-            .onErrorResume(throwable -> {
-                if (throwable.getMessage().contains("duplicate key value violates unique constraint")) {
-                    return Mono.error(new MailboxExistsException(mailbox.getName()));
-                } else {
-                    return Mono.error(throwable);
-                }
-            });
+            .onErrorMap(throwable -> throwable.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
+                throwable -> new MailboxExistsException(mailbox.getName()));
     }
 
     @Override
     public Mono<Void> delete(MailboxId mailboxId) {
         return postgresExecutor.dslContext()
             .flatMap(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
-                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).getRawId()))))
+                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))))
             .then();
     }
 
@@ -109,11 +102,7 @@ public class PostgresMailboxDAOImpl implements PostgresMailboxDAO {
                 .where(MAILBOX_NAME.eq(mailboxPath.getName())
                     .and(USER_NAME.eq(mailboxPath.getUser().asString()))
                     .and(MAILBOX_NAMESPACE.eq(mailboxPath.getNamespace()))))
-                .map(record -> generateMailbox(record.get(PostgresMailboxTable.MAILBOX_ID),
-                    record.get(MAILBOX_NAMESPACE),
-                    record.get(USER_NAME),
-                    record.get(MAILBOX_NAME),
-                    record.get(MAILBOX_UID_VALIDITY))))
+                .map(this::generateMailbox))
             .last()
             .onErrorResume(NoSuchElementException.class, e -> Mono.empty());
     }
@@ -122,19 +111,23 @@ public class PostgresMailboxDAOImpl implements PostgresMailboxDAO {
     public Mono<Mailbox> findMailboxById(MailboxId id) {
         return postgresExecutor.dslContext()
             .flatMapMany(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)
-                    .where(MAILBOX_ID.eq(((PostgresMailboxId) id).getRawId())))
-                .map(record -> generateMailbox(record.get(PostgresMailboxTable.MAILBOX_ID),
-                    record.get(MAILBOX_NAMESPACE),
-                    record.get(USER_NAME),
-                    record.get(MAILBOX_NAME),
-                    record.get(MAILBOX_UID_VALIDITY))))
+                    .where(MAILBOX_ID.eq(((PostgresMailboxId) id).asUuid())))
+                .map(this::generateMailbox))
             .last()
             .onErrorResume(NoSuchElementException.class, e -> Mono.empty());
     }
 
     @Override
     public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
-        return null;
+        String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
+
+        return postgresExecutor.dslContext()
+            .flatMapMany(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)
+                    .where(MAILBOX_NAME.like(pathLike)
+                        .and(USER_NAME.eq(query.getFixedUser().asString()))
+                        .and(MAILBOX_NAMESPACE.eq(query.getFixedNamespace()))))
+                .map(this::generateMailbox))
+            .filter(query::matches);
     }
 
     @Override
@@ -155,16 +148,12 @@ public class PostgresMailboxDAOImpl implements PostgresMailboxDAO {
     public Flux<Mailbox> getAll() {
         return postgresExecutor.dslContext()
             .flatMapMany(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)))
-                .map(record -> generateMailbox(record.get(PostgresMailboxTable.MAILBOX_ID),
-                    record.get(MAILBOX_NAMESPACE),
-                    record.get(USER_NAME),
-                    record.get(MAILBOX_NAME),
-                    record.get(MAILBOX_UID_VALIDITY)));
+                .map(this::generateMailbox);
     }
 
-    private Mailbox generateMailbox(long mailboxId, String namespace, String user, String name, long uidValidity) {
-        MailboxPath path = new MailboxPath(namespace, Username.of(user), name);
-        return new Mailbox(path, sanitizeUidValidity(uidValidity), new PostgresMailboxId(mailboxId));
+    private Mailbox generateMailbox(Record record) {
+        return new Mailbox(new MailboxPath(record.get(MAILBOX_NAMESPACE), Username.of(record.get(USER_NAME)), record.get(MAILBOX_NAME)),
+            sanitizeUidValidity(record.get(MAILBOX_UID_VALIDITY)), PostgresMailboxId.of(record.get(PostgresMailboxTable.MAILBOX_ID)));
     }
 
     private UidValidity sanitizeUidValidity(long uidValidity) {

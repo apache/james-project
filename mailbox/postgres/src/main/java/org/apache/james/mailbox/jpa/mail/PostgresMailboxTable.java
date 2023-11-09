@@ -17,7 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.jpa.mail.table;
+package org.apache.james.mailbox.jpa.mail;
+
+import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
@@ -29,7 +31,7 @@ import org.jooq.impl.SQLDataType;
 public interface PostgresMailboxTable {
     Table<Record> TABLE_NAME = DSL.table("mailbox");
 
-    Field<Long> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.BIGINT.notNull());
+    Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
     Field<String> MAILBOX_NAME = DSL.field("mailbox_name", SQLDataType.VARCHAR(255).notNull());
     Field<Long> MAILBOX_UID_VALIDITY = DSL.field("mailbox_uid_validity", SQLDataType.BIGINT.notNull());
     Field<String> USER_NAME = DSL.field("user_name", SQLDataType.VARCHAR(255));
@@ -39,7 +41,7 @@ public interface PostgresMailboxTable {
 
     PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
         .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
-            .column(MAILBOX_ID, SQLDataType.BIGINT.identity(true))
+            .column(MAILBOX_ID, SQLDataType.UUID)
             .column(MAILBOX_NAME)
             .column(MAILBOX_UID_VALIDITY)
             .column(USER_NAME)
@@ -49,9 +51,4 @@ public interface PostgresMailboxTable {
             .constraint(DSL.primaryKey(MAILBOX_ID))
             .constraint(DSL.unique(MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE))))
         .enableRowLevelSecurity();
-
-//     PostgresIndex INDEX = PostgresIndex.name("subscription_user_index")
-//        .createIndexStep((dsl, indexName) -> dsl.createIndex(indexName)
-//            .on(TABLE_NAME, USER));
-
 }

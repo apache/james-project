@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.jpa.mail.table.PostgresMailboxTable;
 
 public interface PostgresMailboxModule {
     PostgresModule MODULE = PostgresModule.builder()
