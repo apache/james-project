@@ -41,12 +41,12 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.jpa.JPAAttachmentContentLoader;
 import org.apache.james.mailbox.jpa.JPAId;
-import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -83,7 +83,7 @@ public class JPAMailboxModule extends AbstractModule {
         install(new JPAQuotaSearchModule());
         install(new JPAEntityManagerModule());
 
-        bind(JPAMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
+        bind(PostgresMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(OpenJPAMailboxManager.class).in(Scopes.SINGLETON);
         bind(JVMMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(StoreSubscriptionManager.class).in(Scopes.SINGLETON);
@@ -98,10 +98,10 @@ public class JPAMailboxModule extends AbstractModule {
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
         bind(SessionProviderImpl.class).in(Scopes.SINGLETON);
 
-        bind(SubscriptionMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
-        bind(MessageMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
-        bind(MailboxMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
-        bind(MailboxSessionMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
+        bind(SubscriptionMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
+        bind(MessageMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
+        bind(MailboxMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
+        bind(MailboxSessionMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
         bind(MessageId.Factory.class).to(DefaultMessageId.Factory.class);
         bind(ThreadIdGuessingAlgorithm.class).to(NaiveThreadIdGuessingAlgorithm.class);
 
@@ -119,7 +119,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(AttachmentContentLoader.class).to(JPAAttachmentContentLoader.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
-        
+
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(JPAMailboxManagerDefinition.class);
 
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
@@ -141,7 +141,7 @@ public class JPAMailboxModule extends AbstractModule {
         Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskStepMultibinder = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
         deleteUserDataTaskStepMultibinder.addBinding().to(MailboxUserDeletionTaskStep.class);
     }
-    
+
     @Singleton
     private static class JPAMailboxManagerDefinition extends MailboxManagerDefinition {
         @Inject

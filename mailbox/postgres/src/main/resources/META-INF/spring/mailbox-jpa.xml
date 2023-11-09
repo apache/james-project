@@ -53,7 +53,7 @@
         <constructor-arg index="1" ref="jpa-sessionMapperFactory"/>
         <constructor-arg index="2" ref="event-bus"/>
     </bean>
-    <bean id="jpa-sessionMapperFactory" class="org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory">
+    <bean id="jpa-sessionMapperFactory" class="org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory">
         <constructor-arg index="0" ref="entityManagerFactory"/>
         <constructor-arg index="1" ref="jpa-uidProvider"/>
         <constructor-arg index="2" ref="jpa-modSeqProvider"/>
