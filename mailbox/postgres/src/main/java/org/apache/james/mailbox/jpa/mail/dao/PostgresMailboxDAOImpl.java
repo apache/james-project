@@ -81,7 +81,8 @@ public class PostgresMailboxDAOImpl implements PostgresMailboxDAO {
             .flatMap(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
                 .set(MAILBOX_NAME, mailbox.getName())
                 .set(USER_NAME, mailbox.getUser().asString())
-                .set(MAILBOX_NAMESPACE, mailbox.getNamespace())))
+                .set(MAILBOX_NAMESPACE, mailbox.getNamespace())
+                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailbox.getMailboxId()).asUuid()))))
             .thenReturn(mailbox.getMailboxId())
             .onErrorMap(throwable -> throwable.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
                 throwable -> new MailboxExistsException(mailbox.getName()));

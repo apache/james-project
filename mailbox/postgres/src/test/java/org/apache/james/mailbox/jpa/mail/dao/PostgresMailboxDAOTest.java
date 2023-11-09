@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.mail.dao;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -83,6 +84,21 @@ public abstract class PostgresMailboxDAOTest {
         Mailbox actual = postgresMailboxDAO().findMailboxById(mailboxId).block();
 
         assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void renameShouldUpdateOnyOneRecord() {
+        MailboxId aliceMailboxId = postgresMailboxDAO().create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
+        MailboxId bobMailboxId = postgresMailboxDAO().create(BOB_INBOX_PATH, UidValidity.of(2L)).block().getMailboxId();
+
+        MailboxPath newMailboxPath = new MailboxPath(ALICE_INBOX_PATH.getNamespace(), ALICE_INBOX_PATH.getUser(), "ENBOX");
+        postgresMailboxDAO().rename(new Mailbox(newMailboxPath, UidValidity.of(1L), aliceMailboxId)).block();
+
+        Mailbox actual = postgresMailboxDAO().findMailboxById(aliceMailboxId).block();
+        Mailbox actualBobMailbox = postgresMailboxDAO().findMailboxById(bobMailboxId).block();
+
+        assertThat(actual.getName()).isEqualTo("ENBOX");
+        assertThat(actualBobMailbox.getName()).isEqualTo(BOB_INBOX_PATH.getName());
     }
 
     @Test
