@@ -38,6 +38,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -65,7 +66,7 @@ public class JpaMailboxManagerProvider {
             .attachmentStorage(true)
             .build();
 
-        JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory), new JPAModSeqProvider(entityManagerFactory), jpaConfiguration,
+        PostgresMailboxSessionMapperFactory mf = new PostgresMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory), new JPAModSeqProvider(entityManagerFactory), jpaConfiguration,
             new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
