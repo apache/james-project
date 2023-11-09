@@ -50,6 +50,7 @@ By omitting these files, sane default values are used.
 *** xref:configure/matchers.adoc[This page] list matchers that can be used out of the box with the Distributed Server.
 ** xref:configure/mailrepositorystore.adoc[*mailrepositorystore.xml*] enables registration of allowed MailRepository protcols and link them to MailRepository implementations link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/mailrepositorystore.xml[example]
 ** xref:configure/recipientrewritetable.adoc[*recipientrewritetable.xml*] enables advanced configuration for the Recipient Rewrite Table component link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/recipientrewritetable.xml[example]
+*** xref:configure/matchers.adoc[This page] allows choosing the indexing technology.
 ** xref:configure/usersrepository.adoc[*usersrepository.xml*] allows configuration of user storage link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/usersrepository.xml[example]
 
 == For extensions

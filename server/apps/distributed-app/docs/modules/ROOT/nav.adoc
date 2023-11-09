@@ -40,6 +40,7 @@
 **** xref:configure/matchers.adoc[Packaged Matchers]
 **** xref:configure/mailrepositorystore.adoc[mailrepositorystore.xml]
 **** xref:configure/recipientrewritetable.adoc[recipientrewritetable.xml]
+**** xref:configure/search.adoc[search.properties]
 **** xref:configure/usersrepository.adoc[usersrepository.xml]
 *** Extensions
 **** xref:configure/vault.adoc[deletedMessageVault.properties]

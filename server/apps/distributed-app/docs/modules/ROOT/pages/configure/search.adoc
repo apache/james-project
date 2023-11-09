@@ -1,0 +1,18 @@
+= Distributed James Server &mdash; Search configuration
+:navtitle: Search configuration
+
+This configuration helps you configure the components used to back search.
+
+.search.properties content
+|===
+| Property name | explanation
+
+| implementation
+| The implementation to be used for search. Should be one of:
+ - *opensearch* : Index and search mails into OpenSearch.
+ - *scanning* : Do not index documents and perform scanning search, scrolling mailbox for matching contents.
+ This implementation can have a prohibitive cost.
+ - *opensearch-disabled* : Saves events to index into event dead letter. Make searches fails.
+ This is useful to start James without OpenSearch while still tracking messages to index for later recovery. This
+ can be used in order to ease delays for disaster recovery action plans.
+|===
