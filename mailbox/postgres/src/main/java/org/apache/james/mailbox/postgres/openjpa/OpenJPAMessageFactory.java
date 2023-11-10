@@ -32,9 +32,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.mail.model.JPAMailbox;
 import org.apache.james.mailbox.postgres.mail.model.openjpa.AbstractJPAMailboxMessage;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAEncryptedMailboxMessage;
 import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessage;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.store.MessageFactory;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
@@ -53,15 +51,6 @@ public class OpenJPAMessageFactory implements MessageFactory<AbstractJPAMailboxM
 
     @Override
     public AbstractJPAMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) throws MailboxException {
-        switch (feature) {
-            case Streaming:
-                return new JPAStreamingMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content,
-                    bodyStartOctet, propertyBuilder);
-            case Encryption:
-                return new JPAEncryptedMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content,
-                    bodyStartOctet, propertyBuilder);
-            default:
-                return new JPAMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content,  bodyStartOctet,  propertyBuilder);
-        }
+        return new JPAMailboxMessage(JPAMailbox.from(mailbox), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
     }
 }
