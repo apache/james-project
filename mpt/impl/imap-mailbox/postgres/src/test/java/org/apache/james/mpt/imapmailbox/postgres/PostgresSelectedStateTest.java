@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresSelectedStateTest extends SelectedState {
     @RegisterExtension
-    public PostgresHostSystemExtension hostSystemExtension = new PostgresHostSystemExtension();
+    public static PostgresHostSystemExtension hostSystemExtension = new PostgresHostSystemExtension();
 
     @Override
     protected ImapHostSystem createImapHostSystem() {
