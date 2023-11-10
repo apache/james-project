@@ -160,6 +160,6 @@ public class PostgresMailboxDAO {
 
     private Mailbox asMailbox(Record record) {
         return new Mailbox(new MailboxPath(record.get(MAILBOX_NAMESPACE), Username.of(record.get(USER_NAME)), record.get(MAILBOX_NAME)),
-            UidValidity.generate(), PostgresMailboxId.of(record.get(MAILBOX_ID)));
+            UidValidity.of(record.get(MAILBOX_UID_VALIDITY)), PostgresMailboxId.of(record.get(MAILBOX_ID)));
     }
 }
