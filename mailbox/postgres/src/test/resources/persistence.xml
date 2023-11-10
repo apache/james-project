@@ -30,7 +30,6 @@
         <class>org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessage</class>
         <class>org.apache.james.mailbox.postgres.mail.model.JPAAttachment</class>
         <class>org.apache.james.mailbox.postgres.mail.model.JPAProperty</class>
-        <class>org.apache.james.mailbox.postgres.user.model.JPASubscription</class>
         <class>org.apache.james.mailbox.postgres.quota.model.MaxDomainMessageCount</class>
         <class>org.apache.james.mailbox.postgres.quota.model.MaxDomainStorage</class>
         <class>org.apache.james.mailbox.postgres.quota.model.MaxGlobalMessageCount</class>
