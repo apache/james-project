@@ -29,8 +29,13 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
 public interface PostgresSubscriptionModule {
-
+    /**
+     * See {@link MailboxManager.MAX_MAILBOX_NAME_LENGTH}
+     */
     Field<String> MAILBOX = DSL.field("mailbox", SQLDataType.VARCHAR(255).notNull());
+    /**
+     * See {@link Username.MAXIMUM_MAIL_ADDRESS_LENGTH}
+     */
     Field<String> USER = DSL.field("user_name", SQLDataType.VARCHAR(255).notNull());
     Table<Record> TABLE_NAME = DSL.table("subscription");
     PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
