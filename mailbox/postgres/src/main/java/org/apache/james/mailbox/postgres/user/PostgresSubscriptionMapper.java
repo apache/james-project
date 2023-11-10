@@ -22,7 +22,6 @@ package org.apache.james.mailbox.postgres.user;
 import java.util.List;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
@@ -38,17 +37,17 @@ public class PostgresSubscriptionMapper implements SubscriptionMapper {
     }
 
     @Override
-    public void save(Subscription subscription) throws SubscriptionException {
+    public void save(Subscription subscription) {
         saveReactive(subscription).block();
     }
 
     @Override
-    public List<Subscription> findSubscriptionsForUser(Username user) throws SubscriptionException {
+    public List<Subscription> findSubscriptionsForUser(Username user) {
         return findSubscriptionsForUserReactive(user).collectList().block();
     }
 
     @Override
-    public void delete(Subscription subscription) throws SubscriptionException {
+    public void delete(Subscription subscription) {
         deleteReactive(subscription).block();
     }
 
