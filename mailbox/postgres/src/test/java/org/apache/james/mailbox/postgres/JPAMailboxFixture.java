@@ -28,7 +28,6 @@ import org.apache.james.mailbox.postgres.mail.model.JPAProperty;
 import org.apache.james.mailbox.postgres.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.postgres.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessage;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessageWithAttachmentStorage;
 import org.apache.james.mailbox.postgres.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.postgres.quota.model.MaxDomainMessageCount;
 import org.apache.james.mailbox.postgres.quota.model.MaxDomainStorage;
@@ -50,8 +49,7 @@ public interface JPAMailboxFixture {
         JPAUserFlag.class,
         JPAMailboxAnnotation.class,
         JPASubscription.class,
-        JPAAttachment.class,
-        JPAMailboxMessageWithAttachmentStorage.class
+        JPAAttachment.class
     );
 
     List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.of(
