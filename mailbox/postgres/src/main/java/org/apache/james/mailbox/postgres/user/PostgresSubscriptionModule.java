@@ -19,16 +19,20 @@
 
 package org.apache.james.mailbox.postgres.user;
 
-import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.MAILBOX;
-import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.TABLE_NAME;
-import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.USER;
-
 import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Table;
 import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
 public interface PostgresSubscriptionModule {
+
+    Field<String> MAILBOX = DSL.field("mailbox", SQLDataType.VARCHAR(255).notNull());
+    Field<String> USER = DSL.field("user_name", SQLDataType.VARCHAR(255).notNull());
+    Table<Record> TABLE_NAME = DSL.table("subscription");
     PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
         .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
             .column(MAILBOX)
