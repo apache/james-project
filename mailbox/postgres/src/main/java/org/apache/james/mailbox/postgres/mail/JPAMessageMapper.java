@@ -50,10 +50,7 @@ import org.apache.james.mailbox.postgres.mail.MessageUtils.MessageChangedFlags;
 import org.apache.james.mailbox.postgres.mail.model.JPAAttachment;
 import org.apache.james.mailbox.postgres.mail.model.JPAMailbox;
 import org.apache.james.mailbox.postgres.mail.model.openjpa.AbstractJPAMailboxMessage;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAEncryptedMailboxMessage;
 import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessage;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessageWithAttachmentStorage;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -363,15 +360,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
         MailboxMessage copy;
         JPAMailbox currentMailbox = JPAMailbox.from(mailbox);
 
-        if (original instanceof JPAStreamingMailboxMessage) {
-            copy = new JPAStreamingMailboxMessage(currentMailbox, uid, modSeq, original);
-        } else if (original instanceof JPAEncryptedMailboxMessage) {
-            copy = new JPAEncryptedMailboxMessage(currentMailbox, uid, modSeq, original);
-        } else if (original instanceof JPAMailboxMessageWithAttachmentStorage) {
-            copy = new JPAMailboxMessageWithAttachmentStorage(currentMailbox, uid, modSeq, original);
-        } else {
-            copy = new JPAMailboxMessage(currentMailbox, uid, modSeq, original);
-        }
+        copy = new JPAMailboxMessage(currentMailbox, uid, modSeq, original);
         return save(mailbox, copy);
     }
 
@@ -394,26 +383,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
                 getEntityManager().persist(message);
                 return message.metaData();
-            } else if (isAttachmentStorage) {
-                JPAMailboxMessageWithAttachmentStorage persistData = new JPAMailboxMessageWithAttachmentStorage(currentMailbox, message.getUid(), message.getModSeq(), message);
-                persistData.setFlags(message.createFlags());
-
-                if (message.getAttachments().isEmpty()) {
-                    getEntityManager().persist(persistData);
-                } else {
-                    List<JPAAttachment> attachments = getAttachments(message);
-                    if (attachments.isEmpty()) {
-                        persistData.setAttachments(message.getAttachments().stream()
-                            .map(JPAAttachment::new)
-                            .collect(Collectors.toList()));
-                        getEntityManager().persist(persistData);
-                    } else {
-                        persistData.setAttachments(attachments);
-                        getEntityManager().merge(persistData);
-                    }
-                }
-                return persistData.metaData();
-            } else {
+            }  else {
                 JPAMailboxMessage persistData = new JPAMailboxMessage(currentMailbox, message.getUid(), message.getModSeq(), message);
                 persistData.setFlags(message.createFlags());
                 getEntityManager().persist(persistData);
