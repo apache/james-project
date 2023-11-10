@@ -16,23 +16,39 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.quota.model;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-public class PostgresMailboxModule extends AbstractModule {
+@Entity(name = "MaxGlobalMessageCount")
+@Table(name = "JAMES_MAX_GLOBAL_MESSAGE_COUNT")
+public class MaxGlobalMessageCount {
+    public static final String DEFAULT_KEY = "default_key";
+    
+    @Id
+    @Column(name = "QUOTAROOT_ID")
+    private String quotaRoot = DEFAULT_KEY;
 
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
+    @Column(name = "VALUE", nullable = true)
+    private Long value;
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    public MaxGlobalMessageCount(Long value) {
+        this.quotaRoot = DEFAULT_KEY;
+        this.value = value;
     }
 
+    public MaxGlobalMessageCount() {
+    }
+
+    public Long getValue() {
+        return value;
+    }
+
+    public void setValue(Long value) {
+        this.value = value;
+    }
 }

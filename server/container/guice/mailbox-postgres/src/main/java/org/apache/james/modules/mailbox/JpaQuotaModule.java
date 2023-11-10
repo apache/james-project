@@ -20,8 +20,8 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.events.EventListener;
-import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager;
-import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
+import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaManager;
+import org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
