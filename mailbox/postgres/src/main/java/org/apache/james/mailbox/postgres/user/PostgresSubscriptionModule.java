@@ -16,23 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
+package org.apache.james.mailbox.postgres.user;
+
+import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.MAILBOX;
+import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.USER;
+
+import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+import org.apache.james.backends.postgres.PostgresTable;
+import org.jooq.impl.DSL;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-
-public class PostgresMailboxModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
-
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
-    }
-
+public interface PostgresSubscriptionModule {
+    PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+        .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
+            .column(MAILBOX)
+            .column(USER)
+            .constraint(DSL.unique(MAILBOX, USER))))
+        .enableRowLevelSecurity();
+    PostgresIndex INDEX = PostgresIndex.name("subscription_user_index")
+        .createIndexStep((dsl, indexName) -> dsl.createIndex(indexName)
+            .on(TABLE_NAME, USER));
+    PostgresModule MODULE = PostgresModule.builder()
+        .addTable(TABLE)
+        .addIndex(INDEX)
+        .build();
 }

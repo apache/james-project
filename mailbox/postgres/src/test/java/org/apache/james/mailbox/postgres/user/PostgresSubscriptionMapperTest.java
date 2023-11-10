@@ -16,23 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
+package org.apache.james.mailbox.postgres.user;
+
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
+import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+import org.apache.james.mailbox.store.user.SubscriptionMapper;
+import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+public class PostgresSubscriptionMapperTest extends SubscriptionMapperTest {
 
-public class PostgresMailboxModule extends AbstractModule {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
 
     @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
-
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    protected SubscriptionMapper createSubscriptionMapper() {
+        PostgresSubscriptionDAO dao = new PostgresSubscriptionDAO(postgresExtension.getPostgresExecutor());
+        return new PostgresSubscriptionMapper(dao);
     }
-
 }
