@@ -27,12 +27,10 @@ import org.jooq.DSLContext;
 import com.google.common.base.Preconditions;
 
 public class PostgresTable {
-
     @FunctionalInterface
     public interface RequireCreateTableStep {
         RequireRowLevelSecurity createTableStep(CreateTableFunction createTableFunction);
     }
-
 
     @FunctionalInterface
     public interface CreateTableFunction {
@@ -41,30 +39,30 @@ public class PostgresTable {
 
     @FunctionalInterface
     public interface RequireRowLevelSecurity {
-        PostgresTable enableRowLevelSecurity(boolean enableRowLevelSecurity);
+        PostgresTable supportsRowLevelSecurity(boolean rowLevelSecurityEnabled);
 
-        default PostgresTable noRLS() {
-            return enableRowLevelSecurity(false);
+        default PostgresTable disableRowLevelSecurity() {
+            return supportsRowLevelSecurity(false);
         }
 
-        default PostgresTable enableRowLevelSecurity() {
-            return enableRowLevelSecurity(true);
+        default PostgresTable supportsRowLevelSecurity() {
+            return supportsRowLevelSecurity(true);
         }
     }
 
     public static RequireCreateTableStep name(String tableName) {
         Preconditions.checkNotNull(tableName);
 
-        return createTableFunction -> enableRowLevelSecurity -> new PostgresTable(tableName, enableRowLevelSecurity, dsl -> createTableFunction.createTable(dsl, tableName));
+        return createTableFunction -> supportsRowLevelSecurity -> new PostgresTable(tableName, supportsRowLevelSecurity, dsl -> createTableFunction.createTable(dsl, tableName));
     }
 
     private final String name;
-    private final boolean enableRowLevelSecurity;
+    private final boolean supportsRowLevelSecurity;
     private final Function<DSLContext, DDLQuery> createTableStepFunction;
 
-    private PostgresTable(String name, boolean enableRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction) {
+    private PostgresTable(String name, boolean supportsRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction) {
         this.name = name;
-        this.enableRowLevelSecurity = enableRowLevelSecurity;
+        this.supportsRowLevelSecurity = supportsRowLevelSecurity;
         this.createTableStepFunction = createTableStepFunction;
     }
 
@@ -77,7 +75,7 @@ public class PostgresTable {
         return createTableStepFunction;
     }
 
-    public boolean isEnableRowLevelSecurity() {
-        return enableRowLevelSecurity;
+    public boolean supportsRowLevelSecurity() {
+        return supportsRowLevelSecurity;
     }
 }

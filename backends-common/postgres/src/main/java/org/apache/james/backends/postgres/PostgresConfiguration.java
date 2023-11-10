@@ -61,7 +61,7 @@ public class PostgresConfiguration {
         private Optional<String> url = Optional.empty();
         private Optional<String> databaseName = Optional.empty();
         private Optional<String> databaseSchema = Optional.empty();
-        private Optional<Boolean> rlsEnabled = Optional.empty();
+        private Optional<Boolean> rowLevelSecurityEnabled = Optional.empty();
 
         public Builder url(String url) {
             this.url = Optional.of(url);
@@ -88,13 +88,13 @@ public class PostgresConfiguration {
             return this;
         }
 
-        public Builder rlsEnabled(boolean rlsEnabled) {
-            this.rlsEnabled = Optional.of(rlsEnabled);
+        public Builder rowLevelSecurityEnabled(boolean rlsEnabled) {
+            this.rowLevelSecurityEnabled = Optional.of(rlsEnabled);
             return this;
         }
 
-        public Builder rlsEnabled() {
-            this.rlsEnabled = Optional.of(true);
+        public Builder rowLevelSecurityEnabled() {
+            this.rowLevelSecurityEnabled = Optional.of(true);
             return this;
         }
 
@@ -106,7 +106,7 @@ public class PostgresConfiguration {
                 parseCredential(postgresURI),
                 databaseName.orElse(DATABASE_NAME_DEFAULT_VALUE),
                 databaseSchema.orElse(DATABASE_SCHEMA_DEFAULT_VALUE),
-                rlsEnabled.orElse(false));
+                rowLevelSecurityEnabled.orElse(false));
         }
 
         private Credential parseCredential(URI postgresURI) {
@@ -140,7 +140,7 @@ public class PostgresConfiguration {
             .url(propertiesConfiguration.getString(URL, null))
             .databaseName(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_NAME)))
             .databaseSchema(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_SCHEMA)))
-            .rlsEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
+            .rowLevelSecurityEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
             .build();
     }
 
@@ -148,33 +148,14 @@ public class PostgresConfiguration {
     private final Credential credential;
     private final String databaseName;
     private final String databaseSchema;
-    private final boolean rlsEnabled;
+    private final boolean rowLevelSecurityEnabled;
 
-    private PostgresConfiguration(URI uri, Credential credential, String databaseName, String databaseSchema, boolean rlsEnabled) {
+    private PostgresConfiguration(URI uri, Credential credential, String databaseName, String databaseSchema, boolean rowLevelSecurityEnabled) {
         this.uri = uri;
         this.credential = credential;
         this.databaseName = databaseName;
         this.databaseSchema = databaseSchema;
-        this.rlsEnabled = rlsEnabled;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof PostgresConfiguration) {
-            PostgresConfiguration that = (PostgresConfiguration) o;
-
-            return Objects.equals(this.rlsEnabled, that.rlsEnabled)
-                && Objects.equals(this.uri, that.uri)
-                && Objects.equals(this.credential, that.credential)
-                && Objects.equals(this.databaseName, that.databaseName)
-                && Objects.equals(this.databaseSchema, that.databaseSchema);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(uri, credential, databaseName, databaseSchema, rlsEnabled);
+        this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
     }
 
     public URI getUri() {
@@ -193,7 +174,26 @@ public class PostgresConfiguration {
         return databaseSchema;
     }
 
-    public boolean rlsEnabled() {
-        return rlsEnabled;
+    public boolean rowLevelSecurityEnabled() {
+        return rowLevelSecurityEnabled;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof PostgresConfiguration) {
+            PostgresConfiguration that = (PostgresConfiguration) o;
+
+            return Objects.equals(this.rowLevelSecurityEnabled, that.rowLevelSecurityEnabled)
+                && Objects.equals(this.uri, that.uri)
+                && Objects.equals(this.credential, that.credential)
+                && Objects.equals(this.databaseName, that.databaseName)
+                && Objects.equals(this.databaseSchema, that.databaseSchema);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(uri, credential, databaseName, databaseSchema, rowLevelSecurityEnabled);
     }
 }

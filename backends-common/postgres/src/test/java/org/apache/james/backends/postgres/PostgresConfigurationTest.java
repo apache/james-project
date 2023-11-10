@@ -71,7 +71,7 @@ class PostgresConfigurationTest {
             .url("postgresql://username:password@postgreshost:5672")
             .build();
 
-        assertThat(configuration.rlsEnabled()).isFalse();
+        assertThat(configuration.rowLevelSecurityEnabled()).isFalse();
     }
 
     @Test
@@ -96,13 +96,13 @@ class PostgresConfigurationTest {
     void shouldReturnCorrespondingProperties() {
         PostgresConfiguration configuration = PostgresConfiguration.builder()
             .url("postgresql://username:password@postgreshost:5672")
-            .rlsEnabled()
+            .rowLevelSecurityEnabled()
             .databaseName("databaseName")
             .databaseSchema("databaseSchema")
             .build();
 
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(configuration.rlsEnabled()).isEqualTo(true);
+            softly.assertThat(configuration.rowLevelSecurityEnabled()).isEqualTo(true);
             softly.assertThat(configuration.getDatabaseName()).isEqualTo("databaseName");
             softly.assertThat(configuration.getDatabaseSchema()).isEqualTo("databaseSchema");
         });
