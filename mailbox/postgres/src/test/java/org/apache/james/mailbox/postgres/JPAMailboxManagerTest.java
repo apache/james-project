@@ -43,7 +43,7 @@ class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
     }
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
