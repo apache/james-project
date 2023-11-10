@@ -16,23 +16,28 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.quota;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.postgres.JPAMailboxFixture;
+import org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
+import org.junit.jupiter.api.AfterEach;
 
-public class PostgresMailboxModule extends AbstractModule {
+class JPACurrentQuotaManagerTest implements CurrentQuotaManagerContract {
+
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES);
 
     @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
+    public CurrentQuotaManager testee() {
+        return new JpaCurrentQuotaManager(JPA_TEST_CLUSTER.getEntityManagerFactory());
+    }
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    @AfterEach
+    void tearDown() {
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.QUOTA_TABLES_NAMES);
     }
 
 }

@@ -16,23 +16,39 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.quota.model;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-public class PostgresMailboxModule extends AbstractModule {
+import org.apache.james.core.Domain;
 
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
+@Entity(name = "MaxDomainMessageCount")
+@Table(name = "JAMES_MAX_DOMAIN_MESSAGE_COUNT")
+public class MaxDomainMessageCount {
+    @Id
+    @Column(name = "DOMAIN")
+    private String domain;
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    @Column(name = "VALUE", nullable = true)
+    private Long value;
+
+    public MaxDomainMessageCount(Domain domain, Long value) {
+        this.domain = domain.asString();
+        this.value = value;
     }
 
+    public MaxDomainMessageCount() {
+    }
+
+    public Long getValue() {
+        return value;
+    }
+
+    public void setValue(Long value) {
+        this.value = value;
+    }
 }
