@@ -35,7 +35,6 @@ import org.apache.james.mailbox.postgres.quota.model.MaxGlobalMessageCount;
 import org.apache.james.mailbox.postgres.quota.model.MaxGlobalStorage;
 import org.apache.james.mailbox.postgres.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.postgres.quota.model.MaxUserStorage;
-import org.apache.james.mailbox.postgres.user.model.JPASubscription;
 
 import com.google.common.collect.ImmutableList;
 
@@ -48,7 +47,6 @@ public interface JPAMailboxFixture {
         JPAProperty.class,
         JPAUserFlag.class,
         JPAMailboxAnnotation.class,
-        JPASubscription.class,
         JPAAttachment.class
     );
 
@@ -68,7 +66,6 @@ public interface JPAMailboxFixture {
         "JAMES_MAILBOX_ANNOTATION",
         "JAMES_MAILBOX",
         "JAMES_MAIL",
-        "JAMES_SUBSCRIPTION",
         "JAMES_ATTACHMENT");
 
     List<String> QUOTA_TABLES_NAMES = ImmutableList.of(
