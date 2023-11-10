@@ -21,6 +21,8 @@ package org.apache.james.events;
 
 import static org.apache.james.events.EventBus.Metrics.timerName;
 
+import java.time.Duration;
+
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.ReactorUtils;
@@ -28,6 +30,10 @@ import org.apache.james.util.ReactorUtils;
 import reactor.core.publisher.Mono;
 
 class ListenerExecutor {
+    // JAMES-3955 RabbitMQ handles timeout by closing channels thus
+    // causing event consumption to halt. We thus need to handle timeout beforehand.
+    private static final Duration TIMEOUT = Duration.ofMinutes(10);
+
     private final MetricFactory metricFactory;
 
     ListenerExecutor(MetricFactory metricFactory) {
@@ -38,7 +44,8 @@ class ListenerExecutor {
         if (listener.isHandling(event)) {
             return Mono.from(metricFactory.decoratePublisherWithTimerMetric(timerName(listener),
                 Mono.from(listener.reactiveEvent(event))
-                    .contextWrite(ReactorUtils.context("ListenerExecutor", mdc(listener, mdcBuilder, event)))));
+                    .contextWrite(ReactorUtils.context("ListenerExecutor", mdc(listener, mdcBuilder, event)))
+                    .timeout(TIMEOUT)));
         }
         return Mono.empty();
     }
