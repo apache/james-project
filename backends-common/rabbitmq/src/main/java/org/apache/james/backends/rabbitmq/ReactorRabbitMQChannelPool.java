@@ -111,6 +111,10 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
         @Override
         public void close(int closeCode, String closeMessage) throws IOException, TimeoutException {
+            // https://www.rabbitmq.com/amqp-0-9-1-reference.html#domain.reply-code
+            if (closeCode >= 300) {
+                LOGGER.warn("Closing channel {} code:{} message:'{}'", getChannelNumber(), closeCode, closeMessage);
+            }
             delegate.close(closeCode, closeMessage);
         }
 
@@ -121,6 +125,10 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
         @Override
         public void abort(int closeCode, String closeMessage) throws IOException {
+            // https://www.rabbitmq.com/amqp-0-9-1-reference.html#domain.reply-code
+            if (closeCode >= 300) {
+                LOGGER.warn("Closing channel {} code:{} message:'{}'", getChannelNumber(), closeCode, closeMessage);
+            }
             delegate.abort(closeCode, closeMessage);
         }
 
