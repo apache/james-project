@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.postgres.user;
 
-import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.MAILBOX;
-import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.TABLE_NAME;
-import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionTable.USER;
+import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule.MAILBOX;
+import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule.TABLE_NAME;
+import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule.USER;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 
