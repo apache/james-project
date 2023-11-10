@@ -42,7 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 

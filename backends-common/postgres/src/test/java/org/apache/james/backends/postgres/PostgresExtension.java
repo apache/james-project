@@ -36,27 +36,29 @@ import io.r2dbc.spi.ConnectionFactory;
 import reactor.core.publisher.Mono;
 
 public class PostgresExtension implements GuiceModuleTestExtension {
+    private static final boolean ROW_LEVEL_SECURITY_ENABLED = true;
+
+    public static PostgresExtension withRowLevelSecurity(PostgresModule module) {
+        return new PostgresExtension(module, ROW_LEVEL_SECURITY_ENABLED);
+    }
+
+    public static PostgresExtension withoutRowLevelSecurity(PostgresModule module) {
+        return new PostgresExtension(module, !ROW_LEVEL_SECURITY_ENABLED);
+    }
+
+    public static PostgresExtension empty() {
+        return withoutRowLevelSecurity(PostgresModule.EMPTY_MODULE);
+    }
+
     private final PostgresModule postgresModule;
     private final boolean rlsEnabled;
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor postgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
 
-    public PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
+    private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
         this.postgresModule = postgresModule;
         this.rlsEnabled = rlsEnabled;
-    }
-
-    public PostgresExtension(PostgresModule postgresModule) {
-        this(postgresModule, false);
-    }
-
-    public PostgresExtension(boolean rlsEnabled) {
-        this(PostgresModule.EMPTY_MODULE, rlsEnabled);
-    }
-
-    public PostgresExtension() {
-        this(false);
     }
 
     @Override
