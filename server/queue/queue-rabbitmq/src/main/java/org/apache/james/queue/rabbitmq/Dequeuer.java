@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
+import java.time.Duration;
 import java.util.function.Consumer;
 
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
@@ -50,6 +51,9 @@ import reactor.rabbitmq.Receiver;
 class Dequeuer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Dequeuer.class);
     private static final boolean REQUEUE = true;
+    // JAMES-3955 RabbitMQ handles timeout by closing channels thus
+    // causing event consumption to halt. We thus need to handle timeout beforehand.
+    private static final Duration TIMEOUT = Duration.ofMinutes(15);
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
 
@@ -133,7 +137,7 @@ class Dequeuer {
                 LOGGER.error("Failed to load email, requeue corresponding message", e);
                 response.nack(REQUEUE);
                 return Mono.empty();
-            });
+            }).timeout(TIMEOUT);
     }
 
     private ThrowingConsumer<MailQueue.MailQueueItem.CompletionStatus> ack(AcknowledgableDelivery response, MailWithEnqueueId mailWithEnqueueId) {
