@@ -16,23 +16,47 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.mail.model;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import java.io.Serializable;
 
-public class PostgresMailboxModule extends AbstractModule {
+import javax.persistence.Embeddable;
 
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
+import com.google.common.base.Objects;
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+@Embeddable
+public final class JPAMailboxAnnotationId implements Serializable {
+    private long mailboxId;
+    private String key;
+
+    public JPAMailboxAnnotationId(long mailboxId, String key) {
+        this.mailboxId = mailboxId;
+        this.key = key;
     }
 
+    public JPAMailboxAnnotationId() {
+    }
+
+    public long getMailboxId() {
+        return mailboxId;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof JPAMailboxAnnotationId) {
+            JPAMailboxAnnotationId that = (JPAMailboxAnnotationId) o;
+            return Objects.equal(this.mailboxId, that.mailboxId) && Objects.equal(this.key, that.key);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(mailboxId, key);
+    }
 }
