@@ -58,7 +58,7 @@ import com.google.common.collect.ImmutableSet;
 class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
 
     static final DomainList NO_DOMAIN_LIST = null;
 
