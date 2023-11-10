@@ -45,7 +45,7 @@ class PostgresWithLDAPJamesServerTest {
             .overrideWith(new TestJPAConfigurationModule()))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .extension(new LdapTestExtension())
-        .extension(new PostgresExtension())
+        .extension(PostgresExtension.empty())
         .build();
 
 
