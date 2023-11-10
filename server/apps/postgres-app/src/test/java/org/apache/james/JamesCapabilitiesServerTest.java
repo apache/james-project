@@ -51,7 +51,7 @@ class JamesCapabilitiesServerTest {
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModule())
             .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
-        .extension(new PostgresExtension())
+        .extension(PostgresExtension.empty())
         .build();
     
     @Test

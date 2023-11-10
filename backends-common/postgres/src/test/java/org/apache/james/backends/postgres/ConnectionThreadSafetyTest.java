@@ -57,7 +57,7 @@ public class ConnectionThreadSafetyTest {
         ");";
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension();
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     private static PostgresqlConnection postgresqlConnection;
     private static SimpleJamesPostgresConnectionFactory jamesPostgresConnectionFactory;
