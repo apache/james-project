@@ -25,6 +25,9 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.events.EventBusTestFixture;
@@ -70,6 +73,7 @@ import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.utils.UpdatableTickingClock;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class PostgresHostSystem extends JamesImapHostSystem {
@@ -87,12 +91,23 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         Feature.MOVE_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
 
-    static JamesImapHostSystem build() {
-        return new PostgresHostSystem();
+
+    static PostgresHostSystem build(PostgresExtension postgresExtension) {
+        return new PostgresHostSystem(postgresExtension);
     }
 
     private JPAPerUserMaxQuotaManager maxQuotaManager;
     private OpenJPAMailboxManager mailboxManager;
+    private final PostgresExtension postgresExtension;
+    private static JamesPostgresConnectionFactory postgresConnectionFactory;
+    public PostgresHostSystem(PostgresExtension postgresExtension) {
+        this.postgresExtension = postgresExtension;
+    }
+
+    public void beforeAll() {
+        Preconditions.checkNotNull(postgresExtension.getConnectionFactory());
+        postgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory());
+    }
 
     @Override
     public void beforeTest() throws Exception {
@@ -104,8 +119,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
             .driverName("driverName")
             .driverURL("driverUrl")
             .build();
-        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider, jpaConfiguration,
-            null);
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider, jpaConfiguration, postgresConnectionFactory);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
