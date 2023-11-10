@@ -16,23 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.user;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Table;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
-public class PostgresMailboxModule extends AbstractModule {
+public interface PostgresSubscriptionTable {
 
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
-
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
-    }
+    Field<String> MAILBOX = DSL.field("mailbox", SQLDataType.VARCHAR(255).notNull());
+    Field<String> USER = DSL.field("user_name", SQLDataType.VARCHAR(255).notNull());
+    Table<Record> TABLE_NAME = DSL.table("subscription");
 
 }
