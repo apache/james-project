@@ -124,7 +124,7 @@ public class PostgresMailboxDAO {
                     .where(MAILBOX_ID.eq(((PostgresMailboxId) id).asUuid())))
                 .map(this::asMailbox))
             .last()
-            .onErrorResume(NoSuchElementException.class, e -> Mono.empty());
+            .onErrorResume(NoSuchElementException.class, e -> Mono.error(new MailboxNotFoundException(id)));
     }
 
     public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
