@@ -31,6 +31,7 @@ import org.apache.james.jdkim.api.Headers;
 import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
+import org.apache.james.server.core.MimeMessageInputStream;
 
 public class DKIMVerifier {
     private final org.apache.james.jdkim.DKIMVerifier originalVerifier;
@@ -53,7 +54,7 @@ public class DKIMVerifier {
                 if (forceCRLF) {
                     os = new CRLFOutputStream(os);
                 }
-                message.writeTo(os);
+                new MimeMessageInputStream(message).transferTo(os);
             }
 
         } catch (IOException e) {

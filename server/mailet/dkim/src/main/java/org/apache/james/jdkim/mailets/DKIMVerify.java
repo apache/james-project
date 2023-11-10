@@ -71,7 +71,7 @@ public class DKIMVerify extends GenericMailet {
 
     public void service(Mail mail) throws MessagingException {
         try {
-            MimeMessage message = mail.getMessage();
+            MimeMessage message =  mail.getMessage();
             List<SignatureRecord> res = verifier.verify(message, forceCRLF);
             if (res == null || res.isEmpty()) {
                 // neutral
