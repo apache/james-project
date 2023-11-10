@@ -27,6 +27,7 @@ import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;
+import org.jooq.conf.StatementType;
 import org.jooq.impl.DSL;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -39,7 +40,8 @@ public class PostgresExecutor {
 
     private static final SQLDialect PGSQL_DIALECT = SQLDialect.POSTGRES;
     private static final Settings SETTINGS = new Settings()
-        .withRenderFormatted(true);
+        .withRenderFormatted(true)
+        .withStatementType(StatementType.PREPARED_STATEMENT);
     private final Mono<Connection> connection;
 
     @Inject
