@@ -29,9 +29,9 @@
 
     <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor"/>
 
-    <bean id="jpa-mailboxIdFactory" class="org.apache.james.mailbox.jpa.JPAId.Factory" />
+    <bean id="jpa-mailboxIdFactory" class="org.apache.james.mailbox.postgres.JPAId.Factory" />
 
-    <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager">
+    <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
         <constructor-arg index="1" ref="sessionProvider"/>
         <constructor-arg index="2" ref="messageParser"/>
@@ -59,10 +59,10 @@
         <constructor-arg index="2" ref="jpa-modSeqProvider"/>
         <constructor-arg index="3" ref="jpa-configuration"/>
     </bean>
-    <bean id="jpa-uidProvider" class="org.apache.james.mailbox.jpa.mail.JPAUidProvider">
+    <bean id="jpa-uidProvider" class="org.apache.james.mailbox.postgres.mail.JPAUidProvider">
         <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
-    <bean id="jpa-modSeqProvider" class="org.apache.james.mailbox.jpa.mail.JPAModSeqProvider">
+    <bean id="jpa-modSeqProvider" class="org.apache.james.mailbox.postgres.mail.JPAModSeqProvider">
         <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
 
@@ -94,15 +94,15 @@
         <property name="showSql" value="false"/>
     </bean>
 
-    <bean id="jpa-per-user-max-quota-dao" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaDAO">
+    <bean id="jpa-per-user-max-quota-dao" class="org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaDAO">
         <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
 
-    <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager">
+    <bean id="jpaMaxQuotaManager" class="org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaManager">
         <constructor-arg index="0" ref="entityManagerFactory"/>
         <constructor-arg index="1" ref="jpa-per-user-max-quota-dao"/>
     </bean>
-    <bean id="jpaCurrentQuotaManager" class="org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager">
+    <bean id="jpaCurrentQuotaManager" class="org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager">
         <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
     <bean id="jpa-configuration" class="org.apache.james.backends.jpa.JPAConfiguration"/>

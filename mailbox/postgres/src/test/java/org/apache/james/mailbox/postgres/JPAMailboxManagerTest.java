@@ -18,62 +18,69 @@
  ****************************************************************/
 package org.apache.james.mailbox.postgres;
 
-import javax.persistence.EntityManagerFactory;
+import java.util.Optional;
 
-import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
-import org.apache.james.events.EventBusTestFixture;
-import org.apache.james.events.InVMEventBus;
-import org.apache.james.events.MemoryEventDeadLetters;
-import org.apache.james.events.delivery.InVmEventDelivery;
+import org.apache.james.events.EventBus;
+import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.SubscriptionManagerContract;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
+import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
+class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
+
+    @Disabled("JPAMailboxManager is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
+        " element of the Vault")
+    @Nested
+    class HookTests {
+    }
 
     @RegisterExtension
     static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
-
-    SubscriptionManager subscriptionManager;
-
+    Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
+    
     @Override
-    public SubscriptionManager getSubscriptionManager() {
-        return subscriptionManager;
+    protected OpenJPAMailboxManager provideMailboxManager() {
+        if (!openJPAMailboxManager.isPresent()) {
+            openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER, postgresExtension));
+        }
+        return openJPAMailboxManager.get();
     }
 
-    @BeforeEach
-    void setUp() {
-        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
-
-        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
-            .driverName("driverName")
-            .driverURL("driverUrl")
-            .build();
-
-        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
-            new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(entityManagerFactory),
-            jpaConfiguration,
-            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
-        subscriptionManager = new StoreSubscriptionManager(mapperFactory, mapperFactory, eventBus);
+    @Override
+    protected SubscriptionManager provideSubscriptionManager() {
+        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory(), provideMailboxManager().getMapperFactory(), provideMailboxManager().getEventBus());
     }
 
     @AfterEach
-    void close() {
+    void tearDownJpa() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 
+    @Disabled("MAILBOX-353 Creating concurrently mailboxes with the same parents with JPA")
+    @Test
+    @Override
+    public void creatingConcurrentlyMailboxesWithSameParentShouldNotFail() {
+
+    }
+
+    @Nested
+    @Disabled("JPA does not support saveDate.")
+    class SaveDateTests {
+
+    }
+
+    @Override
+    protected EventBus retrieveEventBus(OpenJPAMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
+    }
 }

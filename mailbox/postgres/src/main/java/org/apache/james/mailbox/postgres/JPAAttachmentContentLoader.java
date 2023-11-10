@@ -16,23 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import java.io.InputStream;
 
-public class PostgresMailboxModule extends AbstractModule {
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.AttachmentMetadata;
 
+public class JPAAttachmentContentLoader implements AttachmentContentLoader {
     @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
-
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    public InputStream load(AttachmentMetadata attachment, MailboxSession mailboxSession) {
+        throw new NotImplementedException("JPA doesn't support loading attachment separately from Message");
     }
-
 }

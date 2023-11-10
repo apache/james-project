@@ -16,64 +16,48 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.postgres;
 
-import javax.persistence.EntityManagerFactory;
+import java.util.Optional;
 
-import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
-import org.apache.james.events.EventBusTestFixture;
-import org.apache.james.events.InVMEventBus;
-import org.apache.james.events.MemoryEventDeadLetters;
-import org.apache.james.events.delivery.InVmEventDelivery;
-import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.SubscriptionManagerContract;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
+import org.apache.james.events.EventBus;
+import org.apache.james.mailbox.MailboxManagerStressContract;
+import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
+class JpaMailboxManagerStressTest implements MailboxManagerStressContract<OpenJPAMailboxManager> {
 
     @RegisterExtension
     static PostgresExtension postgresExtension = new PostgresExtension(PostgresSubscriptionModule.MODULE);
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
-
-    SubscriptionManager subscriptionManager;
+    Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
 
     @Override
-    public SubscriptionManager getSubscriptionManager() {
-        return subscriptionManager;
+    public OpenJPAMailboxManager getManager() {
+        return openJPAMailboxManager.get();
+    }
+
+    @Override
+    public EventBus retrieveEventBus() {
+        return getManager().getEventBus();
     }
 
     @BeforeEach
     void setUp() {
-        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
-
-        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
-            .driverName("driverName")
-            .driverURL("driverUrl")
-            .build();
-
-        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
-            new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(entityManagerFactory),
-            jpaConfiguration,
-            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
-        subscriptionManager = new StoreSubscriptionManager(mapperFactory, mapperFactory, eventBus);
+        if (!openJPAMailboxManager.isPresent()) {
+            openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER, postgresExtension));
+        }
     }
 
     @AfterEach
-    void close() {
+    void tearDown() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
-
 }

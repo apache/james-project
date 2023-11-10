@@ -16,23 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.mail;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.postgres.JPAMailboxFixture;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.mailbox.store.mail.model.MessageMoveTest;
+import org.junit.jupiter.api.AfterEach;
 
-public class PostgresMailboxModule extends AbstractModule {
+class JpaMessageMoveTest extends MessageMoveTest {
+    
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
     @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
-
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    protected MapperProvider createMapperProvider() {
+        return new JPAMapperProvider(JPA_TEST_CLUSTER);
+    }
+    
+    @AfterEach
+    void cleanUp() {
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 
 }

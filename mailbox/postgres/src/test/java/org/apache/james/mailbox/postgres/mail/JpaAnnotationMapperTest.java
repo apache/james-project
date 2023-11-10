@@ -16,23 +16,37 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.mail;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class PostgresMailboxModule extends AbstractModule {
+import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.postgres.JPAId;
+import org.apache.james.mailbox.postgres.JPAMailboxFixture;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.store.mail.AnnotationMapper;
+import org.apache.james.mailbox.store.mail.model.AnnotationMapperTest;
+import org.junit.jupiter.api.AfterEach;
 
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
+class JpaAnnotationMapperTest extends AnnotationMapperTest {
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+
+    final AtomicInteger counter = new AtomicInteger();
+
+    @AfterEach
+    void tearDown() {
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 
+    @Override
+    protected AnnotationMapper createAnnotationMapper() {
+        return new TransactionalAnnotationMapper(new JPAAnnotationMapper(JPA_TEST_CLUSTER.getEntityManagerFactory()));
+    }
+
+    @Override
+    protected MailboxId generateMailboxId() {
+        return JPAId.of(counter.incrementAndGet());
+    }
 }
