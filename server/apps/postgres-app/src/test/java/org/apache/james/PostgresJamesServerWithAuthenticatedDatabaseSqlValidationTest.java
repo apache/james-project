@@ -35,7 +35,7 @@ class PostgresJamesServerWithAuthenticatedDatabaseSqlValidationTest extends Post
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.WithDatabaseAuthentication()))
-        .extension(new PostgresExtension())
+        .extension(PostgresExtension.empty())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }

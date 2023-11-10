@@ -46,7 +46,7 @@ import reactor.core.publisher.Mono;
 
 public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConnectionFactoryTest {
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension();
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     private PostgresqlConnection postgresqlConnection;
     private SimpleJamesPostgresConnectionFactory jamesPostgresConnectionFactory;

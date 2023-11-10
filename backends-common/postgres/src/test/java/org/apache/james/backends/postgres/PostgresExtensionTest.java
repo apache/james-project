@@ -59,7 +59,7 @@ class PostgresExtensionTest {
         .build();
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension(POSTGRES_MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(POSTGRES_MODULE);
 
     @Test
     void postgresExtensionShouldProvisionTablesAndIndexes() {
