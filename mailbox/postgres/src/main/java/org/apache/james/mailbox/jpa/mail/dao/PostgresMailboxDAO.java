@@ -27,8 +27,6 @@ import static org.apache.james.mailbox.jpa.mail.PostgresMailboxModule.PostgresMa
 import static org.apache.james.mailbox.jpa.mail.PostgresMailboxModule.PostgresMailboxTable.USER_NAME;
 import static org.jooq.impl.DSL.count;
 
-import java.util.NoSuchElementException;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -66,9 +64,11 @@ public class PostgresMailboxDAO {
 
     public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
         final PostgresMailboxId mailboxId = PostgresMailboxId.generate();
+
         return postgresExecutor.dslContext()
             .flatMap(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, MAILBOX_ID, MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE, MAILBOX_UID_VALIDITY)
                 .values(mailboxId.asUuid(), mailboxPath.getName(), mailboxPath.getUser().asString(), mailboxPath.getNamespace(), uidValidity.asLong())))
+            .then()
             .thenReturn(new Mailbox(mailboxPath, uidValidity, mailboxId))
             .onErrorMap(e -> e instanceof DataAccessException && e.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
                 e -> new MailboxExistsException(mailboxPath.getName()));
@@ -109,22 +109,19 @@ public class PostgresMailboxDAO {
 
     public Mono<Mailbox> findMailboxByPath(MailboxPath mailboxPath) {
         return postgresExecutor.dslContext()
-            .flatMapMany(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)
-                .where(MAILBOX_NAME.eq(mailboxPath.getName())
-                    .and(USER_NAME.eq(mailboxPath.getUser().asString()))
-                    .and(MAILBOX_NAMESPACE.eq(mailboxPath.getNamespace()))))
-                .map(this::asMailbox))
-            .last()
-            .onErrorResume(NoSuchElementException.class, e -> Mono.empty());
+            .flatMap(dsl -> Mono.from(dsl.selectFrom(TABLE_NAME)
+                    .where(MAILBOX_NAME.eq(mailboxPath.getName())
+                        .and(USER_NAME.eq(mailboxPath.getUser().asString()))
+                        .and(MAILBOX_NAMESPACE.eq(mailboxPath.getNamespace()))))
+                .map(this::asMailbox));
     }
 
     public Mono<Mailbox> findMailboxById(MailboxId id) {
         return postgresExecutor.dslContext()
-            .flatMapMany(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)
+            .flatMap(dsl -> Mono.from(dsl.selectFrom(TABLE_NAME)
                     .where(MAILBOX_ID.eq(((PostgresMailboxId) id).asUuid())))
                 .map(this::asMailbox))
-            .last()
-            .onErrorResume(NoSuchElementException.class, e -> Mono.error(new MailboxNotFoundException(id)));
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(id)));
     }
 
     public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
