@@ -38,7 +38,7 @@ class PostgresExtensionTest {
             .column("column1", SQLDataType.UUID.notNull())
             .column("column2", SQLDataType.INTEGER)
             .column("column3", SQLDataType.VARCHAR(255).notNull()))
-        .noRLS();
+        .disableRowLevelSecurity();
 
     static PostgresIndex INDEX_1 = PostgresIndex.name("index1")
         .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
@@ -47,7 +47,7 @@ class PostgresExtensionTest {
     static PostgresTable TABLE_2 = PostgresTable.name("table2")
         .createTableStep((dslContext, tableName) -> dslContext.createTable(tableName)
             .column("column1", SQLDataType.INTEGER))
-        .noRLS();
+        .disableRowLevelSecurity();
 
     static PostgresIndex INDEX_2 = PostgresIndex.name("index2")
         .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
