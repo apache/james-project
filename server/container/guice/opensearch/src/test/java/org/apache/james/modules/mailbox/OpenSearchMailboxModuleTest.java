@@ -43,7 +43,7 @@ class OpenSearchMailboxModuleTest {
             new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
             ExtensionConfiguration.DEFAULT);
 
-        Set<ListeningMessageSearchIndex.SearchOverride> searchOverrides = new OpenSearchMailboxModule()
+        Set<ListeningMessageSearchIndex.SearchOverride> searchOverrides = new OpenSearchMailboxConfigurationModule()
             .provideSearchOverrides(genericLoader,
             OpenSearchConfiguration.builder()
                 .addHost(Host.parseConfString("127.0.0.1", 9200))
