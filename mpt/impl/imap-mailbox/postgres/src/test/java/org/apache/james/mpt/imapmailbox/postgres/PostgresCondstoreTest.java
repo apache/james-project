@@ -26,7 +26,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresCondstoreTest extends Condstore {
     @RegisterExtension
-    public PostgresHostSystemExtension hostSystemExtension = new PostgresHostSystemExtension();
+    public static PostgresHostSystemExtension hostSystemExtension = new PostgresHostSystemExtension();
 
     @Override
     protected JamesImapHostSystem createJamesImapHostSystem() {
