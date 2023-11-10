@@ -16,23 +16,51 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
+package org.apache.james.mailbox.postgres.mail.model.openjpa;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+/**
+ * Helper class for encrypt and de-crypt data
+ * 
+ *
+ */
+public class EncryptDecryptHelper {    
 
-public class PostgresMailboxModule extends AbstractModule {
+    // Use one static instance as it is thread safe
+    private static final StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
+    
+    
+    /**
+     * Set the password for encrypt / de-crypt. This MUST be done before
+     * the usage of {@link #getDecrypted(byte[])} and {@link #getEncrypted(byte[])}.
+     * 
+     * So to be safe its the best to call this in a constructor
+     * 
+     * @param pass
+     */
+    public static void init(String pass) {
+        encryptor.setPassword(pass);
+    }
 
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
+    /**
+     * Encrypt the given array and return the encrypted one
+     * 
+     * @param array
+     * @return enc-array
+     */
+    public static byte[] getEncrypted(byte[] array) {
+        return encryptor.encrypt(array);
+    }
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    /**
+     * Decrypt the given array and return the de-crypted one
+     * 
+     * @param array
+     * @return dec-array
+     */
+    public static byte[] getDecrypted(byte[] array) {
+        return encryptor.decrypt(array);
     }
 
 }

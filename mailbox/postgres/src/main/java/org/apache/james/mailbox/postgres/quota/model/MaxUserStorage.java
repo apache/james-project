@@ -16,23 +16,38 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+package org.apache.james.mailbox.postgres.quota.model;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-public class PostgresMailboxModule extends AbstractModule {
+@Entity(name = "MaxUserStorage")
+@Table(name = "JAMES_MAX_USER_STORAGE")
+public class MaxUserStorage {
 
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
+    @Id
+    @Column(name = "QUOTAROOT_ID")
+    private String quotaRoot;
 
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+    @Column(name = "VALUE", nullable = true)
+    private Long value;
+
+    public MaxUserStorage(String quotaRoot, Long value) {
+        this.quotaRoot = quotaRoot;
+        this.value = value;
     }
 
+    public MaxUserStorage() {
+    }
+
+    public Long getValue() {
+        return value;
+    }
+
+    public void setValue(Long value) {
+        this.value = value;
+    }
 }
