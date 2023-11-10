@@ -53,7 +53,7 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .noRLS();
+            .disableRowLevelSecurity();
 
         PostgresModule module = PostgresModule.table(table);
 
@@ -75,12 +75,12 @@ class PostgresTableManagerTest {
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull())).noRLS();
+                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity();
 
         String tableName2 = "tableName2";
         PostgresTable table2 = PostgresTable.name(tableName2)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columB", SQLDataType.INTEGER)).noRLS();
+                .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1, table2));
 
@@ -101,7 +101,7 @@ class PostgresTableManagerTest {
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull())).noRLS();
+                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
 
@@ -117,7 +117,7 @@ class PostgresTableManagerTest {
         String tableName1 = "tableName1";
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull())).noRLS();
+                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity();
 
         tableManagerFactory.apply(PostgresModule.table(table1))
             .initializeTables()
@@ -125,7 +125,7 @@ class PostgresTableManagerTest {
 
         PostgresTable table1Changed = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columB", SQLDataType.INTEGER)).noRLS();
+                .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity();
 
         tableManagerFactory.apply(PostgresModule.table(table1Changed))
             .initializeTables()
@@ -145,7 +145,7 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .noRLS();
+            .disableRowLevelSecurity();
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
@@ -178,7 +178,7 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .noRLS();
+            .disableRowLevelSecurity();
 
         String indexName1 = "idx_test_1";
         PostgresIndex index1 = PostgresIndex.name(indexName1)
@@ -216,7 +216,7 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .noRLS();
+            .disableRowLevelSecurity();
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
@@ -244,7 +244,7 @@ class PostgresTableManagerTest {
         String tableName1 = "tbn1";
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("column1", SQLDataType.INTEGER.notNull())).noRLS();
+                .column("column1", SQLDataType.INTEGER.notNull())).disableRowLevelSecurity();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
         testee.initializeTables()
@@ -286,7 +286,7 @@ class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("clm1", SQLDataType.UUID.notNull())
                 .column("clm2", SQLDataType.VARCHAR(255).notNull()))
-            .enableRowLevelSecurity();
+            .supportsRowLevelSecurity();
 
         PostgresModule module = PostgresModule.table(table);
 
@@ -326,7 +326,7 @@ class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("clm1", SQLDataType.UUID.notNull())
                 .column("clm2", SQLDataType.VARCHAR(255).notNull()))
-            .enableRowLevelSecurity();
+            .supportsRowLevelSecurity();
 
         PostgresModule module = PostgresModule.table(table);
         boolean disabledRLS = false;
