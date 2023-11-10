@@ -40,7 +40,7 @@ public class PostgresTableManager implements Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
-    private final boolean rlsEnabled;
+    private final boolean rowLevelSecurityEnabled;
 
     @Inject
     public PostgresTableManager(JamesPostgresConnectionFactory postgresConnectionFactory,
@@ -48,34 +48,36 @@ public class PostgresTableManager implements Startable {
                                 PostgresConfiguration postgresConfiguration) {
         this.postgresExecutor = new PostgresExecutor(postgresConnectionFactory.getConnection(Optional.empty()));
         this.module = module;
-        this.rlsEnabled = postgresConfiguration.rlsEnabled();
+        this.rowLevelSecurityEnabled = postgresConfiguration.rowLevelSecurityEnabled();
     }
 
     @VisibleForTesting
-    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, boolean rlsEnabled) {
+    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, boolean rowLevelSecurityEnabled) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
-        this.rlsEnabled = rlsEnabled;
+        this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
     }
 
     public Mono<Void> initializeTables() {
         return postgresExecutor.dslContext()
             .flatMap(dsl -> Flux.fromIterable(module.tables())
                 .flatMap(table -> Mono.from(table.getCreateTableStepFunction().apply(dsl))
-                    .then(alterTableEnableRLSIfNeed(table))
+                    .then(alterTableIfNeeded(table))
                     .doOnSuccess(any -> LOGGER.info("Table {} created", table.getName()))
-                    .onErrorResume(DataAccessException.class, exception -> {
-                        if (exception.getMessage().contains(String.format("\"%s\" already exists", table.getName()))) {
-                            return Mono.empty();
-                        }
-                        return Mono.error(exception);
-                    })
-                    .doOnError(e -> LOGGER.error("Error while creating table {}", table.getName(), e)))
+                    .onErrorResume(exception -> handleTableCreationException(table, exception)))
                 .then());
     }
 
-    private Mono<Void> alterTableEnableRLSIfNeed(PostgresTable table) {
-        if (rlsEnabled && table.isEnableRowLevelSecurity()) {
+    private Mono<Void> handleTableCreationException(PostgresTable table, Throwable e) {
+        if (e instanceof DataAccessException && e.getMessage().contains(String.format("\"%s\" already exists", table.getName()))) {
+            return Mono.empty();
+        }
+        LOGGER.error("Error while creating table {}", table.getName(), e);
+        return Mono.error(e);
+    }
+
+    private Mono<Void> alterTableIfNeeded(PostgresTable table) {
+        if (rowLevelSecurityEnabled && table.supportsRowLevelSecurity()) {
             return alterTableEnableRLS(table);
         }
         return Mono.empty();
@@ -83,12 +85,13 @@ public class PostgresTableManager implements Startable {
 
     public Mono<Void> alterTableEnableRLS(PostgresTable table) {
         return postgresExecutor.connection()
-            .flatMapMany(con -> con.createStatement(getAlterRLSStatement(table.getName())).execute())
+            .flatMapMany(connection -> connection.createStatement(rowLevelSecurityAlterStatement(table.getName()))
+                .execute())
             .flatMap(Result::getRowsUpdated)
             .then();
     }
 
-    private String getAlterRLSStatement(String tableName) {
+    private String rowLevelSecurityAlterStatement(String tableName) {
         return "SET app.current_domain = ''; ALTER TABLE " + tableName + " ADD DOMAIN varchar(255) not null DEFAULT current_setting('app.current_domain')::text;" +
             "ALTER TABLE " + tableName + " ENABLE ROW LEVEL SECURITY; " +
             "CREATE POLICY DOMAIN_" + tableName + "_POLICY ON " + tableName + " USING (DOMAIN = current_setting('app.current_domain')::text);";
@@ -108,13 +111,15 @@ public class PostgresTableManager implements Startable {
             .flatMap(dsl -> Flux.fromIterable(module.tableIndexes())
                 .concatMap(index -> Mono.from(index.getCreateIndexStepFunction().apply(dsl))
                     .doOnSuccess(any -> LOGGER.info("Index {} created", index.getName()))
-                    .onErrorResume(DataAccessException.class, exception -> {
-                        if (exception.getMessage().contains(String.format("\"%s\" already exists", index.getName()))) {
-                            return Mono.empty();
-                        }
-                        return Mono.error(exception);
-                    })
-                    .doOnError(e -> LOGGER.error("Error while creating index {}", index.getName(), e)))
+                    .onErrorResume(e -> handleIndexCreationException(index, e)))
                 .then());
+    }
+
+    private Mono<? extends Integer> handleIndexCreationException(PostgresIndex index, Throwable e) {
+        if (e instanceof DataAccessException && e.getMessage().contains(String.format("\"%s\" already exists", index.getName()))) {
+            return Mono.empty();
+        }
+        LOGGER.error("Error while creating index {}", index.getName(), e);
+        return Mono.error(e);
     }
 }
