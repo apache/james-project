@@ -39,7 +39,7 @@ import reactor.core.publisher.Mono;
 class PostgresTableManagerTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension();
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     Function<PostgresModule, PostgresTableManager> tableManagerFactory =
         module -> new PostgresTableManager(new PostgresExecutor(postgresExtension.getConnection()), module, true);
