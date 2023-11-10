@@ -80,7 +80,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
                 .toString())
             .databaseName(PostgresFixture.Database.DB_NAME)
             .databaseSchema(PostgresFixture.Database.SCHEMA)
-            .rlsEnabled(rlsEnabled)
+            .rowLevelSecurityEnabled(rlsEnabled)
             .build();
 
         connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
@@ -149,7 +149,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void initTablesAndIndexes() {
-        PostgresTableManager postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration.rlsEnabled());
+        PostgresTableManager postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration.rowLevelSecurityEnabled());
         postgresTableManager.initializeTables().block();
         postgresTableManager.initializeTableIndexes().block();
     }
