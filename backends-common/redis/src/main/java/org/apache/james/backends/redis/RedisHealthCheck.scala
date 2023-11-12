@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.redis
 
+import java.time.Duration
+
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.codec.StringCodec
@@ -28,9 +30,8 @@ import org.apache.james.core.healthcheck.{ComponentName, HealthCheck, Result}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
-import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.jdk.CollectionConverters.IterableHasAsJava
+import scala.jdk.CollectionConverters._
 import scala.jdk.FutureConverters._
 
 class RedisHealthCheck @Inject()(redisConfiguration: RedisConfiguration) extends HealthCheck {
