@@ -17,9 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rate.limiter.redis
-
-import java.time.Duration
+package org.apache.james.backends.redis
 
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.cluster.RedisClusterClient
@@ -30,11 +28,12 @@ import org.apache.james.core.healthcheck.{ComponentName, HealthCheck, Result}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono
 
+import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.IterableHasAsJava
 import scala.jdk.FutureConverters._
 
-class RedisHealthCheck @Inject()(redisConfiguration: RedisRateLimiterConfiguration) extends HealthCheck {
+class RedisHealthCheck @Inject()(redisConfiguration: RedisConfiguration) extends HealthCheck {
   private val redisComponent: ComponentName = new ComponentName("Redis")
   private val healthcheckTimeout = Duration.ofSeconds(3)
 

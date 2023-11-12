@@ -17,14 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rate.limiter;
+package org.apache.james.backends.redis;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import io.lettuce.core.api.sync.RedisCommands;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.lettuce.core.api.sync.RedisCommands;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class RedisExtensionTest {
 
