@@ -17,12 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rate.limiter;
+package org.apache.james.backends.redis;
 
 import javax.inject.Singleton;
 
 import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.rate.limiter.redis.RedisRateLimiterConfiguration;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
@@ -54,8 +53,8 @@ public class RedisExtension implements GuiceModuleTestExtension {
         return new AbstractModule() {
             @Provides
             @Singleton
-            public RedisRateLimiterConfiguration provideConfig() {
-                return RedisRateLimiterConfiguration.from(dockerRedis().redisURI().toString(), false);
+            public  RedisConfiguration provideConfig() {
+                return RedisConfiguration.from(dockerRedis().redisURI().toString(), false);
             }
         };
     }

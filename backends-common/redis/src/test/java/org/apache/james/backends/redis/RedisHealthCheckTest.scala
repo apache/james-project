@@ -17,10 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rate.limiter
+package org.apache.james.backends.redis
 
 import org.apache.james.core.healthcheck.Result
-import org.apache.james.rate.limiter.redis.{RedisHealthCheck, RedisRateLimiterConfiguration}
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.extension.ExtendWith
@@ -34,7 +33,7 @@ class RedisHealthCheckTest {
 
   @BeforeEach
   def setup(redis: DockerRedis): Unit = {
-    val redisConfiguration: RedisRateLimiterConfiguration = RedisRateLimiterConfiguration.from(redis.redisURI().toString, isCluster = false)
+    val redisConfiguration: RedisConfiguration = RedisConfiguration.from(redis.redisURI().toString, isCluster = false)
 
     redisHealthCheck = new RedisHealthCheck(redisConfiguration)
   }

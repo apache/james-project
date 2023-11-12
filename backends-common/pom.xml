@@ -39,6 +39,7 @@
         <module>opensearch</module>
         <module>pulsar</module>
         <module>rabbitmq</module>
+        <module>redis</module>
     </modules>
 
 </project>
