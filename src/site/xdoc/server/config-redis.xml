@@ -27,7 +27,7 @@
 
   <section name="Redis Server Configuration">
       <p>
-          Redis is used in distributed James for the optional rate limiting component.
+          Redis is used in distributed James for the optional component.
 
           This configuration helps you configure components using Redis in case you want to setup a distributed James.
           And it is only applicable with Guice products.
@@ -38,7 +38,7 @@
       </p>
 
       <p>
-          RabbitMQ Configuration
+          Redis Configuration
       </p>
       <dl>
           <dt><strong>redisURL</strong></dt>

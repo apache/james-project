@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rate.limiter.redis
+package org.apache.james.backends.redis
 
 import com.google.common.base.Preconditions
 import eu.timepit.refined
@@ -25,24 +25,24 @@ import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
 import io.lettuce.core.RedisURI
 import org.apache.commons.configuration2.Configuration
-import org.apache.james.rate.limiter.redis.RedisUris.RedisUris
+import org.apache.james.backends.redis.RedisUris.RedisUris
 
-object RedisRateLimiterConfiguration {
+object RedisConfiguration {
   val CLUSTER_ENABLED_DEFAULT = false
 
-  def from(config: Configuration): RedisRateLimiterConfiguration =
+  def from(config: Configuration): RedisConfiguration =
     from(config.getString("redisURL"),
       config.getBoolean("cluster.enabled", CLUSTER_ENABLED_DEFAULT),
       Option(config.getInteger("redis.ioThreads", null)).map(Integer2int),
       Option(config.getInteger("redis.workerThreads", null)).map(Integer2int))
 
-  def from(redisUri: String, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int]): RedisRateLimiterConfiguration = {
+  def from(redisUri: String, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int]): RedisConfiguration = {
     Preconditions.checkArgument(redisUri != null && !redisUri.isBlank)
     Preconditions.checkNotNull(isCluster)
-    RedisRateLimiterConfiguration(RedisUris.from(redisUri), isCluster, ioThreads, workerThreads)
+    RedisConfiguration(RedisUris.from(redisUri), isCluster, ioThreads, workerThreads)
   }
 
-  def from(redisUri: String, isCluster: Boolean): RedisRateLimiterConfiguration = from(redisUri, isCluster, None, None)
+  def from(redisUri: String, isCluster: Boolean): RedisConfiguration = from(redisUri, isCluster, None, None)
 }
 
 object RedisUris {
@@ -64,4 +64,4 @@ object RedisUris {
   def from(value: String): RedisUris = liftOrThrow(value.split(',').toList.map(RedisURI.create))
 }
 
-case class RedisRateLimiterConfiguration(redisURI: RedisUris, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int])
+case class RedisConfiguration(redisURI: RedisUris, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int])

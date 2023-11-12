@@ -20,7 +20,6 @@
 package org.apache.james.rate.limiter.redis
 
 import java.time.Duration
-
 import com.google.inject.multibindings.Multibinder
 import com.google.inject.{AbstractModule, Provides, Scopes}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
@@ -28,6 +27,8 @@ import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSl
 import io.lettuce.core.RedisClient
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.resource.ClientResources
+import org.apache.james.backends.redis.{RedisConfiguration, RedisHealthCheck}
+
 import javax.inject.Inject
 import org.apache.james.core.healthcheck.HealthCheck
 import org.apache.james.rate.limiter.api.Increment.Increment
@@ -52,11 +53,11 @@ class RedisRateLimiterModule() extends AbstractModule {
   }
 
   @Provides
-  def provideConfig(propertiesProvider: PropertiesProvider): RedisRateLimiterConfiguration =
-    RedisRateLimiterConfiguration.from(propertiesProvider.getConfiguration("redis"))
+  def provideConfig(propertiesProvider: PropertiesProvider): RedisConfiguration =
+    RedisConfiguration.from(propertiesProvider.getConfiguration("redis"))
 }
 
-class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisRateLimiterConfiguration) extends RateLimiterFactory {
+class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisConfiguration) extends RateLimiterFactory {
   val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] =
     if (redisConfiguration.isCluster) {
       val resourceBuilder = ClientResources.builder()

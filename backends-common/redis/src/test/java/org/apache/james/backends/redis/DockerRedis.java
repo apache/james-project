@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rate.limiter;
+package org.apache.james.backends.redis;
 
 import java.net.URI;
 import java.time.Duration;
@@ -33,6 +33,8 @@ import com.github.fge.lambdas.Throwing;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
+
+import static java.lang.Boolean.TRUE;
 
 public class DockerRedis {
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("redis").withTag("7.0.12");
@@ -86,10 +88,10 @@ public class DockerRedis {
     }
 
     public boolean isPaused() {
-        return container.getDockerClient().inspectContainerCmd(container.getContainerId())
+        return TRUE.equals(container.getDockerClient().inspectContainerCmd(container.getContainerId())
             .exec()
             .getState()
-            .getPaused();
+            .getPaused());
     }
 
     public RedisCommands<String, String> createClient() {
