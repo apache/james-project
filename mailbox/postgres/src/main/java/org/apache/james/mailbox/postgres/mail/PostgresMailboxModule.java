@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.jpa.mail;
+package org.apache.james.mailbox.postgres.mail;
 
 import java.util.UUID;
 

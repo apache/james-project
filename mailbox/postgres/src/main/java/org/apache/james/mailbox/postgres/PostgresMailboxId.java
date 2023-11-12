@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa;
+package org.apache.james.mailbox.postgres;
 
 import java.io.Serializable;
 import java.util.Objects;
