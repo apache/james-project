@@ -44,7 +44,6 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.Record1;
 import org.jooq.exception.DataAccessException;
 
 import com.google.common.base.Preconditions;
@@ -133,12 +132,11 @@ public class PostgresMailboxDAO {
     public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
         String name = mailbox.getName() + delimiter + SQL_WILDCARD_CHAR;
 
-        return postgresExecutor.dslContext()
-            .flatMapMany(dsl -> Flux.from(dsl.select(count()).from(TABLE_NAME)
+        return postgresExecutor.executeRows(dsl -> Flux.from(dsl.select(count()).from(TABLE_NAME)
                 .where(MAILBOX_NAME.like(name)
                     .and(USER_NAME.eq(mailbox.getUser().asString()))
                     .and(MAILBOX_NAMESPACE.eq(mailbox.getNamespace())))))
-            .map(Record1::value1)
+            .map(record -> record.get(0, Integer.class))
             .filter(count -> count > 0)
             .hasElements();
     }
