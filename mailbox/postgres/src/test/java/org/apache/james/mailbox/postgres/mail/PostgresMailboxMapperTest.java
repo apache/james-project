@@ -41,14 +41,11 @@ public class PostgresMailboxMapperTest extends MailboxMapperTest {
     protected static final MailboxPath BOB_INBOX_PATH = MailboxPath.forUser(BOB, "INBOX");
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = new PostgresExtension(PostgresMailboxModule.MODULE);
-
-    private MailboxMapper mailboxMapper;
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxModule.MODULE);
 
     @Override
     protected MailboxMapper createMailboxMapper() {
-        mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
-        return mailboxMapper;
+        return new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
     }
 
     @Override
@@ -57,7 +54,7 @@ public class PostgresMailboxMapperTest extends MailboxMapperTest {
     }
 
     @Test
-    void renameShouldUpdateOnyOneMailbox() {
+    void renameShouldUpdateOnlyOneMailbox() {
         MailboxId aliceMailboxId = mailboxMapper.create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
         MailboxId bobMailboxId = mailboxMapper.create(BOB_INBOX_PATH, UidValidity.of(2L)).block().getMailboxId();
 
