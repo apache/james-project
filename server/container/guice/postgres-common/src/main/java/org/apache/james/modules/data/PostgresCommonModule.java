@@ -27,8 +27,9 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTableManager;
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -42,12 +43,11 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.ConnectionFactory;
+import reactor.core.publisher.Mono;
 
 public class PostgresCommonModule extends AbstractModule {
     @Override
     public void configure() {
-        bind(JamesPostgresConnectionFactory.class).to(DomainImplPostgresConnectionFactory.class);
-
         Multibinder.newSetBinder(binder(), PostgresModule.class);
 
         bind(DomainImplPostgresConnectionFactory.class).in(Scopes.SINGLETON);
@@ -57,6 +57,15 @@ public class PostgresCommonModule extends AbstractModule {
     @Singleton
     PostgresConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws FileNotFoundException, ConfigurationException {
         return PostgresConfiguration.from(propertiesProvider.getConfiguration("postgres"));
+    }
+
+    @Provides
+    @Singleton
+    JamesPostgresConnectionFactory provideJamesPostgresConnectionFactory(PostgresConfiguration postgresConfiguration, ConnectionFactory connectionFactory) {
+        if (postgresConfiguration.rowLevelSecurityEnabled()) {
+            return new DomainImplPostgresConnectionFactory(connectionFactory);
+        }
+        return new SinglePostgresConnectionFactory(Mono.from(connectionFactory.create()).block());
     }
 
     @Provides
