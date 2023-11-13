@@ -28,7 +28,7 @@ import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTableManager;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
-import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -46,11 +46,11 @@ import io.r2dbc.spi.ConnectionFactory;
 public class PostgresCommonModule extends AbstractModule {
     @Override
     public void configure() {
-        bind(JamesPostgresConnectionFactory.class).to(SimpleJamesPostgresConnectionFactory.class);
+        bind(JamesPostgresConnectionFactory.class).to(DomainImplPostgresConnectionFactory.class);
 
         Multibinder.newSetBinder(binder(), PostgresModule.class);
 
-        bind(SimpleJamesPostgresConnectionFactory.class).in(Scopes.SINGLETON);
+        bind(DomainImplPostgresConnectionFactory.class).in(Scopes.SINGLETON);
     }
 
     @Provides
