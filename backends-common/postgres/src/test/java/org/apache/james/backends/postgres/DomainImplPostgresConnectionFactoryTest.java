@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
-import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.core.Domain;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.jetbrains.annotations.Nullable;
@@ -45,12 +45,12 @@ import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConnectionFactoryTest {
+public class DomainImplPostgresConnectionFactoryTest extends JamesPostgresConnectionFactoryTest {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     private PostgresqlConnection postgresqlConnection;
-    private SimpleJamesPostgresConnectionFactory jamesPostgresConnectionFactory;
+    private DomainImplPostgresConnectionFactory jamesPostgresConnectionFactory;
 
     JamesPostgresConnectionFactory jamesPostgresConnectionFactory() {
         return jamesPostgresConnectionFactory;
@@ -58,7 +58,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
 
     @BeforeEach
     void beforeEach() {
-        jamesPostgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory());
+        jamesPostgresConnectionFactory = new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory());
         postgresqlConnection = (PostgresqlConnection) postgresExtension.getConnection().block();
     }
 
