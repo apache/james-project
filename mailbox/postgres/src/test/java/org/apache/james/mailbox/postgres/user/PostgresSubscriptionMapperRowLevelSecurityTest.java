@@ -22,19 +22,14 @@ package org.apache.james.mailbox.postgres.user;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.exception.SubscriptionException;
-import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
-import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -67,7 +62,6 @@ public class PostgresSubscriptionMapperRowLevelSecurityTest {
             .containsOnly(subscription);
     }
 
-    @Disabled("Row level security for subscriptions is not implemented correctly")
     @Test
     void subscriptionsShouldBeIsolatedByDomain() throws Exception {
         Username username = Username.of("bob@domain1");

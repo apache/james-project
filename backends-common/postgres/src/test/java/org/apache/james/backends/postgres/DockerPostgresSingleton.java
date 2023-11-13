@@ -30,7 +30,7 @@ public class DockerPostgresSingleton {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerPostgresSingleton.class);
-    public static final PostgreSQLContainer SINGLETON = PostgresFixture.PG_CONTAINER.get()
+    public static final PostgreSQLContainer<?> SINGLETON = PostgresFixture.PG_CONTAINER.get()
         .withLogConsumer(DockerPostgresSingleton::displayDockerLog);
 
     static {

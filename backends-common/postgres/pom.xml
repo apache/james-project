@@ -29,7 +29,6 @@
     <name>Apache James :: Backends Common :: Postgres</name>
 
     <properties>
-        <postgresql.driver.version>42.5.1</postgresql.driver.version>
         <jooq.version>3.16.22</jooq.version>
         <r2dbc.postgresql.version>1.0.2.RELEASE</r2dbc.postgresql.version>
     </properties>
@@ -70,12 +69,6 @@
             <groupId>org.jooq</groupId>
             <artifactId>jooq</artifactId>
             <version>${jooq.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.driver.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
