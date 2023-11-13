@@ -29,7 +29,7 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.core.Domain;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.jetbrains.annotations.NotNull;
@@ -60,11 +60,11 @@ public class ConnectionThreadSafetyTest {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     private static PostgresqlConnection postgresqlConnection;
-    private static SimpleJamesPostgresConnectionFactory jamesPostgresConnectionFactory;
+    private static DomainImplPostgresConnectionFactory jamesPostgresConnectionFactory;
 
     @BeforeAll
     static void beforeAll() {
-        jamesPostgresConnectionFactory = new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory());
+        jamesPostgresConnectionFactory = new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory());
         postgresqlConnection = (PostgresqlConnection) postgresExtension.getConnection().block();
     }
 

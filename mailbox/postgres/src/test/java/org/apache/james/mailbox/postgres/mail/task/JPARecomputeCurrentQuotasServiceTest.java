@@ -25,7 +25,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.mailbox.MailboxManager;
@@ -89,7 +89,7 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
             new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(entityManagerFactory),
             jpaConfiguration,
-            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+            new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
 
         usersRepository = new JPAUsersRepository(NO_DOMAIN_LIST);
         usersRepository.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
