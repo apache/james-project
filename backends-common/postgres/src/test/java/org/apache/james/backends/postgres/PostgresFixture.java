@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.utility.MountableFile;
 
 public interface PostgresFixture {
 
@@ -91,12 +90,9 @@ public interface PostgresFixture {
 
     String IMAGE = "postgres:16";
     Integer PORT = POSTGRESQL_PORT;
-    String POSTGRES_ROW_LEVEL_SECURITY_INIT_FILE = "postgres-rowlevelsecurity-init.sql";
-    String SCRIPT_ROW_LEVEL_SECURITY_INIT_PATH = "/tmp/" + POSTGRES_ROW_LEVEL_SECURITY_INIT_FILE;
     Supplier<PostgreSQLContainer<?>> PG_CONTAINER = () -> new PostgreSQLContainer<>(IMAGE)
         .withDatabaseName(DEFAULT_DATABASE.dbName())
         .withUsername(DEFAULT_DATABASE.dbUser())
         .withPassword(DEFAULT_DATABASE.dbPassword())
-        .withCreateContainerCmdModifier(cmd -> cmd.withName("james-postgres-test-" + UUID.randomUUID()))
-        .withCopyFileToContainer(MountableFile.forClasspathResource(POSTGRES_ROW_LEVEL_SECURITY_INIT_FILE), "/tmp/");
+        .withCreateContainerCmdModifier(cmd -> cmd.withName("james-postgres-test-" + UUID.randomUUID()));
 }
