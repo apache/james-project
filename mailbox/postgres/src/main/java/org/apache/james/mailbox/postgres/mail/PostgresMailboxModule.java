@@ -52,7 +52,7 @@ public interface PostgresMailboxModule {
                 .column(MAILBOX_HIGHEST_MODSEQ)
                 .constraint(DSL.primaryKey(MAILBOX_ID))
                 .constraint(DSL.unique(MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE))))
-            .enableRowLevelSecurity();
+            .supportsRowLevelSecurity();
     }
 
     PostgresModule MODULE = PostgresModule.builder()

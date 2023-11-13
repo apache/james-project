@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
-import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.exception.DataAccessException;
 
@@ -73,20 +72,20 @@ public class PostgresMailboxDAO {
     public Mono<MailboxId> rename(Mailbox mailbox) {
         Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
 
-        return postgresExecutor.executeRow(dslContext -> rename(mailbox, dslContext))
-            .map(record -> mailbox.getMailboxId())
-            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailbox.getMailboxId())))
-            .onErrorMap(e -> e instanceof DataAccessException && e.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
-                throwable -> new MailboxExistsException(mailbox.getName()));
+        return findMailboxByPath(mailbox.generateAssociatedPath())
+            .flatMap(m -> Mono.error(new MailboxExistsException(mailbox.getName())))
+            .then(update(mailbox));
     }
 
-    private Mono<Record> rename(Mailbox mailbox, DSLContext dslContext) {
-        return Mono.from(dslContext.update(TABLE_NAME)
-            .set(MAILBOX_NAME, mailbox.getName())
-            .set(USER_NAME, mailbox.getUser().asString())
-            .set(MAILBOX_NAMESPACE, mailbox.getNamespace())
-            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailbox.getMailboxId()).asUuid()))
-            .returning(MAILBOX_ID));
+    private Mono<MailboxId> update(Mailbox mailbox) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
+                .set(MAILBOX_NAME, mailbox.getName())
+                .set(USER_NAME, mailbox.getUser().asString())
+                .set(MAILBOX_NAMESPACE, mailbox.getNamespace())
+                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailbox.getMailboxId()).asUuid()))
+                .returning(MAILBOX_ID)))
+            .map(record -> mailbox.getMailboxId())
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailbox.getMailboxId())));
     }
 
     public Mono<Void> delete(MailboxId mailboxId) {
