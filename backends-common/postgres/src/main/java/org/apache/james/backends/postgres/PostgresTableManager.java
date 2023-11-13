@@ -94,6 +94,7 @@ public class PostgresTableManager implements Startable {
     private String rowLevelSecurityAlterStatement(String tableName) {
         return "SET app.current_domain = ''; ALTER TABLE " + tableName + " ADD DOMAIN varchar(255) not null DEFAULT current_setting('app.current_domain')::text;" +
             "ALTER TABLE " + tableName + " ENABLE ROW LEVEL SECURITY; " +
+            "ALTER TABLE " + tableName + " FORCE ROW LEVEL SECURITY; " +
             "CREATE POLICY DOMAIN_" + tableName + "_POLICY ON " + tableName + " USING (DOMAIN = current_setting('app.current_domain')::text);";
     }
 

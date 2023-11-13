@@ -20,9 +20,6 @@
 package org.apache.james.mailbox.postgres.user;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -30,7 +27,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class PostgresSubscriptionMapperTest extends SubscriptionMapperTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresSubscriptionModule.MODULE);
 
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {
