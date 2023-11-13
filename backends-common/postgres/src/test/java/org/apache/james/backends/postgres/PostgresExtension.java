@@ -20,10 +20,9 @@
 package org.apache.james.backends.postgres;
 
 import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAULT_DATABASE;
-import static org.apache.james.backends.postgres.PostgresFixture.SCRIPT_ROW_LEVEL_SECURITY_INIT_PATH;
+import static org.apache.james.backends.postgres.PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
 
 import java.net.URISyntaxException;
-import java.util.Optional;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
@@ -59,7 +58,6 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     public static PostgreSQLContainer<?> PG_CONTAINER = DockerPostgresSingleton.SINGLETON;
     private final PostgresModule postgresModule;
     private final boolean rlsEnabled;
-    private final Optional<String> initScriptPath;
     private final PostgresFixture.Database selectedDatabase;
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor postgresExecutor;
@@ -70,10 +68,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         this.rlsEnabled = rlsEnabled;
         if (rlsEnabled) {
             this.selectedDatabase = PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
-            this.initScriptPath = Optional.of(SCRIPT_ROW_LEVEL_SECURITY_INIT_PATH);
         } else {
             this.selectedDatabase = DEFAULT_DATABASE;
-            this.initScriptPath = Optional.empty();
         }
     }
 
@@ -82,13 +78,17 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         if (!PG_CONTAINER.isRunning()) {
             PG_CONTAINER.start();
         }
-        runInitScriptIfNeed();
+        querySettingRowLevelSecurityIfNeed();
         initPostgresSession();
     }
 
-
-    private void runInitScriptIfNeed() {
-        initScriptPath.ifPresent(scriptPath -> Throwing.supplier(() -> PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-f", scriptPath)).get());
+    private void querySettingRowLevelSecurityIfNeed() {
+        Throwing.runnable(() -> {
+            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create user " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + " WITH PASSWORD '" + ROW_LEVEL_SECURITY_DATABASE.dbPassword() + "';");
+            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + ";");
+            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "grant all privileges on database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + " to " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + ";");
+            PG_CONTAINER.execInContainer("psql", "-U", ROW_LEVEL_SECURITY_DATABASE.dbUser(), "-d", ROW_LEVEL_SECURITY_DATABASE.dbName(), "-c", "create schema if not exists " + ROW_LEVEL_SECURITY_DATABASE.schema() + ";");
+        }).sneakyThrow().run();
     }
 
     private void initPostgresSession() throws URISyntaxException {
