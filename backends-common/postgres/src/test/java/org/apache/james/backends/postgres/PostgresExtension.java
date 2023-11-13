@@ -19,13 +19,18 @@
 
 package org.apache.james.backends.postgres;
 
+import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAULT_DATABASE;
+import static org.apache.james.backends.postgres.PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
+
 import java.net.URISyntaxException;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.testcontainers.containers.PostgreSQLContainer;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
@@ -50,8 +55,10 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         return withoutRowLevelSecurity(PostgresModule.EMPTY_MODULE);
     }
 
+    public static PostgreSQLContainer<?> PG_CONTAINER = DockerPostgresSingleton.SINGLETON;
     private final PostgresModule postgresModule;
     private final boolean rlsEnabled;
+    private final PostgresFixture.Database selectedDatabase;
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor postgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
@@ -59,14 +66,29 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
         this.postgresModule = postgresModule;
         this.rlsEnabled = rlsEnabled;
+        if (rlsEnabled) {
+            this.selectedDatabase = PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
+        } else {
+            this.selectedDatabase = DEFAULT_DATABASE;
+        }
     }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
-        if (!DockerPostgresSingleton.SINGLETON.isRunning()) {
-            DockerPostgresSingleton.SINGLETON.start();
+        if (!PG_CONTAINER.isRunning()) {
+            PG_CONTAINER.start();
         }
+        querySettingRowLevelSecurityIfNeed();
         initPostgresSession();
+    }
+
+    private void querySettingRowLevelSecurityIfNeed() {
+        Throwing.runnable(() -> {
+            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create user " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + " WITH PASSWORD '" + ROW_LEVEL_SECURITY_DATABASE.dbPassword() + "';");
+            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + ";");
+            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "grant all privileges on database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + " to " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + ";");
+            PG_CONTAINER.execInContainer("psql", "-U", ROW_LEVEL_SECURITY_DATABASE.dbUser(), "-d", ROW_LEVEL_SECURITY_DATABASE.dbName(), "-c", "create schema if not exists " + ROW_LEVEL_SECURITY_DATABASE.schema() + ";");
+        }).sneakyThrow().run();
     }
 
     private void initPostgresSession() throws URISyntaxException {
@@ -75,11 +97,11 @@ public class PostgresExtension implements GuiceModuleTestExtension {
                 .setScheme("postgresql")
                 .setHost(getHost())
                 .setPort(getMappedPort())
-                .setUserInfo(PostgresFixture.Database.DB_USER, PostgresFixture.Database.DB_PASSWORD)
+                .setUserInfo(selectedDatabase.dbUser(), selectedDatabase.dbPassword())
                 .build()
                 .toString())
-            .databaseName(PostgresFixture.Database.DB_NAME)
-            .databaseSchema(PostgresFixture.Database.SCHEMA)
+            .databaseName(selectedDatabase.dbName())
+            .databaseSchema(selectedDatabase.schema())
             .rowLevelSecurityEnabled(rlsEnabled)
             .build();
 
@@ -117,8 +139,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     public void restartContainer() throws URISyntaxException {
-        DockerPostgresSingleton.SINGLETON.stop();
-        DockerPostgresSingleton.SINGLETON.start();
+        PG_CONTAINER.stop();
+        PG_CONTAINER.start();
         initPostgresSession();
     }
 
@@ -129,11 +151,11 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     public String getHost() {
-        return DockerPostgresSingleton.SINGLETON.getHost();
+        return PG_CONTAINER.getHost();
     }
 
     public Integer getMappedPort() {
-        return DockerPostgresSingleton.SINGLETON.getMappedPort(PostgresFixture.PORT);
+        return PG_CONTAINER.getMappedPort(PostgresFixture.PORT);
     }
 
     public Mono<Connection> getConnection() {
@@ -156,8 +178,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     private void resetSchema() {
         getConnection()
-            .flatMapMany(connection -> Mono.from(connection.createStatement("DROP SCHEMA " + PostgresFixture.Database.SCHEMA + " CASCADE").execute())
-                .then(Mono.from(connection.createStatement("CREATE SCHEMA " + PostgresFixture.Database.SCHEMA).execute()))
+            .flatMapMany(connection -> Mono.from(connection.createStatement("DROP SCHEMA " + selectedDatabase.schema() + " CASCADE").execute())
+                .then(Mono.from(connection.createStatement("CREATE SCHEMA " + selectedDatabase.schema() + " AUTHORIZATION " + selectedDatabase.dbUser()).execute()))
                 .flatMap(result -> Mono.from(result.getRowsUpdated())))
             .collectList()
             .block();
