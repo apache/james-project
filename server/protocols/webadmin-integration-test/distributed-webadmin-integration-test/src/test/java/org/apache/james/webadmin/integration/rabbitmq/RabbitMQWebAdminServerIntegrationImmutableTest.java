@@ -138,6 +138,7 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
             "RabbitMQ backend", "RabbitMQMailQueueDeadLetterQueueHealthCheck",
             "RabbitMQEventBusDeadLetterQueueHealthCheck", "MailReceptionCheck",
             "Cassandra backend", "EventDeadLettersHealthCheck", "MessageFastViewProjection",
-            "RabbitMQMailQueue BrowseStart", "OpenSearch Backend", "ObjectStorage");
+            "RabbitMQMailQueue BrowseStart", "OpenSearch Backend", "ObjectStorage", "DistributedTaskManagerConsumers",
+            "EventbusConsumers-jmapEvent", "MailQueueConsumers", "EventbusConsumers-mailboxEvent");
     }
 }
