@@ -29,6 +29,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.server.HostnameModule;
 import org.apache.james.modules.server.TaskSerializationModule;
 import org.apache.james.task.TaskManager;
@@ -39,6 +40,7 @@ import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.apache.james.task.eventsourcing.distributed.CancelRequestQueueName;
+import org.apache.james.task.eventsourcing.distributed.DistributedTaskManagerHealthCheck;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueConfiguration;
@@ -81,6 +83,10 @@ public class DistributedTaskManagerModule extends AbstractModule {
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(RabbitMQWorkQueueReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(TerminationReconnectionHandler.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class)
+            .addBinding()
+            .to(DistributedTaskManagerHealthCheck.class);
     }
 
     @Provides

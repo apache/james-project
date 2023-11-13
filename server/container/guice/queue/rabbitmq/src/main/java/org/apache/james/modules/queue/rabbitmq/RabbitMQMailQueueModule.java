@@ -29,6 +29,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
+import org.apache.james.queue.rabbitmq.RabbitMQMailQueueConsumerHealthCheck;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueDeadLetterQueueHealthCheck;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
@@ -44,6 +45,9 @@ public class RabbitMQMailQueueModule extends AbstractModule {
         reconnectionHandlerMultibinder.addBinding().to(SpoolerReconnectionHandler.class);
         Multibinder<HealthCheck> healthCheckMultiBinder = Multibinder.newSetBinder(binder(), HealthCheck.class);
         healthCheckMultiBinder.addBinding().to(RabbitMQMailQueueDeadLetterQueueHealthCheck.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding()
+            .to(RabbitMQMailQueueConsumerHealthCheck.class);
     }
 
     @Provides
