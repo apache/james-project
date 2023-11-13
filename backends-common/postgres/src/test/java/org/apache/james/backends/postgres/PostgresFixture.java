@@ -19,28 +19,84 @@
 
 package org.apache.james.backends.postgres;
 
+import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAULT_DATABASE;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
 import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.MountableFile;
 
 public interface PostgresFixture {
 
     interface Database {
-        String DB_USER = "james";
-        String DB_PASSWORD = "secret1";
-        String DB_NAME = "james";
-        String SCHEMA = "public";
+
+        Database DEFAULT_DATABASE = new DefaultDatabase();
+        Database ROW_LEVEL_SECURITY_DATABASE = new RowLevelSecurityDatabase();
+
+        String dbUser();
+
+        String dbPassword();
+
+        String dbName();
+
+        String schema();
+
+
+        class DefaultDatabase implements Database {
+            @Override
+            public String dbUser() {
+                return "james";
+            }
+
+            @Override
+            public String dbPassword() {
+                return "secret1";
+            }
+
+            @Override
+            public String dbName() {
+                return "james";
+            }
+
+            @Override
+            public String schema() {
+                return "public";
+            }
+        }
+
+        class RowLevelSecurityDatabase implements Database {
+            @Override
+            public String dbUser() {
+                return "rlsuser";
+            }
+
+            @Override
+            public String dbPassword() {
+                return "secret1";
+            }
+
+            @Override
+            public String dbName() {
+                return "rlsdb";
+            }
+
+            @Override
+            public String schema() {
+                return "rlsschema";
+            }
+        }
     }
 
-    String IMAGE = "postgres:16.0";
+    String IMAGE = "postgres:16";
     Integer PORT = POSTGRESQL_PORT;
-
+    String POSTGRES_ROW_LEVEL_SECURITY_INIT_FILE = "postgres-rowlevelsecurity-init.sql";
+    String SCRIPT_ROW_LEVEL_SECURITY_INIT_PATH = "/tmp/" + POSTGRES_ROW_LEVEL_SECURITY_INIT_FILE;
     Supplier<PostgreSQLContainer<?>> PG_CONTAINER = () -> new PostgreSQLContainer<>(IMAGE)
-        .withDatabaseName(Database.DB_NAME)
-        .withUsername(Database.DB_USER)
-        .withPassword(Database.DB_PASSWORD)
-        .withCreateContainerCmdModifier(cmd -> cmd.withName("james-postgres-test-" + UUID.randomUUID()));
+        .withDatabaseName(DEFAULT_DATABASE.dbName())
+        .withUsername(DEFAULT_DATABASE.dbUser())
+        .withPassword(DEFAULT_DATABASE.dbPassword())
+        .withCreateContainerCmdModifier(cmd -> cmd.withName("james-postgres-test-" + UUID.randomUUID()))
+        .withCopyFileToContainer(MountableFile.forClasspathResource(POSTGRES_ROW_LEVEL_SECURITY_INIT_FILE), "/tmp/");
 }
