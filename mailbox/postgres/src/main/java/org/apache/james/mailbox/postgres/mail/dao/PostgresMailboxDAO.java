@@ -27,8 +27,6 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.Postg
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.USER_NAME;
 import static org.jooq.impl.DSL.count;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -47,7 +45,6 @@ import org.jooq.Record;
 import org.jooq.exception.DataAccessException;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -76,26 +73,20 @@ public class PostgresMailboxDAO {
     public Mono<MailboxId> rename(Mailbox mailbox) {
         Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
 
-        return postgresExecutor.executeSingleRowList(dslContext -> rename(mailbox, dslContext))
-            .flatMap(records -> {
-                if (records.size() == 0) {
-                    return Mono.error(new MailboxNotFoundException(mailbox.getMailboxId()));
-                } else {
-                    return Mono.just(mailbox.getMailboxId());
-                }
-            })
+        return postgresExecutor.executeRow(dslContext -> rename(mailbox, dslContext))
+            .map(record -> mailbox.getMailboxId())
+            .switchIfEmpty(Mono.error(new MailboxNotFoundException(mailbox.getMailboxId())))
             .onErrorMap(e -> e instanceof DataAccessException && e.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
                 throwable -> new MailboxExistsException(mailbox.getName()));
     }
 
-    private Mono<List<Record>> rename(Mailbox mailbox, DSLContext dslContext) {
-        return Flux.from(dslContext.update(TABLE_NAME)
-                .set(MAILBOX_NAME, mailbox.getName())
-                .set(USER_NAME, mailbox.getUser().asString())
-                .set(MAILBOX_NAMESPACE, mailbox.getNamespace())
-                .where(MAILBOX_ID.eq(((PostgresMailboxId) mailbox.getMailboxId()).asUuid()))
-                .returning(MAILBOX_ID))
-            .collect(ImmutableList.toImmutableList());
+    private Mono<Record> rename(Mailbox mailbox, DSLContext dslContext) {
+        return Mono.from(dslContext.update(TABLE_NAME)
+            .set(MAILBOX_NAME, mailbox.getName())
+            .set(USER_NAME, mailbox.getUser().asString())
+            .set(MAILBOX_NAMESPACE, mailbox.getNamespace())
+            .where(MAILBOX_ID.eq(((PostgresMailboxId) mailbox.getMailboxId()).asUuid()))
+            .returning(MAILBOX_ID));
     }
 
     public Mono<Void> delete(MailboxId mailboxId) {
