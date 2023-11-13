@@ -36,6 +36,7 @@ import reactor.core.publisher.Mono;
 public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnectionFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleJamesPostgresConnectionFactory.class);
     private static final Domain DEFAULT = Domain.of("default");
+    private static final String DEFAULT_DOMAIN_ATTRIBUTE_VALUE = "";
 
     private final ConnectionFactory connectionFactory;
     private final Map<Domain, Connection> mapDomainToConnection = new ConcurrentHashMap<>();
@@ -63,7 +64,7 @@ public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnec
     }
 
     private Mono<Connection> getAndSetConnection(Domain domain, Connection newConnection) {
-        return Mono.justOrEmpty(mapDomainToConnection.putIfAbsent(domain, newConnection))
+        return Mono.fromCallable(() -> mapDomainToConnection.putIfAbsent(domain, newConnection))
             .map(postgresqlConnection -> {
                 //close redundant connection
                 Mono.from(newConnection.close())
@@ -74,13 +75,17 @@ public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnec
     }
 
     private static Mono<Connection> setDomainAttributeForConnection(Domain domain, Connection newConnection) {
-        if (DEFAULT.equals(domain)) {
-            return Mono.just(newConnection);
-        } else {
-            return Mono.from(newConnection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + domain.asString() + "'") // It should be set value via Bind, but it doesn't work
+        return Mono.from(newConnection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + getDomainAttributeValue(domain) + "'") // It should be set value via Bind, but it doesn't work
                 .execute())
-                .doOnError(e -> LOGGER.error("Error while setting domain attribute for domain {}", domain, e))
-                .then(Mono.just(newConnection));
+            .doOnError(e -> LOGGER.error("Error while setting domain attribute for domain {}", domain, e))
+            .then(Mono.just(newConnection));
+    }
+
+    private static String getDomainAttributeValue(Domain domain) {
+        if (DEFAULT.equals(domain)) {
+            return DEFAULT_DOMAIN_ATTRIBUTE_VALUE;
+        } else {
+            return domain.asString();
         }
     }
 }

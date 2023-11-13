@@ -71,7 +71,7 @@ public abstract class JamesPostgresConnectionFactoryTest {
     }
 
     @Test
-    void getConnectionWithoutDomainShouldNotSetCurrentDomainAttribute() {
+    void getConnectionWithoutDomainShouldReturnEmptyAttribute() {
         Connection connection = jamesPostgresConnectionFactory().getConnection(Optional.empty()).block();
 
         String message = Flux.from(connection.createStatement("show " + JamesPostgresConnectionFactory.DOMAIN_ATTRIBUTE)
@@ -82,7 +82,7 @@ public abstract class JamesPostgresConnectionFactoryTest {
             .onErrorResume(throwable -> Mono.just(throwable.getMessage()))
             .block();
 
-        assertThat(message).isEqualTo("unrecognized configuration parameter \"" + JamesPostgresConnectionFactory.DOMAIN_ATTRIBUTE + "\"");
+        assertThat(message).isEqualTo("");
     }
 
     String getDomainAttributeValue(Connection connection) {
