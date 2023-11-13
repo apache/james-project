@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.postgres;
 
+import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAULT_DATABASE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URISyntaxException;
@@ -84,7 +85,7 @@ public class SimpleJamesPostgresConnectionFactoryTest extends JamesPostgresConne
     @Nullable
     private Integer getNumberOfConnections() {
         return Mono.from(postgresqlConnection.createStatement("SELECT count(*) from pg_stat_activity where usename = $1;")
-            .bind("$1", PostgresFixture.Database.DB_USER)
+            .bind("$1", DEFAULT_DATABASE.dbUser())
             .execute()).flatMap(result -> Mono.from(result.map((row, rowMetadata) -> row.get(0, Integer.class)))).block();
     }
 
