@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
-import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -42,7 +42,7 @@ public class PostgresSubscriptionMapperRowLevelSecurityTest {
     @BeforeEach
     public void setUp() {
         subscriptionMapperFactory = session -> new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(new PostgresExecutor(
-            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory())
+            new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory())
                 .getConnection(session.getUser().getDomainPart()))));
     }
 
