@@ -33,8 +33,8 @@ import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
 import reactor.core.publisher.Mono;
 
-public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnectionFactory {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleJamesPostgresConnectionFactory.class);
+public class DomainImplPostgresConnectionFactory implements JamesPostgresConnectionFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DomainImplPostgresConnectionFactory.class);
     private static final Domain DEFAULT = Domain.of("default");
     private static final String DEFAULT_DOMAIN_ATTRIBUTE_VALUE = "";
 
@@ -42,7 +42,7 @@ public class SimpleJamesPostgresConnectionFactory implements JamesPostgresConnec
     private final Map<Domain, Connection> mapDomainToConnection = new ConcurrentHashMap<>();
 
     @Inject
-    public SimpleJamesPostgresConnectionFactory(ConnectionFactory connectionFactory) {
+    public DomainImplPostgresConnectionFactory(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }
 
