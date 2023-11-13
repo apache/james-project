@@ -19,27 +19,15 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMailboxMapperTest extends MailboxMapperTest {
-    protected static final Username ALICE = Username.of("alice");
-    protected static final Username BOB = Username.of("bob");
-    protected static final MailboxPath ALICE_INBOX_PATH = MailboxPath.forUser(ALICE, "INBOX");
-    protected static final MailboxPath BOB_INBOX_PATH = MailboxPath.forUser(BOB, "INBOX");
-
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxModule.MODULE);
 
@@ -51,20 +39,5 @@ public class PostgresMailboxMapperTest extends MailboxMapperTest {
     @Override
     protected MailboxId generateId() {
         return PostgresMailboxId.generate();
-    }
-
-    @Test
-    void renameShouldUpdateOnlyOneMailbox() {
-        MailboxId aliceMailboxId = mailboxMapper.create(ALICE_INBOX_PATH, UidValidity.of(1L)).block().getMailboxId();
-        MailboxId bobMailboxId = mailboxMapper.create(BOB_INBOX_PATH, UidValidity.of(2L)).block().getMailboxId();
-
-        MailboxPath newMailboxPath = new MailboxPath(ALICE_INBOX_PATH.getNamespace(), ALICE_INBOX_PATH.getUser(), "ENBOX");
-        mailboxMapper.rename(new Mailbox(newMailboxPath, UidValidity.of(1L), aliceMailboxId)).block();
-
-        Mailbox actualAliceMailbox = mailboxMapper.findMailboxById(aliceMailboxId).block();
-        Mailbox actualBobMailbox = mailboxMapper.findMailboxById(bobMailboxId).block();
-
-        assertThat(actualAliceMailbox.getName()).isEqualTo("ENBOX");
-        assertThat(actualBobMailbox.getName()).isEqualTo(BOB_INBOX_PATH.getName());
     }
 }

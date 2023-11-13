@@ -50,7 +50,7 @@ public class PostgresMailboxMapperRowLevelSecurityTest {
     }
 
     @Test
-    void subscriptionsCanBeAccessedAtTheDataLevelByMembersOfTheSameDomain() throws Exception {
+    void mailboxesCanBeAccessedAtTheDataLevelByMembersOfTheSameDomain() throws Exception {
         Username username = Username.of("alice@domain1");
         Username username2 = Username.of("bob@domain1");
 
@@ -67,7 +67,7 @@ public class PostgresMailboxMapperRowLevelSecurityTest {
     }
 
     @Test
-    void subscriptionsShouldBeIsolatedByDomain() throws Exception {
+    void mailboxesShouldBeIsolatedByDomain() throws Exception {
         Username username = Username.of("alice@domain1");
         Username username2 = Username.of("bob@domain2");
 
