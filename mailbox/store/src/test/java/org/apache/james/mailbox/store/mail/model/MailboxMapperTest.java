@@ -153,6 +153,21 @@ public abstract class MailboxMapperTest {
     }
 
     @Test
+    void renameShouldUpdateOnlyOneMailbox() {
+        MailboxId aliceMailboxId = mailboxMapper.create(benwaInboxPath, UidValidity.of(1L)).block().getMailboxId();
+        MailboxId bobMailboxId = mailboxMapper.create(bobInboxPath, UidValidity.of(2L)).block().getMailboxId();
+
+        MailboxPath newMailboxPath = new MailboxPath(benwaInboxPath.getNamespace(), benwaInboxPath.getUser(), "ENBOX");
+        mailboxMapper.rename(new Mailbox(newMailboxPath, UidValidity.of(1L), aliceMailboxId)).block();
+
+        Mailbox actualAliceMailbox = mailboxMapper.findMailboxById(aliceMailboxId).block();
+        Mailbox actualBobMailbox = mailboxMapper.findMailboxById(bobMailboxId).block();
+
+        assertThat(actualAliceMailbox.getName()).isEqualTo("ENBOX");
+        assertThat(actualBobMailbox.getName()).isEqualTo(bobInboxPath.getName());
+    }
+
+    @Test
     void listShouldRetrieveAllMailbox() {
         createAll();
         List<Mailbox> mailboxes = mailboxMapper.list().collectList().block();
