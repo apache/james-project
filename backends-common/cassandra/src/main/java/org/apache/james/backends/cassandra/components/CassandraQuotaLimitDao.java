@@ -136,7 +136,7 @@ public class CassandraQuotaLimitDao {
             .setString(QUOTA_SCOPE, quotaKey.getQuotaScope().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue()))
-            .map(row -> convertRowToModel(row));
+            .map(this::convertRowToModel);
     }
 
     public Flux<QuotaLimit> getQuotaLimits(QuotaComponent quotaComponent, QuotaScope quotaScope, String identifier) {
@@ -144,7 +144,7 @@ public class CassandraQuotaLimitDao {
             .setString(QUOTA_COMPONENT, quotaComponent.getValue())
             .setString(QUOTA_SCOPE, quotaScope.getValue())
             .setString(IDENTIFIER, identifier))
-            .map(row -> convertRowToModel(row));
+            .map(this::convertRowToModel);
     }
 
     public Mono<Void> setQuotaLimit(QuotaLimit quotaLimit) {
@@ -153,7 +153,7 @@ public class CassandraQuotaLimitDao {
             .setString(QUOTA_SCOPE, quotaLimit.getQuotaScope().getValue())
             .setString(IDENTIFIER, quotaLimit.getIdentifier())
             .setString(QUOTA_TYPE, quotaLimit.getQuotaType().getValue())
-            .setLong(QUOTA_LIMIT, quotaLimit.getQuotaLimit().orElse(null)));
+            .set(QUOTA_LIMIT, quotaLimit.getQuotaLimit().orElse(null), Long.class));
     }
 
     public Mono<Void> deleteQuotaLimit(QuotaLimitKey quotaKey) {
