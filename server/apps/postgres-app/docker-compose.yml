@@ -18,6 +18,15 @@ services:
       - $PWD/postgresql-42.5.4.jar:/root/libs/postgresql-42.5.4.jar
       - $PWD/sample-configuration/james-database-postgres.properties:/root/conf/james-database.properties
       - $PWD/src/test/resources/keystore:/root/conf/keystore
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
 
   postgres:
     image: postgres:16.0
