@@ -47,7 +47,7 @@ under the License.
         <idleTimeInterval>120</idleTimeInterval>
         <idleTimeIntervalUnit>SECONDS</idleTimeIntervalUnit>
         <enableIdle>true</enableIdle>
-        <plainAuthDisallowed>true</plainAuthDisallowed>
+        <plainAuthDisallowed>false</plainAuthDisallowed>
         <auth>
             <plainAuthEnabled>true</plainAuthEnabled>
         </auth>
