@@ -28,7 +28,9 @@ import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -52,6 +54,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import spark.Service;
 
 public class WebAdminServer implements Startable {
@@ -116,8 +120,13 @@ public class WebAdminServer implements Startable {
                 routes.define(service);
             });
             publicRoutes.forEach(routes -> routes.define(service));
-            service.awaitInitialization();
-            LOGGER.info("Web admin server started on port {}", service.port());
+
+            Mono.fromRunnable(service::awaitInitialization)
+                .subscribeOn(Schedulers.boundedElastic())
+                .timeout(Duration.ofSeconds(10))
+                .doOnSuccess(started -> LOGGER.info("Web admin server started on port {}", service.port()))
+                .doOnError(TimeoutException.class, e -> LOGGER.error("Web admin server did not started in time, likely there was a port conflict. Please check webadmin port setting."))
+                .block();
         }
         return this;
     }
