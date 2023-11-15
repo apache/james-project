@@ -24,14 +24,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import javax.mail.Flags;
+import javax.persistence.EntityManagerFactory;
 
+import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.postgres.JPAMailboxFixture;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.postgres.JPAMailboxFixture;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
+import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
@@ -40,14 +47,32 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JpaMessageMapperTest extends MessageMapperTest {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
+        PostgresMailboxModule.MODULE,
+        PostgresSubscriptionModule.MODULE));
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     
     @Override
     protected MapperProvider createMapperProvider() {
-        return new JPAMapperProvider(JPA_TEST_CLUSTER);
+        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
+
+        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
+            .driverName("driverName")
+            .driverURL("driverUrl")
+            .build();
+
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
+            new JPAUidProvider(entityManagerFactory),
+            new JPAModSeqProvider(entityManagerFactory),
+            jpaConfiguration,
+            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+
+        return new JPAMapperProvider(JPA_TEST_CLUSTER, mapperFactory);
     }
 
     @Override

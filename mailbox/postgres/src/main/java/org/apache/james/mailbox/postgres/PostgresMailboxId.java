@@ -62,6 +62,10 @@ public class PostgresMailboxId implements MailboxId, Serializable {
         return id;
     }
 
+    public JPAId asJPAId() {
+        return JPAId.of(id.getLeastSignificantBits());
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof PostgresMailboxId) {

@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 public interface JPAMailboxFixture {
 
     List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.of(
-        JPAMailbox.class,
         AbstractJPAMailboxMessage.class,
         JPAMailboxMessage.class,
         JPAProperty.class,
@@ -64,7 +63,6 @@ public interface JPAMailboxFixture {
         "JAMES_MAIL_USERFLAG",
         "JAMES_MAIL_PROPERTY",
         "JAMES_MAILBOX_ANNOTATION",
-        "JAMES_MAILBOX",
         "JAMES_MAIL",
         "JAMES_ATTACHMENT");
 

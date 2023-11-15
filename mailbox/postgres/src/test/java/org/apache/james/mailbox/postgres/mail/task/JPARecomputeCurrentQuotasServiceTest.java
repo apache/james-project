@@ -25,6 +25,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.model.JPADomain;
@@ -35,6 +36,7 @@ import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.JpaMailboxManagerProvider;
 import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
 import org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -58,7 +60,9 @@ import com.google.common.collect.ImmutableSet;
 class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
+        PostgresMailboxModule.MODULE,
+        PostgresSubscriptionModule.MODULE));
 
     static final DomainList NO_DOMAIN_LIST = null;
 

@@ -30,10 +30,11 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.postgres.mail.JPAAnnotationMapper;
 import org.apache.james.mailbox.postgres.mail.JPAAttachmentMapper;
-import org.apache.james.mailbox.postgres.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.postgres.mail.JPAMessageMapper;
 import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxMapper;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -75,7 +76,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession session) {
-        return new JPAMailboxMapper(entityManagerFactory);
+        return new PostgresMailboxMapper(new PostgresMailboxDAO(new PostgresExecutor(
+            postgresConnectionFactory.getConnection(session.getUser().getDomainPart()))));
     }
 
     @Override

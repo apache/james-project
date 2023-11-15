@@ -57,7 +57,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
 
     @Override
     public List<MailboxAnnotation> getAllAnnotations(MailboxId mailboxId) {
-        JPAId jpaId = (JPAId) mailboxId;
+        JPAId jpaId = JPAId.of(mailboxId);
         return getEntityManager().createNamedQuery("retrieveAllAnnotations", JPAMailboxAnnotation.class)
             .setParameter("idParam", jpaId.getRawId())
             .getResultList()
@@ -69,7 +69,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeys(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
         try {
-            final JPAId jpaId = (JPAId) mailboxId;
+            final JPAId jpaId = JPAId.of(mailboxId);
             return keys.stream()
                 .map(input -> READ_ROW.apply(
                         getEntityManager()
@@ -85,7 +85,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
-        return getFilteredLikes((JPAId) mailboxId,
+        return getFilteredLikes(JPAId.of(mailboxId),
             keys,
             key ->
                 annotation ->
@@ -94,7 +94,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
 
     @Override
     public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxId mailboxId, Set<MailboxAnnotationKey> keys) {
-        return getFilteredLikes((JPAId) mailboxId,
+        return getFilteredLikes(JPAId.of(mailboxId),
             keys,
             key ->
                 annotation -> key.isAncestorOrIsEqual(annotation.getKey()));
@@ -120,7 +120,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     @Override
     public void deleteAnnotation(MailboxId mailboxId, MailboxAnnotationKey key) {
         try {
-            JPAId jpaId = (JPAId) mailboxId;
+            JPAId jpaId = JPAId.of(mailboxId);
             JPAMailboxAnnotation jpaMailboxAnnotation = getEntityManager()
                 .find(JPAMailboxAnnotation.class, new JPAMailboxAnnotationId(jpaId.getRawId(), key.asString()));
             getEntityManager().remove(jpaMailboxAnnotation);
@@ -134,7 +134,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     @Override
     public void insertAnnotation(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
         Preconditions.checkArgument(!mailboxAnnotation.isNil());
-        JPAId jpaId = (JPAId) mailboxId;
+        JPAId jpaId = JPAId.of(mailboxId);
         if (getAnnotationsByKeys(mailboxId, ImmutableSet.of(mailboxAnnotation.getKey())).isEmpty()) {
             getEntityManager().persist(
                 new JPAMailboxAnnotation(jpaId.getRawId(),
@@ -149,7 +149,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
 
     @Override
     public boolean exist(MailboxId mailboxId, MailboxAnnotation mailboxAnnotation) {
-        JPAId jpaId = (JPAId) mailboxId;
+        JPAId jpaId = JPAId.of(mailboxId);
         Optional<JPAMailboxAnnotation> row = Optional.ofNullable(getEntityManager().find(JPAMailboxAnnotation.class,
             new JPAMailboxAnnotationId(jpaId.getRawId(), mailboxAnnotation.getKey().asString())));
         return row.isPresent();
@@ -158,7 +158,7 @@ public class JPAAnnotationMapper extends JPATransactionalMapper implements Annot
     @Override
     public int countAnnotations(MailboxId mailboxId) {
         try {
-            JPAId jpaId = (JPAId) mailboxId;
+            JPAId jpaId = JPAId.of(mailboxId);
             return ((Long)getEntityManager().createNamedQuery("countAnnotationsInMailbox")
                 .setParameter("idParam", jpaId.getRawId()).getSingleResult()).intValue();
         } catch (PersistenceException pe) {

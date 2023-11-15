@@ -55,7 +55,7 @@ public class JPAUidProvider implements UidProvider {
 
     public Optional<MessageUid> lastUid(Mailbox mailbox, EntityManager manager) throws MailboxException {
         try {
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
             long uid = (Long) manager.createNamedQuery("findLastUid").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
             if (uid == 0) {
                 return Optional.empty();
@@ -68,12 +68,12 @@ public class JPAUidProvider implements UidProvider {
 
     @Override
     public MessageUid nextUid(Mailbox mailbox) throws MailboxException {
-        return nextUid((JPAId) mailbox.getMailboxId());
+        return nextUid(JPAId.of(mailbox.getMailboxId()));
     }
 
     @Override
     public MessageUid nextUid(MailboxId mailboxId) throws MailboxException {
-        return nextUid((JPAId) mailboxId);
+        return nextUid(JPAId.of(mailboxId));
     }
 
     private MessageUid nextUid(JPAId mailboxId) throws MailboxException {

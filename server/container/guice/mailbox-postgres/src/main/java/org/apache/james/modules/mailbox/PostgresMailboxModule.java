@@ -33,6 +33,7 @@ public class PostgresMailboxModule extends AbstractModule {
 
         Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
         postgresDataDefinitions.addBinding().toInstance(PostgresSubscriptionModule.MODULE);
+        postgresDataDefinitions.addBinding().toInstance(org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.MODULE);
     }
 
 }

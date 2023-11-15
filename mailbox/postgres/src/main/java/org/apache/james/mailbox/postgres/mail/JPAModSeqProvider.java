@@ -43,23 +43,23 @@ public class JPAModSeqProvider implements ModSeqProvider {
 
     @Override
     public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
-        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
         return highestModSeq(mailboxId);
     }
 
     @Override
     public ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
-        return nextModSeq((JPAId) mailbox.getMailboxId());
+        return nextModSeq(JPAId.of(mailbox.getMailboxId()));
     }
 
     @Override
     public ModSeq nextModSeq(MailboxId mailboxId) throws MailboxException {
-        return nextModSeq((JPAId) mailboxId);
+        return nextModSeq(JPAId.of(mailboxId));
     }
 
     @Override
     public ModSeq highestModSeq(MailboxId mailboxId) throws MailboxException {
-        return highestModSeq((JPAId) mailboxId);
+        return highestModSeq(JPAId.of(mailboxId));
     }
 
     private ModSeq nextModSeq(JPAId mailboxId) throws MailboxException {
@@ -92,7 +92,7 @@ public class JPAModSeqProvider implements ModSeqProvider {
     }
 
     public ModSeq highestModSeq(MailboxId mailboxId, EntityManager manager) throws MailboxException {
-        JPAId jpaId = (JPAId) mailboxId;
+        JPAId jpaId = JPAId.of(mailboxId);
         try {
             long highest = (Long) manager.createNamedQuery("findHighestModSeq")
                 .setParameter("idParam", jpaId.getRawId())

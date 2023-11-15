@@ -19,19 +19,45 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import javax.persistence.EntityManagerFactory;
+
+import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.mailbox.postgres.JPAMailboxFixture;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
+import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMoveTest;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JpaMessageMoveTest extends MessageMoveTest {
-    
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
+        PostgresMailboxModule.MODULE,
+        PostgresSubscriptionModule.MODULE));
+
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
     @Override
     protected MapperProvider createMapperProvider() {
-        return new JPAMapperProvider(JPA_TEST_CLUSTER);
+        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
+
+        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
+            .driverName("driverName")
+            .driverURL("driverUrl")
+            .build();
+
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
+            new JPAUidProvider(entityManagerFactory),
+            new JPAModSeqProvider(entityManagerFactory),
+            jpaConfiguration,
+            new SimpleJamesPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+
+        return new JPAMapperProvider(JPA_TEST_CLUSTER, mapperFactory);
     }
     
     @AfterEach

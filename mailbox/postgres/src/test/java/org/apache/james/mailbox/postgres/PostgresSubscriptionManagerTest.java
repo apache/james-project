@@ -23,6 +23,7 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.utils.SimpleJamesPostgresConnectionFactory;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -42,7 +44,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
+        PostgresMailboxModule.MODULE,
+        PostgresSubscriptionModule.MODULE));
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 

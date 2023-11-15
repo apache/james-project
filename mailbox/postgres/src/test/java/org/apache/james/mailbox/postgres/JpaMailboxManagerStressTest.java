@@ -23,8 +23,10 @@ import java.util.Optional;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerStressContract;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
 import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.junit.jupiter.api.AfterEach;
@@ -34,7 +36,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class JpaMailboxManagerStressTest implements MailboxManagerStressContract<OpenJPAMailboxManager> {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(
+        PostgresMailboxModule.MODULE,
+        PostgresSubscriptionModule.MODULE));
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();

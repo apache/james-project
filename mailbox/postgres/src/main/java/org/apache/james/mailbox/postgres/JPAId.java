@@ -35,6 +35,16 @@ public class JPAId implements MailboxId, Serializable {
         return new JPAId(value);
     }
 
+    public static JPAId of(MailboxId mailboxId) {
+        if (mailboxId instanceof JPAId) {
+            return (JPAId) mailboxId;
+        }
+        if  (mailboxId instanceof PostgresMailboxId) {
+            return ((PostgresMailboxId) mailboxId).asJPAId();
+        }
+        throw new IllegalArgumentException("MailboxId is not a valid JPAId or PostgresMailboxId");
+    }
+
     private final long value;
 
     public JPAId(long value) {

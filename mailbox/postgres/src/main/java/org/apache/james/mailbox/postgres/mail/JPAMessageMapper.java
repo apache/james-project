@@ -97,7 +97,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     public Flux<MessageUid> listAllMessageUids(Mailbox mailbox) {
         return Mono.fromCallable(() -> {
             try {
-                JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+                JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
                 Query query = getEntityManager().createNamedQuery("listUidsInMailbox")
                     .setParameter("idParam", mailboxId.getRawId());
                 return query.getResultStream().map(result -> MessageUid.of((Long) result));
@@ -126,7 +126,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             MessageUid from = set.getUidFrom();
             MessageUid to = set.getUidTo();
             Type type = set.getType();
-            JPAId jpaId = (JPAId) mailboxId;
+            JPAId jpaId = JPAId.of(mailboxId);
 
             switch (type) {
                 default:
@@ -146,7 +146,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
-        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
         return countMessagesInMailbox(mailboxId);
     }
 
@@ -160,7 +160,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
-        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
         return countUnseenMessagesInMailbox(mailboxId);
     }
 
@@ -185,7 +185,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     private AbstractJPAMailboxMessage.MailboxIdUidKey buildKey(Mailbox mailbox, MailboxMessage message) {
-        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
         AbstractJPAMailboxMessage.MailboxIdUidKey key = new AbstractJPAMailboxMessage.MailboxIdUidKey();
         key.mailbox = mailboxId.getRawId();
         key.uid = message.getUid().asLong();
@@ -196,7 +196,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     @SuppressWarnings("unchecked")
     public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
         try {
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
             Query query = getEntityManager().createNamedQuery("findUnseenMessagesInMailboxOrderByUid").setParameter(
                     "idParam", mailboxId.getRawId());
             query.setMaxResults(1);
@@ -215,7 +215,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     @SuppressWarnings("unchecked")
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
         try {
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
             Query query = getEntityManager().createNamedQuery("findRecentMessageUidsInMailbox").setParameter("idParam",
                     mailboxId.getRawId());
             List<Long> resultList = query.getResultList();
@@ -234,7 +234,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     @Override
     public List<MessageUid> retrieveMessagesMarkedForDeletion(Mailbox mailbox, MessageRange messageRange) throws MailboxException {
         try {
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
             List<MailboxMessage> messages = findDeletedMessages(messageRange, mailboxId);
             return getUidList(messages);
         } catch (PersistenceException e) {
@@ -262,7 +262,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Map<MessageUid, MessageMetaData> deleteMessages(Mailbox mailbox, List<MessageUid> uids) throws MailboxException {
-        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
         Map<MessageUid, MessageMetaData> data = new HashMap<>();
         List<MessageRange> ranges = MessageRange.toRanges(uids);
 
@@ -299,7 +299,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        JPAId originalMailboxId = (JPAId) original.getMailboxId();
+        JPAId originalMailboxId = JPAId.of(mailbox.getMailboxId());
         JPAMailbox originalMailbox = getEntityManager().find(JPAMailbox.class, originalMailboxId.getRawId());
 
         MessageMetaData messageMetaData = copy(mailbox, original);
@@ -346,7 +346,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
-        JPAId jpaId = (JPAId) mailbox.getMailboxId();
+        JPAId jpaId = JPAId.of(mailbox.getMailboxId());
         ApplicableFlagBuilder builder = ApplicableFlagBuilder.builder();
         List<String> flags = getEntityManager().createNativeQuery("SELECT DISTINCT USERFLAG_NAME FROM JAMES_MAIL_USERFLAG WHERE MAILBOX_ID=?")
                 .setParameter(1, jpaId.getRawId())
@@ -370,7 +370,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             // mailbox is already "JPA detached"
             // If we don't this, we will get an
             // org.apache.openjpa.persistence.ArgumentException.
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+            JPAId mailboxId = JPAId.of(mailbox.getMailboxId());
             JPAMailbox currentMailbox = getEntityManager().find(JPAMailbox.class, mailboxId.getRawId());
 
             boolean isAttachmentStorage = false;
