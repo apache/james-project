@@ -19,15 +19,20 @@
 
 package org.apache.james.webadmin;
 
-import java.time.Duration;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
+
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.jupiter.api.Disabled;
+import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
+import org.apache.james.webadmin.mdc.LoggingRequestFilter;
 import org.junit.jupiter.api.Test;
 
 class WebAdminUtilsTest {
 
-    @Disabled("JAMES-3046 the concurrent webadmin server fails on a high concurrent level")
     @Test
     void serverShouldBeAbleToStartConcurrently() throws Exception {
         ConcurrentTestRunner.builder()
@@ -39,5 +44,25 @@ class WebAdminUtilsTest {
             .threadCount(10)
             .operationCount(100)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
+    }
+
+    @Test
+    void webAdminStartShouldNotHangUponPortConflict() {
+        WebAdminServer successWebAdmin = WebAdminUtils.createWebAdminServer()
+            .start();
+
+        WebAdminConfiguration conflictedPortConfiguration = WebAdminConfiguration.builder()
+            .enabled()
+            .corsDisabled()
+            .host("127.0.0.1")
+            .port(successWebAdmin::getPort)
+            .build();
+
+        assertThatThrownBy(() -> new WebAdminServer(conflictedPortConfiguration, List.of(), new NoAuthenticationFilter(), new RecordingMetricFactory(), LoggingRequestFilter.create())
+            .start())
+            .rootCause()
+            .isInstanceOf(TimeoutException.class);
+
+        successWebAdmin.destroy();
     }
 }
