@@ -22,6 +22,7 @@ package org.apache.james;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Duration;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -32,10 +33,18 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
+
 public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback, ParameterResolver {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JamesServerExtension.class);
 
     interface ThrowingFunction<P, T> {
         T apply(P parameter) throws Exception;
@@ -126,7 +135,18 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
         registrableExtension.beforeEach(extensionContext);
         guiceJamesServer = serverSupplier.apply(createTmpDir());
         if (autoStart) {
-            guiceJamesServer.start();
+            Mono.fromRunnable(Throwing.runnable(() -> {
+                    try {
+                        guiceJamesServer.start();
+                    } catch (Exception e) {
+                        LOGGER.error("Error {} while starting James Extension. May retry to restart James...", e.getMessage());
+                        guiceJamesServer.stop();
+                        throw e;
+                    }
+                }))
+                .retryWhen(Retry.backoff(2, Duration.ofMillis(500))
+                    .scheduler(Schedulers.boundedElastic()))
+                .block();
         }
     }
 
