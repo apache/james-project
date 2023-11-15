@@ -41,6 +41,7 @@ import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 
 public class WebAdminUtils {
@@ -68,7 +69,8 @@ public class WebAdminUtils {
          */
         public Startable createServer() {
             return () -> Mono.fromCallable(this::createServerSingleTry)
-                .retryWhen(Retry.backoff(10, Duration.ofMillis(10)))
+                .retryWhen(Retry.backoff(10, Duration.ofMillis(10))
+                    .scheduler(Schedulers.boundedElastic()))
                 .block();
         }
 
