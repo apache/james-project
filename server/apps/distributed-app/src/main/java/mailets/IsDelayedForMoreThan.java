@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.examples.custom.mailets;
+package mailets;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -53,7 +53,7 @@ public class IsDelayedForMoreThan extends GenericMatcher {
         Date sentDate = mail.getMessage().getSentDate();
 
         //if (clock.instant().isAfter(sentDate.toInstant().plusMillis(maxDelay.toMillis()))) {
-            return ImmutableList.copyOf(mail.getRecipients());
+        return ImmutableList.copyOf(mail.getRecipients());
         //}
         //return ImmutableList.of();
     }

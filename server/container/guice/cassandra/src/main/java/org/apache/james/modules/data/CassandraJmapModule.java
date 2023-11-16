@@ -99,7 +99,7 @@ public class CassandraJmapModule extends AbstractModule {
             .addBinding()
             .to(MessageFastViewProjectionHealthCheck.class);
 
-        bind(CassandraEmailQueryView.class).in(Scopes.SINGLETON);
+        bind(CassandraEmailQueryView.class).in(Scopes.SINGLETON);https://github.com/apache/james-project/blob/master/server/container/guice/data-cassandra/src/main/java/org/apache/james/modules/data/CassandraUsersRepositoryModule.java
         bind(EmailQueryView.class).to(CassandraEmailQueryView.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
