@@ -80,13 +80,14 @@ public class CassandraEmailQueryView implements EmailQueryView {
     @Inject
     public CassandraEmailQueryView(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
-
+        System.out.println("cassandra JMAP email query view");
         listMailboxContentBySentAt = session.prepare(selectFrom(TABLE_NAME_SENT_AT)
             .column(MESSAGE_ID)
             .whereColumn(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID))
             .orderBy(SENT_AT, DESC)
             .limit(bindMarker(LIMIT_MARKER))
             .build());
+
 
         listMailboxContentByReceivedAt = session.prepare(selectFrom(TABLE_NAME_RECEIVED_AT)
             .column(MESSAGE_ID)
@@ -176,7 +177,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     @Override
     public Flux<MessageId> listMailboxContentSortedBySentAt(MailboxId mailboxId, Limit limit) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
-
+        System.out.println("list content");
         CassandraId cassandraId = (CassandraId) mailboxId;
         return executor.executeRows(listMailboxContentBySentAt.bind()
                 .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
@@ -187,7 +188,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     @Override
     public Flux<MessageId> listMailboxContentSortedByReceivedAt(MailboxId mailboxId, Limit limit) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
-
+        System.out.println("listmailboxreceivedat");
         CassandraId cassandraId = (CassandraId) mailboxId;
         return executor.executeRows(listMailboxContentByReceivedAt.bind()
             .set(MAILBOX_ID, cassandraId.asUuid(), TypeCodecs.UUID)
@@ -198,7 +199,7 @@ public class CassandraEmailQueryView implements EmailQueryView {
     @Override
     public Flux<MessageId> listMailboxContentSinceAfterSortedBySentAt(MailboxId mailboxId, ZonedDateTime since, Limit limit) {
         Preconditions.checkArgument(!limit.isUnlimited(), "Limit should be defined");
-
+        System.out.println("listmailboxsentat");
         CassandraId cassandraId = (CassandraId) mailboxId;
 
         return executor.executeRows(listMailboxContentSinceReceivedAt.bind()
