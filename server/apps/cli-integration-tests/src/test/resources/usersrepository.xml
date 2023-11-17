@@ -20,6 +20,6 @@
 
 <!-- See http://james.apache.org/server/3/config.html for usage -->
 <usersrepository name="LocalUsers" class="org.apache.james.user.memory.MemoryUsersRepository">
-  <enableVirtualHosting>true</enableVirtualHosting>
   <algorithm>SHA-1</algorithm>
+  <enableVirtualHosting>true</enableVirtualHosting>
 </usersrepository>
