@@ -84,6 +84,7 @@ public class MailDelivrerToHost {
     private ObjectPool<Session> createSessionPool(Properties defaultConfiguration) {
         GenericObjectPoolConfig<Session> poolConfig = new GenericObjectPoolConfig<>();
         poolConfig.setMaxTotal(-1); // unbounded pool, scales to match peak delivery thread concurrency
+        poolConfig.setJmxEnabled(false);
         return new GenericObjectPool<>(new BasePooledObjectFactory<>() {
             @Override
             public Session create() {
