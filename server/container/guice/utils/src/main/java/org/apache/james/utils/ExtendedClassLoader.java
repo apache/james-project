@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -36,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 
 public class ExtendedClassLoader {
+    private static final Map<FullyQualifiedClassName, Optional<Class<?>>> cache = new HashMap<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExtendedClassLoader.class);
 
@@ -73,7 +77,18 @@ public class ExtendedClassLoader {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Class<T> locateClass(FullyQualifiedClassName className) throws ClassNotFoundException {
-        return (Class<T>) urlClassLoader.loadClass(className.getName());
+    public <T> Optional<Class<T>> locateClass(FullyQualifiedClassName className) {
+        Optional<Class<?>> cachedValue = cache.get(className);
+        if (cachedValue != null) {
+            return (Optional) cachedValue;
+        }
+        try {
+            Class<?> aClass = urlClassLoader.loadClass(className.getName());
+            cache.put(className, Optional.of(aClass));
+            return (Optional) Optional.of(aClass);
+        } catch (ClassNotFoundException e) {
+            cache.put(className, Optional.empty());
+            return Optional.empty();
+        }
     }
 }

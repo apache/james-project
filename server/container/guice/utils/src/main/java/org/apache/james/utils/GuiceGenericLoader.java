@@ -73,11 +73,7 @@ public class GuiceGenericLoader {
         }
 
         private Stream<Class<T>> tryLocateClass(FullyQualifiedClassName className) {
-            try {
-                return Stream.of(extendedClassLoader.locateClass(className));
-            } catch (ClassNotFoundException e) {
-                return Stream.empty();
-            }
+            return (Stream) extendedClassLoader.locateClass(className).stream();
         }
     }
 
