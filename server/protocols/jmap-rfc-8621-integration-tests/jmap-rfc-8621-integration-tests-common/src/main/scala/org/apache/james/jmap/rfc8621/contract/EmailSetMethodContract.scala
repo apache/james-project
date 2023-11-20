@@ -3172,6 +3172,110 @@ trait EmailSetMethodContract {
   }
 
   @Test
+  def bodyPartShouldSupportSpecificHeaders(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val payload = "123456789\r\n".getBytes(StandardCharsets.UTF_8)
+    val htmlBody: String = "<!DOCTYPE html><html><head><title></title></head><body><div>I have the most <b>brilliant</b> plan. Let me tell you all about it. What we do is, we</div></body></html>"
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa": {
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "subject": "World domination",
+         |          "htmlBody": [
+         |            {
+         |              "partId": "a49d",
+         |              "type": "text/html"
+         |            }
+         |          ],
+         |          "bodyValues": {
+         |            "a49d": {
+         |              "value": "$htmlBody",
+         |              "isTruncated": false,
+         |              "isEncodingProblem": false,
+         |              "header:Specific:asText": "MATCHME"
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |      {
+         |        "accountId": "$ACCOUNT_ID",
+         |        "ids": ["#aaaaaa"],
+         |        "properties": ["bodyStructure"],
+         |        "bodyProperties": ["type", "disposition", "cid", "subParts", "header:Specific:asText"]
+         |      },
+         |    "c2"]
+         |  ]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("aaaaaa")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+    val size = responseAsJson
+      .\("size")
+      .get.asInstanceOf[JsNumber].value
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isEqualTo(
+        s"""{
+           | "id": "$messageId",
+           | "blobId": "$messageId",
+           | "threadId": "$messageId",
+           | "size": $size
+           |}""".stripMargin)
+
+    assertThatJson(response)
+      .inPath(s"methodResponses[1][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |  "id": "$messageId",
+           |  "bodyStructure": {
+           |                            "subParts": [
+           |                                {
+           |                                    "header:Specific:asText": "MATCHME",
+           |                                    "type": "text/plain"
+           |                                },
+           |                                {
+           |                                    "header:Specific:asText": "MATCHME",
+           |                                    "type": "text/html"
+           |                                }
+           |                            ],
+           |                            "header:Specific:asText": null,
+           |                            "type": "multipart/alternative"
+           |                        }
+           |}""".stripMargin)
+  }
+
+  @Test
   def inlinedAttachmentsOnlyShouldNotBeWrappedInAMixedMultipart(server: GuiceJamesServer): Unit = {
     val bobPath = MailboxPath.inbox(BOB)
     val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)

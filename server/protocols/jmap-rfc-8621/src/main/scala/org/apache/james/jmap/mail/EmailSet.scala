@@ -73,9 +73,21 @@ case class ClientPartId(id: Id)
 
 case class ClientBody(partId: ClientPartId, `type`: Type)
 
+case class ClientEmailBodyValueWithoutHeaders(value: String,
+                                isEncodingProblem: Option[IsEncodingProblem],
+                                isTruncated: Option[IsTruncated]) {
+  def withHeaders(specificHeaders: List[EmailHeader]): ClientEmailBodyValue = {
+    println(specificHeaders)
+    ClientEmailBodyValue(value, isEncodingProblem, isTruncated, specificHeaders)
+  }
+}
+
 case class ClientEmailBodyValue(value: String,
                                 isEncodingProblem: Option[IsEncodingProblem],
-                                isTruncated: Option[IsTruncated])
+                                isTruncated: Option[IsTruncated],
+                                specificHeaders: List[EmailHeader])
+
+case class ClientBodyPart(value: String, specificHeaders: List[EmailHeader])
 
 object ClientCid {
   def of(entity: Entity): Option[Cid] =
@@ -160,22 +172,31 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   private def generateUniqueMessageId(fromAddress: Option[List[Mailbox]]): String = 
     MimeUtil.createUniqueMessageId(fromAddress.flatMap(_.headOption).map(_.getDomain).orNull)
 
-  private def createAlternativeBody(htmlBody: Option[String], textBody: Option[String], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createAlternativeBody(htmlBody: Option[ClientBodyPart], textBody: Option[ClientBodyPart], htmlTextExtractor: HtmlTextExtractor) = {
     val alternativeBuilder = MultipartBuilder.create(SubType.ALTERNATIVE_SUBTYPE)
-    addBodypart(alternativeBuilder, textBody.getOrElse(htmlTextExtractor.toPlainText(htmlBody.getOrElse(""))), PLAIN_TEXT_UTF_8, StandardCharsets.UTF_8)
+    val replacement: ClientBodyPart = textBody.getOrElse(ClientBodyPart(
+      htmlTextExtractor.toPlainText(htmlBody.map(_.value).getOrElse("")),
+      htmlBody.map(_.specificHeaders).getOrElse(List())))
+    addBodypart(alternativeBuilder, replacement, PLAIN_TEXT_UTF_8, StandardCharsets.UTF_8)
     htmlBody.foreach(text => addBodypart(alternativeBuilder, text, HTML_UTF_8, StandardCharsets.UTF_8))
 
     alternativeBuilder
   }
 
-  private def addBodypart(multipartBuilder: MultipartBuilder, body: String, mediaType: MediaType, charset: NioCharset): MultipartBuilder =
-    multipartBuilder.addBodyPart(
-      BodyPartBuilder.create.setBody(body, charset)
+  private def addBodypart(multipartBuilder: MultipartBuilder, body: ClientBodyPart, mediaType: MediaType, charset: NioCharset): MultipartBuilder = {
+    val bodyPartBuilder = BodyPartBuilder.create.setBody(body.value, charset)
       .setContentType(mediaType.withoutParameters().toString, new NameValuePair("charset", charset.name))
-      .setContentTransferEncoding("quoted-printable"))
+      .setContentTransferEncoding("quoted-printable")
 
-  private def createMultipartWithAttachments(maybeHtmlBody: Option[String],
-                                             maybeTextBody: Option[String],
+    body.specificHeaders
+      .flatMap(_.asFields)
+      .foreach(field => bodyPartBuilder.addField(field))
+
+    multipartBuilder.addBodyPart(bodyPartBuilder)
+  }
+
+  private def createMultipartWithAttachments(maybeHtmlBody: Option[ClientBodyPart],
+                                             maybeTextBody: Option[ClientBodyPart],
                                              attachments: List[Attachment],
                                              blobResolvers: BlobResolvers,
                                              htmlTextExtractor: HtmlTextExtractor,
@@ -203,8 +224,8 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       _.readAllBytes()
     }.toEither
 
-  private def createMixedRelatedBody(maybeHtmlBody: Option[String],
-                                     maybeTextBody: Option[String],
+  private def createMixedRelatedBody(maybeHtmlBody: Option[ClientBodyPart],
+                                     maybeTextBody: Option[ClientBodyPart],
                                      inlineAttachments: List[LoadedAttachment],
                                      normalAttachments: List[LoadedAttachment],
                                      htmlTextExtractor: HtmlTextExtractor): MultipartBuilder = {
@@ -226,7 +247,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def createMixedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], normalAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createMixedBody(maybeHtmlBody: Option[ClientBodyPart], maybeTextBody: Option[ClientBodyPart], normalAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
     val mixedMultipartBuilder = MultipartBuilder.create(SubType.MIXED_SUBTYPE)
     mixedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     normalAttachments.foldLeft(mixedMultipartBuilder) {
@@ -236,7 +257,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     }
   }
 
-  private def createRelatedBody(maybeHtmlBody: Option[String], maybeTextBody: Option[String], inlineAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
+  private def createRelatedBody(maybeHtmlBody: Option[ClientBodyPart], maybeTextBody: Option[ClientBodyPart], inlineAttachments: List[LoadedAttachment], htmlTextExtractor: HtmlTextExtractor) = {
     val relatedMultipartBuilder = MultipartBuilder.create(SubType.RELATED_SUBTYPE)
     relatedMultipartBuilder.addBodyPart(BodyPartBuilder.create().setBody(createAlternativeBody(maybeHtmlBody, maybeTextBody, htmlTextExtractor).build))
     inlineAttachments.foldLeft(relatedMultipartBuilder) {
@@ -281,7 +302,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
       .filter(!_._1.equals("name"))
       .toMap
 
-  def validateHtmlBody: Either[IllegalArgumentException, Option[String]] = htmlBody match {
+  def validateHtmlBody: Either[IllegalArgumentException, Option[ClientBodyPart]] = htmlBody match {
     case None => Right(None)
     case Some(html :: Nil) if !html.`type`.value.equals("text/html") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
     case Some(html :: Nil) => retrieveCorrespondingBody(html.partId)
@@ -289,7 +310,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     case _ => Left(new IllegalArgumentException("Expecting htmlBody to contains only 1 part"))
   }
 
-  def validateTextBody: Either[IllegalArgumentException, Option[String]] = textBody match {
+  def validateTextBody: Either[IllegalArgumentException, Option[ClientBodyPart]] = textBody match {
     case None => Right(None)
     case Some(text :: Nil) if !text.`type`.value.equals("text/plain") => Left(new IllegalArgumentException("Expecting htmlBody type to be text/html"))
     case Some(text :: Nil) => retrieveCorrespondingBody(text.partId)
@@ -297,13 +318,14 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     case _ => Left(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
   }
 
-  private def retrieveCorrespondingBody(partId: ClientPartId): Option[Either[IllegalArgumentException, Some[String]]] =
+  private def retrieveCorrespondingBody(partId: ClientPartId): Option[Either[IllegalArgumentException, Some[ClientBodyPart]]] =
     bodyValues.getOrElse(Map())
       .get(partId)
       .map {
         case part if part.isTruncated.isDefined && part.isTruncated.get.value => Left(new IllegalArgumentException("Expecting isTruncated to be false"))
         case part if part.isEncodingProblem.isDefined && part.isEncodingProblem.get.value => Left(new IllegalArgumentException("Expecting isEncodingProblem to be false"))
-        case part => Right(Some(part.value))
+        case part => Right(Some(
+          ClientBodyPart(part.value, part.specificHeaders)))
       }
 
   private def validateSpecificHeaders(message: Message.Builder): Either[IllegalArgumentException, Unit] = {

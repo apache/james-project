@@ -24,12 +24,13 @@ import eu.timepit.refined
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
+
 import javax.inject.Inject
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName}
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AllHeaderValues, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedMessageId}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AllHeaderValues, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientEmailBodyValueWithoutHeaders, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedMessageId}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -256,7 +257,35 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
   private implicit val isTruncatedReads: Reads[IsTruncated] = Json.valueReads[IsTruncated]
   private implicit val isEncodingProblemReads: Reads[IsEncodingProblem] = Json.valueReads[IsEncodingProblem]
-  private implicit val clientEmailBodyValueReads: Reads[ClientEmailBodyValue] = Json.reads[ClientEmailBodyValue]
+  private implicit val clientEmailBodyValueWithoutHeadersReads: Reads[ClientEmailBodyValueWithoutHeaders] = Json.reads[ClientEmailBodyValueWithoutHeaders]
+  private implicit val clientEmailBodyValueReads: Reads[ClientEmailBodyValue] = {
+    case o: JsObject =>
+      if (o.value.contains("headers")) {
+        JsError("'headers' is not allowed")
+      } else {
+        extractSpecificHeaders(o).fold(e => JsError(e.getMessage),
+          specificHeaders => clientEmailBodyValueWithoutHeadersReads.reads(o).map(_.withHeaders(specificHeaders)))
+      }
+
+    case _ => JsError("Expecting a JsObject to represent a creation request")
+  }
+
+  private def extractSpecificHeaders(o: JsObject): Either[IllegalArgumentException, List[EmailHeader]] =
+    o.value.toList
+      .filter {
+        case (name, _) => name.startsWith("header:")
+      }.map {
+      case (name, value) =>
+        val refinedName: Either[String, NonEmptyString] = refineV[NonEmpty](name)
+        refinedName.left.map(e => new IllegalArgumentException(e))
+          .flatMap(property => SpecificHeaderRequest.from(property)
+            .left.map(_ => new IllegalArgumentException(s"$name is an invalid specific header")))
+          .flatMap(_.validate)
+          .flatMap(specificHeaderRequest => asReads(specificHeaderRequest)
+            .reads(value).asEither.left.map(e => new IllegalArgumentException(e.toString()))
+            .map(headerValue => EmailHeader(EmailHeaderName(specificHeaderRequest.headerName), headerValue)))
+    }.sequence
+
   private implicit val typeReads: Reads[Type] = Json.valueReads[Type]
   private implicit val clientPartIdReads: Reads[ClientPartId] = Json.valueReads[ClientPartId]
   private val rawClientBodyReads: Reads[ClientBody] = Json.reads[ClientBody]
@@ -407,27 +436,10 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       if(o.value.contains("headers")) {
         JsError("'headers' is not allowed")
       } else {
-        val withoutHeader = emailCreationRequestWithoutHeadersReads.reads(o)
-
-        val specificHeadersEither: Either[IllegalArgumentException, List[EmailHeader]] = o.value.toList
-          .filter {
-            case (name, _) => name.startsWith("header:")
-          }.map {
-          case (name, value) =>
-            val refinedName: Either[String, NonEmptyString] = refineV[NonEmpty](name)
-            refinedName.left.map(e => new IllegalArgumentException(e))
-              .flatMap(property => SpecificHeaderRequest.from(property)
-                .left.map(_ => new IllegalArgumentException(s"$name is an invalid specific header")))
-              .flatMap(_.validate)
-              .flatMap(specificHeaderRequest => asReads(specificHeaderRequest)
-                .reads(value).asEither.left.map(e => new IllegalArgumentException(e.toString()))
-                .map(headerValue => EmailHeader(EmailHeaderName(specificHeaderRequest.headerName), headerValue)))
-        }.sequence
-
-        specificHeadersEither.fold(e => JsError(e.getMessage),
-          specificHeaders => withoutHeader.map(_.toCreationRequest(specificHeaders)))
+        extractSpecificHeaders(o)
+          .fold(e => JsError(e.getMessage),
+          specificHeaders => emailCreationRequestWithoutHeadersReads.reads(o).map(_.toCreationRequest(specificHeaders)))
       }
-
     case _ => JsError("Expecting a JsObject to represent a creation request")
   }
   private implicit val emailImportReads: Reads[EmailImport] = Json.reads[EmailImport]
