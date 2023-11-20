@@ -76,10 +76,8 @@ case class ClientBody(partId: ClientPartId, `type`: Type)
 case class ClientEmailBodyValueWithoutHeaders(value: String,
                                 isEncodingProblem: Option[IsEncodingProblem],
                                 isTruncated: Option[IsTruncated]) {
-  def withHeaders(specificHeaders: List[EmailHeader]): ClientEmailBodyValue = {
-    println(specificHeaders)
+  def withHeaders(specificHeaders: List[EmailHeader]): ClientEmailBodyValue =
     ClientEmailBodyValue(value, isEncodingProblem, isTruncated, specificHeaders)
-  }
 }
 
 case class ClientEmailBodyValue(value: String,

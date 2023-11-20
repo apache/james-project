@@ -436,8 +436,7 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
       if(o.value.contains("headers")) {
         JsError("'headers' is not allowed")
       } else {
-        extractSpecificHeaders(o)
-          .fold(e => JsError(e.getMessage),
+        extractSpecificHeaders(o).fold(e => JsError(e.getMessage),
           specificHeaders => emailCreationRequestWithoutHeadersReads.reads(o).map(_.toCreationRequest(specificHeaders)))
       }
     case _ => JsError("Expecting a JsObject to represent a creation request")

@@ -3259,19 +3259,19 @@ trait EmailSetMethodContract {
         s"""{
            |  "id": "$messageId",
            |  "bodyStructure": {
-           |                            "subParts": [
-           |                                {
-           |                                    "header:Specific:asText": "MATCHME",
-           |                                    "type": "text/plain"
-           |                                },
-           |                                {
-           |                                    "header:Specific:asText": "MATCHME",
-           |                                    "type": "text/html"
-           |                                }
-           |                            ],
-           |                            "header:Specific:asText": null,
-           |                            "type": "multipart/alternative"
-           |                        }
+           |    "subParts": [
+           |      {
+           |        "header:Specific:asText": "MATCHME",
+           |        "type": "text/plain"
+           |      },
+           |      {
+           |        "header:Specific:asText": "MATCHME",
+           |        "type": "text/html"
+           |      }
+           |    ],
+           |    "header:Specific:asText": null,
+           |    "type": "multipart/alternative"
+           |  }
            |}""".stripMargin)
   }
 
