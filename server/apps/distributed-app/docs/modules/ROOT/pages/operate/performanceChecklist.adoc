@@ -75,7 +75,6 @@ We recommend the use of the blob store cache, which will be populated by email h
 ....
 cache.enable=true
 cache.cassandra.ttl=1year
-cache.cassandra.timeout=100ms
 cache.sizeThresholdInBytes=16 KiB
 ....
 
