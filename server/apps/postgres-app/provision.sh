@@ -6,8 +6,13 @@ export USERS_COUNT=1000
 
 echo "Start provisioning users."
 
+user_file="./imap-provision-conf/users.csv"
+
 # Remove old users.csv file
-rm ./imap-provision-conf/users.csv
+if [ -e "$user_file" ]; then
+  echo "Removing old users.csv file"
+  rm $user_file
+fi
 
 # Create domain
 curl -X PUT ${WEBADMIN_BASE_URL}/domains/${DOMAIN_NAME}
@@ -22,7 +27,7 @@ do
      -H "Content-Type: application/json"
 
    # Append user to users.csv
-   echo -e "$username,secret" >> ./imap-provision-conf/users.csv
+   echo -e "$username,secret" >> $user_file
 done
 
 echo "Finished provisioning users."
@@ -30,6 +35,6 @@ echo "Finished provisioning users."
 # Provisioning IMAP mailboxes and messages.
 echo "Start provisioning IMAP mailboxes and messages..."
 docker run --rm -it --name james-provisioning --network host -v ./imap-provision-conf/provisioning.properties:/conf/provisioning.properties \
--v ./imap-provision-conf/users.csv:/conf/users.csv linagora/james-provisioning:latest
+-v $user_file:/conf/users.csv linagora/james-provisioning:latest
 echo "Finished provisioning IMAP mailboxes and messages."
 
