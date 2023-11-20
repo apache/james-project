@@ -82,8 +82,6 @@ public class CassandraCacheConfiguration {
     public static CassandraCacheConfiguration from(Configuration configuration) {
         Optional<Duration> ttl = Optional.ofNullable(configuration.getString("cache.cassandra.ttl", null))
             .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS));
-        Optional<Duration> timeOut = Optional.ofNullable(configuration.getString("cache.cassandra.timeout", null))
-            .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS));
         Optional<Integer> sizeThreshold = Optional.ofNullable(configuration.getString("cache.sizeThresholdInBytes", null))
             .map(SizeFormat::parseAsByteCount)
             .map(Math::toIntExact);
