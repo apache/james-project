@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.opensearch;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -32,7 +34,7 @@ import org.testcontainers.shaded.org.awaitility.Awaitility;
 public class DockerOpenSearchExtension implements AfterEachCallback, BeforeEachCallback, ParameterResolver {
 
     @FunctionalInterface
-    interface CleanupStrategy {
+    public interface CleanupStrategy {
         CleanupStrategy NONE = any -> {};
 
         void clean(DockerOpenSearch openSearch);
