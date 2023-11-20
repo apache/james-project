@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
+import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.TestTask;
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
@@ -62,7 +63,7 @@ class RabbitMQWorkQueueTest {
     private RabbitMQWorkQueue testee;
     private ImmediateWorker worker;
     private JsonTaskSerializer serializer;
-
+    private RabbitMQManagementAPI managementAPI;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -70,11 +71,20 @@ class RabbitMQWorkQueueTest {
         serializer = JsonTaskSerializer.of(TestTaskDTOModules.COMPLETED_TASK_MODULE, TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore()));
         testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(), serializer, RabbitMQWorkQueueConfiguration$.MODULE$.enabled(), CancelRequestQueueName.generate(), rabbitMQExtension.getRabbitMQ().getConfiguration());
         testee.start();
+        managementAPI = rabbitMQExtension.managementAPI();
     }
 
     @AfterEach
     void tearDown() {
         testee.close();
+    }
+
+    @Test
+    void shouldSetConsumerTimeoutArgumentOnTaskQueue() {
+        assertThat(managementAPI.queueDetails("/", "taskManagerWorkQueue")
+            .getArguments()
+            .get("x-consumer-timeout"))
+            .isEqualTo("86400000");
     }
 
     @Test
