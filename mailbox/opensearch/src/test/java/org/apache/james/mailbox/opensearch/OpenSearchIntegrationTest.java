@@ -27,10 +27,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
+import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -94,18 +97,17 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
     static TikaExtension tika = new TikaExtension();
 
     @RegisterExtension
-    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
-        new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
+    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(DockerOpenSearchExtension.CleanupStrategy.NONE);
 
     static TikaTextExtractor textExtractor;
     static ReactorOpenSearchClient client;
+    private ReadAliasName readAliasName;
+    private WriteAliasName writeAliasName;
+    private IndexName indexName;
 
     @BeforeAll
     static void setUpAll() throws Exception {
         client = openSearch.getDockerOpenSearch().clientProvider().get();
-        MailboxIndexCreationUtil.prepareDefaultClient(
-            client,
-            openSearch.getDockerOpenSearch().configuration());
         textExtractor = new TikaTextExtractor(new RecordingMetricFactory(),
             new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
@@ -136,6 +138,13 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 
+        readAliasName = new ReadAliasName(UUID.randomUUID().toString());
+        writeAliasName = new WriteAliasName(UUID.randomUUID().toString());
+        indexName = new IndexName(UUID.randomUUID().toString());
+        MailboxIndexCreationUtil.prepareClient(
+            client, readAliasName, writeAliasName, indexName,
+            openSearch.getDockerOpenSearch().configuration());
+
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
@@ -146,9 +155,9 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+                    writeAliasName),
                 new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
+                    readAliasName, routingKeyFactory),
                 new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
                 openSearchMailboxConfiguration(), new RecordingMetricFactory()))
@@ -201,7 +210,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         ObjectNode updatedDocument = client.get(
                  new GetRequest.Builder()
-                    .index("mailboxWriteAlias")
+                    .index(indexName.getValue())
                     .id(mailboxBId.serialize() + ":" + bMessageUid.asLong())
                     .routing(mailboxBId.serialize())
                     .build())
@@ -235,7 +244,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         // Try to delete the document manually to simulate a not found document.
         client.deleteByQuery(new DeleteByQueryRequest.Builder()
-                .index("mailboxWriteAlias")
+                .index(indexName.getValue())
                 .query(new MatchAllQuery.Builder().build()._toQuery())
                 .build())
             .block();
@@ -283,7 +292,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
                     new SearchRequest.Builder()
-                        .index(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                        .index(indexName.getValue())
                         .query(QueryBuilders.matchAll().build()._toQuery())
                         .build())
                 .block()
@@ -564,7 +573,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
                 .untilAsserted(() -> assertThat(client.search(
                         new SearchRequest.Builder()
-                            .index(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                            .index(indexName.getValue())
                             .query(query)
                             .build())
                         .block()
