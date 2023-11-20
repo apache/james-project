@@ -60,6 +60,11 @@ public class QueueArguments {
             return this;
         }
 
+        public Builder consumerTimeout(long consumerTimeoutInMillisecond) {
+            arguments.put("x-consumer-timeout", consumerTimeoutInMillisecond);
+            return this;
+        }
+
         public ImmutableMap<String, Object> build() {
             return arguments.build();
         }
