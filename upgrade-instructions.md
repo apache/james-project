@@ -28,6 +28,22 @@ Change list:
 - [Adding delegatedUser column to user_table](#adding-delegatedusers-column-to-user-table)
 - [DeletedMessageVaultHook should not be used on Cassandra based products](#deleted-message-vault-is-now-deactivated-by-default)
 
+### Increase RabbitMQ consumer timeout on the task queue
+
+Date: 11/20/2023
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3955
+
+Before, the RabbitMQ default acknowledgement timeout on the `taskManagerWorkQueue` was 30 minutes.
+This is not enough for long-running tasks, therefore we advise to increase the acknowledgement timeout and now enforce it to 1 day by default.
+
+rf: https://www.rabbitmq.com/consumers.html#acknowledgement-timeout
+
+To make the per queue argument feature work, update your RabbitMQ to version 3.12 at least.
+
+If you want the old behavior where consumer timeout defaults to 30 minutes, you can either not upgrade your RabbitMQ or set `task.queue.consumer.timeout=30minutes` in `rabbitmq.properties`.
+
+
 ### JMAP filters event sourcing increments and snapshots
 
 Date: 19/04/2023
