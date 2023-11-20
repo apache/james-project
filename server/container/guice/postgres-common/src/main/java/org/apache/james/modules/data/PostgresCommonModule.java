@@ -33,10 +33,11 @@ import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
@@ -46,11 +47,11 @@ import io.r2dbc.spi.ConnectionFactory;
 import reactor.core.publisher.Mono;
 
 public class PostgresCommonModule extends AbstractModule {
+    private static final Logger LOGGER = LoggerFactory.getLogger("POSTGRES");
+
     @Override
     public void configure() {
         Multibinder.newSetBinder(binder(), PostgresModule.class);
-
-        bind(DomainImplPostgresConnectionFactory.class).in(Scopes.SINGLETON);
     }
 
     @Provides
@@ -63,8 +64,11 @@ public class PostgresCommonModule extends AbstractModule {
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactory(PostgresConfiguration postgresConfiguration, ConnectionFactory connectionFactory) {
         if (postgresConfiguration.rowLevelSecurityEnabled()) {
+            LOGGER.info("PostgreSQL row level security enabled");
+            LOGGER.info("Implementation for PostgreSQL connection factory: {}", DomainImplPostgresConnectionFactory.class.getName());
             return new DomainImplPostgresConnectionFactory(connectionFactory);
         }
+        LOGGER.info("Implementation for PostgreSQL connection factory: {}", SinglePostgresConnectionFactory.class.getName());
         return new SinglePostgresConnectionFactory(Mono.from(connectionFactory.create()).block());
     }
 
