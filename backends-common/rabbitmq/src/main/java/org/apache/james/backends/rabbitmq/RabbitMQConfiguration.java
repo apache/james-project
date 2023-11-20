@@ -30,6 +30,8 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -38,6 +40,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.james.util.DurationParser;
 import org.apache.james.util.Host;
 
 import com.google.common.base.Preconditions;
@@ -305,6 +308,8 @@ public class RabbitMQConfiguration {
     private static final String SSL_KEY_STORE_PASSWORD = "ssl.keystore.password";
     private static final String QUEUE_TTL = "notification.queue.ttl";
 
+    private static final String TASK_QUEUE_CONSUMER_TIMEOUT = "task.queue.consumer.timeout";
+
     public static class ManagementCredentials {
 
         static ManagementCredentials from(Configuration configuration) {
@@ -380,6 +385,7 @@ public class RabbitMQConfiguration {
         static final int DEFAULT_SHUTDOWN_TIMEOUT = 10_000;
         static final int DEFAULT_NETWORK_RECOVERY_INTERVAL = 5_000;
         static final int DEFAULT_PORT = 5672;
+        static final Duration DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT = Duration.ofDays(1);
 
         private final URI amqpUri;
         private final URI managementUri;
@@ -398,6 +404,7 @@ public class RabbitMQConfiguration {
         private Optional<Integer> quorumQueueReplicationFactor;
         private Optional<SSLConfiguration> sslConfiguration;
         private Optional<Long> queueTTL;
+        private Optional<Duration> taskQueueConsumerTimeout;
 
         private Builder(URI amqpUri, URI managementUri, ManagementCredentials managementCredentials) {
             this.amqpUri = amqpUri;
@@ -417,6 +424,7 @@ public class RabbitMQConfiguration {
             this.quorumQueueReplicationFactor = Optional.empty();
             this.hosts = ImmutableList.builder();
             this.queueTTL = Optional.empty();
+            this.taskQueueConsumerTimeout = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -497,6 +505,11 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder taskQueueConsumerTimeout(Optional<Duration> taskQueueConsumerTimeout) {
+            this.taskQueueConsumerTimeout = taskQueueConsumerTimeout;
+            return this;
+        }
+
         public RabbitMQConfiguration build() {
             Preconditions.checkNotNull(amqpUri, "'amqpUri' should not be null");
             Preconditions.checkNotNull(managementUri, "'managementUri' should not be null");
@@ -517,7 +530,8 @@ public class RabbitMQConfiguration {
                     useQuorumQueues.orElse(false),
                     quorumQueueReplicationFactor.orElse(DEFAULT_QUORUM_QUEUE_REPLICATION_FACTOR),
                     hostsDefaultingToUri(),
-                    queueTTL);
+                    queueTTL,
+                    taskQueueConsumerTimeout.orElse(DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT));
         }
 
         private List<Host> hostsDefaultingToUri() {
@@ -567,6 +581,10 @@ public class RabbitMQConfiguration {
         Optional<Long> queueTTL = Optional.ofNullable(configuration.getLong(QUEUE_TTL, null));
 
         ManagementCredentials managementCredentials = ManagementCredentials.from(configuration);
+
+        Optional<Duration> taskQueueConsumerTimeout = Optional.ofNullable(configuration.getString(TASK_QUEUE_CONSUMER_TIMEOUT, null))
+            .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS));
+
         return builder()
             .amqpUri(amqpUri)
             .managementUri(managementUri)
@@ -578,6 +596,7 @@ public class RabbitMQConfiguration {
             .quorumQueueReplicationFactor(quorumQueueReplicationFactor)
             .hosts(hosts)
             .queueTTL(queueTTL)
+            .taskQueueConsumerTimeout(taskQueueConsumerTimeout)
             .build();
     }
 
@@ -646,11 +665,13 @@ public class RabbitMQConfiguration {
     private final List<Host> hosts;
     private final ManagementCredentials managementCredentials;
     private final Optional<Long> queueTTL;
+    private final Duration taskQueueConsumerTimeout;
 
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
                                   int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs,
                                   int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration,
-                                  boolean useQuorumQueues, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL) {
+                                  boolean useQuorumQueues, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL,
+                                  Duration taskQueueConsumerTimeout) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
@@ -668,6 +689,7 @@ public class RabbitMQConfiguration {
         this.quorumQueueReplicationFactor = quorumQueueReplicationFactor;
         this.hosts = hosts;
         this.queueTTL = queueTTL;
+        this.taskQueueConsumerTimeout = taskQueueConsumerTimeout;
     }
 
     public URI getUri() {
@@ -739,6 +761,10 @@ public class RabbitMQConfiguration {
         return queueTTL;
     }
 
+    public Duration getTaskQueueConsumerTimeout() {
+        return taskQueueConsumerTimeout;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof RabbitMQConfiguration) {
@@ -760,7 +786,8 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.useSslManagement, that.useSslManagement)
                 && Objects.equals(this.sslConfiguration, that.sslConfiguration)
                 && Objects.equals(this.hosts, that.hosts)
-                && Objects.equals(this.queueTTL, that.queueTTL);
+                && Objects.equals(this.queueTTL, that.queueTTL)
+                && Objects.equals(this.taskQueueConsumerTimeout, that.taskQueueConsumerTimeout);
         }
         return false;
     }
@@ -768,6 +795,7 @@ public class RabbitMQConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, useQuorumQueues, hosts,
-            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement, sslConfiguration, queueTTL);
+            channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement,
+            sslConfiguration, queueTTL, taskQueueConsumerTimeout);
     }
 }
