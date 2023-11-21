@@ -22,7 +22,10 @@ package org.apache.james.backends.postgres;
 import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAULT_DATABASE;
 import static org.apache.james.backends.postgres.PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
@@ -79,16 +82,23 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             PG_CONTAINER.start();
         }
         querySettingRowLevelSecurityIfNeed();
+        querySettingExtension();
         initPostgresSession();
     }
 
     private void querySettingRowLevelSecurityIfNeed() {
-        Throwing.runnable(() -> {
-            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create user " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + " WITH PASSWORD '" + ROW_LEVEL_SECURITY_DATABASE.dbPassword() + "';");
-            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + ";");
-            PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "grant all privileges on database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + " to " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + ";");
-            PG_CONTAINER.execInContainer("psql", "-U", ROW_LEVEL_SECURITY_DATABASE.dbUser(), "-d", ROW_LEVEL_SECURITY_DATABASE.dbName(), "-c", "create schema if not exists " + ROW_LEVEL_SECURITY_DATABASE.schema() + ";");
-        }).sneakyThrow().run();
+        if (rlsEnabled) {
+            Throwing.runnable(() -> {
+                PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create user " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + " WITH PASSWORD '" + ROW_LEVEL_SECURITY_DATABASE.dbPassword() + "';");
+                PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "create database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + ";");
+                PG_CONTAINER.execInContainer("psql", "-U", DEFAULT_DATABASE.dbUser(), "-c", "grant all privileges on database " + ROW_LEVEL_SECURITY_DATABASE.dbName() + " to " + ROW_LEVEL_SECURITY_DATABASE.dbUser() + ";");
+                PG_CONTAINER.execInContainer("psql", "-U", ROW_LEVEL_SECURITY_DATABASE.dbUser(), "-d", ROW_LEVEL_SECURITY_DATABASE.dbName(), "-c", "create schema if not exists " + ROW_LEVEL_SECURITY_DATABASE.schema() + ";");
+            }).sneakyThrow().run();
+        }
+    }
+
+    private void querySettingExtension() throws IOException, InterruptedException {
+        PG_CONTAINER.execInContainer("psql", "-U", selectedDatabase.dbUser(), selectedDatabase.dbName(), "-c", String.format("CREATE EXTENSION IF NOT EXISTS hstore SCHEMA %s;", selectedDatabase.schema()));
     }
 
     private void initPostgresSession() throws URISyntaxException {
@@ -177,10 +187,26 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void resetSchema() {
-        getConnection()
-            .flatMapMany(connection -> Mono.from(connection.createStatement("DROP SCHEMA " + selectedDatabase.schema() + " CASCADE").execute())
-                .then(Mono.from(connection.createStatement("CREATE SCHEMA " + selectedDatabase.schema() + " AUTHORIZATION " + selectedDatabase.dbUser()).execute()))
-                .flatMap(result -> Mono.from(result.getRowsUpdated())))
+        dropTables(listAllTables());
+    }
+
+    private void dropTables(List<String> tables) {
+        String tablesToDelete = tables.stream()
+            .map(tableName -> "\"" + tableName + "\"")
+            .collect(Collectors.joining(", "));
+
+        postgresExecutor.connection()
+            .flatMapMany(connection -> connection.createStatement(String.format("DROP table if exists %s cascade;", tablesToDelete))
+                .execute())
+            .then()
+            .block();
+    }
+
+    private List<String> listAllTables() {
+        return postgresExecutor.connection()
+            .flatMapMany(connection -> connection.createStatement(String.format("SELECT tablename FROM pg_tables WHERE schemaname = '%s'", selectedDatabase.schema()))
+                .execute())
+            .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
             .collectList()
             .block();
     }
