@@ -16,56 +16,38 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.domainlist.jpa;
 
-import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.core.Domain;
+package org.apache.james.domainlist.postgres;
+
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.lib.DomainListContract;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-/**
- * Test the JPA implementation of the DomainList.
- */
-class JPADomainListTest implements DomainListContract {
+import io.r2dbc.spi.Connection;
+import reactor.core.publisher.Mono;
 
-    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
+public class PostgresDomainListTest implements DomainListContract {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresDomainModule.MODULE);
 
-    JPADomainList jpaDomainList;
+    PostgresDomainList domainList;
 
     @BeforeEach
-    public void setUp() throws Exception {
-        jpaDomainList = createDomainList();
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception {
-        DomainList domainList = createDomainList();
-        for (Domain domain: domainList.getDomains()) {
-            try {
-                domainList.removeDomain(domain);
-            } catch (Exception e) {
-                // silent: exception arise where clearing auto detected domains
-            }
-        }
+    public void setup() throws Exception {
+        Connection connection = Mono.from(postgresExtension.getConnectionFactory().create()).block();
+        domainList = new PostgresDomainList(getDNSServer("localhost"), new SinglePostgresConnectionFactory(connection));
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .build());
     }
 
     @Override
     public DomainList domainList() {
-        return jpaDomainList;
-    }
-
-    private JPADomainList createDomainList() throws Exception {
-        JPADomainList jpaDomainList = new JPADomainList(getDNSServer("localhost"),
-            JPA_TEST_CLUSTER.getEntityManagerFactory());
-        jpaDomainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
-
-        return jpaDomainList;
+        return domainList;
     }
 }
