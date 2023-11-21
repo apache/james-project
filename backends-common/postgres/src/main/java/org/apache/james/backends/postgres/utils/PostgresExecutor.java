@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.postgres.utils;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -85,11 +84,6 @@ public class PostgresExecutor {
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return dslContext()
             .flatMapMany(queryFunction);
-    }
-
-    public Mono<List<Record>> executeSingleRowList(Function<DSLContext, Mono<List<Record>>> queryFunction) {
-        return dslContext()
-            .flatMap(queryFunction);
     }
 
     public Mono<Record> executeRow(Function<DSLContext, Mono<Record>> queryFunction) {
