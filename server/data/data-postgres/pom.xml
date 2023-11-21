@@ -157,7 +157,6 @@
                 <configuration>
                     <includes>org/apache/james/sieve/postgres/model/JPASieveScript.class,
                         org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,
-                        org/apache/james/domainlist/jpa/model/JPADomain.class,
                         org/apache/james/mailrepository/jpa/model/JPAUrl.class,
                         org/apache/james/mailrepository/jpa/model/JPAMail.class</includes>
                     <addDefaultConstructor>true</addDefaultConstructor>
@@ -171,7 +170,6 @@
                             <name>metaDataFactory</name>
                             <value>jpa(Types=org.apache.james.sieve.postgres.model.JPASieveScript;
                                 org.apache.james.rrt.jpa.model.JPARecipientRewrite;
-                                org.apache.james.domainlist.jpa.model.JPADomain;
                                 org.apache.james.mailrepository.jpa.model.JPAUrl;
                                 org.apache.james.mailrepository.jpa.model.JPAMail)</value>
                         </property>

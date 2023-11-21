@@ -16,29 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.modules.data;
 
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.JPADomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.postgres.PostgresDomainList;
+import org.apache.james.domainlist.postgres.PostgresDomainModule;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class JPADomainListModule extends AbstractModule {
+public class PostgresDomainListModule extends AbstractModule {
     @Override
     public void configure() {
-        bind(JPADomainList.class).in(Scopes.SINGLETON);
-        bind(DomainList.class).to(JPADomainList.class);
+        bind(PostgresDomainList.class).in(Scopes.SINGLETON);
+        bind(DomainList.class).to(PostgresDomainList.class);
+        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresDomainModule.MODULE);
     }
 
     @ProvidesIntoSet
-    InitializationOperation configureDomainList(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
+    InitializationOperation configureDomainList(DomainListConfiguration configuration, PostgresDomainList postgresDomainList) {
         return InitilizationOperationBuilder
-            .forClass(JPADomainList.class)
-            .init(() -> jpaDomainList.configure(configuration));
+            .forClass(PostgresDomainList.class)
+            .init(() -> postgresDomainList.configure(configuration));
     }
 }
