@@ -503,7 +503,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                             .build())
                     .build());
 
-                return save(messageIdMapper, copy, mailbox)
+                return save(messageIdMapper, copy, mailbox, mailboxSession)
                     .map(metadata -> addedEvent(mailboxSession, mailbox, metadata, messageMoves));
             }).sneakyThrow());
     }
@@ -526,10 +526,11 @@ public class StoreMessageIdManager implements MessageIdManager {
         return messageMoves.addedMailboxes().size() == 1 && messageMoves.removedMailboxes().size() == 1;
     }
 
-    private Mono<MessageMetaData> save(MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage, Mailbox mailbox) {
+    private Mono<MessageMetaData> save(MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage,
+                                       Mailbox mailbox, MailboxSession mailboxSession) {
         return Mono.zip(
-                mailboxSessionMapperFactory.getModSeqProvider().nextModSeqReactive(mailbox.getMailboxId()),
-                mailboxSessionMapperFactory.getUidProvider().nextUidReactive(mailbox.getMailboxId()))
+                mailboxSessionMapperFactory.getModSeqProvider(mailboxSession).nextModSeqReactive(mailbox.getMailboxId()),
+                mailboxSessionMapperFactory.getUidProvider(mailboxSession).nextUidReactive(mailbox.getMailboxId()))
             .flatMap(modSeqAndUid -> {
                 mailboxMessage.setModSeq(modSeqAndUid.getT1());
                 mailboxMessage.setUid(modSeqAndUid.getT2());

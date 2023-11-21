@@ -103,12 +103,12 @@ public class InMemoryMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     @Override
-    public UidProvider getUidProvider() {
+    public UidProvider getUidProvider(MailboxSession session) {
         return uidProvider;
     }
 
     @Override
-    public ModSeqProvider getModSeqProvider() {
+    public ModSeqProvider getModSeqProvider(MailboxSession session) {
         return modSeqProvider;
     }
 

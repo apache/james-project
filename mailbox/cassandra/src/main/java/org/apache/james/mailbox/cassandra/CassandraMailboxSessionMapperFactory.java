@@ -179,12 +179,12 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     }
 
     @Override
-    public ModSeqProvider getModSeqProvider() {
+    public ModSeqProvider getModSeqProvider(MailboxSession session) {
         return modSeqProvider;
     }
 
     @Override
-    public UidProvider getUidProvider() {
+    public UidProvider getUidProvider(MailboxSession session) {
         return uidProvider;
     }
 

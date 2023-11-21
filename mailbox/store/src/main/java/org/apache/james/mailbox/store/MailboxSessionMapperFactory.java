@@ -124,9 +124,9 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
      */
     public abstract SubscriptionMapper createSubscriptionMapper(MailboxSession session);
 
-    public abstract UidProvider getUidProvider();
+    public abstract UidProvider getUidProvider(MailboxSession session);
 
-    public abstract ModSeqProvider getModSeqProvider();
+    public abstract ModSeqProvider getModSeqProvider(MailboxSession session);
 
     /**
      * Call endRequest on {@link Mapper} instances
