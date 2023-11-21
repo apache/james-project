@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import javax.inject.Inject;
-import javax.naming.OperationNotSupportedException;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -32,6 +31,8 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+
+import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -86,19 +87,27 @@ public class PostgresMailboxMapper implements MailboxMapper {
 
     @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
-        // TODO
-        return Flux.error(new OperationNotSupportedException());
+        return postgresMailboxDAO.findNonPersonalMailboxes(userName, right);
     }
 
     @Override
     public Mono<ACLDiff> updateACL(Mailbox mailbox, MailboxACL.ACLCommand mailboxACLCommand) {
-        // TODO
-        return Mono.error(new OperationNotSupportedException());
+        MailboxACL oldACL = mailbox.getACL();
+        MailboxACL newACL = Throwing.supplier(() -> oldACL.apply(mailboxACLCommand)).get();
+        return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), newACL)
+            .map(updatedACL -> {
+                mailbox.setACL(updatedACL);
+                return ACLDiff.computeDiff(oldACL, updatedACL);
+            });
     }
 
     @Override
     public Mono<ACLDiff> setACL(Mailbox mailbox, MailboxACL mailboxACL) {
-        // TODO
-        return Mono.error(new OperationNotSupportedException());
+        MailboxACL oldACL = mailbox.getACL();
+        return postgresMailboxDAO.upsertACL(mailbox.getMailboxId(), mailboxACL)
+            .map(updatedACL -> {
+                mailbox.setACL(updatedACL);
+                return ACLDiff.computeDiff(oldACL, updatedACL);
+            });
     }
 }
