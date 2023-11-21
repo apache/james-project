@@ -17,16 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.user.postgres;
+package org.apache.james.backends.postgres.utils;
 
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.user.lib.UsersRepositoryImpl;
+import org.jooq.exception.DataAccessException;
 
-import javax.inject.Inject;
+import java.util.function.Predicate;
 
-public class PostgresUsersRepository extends UsersRepositoryImpl<PostgresUsersDAO> {
-    @Inject
-    public PostgresUsersRepository(DomainList domainList, PostgresUsersDAO usersDAO) {
-        super(domainList, usersDAO);
-    }
+public class PostgresUtils {
+    private static final String UNIQUE_CONSTRAINT_VIOLATION_MESSAGE = "duplicate key value violates unique constraint";
+
+    public static final Predicate<Throwable> UNIQUE_CONSTRAINT_VIOLATION_PREDICATE =
+        throwable -> throwable instanceof DataAccessException && throwable.getMessage().contains(UNIQUE_CONSTRAINT_VIOLATION_MESSAGE);
 }

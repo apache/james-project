@@ -17,16 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.user.postgres;
+package org.apache.james.modules.data;
 
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.user.lib.UsersRepositoryImpl;
+import com.google.inject.AbstractModule;
 
-import javax.inject.Inject;
-
-public class PostgresUsersRepository extends UsersRepositoryImpl<PostgresUsersDAO> {
-    @Inject
-    public PostgresUsersRepository(DomainList domainList, PostgresUsersDAO usersDAO) {
-        super(domainList, usersDAO);
+public class PostgresDataModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        install(new PostgresUsersRepositoryModule());
     }
 }

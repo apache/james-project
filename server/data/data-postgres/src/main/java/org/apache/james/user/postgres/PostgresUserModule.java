@@ -36,12 +36,12 @@ public interface PostgresUserModule {
         Field<String> ALGORITHM = DSL.field("algorithm", SQLDataType.VARCHAR(100).notNull());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
-            .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
+            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(USERNAME)
                 .column(HASHED_PASSWORD)
                 .column(ALGORITHM)
                 .constraint(DSL.primaryKey(USERNAME))))
-            .supportsRowLevelSecurity();
+            .disableRowLevelSecurity();
     }
 
     PostgresModule MODULE = PostgresModule.builder()

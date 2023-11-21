@@ -25,6 +25,7 @@ import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.JPADataModule;
 import org.apache.james.modules.data.JPAUsersRepositoryModule;
+import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
@@ -85,6 +86,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new JPADataModule(),
         new JPAMailboxModule(),
         new PostgresMailboxModule(),
+        new PostgresDataModule(),
         new MailboxModule(),
         new LuceneSearchMailboxModule(),
         new NoJwtModule(),

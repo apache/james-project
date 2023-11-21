@@ -20,6 +20,7 @@
 package org.apache.james.user.postgres;
 
 import com.google.common.base.Preconditions;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
@@ -28,7 +29,6 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
-import org.jooq.exception.DataAccessException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,25 +36,25 @@ import javax.inject.Inject;
 import java.util.Iterator;
 import java.util.Optional;
 
+import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.*;
 import static org.jooq.impl.DSL.count;
 
 public class PostgresUsersDAO implements UsersDAO {
-    private static final String DUPLICATE_VIOLATION_MESSAGE = "duplicate key value violates unique constraint";
-
     private final PostgresExecutor postgresExecutor;
     private final Algorithm algorithm;
     private final Algorithm.HashingMode fallbackHashingMode;
 
     @Inject
-    public PostgresUsersDAO(PostgresExecutor postgresExecutor, PostgresRepositoryConfiguration postgresRepositoryConfiguration) {
-        this.postgresExecutor = postgresExecutor;
+    public PostgresUsersDAO(JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
+                            PostgresRepositoryConfiguration postgresRepositoryConfiguration) {
+        this.postgresExecutor = new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(Optional.empty()));
         this.algorithm = postgresRepositoryConfiguration.getPreferredAlgorithm();
         this.fallbackHashingMode = postgresRepositoryConfiguration.getFallbackHashingMode();
     }
 
     @Override
-    public Optional<? extends User> getUserByName(Username name) throws UsersRepositoryException {
+    public Optional<? extends User> getUserByName(Username name) {
         return getUserByNameReactive(name).blockOptional();
     }
 
@@ -99,12 +99,12 @@ public class PostgresUsersDAO implements UsersDAO {
     }
 
     @Override
-    public boolean contains(Username name) throws UsersRepositoryException {
+    public boolean contains(Username name) {
         return getUserByName(name).isPresent();
     }
 
     @Override
-    public int countUsers() throws UsersRepositoryException {
+    public int countUsers() {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(count()).from(TABLE_NAME)))
             .map(record -> record.get(0, Integer.class))
             .block();
@@ -130,7 +130,7 @@ public class PostgresUsersDAO implements UsersDAO {
 
         postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, USERNAME, HASHED_PASSWORD, ALGORITHM)
                 .values(user.getUserName().asString(), user.getHashedPassword(), user.getHashAlgorithm().asString())))
-            .onErrorMap(e -> e instanceof DataAccessException && e.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
+            .onErrorMap(UNIQUE_CONSTRAINT_VIOLATION_PREDICATE,
                 e -> new AlreadyExistInUsersRepositoryException("User with username " + username + " already exist!"))
             .block();
     }
