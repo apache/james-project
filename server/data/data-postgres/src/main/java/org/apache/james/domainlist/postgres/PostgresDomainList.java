@@ -19,6 +19,8 @@
 
 package org.apache.james.domainlist.postgres;
 
+import static org.apache.james.domainlist.postgres.PostgresDomainModule.PostgresDomainTable.DOMAIN;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -46,34 +48,41 @@ public class PostgresDomainList extends AbstractDomainList {
 
     @Override
     public void addDomain(Domain domain) throws DomainListException {
-        postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(PostgresDomainModule.PostgresDomainTable.TABLE_NAME, PostgresDomainModule.PostgresDomainTable.DOMAIN)
-                .values(domain.asString())))
-            .onErrorMap(DataAccessException.class, e -> new DomainListException(domain.name() + " already exists."))
-            .block();
-
+        try {
+            postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(PostgresDomainModule.PostgresDomainTable.TABLE_NAME, DOMAIN)
+                    .values(domain.asString())))
+                .block();
+        } catch (DataAccessException exception) {
+            throw new DomainListException(domain.name() + " already exists.");
+        }
     }
 
     @Override
-    protected List<Domain> getDomainListInternal() throws DomainListException {
+    protected List<Domain> getDomainListInternal() {
         return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectFrom(PostgresDomainModule.PostgresDomainTable.TABLE_NAME)))
-            .map(record -> Domain.of(record.get(PostgresDomainModule.PostgresDomainTable.DOMAIN)))
+            .map(record -> Domain.of(record.get(DOMAIN)))
             .collectList()
             .block();
     }
 
     @Override
-    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
+    protected boolean containsDomainInternal(Domain domain) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.selectFrom(PostgresDomainModule.PostgresDomainTable.TABLE_NAME)
-            .where(PostgresDomainModule.PostgresDomainTable.DOMAIN.eq(domain.asString()))))
+            .where(DOMAIN.eq(domain.asString()))))
             .blockOptional()
             .isPresent();
     }
 
     @Override
     protected void doRemoveDomain(Domain domain) throws DomainListException {
-        postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(PostgresDomainModule.PostgresDomainTable.TABLE_NAME)
-            .where(PostgresDomainModule.PostgresDomainTable.DOMAIN.eq(domain.asString()))))
-            .onErrorMap(DataAccessException.class, e -> new DomainListException(domain.name() + " was not found"))
-            .block();
+        boolean executed = postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.deleteFrom(PostgresDomainModule.PostgresDomainTable.TABLE_NAME)
+                .where(DOMAIN.eq(domain.asString()))
+                .returning(DOMAIN)))
+            .blockOptional()
+            .isPresent();
+
+        if (!executed) {
+            throw new DomainListException(domain.name() + " was not found");
+        }
     }
 }
