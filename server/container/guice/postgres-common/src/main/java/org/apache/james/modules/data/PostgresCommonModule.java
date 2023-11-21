@@ -105,7 +105,8 @@ public class PostgresCommonModule extends AbstractModule {
     InitializationOperation provisionPostgresTablesAndIndexes(PostgresTableManager postgresTableManager) {
         return InitilizationOperationBuilder
             .forClass(PostgresTableManager.class)
-            .init(() -> postgresTableManager.initializeTables()
+            .init(() -> postgresTableManager.initializePostgresExtension()
+                .then(postgresTableManager.initializeTables())
                 .then(postgresTableManager.initializeTableIndexes())
                 .block());
     }

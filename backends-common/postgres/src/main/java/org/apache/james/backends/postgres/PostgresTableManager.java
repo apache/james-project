@@ -58,6 +58,14 @@ public class PostgresTableManager implements Startable {
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
     }
 
+    public Mono<Void> initializePostgresExtension() {
+        return postgresExecutor.connection()
+            .flatMapMany(connection -> connection.createStatement("CREATE EXTENSION IF NOT EXISTS hstore")
+                .execute())
+            .flatMap(Result::getRowsUpdated)
+            .then();
+    }
+
     public Mono<Void> initializeTables() {
         return postgresExecutor.dslContext()
             .flatMap(dsl -> Flux.fromIterable(module.tables())
