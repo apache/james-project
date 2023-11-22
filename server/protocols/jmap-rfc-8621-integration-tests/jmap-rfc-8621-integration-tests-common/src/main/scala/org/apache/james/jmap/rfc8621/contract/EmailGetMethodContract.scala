@@ -2512,6 +2512,109 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def shouldInlineMDN(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.builder()
+        .withInternalDate(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant))
+        .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/mdn_simple.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "inReplyTo": null,
+           |    "to": [
+           |        {
+           |            "email": "magiclan@linagora.com"
+           |        }
+           |    ],
+           |    "receivedAt": "2014-10-30T14:12:00Z",
+           |    "sentAt": "2021-03-30T03:31:50Z",
+           |    "attachments": [],
+           |    "subject": "Read: test",
+           |    "size": 908,
+           |    "blobId": "${messageId.serialize()}",
+           |    "preview": "This is simple body of human-readable part",
+           |    "references": null,
+           |    "id": "${messageId.serialize()}",
+           |    "htmlBody": [
+           |        {
+           |            "charset": "UTF-8",
+           |            "size": 42,
+           |            "partId": "2",
+           |            "blobId": "${messageId.serialize()}_2",
+           |            "type": "text/plain"
+           |        },
+           |        {
+           |            "charset": "UTF-8",
+           |            "size": 108,
+           |            "partId": "3",
+           |            "blobId": "${messageId.serialize()}_3",
+           |            "type": "message/disposition-notification"
+           |        }
+           |    ],
+           |    "mailboxIds": {
+           |        "${mailboxId.serialize()}": true
+           |    },
+           |    "bodyValues": {},
+           |    "messageId": [
+           |        "Mime4j.f.9089aa43e656a14b.1788130035c@linagora.com"
+           |    ],
+           |    "from": [
+           |        {
+           |            "email": "tungexplorer@linagora.com"
+           |        }
+           |    ],
+           |    "keywords": {},
+           |    "textBody": [
+           |        {
+           |            "charset": "UTF-8",
+           |            "size": 42,
+           |            "partId": "2",
+           |            "blobId": "${messageId.serialize()}_2",
+           |            "type": "text/plain"
+           |        },
+           |        {
+           |            "charset": "UTF-8",
+           |            "size": 108,
+           |            "partId": "3",
+           |            "blobId": "${messageId.serialize()}_3",
+           |            "type": "message/disposition-notification"
+           |        }
+           |    ],
+           |    "threadId": "${messageId.serialize()}",
+           |    "hasAttachment": true
+           |}""".stripMargin)
+  }
+
+  @Test
   def requestingTheSameIdTwiceReturnsItOnce(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
       .of
