@@ -2610,7 +2610,7 @@ trait EmailGetMethodContract {
            |        }
            |    ],
            |    "threadId": "${messageId.serialize()}",
-           |    "hasAttachment": true
+           |    "hasAttachment": false
            |}""".stripMargin)
   }
 
