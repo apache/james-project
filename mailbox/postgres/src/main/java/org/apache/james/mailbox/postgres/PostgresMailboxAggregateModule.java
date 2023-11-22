@@ -16,23 +16,16 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.mailbox;
+
+package org.apache.james.mailbox.postgres;
 
 import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
-import org.apache.james.modules.data.PostgresCommonModule;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
+import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
+public interface PostgresMailboxAggregateModule {
 
-public class PostgresMailboxModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        install(new PostgresCommonModule());
-
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresMailboxAggregateModule.MODULE);
-    }
-
+    PostgresModule MODULE = PostgresModule.aggregateModules(
+        PostgresMailboxModule.MODULE,
+        PostgresSubscriptionModule.MODULE);
 }
