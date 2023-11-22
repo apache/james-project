@@ -19,9 +19,9 @@
 
 package org.apache.james.backends.postgres.utils;
 
-import org.jooq.exception.DataAccessException;
-
 import java.util.function.Predicate;
+
+import org.jooq.exception.DataAccessException;
 
 public class PostgresUtils {
     private static final String UNIQUE_CONSTRAINT_VIOLATION_MESSAGE = "duplicate key value violates unique constraint";

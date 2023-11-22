@@ -19,7 +19,18 @@
 
 package org.apache.james.user.postgres;
 
-import com.google.common.base.Preconditions;
+import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
+import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.ALGORITHM;
+import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.HASHED_PASSWORD;
+import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.TABLE_NAME;
+import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.USERNAME;
+import static org.jooq.impl.DSL.count;
+
+import java.util.Iterator;
+import java.util.Optional;
+
+import javax.inject.Inject;
+
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
@@ -29,16 +40,11 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
+
+import com.google.common.base.Preconditions;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import javax.inject.Inject;
-import java.util.Iterator;
-import java.util.Optional;
-
-import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
-import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.*;
-import static org.jooq.impl.DSL.count;
 
 public class PostgresUsersDAO implements UsersDAO {
     private final PostgresExecutor postgresExecutor;

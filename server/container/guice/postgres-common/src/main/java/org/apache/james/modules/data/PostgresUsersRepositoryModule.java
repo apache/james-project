@@ -19,10 +19,6 @@
 
 package org.apache.james.modules.data;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
@@ -30,6 +26,11 @@ import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.postgres.PostgresRepositoryConfiguration;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 
 public class PostgresUsersRepositoryModule extends AbstractModule {
     @Override
