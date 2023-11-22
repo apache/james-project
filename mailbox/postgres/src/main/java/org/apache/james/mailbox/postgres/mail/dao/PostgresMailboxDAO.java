@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.mailbox.postgres.PostgresMailboxIdFaker.getMailboxId;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_HIGHEST_MODSEQ;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_LAST_UID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAME;
@@ -33,6 +34,7 @@ import static org.jooq.impl.DSL.count;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -157,5 +159,23 @@ public class PostgresMailboxDAO {
                 .returning(MAILBOX_LAST_UID)))
             .map(record -> record.get(MAILBOX_LAST_UID))
             .map(MessageUid::of);
+    }
+
+
+    public Mono<ModSeq> findHighestModSeqByMailboxId(MailboxId mailboxId) {
+        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(MAILBOX_HIGHEST_MODSEQ)
+                .from(TABLE_NAME)
+                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))))
+            .flatMap(record -> Mono.justOrEmpty(record.get(MAILBOX_HIGHEST_MODSEQ)))
+            .map(ModSeq::of);
+    }
+
+    public Mono<ModSeq> incrementAndGetModSeq(MailboxId mailboxId) {
+        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
+                .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, 0L).add(1))
+                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))
+                .returning(MAILBOX_HIGHEST_MODSEQ)))
+            .map(record -> record.get(MAILBOX_HIGHEST_MODSEQ))
+            .map(ModSeq::of);
     }
 }
