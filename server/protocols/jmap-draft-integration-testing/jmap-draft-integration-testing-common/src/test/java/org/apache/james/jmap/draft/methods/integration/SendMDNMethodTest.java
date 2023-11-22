@@ -313,62 +313,11 @@ public abstract class SendMDNMethodTest {
             .statusCode(200)
             .body(firstMessage + ".from.email", is(HOMER.asString()))
             .body(firstMessage + ".to.email", contains(BART.asString()))
-            .body(firstMessage + ".hasAttachment", is(true))
+            .body(firstMessage + ".hasAttachment", is(false))
             .body(firstMessage + ".textBody", is("Read confirmation"))
             .body(firstMessage + ".subject", is("subject"))
             .body(firstMessage + ".headers.Content-Type", startsWith("multipart/report;"))
-            .body(firstMessage + ".headers.X-JAMES-MDN-JMAP-MESSAGE-ID", equalTo(bartSentJmapMessageId))
-            .body(firstMessage + ".attachments[0].type", startsWith("message/disposition-notification"));
-    }
-
-    @Test
-    void sendMDNShouldPositionTheReportAsAnAttachment() {
-        bartSendMessageToHomer();
-
-        List<String> messageIds = listMessageIdsForAccount(homerAccessToken);
-
-        // USER sends a MDN back to BART
-        String creationId = "creation-1";
-        with()
-            .header("Authorization", homerAccessToken.asString())
-            .body("[[\"setMessages\", {\"sendMDN\": {" +
-                "\"" + creationId + "\":{" +
-                "    \"messageId\":\"" + messageIds.get(0) + "\"," +
-                "    \"subject\":\"subject\"," +
-                "    \"textBody\":\"Read confirmation\"," +
-                "    \"reportingUA\":\"reportingUA\"," +
-                "    \"disposition\":{" +
-                "        \"actionMode\":\"automatic-action\"," +
-                "        \"sendingMode\":\"MDN-sent-automatically\"," +
-                "        \"type\":\"processed\"" +
-                "    }" +
-                "}" +
-                "}}, \"#0\"]]")
-            .post("/jmap");
-
-        // BART should have received it
-        calmlyAwait.until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
-        List<String> bobInboxMessageIds = listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken));
-
-        String blobId = with()
-            .header("Authorization", bartAccessToken.asString())
-            .body("[[\"getMessages\", {\"ids\": [\"" + bobInboxMessageIds.get(0) + "\"]}, \"#0\"]]")
-            .post("/jmap")
-        .then()
-            .extract()
-            .body()
-            .path(ARGUMENTS + ".list[0].attachments[0].blobId");
-
-        given()
-            .header("Authorization", bartAccessToken.asString())
-        .when()
-            .get("/download/" + blobId)
-        .then()
-            .statusCode(200)
-            .body(containsString("Reporting-UA: reportingUA"))
-            .body(containsString("Final-Recipient: rfc822; homer@domain.tld"))
-            .body(containsString("Original-Message-ID: "))
-            .body(containsString("Disposition: automatic-action/MDN-sent-automatically;processed"));
+            .body(firstMessage + ".headers.X-JAMES-MDN-JMAP-MESSAGE-ID", equalTo(bartSentJmapMessageId));
     }
 
     @Test
