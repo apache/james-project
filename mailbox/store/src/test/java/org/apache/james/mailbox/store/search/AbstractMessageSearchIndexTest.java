@@ -460,13 +460,13 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    protected void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() throws MailboxException {
+    protected void bodyContainsShouldReturnUidOfMessageContainingBothTerms() throws MailboxException {
         /* mail1.eml contains words created AND summary
            mail.eml contains created and thus matches the query with a low score */
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.bodyContains("created summary"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsOnly(m2.getUid(), m8.getUid());
+            .containsOnly(m2.getUid());
     }
 
     @Test
@@ -1317,11 +1317,11 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    protected void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() throws Exception {
+    protected void mailsContainsShouldIncludeMailHavingAttachmentsMatchingAllTermsOfTheRequest() throws Exception {
         SearchQuery searchQuery = SearchQuery.of(SearchQuery.mailContains("root mailing list"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
-            .containsOnly(m1.getUid(), m6.getUid());
+            .containsOnly(m1.getUid());
     }
 
     @Test
@@ -1426,21 +1426,6 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).toStream())
             .containsExactly(m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid());
-    }
-
-    @Test
-    void searchWithFullTextShouldReturnMailsWhenNotAPerfectMatch() throws Exception {
-        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.FullText));
-        ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
-            MessageManager.AppendCommand.builder()
-            .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithTextAttachment.eml")),
-            session).getId();
-        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
-
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.mailContains("User message banana"));
-
-        assertThat(messageSearchIndex.search(session, mailbox2, searchQuery).toStream())
-            .containsExactly(messageWithBeautifulBananaAsTextAttachment.getUid());
     }
 
     @Test

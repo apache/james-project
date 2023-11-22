@@ -164,7 +164,7 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
-    public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() {
+    public void bodyContainsShouldReturnUidOfMessageContainingBothTerms() {
     }
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
@@ -190,11 +190,6 @@ class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
     public void headerDateAfterShouldWork() {
-    }
-
-    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
-    @Override
-    public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() {
     }
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")

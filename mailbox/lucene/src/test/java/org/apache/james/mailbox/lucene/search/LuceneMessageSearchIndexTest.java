@@ -135,12 +135,7 @@ class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
     @Override
-    public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() {
-    }
-
-    @Disabled("JAMES-1799: ignoring failing test after generalizing OpenSearch test suite to other mailbox search backends")
-    @Override
-    public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() {
+    public void bodyContainsShouldReturnUidOfMessageContainingBothTerms() {
     }
 
     @Disabled("Domain part search is not supported by Lucene")
