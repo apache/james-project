@@ -21,11 +21,13 @@ package org.apache.james.mailbox.postgres;
 
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 
 public interface PostgresMailboxAggregateModule {
 
     PostgresModule MODULE = PostgresModule.aggregateModules(
         PostgresMailboxModule.MODULE,
-        PostgresSubscriptionModule.MODULE);
+        PostgresSubscriptionModule.MODULE,
+        PostgresMessageModule.MODULE);
 }
