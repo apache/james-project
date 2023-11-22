@@ -19,12 +19,10 @@
 
 package org.apache.james;
 
-import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.JPADataModule;
-import org.apache.james.modules.data.JPAUsersRepositoryModule;
 import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
@@ -116,8 +114,6 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     static GuiceJamesServer createServer(PostgresJamesConfiguration configuration) {
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(POSTGRES_MODULE_AGGREGATE)
-            .combineWith(new UsersRepositoryModuleChooser(new JPAUsersRepositoryModule())
-                .chooseModules(configuration.getUsersRepositoryImplementation()));
+            .combineWith(POSTGRES_MODULE_AGGREGATE);
     }
 }

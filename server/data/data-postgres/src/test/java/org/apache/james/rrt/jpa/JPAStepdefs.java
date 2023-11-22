@@ -18,12 +18,15 @@
  ****************************************************************/
 package org.apache.james.rrt.jpa;
 
+import static org.mockito.Mockito.mock;
+
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
-import org.apache.james.user.jpa.JPAUsersRepository;
+import org.apache.james.user.postgres.PostgresUsersDAO;
+import org.apache.james.user.postgres.PostgresUsersRepository;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -53,7 +56,7 @@ public class JPAStepdefs {
     private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        localVirtualUserTable.setUsersRepository(new JPAUsersRepository(RecipientRewriteTableFixture.domainListForCucumberTests()));
+        localVirtualUserTable.setUsersRepository(new PostgresUsersRepository(RecipientRewriteTableFixture.domainListForCucumberTests(), mock(PostgresUsersDAO.class)));
         localVirtualUserTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
         return localVirtualUserTable;
     }
