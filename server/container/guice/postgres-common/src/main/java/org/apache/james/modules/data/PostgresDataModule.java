@@ -19,11 +19,16 @@
 
 package org.apache.james.modules.data;
 
+import org.apache.james.CoreDataModule;
+
 import com.google.inject.AbstractModule;
 
 public class PostgresDataModule extends AbstractModule {
     @Override
     protected void configure() {
-        install(new PostgresUsersRepositoryModule());
+        install(new CoreDataModule());
+        install(new JPADomainListModule());
+        install(new JPARecipientRewriteTableModule());
+        install(new JPAMailRepositoryModule());
     }
 }

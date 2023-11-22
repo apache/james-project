@@ -24,10 +24,10 @@ import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.UsersDAO;
-import org.apache.james.user.postgres.PostgresRepositoryConfiguration;
 import org.apache.james.user.postgres.PostgresUserModule;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
+import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -50,8 +50,8 @@ public class PostgresUsersRepositoryModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public PostgresRepositoryConfiguration provideConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
-        return PostgresRepositoryConfiguration.from(
+    public PostgresUsersRepositoryConfiguration provideConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        return PostgresUsersRepositoryConfiguration.from(
             configurationProvider.getConfiguration("usersrepository"));
     }
 }

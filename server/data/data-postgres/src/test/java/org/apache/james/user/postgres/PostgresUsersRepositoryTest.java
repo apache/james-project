@@ -90,7 +90,7 @@ class PostgresUsersRepositoryTest {
 
     private static UsersRepositoryImpl<PostgresUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
         PostgresUsersDAO usersDAO = new PostgresUsersDAO(new SinglePostgresConnectionFactory(postgresExtension.getConnection().block()),
-            PostgresRepositoryConfiguration.DEFAULT);
+            PostgresUsersRepositoryConfiguration.DEFAULT);
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
         administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));

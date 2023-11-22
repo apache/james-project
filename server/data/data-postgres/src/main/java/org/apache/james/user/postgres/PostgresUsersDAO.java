@@ -53,10 +53,10 @@ public class PostgresUsersDAO implements UsersDAO {
 
     @Inject
     public PostgresUsersDAO(JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
-                            PostgresRepositoryConfiguration postgresRepositoryConfiguration) {
+                            PostgresUsersRepositoryConfiguration postgresUsersRepositoryConfiguration) {
         this.postgresExecutor = new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(Optional.empty()));
-        this.algorithm = postgresRepositoryConfiguration.getPreferredAlgorithm();
-        this.fallbackHashingMode = postgresRepositoryConfiguration.getFallbackHashingMode();
+        this.algorithm = postgresUsersRepositoryConfiguration.getPreferredAlgorithm();
+        this.fallbackHashingMode = postgresUsersRepositoryConfiguration.getFallbackHashingMode();
     }
 
     @Override

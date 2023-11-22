@@ -25,18 +25,18 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.Algorithm.HashingMode;
 
-public class PostgresRepositoryConfiguration {
+public class PostgresUsersRepositoryConfiguration {
     public static final String DEFAULT_ALGORITHM = "PBKDF2-SHA512";
     public static final String DEFAULT_HASHING_MODE = HashingMode.PLAIN.name();
 
-    public static final PostgresRepositoryConfiguration DEFAULT = new PostgresRepositoryConfiguration(
+    public static final PostgresUsersRepositoryConfiguration DEFAULT = new PostgresUsersRepositoryConfiguration(
         Algorithm.of(DEFAULT_ALGORITHM), HashingMode.parse(DEFAULT_HASHING_MODE)
     );
 
     private final Algorithm preferredAlgorithm;
     private final HashingMode fallbackHashingMode;
 
-    public PostgresRepositoryConfiguration(Algorithm preferredAlgorithm, HashingMode fallbackHashingMode) {
+    public PostgresUsersRepositoryConfiguration(Algorithm preferredAlgorithm, HashingMode fallbackHashingMode) {
         this.preferredAlgorithm = preferredAlgorithm;
         this.fallbackHashingMode = fallbackHashingMode;
     }
@@ -49,8 +49,8 @@ public class PostgresRepositoryConfiguration {
         return fallbackHashingMode;
     }
 
-    public static PostgresRepositoryConfiguration from(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        return new PostgresRepositoryConfiguration(
+    public static PostgresUsersRepositoryConfiguration from(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
+        return new PostgresUsersRepositoryConfiguration(
             Algorithm.of(config.getString("algorithm", DEFAULT_ALGORITHM)),
             HashingMode.parse(config.getString("hashingMode", DEFAULT_HASHING_MODE)));
     }
