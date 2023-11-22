@@ -20,10 +20,12 @@
 package org.apache.james.backends.postgres.utils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Domain;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
@@ -39,13 +41,30 @@ import reactor.core.publisher.Mono;
 
 public class PostgresExecutor {
 
+    public static class Factory {
+
+        private final JamesPostgresConnectionFactory jamesPostgresConnectionFactory;
+
+        @Inject
+        public Factory(JamesPostgresConnectionFactory jamesPostgresConnectionFactory) {
+            this.jamesPostgresConnectionFactory = jamesPostgresConnectionFactory;
+        }
+
+        public PostgresExecutor create(Optional<Domain> domain) {
+            return new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(domain));
+        }
+
+        public PostgresExecutor create() {
+            return create(Optional.empty());
+        }
+    }
+
     private static final SQLDialect PGSQL_DIALECT = SQLDialect.POSTGRES;
     private static final Settings SETTINGS = new Settings()
         .withRenderFormatted(true)
         .withStatementType(StatementType.PREPARED_STATEMENT);
     private final Mono<Connection> connection;
 
-    @Inject
     public PostgresExecutor(Mono<Connection> connection) {
         this.connection = connection;
     }
