@@ -552,6 +552,27 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    void subjectShouldMatchSubject() throws Exception {
+        assertThat(Flux.from(inboxMessageManager.search(SearchQuery.of(SearchQuery.subject("JSON")), session)).toStream())
+            .containsOnly(m2.getUid());
+    }
+
+    @Test
+    void subjectShouldNotIncludeIrrelevantResults() throws Exception {
+        ComposedMessageId m = inboxMessageManager.appendMessage(
+            ClassLoader.getSystemResourceAsStream("eml/oneInlinedAttachment.eml"),
+            new Date(1409608900000L),
+            session,
+            RECENT,
+            new Flags("Hello you")).getId();
+
+        awaitMessageCount(ImmutableList.of(), SearchQuery.matchAll(), 14);
+
+        assertThat(Flux.from(inboxMessageManager.search(SearchQuery.of(SearchQuery.subject("Inline attachment")), session)).toStream())
+            .containsOnly(m.getUid());
+    }
+
+    @Test
     void textShouldMatchEmailAddressLocalPart() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
