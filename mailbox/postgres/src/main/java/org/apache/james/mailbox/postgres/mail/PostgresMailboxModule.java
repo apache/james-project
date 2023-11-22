@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import static org.jooq.impl.SQLDataType.BIGINT;
+
 import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresModule;
@@ -35,14 +37,14 @@ public interface PostgresMailboxModule {
 
         Field<UUID> MAILBOX_ID = DSL.field("mailbox_id", SQLDataType.UUID.notNull());
         Field<String> MAILBOX_NAME = DSL.field("mailbox_name", SQLDataType.VARCHAR(255).notNull());
-        Field<Long> MAILBOX_UID_VALIDITY = DSL.field("mailbox_uid_validity", SQLDataType.BIGINT.notNull());
+        Field<Long> MAILBOX_UID_VALIDITY = DSL.field("mailbox_uid_validity", BIGINT.notNull());
         Field<String> USER_NAME = DSL.field("user_name", SQLDataType.VARCHAR(255));
         Field<String> MAILBOX_NAMESPACE = DSL.field("mailbox_namespace", SQLDataType.VARCHAR(255).notNull());
-        Field<Long> MAILBOX_LAST_UID = DSL.field("mailbox_last_uid", SQLDataType.BIGINT);
-        Field<Long> MAILBOX_HIGHEST_MODSEQ = DSL.field("mailbox_highest_modseq", SQLDataType.BIGINT);
+        Field<Long> MAILBOX_LAST_UID = DSL.field("mailbox_last_uid", BIGINT);
+        Field<Long> MAILBOX_HIGHEST_MODSEQ = DSL.field("mailbox_highest_modseq", BIGINT);
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
-            .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
+            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(MAILBOX_ID, SQLDataType.UUID)
                 .column(MAILBOX_NAME)
                 .column(MAILBOX_UID_VALIDITY)

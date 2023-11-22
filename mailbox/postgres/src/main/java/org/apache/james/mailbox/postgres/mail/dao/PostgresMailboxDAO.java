@@ -19,18 +19,20 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
+import static org.apache.james.mailbox.postgres.PostgresMailboxIdFaker.getMailboxId;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_LAST_UID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAMESPACE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_UID_VALIDITY;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.USER_NAME;
+import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.count;
-
-import javax.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -54,7 +56,6 @@ public class PostgresMailboxDAO {
 
     private final PostgresExecutor postgresExecutor;
 
-    @Inject
     public PostgresMailboxDAO(PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
@@ -139,5 +140,22 @@ public class PostgresMailboxDAO {
     private Mailbox asMailbox(Record record) {
         return new Mailbox(new MailboxPath(record.get(MAILBOX_NAMESPACE), Username.of(record.get(USER_NAME)), record.get(MAILBOX_NAME)),
             UidValidity.of(record.get(MAILBOX_UID_VALIDITY)), PostgresMailboxId.of(record.get(MAILBOX_ID)));
+    }
+
+    public Mono<MessageUid> findLastUidByMailboxId(MailboxId mailboxId) {
+        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(MAILBOX_LAST_UID)
+                .from(TABLE_NAME)
+                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))))
+            .flatMap(record -> Mono.justOrEmpty(record.get(MAILBOX_LAST_UID)))
+            .map(MessageUid::of);
+    }
+
+    public Mono<MessageUid> incrementAndGetLastUid(MailboxId mailboxId, int count) {
+        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
+                .set(MAILBOX_LAST_UID, coalesce(MAILBOX_LAST_UID, 0L).add(count))
+                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))
+                .returning(MAILBOX_LAST_UID)))
+            .map(record -> record.get(MAILBOX_LAST_UID))
+            .map(MessageUid::of);
     }
 }
