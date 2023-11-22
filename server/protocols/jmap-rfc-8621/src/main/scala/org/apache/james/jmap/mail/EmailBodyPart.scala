@@ -32,7 +32,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.james.jmap.api.model.Size
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
-import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN, of}
+import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MDN_TYPE, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN, of}
 import org.apache.james.jmap.mail.PartId.PartIdValue
 import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageResult}
 import org.apache.james.mime4j.Charsets.DEFAULT_CHARSET
@@ -69,6 +69,7 @@ case class PartId(value: PartIdValue) {
 object EmailBodyPart {
   val TEXT_PLAIN: Type = Type("text/plain")
   val TEXT_HTML: Type = Type("text/html")
+  val MDN_TYPE: Type = Type("message/disposition-notification")
   val MULTIPART_ALTERNATIVE: Type = Type("multipart/alternative")
   val FILENAME_PREFIX = "name"
 
@@ -320,7 +321,7 @@ case class EmailBodyPart(partId: PartId,
     Nil
   }
 
-  private val hasTextMediaType: Boolean = `type`.equals(TEXT_PLAIN) || `type`.equals(TEXT_HTML)
+  private val hasTextMediaType: Boolean = `type`.equals(TEXT_PLAIN) || `type`.equals(TEXT_HTML) || `type`.equals(MDN_TYPE)
   private val shouldBeDisplayedAsBody: Boolean = hasTextMediaType && !disposition.contains(Disposition.ATTACHMENT )
   private val shouldBeDisplayedAsBodyStrict: Boolean = hasTextMediaType && disposition.isEmpty && cid.isEmpty
   private val shouldBeDisplayedAsAttachment: Boolean = !shouldBeDisplayedAsBodyStrict && subParts.isEmpty
