@@ -26,7 +26,6 @@ import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -43,7 +42,7 @@ class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
     }
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
