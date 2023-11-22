@@ -21,14 +21,13 @@ package org.apache.james.modules.data;
 import java.io.FileNotFoundException;
 import java.util.Set;
 
-import javax.inject.Singleton;
-
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTableManager;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -38,6 +37,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
@@ -52,6 +53,7 @@ public class PostgresCommonModule extends AbstractModule {
     @Override
     public void configure() {
         Multibinder.newSetBinder(binder(), PostgresModule.class);
+        bind(PostgresExecutor.Factory.class).in(Scopes.SINGLETON);
     }
 
     @Provides
