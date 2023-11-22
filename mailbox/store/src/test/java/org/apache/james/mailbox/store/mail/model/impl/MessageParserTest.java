@@ -330,7 +330,7 @@ class MessageParserTest {
     }
 
     @Test
-    void mdnReportShouldBeConsideredAsAttachmentWhenDispositionContentType() throws Exception {
+    void mdnReportShouldNotBeConsideredAsAttachmentWhenDispositionContentType() throws Exception {
         Message message = MDN.builder()
             .humanReadableText("A little test")
             .report(MDNReport.builder()
@@ -350,7 +350,6 @@ class MessageParserTest {
 
         List<ParsedAttachment> result = testee.retrieveAttachments(new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)))
             .getAttachments();
-        assertThat(result).hasSize(1)
-            .allMatch(attachment -> attachment.getContentType().equals(ContentType.of("message/disposition-notification; charset=UTF-8")));
+        assertThat(result).isEmpty();
     }
 }

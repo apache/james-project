@@ -86,8 +86,7 @@ public class MessageParser {
             ContentDispositionField.DISPOSITION_TYPE_INLINE.toLowerCase(Locale.US));
     private static final String TEXT_CALENDAR = "text/calendar";
     private static final ImmutableList<String> ATTACHMENT_CONTENT_TYPES = ImmutableList.of(
-        "application/pgp-signature",
-        "message/disposition-notification");
+        "application/pgp-signature");
     private static final ImmutableList<String> ALLOWED_ATTACHMENT_CONTENT_TYPES = ImmutableList.<String>builder()
         .addAll(ATTACHMENT_CONTENT_TYPES)
         .add(TEXT_CALENDAR)
