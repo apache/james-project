@@ -33,7 +33,6 @@
         <class>org.apache.james.domainlist.jpa.model.JPADomain</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAUrl</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAMail</class>
-        <class>org.apache.james.user.jpa.model.JPAUser</class>
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
         <class>org.apache.james.sieve.jpa.model.JPASieveQuota</class>
         <class>org.apache.james.sieve.jpa.model.JPASieveScript</class>

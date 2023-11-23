@@ -17,48 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.user.jpa;
+package org.apache.james.user.postgres;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
 
-import org.apache.commons.configuration2.HierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 
-/**
- * JPA based UserRepository
- */
-public class JPAUsersRepository extends UsersRepositoryImpl<JPAUsersDAO> {
+public class PostgresUsersRepository extends UsersRepositoryImpl<PostgresUsersDAO> {
     @Inject
-    public JPAUsersRepository(DomainList domainList) {
-        super(domainList, new JPAUsersDAO());
-    }
-
-    /**
-     * Sets entity manager.
-     * 
-     * @param entityManagerFactory
-     *            the entityManager to set
-     */
-    @Inject
-    @PersistenceUnit(unitName = "James")
-    public final void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
-        usersDAO.setEntityManagerFactory(entityManagerFactory);
-    }
-
-    @PostConstruct
-    public void init() {
-        usersDAO.init();
-    }
-
-    @Override
-    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        usersDAO.configure(config);
-        super.configure(config);
+    public PostgresUsersRepository(DomainList domainList, PostgresUsersDAO usersDAO) {
+        super(domainList, usersDAO);
     }
 }
