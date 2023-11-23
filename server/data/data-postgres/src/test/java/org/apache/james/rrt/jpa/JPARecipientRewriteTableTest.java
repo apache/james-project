@@ -25,7 +25,8 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableContract;
-import org.apache.james.user.jpa.JPAUsersRepository;
+import org.apache.james.user.postgres.PostgresUsersDAO;
+import org.apache.james.user.postgres.PostgresUsersRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -49,7 +50,7 @@ class JPARecipientRewriteTableTest implements RecipientRewriteTableContract {
     public void createRecipientRewriteTable() {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        localVirtualUserTable.setUsersRepository(new JPAUsersRepository(mock(DomainList.class)));
+        localVirtualUserTable.setUsersRepository(new PostgresUsersRepository(mock(DomainList.class), mock(PostgresUsersDAO.class)));
         recipientRewriteTable = localVirtualUserTable;
     }
 
