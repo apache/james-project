@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.postgres.quota;
 
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
 import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -41,22 +40,23 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaType;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.Limits;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.quota.QuotaCodec;
 
 import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
-
+public class PostgresPerUserMaxQuotaManager implements MaxQuotaManager {
     private static final String GLOBAL_IDENTIFIER = "global";
 
-    private final CassandraQuotaLimitDao cassandraQuotaLimitDao;
+    private final PostgresQuotaLimitDAO postgresQuotaLimitDAO;
 
     @Inject
-    public CassandraPerUserMaxQuotaManagerV2(CassandraQuotaLimitDao cassandraQuotaLimitDao) {
-        this.cassandraQuotaLimitDao = cassandraQuotaLimitDao;
+    public PostgresPerUserMaxQuotaManager(PostgresQuotaLimitDAO postgresQuotaLimitDAO) {
+        this.postgresQuotaLimitDAO = postgresQuotaLimitDAO;
     }
 
     @Override
@@ -66,13 +66,13 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> setMaxStorageReactive(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) {
-        return cassandraQuotaLimitDao.setQuotaLimit(QuotaLimit.builder()
-                .quotaScope(QuotaScope.USER)
-                .identifier(quotaRoot.getValue())
-                .quotaComponent(QuotaComponent.MAILBOX)
-                .quotaType(QuotaType.SIZE)
-                .quotaLimit(QuotaCodec.quotaValueToLong(maxStorageQuota))
-                .build());
+        return postgresQuotaLimitDAO.setQuotaLimit(QuotaLimit.builder()
+            .quotaScope(QuotaScope.USER)
+            .identifier(quotaRoot.getValue())
+            .quotaComponent(QuotaComponent.MAILBOX)
+            .quotaType(QuotaType.SIZE)
+            .quotaLimit(QuotaCodec.quotaValueToLong(maxStorageQuota))
+            .build());
     }
 
     @Override
@@ -82,13 +82,13 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> setMaxMessageReactive(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
-        return cassandraQuotaLimitDao.setQuotaLimit(QuotaLimit.builder()
-                .quotaScope(QuotaScope.USER)
-                .identifier(quotaRoot.getValue())
-                .quotaComponent(QuotaComponent.MAILBOX)
-                .quotaType(QuotaType.COUNT)
-                .quotaLimit(QuotaCodec.quotaValueToLong(maxMessageCount))
-                .build());
+        return postgresQuotaLimitDAO.setQuotaLimit(QuotaLimit.builder()
+            .quotaScope(QuotaScope.USER)
+            .identifier(quotaRoot.getValue())
+            .quotaComponent(QuotaComponent.MAILBOX)
+            .quotaType(QuotaType.COUNT)
+            .quotaLimit(QuotaCodec.quotaValueToLong(maxMessageCount))
+            .build());
     }
 
     @Override
@@ -98,13 +98,13 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> setDomainMaxMessageReactive(Domain domain, QuotaCountLimit count) {
-        return cassandraQuotaLimitDao.setQuotaLimit(QuotaLimit.builder()
-                .quotaScope(QuotaScope.DOMAIN)
-                .identifier(domain.asString())
-                .quotaComponent(QuotaComponent.MAILBOX)
-                .quotaType(QuotaType.COUNT)
-                .quotaLimit(QuotaCodec.quotaValueToLong(count))
-                .build());
+        return postgresQuotaLimitDAO.setQuotaLimit(QuotaLimit.builder()
+            .quotaScope(QuotaScope.DOMAIN)
+            .identifier(domain.asString())
+            .quotaComponent(QuotaComponent.MAILBOX)
+            .quotaType(QuotaType.COUNT)
+            .quotaLimit(QuotaCodec.quotaValueToLong(count))
+            .build());
     }
 
     @Override
@@ -114,13 +114,13 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> setDomainMaxStorageReactive(Domain domain, QuotaSizeLimit size) {
-        return cassandraQuotaLimitDao.setQuotaLimit(QuotaLimit.builder()
-                .quotaScope(QuotaScope.DOMAIN)
-                .identifier(domain.asString())
-                .quotaComponent(QuotaComponent.MAILBOX)
-                .quotaType(QuotaType.SIZE)
-                .quotaLimit(QuotaCodec.quotaValueToLong(size))
-                .build());
+        return postgresQuotaLimitDAO.setQuotaLimit(QuotaLimit.builder()
+            .quotaScope(QuotaScope.DOMAIN)
+            .identifier(domain.asString())
+            .quotaComponent(QuotaComponent.MAILBOX)
+            .quotaType(QuotaType.SIZE)
+            .quotaLimit(QuotaCodec.quotaValueToLong(size))
+            .build());
     }
 
     @Override
@@ -130,7 +130,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeDomainMaxMessageReactive(Domain domain) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.COUNT));
+        return postgresQuotaLimitDAO.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.COUNT));
     }
 
     @Override
@@ -140,7 +140,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeDomainMaxStorageReactive(Domain domain) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.SIZE));
+        return postgresQuotaLimitDAO.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, domain.asString(), QuotaType.SIZE));
     }
 
     @Override
@@ -170,7 +170,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeMaxMessageReactive(QuotaRoot quotaRoot) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.COUNT));
+        return postgresQuotaLimitDAO.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.COUNT));
     }
 
     @Override
@@ -180,7 +180,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeMaxStorageReactive(QuotaRoot quotaRoot) {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.SIZE));
+        return postgresQuotaLimitDAO.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.USER, quotaRoot.getValue(), QuotaType.SIZE));
     }
 
     @Override
@@ -190,12 +190,12 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> setGlobalMaxStorageReactive(QuotaSizeLimit globalMaxStorage) {
-        return cassandraQuotaLimitDao.setQuotaLimit(QuotaLimit.builder()
-                .quotaScope(QuotaScope.GLOBAL).identifier(GLOBAL_IDENTIFIER)
-                .quotaComponent(QuotaComponent.MAILBOX)
-                .quotaType(QuotaType.SIZE)
-                .quotaLimit(QuotaCodec.quotaValueToLong(globalMaxStorage))
-                .build());
+        return postgresQuotaLimitDAO.setQuotaLimit(QuotaLimit.builder()
+            .quotaScope(QuotaScope.GLOBAL).identifier(GLOBAL_IDENTIFIER)
+            .quotaComponent(QuotaComponent.MAILBOX)
+            .quotaType(QuotaType.SIZE)
+            .quotaLimit(QuotaCodec.quotaValueToLong(globalMaxStorage))
+            .build());
     }
 
     @Override
@@ -205,7 +205,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeGlobalMaxStorageReactive() {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.SIZE));
+        return postgresQuotaLimitDAO.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.SIZE));
     }
 
     @Override
@@ -215,12 +215,12 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> setGlobalMaxMessageReactive(QuotaCountLimit globalMaxMessageCount) {
-        return cassandraQuotaLimitDao.setQuotaLimit(QuotaLimit.builder()
-                .quotaScope(QuotaScope.GLOBAL).identifier(GLOBAL_IDENTIFIER)
-                .quotaComponent(QuotaComponent.MAILBOX)
-                .quotaType(QuotaType.COUNT)
-                .quotaLimit(QuotaCodec.quotaValueToLong(globalMaxMessageCount))
-                .build());
+        return postgresQuotaLimitDAO.setQuotaLimit(QuotaLimit.builder()
+            .quotaScope(QuotaScope.GLOBAL).identifier(GLOBAL_IDENTIFIER)
+            .quotaComponent(QuotaComponent.MAILBOX)
+            .quotaType(QuotaType.COUNT)
+            .quotaLimit(QuotaCodec.quotaValueToLong(globalMaxMessageCount))
+            .build());
     }
 
     @Override
@@ -230,7 +230,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     @Override
     public Mono<Void> removeGlobalMaxMessageReactive() {
-        return cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.COUNT));
+        return postgresQuotaLimitDAO.deleteQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.GLOBAL, GLOBAL_IDENTIFIER, QuotaType.COUNT));
     }
 
     @Override
@@ -263,11 +263,11 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
         return Flux.merge(
             getMaxMessageReactive(QuotaScope.USER, quotaRoot.getValue())
                 .map(limit -> Pair.of(Quota.Scope.User, limit)),
-            Mono.justOrEmpty(quotaRoot.getDomain())
-                .flatMap(domain -> getMaxMessageReactive(QuotaScope.DOMAIN, domain.asString()))
-                .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
-            getGlobalMaxMessageReactive()
-                .map(limit -> Pair.of(Quota.Scope.Global, limit)))
+                Mono.justOrEmpty(quotaRoot.getDomain())
+                    .flatMap(domain -> getMaxMessageReactive(QuotaScope.DOMAIN, domain.asString()))
+                    .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
+                getGlobalMaxMessageReactive()
+                    .map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .collect(ImmutableMap.toImmutableMap(
                 Pair::getKey,
                 Pair::getValue));
@@ -283,11 +283,11 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
         return Flux.merge(
             getMaxStorageReactive(QuotaScope.USER, quotaRoot.getValue())
                 .map(limit -> Pair.of(Quota.Scope.User, limit)),
-            Mono.justOrEmpty(quotaRoot.getDomain())
-                .flatMap(domain -> getMaxStorageReactive(QuotaScope.DOMAIN, domain.asString()))
-                .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
-            getGlobalMaxStorageReactive()
-                .map(limit -> Pair.of(Quota.Scope.Global, limit)))
+                Mono.justOrEmpty(quotaRoot.getDomain())
+                    .flatMap(domain -> getMaxStorageReactive(QuotaScope.DOMAIN, domain.asString()))
+                    .map(limit -> Pair.of(Quota.Scope.Domain, limit)),
+                getGlobalMaxStorageReactive()
+                    .map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .collect(ImmutableMap.toImmutableMap(
                 Pair::getKey,
                 Pair::getValue));
@@ -303,15 +303,15 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
     public Mono<QuotaDetails> quotaDetailsReactive(QuotaRoot quotaRoot) {
         return Mono.zip(
             getLimits(QuotaScope.USER, quotaRoot.getValue()),
-            Mono.justOrEmpty(quotaRoot.getDomain()).flatMap(domain -> getLimits(QuotaScope.DOMAIN, domain.asString())).switchIfEmpty(Mono.just(Limits.empty())),
-            getLimits(QuotaScope.GLOBAL, GLOBAL_IDENTIFIER))
+                Mono.justOrEmpty(quotaRoot.getDomain()).flatMap(domain -> getLimits(QuotaScope.DOMAIN, domain.asString())).switchIfEmpty(Mono.just(Limits.empty())),
+                getLimits(QuotaScope.GLOBAL, GLOBAL_IDENTIFIER))
             .map(tuple -> new QuotaDetails(
                 countDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getCountLimit()),
                 sizeDetails(tuple.getT1(), tuple.getT2(), tuple.getT3().getSizeLimit())));
     }
 
     private Mono<Limits> getLimits(QuotaScope quotaScope, String identifier) {
-        return cassandraQuotaLimitDao.getQuotaLimits(QuotaComponent.MAILBOX, quotaScope, identifier)
+        return postgresQuotaLimitDAO.getQuotaLimits(QuotaComponent.MAILBOX, quotaScope, identifier)
             .collectList()
             .map(list -> {
                 Map<QuotaType, Optional<Long>> map = list.stream().collect(Collectors.toMap(QuotaLimit::getQuotaType, QuotaLimit::getQuotaLimit));
@@ -322,7 +322,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
     }
 
     private Mono<QuotaCountLimit> getMaxMessageReactive(QuotaScope quotaScope, String identifier) {
-        return cassandraQuotaLimitDao.getQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, quotaScope, identifier, QuotaType.COUNT))
+        return postgresQuotaLimitDAO.getQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, quotaScope, identifier, QuotaType.COUNT))
             .map(QuotaLimit::getQuotaLimit)
             .handle(publishIfPresent())
             .map(QuotaCodec::longToQuotaCount)
@@ -330,7 +330,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
     }
 
     public Mono<QuotaSizeLimit> getMaxStorageReactive(QuotaScope quotaScope, String identifier) {
-        return cassandraQuotaLimitDao.getQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, quotaScope, identifier, QuotaType.SIZE))
+        return postgresQuotaLimitDAO.getQuotaLimit(QuotaLimitKey.of(QuotaComponent.MAILBOX, quotaScope, identifier, QuotaType.SIZE))
             .map(QuotaLimit::getQuotaLimit)
             .handle(publishIfPresent())
             .map(QuotaCodec::longToQuotaSize)
@@ -339,7 +339,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     private Map<Quota.Scope, QuotaSizeLimit> sizeDetails(Limits userLimits, Limits domainLimits, Optional<QuotaSizeLimit> globalLimits) {
         return Stream.of(
-                userLimits.getSizeLimit().stream().map(limit -> Pair.of(Quota.Scope.User, limit)),
+            userLimits.getSizeLimit().stream().map(limit -> Pair.of(Quota.Scope.User, limit)),
                 domainLimits.getSizeLimit().stream().map(limit -> Pair.of(Quota.Scope.Domain, limit)),
                 globalLimits.stream().map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .flatMap(Function.identity())
@@ -350,7 +350,7 @@ public class CassandraPerUserMaxQuotaManagerV2 implements MaxQuotaManager {
 
     private Map<Quota.Scope, QuotaCountLimit> countDetails(Limits userLimits, Limits domainLimits, Optional<QuotaCountLimit> globalLimits) {
         return Stream.of(
-                userLimits.getCountLimit().stream().map(limit -> Pair.of(Quota.Scope.User, limit)),
+            userLimits.getCountLimit().stream().map(limit -> Pair.of(Quota.Scope.User, limit)),
                 domainLimits.getCountLimit().stream().map(limit -> Pair.of(Quota.Scope.Domain, limit)),
                 globalLimits.stream().map(limit -> Pair.of(Quota.Scope.Global, limit)))
             .flatMap(Function.identity())

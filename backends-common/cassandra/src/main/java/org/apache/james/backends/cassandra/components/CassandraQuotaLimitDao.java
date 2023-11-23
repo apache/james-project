@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaLimit;
+import org.apache.james.core.quota.QuotaLimitKey;
 import org.apache.james.core.quota.QuotaScope;
 import org.apache.james.core.quota.QuotaType;
 
@@ -53,68 +54,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraQuotaLimitDao {
-
-    public static class QuotaLimitKey {
-
-        public static QuotaLimitKey of(QuotaComponent component, QuotaScope scope, String identifier, QuotaType quotaType) {
-            return new QuotaLimitKey(component, scope, identifier, quotaType);
-        }
-
-        private final QuotaComponent quotaComponent;
-        private final QuotaScope quotaScope;
-        private final String identifier;
-        private final QuotaType quotaType;
-
-        public QuotaComponent getQuotaComponent() {
-            return quotaComponent;
-        }
-
-        public QuotaScope getQuotaScope() {
-            return quotaScope;
-        }
-
-        public String getIdentifier() {
-            return identifier;
-        }
-
-        public QuotaType getQuotaType() {
-            return quotaType;
-        }
-
-        private QuotaLimitKey(QuotaComponent quotaComponent, QuotaScope quotaScope, String identifier, QuotaType quotaType) {
-            this.quotaComponent = quotaComponent;
-            this.quotaScope = quotaScope;
-            this.identifier = identifier;
-            this.quotaType = quotaType;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(quotaComponent, quotaScope, identifier, quotaType);
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof QuotaLimitKey) {
-                QuotaLimitKey other = (QuotaLimitKey) o;
-                return Objects.equals(quotaComponent, other.quotaComponent)
-                    && Objects.equals(quotaScope, other.quotaScope)
-                    && Objects.equals(identifier, other.identifier)
-                    && Objects.equals(quotaType, other.quotaType);
-            }
-            return false;
-        }
-
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("quotaComponent", quotaComponent)
-                .add("quotaScope", quotaScope)
-                .add("identifier", identifier)
-                .add("quotaType", quotaType)
-                .toString();
-        }
-    }
-
     private final CassandraAsyncExecutor queryExecutor;
     private final PreparedStatement getQuotaLimitStatement;
     private final PreparedStatement getQuotaLimitsStatement;
@@ -203,7 +142,8 @@ public class CassandraQuotaLimitDao {
             .quotaScope(QuotaScope.of(row.get(QUOTA_SCOPE, String.class)))
             .identifier(row.get(IDENTIFIER, String.class))
             .quotaType(QuotaType.of(row.get(QUOTA_TYPE, String.class)))
-            .quotaLimit(row.get(QUOTA_LIMIT, Long.class)).build();
+            .quotaLimit(row.get(QUOTA_LIMIT, Long.class))
+            .build();
     }
 
 }

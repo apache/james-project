@@ -30,6 +30,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaLimit;
+import org.apache.james.core.quota.QuotaLimitKey;
 import org.apache.james.core.quota.QuotaScope;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaType;
@@ -93,7 +94,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> removeQuota() {
-        return limitDao.deleteQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(QUOTA_COMPONENT, QuotaScope.GLOBAL, GLOBAL, QuotaType.SIZE));
+        return limitDao.deleteQuotaLimit(QuotaLimitKey.of(QUOTA_COMPONENT, QuotaScope.GLOBAL, GLOBAL, QuotaType.SIZE));
     }
 
     @Override
@@ -117,7 +118,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> removeQuota(Username username) {
-        return limitDao.deleteQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(
+        return limitDao.deleteQuotaLimit(QuotaLimitKey.of(
             QUOTA_COMPONENT, QuotaScope.USER, username.asString(), QuotaType.SIZE));
     }
 
