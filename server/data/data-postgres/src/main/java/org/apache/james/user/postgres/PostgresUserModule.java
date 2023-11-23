@@ -16,18 +16,35 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.data;
 
-import org.apache.james.CoreDataModule;
+package org.apache.james.user.postgres;
 
-import com.google.inject.AbstractModule;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresTable;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Table;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
-public class JPADataModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        install(new CoreDataModule());
-        install(new JPADomainListModule());
-        install(new JPARecipientRewriteTableModule());
-        install(new JPAMailRepositoryModule());
+public interface PostgresUserModule {
+    interface PostgresUserTable {
+        Table<Record> TABLE_NAME = DSL.table("users");
+
+        Field<String> USERNAME = DSL.field("username", SQLDataType.VARCHAR(255).notNull());
+        Field<String> HASHED_PASSWORD = DSL.field("hashed_password", SQLDataType.VARCHAR.notNull());
+        Field<String> ALGORITHM = DSL.field("algorithm", SQLDataType.VARCHAR(100).notNull());
+
+        PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
+                .column(USERNAME)
+                .column(HASHED_PASSWORD)
+                .column(ALGORITHM)
+                .constraint(DSL.primaryKey(USERNAME))))
+            .disableRowLevelSecurity();
     }
+
+    PostgresModule MODULE = PostgresModule.builder()
+        .addTable(PostgresUserTable.TABLE)
+        .build();
 }
