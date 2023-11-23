@@ -16,32 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.user.jpa;
 
-import java.util.Optional;
+package org.apache.james.user.postgres;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.jpa.model.JPAUser;
 import org.apache.james.user.lib.UsersRepositoryContract;
-import org.junit.jupiter.api.AfterEach;
+import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JpaUsersRepositoryTest {
+import java.util.Optional;
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAUser.class);
+class PostgresUsersRepositoryTest {
+
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresUserModule.MODULE);
 
     @Nested
     class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingContract {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withVirtualHost();
 
-        private JPAUsersRepository usersRepository;
+        private UsersRepositoryImpl<PostgresUsersDAO> usersRepository;
         private TestSystem testSystem;
 
         @BeforeEach
@@ -51,7 +53,7 @@ class JpaUsersRepositoryTest {
         }
 
         @Override
-        public UsersRepository testee() {
+        public UsersRepositoryImpl<PostgresUsersDAO> testee() {
             return usersRepository;
         }
 
@@ -66,7 +68,7 @@ class JpaUsersRepositoryTest {
         @RegisterExtension
         UserRepositoryExtension extension = UserRepositoryExtension.withoutVirtualHosting();
 
-        private JPAUsersRepository usersRepository;
+        private UsersRepositoryImpl<PostgresUsersDAO> usersRepository;
         private TestSystem testSystem;
 
         @BeforeEach
@@ -76,7 +78,7 @@ class JpaUsersRepositoryTest {
         }
 
         @Override
-        public UsersRepository testee() {
+        public UsersRepositoryImpl<PostgresUsersDAO> testee() {
             return usersRepository;
         }
 
@@ -86,18 +88,15 @@ class JpaUsersRepositoryTest {
         }
     }
 
-    @AfterEach
-    void tearDown() {
-        JPA_TEST_CLUSTER.clear("JAMES_USER");
-    }
-
-    private static JPAUsersRepository getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
-        JPAUsersRepository repos = new JPAUsersRepository(domainList);
-        repos.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
+    private static UsersRepositoryImpl<PostgresUsersDAO> getUsersRepository(DomainList domainList, boolean enableVirtualHosting, Optional<Username> administrator) throws Exception {
+        PostgresUsersDAO usersDAO = new PostgresUsersDAO(new SinglePostgresConnectionFactory(postgresExtension.getConnection().block()),
+            PostgresUsersRepositoryConfiguration.DEFAULT);
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", String.valueOf(enableVirtualHosting));
         administrator.ifPresent(username -> configuration.addProperty("administratorId", username.asString()));
-        repos.configure(configuration);
-        return repos;
+
+        UsersRepositoryImpl<PostgresUsersDAO> usersRepository = new PostgresUsersRepository(domainList, usersDAO);
+        usersRepository.configure(configuration);
+        return usersRepository;
     }
 }
