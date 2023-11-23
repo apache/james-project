@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
+import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
 import static org.apache.james.mailbox.postgres.PostgresMailboxIdFaker.getMailboxId;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ACL;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_HIGHEST_MODSEQ;
@@ -54,7 +55,6 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.jooq.Record;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.postgres.extensions.types.Hstore;
 import org.slf4j.Logger;
@@ -69,7 +69,6 @@ import reactor.core.publisher.Mono;
 public class PostgresMailboxDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresMailboxDAO.class);
     private static final char SQL_WILDCARD_CHAR = '%';
-    private static final String DUPLICATE_VIOLATION_MESSAGE = "duplicate key value violates unique constraint";
     private static final Function<MailboxACL, Hstore> MAILBOX_ACL_TO_HSTORE_FUNCTION = acl -> Hstore.hstore(acl.getEntries()
         .entrySet()
         .stream()
@@ -105,10 +104,11 @@ public class PostgresMailboxDAO {
     public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
         final PostgresMailboxId mailboxId = PostgresMailboxId.generate();
 
-        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, MAILBOX_ID, MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE, MAILBOX_UID_VALIDITY)
-                .values(mailboxId.asUuid(), mailboxPath.getName(), mailboxPath.getUser().asString(), mailboxPath.getNamespace(), uidValidity.asLong())))
+        return postgresExecutor.executeVoid(dslContext ->
+                Mono.from(dslContext.insertInto(TABLE_NAME, MAILBOX_ID, MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE, MAILBOX_UID_VALIDITY)
+                    .values(mailboxId.asUuid(), mailboxPath.getName(), mailboxPath.getUser().asString(), mailboxPath.getNamespace(), uidValidity.asLong())))
             .thenReturn(new Mailbox(mailboxPath, uidValidity, mailboxId))
-            .onErrorMap(e -> e instanceof DataAccessException && e.getMessage().contains(DUPLICATE_VIOLATION_MESSAGE),
+            .onErrorMap(UNIQUE_CONSTRAINT_VIOLATION_PREDICATE,
                 e -> new MailboxExistsException(mailboxPath.getName()));
     }
 
