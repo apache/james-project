@@ -33,7 +33,6 @@ import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.UID;
 
 import java.util.stream.Stream;
 
-import org.apache.james.backends.opensearch.IndexCreationFactory;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.opensearch.client.opensearch._types.FieldSort;
