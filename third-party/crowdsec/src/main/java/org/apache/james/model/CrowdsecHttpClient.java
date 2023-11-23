@@ -21,7 +21,6 @@ package org.apache.james.model;
 
 import static org.apache.james.model.CrowdsecClientConfiguration.DEFAULT_TIMEOUT;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -35,6 +34,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.google.common.collect.ImmutableList;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import reactor.core.publisher.Mono;
@@ -72,7 +72,7 @@ public class CrowdsecHttpClient {
 
     private List<CrowdsecDecision> parseCrowdsecDecisions(String json) {
         if (noCrowdsecDecision(json)) {
-            return new ArrayList<>();
+            return ImmutableList.of();
         } else {
             try {
                 return mapper.readValue(json, new TypeReference<>() {});
