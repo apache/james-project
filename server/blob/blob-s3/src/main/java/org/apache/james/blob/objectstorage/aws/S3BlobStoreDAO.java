@@ -38,7 +38,11 @@ import javax.inject.Inject;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.blob.api.*;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStoreDAO;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;

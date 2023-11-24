@@ -17,15 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
-
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
-import org.apache.commons.lang3.StringUtils;
+package org.apache.james.blob.objectstorage.aws;
 
 import java.util.Objects;
 
-public final class ResolvedBucketName {
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+
+final class ResolvedBucketName {
     public static ResolvedBucketName of(String value) {
         return new ResolvedBucketName(value);
     }

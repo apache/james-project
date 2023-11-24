@@ -24,7 +24,6 @@ import java.util.Optional;
 import org.apache.james.blob.api.BucketName;
 
 import com.google.common.base.Preconditions;
-import org.apache.james.blob.api.ResolvedBucketName;
 
 public class BucketNameResolver {
     static class Builder {
