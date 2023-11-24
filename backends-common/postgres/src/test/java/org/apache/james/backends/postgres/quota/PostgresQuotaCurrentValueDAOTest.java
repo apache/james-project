@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO.QuotaKey;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaType;
@@ -36,7 +35,7 @@ class PostgresQuotaCurrentValueDAOTest {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
 
-    private static final QuotaKey QUOTA_KEY = QuotaKey.of(QuotaComponent.MAILBOX, "james@abc.com", QuotaType.SIZE);
+    private static final QuotaCurrentValue.Key QUOTA_KEY = QuotaCurrentValue.Key.of(QuotaComponent.MAILBOX, "james@abc.com", QuotaType.SIZE);
 
     private PostgresQuotaCurrentValueDAO postgresQuotaCurrentValueDAO;
 
@@ -91,12 +90,12 @@ class PostgresQuotaCurrentValueDAOTest {
     }
 
     @Test
-    void decreaseQuotaCurrentValueDownToNegativeShouldSetValueToZero() {
+    void decreaseQuotaCurrentValueDownToNegativeShouldAllowNegativeValue() {
         postgresQuotaCurrentValueDAO.increase(QUOTA_KEY, 100L).block();
         postgresQuotaCurrentValueDAO.decrease(QUOTA_KEY, 1000L).block();
 
         assertThat(postgresQuotaCurrentValueDAO.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue())
-            .isZero();
+            .isEqualTo(-900L);
     }
 
     @Test
@@ -109,7 +108,7 @@ class PostgresQuotaCurrentValueDAOTest {
 
     @Test
     void deleteQuotaCurrentValueShouldDeleteSuccessfully() {
-        QuotaKey quotaKey = QuotaKey.of(QuotaComponent.MAILBOX, "andre@abc.com", QuotaType.SIZE);
+        QuotaCurrentValue.Key quotaKey = QuotaCurrentValue.Key.of(QuotaComponent.MAILBOX, "andre@abc.com", QuotaType.SIZE);
         postgresQuotaCurrentValueDAO.increase(quotaKey, 100L).block();
         postgresQuotaCurrentValueDAO.deleteQuotaCurrentValue(quotaKey).block();
 
@@ -129,7 +128,7 @@ class PostgresQuotaCurrentValueDAOTest {
 
     @Test
     void getQuotasByComponentShouldGetAllQuotaTypesSuccessfully() {
-        QuotaKey countQuotaKey = QuotaKey.of(QuotaComponent.MAILBOX, "james@abc.com", QuotaType.COUNT);
+        QuotaCurrentValue.Key countQuotaKey = QuotaCurrentValue.Key.of(QuotaComponent.MAILBOX, "james@abc.com", QuotaType.COUNT);
 
         QuotaCurrentValue expectedQuotaSize = QuotaCurrentValue.builder().quotaComponent(QUOTA_KEY.getQuotaComponent())
             .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(100L).build();

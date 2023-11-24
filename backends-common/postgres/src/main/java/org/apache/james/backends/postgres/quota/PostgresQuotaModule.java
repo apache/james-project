@@ -25,6 +25,7 @@ import static org.jooq.impl.SQLDataType.BIGINT;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
+import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
@@ -39,13 +40,16 @@ public interface PostgresQuotaModule {
         Field<String> TYPE = DSL.field("type", SQLDataType.VARCHAR.notNull());
         Field<Long> CURRENT_VALUE = DSL.field(name(TABLE_NAME.getName(), "current_value"), BIGINT.notNull());
 
+        Name PRIMARY_KEY_CONSTRAINT_NAME = DSL.name("quota_current_value_primary_key");
+
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(IDENTIFIER)
                 .column(COMPONENT)
                 .column(TYPE)
                 .column(CURRENT_VALUE)
-                .constraint(DSL.primaryKey(IDENTIFIER, COMPONENT, TYPE))))
+                .constraint(DSL.constraint(PRIMARY_KEY_CONSTRAINT_NAME)
+                    .primaryKey(IDENTIFIER, COMPONENT, TYPE))))
             .disableRowLevelSecurity();
     }
 
