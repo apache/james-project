@@ -27,13 +27,14 @@ import javax.inject.Singleton;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.lib.DomainCreator;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 
 /**
  * Mimic the old behavior of JAMES
  */
 @Singleton
-public class XMLDomainList implements DomainList {
+public class XMLDomainList implements DomainList, DomainCreator.SkipDomainCreationMarker {
     private final DomainListConfiguration configuration;
 
     @Inject

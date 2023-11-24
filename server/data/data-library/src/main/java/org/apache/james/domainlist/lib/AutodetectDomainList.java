@@ -40,9 +40,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
-// TODO Binding guice + spring
-// TODO ecrire une factory et passer les classes utilitaires en package private
-public class AutodetectDomainList implements DomainList {
+class AutodetectDomainList implements DomainList {
     private static final Logger LOGGER = LoggerFactory.getLogger(AutodetectDomainList.class);
 
     enum DomainType {
@@ -54,7 +52,7 @@ public class AutodetectDomainList implements DomainList {
 
     private final DNSService dns;
     private final DomainList underlying;
-    private DomainListConfiguration configuration;
+    private final DomainListConfiguration configuration;
 
     public AutodetectDomainList(DNSService dns, DomainList underlying, DomainListConfiguration configuration) {
         this.dns = dns;

@@ -30,7 +30,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
-public class CachingDomainList implements DomainList {
+class CachingDomainList implements DomainList {
     private final DomainList underlying;
     private final LoadingCache<Domain, Boolean> cache;
 

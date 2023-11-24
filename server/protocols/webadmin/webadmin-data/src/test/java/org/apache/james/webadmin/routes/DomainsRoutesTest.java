@@ -45,9 +45,8 @@ import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.AutodetectDomainList;
-import org.apache.james.domainlist.lib.DomainCreator;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.lib.DomainListFactory;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -838,14 +837,12 @@ class DomainsRoutesTest {
             when(dnsService.getAllByName(any())).thenReturn(ImmutableList.of(InetAddress.getByName("172.45.62.13")));
             when(dnsService.getHostName(any())).thenReturn("james.local");
 
-            DomainListConfiguration configuration = new DomainListConfiguration.Transformer()
-                .apply(DomainListConfiguration.builder()
-                .autoDetect(true)
-                .autoDetectIp(true)
-                .defaultDomain(Domain.of("default.tld"))
-                .build());
-            DomainList domainList = new AutodetectDomainList(dnsService, new MemoryDomainList(), configuration);
-            new DomainCreator(domainList, configuration).createConfiguredDomains();
+            DomainList domainList = new DomainListFactory(dnsService, MemoryDomainList::new)
+                .createWithAllInitialisation(DomainListConfiguration.builder()
+                    .autoDetect(true)
+                    .autoDetectIp(true)
+                    .defaultDomain(Domain.of("default.tld"))
+                    .build());
             createServer(domainList);
         }
 

@@ -45,17 +45,17 @@ class AbstractDomainListPrivateMethodsTest {
     EnvDetector envDetector;
 
     public DomainList testee(DomainListConfiguration configuration) throws Exception {
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
-        return testee(new MyDomainList(newConfiguration), newConfiguration);
+        return new DomainListFactory(dnsService, MyDomainList::new)
+            .createWithAllInitialisation(configuration);
     }
 
     public DomainList testee(DomainListConfiguration.Builder configuration) throws Exception {
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration.build());
-        return testee(new MyDomainList(newConfiguration), newConfiguration);
+        return testee(configuration.build());
     }
 
     public DomainList testee(MyDomainList domainList, DomainListConfiguration configuration) throws Exception {
-        return new AutodetectDomainList(dnsService, domainList, configuration);
+        return new DomainListFactory(dnsService, MyDomainList::new)
+            .wrap(domainList, configuration);
     }
 
     @BeforeEach

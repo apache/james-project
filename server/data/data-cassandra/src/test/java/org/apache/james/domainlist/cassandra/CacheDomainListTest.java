@@ -29,8 +29,8 @@ import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.CachingDomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.lib.DomainListFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -52,15 +52,13 @@ class CacheDomainListTest {
 
     @BeforeEach
     public void setUp(CassandraCluster cassandra) throws Exception {
-        DomainListConfiguration configuration = DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .cacheEnabled(true)
-            .cacheExpiracy(Duration.ofSeconds(1))
-            .build();
-        CassandraDomainList cassandraDomainList = new CassandraDomainList(cassandra.getConf(), configuration);
-        domainList = new CachingDomainList(cassandraDomainList, configuration);
-        cassandraDomainList.configure(configuration);
+        domainList = new DomainListFactory(null, conf -> new CassandraDomainList(cassandra.getConf(), conf))
+            .create(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .cacheEnabled(true)
+                .cacheExpiracy(Duration.ofSeconds(1))
+                .build());
     }
 
     @Test

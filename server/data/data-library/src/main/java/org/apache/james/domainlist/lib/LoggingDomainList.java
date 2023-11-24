@@ -19,23 +19,16 @@
 
 package org.apache.james.domainlist.lib;
 
-import java.util.List;
-
-import org.apache.commons.configuration2.HierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.lifecycle.api.Configurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-public abstract class LoggingDomainList implements DomainList {
+class LoggingDomainList implements DomainList {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoggingDomainList.class);
 
     private final DomainList underlying;

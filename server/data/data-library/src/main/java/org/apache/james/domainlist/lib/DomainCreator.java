@@ -27,6 +27,10 @@ import com.github.fge.lambdas.Throwing;
 import javax.inject.Inject;
 
 public class DomainCreator implements Startable {
+    public interface SkipDomainCreationMarker {
+
+    }
+
     private final DomainList domainList;
     private final DomainListConfiguration configuration;
 
@@ -37,6 +41,9 @@ public class DomainCreator implements Startable {
     }
 
     public void createConfiguredDomains() {
+        if (domainList instanceof SkipDomainCreationMarker) {
+            return;
+        }
         configuration.getConfiguredDomains().stream()
             .filter(Throwing.predicate((Domain domain) -> !domainList.containsDomain(domain)).sneakyThrow())
             .forEach(Throwing.consumer(domainList::addDomain).sneakyThrow());
