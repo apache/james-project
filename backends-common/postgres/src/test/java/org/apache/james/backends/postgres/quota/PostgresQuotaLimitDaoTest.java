@@ -17,14 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.quota;
+package org.apache.james.backends.postgres.quota;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
-import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaLimit;
 import org.apache.james.core.quota.QuotaScope;
@@ -33,63 +28,56 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraQuotaLimitDaoTest {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    private CassandraQuotaLimitDao cassandraQuotaLimitDao;
+public class PostgresQuotaLimitDaoTest {
+
+    private PostgresQuotaLimitDAO postgresQuotaLimitDao;
 
     @RegisterExtension
-    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(CassandraMutualizedQuotaModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
 
     @BeforeEach
     void setup() {
-        cassandraQuotaLimitDao = new CassandraQuotaLimitDao(cassandraCluster.getCassandraCluster().getConf());
+        postgresQuotaLimitDao = new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor());
     }
 
     @Test
     void getQuotaLimitsShouldGetSomeQuotaLimitsSuccessfully() {
         QuotaLimit expectedOne = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(200l).build();
         QuotaLimit expectedTwo = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.SIZE).quotaLimit(100l).build();
-        cassandraQuotaLimitDao.setQuotaLimit(expectedOne).block();
-        cassandraQuotaLimitDao.setQuotaLimit(expectedTwo).block();
+        postgresQuotaLimitDao.setQuotaLimit(expectedOne).block();
+        postgresQuotaLimitDao.setQuotaLimit(expectedTwo).block();
 
-        assertThat(cassandraQuotaLimitDao.getQuotaLimits(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A").collectList().block())
+        assertThat(postgresQuotaLimitDao.getQuotaLimits(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A").collectList().block())
             .containsExactlyInAnyOrder(expectedOne, expectedTwo);
     }
 
     @Test
     void setQuotaLimitShouldSaveObjectSuccessfully() {
         QuotaLimit expected = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(100l).build();
-        cassandraQuotaLimitDao.setQuotaLimit(expected).block();
+        postgresQuotaLimitDao.setQuotaLimit(expected).block();
 
-        assertThat(cassandraQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
+        assertThat(postgresQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
             .isEqualTo(expected);
-    }
-
-    @Test
-    void setQuotaLimitWithEmptyQuotaLimitValueShouldNotThrowNullPointerException() {
-        QuotaLimit emptyQuotaLimitValue = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).build();
-        cassandraQuotaLimitDao.setQuotaLimit(emptyQuotaLimitValue).block();
-
-        assertThat(cassandraQuotaLimitDao.getQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
-            .isEqualTo(emptyQuotaLimitValue);
     }
 
     @Test
     void setQuotaLimitShouldSaveObjectSuccessfullyWhenLimitIsMinusOne() {
         QuotaLimit expected = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(-1l).build();
-        cassandraQuotaLimitDao.setQuotaLimit(expected).block();
+        postgresQuotaLimitDao.setQuotaLimit(expected).block();
 
-        assertThat(cassandraQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
+        assertThat(postgresQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
             .isEqualTo(expected);
     }
 
     @Test
     void deleteQuotaLimitShouldDeleteObjectSuccessfully() {
         QuotaLimit quotaLimit = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).quotaLimit(100l).build();
-        cassandraQuotaLimitDao.setQuotaLimit(quotaLimit).block();
-        cassandraQuotaLimitDao.deleteQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block();
+        postgresQuotaLimitDao.setQuotaLimit(quotaLimit).block();
+        postgresQuotaLimitDao.deleteQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block();
 
-        assertThat(cassandraQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
+        assertThat(postgresQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
             .isNull();
     }
 
