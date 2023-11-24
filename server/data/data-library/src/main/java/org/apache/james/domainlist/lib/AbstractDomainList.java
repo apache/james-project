@@ -64,20 +64,12 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         DetectedIp
     }
 
-    public static final String ENV_DOMAIN = "DOMAIN";
-
     private final DNSService dns;
-    private final EnvDetector envDetector;
     private DomainListConfiguration configuration;
     private Domain defaultDomain;
 
-    public AbstractDomainList(DNSService dns, EnvDetector envDetector) {
-        this.dns = dns;
-        this.envDetector = envDetector;
-    }
-
     public AbstractDomainList(DNSService dns) {
-        this(dns, new EnvDetector());
+        this.dns = dns;
     }
 
     @Override
@@ -92,7 +84,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
         configureDefaultDomain(domainListConfiguration.getDefaultDomain());
 
-        addEnvDomain();
         addConfiguredDomains(domainListConfiguration.getConfiguredDomains());
     }
     
@@ -104,22 +95,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         domains.stream()
             .filter(Throwing.predicate((Domain domain) -> !containsDomainInternal(domain)).sneakyThrow())
             .forEach(Throwing.consumer(this::addDomain).sneakyThrow());
-    }
-
-
-    private void addEnvDomain() {
-        String envDomain = envDetector.getEnv(ENV_DOMAIN);
-        if (!Strings.isNullOrEmpty(envDomain)) {
-            try {
-                LOGGER.info("Adding environment defined domain {}", envDomain);
-                Domain domain = Domain.of(envDomain);
-                if (!containsDomain(domain)) {
-                    addDomain(domain);
-                }
-            } catch (DomainListException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     @VisibleForTesting void configureDefaultDomain(Domain defaultDomain) throws ConfigurationException {

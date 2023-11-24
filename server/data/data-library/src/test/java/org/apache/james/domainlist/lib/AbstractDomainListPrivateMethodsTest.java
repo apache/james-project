@@ -48,15 +48,15 @@ class AbstractDomainListPrivateMethodsTest {
     void setup() {
         dnsService = mock(DNSService.class);
         envDetector = mock(EnvDetector.class);
-        domainList = new MyDomainList(dnsService, envDetector);
+        domainList = new MyDomainList(dnsService);
     }
 
     private static class MyDomainList extends AbstractDomainList {
 
         private List<Domain> domains;
 
-        MyDomainList(DNSService dns, EnvDetector envDetector) {
-            super(dns, envDetector);
+        MyDomainList(DNSService dns) {
+            super(dns);
             this.domains = Lists.newArrayList();
         }
 
@@ -346,12 +346,12 @@ class AbstractDomainListPrivateMethodsTest {
     @Test
     void envDomainShouldBeAddedUponConfiguration() throws Exception {
         String envDomain = "env.tld";
-        when(envDetector.getEnv(AbstractDomainList.ENV_DOMAIN)).thenReturn(envDomain);
-
+        when(envDetector.getEnv(DomainListConfiguration.ENV_DOMAIN)).thenReturn(envDomain);
 
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
-            .autoDetectIp(false));
+            .autoDetectIp(false)
+            .addDomainFromEnv(envDetector));
 
         assertThat(domainList.containsDomain(Domain.of(envDomain))).isTrue();
     }
@@ -360,12 +360,13 @@ class AbstractDomainListPrivateMethodsTest {
     void envDomainShouldNotFailWhenDomainExists() throws Exception {
         String envDomain = "env.tld";
         domainList.addDomain(Domain.of(envDomain));
-        when(envDetector.getEnv(AbstractDomainList.ENV_DOMAIN)).thenReturn(envDomain);
+        when(envDetector.getEnv(DomainListConfiguration.ENV_DOMAIN)).thenReturn(envDomain);
 
 
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(true)
-            .autoDetectIp(false));
+            .autoDetectIp(false)
+            .addDomainFromEnv(envDetector));
 
         assertThat(domainList.containsDomain(Domain.of(envDomain))).isTrue();
     }
