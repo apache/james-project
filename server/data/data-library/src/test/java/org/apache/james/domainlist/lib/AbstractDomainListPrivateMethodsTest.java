@@ -55,7 +55,7 @@ class AbstractDomainListPrivateMethodsTest {
 
     public DomainList testee(MyDomainList domainList, DomainListConfiguration configuration) throws Exception {
         return new DomainListFactory(dnsService, MyDomainList::new)
-            .wrap(domainList, configuration);
+            .wrapWithAllCreation(domainList, configuration);
     }
 
     @BeforeEach

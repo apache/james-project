@@ -54,15 +54,21 @@ public class DomainListFactory {
         return domainList;
     }
 
-    public DomainList wrap(DomainList internalDomainList, DomainListConfiguration domainListConfiguration) {
+    private DomainList wrap(DomainList internalDomainList, DomainListConfiguration domainListConfiguration) {
         DomainList withCache = wrapWithCache(internalDomainList, domainListConfiguration);
         DomainList withAutoDetect = wrapWithAutoDetect(withCache, domainListConfiguration);
         return new LoggingDomainList(withAutoDetect);
     }
 
+    public DomainList wrapWithAllCreation(DomainList internalDomainList, DomainListConfiguration domainListConfiguration) {
+        DomainList domainList = wrap(internalDomainList, domainListConfiguration);
+        new DomainCreator(domainList, domainListConfiguration.withDefaultDomainApplied()).createConfiguredDomains();
+        return domainList;
+    }
+
     public DomainList createWithAllInitialisation(DomainListConfiguration domainListConfiguration) {
         DomainList domainList = create(domainListConfiguration);
-        new DomainCreator(domainList, domainListConfiguration).createConfiguredDomains();
+        new DomainCreator(domainList, domainListConfiguration.withDefaultDomainApplied()).createConfiguredDomains();
         return domainList;
     }
 }
