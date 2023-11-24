@@ -74,7 +74,7 @@ public class JPADomainList extends AbstractDomainList {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected List<Domain> getDomainListInternal() throws DomainListException {
+    public List<Domain> getDomains() throws DomainListException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try {
             List<String> resultList = entityManager
@@ -93,7 +93,7 @@ public class JPADomainList extends AbstractDomainList {
     }
 
     @Override
-    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
+    public boolean containsDomain(Domain domain) throws DomainListException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try {
             return containsDomainInternal(domain, entityManager);
@@ -128,7 +128,7 @@ public class JPADomainList extends AbstractDomainList {
     }
 
     @Override
-    public void doRemoveDomain(Domain domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {

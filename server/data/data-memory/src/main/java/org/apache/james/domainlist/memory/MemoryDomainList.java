@@ -32,7 +32,6 @@ import org.apache.james.domainlist.lib.AbstractDomainList;
 import com.google.common.collect.ImmutableList;
 
 public class MemoryDomainList extends AbstractDomainList {
-
     private final List<Domain> domains;
 
     @Inject
@@ -42,12 +41,12 @@ public class MemoryDomainList extends AbstractDomainList {
     }
 
     @Override
-    protected List<Domain> getDomainListInternal() {
+    public List<Domain> getDomains() {
         return ImmutableList.copyOf(domains);
     }
 
     @Override
-    protected boolean containsDomainInternal(Domain domain) {
+    public boolean containsDomain(Domain domain) {
         return domains.contains(domain);
     }
 
@@ -60,7 +59,7 @@ public class MemoryDomainList extends AbstractDomainList {
     }
 
     @Override
-    public void doRemoveDomain(Domain domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         if (!domains.remove(domain)) {
             throw new DomainListException(domain.name() + " was not found");
         }

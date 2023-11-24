@@ -66,7 +66,6 @@ class AbstractDomainListPrivateMethodsTest {
     }
 
     private static class MyDomainList extends AbstractDomainList {
-
         private List<Domain> domains;
 
         MyDomainList() {
@@ -74,7 +73,7 @@ class AbstractDomainListPrivateMethodsTest {
         }
 
         @Override
-        protected boolean containsDomainInternal(Domain domain) {
+        public boolean containsDomain(Domain domain) {
             return domains.contains(domain);
         }
 
@@ -87,12 +86,12 @@ class AbstractDomainListPrivateMethodsTest {
         }
 
         @Override
-        public void doRemoveDomain(Domain domain) {
+        public void removeDomain(Domain domain) {
             domains.remove(domain);
         }
 
         @Override
-        protected List<Domain> getDomainListInternal() {
+        public List<Domain> getDomains() {
             return domains;
         }
     }

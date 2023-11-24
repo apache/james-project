@@ -65,31 +65,4 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     public Domain getDefaultDomain() throws DomainListException {
         return configuration.getDefaultDomain();
     }
-
-    @Override
-    public boolean containsDomain(Domain domain) throws DomainListException {
-        return containsDomainInternal(domain);
-    }
-
-    @Override
-    public List<Domain> getDomains() throws DomainListException {
-        return getDomainListInternal();
-    }
-
-    @Override
-    public void removeDomain(Domain domain) throws DomainListException {
-        doRemoveDomain(domain);
-    }
-
-    /**
-     * Return domainList
-     *
-     * @return List
-     */
-    protected abstract List<Domain> getDomainListInternal() throws DomainListException;
-
-    protected abstract boolean containsDomainInternal(Domain domain) throws DomainListException;
-
-    protected abstract void doRemoveDomain(Domain domain) throws DomainListException;
-
 }

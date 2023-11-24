@@ -48,12 +48,12 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     }
 
     @Override
-    protected List<Domain> getDomainListInternal() {
+    public List<Domain> getDomains() {
         return new ArrayList<>(domainNames);
     }
 
     @Override
-    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
+    public boolean containsDomain(Domain domain) throws DomainListException {
         return domainNames.contains(domain);
     }
 
@@ -66,7 +66,7 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     }
 
     @Override
-    public void doRemoveDomain(Domain domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         if (isConfigured) {
             throw new DomainListException("Read-Only DomainList implementation");
         }
