@@ -29,67 +29,51 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * All implementations of the DomainList interface should extends this abstract
- * class
- */
-// TODO Binding guice + spring
-// TODO ecrire une factory et passer les classes utilitaires en package private
-public abstract class AbstractDomainList implements DomainList, Configurable {
-    private DomainListConfiguration configuration;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
-    public AbstractDomainList() {
+public abstract class LoggingDomainList implements DomainList {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingDomainList.class);
 
-    }
+    private final DomainList underlying;
 
-    // TODO kill meeeee
-    public AbstractDomainList(DNSService dns) {
-
+    public LoggingDomainList(DomainList underlying) {
+        this.underlying = underlying;
     }
 
     @Override
-    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        configure(DomainListConfiguration.from(config));
-    }
+    public ImmutableList<Domain> getDomains() throws DomainListException {
+        ImmutableSet<Domain> allDomains = ImmutableSet.copyOf(underlying.getDomains());
 
-    public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
-        this.configuration = domainListConfiguration;
-    }
+        if (LOGGER.isDebugEnabled()) {
+            for (Domain domain : allDomains) {
+                LOGGER.debug("Handling mail for: " + domain.name());
+            }
+        }
 
-    public void configure(DomainListConfiguration.Builder configurationBuilder) throws ConfigurationException {
-        configure(configurationBuilder.build());
-    }
-
-    @Override
-    public Domain getDefaultDomain() throws DomainListException {
-        return configuration.getDefaultDomain();
+        return ImmutableList.copyOf(allDomains);
     }
 
     @Override
     public boolean containsDomain(Domain domain) throws DomainListException {
-        return containsDomainInternal(domain);
+        return underlying.containsDomain(domain);
     }
 
     @Override
-    public List<Domain> getDomains() throws DomainListException {
-        return getDomainListInternal();
+    public void addDomain(Domain domain) throws DomainListException {
+        underlying.addDomain(domain);
     }
 
     @Override
     public void removeDomain(Domain domain) throws DomainListException {
-        doRemoveDomain(domain);
+        underlying.removeDomain(domain);
     }
 
-    /**
-     * Return domainList
-     *
-     * @return List
-     */
-    protected abstract List<Domain> getDomainListInternal() throws DomainListException;
-
-    protected abstract boolean containsDomainInternal(Domain domain) throws DomainListException;
-
-    protected abstract void doRemoveDomain(Domain domain) throws DomainListException;
-
+    @Override
+    public Domain getDefaultDomain() throws DomainListException {
+        return underlying.getDefaultDomain();
+    }
 }
