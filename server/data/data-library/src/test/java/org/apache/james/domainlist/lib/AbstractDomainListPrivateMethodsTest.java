@@ -146,10 +146,11 @@ class AbstractDomainListPrivateMethodsTest {
             .autoDetect(true)
             .autoDetectIp(true)
             .defaultDomain(expectedDefaultDomain)
-            .build();
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
-        MyDomainList myDomainList = new MyDomainList(newConfiguration);
-        DomainList domainList = testee(myDomainList, newConfiguration);
+            .build()
+            .withDefaultDomainApplied();
+
+        MyDomainList myDomainList = new MyDomainList(configuration);
+        DomainList domainList = testee(myDomainList, configuration);
 
         assertThat(domainList.getDomains()).containsOnlyOnce(expectedDefaultDomain);
     }
@@ -292,12 +293,12 @@ class AbstractDomainListPrivateMethodsTest {
             .autoDetect(false)
             .autoDetectIp(false)
             .defaultDomain(defaultDomain)
-            .build();
+            .build()
+            .withDefaultDomainApplied();
 
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
-        MyDomainList myDomainList = new MyDomainList(newConfiguration);
+        MyDomainList myDomainList = new MyDomainList(configuration);
         myDomainList.addDomain(domain);
-        DomainList domainList = testee(myDomainList, newConfiguration);
+        DomainList domainList = testee(myDomainList, configuration);
 
         assertThat(domainList.getDomains()).containsOnly(domain, defaultDomain);
     }
@@ -326,11 +327,11 @@ class AbstractDomainListPrivateMethodsTest {
         DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
-            .build();
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
-        MyDomainList myDomainList = new MyDomainList(newConfiguration);
+            .build()
+            .withDefaultDomainApplied();
+        MyDomainList myDomainList = new MyDomainList(configuration);
         myDomainList.addDomain(domain);
-        DomainList domainList = testee(myDomainList, newConfiguration);
+        DomainList domainList = testee(myDomainList, configuration);
 
         assertThat(domainList.containsDomain(domain)).isTrue();
     }
@@ -389,13 +390,13 @@ class AbstractDomainListPrivateMethodsTest {
             .autoDetect(true)
             .autoDetectIp(false)
             .addDomainFromEnv(envDetector)
-            .build();
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
-        MyDomainList myDomainList = new MyDomainList(newConfiguration);
+            .build()
+            .withDefaultDomainApplied();
+        MyDomainList myDomainList = new MyDomainList(configuration);
         myDomainList.addDomain(Domain.of(envDomain));
         when(envDetector.getEnv(DomainListConfiguration.ENV_DOMAIN)).thenReturn(envDomain);
 
-        DomainList domainList = testee(myDomainList, newConfiguration);
+        DomainList domainList = testee(myDomainList, configuration);
 
         assertThat(domainList.containsDomain(Domain.of(envDomain))).isTrue();
     }

@@ -28,62 +28,22 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
-import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class DomainListConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(DomainListConfiguration.class);
-
     public static final String ENV_DOMAIN = "DOMAIN";
 
-    public static class Transformer implements UnaryOperator<DomainListConfiguration> {
-        @Override
-        public DomainListConfiguration apply(DomainListConfiguration configuration) {
-            Domain newDefaultDomain = defaultDomain(configuration);
-
-            return DomainListConfiguration.builder()
-                .autoDetect(configuration.isAutoDetect())
-                .autoDetectIp(configuration.isAutoDetectIp())
-                .cacheEnabled(configuration.isCacheEnabled())
-                .cacheExpiracy(configuration.getCacheExpiracy())
-                .defaultDomain(newDefaultDomain)
-                .addConfiguredDomains(ImmutableList.<Domain>builder()
-                    .addAll(configuration.getConfiguredDomains())
-                    .add(configuration.getDefaultDomain())
-                    .add(newDefaultDomain)
-                    .build())
-                .build();
-        }
-
-        private Domain defaultDomain(DomainListConfiguration configuration) {
-            if (mayChangeDefaultDomain(configuration)) {
-                try {
-                    String hostName = InetAddress.getLocalHost().getHostName();
-                    return Domain.of(hostName);
-                } catch (UnknownHostException e) {
-                    LOGGER.warn("Unable to retrieve hostname.", e);
-                }
-            }
-            return configuration.getDefaultDomain();
-        }
-
-        private boolean mayChangeDefaultDomain(DomainListConfiguration configuration) {
-            return configuration.isAutoDetect() && Domain.LOCALHOST.equals(configuration.defaultDomain);
-        }
-    }
     public static class Builder {
         private Optional<Boolean> autoDetectIp;
         private Optional<Boolean> autoDetect;
@@ -257,6 +217,39 @@ public class DomainListConfiguration {
 
     public Duration getCacheExpiracy() {
         return cacheExpiracy;
+    }
+
+    public DomainListConfiguration withDefaultDomainApplied() {
+        Domain newDefaultDomain = defaultDomain();
+
+        return DomainListConfiguration.builder()
+            .autoDetect(isAutoDetect())
+            .autoDetectIp(isAutoDetectIp())
+            .cacheEnabled(isCacheEnabled())
+            .cacheExpiracy(getCacheExpiracy())
+            .defaultDomain(newDefaultDomain)
+            .addConfiguredDomains(ImmutableList.<Domain>builder()
+                .addAll(getConfiguredDomains())
+                .add(getDefaultDomain())
+                .add(newDefaultDomain)
+                .build())
+            .build();
+    }
+
+    private Domain defaultDomain() {
+        if (mayChangeDefaultDomain()) {
+            try {
+                String hostName = InetAddress.getLocalHost().getHostName();
+                return Domain.of(hostName);
+            } catch (UnknownHostException e) {
+                LOGGER.warn("Unable to retrieve hostname.", e);
+            }
+        }
+        return getDefaultDomain();
+    }
+
+    private boolean mayChangeDefaultDomain() {
+        return isAutoDetect() && Domain.LOCALHOST.equals(defaultDomain);
     }
 
     @Override

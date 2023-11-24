@@ -35,7 +35,7 @@ public class DomainListFactory {
     }
 
     public DomainList create(DomainListConfiguration domainListConfiguration) {
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(domainListConfiguration);
+        DomainListConfiguration newConfiguration = domainListConfiguration.withDefaultDomainApplied();
         DomainList internalDomainList = domainListFunction.apply(newConfiguration);
         return wrap(internalDomainList, newConfiguration);
     }
