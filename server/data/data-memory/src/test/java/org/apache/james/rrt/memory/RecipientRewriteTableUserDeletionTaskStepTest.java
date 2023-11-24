@@ -26,7 +26,6 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.RecipientRewriteTableUserDeletionTaskStep;
 import org.apache.james.rrt.lib.MappingSource;
@@ -44,7 +43,6 @@ class RecipientRewriteTableUserDeletionTaskStepTest {
     @BeforeEach
     void setUp() throws Exception {
         MemoryDomainList domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
 
         rrt = new MemoryRecipientRewriteTable();

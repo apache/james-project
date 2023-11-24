@@ -58,13 +58,7 @@ class JPADomainListTest implements DomainListContract {
         return jpaDomainList;
     }
 
-    private JPADomainList createDomainList() throws Exception {
-        JPADomainList jpaDomainList = new JPADomainList(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        jpaDomainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
-
-        return jpaDomainList;
+    private JPADomainList createDomainList() {
+        return new JPADomainList(JPA_TEST_CLUSTER.getEntityManagerFactory(), DomainListConfiguration.DEFAULT);
     }
 }

@@ -45,7 +45,6 @@ class MemoryRecipientRewriteTableTest implements RecipientRewriteTableContract {
     @Override
     public void createRecipientRewriteTable() throws Exception {
         MemoryDomainList domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.DEFAULT);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
         recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));
         recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);

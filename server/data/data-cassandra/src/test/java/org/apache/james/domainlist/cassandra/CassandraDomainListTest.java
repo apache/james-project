@@ -35,11 +35,7 @@ class CassandraDomainListTest implements DomainListContract {
 
     @BeforeEach
     public void setUp(CassandraCluster cassandra) throws Exception {
-        domainList = new CassandraDomainList(cassandra.getConf());
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
+        domainList = new CassandraDomainList(cassandra.getConf(), DomainListConfiguration.DEFAULT);
     }
 
     @Override

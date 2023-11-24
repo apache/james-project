@@ -19,7 +19,7 @@
 
 package org.apache.james.quota.search.scanning;
 
-import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -45,7 +45,7 @@ public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
             MemoryDomainList domainList = new MemoryDomainList();
-            domainList.configure(DomainListConfiguration.DEFAULT);
+            domainList.addDomain(Domain.LOCALHOST);
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
             QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();

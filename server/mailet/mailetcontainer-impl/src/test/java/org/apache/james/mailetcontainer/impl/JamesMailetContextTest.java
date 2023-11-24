@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailetcontainer.api.LocalResources;
@@ -40,7 +40,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 public class JamesMailetContextTest implements JamesMailetContextContract {
     @Override
-    public AbstractDomainList domainList() {
+    public DomainList domainList(DomainListConfiguration) {
         return domainList;
     }
 
@@ -80,7 +80,6 @@ public class JamesMailetContextTest implements JamesMailetContextContract {
     void setUp() throws Exception {
         DNSService dnsService = null;
         domainList = spy(new MemoryDomainList());
-        domainList.configure(DomainListConfiguration.DEFAULT);
 
         usersRepository = spy(MemoryUsersRepository.withVirtualHosting(domainList));
         recipientRewriteTable = spy(new MemoryRecipientRewriteTable());

@@ -31,10 +31,10 @@ import javax.persistence.PersistenceUnit;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,17 +45,24 @@ import com.google.common.collect.ImmutableList;
  * This implementation is compatible with the JDBCDomainList, meaning same
  * database schema can be reused.
  */
-public class JPADomainList extends AbstractDomainList {
+public class JPADomainList implements DomainList {
     private static final Logger LOGGER = LoggerFactory.getLogger(JPADomainList.class);
 
     /**
      * The entity manager to access the database.
      */
     private EntityManagerFactory entityManagerFactory;
+    private final DomainListConfiguration domainListConfiguration;
 
     @Inject
-    public JPADomainList(EntityManagerFactory entityManagerFactory) {
+    public JPADomainList(EntityManagerFactory entityManagerFactory, DomainListConfiguration domainListConfiguration) {
         this.entityManagerFactory = entityManagerFactory;
+        this.domainListConfiguration = domainListConfiguration;
+    }
+
+    @Override
+    public Domain getDefaultDomain() {
+        return domainListConfiguration.getDefaultDomain();
     }
 
     /**

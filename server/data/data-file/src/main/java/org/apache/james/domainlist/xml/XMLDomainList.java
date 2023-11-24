@@ -19,58 +19,50 @@
 
 package org.apache.james.domainlist.xml;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.lifecycle.api.Configurable;
 
 /**
  * Mimic the old behavior of JAMES
  */
 @Singleton
-public class XMLDomainList extends AbstractDomainList implements Configurable {
-    private final List<Domain> domainNames = new ArrayList<>();
-    private boolean isConfigured = false;
+public class XMLDomainList implements DomainList {
+    private final DomainListConfiguration configuration;
 
-    @Override
-    public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
-        super.configure(domainListConfiguration);
-        isConfigured = true;
+    @Inject
+    public XMLDomainList(DomainListConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
     public List<Domain> getDomains() {
-        return new ArrayList<>(domainNames);
+        return configuration.getConfiguredDomains();
     }
 
     @Override
     public boolean containsDomain(Domain domain) throws DomainListException {
-        return domainNames.contains(domain);
+        return configuration.getConfiguredDomains().contains(domain);
     }
 
     @Override
     public void addDomain(Domain domain) throws DomainListException {
-        if (isConfigured) {
-            throw new DomainListException("Read-Only DomainList implementation");
-        }
-        domainNames.add(domain);
+        throw new DomainListException("Read-Only DomainList implementation");
     }
 
     @Override
     public void removeDomain(Domain domain) throws DomainListException {
-        if (isConfigured) {
-            throw new DomainListException("Read-Only DomainList implementation");
-        }
-        domainNames.remove(domain);
+        throw new DomainListException("Read-Only DomainList implementation");
     }
 
+    @Override
+    public Domain getDefaultDomain() throws DomainListException {
+        return configuration.getDefaultDomain();
+    }
 }

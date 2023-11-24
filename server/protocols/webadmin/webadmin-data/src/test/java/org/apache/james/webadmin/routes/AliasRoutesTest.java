@@ -41,7 +41,6 @@ import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -109,7 +108,6 @@ class AliasRoutesTest {
         void setUp() throws Exception {
             memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
             domainList = new MemoryDomainList();
-            domainList.configure(DomainListConfiguration.DEFAULT);
             domainList.addDomain(DOMAIN);
             domainList.addDomain(ALIAS_DOMAIN);
             domainList.addDomain(DOMAIN_MAPPING);

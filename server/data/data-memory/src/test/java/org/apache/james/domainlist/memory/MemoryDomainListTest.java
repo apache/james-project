@@ -20,7 +20,6 @@
 package org.apache.james.domainlist.memory;
 
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.lib.DomainListContract;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -30,10 +29,6 @@ class MemoryDomainListTest implements DomainListContract {
     @BeforeEach
     void setUp() throws Exception {
         domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
     }
 
     @Override

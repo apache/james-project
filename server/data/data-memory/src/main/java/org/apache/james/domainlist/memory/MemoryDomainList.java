@@ -25,18 +25,27 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 
 import com.google.common.collect.ImmutableList;
 
-public class MemoryDomainList extends AbstractDomainList {
+// TODO Fix RecipientRewriteTableProcessorTest
+// TODO Fix JamesMailetContextContract
+public class MemoryDomainList implements DomainList {
     private final List<Domain> domains;
+    private final DomainListConfiguration configuration;
 
     @Inject
     public MemoryDomainList() {
+        this(DomainListConfiguration.DEFAULT);
+    }
+
+    @Inject
+    public MemoryDomainList(DomainListConfiguration configuration) {
         this.domains = new ArrayList<>();
+        this.configuration = configuration;
     }
 
     @Override
@@ -62,5 +71,10 @@ public class MemoryDomainList extends AbstractDomainList {
         if (!domains.remove(domain)) {
             throw new DomainListException(domain.name() + " was not found");
         }
+    }
+
+    @Override
+    public Domain getDefaultDomain() throws DomainListException {
+        return configuration.getDefaultDomain();
     }
 }

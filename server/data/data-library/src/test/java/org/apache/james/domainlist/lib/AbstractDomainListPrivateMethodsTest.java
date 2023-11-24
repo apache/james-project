@@ -45,17 +45,16 @@ class AbstractDomainListPrivateMethodsTest {
     EnvDetector envDetector;
 
     public DomainList testee(DomainListConfiguration configuration) throws Exception {
-        return testee(new MyDomainList(), configuration);
+        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
+        return testee(new MyDomainList(newConfiguration), newConfiguration);
     }
 
     public DomainList testee(DomainListConfiguration.Builder configuration) throws Exception {
-        return testee(new MyDomainList(), configuration.build());
+        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration.build());
+        return testee(new MyDomainList(newConfiguration), newConfiguration);
     }
 
     public DomainList testee(MyDomainList domainList, DomainListConfiguration configuration) throws Exception {
-        domainList.configure(configuration);
-        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
-        new DomainCreator(domainList, newConfiguration).createConfiguredDomains();
         return new AutodetectDomainList(dnsService, domainList, configuration);
     }
 
@@ -65,10 +64,12 @@ class AbstractDomainListPrivateMethodsTest {
         envDetector = mock(EnvDetector.class);
     }
 
-    private static class MyDomainList extends AbstractDomainList {
+    private static class MyDomainList implements DomainList {
+        private final DomainListConfiguration configuration;
         private List<Domain> domains;
 
-        MyDomainList() {
+        MyDomainList(DomainListConfiguration configuration) {
+            this.configuration = configuration;
             this.domains = Lists.newArrayList();
         }
 
@@ -93,6 +94,11 @@ class AbstractDomainListPrivateMethodsTest {
         @Override
         public List<Domain> getDomains() {
             return domains;
+        }
+
+        @Override
+        public Domain getDefaultDomain() {
+            return configuration.getDefaultDomain();
         }
     }
 
@@ -136,15 +142,14 @@ class AbstractDomainListPrivateMethodsTest {
     @Test
     void setDefaultDomainShouldNotCreateTwiceWhenCallingTwoTimes() throws Exception {
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
-        MyDomainList myDomainList = new MyDomainList();
         DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(true)
             .defaultDomain(expectedDefaultDomain)
             .build();
-        DomainList domainList = testee(myDomainList, configuration);
-
-        myDomainList.configure(configuration);
+        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
+        MyDomainList myDomainList = new MyDomainList(newConfiguration);
+        DomainList domainList = testee(myDomainList, newConfiguration);
 
         assertThat(domainList.getDomains()).containsOnlyOnce(expectedDefaultDomain);
     }
@@ -283,14 +288,16 @@ class AbstractDomainListPrivateMethodsTest {
         Domain defaultDomain = Domain.of("default.tld");
         Domain domain = Domain.of("added.tld");
 
-        MyDomainList myDomainList = new MyDomainList();
-        myDomainList.addDomain(domain);
-
-        DomainList domainList = testee(myDomainList, DomainListConfiguration.builder()
+        DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
             .defaultDomain(defaultDomain)
-            .build());
+            .build();
+
+        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
+        MyDomainList myDomainList = new MyDomainList(newConfiguration);
+        myDomainList.addDomain(domain);
+        DomainList domainList = testee(myDomainList, newConfiguration);
 
         assertThat(domainList.getDomains()).containsOnly(domain, defaultDomain);
     }
@@ -316,12 +323,14 @@ class AbstractDomainListPrivateMethodsTest {
     @Test
     void containsDomainShouldReturnTrueWhenDomainIsContained() throws Exception {
         Domain domain = Domain.of("added.tld");
-        MyDomainList myDomainList = new MyDomainList();
-        myDomainList.addDomain(domain);
-        DomainList domainList = testee(myDomainList, DomainListConfiguration.builder()
+        DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
-            .build());
+            .build();
+        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
+        MyDomainList myDomainList = new MyDomainList(newConfiguration);
+        myDomainList.addDomain(domain);
+        DomainList domainList = testee(myDomainList, newConfiguration);
 
         assertThat(domainList.containsDomain(domain)).isTrue();
     }
@@ -376,15 +385,17 @@ class AbstractDomainListPrivateMethodsTest {
     @Test
     void envDomainShouldNotFailWhenDomainExists() throws Exception {
         String envDomain = "env.tld";
-        MyDomainList myDomainList = new MyDomainList();
-        myDomainList.addDomain(Domain.of(envDomain));
-        when(envDetector.getEnv(DomainListConfiguration.ENV_DOMAIN)).thenReturn(envDomain);
-
-        DomainList domainList = testee(myDomainList, DomainListConfiguration.builder()
+        DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false)
             .addDomainFromEnv(envDetector)
-            .build());
+            .build();
+        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
+        MyDomainList myDomainList = new MyDomainList(newConfiguration);
+        myDomainList.addDomain(Domain.of(envDomain));
+        when(envDetector.getEnv(DomainListConfiguration.ENV_DOMAIN)).thenReturn(envDomain);
+
+        DomainList domainList = testee(myDomainList, newConfiguration);
 
         assertThat(domainList.containsDomain(Domain.of(envDomain))).isTrue();
     }

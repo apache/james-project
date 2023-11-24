@@ -31,7 +31,6 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -68,9 +67,6 @@ class ValidRcptHandlerTest {
     @BeforeEach
     void setUp() throws Exception {
         memoryDomainList = new MemoryDomainList();
-        memoryDomainList.configure(DomainListConfiguration.builder()
-            .defaultDomain(Domain.LOCALHOST)
-            .build());
         UsersRepository users = MemoryUsersRepository.withoutVirtualHosting(memoryDomainList);
         users.addUser(VALID_USER, PASSWORD);
 

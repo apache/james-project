@@ -40,7 +40,6 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jwt.OidcTokenFixture;
@@ -121,8 +120,6 @@ class SMTPSaslTest {
     @BeforeEach
     void setUp() throws Exception {
         domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.DEFAULT);
-
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
         usersRepository.addUser(USER, PASSWORD);

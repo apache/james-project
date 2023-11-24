@@ -35,10 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailPrioritySupport;
@@ -105,14 +103,14 @@ class RemoteDeliveryTest {
     private MemoryMailQueueFactory.MemoryCacheableMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp() throws ConfigurationException {
+    public void setUp() throws Exception {
         MemoryMailQueueFactory queueFactory = spy(new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory()));
         mailQueue = spy(queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME));
         when(queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME))
             .thenReturn(mailQueue);
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.builder().defaultDomain(JAMES_APACHE_ORG_DOMAIN));
+        domainList.addDomain(JAMES_APACHE_ORG_DOMAIN);
         remoteDelivery = new RemoteDelivery(dnsService, domainList,
             queueFactory, new RecordingMetricFactory(), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
     }

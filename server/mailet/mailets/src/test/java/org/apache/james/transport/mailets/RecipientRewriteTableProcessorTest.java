@@ -347,8 +347,4 @@ class RecipientRewriteTableProcessorTest {
         assertThat(mail.getRecipients()).isEmpty();
     }
 
-    private void defineDefaultDomain(String jamesLocal) throws ConfigurationException {
-        domainList.configure(DomainListConfiguration.builder().defaultDomain(Domain.of(jamesLocal)));
-    }
-
 }

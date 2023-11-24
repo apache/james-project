@@ -38,7 +38,6 @@ import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessageId;
@@ -150,9 +149,9 @@ public class SetMessagesUpdateProcessorTest {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 
         MemoryDomainList domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));
+
         recipientRewriteTable.setUsersRepository(withVirtualHosting(domainList));
         recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
         recipientRewriteTable.setDomainList(domainList);

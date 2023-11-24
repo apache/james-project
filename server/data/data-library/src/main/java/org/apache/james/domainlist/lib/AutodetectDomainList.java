@@ -46,6 +46,8 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
+// TODO Binding guice + spring
+// TODO ecrire une factory et passer les classes utilitaires en package private
 public class AutodetectDomainList implements DomainList {
     private static final Logger LOGGER = LoggerFactory.getLogger(AutodetectDomainList.class);
 

@@ -32,23 +32,24 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
-public class CassandraDomainList extends AbstractDomainList {
+public class CassandraDomainList implements DomainList {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement readAllStatement;
     private final PreparedStatement readStatement;
     private final PreparedStatement insertStatement;
     private final PreparedStatement removeStatement;
+    private final DomainListConfiguration configuration;
 
     @Inject
-    public CassandraDomainList(CqlSession session) {
+    public CassandraDomainList(CqlSession session, DomainListConfiguration configuration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.readAllStatement = session.prepare(selectFrom(TABLE_NAME)
             .column(DOMAIN)
@@ -68,6 +69,7 @@ public class CassandraDomainList extends AbstractDomainList {
             .whereColumn(DOMAIN).isEqualTo(bindMarker(DOMAIN))
             .ifExists()
             .build());
+        this.configuration = configuration;
     }
 
     @Override
@@ -106,4 +108,8 @@ public class CassandraDomainList extends AbstractDomainList {
         }
     }
 
+    @Override
+    public Domain getDefaultDomain() throws DomainListException {
+        return configuration.getDefaultDomain();
+    }
 }

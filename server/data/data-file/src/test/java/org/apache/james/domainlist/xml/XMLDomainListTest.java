@@ -63,15 +63,14 @@ class XMLDomainListTest {
     // See https://issues.apache.org/jira/browse/JAMES-998
     @Test
     void testNoConfiguredDomains() throws Exception {
-        XMLDomainList xmlDomainList = new XMLDomainList();
-
         DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
             .defaultDomain(DEFAULT_DOMAIN)
             .build();
+        XMLDomainList xmlDomainList = new XMLDomainList(configuration);
+
         DomainList domainList = new AutodetectDomainList(setUpDNSServer("localhost"), xmlDomainList, configuration);
-        xmlDomainList.configure(configuration);
 
 
         assertThat(domainList.getDomains()).containsOnly(DEFAULT_DOMAIN);
@@ -79,60 +78,56 @@ class XMLDomainListTest {
 
     @Test
     void testGetDomains() throws Exception {
-        XMLDomainList xmlDomainList = new XMLDomainList();
         DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
             .addConfiguredDomains(Domain.of("domain1"), Domain.of("domain2"))
             .defaultDomain(DEFAULT_DOMAIN)
             .build();
+        XMLDomainList xmlDomainList = new XMLDomainList(configuration);
         DomainList domainList = new AutodetectDomainList(setUpDNSServer("localhost"), xmlDomainList, configuration);
-        xmlDomainList.configure(configuration);
 
         assertThat(domainList.getDomains()).hasSize(3);
     }
 
     @Test
     void testGetDomainsAutoDetectNotLocalHost() throws Exception {
-        XMLDomainList xmlDomainList = new XMLDomainList();
         DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false)
             .addConfiguredDomains(Domain.of("domain1"))
             .defaultDomain(DEFAULT_DOMAIN)
             .build();
+        XMLDomainList xmlDomainList = new XMLDomainList(configuration);
         DomainList domainList = new AutodetectDomainList(setUpDNSServer("local"), xmlDomainList, configuration);
-        xmlDomainList.configure(configuration);
 
         assertThat(domainList.getDomains()).contains(Domain.of("local"));
     }
 
     @Test
     void testGetDomainsAutoDetectLocalHost() throws Exception {
-        XMLDomainList xmlDomainList = new XMLDomainList();
         DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)
             .addConfiguredDomains(Domain.of("domain1"))
             .defaultDomain(DEFAULT_DOMAIN)
             .build();
+        XMLDomainList xmlDomainList = new XMLDomainList(configuration);
         DomainList testee = new AutodetectDomainList(setUpDNSServer("localhost"), xmlDomainList, configuration);
-        xmlDomainList.configure(configuration);
 
         assertThat(testee.getDomains()).hasSize(2);
     }
 
     @Test
     void addDomainShouldFailWhenAlreadyConfigured() throws Exception {
-        XMLDomainList xmlDomainList = new XMLDomainList();
         DomainListConfiguration configuration = DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false)
             .addConfiguredDomain(DOMAIN_1)
             .defaultDomain(DEFAULT_DOMAIN)
             .build();
+        XMLDomainList xmlDomainList = new XMLDomainList(configuration);
         DomainList testee = new AutodetectDomainList(setUpDNSServer("hostname"), xmlDomainList, configuration);
-        xmlDomainList.configure(configuration);
 
         assertThatThrownBy(() -> testee.addDomain(Domain.of("newDomain")))
             .isInstanceOf(DomainListException.class);
@@ -145,9 +140,8 @@ class XMLDomainListTest {
             .autoDetectIp(false)
             .addConfiguredDomain(DOMAIN_1)
             .build();
-        XMLDomainList xmlDomainList = new XMLDomainList();
+        XMLDomainList xmlDomainList = new XMLDomainList(configuration);
         DomainList testee = new AutodetectDomainList(setUpDNSServer("localhost"), xmlDomainList, configuration);
-        xmlDomainList.configure(configuration);
 
         assertThatThrownBy(() -> testee.removeDomain(Domain.of("newDomain")))
             .isInstanceOf(DomainListException.class);
@@ -162,9 +156,8 @@ class XMLDomainListTest {
             .addConfiguredDomain(DOMAIN_1)
             .build();
 
-        XMLDomainList xmlDomainList = new XMLDomainList();
+        XMLDomainList xmlDomainList = new XMLDomainList(configuration);
         DomainList testee = new AutodetectDomainList(setUpDNSServer("localhost"), xmlDomainList, configuration);
-        xmlDomainList.configure(configuration);
 
         assertThat(testee.getDomains())
             .containsOnly(DOMAIN_1, Domain.LOCALHOST);

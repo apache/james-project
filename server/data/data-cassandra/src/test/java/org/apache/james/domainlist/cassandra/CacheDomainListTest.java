@@ -58,7 +58,7 @@ class CacheDomainListTest {
             .cacheEnabled(true)
             .cacheExpiracy(Duration.ofSeconds(1))
             .build();
-        CassandraDomainList cassandraDomainList = new CassandraDomainList(cassandra.getConf());
+        CassandraDomainList cassandraDomainList = new CassandraDomainList(cassandra.getConf(), configuration);
         domainList = new CachingDomainList(cassandraDomainList, configuration);
         cassandraDomainList.configure(configuration);
     }

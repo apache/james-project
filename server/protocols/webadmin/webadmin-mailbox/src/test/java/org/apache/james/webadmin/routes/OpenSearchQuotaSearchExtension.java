@@ -26,7 +26,6 @@ import org.apache.james.backends.opensearch.DockerOpenSearchSingleton;
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -68,7 +67,6 @@ public class OpenSearchQuotaSearchExtension implements ParameterResolver, Before
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
             MemoryDomainList domainList = new MemoryDomainList();
-            domainList.configure(DomainListConfiguration.DEFAULT);
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
             OpenSearchQuotaMailboxListener listener = new OpenSearchQuotaMailboxListener(

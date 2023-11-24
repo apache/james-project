@@ -19,7 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -45,7 +44,6 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
             MemoryDomainList domainList = new MemoryDomainList();
-            domainList.configure(DomainListConfiguration.DEFAULT);
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
 

@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.task.Hostname;
@@ -106,7 +105,6 @@ class UsernameChangeRoutesTest {
     @BeforeEach
     void setUpUsersRepo() throws Exception {
         MemoryDomainList domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
     }

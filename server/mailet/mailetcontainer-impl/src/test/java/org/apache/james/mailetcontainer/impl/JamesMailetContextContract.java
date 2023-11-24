@@ -36,8 +36,8 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.AbstractDomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -61,7 +61,11 @@ public interface JamesMailetContextContract {
     Username USERMAIL = Username.of(USERNAME + "@" + DOMAIN_COM.name());
     String PASSWORD = "password";
 
-    AbstractDomainList domainList();
+    DomainList domainList(DomainListConfiguration configuration);
+
+    default DomainList domainList() {
+        return domainList(DomainListConfiguration.DEFAULT);
+    }
 
     UsersRepository usersRepository();
 

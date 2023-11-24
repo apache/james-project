@@ -22,7 +22,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
@@ -41,9 +40,9 @@ public class CanSendFromImplTest implements CanSendFromContract {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 
         MemoryDomainList domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(DOMAIN);
         domainList.addDomain(OTHER_DOMAIN);
+
         recipientRewriteTable.setDomainList(domainList);
         recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));

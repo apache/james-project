@@ -27,7 +27,6 @@ import java.net.URLEncoder;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -49,7 +48,6 @@ class RegexMappingRoutesTest {
     @BeforeEach
     void beforeEach() throws Exception {
         MemoryDomainList domainList = new MemoryDomainList();
-        domainList.configure(DomainListConfiguration.DEFAULT);
         memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(domainList);
         domainList.addDomain(Domain.of("domain.tld"));

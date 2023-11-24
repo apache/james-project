@@ -25,6 +25,7 @@ import org.apache.james.DefaultVacationService;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.lib.DomainCreator;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailrepository.api.MailRepositoryFactory;
@@ -113,10 +114,10 @@ public class MemoryDataModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    InitializationOperation configureDomainList(DomainListConfiguration domainListConfiguration, MemoryDomainList memoryDomainList) {
+    InitializationOperation configureDomainList(DomainListConfiguration configuration, MemoryDomainList memoryDomainList) {
         return InitilizationOperationBuilder
-            .forClass(MemoryDomainList.class)
-            .init(() -> memoryDomainList.configure(domainListConfiguration));
+            .forClass(DomainCreator.class)
+            .init(() -> new DomainCreator(memoryDomainList, configuration).createConfiguredDomains());
     }
 
     @ProvidesIntoSet

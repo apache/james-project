@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.inmemory.mail.task;
 
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
@@ -45,10 +44,6 @@ class MemoryRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasS
     @BeforeEach
     void setUp() throws Exception {
         MemoryDomainList memoryDomainList = new MemoryDomainList();
-        memoryDomainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(memoryDomainList);
 
         resources = InMemoryIntegrationResources.defaultResources();

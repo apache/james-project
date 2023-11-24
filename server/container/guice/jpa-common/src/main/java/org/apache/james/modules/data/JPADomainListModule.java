@@ -20,6 +20,7 @@ package org.apache.james.modules.data;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.JPADomainList;
+import org.apache.james.domainlist.lib.DomainCreator;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -38,7 +39,7 @@ public class JPADomainListModule extends AbstractModule {
     @ProvidesIntoSet
     InitializationOperation configureDomainList(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
         return InitilizationOperationBuilder
-            .forClass(JPADomainList.class)
-            .init(() -> jpaDomainList.configure(configuration));
+            .forClass(DomainCreator.class)
+            .init(() -> new DomainCreator(jpaDomainList, configuration).createConfiguredDomains());
     }
 }
