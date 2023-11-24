@@ -54,6 +54,7 @@ class AbstractDomainListPrivateMethodsTest {
 
     public DomainList testee(MyDomainList domainList, DomainListConfiguration configuration) throws Exception {
         domainList.configure(configuration);
+        new DomainCreator(domainList, configuration).createConfiguredDomains();
         return new AutodetectDomainList(dnsService, domainList, configuration);
     }
 
