@@ -54,7 +54,8 @@ class AbstractDomainListPrivateMethodsTest {
 
     public DomainList testee(MyDomainList domainList, DomainListConfiguration configuration) throws Exception {
         domainList.configure(configuration);
-        new DomainCreator(domainList, configuration).createConfiguredDomains();
+        DomainListConfiguration newConfiguration = new DomainListConfiguration.Transformer().apply(configuration);
+        new DomainCreator(domainList, newConfiguration).createConfiguredDomains();
         return new AutodetectDomainList(dnsService, domainList, configuration);
     }
 
@@ -108,6 +109,7 @@ class AbstractDomainListPrivateMethodsTest {
         assertThat(domainList.getDefaultDomain()).isEqualTo(Domain.of(expectedDefaultDomain));
     }
 
+    // TODO fixme
     @Test
     void setDefaultDomainShouldSetFromHostnameWhenEqualsToLocalhost() throws Exception {
         DomainList domainList = testee(DomainListConfiguration.builder()

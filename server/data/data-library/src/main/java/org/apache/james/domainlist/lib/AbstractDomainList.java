@@ -34,7 +34,6 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -42,6 +41,8 @@ import com.google.common.collect.ImmutableSet;
  * All implementations of the DomainList interface should extends this abstract
  * class
  */
+// TODO Binding guice + spring
+// TODO ecrire une factory et passer les classes utilitaires en package private
 public abstract class AbstractDomainList implements DomainList, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
 
@@ -59,44 +60,18 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        DomainListConfiguration domainListConfiguration = DomainListConfiguration.from(config);
-
-        configure(domainListConfiguration);
+        configure(DomainListConfiguration.from(config));
     }
 
     public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
-        this.configuration = domainListConfiguration;
-
-        configureDefaultDomain(domainListConfiguration.getDefaultDomain());
+        setDefaultDomain(domainListConfiguration.getDefaultDomain());
     }
-    
+
     public void configure(DomainListConfiguration.Builder configurationBuilder) throws ConfigurationException {
         configure(configurationBuilder.build());
     }
 
-    @VisibleForTesting void configureDefaultDomain(Domain defaultDomain) throws ConfigurationException {
-        try {
-            setDefaultDomain(defaultDomain);
-
-            String hostName = InetAddress.getLocalHost().getHostName();
-            if (mayChangeDefaultDomain()) {
-                setDefaultDomain(Domain.of(hostName));
-            }
-        } catch (UnknownHostException e) {
-            LOGGER.warn("Unable to retrieve hostname.", e);
-        } catch (DomainListException e) {
-            LOGGER.error("An error occured while creating the default domain", e);
-        }
-    }
-
-    private boolean mayChangeDefaultDomain() {
-        return configuration.isAutoDetect() && Domain.LOCALHOST.equals(defaultDomain);
-    }
-
-    private void setDefaultDomain(Domain defaultDomain) throws DomainListException {
-        if (defaultDomain != null && !containsDomain(defaultDomain)) {
-            addDomain(defaultDomain);
-        }
+    private void setDefaultDomain(Domain defaultDomain) {
         this.defaultDomain = defaultDomain;
     }
 
