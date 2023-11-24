@@ -32,7 +32,6 @@ import org.apache.james.domainlist.lib.DomainListConfiguration;
 import com.google.common.collect.ImmutableList;
 
 // TODO Fix RecipientRewriteTableProcessorTest
-// TODO Fix JamesMailetContextContract
 public class MemoryDomainList implements DomainList {
     private final List<Domain> domains;
     private final DomainListConfiguration configuration;
