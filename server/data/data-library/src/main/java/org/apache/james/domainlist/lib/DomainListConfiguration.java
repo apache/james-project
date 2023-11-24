@@ -226,7 +226,7 @@ public class DomainListConfiguration {
     private final boolean cacheEnabled;
     private final Duration cacheExpiracy;
 
-    public DomainListConfiguration(boolean autoDetectIp, boolean autoDetect, Domain defaultDomain, List<Domain> configuredDomains, boolean cacheEnabled, Duration cacheExpiracy) {
+    private DomainListConfiguration(boolean autoDetectIp, boolean autoDetect, Domain defaultDomain, List<Domain> configuredDomains, boolean cacheEnabled, Duration cacheExpiracy) {
         this.autoDetectIp = autoDetectIp;
         this.autoDetect = autoDetect;
         this.defaultDomain = defaultDomain;

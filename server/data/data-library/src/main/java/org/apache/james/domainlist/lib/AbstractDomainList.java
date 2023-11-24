@@ -47,7 +47,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
 
     private DomainListConfiguration configuration;
-    private Domain defaultDomain;
 
     public AbstractDomainList() {
 
@@ -64,24 +63,16 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
-        setDefaultDomain(domainListConfiguration.getDefaultDomain());
+        this.configuration = domainListConfiguration;
     }
 
     public void configure(DomainListConfiguration.Builder configurationBuilder) throws ConfigurationException {
         configure(configurationBuilder.build());
     }
 
-    private void setDefaultDomain(Domain defaultDomain) {
-        this.defaultDomain = defaultDomain;
-    }
-
     @Override
     public Domain getDefaultDomain() throws DomainListException {
-        if (defaultDomain != null) {
-            return defaultDomain;
-        } else {
-            throw new DomainListException("Null default domain. Domain list might not be configured yet.");
-        }
+        return configuration.getDefaultDomain();
     }
 
     @Override
