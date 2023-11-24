@@ -93,7 +93,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> removeQuota() {
-        return limitDao.deleteQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(QUOTA_COMPONENT, QuotaScope.GLOBAL, GLOBAL, QuotaType.SIZE));
+        return limitDao.deleteQuotaLimit(QuotaLimit.QuotaLimitKey.of(QUOTA_COMPONENT, QuotaScope.GLOBAL, GLOBAL, QuotaType.SIZE));
     }
 
     @Override
@@ -117,7 +117,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> removeQuota(Username username) {
-        return limitDao.deleteQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(
+        return limitDao.deleteQuotaLimit(QuotaLimit.QuotaLimitKey.of(
             QUOTA_COMPONENT, QuotaScope.USER, username.asString(), QuotaType.SIZE));
     }
 
