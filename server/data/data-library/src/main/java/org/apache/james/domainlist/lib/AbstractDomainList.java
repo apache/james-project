@@ -68,7 +68,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     private final DNSService dns;
     private final EnvDetector envDetector;
-    private LoadingCache<Domain, Boolean> cache;
     private DomainListConfiguration configuration;
     private Domain defaultDomain;
 
@@ -90,15 +89,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
         this.configuration = domainListConfiguration;
-
-        this.cache = CacheBuilder.newBuilder()
-            .expireAfterWrite(configuration.getCacheExpiracy())
-            .build(new CacheLoader<>() {
-                @Override
-                public Boolean load(Domain key) throws DomainListException {
-                    return containsDomainInternal(key) || detectedDomainsContains(key);
-                }
-            });
 
         configureDefaultDomain(domainListConfiguration.getDefaultDomain());
 
@@ -169,19 +159,8 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @Override
     public boolean containsDomain(Domain domain) throws DomainListException {
-        if (configuration.isCacheEnabled()) {
-            try {
-                return cache.get(domain);
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof DomainListException) {
-                    throw (DomainListException) e.getCause();
-                }
-                throw new RuntimeException(e);
-            }
-        } else {
-            boolean internalAnswer = containsDomainInternal(domain);
-            return internalAnswer || detectedDomainsContains(domain);
-        }
+        boolean internalAnswer = containsDomainInternal(domain);
+        return internalAnswer || detectedDomainsContains(domain);
     }
 
     private boolean detectedDomainsContains(Domain domain) throws DomainListException {
@@ -197,11 +176,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         ImmutableSet<Domain> allDomains = domainsWithType.values()
             .stream()
             .collect(ImmutableSet.toImmutableSet());
-
-        if (configuration.isCacheEnabled()) {
-            domainsWithType.get(DomainType.Internal)
-                .forEach(domain -> cache.put(domain, true));
-        }
 
         if (LOGGER.isDebugEnabled()) {
             for (Domain domain : allDomains) {
