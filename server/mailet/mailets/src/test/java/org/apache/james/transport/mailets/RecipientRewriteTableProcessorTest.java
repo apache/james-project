@@ -31,7 +31,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
@@ -67,7 +66,7 @@ class RecipientRewriteTableProcessorTest {
 
     @BeforeEach
     void setup() throws Exception {
-        domainList = new MemoryDomainList(new InMemoryDNSService());
+        domainList = new MemoryDomainList();
         virtualTableStore = new MemoryRecipientRewriteTable();
         virtualTableStore.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
 

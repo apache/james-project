@@ -29,7 +29,7 @@ class MemoryDomainListTest implements DomainListContract {
 
     @BeforeEach
     void setUp() throws Exception {
-        domainList = new MemoryDomainList(getDNSServer("localhost"));
+        domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)

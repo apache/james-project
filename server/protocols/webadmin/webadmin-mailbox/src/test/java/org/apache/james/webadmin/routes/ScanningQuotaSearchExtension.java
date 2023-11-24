@@ -19,9 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import static org.mockito.Mockito.mock;
-
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -47,9 +44,7 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
         try {
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
-
-            DNSService dnsService = mock(DNSService.class);
-            MemoryDomainList domainList = new MemoryDomainList(dnsService);
+            MemoryDomainList domainList = new MemoryDomainList();
             domainList.configure(DomainListConfiguration.DEFAULT);
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 

@@ -79,7 +79,7 @@ public class JamesMailetContextTest implements JamesMailetContextContract {
     @BeforeEach
     void setUp() throws Exception {
         DNSService dnsService = null;
-        domainList = spy(new MemoryDomainList(dnsService));
+        domainList = spy(new MemoryDomainList());
         domainList.configure(DomainListConfiguration.DEFAULT);
 
         usersRepository = spy(MemoryUsersRepository.withVirtualHosting(domainList));

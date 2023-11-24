@@ -132,11 +132,7 @@ class LmtpServerTest {
             .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
             .registerMxRecord("examplebis.local", "127.0.0.1")
             .registerMxRecord("127.0.0.1", "127.0.0.1");
-        domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
+        domainList = new MemoryDomainList();
         domainList.addDomain(Domain.of("examplebis.local"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
         usersRepository.addUser(Username.of("bob@examplebis.local"), "pwd");

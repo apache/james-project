@@ -35,8 +35,7 @@ public class MemoryDomainList extends AbstractDomainList {
     private final List<Domain> domains;
 
     @Inject
-    public MemoryDomainList(DNSService dns) {
-        super(dns);
+    public MemoryDomainList() {
         this.domains = new ArrayList<>();
     }
 

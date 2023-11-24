@@ -221,8 +221,7 @@ class DeletedMessagesVaultRoutesTest {
     }
 
     private MemoryUsersRepository createUsersRepository() throws Exception {
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(DOMAIN);
 

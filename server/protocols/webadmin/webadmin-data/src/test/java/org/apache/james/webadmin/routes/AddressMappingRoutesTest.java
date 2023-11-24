@@ -58,8 +58,7 @@ class AddressMappingRoutesTest {
     @BeforeEach
     void setUp() throws Exception {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
 

@@ -22,11 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 
-import java.net.UnknownHostException;
-
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.junit.jupiter.api.Test;
@@ -149,14 +145,5 @@ public interface DomainListContract {
     default void removeDomainShouldThrowIfTheDomainIsAbsent() {
         assertThatThrownBy(() -> domainList().removeDomain(DOMAIN_1))
             .isInstanceOf(DomainListException.class);
-    }
-
-    /**
-     * Return a fake DNSServer.
-     */
-    default DNSService getDNSServer(final String hostName) throws UnknownHostException {
-        return new InMemoryDNSService()
-            .registerMxRecord(hostName, "127.0.0.1")
-            .registerMxRecord("127.0.0.1", "127.0.0.1");
     }
 }

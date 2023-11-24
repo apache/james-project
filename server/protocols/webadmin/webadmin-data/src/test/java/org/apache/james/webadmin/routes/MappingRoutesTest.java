@@ -22,13 +22,11 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.when;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.Mockito.mock;
 
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
@@ -66,8 +64,7 @@ class MappingRoutesTest {
     void setUp() throws Exception {
         JsonTransformer jsonTransformer = new JsonTransformer();
         recipientRewriteTable = new MemoryRecipientRewriteTable();
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
         domainList.addDomain(Domain.of("aliasdomain.tld"));

@@ -17,17 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
- package org.apache.james.rrt.memory;
+package org.apache.james.rrt.memory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.mock;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.RecipientRewriteTableUserDeletionTaskStep;
@@ -45,8 +43,7 @@ class RecipientRewriteTableUserDeletionTaskStepTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
 

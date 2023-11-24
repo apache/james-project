@@ -19,17 +19,10 @@
 
 package org.apache.james.webadmin.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.net.InetAddress;
 import java.util.Set;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
@@ -77,14 +70,7 @@ class DeleteUsersDataOfDomainTaskTest {
 
     @BeforeEach
     void setup() throws Exception {
-        DNSService dnsService = mock(DNSService.class);
-        when(dnsService.getHostName(any())).thenReturn("localhost");
-        when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.addDomain(DOMAIN_1);
         domainList.addDomain(DOMAIN_2);
 

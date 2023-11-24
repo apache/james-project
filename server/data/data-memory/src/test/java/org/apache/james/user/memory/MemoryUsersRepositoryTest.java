@@ -29,8 +29,6 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -41,10 +39,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryUsersRepositoryTest {
-
-    private static final String LOCALHOST = "localhost";
-    private static final String LOCALHOST_ADDRESS = "127.0.0.1";
-
     @Nested
     class WhenEnableVirtualHosting implements UsersRepositoryContract.WithVirtualHostingContract {
         @RegisterExtension
@@ -79,13 +73,7 @@ class MemoryUsersRepositoryTest {
 
         @Test
         void assertValidShouldNotThrowWhenDomainPartAndVirtualHosting() throws Exception {
-            MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
-                .registerMxRecord(LOCALHOST, LOCALHOST_ADDRESS)
-                .registerMxRecord(LOCALHOST_ADDRESS, LOCALHOST_ADDRESS));
-            domainList.configure(DomainListConfiguration.builder()
-                .autoDetect(false)
-                .autoDetectIp(false)
-                .build());
+            MemoryDomainList domainList = new MemoryDomainList();
             domainList.addDomain(Domain.of("domain.tld"));
 
             MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
@@ -96,13 +84,7 @@ class MemoryUsersRepositoryTest {
 
         @Test
         void assertValidShouldNotThrowWhenDomainPartAndDomainNotFound() throws Exception {
-            MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
-                .registerMxRecord(LOCALHOST, LOCALHOST_ADDRESS)
-                .registerMxRecord(LOCALHOST_ADDRESS, LOCALHOST_ADDRESS));
-            domainList.configure(DomainListConfiguration.builder()
-                .autoDetect(false)
-                .autoDetectIp(false)
-                .build());
+            MemoryDomainList domainList = new MemoryDomainList();
 
             MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 

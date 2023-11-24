@@ -19,13 +19,10 @@
 
 package org.apache.james.domainlist.lib;
 
-import java.util.List;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
@@ -40,11 +37,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     private DomainListConfiguration configuration;
 
     public AbstractDomainList() {
-
-    }
-
-    // TODO kill meeeee
-    public AbstractDomainList(DNSService dns) {
 
     }
 

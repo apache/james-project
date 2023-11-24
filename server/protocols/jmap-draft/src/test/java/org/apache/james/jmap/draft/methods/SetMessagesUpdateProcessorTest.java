@@ -37,7 +37,6 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -125,14 +124,6 @@ public class SetMessagesUpdateProcessorTest {
 
     private final CreationMessageId creationMessageId = CreationMessageId.of("dlkja");
 
-    private final SetMessagesRequest createMessageInOutbox = SetMessagesRequest.builder()
-        .create(
-            creationMessageId,
-            creationMessageBuilder
-                .mailboxId(OUTBOX_ID.serialize())
-                .from(CreationMessage.DraftEmailer.builder().name("user").email("user@example.com").build())
-                .build())
-        .build();
 
     private MailSpool mockedMailSpool;
     private SystemMailboxesProvider fakeSystemMailboxesProvider;
@@ -155,12 +146,10 @@ public class SetMessagesUpdateProcessorTest {
 
     @Before
     public void setUp() throws MailboxException, DomainListException, UnknownHostException, ConfigurationException {
-        BlobManager blobManager = mock(BlobManager.class);
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));

@@ -73,7 +73,7 @@ public class ExportServiceTestSystem {
         backup = createMailboxBackup();
         DNSService dnsService = createDnsService();
 
-        usersRepository = createUsersRepository(dnsService);
+        usersRepository = createUsersRepository();
 
         bobSession = mailboxManager.createSystemSession(BOB);
 
@@ -86,8 +86,8 @@ public class ExportServiceTestSystem {
             LocalFileBlobExportMechanism.Configuration.DEFAULT_CONFIGURATION);
     }
 
-    private MemoryUsersRepository createUsersRepository(DNSService dnsService) throws Exception {
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+    private MemoryUsersRepository createUsersRepository() throws Exception {
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 

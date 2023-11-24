@@ -19,10 +19,7 @@
 
 package org.apache.james.rrt.memory;
 
-import static org.mockito.Mockito.mock;
-
 import org.apache.james.UserEntityValidator;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -47,8 +44,7 @@ class MemoryRecipientRewriteTableTest implements RecipientRewriteTableContract {
 
     @Override
     public void createRecipientRewriteTable() throws Exception {
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
         recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));

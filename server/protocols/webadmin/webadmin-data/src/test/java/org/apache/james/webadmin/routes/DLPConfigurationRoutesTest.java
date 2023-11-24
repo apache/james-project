@@ -85,15 +85,7 @@ class DLPConfigurationRoutesTest {
 
     @BeforeEach
     void setup() throws Exception {
-        DNSService dnsService = mock(DNSService.class);
-        Mockito.when(dnsService.getHostName(any())).thenReturn("localhost");
-        Mockito.when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
-
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.addDomain(SENDER_DOMAIN);
         domainList.addDomain(SENDER_DOMAIN_2);
 

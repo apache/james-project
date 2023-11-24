@@ -105,8 +105,7 @@ class DeleteUserDataRoutesTest {
 
     @BeforeEach
     void setUpUsersRepo() throws Exception {
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);

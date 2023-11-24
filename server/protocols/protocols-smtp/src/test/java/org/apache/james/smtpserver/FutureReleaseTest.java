@@ -26,7 +26,6 @@ import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -97,7 +96,7 @@ class FutureReleaseTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        domainList = new MemoryDomainList(new InMemoryDNSService());
+        domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
 
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));

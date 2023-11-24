@@ -23,18 +23,14 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.json.DTOConverter;
-import org.apache.james.rrt.lib.Mapping;
-import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -109,8 +105,7 @@ class UsernameChangeRoutesTest {
 
     @BeforeEach
     void setUpUsersRepo() throws Exception {
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(Domain.of("domain.tld"));
         usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);

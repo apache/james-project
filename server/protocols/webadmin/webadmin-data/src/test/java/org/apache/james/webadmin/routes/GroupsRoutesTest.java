@@ -107,8 +107,7 @@ class GroupsRoutesTest {
         @BeforeEach
         void setUp() throws Exception {
             memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
-            DNSService dnsService = mock(DNSService.class);
-            domainList = new MemoryDomainList(dnsService);
+            domainList = new MemoryDomainList();
             domainList.configure(DomainListConfiguration.DEFAULT);
             domainList.addDomain(DOMAIN);
             domainList.addDomain(ALIAS_DOMAIN);

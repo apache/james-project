@@ -19,12 +19,9 @@
 
 package org.apache.james.rrt.lib;
 
-import static org.mockito.Mockito.mock;
-
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.AliasReverseResolver;
@@ -42,8 +39,7 @@ public class AliasReverseResolverImplTest implements AliasReverseResolverContrac
     void setup() throws Exception {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.DEFAULT);
         domainList.addDomain(DOMAIN);
         domainList.addDomain(OTHER_DOMAIN);

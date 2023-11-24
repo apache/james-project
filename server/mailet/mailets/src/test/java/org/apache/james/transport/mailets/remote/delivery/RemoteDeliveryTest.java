@@ -111,7 +111,7 @@ class RemoteDeliveryTest {
         when(queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME))
             .thenReturn(mailQueue);
         DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.configure(DomainListConfiguration.builder().defaultDomain(JAMES_APACHE_ORG_DOMAIN));
         remoteDelivery = new RemoteDelivery(dnsService, domainList,
             queueFactory, new RecordingMetricFactory(), RemoteDelivery.ThreadState.DO_NOT_START_THREADS);
