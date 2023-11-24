@@ -48,8 +48,7 @@ public class CassandraDomainList extends AbstractDomainList {
     private final PreparedStatement removeStatement;
 
     @Inject
-    public CassandraDomainList(DNSService dnsService, CqlSession session) {
-        super(dnsService);
+    public CassandraDomainList(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
         this.readAllStatement = session.prepare(selectFrom(TABLE_NAME)
             .column(DOMAIN)

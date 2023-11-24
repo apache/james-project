@@ -54,8 +54,7 @@ public class JPADomainList extends AbstractDomainList {
     private EntityManagerFactory entityManagerFactory;
 
     @Inject
-    public JPADomainList(DNSService dns, EntityManagerFactory entityManagerFactory) {
-        super(dns);
+    public JPADomainList(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
     }
 

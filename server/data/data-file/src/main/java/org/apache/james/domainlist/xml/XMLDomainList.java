@@ -38,14 +38,8 @@ import org.apache.james.lifecycle.api.Configurable;
  */
 @Singleton
 public class XMLDomainList extends AbstractDomainList implements Configurable {
-
     private final List<Domain> domainNames = new ArrayList<>();
     private boolean isConfigured = false;
-
-    @Inject
-    public XMLDomainList(DNSService dns) {
-        super(dns);
-    }
 
     @Override
     public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {

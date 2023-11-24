@@ -59,8 +59,7 @@ class JPADomainListTest implements DomainListContract {
     }
 
     private JPADomainList createDomainList() throws Exception {
-        JPADomainList jpaDomainList = new JPADomainList(getDNSServer("localhost"),
-            JPA_TEST_CLUSTER.getEntityManagerFactory());
+        JPADomainList jpaDomainList = new JPADomainList(JPA_TEST_CLUSTER.getEntityManagerFactory());
         jpaDomainList.configure(DomainListConfiguration.builder()
             .autoDetect(false)
             .autoDetectIp(false)

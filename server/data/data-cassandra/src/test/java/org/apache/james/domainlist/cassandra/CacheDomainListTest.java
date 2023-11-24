@@ -21,15 +21,12 @@ package org.apache.james.domainlist.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.UnknownHostException;
 import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.CachingDomainList;
@@ -61,7 +58,7 @@ class CacheDomainListTest {
             .cacheEnabled(true)
             .cacheExpiracy(Duration.ofSeconds(1))
             .build();
-        CassandraDomainList cassandraDomainList = new CassandraDomainList(getDNSServer("localhost"), cassandra.getConf());
+        CassandraDomainList cassandraDomainList = new CassandraDomainList(cassandra.getConf());
         domainList = new CachingDomainList(cassandraDomainList, configuration);
         cassandraDomainList.configure(configuration);
     }
@@ -127,11 +124,5 @@ class CacheDomainListTest {
         domainList.getDomains();
 
         assertThat(domainList.containsDomain(DOMAIN_1)).isEqualTo(true);
-    }
-
-    private DNSService getDNSServer(final String hostName) throws UnknownHostException {
-        return new InMemoryDNSService()
-            .registerMxRecord(hostName, "127.0.0.1")
-            .registerMxRecord("127.0.0.1", "127.0.0.1");
     }
 }
