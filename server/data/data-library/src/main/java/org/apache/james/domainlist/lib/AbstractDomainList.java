@@ -64,6 +64,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     }
 
+    // TODO kill meeeee
     public AbstractDomainList(DNSService dns) {
 
     }
