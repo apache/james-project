@@ -53,7 +53,30 @@ public interface PostgresQuotaModule {
             .disableRowLevelSecurity();
     }
 
+    interface PostgresQuotaLimitTable {
+        Table<Record> TABLE_NAME = DSL.table("quota_limit");
+
+        Field<String> QUOTA_SCOPE = DSL.field("quota_scope", SQLDataType.VARCHAR.notNull());
+        Field<String> IDENTIFIER = DSL.field("identifier", SQLDataType.VARCHAR.notNull());
+        Field<String> QUOTA_COMPONENT = DSL.field("quota_component", SQLDataType.VARCHAR.notNull());
+        Field<String> QUOTA_TYPE = DSL.field("quota_type", SQLDataType.VARCHAR.notNull());
+        Field<Long> QUOTA_LIMIT = DSL.field("quota_limit", SQLDataType.BIGINT);
+
+        Name PK_CONSTRAINT_NAME = DSL.name("quota_limit_pkey");
+
+        PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+            .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
+                .column(QUOTA_SCOPE)
+                .column(IDENTIFIER)
+                .column(QUOTA_COMPONENT)
+                .column(QUOTA_TYPE)
+                .column(QUOTA_LIMIT)
+                .constraint(DSL.constraint(PK_CONSTRAINT_NAME).primaryKey(QUOTA_SCOPE, IDENTIFIER, QUOTA_COMPONENT, QUOTA_TYPE))))
+            .supportsRowLevelSecurity();
+    }
+
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(PostgresQuotaCurrentValueTable.TABLE)
+        .addTable(PostgresQuotaLimitTable.TABLE)
         .build();
 }
