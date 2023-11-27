@@ -24,6 +24,7 @@ import jakarta.inject.Inject;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
+import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.core.quota.QuotaType;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
@@ -43,19 +44,19 @@ public class CassandraUploadUsageRepository implements UploadUsageRepository {
 
     @Override
     public Mono<Void> increaseSpace(Username username, QuotaSizeUsage usage) {
-        return cassandraQuotaCurrentValueDao.increase(CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE),
+        return cassandraQuotaCurrentValueDao.increase(QuotaCurrentValue.Key.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE),
             usage.asLong());
     }
 
     @Override
     public Mono<Void> decreaseSpace(Username username, QuotaSizeUsage usage) {
-        return cassandraQuotaCurrentValueDao.decrease(CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE),
+        return cassandraQuotaCurrentValueDao.decrease(QuotaCurrentValue.Key.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE),
             usage.asLong());
     }
 
     @Override
     public Mono<QuotaSizeUsage> getSpaceUsage(Username username) {
-        return cassandraQuotaCurrentValueDao.getQuotaCurrentValue(CassandraQuotaCurrentValueDao.QuotaKey.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE))
+        return cassandraQuotaCurrentValueDao.getQuotaCurrentValue(QuotaCurrentValue.Key.of(QuotaComponent.JMAP_UPLOADS, username.asString(), QuotaType.SIZE))
             .map(quotaCurrentValue -> QuotaSizeUsage.size(quotaCurrentValue.getCurrentValue())).defaultIfEmpty(DEFAULT_QUOTA_SIZE_USAGE);
     }
 
