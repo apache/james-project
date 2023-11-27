@@ -26,8 +26,6 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.events.EventBusTestFixture;
@@ -99,14 +97,12 @@ public class PostgresHostSystem extends JamesImapHostSystem {
     private JPAPerUserMaxQuotaManager maxQuotaManager;
     private OpenJPAMailboxManager mailboxManager;
     private final PostgresExtension postgresExtension;
-    private static JamesPostgresConnectionFactory postgresConnectionFactory;
     public PostgresHostSystem(PostgresExtension postgresExtension) {
         this.postgresExtension = postgresExtension;
     }
 
     public void beforeAll() {
         Preconditions.checkNotNull(postgresExtension.getConnectionFactory());
-        postgresConnectionFactory = new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory());
     }
 
     @Override
@@ -119,7 +115,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
             .driverName("driverName")
             .driverURL("driverUrl")
             .build();
-        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider, jpaConfiguration, postgresConnectionFactory);
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider, jpaConfiguration, postgresExtension.getExecutorFactory());
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
