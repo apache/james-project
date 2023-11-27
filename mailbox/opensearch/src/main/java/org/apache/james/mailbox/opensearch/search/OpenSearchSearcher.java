@@ -72,7 +72,7 @@ public class OpenSearchSearcher {
     private SearchRequest prepareSearch(Collection<MailboxId> mailboxIds, SearchQuery query, Optional<Integer> limit, List<String> fields) {
         List<SortOptions> sorts = query.getSorts()
             .stream()
-            .map(SortConverter::convertSort)
+            .flatMap(SortConverter::convertSort)
             .map(fieldSort -> new SortOptions.Builder().field(fieldSort).build())
             .collect(Collectors.toList());
 

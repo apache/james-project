@@ -19,7 +19,20 @@
 
 package org.apache.james.mailbox.opensearch.query;
 
-import org.apache.james.backends.opensearch.IndexCreationFactory;
+import static org.apache.james.backends.opensearch.IndexCreationFactory.RAW;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.CC;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.EMailer.ADDRESS;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.EMailer.NAME;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.FROM;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.MESSAGE_ID;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.SENT_DATE;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.SIZE;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.SUBJECT;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.TO;
+import static org.apache.james.mailbox.opensearch.json.JsonMessageConstants.UID;
+
+import java.util.stream.Stream;
+
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.json.JsonMessageConstants;
 import org.opensearch.client.opensearch._types.FieldSort;
@@ -30,36 +43,36 @@ public class SortConverter {
 
     private static final String PATH_SEPARATOR = ".";
 
-    public static FieldSort convertSort(SearchQuery.Sort sort) {
+    public static Stream<FieldSort> convertSort(SearchQuery.Sort sort) {
         return getSortClause(sort.getSortClause())
-            .order(getOrder(sort))
-            .mode(SortMode.Min)
-            .build();
+            .map(clause -> clause.order(getOrder(sort))
+                .mode(SortMode.Min)
+                .build());
     }
 
-    private static FieldSort.Builder getSortClause(SearchQuery.Sort.SortClause clause) {
+    private static Stream<FieldSort.Builder> getSortClause(SearchQuery.Sort.SortClause clause) {
         switch (clause) {
             case Arrival :
-                return new FieldSort.Builder().field(JsonMessageConstants.DATE);
+                return Stream.of(new FieldSort.Builder().field(JsonMessageConstants.DATE));
             case MailboxCc :
-                return new FieldSort.Builder().field(JsonMessageConstants.CC + PATH_SEPARATOR
-                    + JsonMessageConstants.EMailer.ADDRESS + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return Stream.of(new FieldSort.Builder().field(CC + PATH_SEPARATOR + NAME + PATH_SEPARATOR + RAW),
+                    new FieldSort.Builder().field(CC + PATH_SEPARATOR + ADDRESS + PATH_SEPARATOR + RAW));
             case MailboxFrom :
-                return new FieldSort.Builder().field(JsonMessageConstants.FROM + PATH_SEPARATOR
-                    + JsonMessageConstants.EMailer.ADDRESS + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return Stream.of(new FieldSort.Builder().field(FROM + PATH_SEPARATOR + NAME + PATH_SEPARATOR + RAW),
+                    new FieldSort.Builder().field(CC + PATH_SEPARATOR + ADDRESS + PATH_SEPARATOR + RAW));
             case MailboxTo :
-                return new FieldSort.Builder().field(JsonMessageConstants.TO + PATH_SEPARATOR
-                    + JsonMessageConstants.EMailer.ADDRESS + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return Stream.of(new FieldSort.Builder().field(TO + PATH_SEPARATOR + NAME + PATH_SEPARATOR + RAW),
+                    new FieldSort.Builder().field(CC + PATH_SEPARATOR + ADDRESS + PATH_SEPARATOR + RAW));
             case BaseSubject :
-                return new FieldSort.Builder().field(JsonMessageConstants.SUBJECT + PATH_SEPARATOR + IndexCreationFactory.RAW);
+                return Stream.of(new FieldSort.Builder().field(SUBJECT + PATH_SEPARATOR + RAW));
             case Size :
-                return new FieldSort.Builder().field(JsonMessageConstants.SIZE);
+                return Stream.of(new FieldSort.Builder().field(SIZE));
             case SentDate :
-                return new FieldSort.Builder().field(JsonMessageConstants.SENT_DATE);
+                return Stream.of(new FieldSort.Builder().field(SENT_DATE));
             case Uid :
-                return new FieldSort.Builder().field(JsonMessageConstants.UID);
+                return Stream.of(new FieldSort.Builder().field(UID));
             case Id:
-                return new FieldSort.Builder().field(JsonMessageConstants.MESSAGE_ID);
+                return Stream.of(new FieldSort.Builder().field(MESSAGE_ID));
             default:
                 throw new RuntimeException("Sort is not implemented");
         }
