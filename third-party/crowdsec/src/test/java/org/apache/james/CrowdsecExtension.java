@@ -28,9 +28,12 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
+import com.google.common.collect.ImmutableList;
+
 public class CrowdsecExtension implements GuiceModuleTestExtension {
     public static final Duration STARTUP_TIMEOUT = Duration.ofMinutes(5);
     public static final int CROWDSEC_PORT = 8080;
+    public static final int EXPOSED_PORT = 8082;
     public static final String CROWDSEC_IMAGE = "crowdsecurity/crowdsec:v1.5.4";
 
     private final GenericContainer<?> crowdsecContainer;
@@ -40,7 +43,7 @@ public class CrowdsecExtension implements GuiceModuleTestExtension {
             .withCreateContainerCmdModifier(cmd -> cmd.withName("james-crowdsec-test-" + UUID.randomUUID()))
             .withExposedPorts(CROWDSEC_PORT)
             .withStartupTimeout(STARTUP_TIMEOUT)
-            .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));;
+            .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
 
     @Override
