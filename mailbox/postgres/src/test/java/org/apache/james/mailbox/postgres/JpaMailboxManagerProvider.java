@@ -26,7 +26,6 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
@@ -65,8 +64,8 @@ public class JpaMailboxManagerProvider {
             .attachmentStorage(true)
             .build();
 
-        PostgresMailboxSessionMapperFactory mf = new PostgresMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory), new JPAModSeqProvider(entityManagerFactory), jpaConfiguration,
-            new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+        PostgresMailboxSessionMapperFactory mf = new PostgresMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory),
+            new JPAModSeqProvider(entityManagerFactory), jpaConfiguration, postgresExtension.getExecutorFactory());
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();

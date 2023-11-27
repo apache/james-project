@@ -19,11 +19,11 @@
 
 package org.apache.james.backends.postgres;
 
-import java.util.Optional;
+import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.lifecycle.api.Startable;
 import org.jooq.exception.DataAccessException;
@@ -43,10 +43,10 @@ public class PostgresTableManager implements Startable {
     private final boolean rowLevelSecurityEnabled;
 
     @Inject
-    public PostgresTableManager(JamesPostgresConnectionFactory postgresConnectionFactory,
+    public PostgresTableManager(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor,
                                 PostgresModule module,
                                 PostgresConfiguration postgresConfiguration) {
-        this.postgresExecutor = new PostgresExecutor(postgresConnectionFactory.getConnection(Optional.empty()));
+        this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurityEnabled = postgresConfiguration.rowLevelSecurityEnabled();
     }
