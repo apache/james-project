@@ -27,13 +27,15 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.postgres.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.postgres.JPAId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -42,6 +44,8 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 public class JPAMapperProvider implements MapperProvider {
 
@@ -53,7 +57,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public MailboxMapper createMailboxMapper() {
-        return new TransactionalMailboxMapper(new JPAMailboxMapper(jpaTestCluster.getEntityManagerFactory()));
+        return new PostgresMailboxMapper(new PostgresMailboxDAO(new PostgresExecutor(Mono.empty())));
     }
 
     @Override
