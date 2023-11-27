@@ -25,7 +25,6 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.backends.jpa.JPAConfiguration;
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.postgres.mail.JPAAnnotationMapper;
@@ -58,19 +57,20 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     private final JPAModSeqProvider modSeqProvider;
     private final AttachmentMapper attachmentMapper;
     private final JPAConfiguration jpaConfiguration;
-    private final JamesPostgresConnectionFactory postgresConnectionFactory;
+
+    private final PostgresExecutor.Factory executorFactory;
 
     @Inject
     public PostgresMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider,
                                                JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration,
-                                               JamesPostgresConnectionFactory postgresConnectionFactory) {
+                                               PostgresExecutor.Factory executorFactory) {
         this.entityManagerFactory = entityManagerFactory;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
         EntityManagerUtils.safelyClose(createEntityManager());
         this.attachmentMapper = new JPAAttachmentMapper(entityManagerFactory);
         this.jpaConfiguration = jpaConfiguration;
-        this.postgresConnectionFactory = postgresConnectionFactory;
+        this.executorFactory = executorFactory;
     }
 
     @Override
@@ -90,8 +90,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) {
-        return new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(new PostgresExecutor(
-            postgresConnectionFactory.getConnection(session.getUser().getDomainPart()))));
+        return new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(executorFactory.create(session.getUser().getDomainPart())));
     }
 
     /**

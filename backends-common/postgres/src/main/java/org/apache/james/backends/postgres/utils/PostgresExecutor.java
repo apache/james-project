@@ -41,6 +41,8 @@ import reactor.core.publisher.Mono;
 
 public class PostgresExecutor {
 
+    public static final String DEFAULT_INJECT = "default";
+
     public static class Factory {
 
         private final JamesPostgresConnectionFactory jamesPostgresConnectionFactory;
@@ -65,7 +67,7 @@ public class PostgresExecutor {
         .withStatementType(StatementType.PREPARED_STATEMENT);
     private final Mono<Connection> connection;
 
-    public PostgresExecutor(Mono<Connection> connection) {
+    private PostgresExecutor(Mono<Connection> connection) {
         this.connection = connection;
     }
 
