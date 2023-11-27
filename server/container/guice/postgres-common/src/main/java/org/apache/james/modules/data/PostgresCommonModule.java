@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
+import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+
 import java.io.FileNotFoundException;
 import java.util.Set;
 
@@ -41,6 +43,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import com.google.inject.name.Named;
 
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
@@ -95,10 +98,17 @@ public class PostgresCommonModule extends AbstractModule {
 
     @Provides
     @Singleton
-    PostgresTableManager postgresTableManager(JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
+    PostgresTableManager postgresTableManager(@Named(DEFAULT_INJECT) PostgresExecutor defaultPostgresExecutor,
                                               PostgresModule postgresModule,
                                               PostgresConfiguration postgresConfiguration) {
-        return new PostgresTableManager(jamesPostgresConnectionFactory, postgresModule, postgresConfiguration);
+        return new PostgresTableManager(defaultPostgresExecutor, postgresModule, postgresConfiguration);
+    }
+
+    @Provides
+    @Named(DEFAULT_INJECT)
+    @Singleton
+    PostgresExecutor defaultPostgresExecutor(PostgresExecutor.Factory factory) {
+        return factory.create();
     }
 
     @ProvidesIntoSet

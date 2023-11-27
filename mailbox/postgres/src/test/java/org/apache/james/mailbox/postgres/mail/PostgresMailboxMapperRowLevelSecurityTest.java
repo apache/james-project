@@ -44,9 +44,8 @@ public class PostgresMailboxMapperRowLevelSecurityTest {
 
     @BeforeEach
     public void setUp() {
-        mailboxMapperFactory = session -> new PostgresMailboxMapper(new PostgresMailboxDAO(new PostgresExecutor(
-            new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory())
-                .getConnection(session.getUser().getDomainPart()))));
+        PostgresExecutor.Factory executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+        mailboxMapperFactory = session -> new PostgresMailboxMapper(new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart())));
     }
 
     @Test
