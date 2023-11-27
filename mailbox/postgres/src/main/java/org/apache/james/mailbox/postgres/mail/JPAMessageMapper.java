@@ -53,6 +53,8 @@ import org.apache.james.mailbox.postgres.mail.model.openjpa.AbstractJPAMailboxMe
 import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.ModSeqProvider;
+import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.openjpa.persistence.ArgumentException;
 
@@ -71,11 +73,11 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private static final int UNLIMITED = -1;
 
     private final MessageUtils messageMetadataMapper;
-    private final JPAUidProvider uidProvider;
-    private final JPAModSeqProvider modSeqProvider;
+    private final UidProvider uidProvider;
+    private final ModSeqProvider modSeqProvider;
     private final JPAConfiguration jpaConfiguration;
 
-    public JPAMessageMapper(JPAUidProvider uidProvider, JPAModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory,
+    public JPAMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory,
                             JPAConfiguration jpaConfiguration) {
         super(entityManagerFactory);
         this.messageMetadataMapper = new MessageUtils(uidProvider, modSeqProvider);
@@ -336,12 +338,12 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.lastUid(mailbox, getEntityManager());
+        return uidProvider.lastUid(mailbox);
     }
 
     @Override
     public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
-        return modSeqProvider.highestModSeq(mailbox.getMailboxId(), getEntityManager());
+        return modSeqProvider.highestModSeq(mailbox.getMailboxId());
     }
 
     @Override

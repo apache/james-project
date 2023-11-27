@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
-import javax.inject.Inject;
-
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.Mailbox;
@@ -40,7 +38,6 @@ import reactor.core.publisher.Mono;
 public class PostgresMailboxMapper implements MailboxMapper {
     private final PostgresMailboxDAO postgresMailboxDAO;
 
-    @Inject
     public PostgresMailboxMapper(PostgresMailboxDAO postgresMailboxDAO) {
         this.postgresMailboxDAO = postgresMailboxDAO;
     }

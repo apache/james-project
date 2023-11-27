@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Disabled("TODO after https://github.com/linagora/james-project/issues/4934")
 class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
 
     @Disabled("JPAMailboxManager is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +

@@ -28,6 +28,7 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.events.EventBusTestFixture;
@@ -45,8 +46,6 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.JPAMailboxFixture;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
 import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaDAO;
 import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaManager;
@@ -113,17 +112,16 @@ public class PostgresHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
         EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
-        JPAUidProvider uidProvider = new JPAUidProvider(entityManagerFactory);
-        JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(entityManagerFactory);
         JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
             .driverName("driverName")
             .driverURL("driverUrl")
             .build();
-        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider, jpaConfiguration, postgresConnectionFactory);
+
+        PostgresExecutor.Factory executorFactory = new PostgresExecutor.Factory(postgresConnectionFactory);
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory, jpaConfiguration, executorFactory);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
-
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, eventBus);

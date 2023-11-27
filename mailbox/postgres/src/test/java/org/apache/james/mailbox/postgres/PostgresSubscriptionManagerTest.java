@@ -24,15 +24,13 @@ import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.SubscriptionManagerContract;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -42,7 +40,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
@@ -62,11 +60,10 @@ class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
             .driverURL("driverUrl")
             .build();
 
-        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
-            new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(entityManagerFactory),
-            jpaConfiguration,
-            new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+        DomainImplPostgresConnectionFactory postgresConnectionFactory = new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory());
+        PostgresExecutor.Factory executorFactory = new PostgresExecutor.Factory(postgresConnectionFactory);
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory, jpaConfiguration, executorFactory);
+
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
         subscriptionManager = new StoreSubscriptionManager(mapperFactory, mapperFactory, eventBus);
     }

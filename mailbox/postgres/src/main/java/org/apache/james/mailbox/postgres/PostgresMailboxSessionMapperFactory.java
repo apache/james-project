@@ -25,15 +25,15 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.backends.jpa.JPAConfiguration;
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.postgres.mail.JPAAnnotationMapper;
 import org.apache.james.mailbox.postgres.mail.JPAAttachmentMapper;
-import org.apache.james.mailbox.postgres.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.postgres.mail.JPAMessageMapper;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxMapper;
+import org.apache.james.mailbox.postgres.mail.PostgresModSeqProvider;
+import org.apache.james.mailbox.postgres.mail.PostgresUidProvider;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -54,33 +54,30 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
     private final EntityManagerFactory entityManagerFactory;
-    private final JPAUidProvider uidProvider;
-    private final JPAModSeqProvider modSeqProvider;
     private final AttachmentMapper attachmentMapper;
     private final JPAConfiguration jpaConfiguration;
-    private final JamesPostgresConnectionFactory postgresConnectionFactory;
+    private final PostgresExecutor.Factory executorFactory;
 
     @Inject
-    public PostgresMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider,
-                                               JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration,
-                                               JamesPostgresConnectionFactory postgresConnectionFactory) {
+    public PostgresMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory,
+                                               JPAConfiguration jpaConfiguration,
+                                               PostgresExecutor.Factory executorFactory) {
         this.entityManagerFactory = entityManagerFactory;
-        this.uidProvider = uidProvider;
-        this.modSeqProvider = modSeqProvider;
+        this.executorFactory = executorFactory;
         EntityManagerUtils.safelyClose(createEntityManager());
         this.attachmentMapper = new JPAAttachmentMapper(entityManagerFactory);
         this.jpaConfiguration = jpaConfiguration;
-        this.postgresConnectionFactory = postgresConnectionFactory;
     }
 
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession session) {
-        return new JPAMailboxMapper(entityManagerFactory);
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart()));
+        return new PostgresMailboxMapper(mailboxDAO);
     }
 
     @Override
     public MessageMapper createMessageMapper(MailboxSession session) {
-        return new JPAMessageMapper(uidProvider, modSeqProvider, entityManagerFactory, jpaConfiguration);
+        return new JPAMessageMapper(getUidProvider(session), getModSeqProvider(session), entityManagerFactory, jpaConfiguration);
     }
 
     @Override
@@ -90,8 +87,8 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) {
-        return new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(new PostgresExecutor(
-            postgresConnectionFactory.getConnection(session.getUser().getDomainPart()))));
+        PostgresSubscriptionDAO subscriptionDAO = new PostgresSubscriptionDAO(executorFactory.create(session.getUser().getDomainPart()));
+        return new PostgresSubscriptionMapper(subscriptionDAO);
     }
 
     /**
@@ -110,12 +107,12 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Override
     public UidProvider getUidProvider(MailboxSession session) {
-        return uidProvider;
+        return new PostgresUidProvider.Factory(executorFactory).create(session);
     }
 
     @Override
     public ModSeqProvider getModSeqProvider(MailboxSession session) {
-        return modSeqProvider;
+        return new PostgresModSeqProvider.Factory(executorFactory).create(session);
     }
 
     @Override

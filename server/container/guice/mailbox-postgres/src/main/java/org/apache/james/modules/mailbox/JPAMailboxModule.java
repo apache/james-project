@@ -44,8 +44,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.JPAAttachmentContentLoader;
 import org.apache.james.mailbox.postgres.JPAId;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
 import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
@@ -57,10 +55,8 @@ import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxSubscriptionListener;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
-import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.data.JPAEntityManagerModule;
@@ -87,8 +83,6 @@ public class JPAMailboxModule extends AbstractModule {
         bind(OpenJPAMailboxManager.class).in(Scopes.SINGLETON);
         bind(JVMMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(StoreSubscriptionManager.class).in(Scopes.SINGLETON);
-        bind(JPAModSeqProvider.class).in(Scopes.SINGLETON);
-        bind(JPAUidProvider.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
         bind(JPAId.Factory.class).in(Scopes.SINGLETON);
@@ -105,8 +99,6 @@ public class JPAMailboxModule extends AbstractModule {
         bind(MessageId.Factory.class).to(DefaultMessageId.Factory.class);
         bind(ThreadIdGuessingAlgorithm.class).to(NaiveThreadIdGuessingAlgorithm.class);
 
-        bind(ModSeqProvider.class).to(JPAModSeqProvider.class);
-        bind(UidProvider.class).to(JPAUidProvider.class);
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(MailboxPathLocker.class).to(JVMMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);

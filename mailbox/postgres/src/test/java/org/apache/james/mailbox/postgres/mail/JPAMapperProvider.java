@@ -27,13 +27,15 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.postgres.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.postgres.JPAId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -46,9 +48,11 @@ import com.google.common.collect.ImmutableList;
 public class JPAMapperProvider implements MapperProvider {
 
     private final JpaTestCluster jpaTestCluster;
+    private final PostgresExtension postgresExtension;
 
-    public JPAMapperProvider(JpaTestCluster jpaTestCluster) {
+    public JPAMapperProvider(JpaTestCluster jpaTestCluster, PostgresExtension postgresExtension) {
         this.jpaTestCluster = jpaTestCluster;
+        this.postgresExtension = postgresExtension;
     }
 
     @Override
@@ -66,8 +70,12 @@ public class JPAMapperProvider implements MapperProvider {
             .attachmentStorage(true)
             .build();
 
-        JPAMessageMapper messageMapper = new JPAMessageMapper(new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(entityManagerFactory),
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getPostgresExecutor());
+        PostgresUidProvider postgresUidProvider = new PostgresUidProvider(mailboxDAO);
+        PostgresModSeqProvider postgresModSeqProvider = new PostgresModSeqProvider(mailboxDAO);
+
+        JPAMessageMapper messageMapper = new JPAMessageMapper(postgresUidProvider,
+            postgresModSeqProvider,
             entityManagerFactory,
             jpaConfiguration);
 
