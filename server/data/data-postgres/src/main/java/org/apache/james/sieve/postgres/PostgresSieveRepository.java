@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.sieve.jpa;
+package org.apache.james.sieve.postgres;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -39,8 +39,7 @@ import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.sieve.jpa.model.JPASieveQuota;
-import org.apache.james.sieve.jpa.model.JPASieveScript;
+import org.apache.james.sieve.postgres.model.JPASieveScript;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -60,16 +59,17 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class JPASieveRepository implements SieveRepository {
+public class PostgresSieveRepository implements SieveRepository {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JPASieveRepository.class);
-    private static final String DEFAULT_SIEVE_QUOTA_USERNAME = "default.quota";
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresSieveRepository.class);
 
     private final TransactionRunner transactionRunner;
+    private final PostgresSieveQuotaDAO postgresSieveQuotaDAO;
 
     @Inject
-    public JPASieveRepository(EntityManagerFactory entityManagerFactory) {
+    public PostgresSieveRepository(EntityManagerFactory entityManagerFactory, PostgresSieveQuotaDAO postgresSieveQuotaDAO) {
         this.transactionRunner = new TransactionRunner(entityManagerFactory);
+        this.postgresSieveQuotaDAO = postgresSieveQuotaDAO;
     }
 
     @Override
@@ -85,10 +85,11 @@ public class JPASieveRepository implements SieveRepository {
         }
     }
 
-    private QuotaSizeLimit limitToUser(Username username) throws StorageException {
-        return findQuotaForUser(username.asString())
-            .or(Throwing.supplier(() -> findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)).sneakyThrow())
-            .map(JPASieveQuota::toQuotaSize)
+    private QuotaSizeLimit limitToUser(Username username) {
+        return postgresSieveQuotaDAO.getQuota(username)
+            .filter(Optional::isPresent)
+            .switchIfEmpty(postgresSieveQuotaDAO.getGlobalQuota())
+            .block()
             .orElse(QuotaSizeLimit.unlimited());
     }
 
@@ -99,7 +100,7 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public void putScript(Username username, ScriptName name, ScriptContent content) throws StorageException, QuotaExceededException {
+    public void putScript(Username username, ScriptName name, ScriptContent content) {
         transactionRunner.runAndHandleException(Throwing.<EntityManager>consumer(entityManager -> {
             try {
                 haveSpace(username, name, content.length());
@@ -117,7 +118,7 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public List<ScriptSummary> listScripts(Username username) throws StorageException {
+    public List<ScriptSummary> listScripts(Username username) {
         return findAllSieveScriptsForUser(username).stream()
                 .map(JPASieveScript::toSummary)
                 .collect(ImmutableList.toImmutableList());
@@ -128,7 +129,7 @@ public class JPASieveRepository implements SieveRepository {
         return Mono.fromCallable(() -> listScripts(username)).flatMapMany(Flux::fromIterable);
     }
 
-    private List<JPASieveScript> findAllSieveScriptsForUser(Username username) throws StorageException {
+    private List<JPASieveScript> findAllSieveScriptsForUser(Username username) {
         return transactionRunner.runAndRetrieveResult(entityManager -> {
             List<JPASieveScript> sieveScripts = entityManager.createNamedQuery("findAllByUsername", JPASieveScript.class)
                     .setParameter("username", username.asString()).getResultList();
@@ -137,26 +138,26 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public ZonedDateTime getActivationDateForActiveScript(Username username) throws StorageException, ScriptNotFoundException {
+    public ZonedDateTime getActivationDateForActiveScript(Username username) throws ScriptNotFoundException {
         Optional<JPASieveScript> script = findActiveSieveScript(username);
         JPASieveScript activeSieveScript = script.orElseThrow(() -> new ScriptNotFoundException("Unable to find active script for user " + username.asString()));
         return activeSieveScript.getActivationDateTime().toZonedDateTime();
     }
 
     @Override
-    public InputStream getActive(Username username) throws ScriptNotFoundException, StorageException {
+    public InputStream getActive(Username username) throws ScriptNotFoundException {
         Optional<JPASieveScript> script = findActiveSieveScript(username);
         JPASieveScript activeSieveScript = script.orElseThrow(() -> new ScriptNotFoundException("Unable to find active script for user " + username.asString()));
         return IOUtils.toInputStream(activeSieveScript.getScriptContent(), StandardCharsets.UTF_8);
     }
 
-    private Optional<JPASieveScript> findActiveSieveScript(Username username) throws StorageException {
+    private Optional<JPASieveScript> findActiveSieveScript(Username username) {
         return transactionRunner.runAndRetrieveResult(
                 Throwing.<EntityManager, Optional<JPASieveScript>>function(entityManager -> findActiveSieveScript(username, entityManager)).sneakyThrow(),
                 throwStorageException("Unable to find active script for user " + username.asString()));
     }
 
-    private Optional<JPASieveScript> findActiveSieveScript(Username username, EntityManager entityManager) throws StorageException {
+    private Optional<JPASieveScript> findActiveSieveScript(Username username, EntityManager entityManager) {
         try {
             JPASieveScript activeSieveScript = entityManager.createNamedQuery("findActiveByUsername", JPASieveScript.class)
                     .setParameter("username", username.asString()).getSingleResult();
@@ -168,7 +169,7 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public void setActive(Username username, ScriptName name) throws ScriptNotFoundException, StorageException {
+    public void setActive(Username username, ScriptName name) {
         transactionRunner.runAndHandleException(Throwing.<EntityManager>consumer(entityManager -> {
             try {
                 if (SieveRepository.NO_SCRIPT_NAME.equals(name)) {
@@ -196,13 +197,13 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public InputStream getScript(Username username, ScriptName name) throws ScriptNotFoundException, StorageException {
+    public InputStream getScript(Username username, ScriptName name) throws ScriptNotFoundException {
         Optional<JPASieveScript> script = findSieveScript(username, name);
         JPASieveScript sieveScript = script.orElseThrow(() -> new ScriptNotFoundException("Unable to find script " + name.getValue() + " for user " + username.asString()));
         return IOUtils.toInputStream(sieveScript.getScriptContent(), StandardCharsets.UTF_8);
     }
 
-    private Optional<JPASieveScript> findSieveScript(Username username, ScriptName scriptName) throws StorageException {
+    private Optional<JPASieveScript> findSieveScript(Username username, ScriptName scriptName) {
         return transactionRunner.runAndRetrieveResult(entityManager -> findSieveScript(username, scriptName, entityManager),
                 throwStorageException("Unable to find script " + scriptName.getValue() + " for user " + username.asString()));
     }
@@ -220,7 +221,7 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public void deleteScript(Username username, ScriptName name) throws ScriptNotFoundException, IsActiveException, StorageException {
+    public void deleteScript(Username username, ScriptName name) {
         transactionRunner.runAndHandleException(Throwing.<EntityManager>consumer(entityManager -> {
             Optional<JPASieveScript> sieveScript = findSieveScript(username, name, entityManager);
             if (!sieveScript.isPresent()) {
@@ -237,7 +238,7 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public void renameScript(Username username, ScriptName oldName, ScriptName newName) throws ScriptNotFoundException, DuplicateException, StorageException {
+    public void renameScript(Username username, ScriptName oldName, ScriptName newName) {
         transactionRunner.runAndHandleException(Throwing.<EntityManager>consumer(entityManager -> {
             Optional<JPASieveScript> sieveScript = findSieveScript(username, oldName, entityManager);
             if (!sieveScript.isPresent()) {
@@ -263,54 +264,56 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public boolean hasDefaultQuota() throws StorageException {
-        Optional<JPASieveQuota> defaultQuota = findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME);
-        return defaultQuota.isPresent();
+    public boolean hasDefaultQuota() {
+        return postgresSieveQuotaDAO.getGlobalQuota()
+            .block()
+            .isPresent();
     }
 
     @Override
-    public QuotaSizeLimit getDefaultQuota() throws QuotaNotFoundException, StorageException {
-        JPASieveQuota jpaSieveQuota = findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)
-                .orElseThrow(() -> new QuotaNotFoundException("Unable to find quota for default user"));
-        return QuotaSizeLimit.size(jpaSieveQuota.getSize());
+    public QuotaSizeLimit getDefaultQuota() throws QuotaNotFoundException {
+        return postgresSieveQuotaDAO.getGlobalQuota()
+            .block()
+            .orElseThrow(() -> new QuotaNotFoundException("Unable to find quota for default user"));
     }
 
     @Override
-    public void setDefaultQuota(QuotaSizeLimit quota) throws StorageException {
-        setQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME, quota);
+    public void setDefaultQuota(QuotaSizeLimit quota) {
+        postgresSieveQuotaDAO.setGlobalQuota(quota)
+            .block();
     }
 
     @Override
-    public void removeQuota() throws QuotaNotFoundException, StorageException {
-        removeQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME);
+    public void removeQuota() {
+        postgresSieveQuotaDAO.removeGlobalQuota()
+            .block();
     }
 
     @Override
-    public boolean hasQuota(Username username) throws StorageException {
-        Optional<JPASieveQuota> quotaForUser = findQuotaForUser(username.asString());
-        return quotaForUser.isPresent();
+    public boolean hasQuota(Username username) {
+        Mono<Boolean> hasUserQuota = postgresSieveQuotaDAO.getQuota(username).map(Optional::isPresent);
+        Mono<Boolean> hasGlobalQuota = postgresSieveQuotaDAO.getGlobalQuota().map(Optional::isPresent);
+
+        return hasUserQuota.zipWith(hasGlobalQuota, (a, b) -> a || b)
+            .block();
     }
 
     @Override
-    public QuotaSizeLimit getQuota(Username username) throws QuotaNotFoundException, StorageException {
-        JPASieveQuota jpaSieveQuota = findQuotaForUser(username.asString())
-                .orElseThrow(() -> new QuotaNotFoundException("Unable to find quota for user " + username.asString()));
-        return QuotaSizeLimit.size(jpaSieveQuota.getSize());
+    public QuotaSizeLimit getQuota(Username username) throws QuotaNotFoundException {
+        return postgresSieveQuotaDAO.getQuota(username)
+            .block()
+            .orElseThrow(() -> new QuotaNotFoundException("Unable to find quota for user " + username.asString()));
     }
 
     @Override
-    public void setQuota(Username username, QuotaSizeLimit quota) throws StorageException {
-        setQuotaForUser(username.asString(), quota);
+    public void setQuota(Username username, QuotaSizeLimit quota) {
+        postgresSieveQuotaDAO.setQuota(username, quota)
+            .block();
     }
 
     @Override
-    public void removeQuota(Username username) throws QuotaNotFoundException, StorageException {
-        removeQuotaForUser(username.asString());
-    }
-
-    private Optional<JPASieveQuota> findQuotaForUser(String username) throws StorageException {
-        return transactionRunner.runAndRetrieveResult(entityManager -> findQuotaForUser(username, entityManager),
-                throwStorageException("Unable to find quota for user " + username));
+    public void removeQuota(Username username) {
+        postgresSieveQuotaDAO.removeQuota(username).block();
     }
 
     private <T> Function<PersistenceException, T> throwStorageException(String message) {
@@ -323,37 +326,6 @@ public class JPASieveRepository implements SieveRepository {
         return Throwing.<PersistenceException>consumer(e -> {
             throw new StorageException(message, e);
         }).sneakyThrow();
-    }
-
-    private Optional<JPASieveQuota> findQuotaForUser(String username, EntityManager entityManager) {
-        try {
-            JPASieveQuota sieveQuota = entityManager.createNamedQuery("findByUsername", JPASieveQuota.class)
-                    .setParameter("username", username).getSingleResult();
-            return Optional.of(sieveQuota);
-        } catch (NoResultException e) {
-            return Optional.empty();
-        }
-    }
-
-    private void setQuotaForUser(String username, QuotaSizeLimit quota) throws StorageException {
-        transactionRunner.runAndHandleException(Throwing.consumer(entityManager -> {
-            Optional<JPASieveQuota> sieveQuota = findQuotaForUser(username, entityManager);
-            if (sieveQuota.isPresent()) {
-                JPASieveQuota jpaSieveQuota = sieveQuota.get();
-                jpaSieveQuota.setSize(quota);
-                entityManager.merge(jpaSieveQuota);
-            } else {
-                JPASieveQuota jpaSieveQuota = new JPASieveQuota(username, quota.asLong());
-                entityManager.persist(jpaSieveQuota);
-            }
-        }), throwStorageExceptionConsumer("Unable to set quota for user " + username));
-    }
-
-    private void removeQuotaForUser(String username) throws StorageException {
-        transactionRunner.runAndHandleException(Throwing.consumer(entityManager -> {
-            Optional<JPASieveQuota> quotaForUser = findQuotaForUser(username, entityManager);
-            quotaForUser.ifPresent(entityManager::remove);
-        }), throwStorageExceptionConsumer("Unable to remove quota for user " + username));
     }
 
     @Override
