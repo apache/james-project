@@ -19,6 +19,7 @@
 
 package org.apache.james.user.postgres;
 
+import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.ALGORITHM;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.HASHED_PASSWORD;
@@ -30,8 +31,8 @@ import java.util.Iterator;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
@@ -52,9 +53,9 @@ public class PostgresUsersDAO implements UsersDAO {
     private final Algorithm.HashingMode fallbackHashingMode;
 
     @Inject
-    public PostgresUsersDAO(JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
+    public PostgresUsersDAO(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor,
                             PostgresUsersRepositoryConfiguration postgresUsersRepositoryConfiguration) {
-        this.postgresExecutor = new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(Optional.empty()));
+        this.postgresExecutor = postgresExecutor;
         this.algorithm = postgresUsersRepositoryConfiguration.getPreferredAlgorithm();
         this.fallbackHashingMode = postgresUsersRepositoryConfiguration.getFallbackHashingMode();
     }
