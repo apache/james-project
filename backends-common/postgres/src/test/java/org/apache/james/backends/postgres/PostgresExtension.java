@@ -29,7 +29,9 @@ import java.util.stream.Collectors;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 
@@ -65,6 +67,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor postgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
+    private PostgresExecutor.Factory executorFactory;
 
     private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
         this.postgresModule = postgresModule;
@@ -124,9 +127,16 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .schema(postgresConfiguration.getDatabaseSchema())
             .build());
 
-        postgresExecutor = new PostgresExecutor(connectionFactory.create()
-            .cache()
-            .cast(Connection.class));
+
+        if (rlsEnabled) {
+            executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory));
+        } else {
+            executorFactory = new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connectionFactory.create()
+                .cache()
+                .cast(Connection.class).block()));
+        }
+
+        postgresExecutor = executorFactory.create();
     }
 
     @Override
@@ -178,6 +188,10 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     public ConnectionFactory getConnectionFactory() {
         return connectionFactory;
+    }
+
+    public PostgresExecutor.Factory getExecutorFactory() {
+        return executorFactory;
     }
 
     private void initTablesAndIndexes() {
