@@ -42,7 +42,7 @@ class PostgresTableManagerTest {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     Function<PostgresModule, PostgresTableManager> tableManagerFactory =
-        module -> new PostgresTableManager(new PostgresExecutor(postgresExtension.getConnection()), module, true);
+        module -> new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, true);
 
     @Test
     void initializeTableShouldSuccessWhenModuleHasSingleTable() {
@@ -330,7 +330,9 @@ class PostgresTableManagerTest {
 
         PostgresModule module = PostgresModule.table(table);
         boolean disabledRLS = false;
-        PostgresTableManager testee = new PostgresTableManager(new PostgresExecutor(postgresExtension.getConnection()), module, disabledRLS);
+
+
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, disabledRLS);
 
         testee.initializeTables()
             .block();
