@@ -23,7 +23,6 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
@@ -66,7 +65,7 @@ class PostgresSubscriptionManagerTest implements SubscriptionManagerContract {
             new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(entityManagerFactory),
             jpaConfiguration,
-            new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+            postgresExtension.getExecutorFactory());
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
         subscriptionManager = new StoreSubscriptionManager(mapperFactory, mapperFactory, eventBus);
     }

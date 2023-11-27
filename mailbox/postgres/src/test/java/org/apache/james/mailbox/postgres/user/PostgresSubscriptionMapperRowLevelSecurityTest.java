@@ -41,9 +41,8 @@ public class PostgresSubscriptionMapperRowLevelSecurityTest {
 
     @BeforeEach
     public void setUp() {
-        subscriptionMapperFactory = session -> new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(new PostgresExecutor(
-            new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory())
-                .getConnection(session.getUser().getDomainPart()))));
+        PostgresExecutor.Factory executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()));
+        subscriptionMapperFactory = session -> new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(executorFactory.create(session.getUser().getDomainPart())));
     }
 
     @Test
