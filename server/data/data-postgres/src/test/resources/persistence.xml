@@ -27,12 +27,10 @@
        <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
         <jta-data-source>osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=jdbc/james)</jta-data-source>
         <class>org.apache.james.domainlist.jpa.model.JPADomain</class>
-        <class>org.apache.james.user.jpa.model.JPAUser</class>
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAUrl</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAMail</class>
-        <class>org.apache.james.sieve.jpa.model.JPASieveQuota</class>
-        <class>org.apache.james.sieve.jpa.model.JPASieveScript</class>
+        <class>org.apache.james.sieve.postgres.model.JPASieveScript</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
