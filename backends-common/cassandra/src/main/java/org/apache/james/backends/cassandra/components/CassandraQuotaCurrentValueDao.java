@@ -30,8 +30,6 @@ import static org.apache.james.backends.cassandra.components.CassandraQuotaCurre
 import static org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueTable.QUOTA_TYPE;
 import static org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueTable.TABLE_NAME;
 
-import java.util.Objects;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -47,65 +45,11 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.querybuilder.delete.Delete;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.api.querybuilder.update.Update;
-import com.google.common.base.MoreObjects;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraQuotaCurrentValueDao {
-
-    public static class QuotaKey {
-
-        public static QuotaKey of(QuotaComponent component, String identifier, QuotaType quotaType) {
-            return new QuotaKey(component, identifier, quotaType);
-        }
-
-        private final QuotaComponent quotaComponent;
-        private final String identifier;
-        private final QuotaType quotaType;
-
-        public QuotaComponent getQuotaComponent() {
-            return quotaComponent;
-        }
-
-        public String getIdentifier() {
-            return identifier;
-        }
-
-        public QuotaType getQuotaType() {
-            return quotaType;
-        }
-
-        private QuotaKey(QuotaComponent quotaComponent, String identifier, QuotaType quotaType) {
-            this.quotaComponent = quotaComponent;
-            this.identifier = identifier;
-            this.quotaType = quotaType;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(quotaComponent, identifier, quotaType);
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof QuotaKey) {
-                QuotaKey other = (QuotaKey) o;
-                return Objects.equals(quotaComponent, other.quotaComponent)
-                    && Objects.equals(identifier, other.identifier)
-                    && Objects.equals(quotaType, other.quotaType);
-            }
-            return false;
-        }
-
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("quotaComponent", quotaComponent)
-                .add("identifier", identifier)
-                .add("quotaType", quotaType)
-                .toString();
-        }
-    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraQuotaCurrentValueDao.class);
 
@@ -126,7 +70,7 @@ public class CassandraQuotaCurrentValueDao {
         this.deleteQuotaCurrentValueStatement = session.prepare(deleteQuotaCurrentValueStatement().build());
     }
 
-    public Mono<Void> increase(QuotaKey quotaKey, long amount) {
+    public Mono<Void> increase(QuotaCurrentValue.Key quotaKey, long amount) {
         return queryExecutor.executeVoid(increaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
@@ -139,7 +83,7 @@ public class CassandraQuotaCurrentValueDao {
             });
     }
 
-    public Mono<Void> decrease(QuotaKey quotaKey, long amount) {
+    public Mono<Void> decrease(QuotaCurrentValue.Key quotaKey, long amount) {
         return queryExecutor.executeVoid(decreaseStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
@@ -152,7 +96,7 @@ public class CassandraQuotaCurrentValueDao {
             });
     }
 
-    public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaKey quotaKey) {
+    public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaCurrentValue.Key quotaKey) {
         return queryExecutor.executeSingleRow(getQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
@@ -160,7 +104,7 @@ public class CassandraQuotaCurrentValueDao {
             .map(row -> convertRowToModel(row));
     }
 
-    public Mono<Void> deleteQuotaCurrentValue(QuotaKey quotaKey) {
+    public Mono<Void> deleteQuotaCurrentValue(QuotaCurrentValue.Key quotaKey) {
         return queryExecutor.executeVoid(deleteQuotaCurrentValueStatement.bind()
             .setString(QUOTA_COMPONENT, quotaKey.getQuotaComponent().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
