@@ -28,6 +28,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.managesieve.transcode.ManageSieveProcessor;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -61,7 +62,8 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
     private Optional<ConnectionLimitUpstreamHandler> connectionLimitUpstreamHandler = Optional.empty();
     private Optional<ConnectionPerIpLimitUpstreamHandler> connectionPerIpLimitUpstreamHandler = Optional.empty();
 
-    public ManageSieveServer(int maxLineLength, ManageSieveProcessor manageSieveProcessor) {
+    public ManageSieveServer(int maxLineLength, ManageSieveProcessor manageSieveProcessor, FileSystem fileSystem) {
+        super(fileSystem);
         this.maxLineLength = maxLineLength;
         this.manageSieveProcessor = manageSieveProcessor;
     }

@@ -23,12 +23,14 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;
 import org.apache.james.lmtpserver.jmx.JMXHandlersLoader;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.lmtp.LMTPConfiguration;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -54,7 +56,8 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
     private final LMTPMetricsImpl lmtpMetrics;
     private String lmtpGreeting;
 
-    public LMTPServer(LMTPMetricsImpl lmtpMetrics) {
+    public LMTPServer(LMTPMetricsImpl lmtpMetrics, ProtocolHandlerLoader loader, FileSystem fileSystem) {
+        super(loader, fileSystem);
         this.lmtpMetrics = lmtpMetrics;
     }
 

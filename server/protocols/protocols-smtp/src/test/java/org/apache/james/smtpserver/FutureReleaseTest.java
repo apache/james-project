@@ -39,6 +39,7 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -55,6 +56,7 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.smtpserver.netty.SMTPServer;
+import org.apache.james.smtpserver.netty.SmtpMetrics;
 import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -133,18 +135,11 @@ class FutureReleaseTest {
         mailRepositoryStore.init();
     }
 
-    protected SMTPServer createSMTPServer(SmtpMetricsImpl smtpMetrics) {
-        return new SMTPServer(smtpMetrics);
-    }
-
     protected void setUpSMTPServer() {
         SmtpMetricsImpl smtpMetrics = mock(SmtpMetricsImpl.class);
         when(smtpMetrics.getCommandsMetric()).thenReturn(mock(Metric.class));
         when(smtpMetrics.getConnectionMetric()).thenReturn(mock(Metric.class));
-        smtpServer = createSMTPServer(smtpMetrics);
-        smtpServer.setDnsService(dnsServer);
-        smtpServer.setFileSystem(fileSystem);
-        smtpServer.setProtocolHandlerLoader(chain);
+        smtpServer = new SMTPServer(smtpMetrics, dnsServer, chain, fileSystem);
     }
 
     protected void setUpFakeLoader() {

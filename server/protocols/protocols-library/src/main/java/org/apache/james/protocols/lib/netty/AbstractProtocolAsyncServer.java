@@ -18,11 +18,10 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.netty;
 
-import javax.inject.Inject;
-
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.lib.ProtocolHandlerChainImpl;
@@ -36,12 +35,12 @@ public abstract class AbstractProtocolAsyncServer extends AbstractConfigurableAs
 
     private ProtocolHandlerChainImpl handlerChain;
 
-    private ProtocolHandlerLoader loader;
+    private final ProtocolHandlerLoader loader;
 
     private HierarchicalConfiguration<ImmutableNode> config;
 
-    @Inject
-    public void setProtocolHandlerLoader(ProtocolHandlerLoader loader) {
+    protected AbstractProtocolAsyncServer(ProtocolHandlerLoader loader, FileSystem fileSystem) {
+        super(fileSystem);
         this.loader = loader;
     }
     

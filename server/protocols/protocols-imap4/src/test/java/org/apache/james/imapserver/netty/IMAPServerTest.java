@@ -149,6 +149,13 @@ class IMAPServerTest {
         memoryIntegrationResources = inMemoryIntegrationResources;
 
         RecordingMetricFactory metricFactory = new RecordingMetricFactory();
+
+        Configuration configuration = Configuration.builder()
+                .workingDirectory("../")
+                .configurationFromClasspath()
+                .build();
+        FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
+
         IMAPServer imapServer = new IMAPServer(
             DefaultImapDecoderFactory.createDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
@@ -163,14 +170,8 @@ class IMAPServerTest {
                 memoryIntegrationResources.getQuotaRootResolver(),
                 metricFactory),
             new ImapMetrics(metricFactory),
-            new NoopGaugeRegistry());
-
-        Configuration configuration = Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build();
-        FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
-        imapServer.setFileSystem(fileSystem);
+            new NoopGaugeRegistry(),
+                fileSystem);
 
         imapServer.configure(config);
         imapServer.init();

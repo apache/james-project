@@ -79,8 +79,7 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
         List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("managesieveserver");
 
         for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
-            ManageSieveServer server = new ManageSieveServer(8000, manageSieveProcessor);
-            server.setFileSystem(fileSystem);
+            ManageSieveServer server = new ManageSieveServer(8000, manageSieveProcessor, fileSystem);
             server.configure(serverConfig);
             servers.add(server);
         }

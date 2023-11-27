@@ -18,10 +18,12 @@
  ****************************************************************/
 package org.apache.james.pop3server.netty;
 
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.pop3server.core.CoreCmdHandlerLoader;
 import org.apache.james.pop3server.jmx.JMXHandlersLoader;
 import org.apache.james.protocols.api.ProtocolConfiguration;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
+import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 import org.apache.james.protocols.lib.netty.AbstractProtocolAsyncServer;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AllButStartTlsLineChannelHandlerFactory;
@@ -42,6 +44,10 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
      */
     private final ProtocolConfiguration theConfigData = new POP3Configuration();
     private POP3Protocol protocol;
+
+    public POP3Server(ProtocolHandlerLoader loader, FileSystem fileSystem) {
+        super(loader, fileSystem);
+    }
 
     @Override
     protected int getDefaultPort() {
