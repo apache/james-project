@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.sieve.jpa.model;
+package org.apache.james.sieve.postgres.model;
 
 import java.time.OffsetDateTime;
 import java.util.Objects;
