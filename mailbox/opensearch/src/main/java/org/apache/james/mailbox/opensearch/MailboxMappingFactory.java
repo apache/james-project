@@ -118,7 +118,12 @@ public class MailboxMappingFactory {
                 .object(new ObjectProperty.Builder()
                     .properties(ImmutableMap.of(
                         JsonMessageConstants.EMailer.NAME, new Property.Builder()
-                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .text(new TextProperty.Builder()
+                                .analyzer(KEEP_MAIL_AND_URL)
+                                .fields(RAW, new Property.Builder()
+                                    .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                                    .build())
+                                .build())
                             .build(),
                         JsonMessageConstants.EMailer.DOMAIN, new Property.Builder()
                             .text(new TextProperty.Builder()
@@ -162,7 +167,12 @@ public class MailboxMappingFactory {
                 .object(new ObjectProperty.Builder()
                     .properties(ImmutableMap.of(
                         JsonMessageConstants.EMailer.NAME, new Property.Builder()
-                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .text(new TextProperty.Builder()
+                                .analyzer(KEEP_MAIL_AND_URL)
+                                .fields(RAW, new Property.Builder()
+                                    .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                                    .build())
+                                .build())
                             .build(),
                         JsonMessageConstants.EMailer.DOMAIN, new Property.Builder()
                             .text(new TextProperty.Builder()
@@ -186,7 +196,12 @@ public class MailboxMappingFactory {
                 .object(new ObjectProperty.Builder()
                     .properties(ImmutableMap.of(
                         JsonMessageConstants.EMailer.NAME, new Property.Builder()
-                            .text(new TextProperty.Builder().analyzer(KEEP_MAIL_AND_URL).build())
+                            .text(new TextProperty.Builder()
+                                .analyzer(KEEP_MAIL_AND_URL)
+                                .fields(RAW, new Property.Builder()
+                                    .keyword(new KeywordProperty.Builder().normalizer(CASE_INSENSITIVE).build())
+                                    .build())
+                                .build())
                             .build(),
                         JsonMessageConstants.EMailer.DOMAIN, new Property.Builder()
                             .text(new TextProperty.Builder()
