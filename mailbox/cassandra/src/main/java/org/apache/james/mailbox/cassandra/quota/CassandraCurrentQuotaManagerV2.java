@@ -26,7 +26,6 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
-import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao.QuotaKey;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaCurrentValue;
@@ -117,16 +116,16 @@ public class CassandraCurrentQuotaManagerV2 implements CurrentQuotaManager {
             });
     }
 
-    private QuotaKey asQuotaKeyCount(QuotaRoot quotaRoot) {
+    private QuotaCurrentValue.Key asQuotaKeyCount(QuotaRoot quotaRoot) {
         return asQuotaKey(quotaRoot, QuotaType.COUNT);
     }
 
-    private QuotaKey asQuotaKeySize(QuotaRoot quotaRoot) {
+    private QuotaCurrentValue.Key asQuotaKeySize(QuotaRoot quotaRoot) {
         return asQuotaKey(quotaRoot, QuotaType.SIZE);
     }
 
-    private QuotaKey asQuotaKey(QuotaRoot quotaRoot, QuotaType quotaType) {
-        return QuotaKey.of(
+    private QuotaCurrentValue.Key asQuotaKey(QuotaRoot quotaRoot, QuotaType quotaType) {
+        return QuotaCurrentValue.Key.of(
             QuotaComponent.MAILBOX,
             quotaRoot.asString(),
             quotaType);
