@@ -51,14 +51,14 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Long> spaceUsedBy(Username username) {
-        CassandraQuotaCurrentValueDao.QuotaKey quotaKey = asQuotaKey(username);
+        QuotaCurrentValue.Key quotaKey = asQuotaKey(username);
 
         return currentValueDao.getQuotaCurrentValue(quotaKey).map(QuotaCurrentValue::getCurrentValue)
             .switchIfEmpty(Mono.just(0L));
     }
 
-    private CassandraQuotaCurrentValueDao.QuotaKey asQuotaKey(Username username) {
-        return CassandraQuotaCurrentValueDao.QuotaKey.of(
+    private QuotaCurrentValue.Key asQuotaKey(Username username) {
+        return QuotaCurrentValue.Key.of(
             QUOTA_COMPONENT,
             username.asString(),
             QuotaType.SIZE);
@@ -66,7 +66,7 @@ public class CassandraSieveQuotaDAOV2 implements CassandraSieveQuotaDAO {
 
     @Override
     public Mono<Void> updateSpaceUsed(Username username, long spaceUsed) {
-        CassandraQuotaCurrentValueDao.QuotaKey quotaKey = asQuotaKey(username);
+        QuotaCurrentValue.Key quotaKey = asQuotaKey(username);
 
         return currentValueDao.deleteQuotaCurrentValue(quotaKey)
             .then(currentValueDao.increase(quotaKey, spaceUsed));
