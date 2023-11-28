@@ -30,8 +30,8 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
+import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -63,7 +63,7 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
                                  MessageSearchIndex index,
                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
                                  Clock clock) {
-        super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(),
+        super(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,
             index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, clock);
