@@ -62,4 +62,9 @@ public class PostgresCommons {
         .map(value -> value.toInstant(ZoneOffset.UTC))
         .map(Date::from)
         .orElse(null);
+
+    public static final Function<Field<?>, Field<?>> UNNEST_FIELD = field -> DSL.function("unnest", field.getType().getComponentType(), field);
+
+    public static final int IN_CLAUSE_MAX_SIZE = 32;
+
 }

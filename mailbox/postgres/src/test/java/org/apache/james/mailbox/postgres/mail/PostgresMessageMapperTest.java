@@ -19,58 +19,28 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
-import java.time.Instant;
-
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresMessageMapperTest extends MessageMapperTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
-    private PostgresMessageMapper postgresMessageMapper;
-    private UpdatableTickingClock updatableTickingClock;
-
+    private PostgresMapperProvider postgresMapperProvider;
     @Override
     protected MapperProvider createMapperProvider() {
-        return null; // todo
+        postgresMapperProvider = new PostgresMapperProvider(postgresExtension);
+        return postgresMapperProvider;
     }
 
     @Override
     protected UpdatableTickingClock updatableTickingClock() {
-        return updatableTickingClock;
+        return postgresMapperProvider.getUpdatableTickingClock();
     }
 
-    @BeforeEach
-    void setup() {
-        PostgresExecutor postgresExecutor = postgresExtension.getPostgresExecutor();
-
-        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExecutor);
-
-        PostgresModSeqProvider modSeqProvider = new PostgresModSeqProvider(mailboxDAO);
-        PostgresUidProvider uidProvider = new PostgresUidProvider(mailboxDAO);
-
-        BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new HashBlobId.Factory());
-
-        updatableTickingClock = new UpdatableTickingClock(Instant.parse("2007-12-03T10:15:30.00Z"));
-        postgresMessageMapper = new PostgresMessageMapper(
-            postgresExecutor,
-            modSeqProvider,
-            uidProvider,
-            blobStore,
-            new UpdatableTickingClock(Instant.now()));
-    }
 }
