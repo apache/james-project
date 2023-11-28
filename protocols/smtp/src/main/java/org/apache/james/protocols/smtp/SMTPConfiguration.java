@@ -22,9 +22,12 @@
 package org.apache.james.protocols.smtp;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.protocols.api.ProtocolConfiguration;
+
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -76,5 +79,9 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
     boolean isPlainAuthEnabled();
 
     Optional<OidcSASLConfiguration> saslConfiguration();
+
+    default Set<String> disabledFeatures() {
+        return ImmutableSet.of();
+    }
 
 }

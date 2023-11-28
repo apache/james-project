@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import java.util.Set;
+
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
@@ -40,6 +42,11 @@ public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSes
 
     public boolean verifyIdentity() {
         return !(smtpConfiguration instanceof SMTPHandlerConfigurationDataImpl) || ((SMTPHandlerConfigurationDataImpl) smtpConfiguration).verifyIdentity();
+    }
+
+    @Override
+    public Set<String> disabledFeatures() {
+        return smtpConfiguration.disabledFeatures();
     }
 
     public MimeMessageInputStreamSource getMimeMessageWriter() {
