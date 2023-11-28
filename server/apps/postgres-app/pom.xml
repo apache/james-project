@@ -125,7 +125,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-sieve-jpa</artifactId>
+            <artifactId>james-server-guice-sieve-postgres</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
