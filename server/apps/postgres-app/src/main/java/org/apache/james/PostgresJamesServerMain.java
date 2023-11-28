@@ -25,7 +25,7 @@ import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
-import org.apache.james.modules.data.SieveJPARepositoryModules;
+import org.apache.james.modules.data.SievePostgresRepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
@@ -89,7 +89,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new LuceneSearchMailboxModule(),
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
-        new SieveJPARepositoryModules(),
+        new SievePostgresRepositoryModules(),
         new DefaultEventModule(),
         new TaskManagerModule(),
         new MemoryDeadLetterModule());
