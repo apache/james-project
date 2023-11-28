@@ -37,6 +37,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 /**
  * Handles EHLO command
@@ -159,12 +160,16 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
 
     @Override
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
-        return ImmutableList.<String>builder()
+        ImmutableSet<String> esmtpFeatures = ImmutableSet.<String>builder()
             .addAll(ESMTP_FEATURES)
             .addAll(getHooks().stream()
                 .flatMap(heloHook -> heloHook.implementedEsmtpFeatures(session).stream())
                 .collect(ImmutableList.toImmutableList()))
             .build();
+
+        return ImmutableList.copyOf(
+            Sets.difference(esmtpFeatures,
+                session.disabledFeatures()));
     }
 
 }
