@@ -19,13 +19,10 @@
 
 package org.apache.james.backends.postgres;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
-
 import javax.inject.Inject;
-import javax.inject.Named;
+import javax.inject.Provider;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
-import org.apache.james.lifecycle.api.Startable;
 import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,19 +33,20 @@ import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PostgresTableManager implements Startable {
+public class PostgresTableManager implements Provider<PostgresExecutor> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
     private final boolean rowLevelSecurityEnabled;
 
     @Inject
-    public PostgresTableManager(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor,
+    public PostgresTableManager(PostgresExecutor.Factory factory,
                                 PostgresModule module,
                                 PostgresConfiguration postgresConfiguration) {
-        this.postgresExecutor = postgresExecutor;
+        this.postgresExecutor = factory.create();
         this.module = module;
         this.rowLevelSecurityEnabled = postgresConfiguration.rowLevelSecurityEnabled();
+        initPostgres();
     }
 
     @VisibleForTesting
@@ -56,6 +54,13 @@ public class PostgresTableManager implements Startable {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
+    }
+
+    private void initPostgres() {
+        initializePostgresExtension()
+            .then(initializeTables())
+            .then(initializeTableIndexes())
+            .block();
     }
 
     public Mono<Void> initializePostgresExtension() {
@@ -130,5 +135,10 @@ public class PostgresTableManager implements Startable {
         }
         LOGGER.error("Error while creating index {}", index.getName(), e);
         return Mono.error(e);
+    }
+
+    @Override
+    public PostgresExecutor get() {
+        return postgresExecutor;
     }
 }
