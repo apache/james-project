@@ -31,8 +31,6 @@ import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFact
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +40,6 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
 
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
@@ -57,6 +54,8 @@ public class PostgresCommonModule extends AbstractModule {
     public void configure() {
         Multibinder.newSetBinder(binder(), PostgresModule.class);
         bind(PostgresExecutor.Factory.class).in(Scopes.SINGLETON);
+
+        bind(PostgresExecutor.class).toProvider(PostgresTableManager.class);
     }
 
     @Provides
@@ -98,26 +97,16 @@ public class PostgresCommonModule extends AbstractModule {
 
     @Provides
     @Singleton
-    PostgresTableManager postgresTableManager(@Named(DEFAULT_INJECT) PostgresExecutor defaultPostgresExecutor,
+    PostgresTableManager postgresTableManager(PostgresExecutor.Factory factory,
                                               PostgresModule postgresModule,
                                               PostgresConfiguration postgresConfiguration) {
-        return new PostgresTableManager(defaultPostgresExecutor, postgresModule, postgresConfiguration);
+        return new PostgresTableManager(factory, postgresModule, postgresConfiguration);
     }
 
     @Provides
     @Named(DEFAULT_INJECT)
     @Singleton
-    PostgresExecutor defaultPostgresExecutor(PostgresExecutor.Factory factory) {
-        return factory.create();
-    }
-
-    @ProvidesIntoSet
-    InitializationOperation provisionPostgresTablesAndIndexes(PostgresTableManager postgresTableManager) {
-        return InitilizationOperationBuilder
-            .forClass(PostgresTableManager.class)
-            .init(() -> postgresTableManager.initializePostgresExtension()
-                .then(postgresTableManager.initializeTables())
-                .then(postgresTableManager.initializeTableIndexes())
-                .block());
+    PostgresExecutor defaultPostgresExecutor(PostgresTableManager postgresTableManager) {
+        return postgresTableManager.get();
     }
 }
