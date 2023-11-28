@@ -79,6 +79,7 @@
         <module>queue/rabbitmq</module>
         <module>sieve-file</module>
         <module>sieve-jpa</module>
+        <module>sieve-postgres</module>
         <module>testing</module>
         <module>utils</module>
     </modules>
@@ -190,6 +191,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-sieve-jpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-sieve-postgres</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
