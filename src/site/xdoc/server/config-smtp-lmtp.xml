@@ -181,6 +181,9 @@
       <dt><strong>maxExecutorCount</strong></dt>
       <dd>Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like
           executing SMTP commands. Optional integer, defaults to 16.</dd>
+
+      <dt><strong>disabledFeatures</strong></dt>
+      <dd>Extended SMTP features to hide in EHLO responses.</dd>
     </dl>
 
       <subsection name="OIDC set up">
