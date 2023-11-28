@@ -24,6 +24,7 @@ import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounc
 import java.net.MalformedURLException;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -48,6 +49,8 @@ import org.apache.james.smtpserver.jmx.JMXHandlersLoader;
 import org.apache.james.util.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -180,6 +183,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      */
     private final SMTPConfiguration theConfigData = new SMTPHandlerConfigurationDataImpl();
     private final SmtpMetrics smtpMetrics;
+    private Set<String> disabledFeatures = ImmutableSet.of();
 
     private boolean addressBracketsEnforcement = true;
 
@@ -244,6 +248,8 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             addressBracketsEnforcement = configuration.getBoolean("addressBracketsEnforcement", true);
 
             verifyIdentity = configuration.getBoolean("verifyIdentity", true);
+
+            disabledFeatures = ImmutableSet.copyOf(configuration.getStringArray("disabledFeatures"));
         }
     }
 
@@ -335,6 +341,11 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         @Override
         public Optional<OidcSASLConfiguration> saslConfiguration() {
             return authenticationConfiguration.getSaslConfiguration();
+        }
+
+        @Override
+        public Set<String> disabledFeatures() {
+            return disabledFeatures;
         }
     }
 

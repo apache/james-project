@@ -20,10 +20,13 @@
 package org.apache.james.protocols.smtp;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * All the handlers access this interface to communicate with
@@ -92,6 +95,10 @@ public interface SMTPSession extends ProtocolSession {
     boolean messageFailed();
 
     void setMessageFailed(boolean value);
+
+    default Set<String> disabledFeatures() {
+        return ImmutableSet.of();
+    }
 
 }
 
