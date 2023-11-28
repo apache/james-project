@@ -36,7 +36,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
-import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.postgres.openjpa.PostgresMailboxManager;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -55,7 +55,7 @@ public class JpaMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    public static OpenJPAMailboxManager provideMailboxManager(JpaTestCluster jpaTestCluster, PostgresExtension postgresExtension) {
+    public static PostgresMailboxManager provideMailboxManager(JpaTestCluster jpaTestCluster, PostgresExtension postgresExtension) {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
 
         JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
@@ -81,7 +81,7 @@ public class JpaMailboxManagerProvider {
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
         MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor(), new JPAAttachmentContentLoader());
 
-        return new OpenJPAMailboxManager(mf, sessionProvider,
+        return new PostgresMailboxManager(mf, sessionProvider,
             messageParser, new DefaultMessageId.Factory(),
             eventBus, annotationManager,
             storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));

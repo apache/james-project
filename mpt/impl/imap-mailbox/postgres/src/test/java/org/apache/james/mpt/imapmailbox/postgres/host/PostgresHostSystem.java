@@ -45,7 +45,7 @@ import org.apache.james.mailbox.postgres.JPAMailboxFixture;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
-import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.postgres.openjpa.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaDAO;
 import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager;
@@ -95,7 +95,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
     }
 
     private JPAPerUserMaxQuotaManager maxQuotaManager;
-    private OpenJPAMailboxManager mailboxManager;
+    private PostgresMailboxManager mailboxManager;
     private final PostgresExtension postgresExtension;
     public PostgresHostSystem(PostgresExtension postgresExtension) {
         this.postgresExtension = postgresExtension;
@@ -134,7 +134,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         AttachmentContentLoader attachmentContentLoader = null;
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
 
-        mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider, messageParser, new DefaultMessageId.Factory(),
+        mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider, messageParser, new DefaultMessageId.Factory(),
             eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
 
         eventBus.register(quotaUpdater);

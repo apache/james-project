@@ -46,7 +46,7 @@ import org.apache.james.mailbox.postgres.JPAId;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
-import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.postgres.openjpa.PostgresMailboxManager;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -84,7 +84,7 @@ public class JPAMailboxModule extends AbstractModule {
         install(new JPAEntityManagerModule());
 
         bind(PostgresMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
-        bind(OpenJPAMailboxManager.class).in(Scopes.SINGLETON);
+        bind(PostgresMailboxManager.class).in(Scopes.SINGLETON);
         bind(JVMMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(StoreSubscriptionManager.class).in(Scopes.SINGLETON);
         bind(JPAModSeqProvider.class).in(Scopes.SINGLETON);
@@ -110,8 +110,8 @@ public class JPAMailboxModule extends AbstractModule {
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(MailboxPathLocker.class).to(JVMMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
-        bind(MailboxManager.class).to(OpenJPAMailboxManager.class);
-        bind(StoreMailboxManager.class).to(OpenJPAMailboxManager.class);
+        bind(MailboxManager.class).to(PostgresMailboxManager.class);
+        bind(StoreMailboxManager.class).to(PostgresMailboxManager.class);
         bind(SessionProvider.class).to(SessionProviderImpl.class);
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxId.Factory.class).to(JPAId.Factory.class);
@@ -145,7 +145,7 @@ public class JPAMailboxModule extends AbstractModule {
     @Singleton
     private static class JPAMailboxManagerDefinition extends MailboxManagerDefinition {
         @Inject
-        private JPAMailboxManagerDefinition(OpenJPAMailboxManager manager) {
+        private JPAMailboxManagerDefinition(PostgresMailboxManager manager) {
             super("jpa-mailboxmanager", manager);
         }
     }

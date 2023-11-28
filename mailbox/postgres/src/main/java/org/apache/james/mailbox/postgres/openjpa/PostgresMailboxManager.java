@@ -43,26 +43,26 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
- * OpenJPA implementation of MailboxManager
+ * PostgreSQL implementation of MailboxManager
  */
-public class OpenJPAMailboxManager extends StoreMailboxManager {
+public class PostgresMailboxManager extends StoreMailboxManager {
     public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(MailboxCapabilities.UserFlag,
         MailboxCapabilities.Namespace,
         MailboxCapabilities.Move,
         MailboxCapabilities.Annotation);
 
     @Inject
-    public OpenJPAMailboxManager(PostgresMailboxSessionMapperFactory mapperFactory,
-                                 SessionProvider sessionProvider,
-                                 MessageParser messageParser,
-                                 MessageId.Factory messageIdFactory,
-                                 EventBus eventBus,
-                                 StoreMailboxAnnotationManager annotationManager,
-                                 StoreRightManager storeRightManager,
-                                 QuotaComponents quotaComponents,
-                                 MessageSearchIndex index,
-                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
-                                 Clock clock) {
+    public PostgresMailboxManager(PostgresMailboxSessionMapperFactory mapperFactory,
+                                  SessionProvider sessionProvider,
+                                  MessageParser messageParser,
+                                  MessageId.Factory messageIdFactory,
+                                  EventBus eventBus,
+                                  StoreMailboxAnnotationManager annotationManager,
+                                  StoreRightManager storeRightManager,
+                                  QuotaComponents quotaComponents,
+                                  MessageSearchIndex index,
+                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                  Clock clock) {
         super(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,

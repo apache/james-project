@@ -25,7 +25,7 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.postgres.openjpa.PostgresMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
+class PostgresMailboxManagerTest extends MailboxManagerTest<PostgresMailboxManager> {
 
     @Disabled("JPAMailboxManager is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
         " element of the Vault")
@@ -45,10 +45,10 @@ class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
     static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
-    Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
+    Optional<PostgresMailboxManager> openJPAMailboxManager = Optional.empty();
     
     @Override
-    protected OpenJPAMailboxManager provideMailboxManager() {
+    protected PostgresMailboxManager provideMailboxManager() {
         if (!openJPAMailboxManager.isPresent()) {
             openJPAMailboxManager = Optional.of(JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER, postgresExtension));
         }
@@ -79,7 +79,7 @@ class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
     }
 
     @Override
-    protected EventBus retrieveEventBus(OpenJPAMailboxManager mailboxManager) {
+    protected EventBus retrieveEventBus(PostgresMailboxManager mailboxManager) {
         return mailboxManager.getEventBus();
     }
 }
