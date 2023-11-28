@@ -180,6 +180,9 @@ Optional integer, defaults to 2 times the count of CPUs.
 | maxExecutorCount
 | Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like executing SMTP commands.
 Optional integer, defaults to 16.
+
+| disabledFeatures
+| Extended SMTP features to hide in EHLO responses.
 |===
 
 === OIDC setup
