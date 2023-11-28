@@ -23,6 +23,8 @@ import static org.apache.james.core.quota.QuotaType.SIZE;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
 import org.apache.james.core.Username;
@@ -41,6 +43,7 @@ public class PostgresSieveQuotaDAO {
     private final PostgresQuotaCurrentValueDAO currentValueDao;
     private final PostgresQuotaLimitDAO limitDao;
 
+    @Inject
     public PostgresSieveQuotaDAO(PostgresQuotaCurrentValueDAO currentValueDao, PostgresQuotaLimitDAO limitDao) {
         this.currentValueDao = currentValueDao;
         this.limitDao = limitDao;
