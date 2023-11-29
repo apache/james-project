@@ -1265,7 +1265,7 @@ public abstract class MessageMapperTest {
 
         messageMapper.updateFlags(benwaInboxMailbox,
             new FlagsUpdateCalculator(new Flags(Flag.DELETED), FlagsUpdateMode.ADD),
-            MessageRange.range(message2.getUid(), message4.getUid()));
+            MessageRange.range(message2.getUid(), message4.getUid())).forEachRemaining(any -> {});
         List<MessageUid> uids = messageMapper.retrieveMessagesMarkedForDeletion(benwaInboxMailbox, MessageRange.all());
         messageMapper.deleteMessages(benwaInboxMailbox, uids);
 
