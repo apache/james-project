@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import static org.jooq.impl.DSL.foreignKey;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -26,6 +28,7 @@ import org.apache.james.backends.postgres.PostgresCommons.DataTypes;
 import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
@@ -123,7 +126,9 @@ public interface PostgresMessageModule {
                 .column(IS_SEEN)
                 .column(USER_FLAGS)
                 .column(SAVE_DATE)
-                .constraint(DSL.primaryKey(MAILBOX_ID, MESSAGE_UID))
+                .constraints(DSL.primaryKey(MAILBOX_ID, MESSAGE_UID),
+                    foreignKey(MAILBOX_ID).references(PostgresMailboxTable.TABLE_NAME, PostgresMailboxTable.MAILBOX_ID),
+                    foreignKey(MESSAGE_ID).references(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID))
                 .comment("Holds mailbox and flags for each message")))
             .supportsRowLevelSecurity();
 
