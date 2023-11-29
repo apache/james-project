@@ -99,11 +99,11 @@ class PostgresQuotaCurrentValueDAOTest {
     }
 
     @Test
-    void decreaseQuotaCurrentValueWhenNoRecordYetShouldNotFailAndSetValueToZero() {
+    void decreaseQuotaCurrentValueWhenNoRecordYetShouldNotFail() {
         postgresQuotaCurrentValueDAO.decrease(QUOTA_KEY, 1000L).block();
 
         assertThat(postgresQuotaCurrentValueDAO.getQuotaCurrentValue(QUOTA_KEY).block().getCurrentValue())
-            .isZero();
+            .isEqualTo(-1000L);
     }
 
     @Test

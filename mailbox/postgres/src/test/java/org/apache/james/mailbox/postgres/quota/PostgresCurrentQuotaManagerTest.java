@@ -19,25 +19,28 @@
 
 package org.apache.james.mailbox.postgres.quota;
 
-import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.mailbox.postgres.JPAMailboxFixture;
-import org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
+import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaManagerContract;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JPACurrentQuotaManagerTest implements CurrentQuotaManagerContract {
+class PostgresCurrentQuotaManagerTest implements CurrentQuotaManagerContract {
 
-    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES);
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
+
+    private PostgresCurrentQuotaManager currentQuotaManager;
+
+    @BeforeEach
+    void setup() {
+        currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
+    }
 
     @Override
     public CurrentQuotaManager testee() {
-        return new JpaCurrentQuotaManager(JPA_TEST_CLUSTER.getEntityManagerFactory());
+        return currentQuotaManager;
     }
-
-    @AfterEach
-    void tearDown() {
-        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.QUOTA_TABLES_NAMES);
-    }
-
 }
