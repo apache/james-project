@@ -20,10 +20,10 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 
-import static org.apache.james.mailbox.postgres.mail.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
-import static org.apache.james.mailbox.postgres.mail.PostgresCommons.IN_CLAUSE_MAX_SIZE;
-import static org.apache.james.mailbox.postgres.mail.PostgresCommons.TABLE_FIELD;
-import static org.apache.james.mailbox.postgres.mail.PostgresCommons.UNNEST_FIELD;
+import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
+import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
+import static org.apache.james.backends.postgres.PostgresCommons.TABLE_FIELD;
+import static org.apache.james.backends.postgres.PostgresCommons.UNNEST_FIELD;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;

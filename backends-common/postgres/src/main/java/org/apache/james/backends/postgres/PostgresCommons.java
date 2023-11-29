@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.mail;
+package org.apache.james.backends.postgres;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;

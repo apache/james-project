@@ -376,18 +376,22 @@ public class PostgresMessageMapper implements MessageMapper {
     @Override
     public Mono<MessageMetaData> copyReactive(Mailbox mailbox, MailboxMessage original) {
         return Mono.fromCallable(() -> {
-                original.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flags.Flag.RECENT).build());
-                original.setSaveDate(Date.from(clock.instant()));
-                return original;
+                MailboxMessage copiedMessage = original.copy(mailbox);
+                copiedMessage.setFlags(new FlagsBuilder().add(original.createFlags()).add(Flags.Flag.RECENT).build());
+                copiedMessage.setSaveDate(Date.from(clock.instant()));
+                return copiedMessage;
             })
-            .flatMap(mailboxMessage -> setNewUidAndModSeq(mailboxMessage)
-                .then(Mono.defer(() -> mailboxMessageDAO.insert(mailboxMessage)))
-                .then(Mono.fromCallable(mailboxMessage::metaData)));
+            .flatMap(copiedMessage -> setNewUidAndModSeq(copiedMessage)
+                .then(Mono.defer(() -> mailboxMessageDAO.insert(copiedMessage))
+                    .thenReturn(copiedMessage))
+                .map(MailboxMessage::metaData));
     }
+
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) {
-        return moveReactive(mailbox, original).block();
+        var t = moveReactive(mailbox, original).block();
+        return t;
     }
 
     @Override
@@ -399,7 +403,8 @@ public class PostgresMessageMapper implements MessageMapper {
     @Override
     public Mono<MessageMetaData> moveReactive(Mailbox mailbox, MailboxMessage original) {
         return copyReactive(mailbox, original)
-            .flatMap(message -> mailboxMessageDAO.deleteByMailboxIdAndMessageUid((PostgresMailboxId) original.getMailboxId(), original.getUid()));
+            .flatMap(copiedResult -> mailboxMessageDAO.deleteByMailboxIdAndMessageUid((PostgresMailboxId) original.getMailboxId(), original.getUid())
+                .thenReturn(copiedResult));
     }
 
     @Override

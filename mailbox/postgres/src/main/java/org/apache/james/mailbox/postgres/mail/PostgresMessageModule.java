@@ -22,10 +22,10 @@ package org.apache.james.mailbox.postgres.mail;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresCommons.DataTypes;
 import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
-import org.apache.james.mailbox.postgres.mail.PostgresCommons.DataTypes;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
@@ -143,7 +143,7 @@ public interface PostgresMessageModule {
         PostgresIndex MAILBOX_ID_IS_DELETE_MESSAGE_UID_INDEX = PostgresIndex.name("mailbox_id_is_delete_mail_uid_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, MAILBOX_ID, IS_DELETED, MESSAGE_UID.asc()));
-        
+
     }
 
     PostgresModule MODULE = PostgresModule.builder()
