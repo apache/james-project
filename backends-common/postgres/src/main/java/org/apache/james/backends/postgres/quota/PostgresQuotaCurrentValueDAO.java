@@ -74,7 +74,7 @@ public class PostgresQuotaCurrentValueDAO {
             .set(IDENTIFIER, quotaKey.getIdentifier())
             .set(COMPONENT, quotaKey.getQuotaComponent().getValue())
             .set(TYPE, quotaKey.getQuotaType().getValue())
-            .set(CURRENT_VALUE, 0L)
+            .set(CURRENT_VALUE, -amount)
             .onConflictOnConstraint(PRIMARY_KEY_CONSTRAINT_NAME)
             .doUpdate()
             .set(CURRENT_VALUE, CURRENT_VALUE.minus(amount))))
