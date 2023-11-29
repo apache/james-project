@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import org.apache.james.core.Domain;
 import org.jooq.DSLContext;
 import org.jooq.Record;
+import org.jooq.Record1;
 import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;
 import org.jooq.conf.StatementType;
@@ -94,6 +95,12 @@ public class PostgresExecutor {
     public Mono<Record> executeRow(Function<DSLContext, Mono<Record>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction);
+    }
+
+    public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
+        return dslContext()
+            .flatMap(queryFunction)
+            .map(Record1::value1);
     }
 
     public Mono<Connection> connection() {
