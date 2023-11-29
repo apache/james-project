@@ -49,7 +49,6 @@ import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageD
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_MESSAGE_UID_FUNCTION;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -69,6 +68,7 @@ import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.streams.Limit;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -93,13 +93,13 @@ public class PostgresMailboxMessageDAO {
 
     public static final SortField<Long> DEFAULT_SORT_ORDER_BY = MESSAGE_UID.asc();
 
-    private static SelectFinalStep<Record1<Long>> selectMessageUidByMailboxIdAndExtraConditionQuery(PostgresMailboxId mailboxId, Condition extraCondition, Optional<Integer> limit, DSLContext dslContext) {
+    private static SelectFinalStep<Record1<Long>> selectMessageUidByMailboxIdAndExtraConditionQuery(PostgresMailboxId mailboxId, Condition extraCondition, Limit limit, DSLContext dslContext) {
         SelectSeekStep1<Record1<Long>, Long> queryWithoutLimit = dslContext.select(MESSAGE_UID)
             .from(TABLE_NAME)
             .where(MAILBOX_ID.eq((mailboxId.asUuid())))
             .and(extraCondition)
             .orderBy(MESSAGE_UID.asc());
-        return limit.map(limitValue -> (SelectFinalStep<Record1<Long>>) queryWithoutLimit.limit(limitValue))
+        return limit.getLimit().map(limitValue -> (SelectFinalStep<Record1<Long>>) queryWithoutLimit.limit(limitValue))
             .orElse(queryWithoutLimit);
     }
 
@@ -111,19 +111,19 @@ public class PostgresMailboxMessageDAO {
 
     public Mono<MessageUid> findFirstUnseenMessageUid(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeRow(dslContext -> Mono.from(selectMessageUidByMailboxIdAndExtraConditionQuery(mailboxId,
-                IS_SEEN.eq(false), Optional.of(1), dslContext)))
+                IS_SEEN.eq(false), Limit.limit(1), dslContext)))
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
     }
 
     public Flux<MessageUid> findAllRecentMessageUid(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(selectMessageUidByMailboxIdAndExtraConditionQuery(mailboxId,
-                IS_RECENT.eq(true), Optional.empty(), dslContext)))
+                IS_RECENT.eq(true), Limit.unlimited(), dslContext)))
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
     }
 
     public Flux<MessageUid> listAllMessageUid(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(selectMessageUidByMailboxIdAndExtraConditionQuery(mailboxId,
-                DSL.noCondition(), Optional.empty(), dslContext)))
+                DSL.noCondition(), Limit.unlimited(), dslContext)))
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
     }
 
@@ -163,23 +163,29 @@ public class PostgresMailboxMessageDAO {
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))));
     }
 
-    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxId(PostgresMailboxId mailboxId, int limit) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .orderBy(DEFAULT_SORT_ORDER_BY)
-                .limit(limit)))
+    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxId(PostgresMailboxId mailboxId, Limit limit) {
+        Function<DSLContext, SelectSeekStep1<Record, Long>> queryWithoutLimit = dslContext -> dslContext.select()
+            .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+            .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+            .orderBy(DEFAULT_SORT_ORDER_BY);
+
+        return postgresExecutor.executeRows(dslContext -> limit.getLimit()
+                .map(limitValue -> Flux.from(queryWithoutLimit.andThen(step -> step.limit(limitValue)).apply(dslContext)))
+                .orElse(Flux.from(queryWithoutLimit.apply(dslContext))))
             .map(record -> Pair.of(RECORD_TO_MAILBOX_MESSAGE_BUILDER_FUNCTION.apply(record), record.get(BLOB_ID)));
     }
 
-    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxIdAndBetweenUIDs(PostgresMailboxId mailboxId, MessageUid from, MessageUid to, int limit) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
-                .and(MESSAGE_UID.lessOrEqual(to.asLong()))
-                .orderBy(DEFAULT_SORT_ORDER_BY)
-                .limit(limit)))
+    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxIdAndBetweenUIDs(PostgresMailboxId mailboxId, MessageUid from, MessageUid to, Limit limit) {
+        Function<DSLContext, SelectSeekStep1<Record, Long>> queryWithoutLimit = dslContext -> dslContext.select()
+            .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+            .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+            .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
+            .and(MESSAGE_UID.lessOrEqual(to.asLong()))
+            .orderBy(DEFAULT_SORT_ORDER_BY);
+
+        return postgresExecutor.executeRows(dslContext -> limit.getLimit()
+                .map(limitValue -> Flux.from(queryWithoutLimit.andThen(step -> step.limit(limitValue)).apply(dslContext)))
+                .orElse(Flux.from(queryWithoutLimit.apply(dslContext))))
             .map(record -> Pair.of(RECORD_TO_MAILBOX_MESSAGE_BUILDER_FUNCTION.apply(record), record.get(BLOB_ID)));
     }
 
@@ -191,13 +197,16 @@ public class PostgresMailboxMessageDAO {
             .map(record -> Pair.of(RECORD_TO_MAILBOX_MESSAGE_BUILDER_FUNCTION.apply(record), record.get(BLOB_ID)));
     }
 
-    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxIdAndAfterUID(PostgresMailboxId mailboxId, MessageUid from, int limit) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
-                .orderBy(DEFAULT_SORT_ORDER_BY)
-                .limit(limit)))
+    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxIdAndAfterUID(PostgresMailboxId mailboxId, MessageUid from, Limit limit) {
+        Function<DSLContext, SelectSeekStep1<Record, Long>> queryWithoutLimit = dslContext -> dslContext.select()
+            .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+            .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+            .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
+            .orderBy(DEFAULT_SORT_ORDER_BY);
+
+        return postgresExecutor.executeRows(dslContext -> limit.getLimit()
+                .map(limitValue -> Flux.from(queryWithoutLimit.andThen(step -> step.limit(limitValue)).apply(dslContext)))
+                .orElse(Flux.from(queryWithoutLimit.apply(dslContext))))
             .map(record -> Pair.of(RECORD_TO_MAILBOX_MESSAGE_BUILDER_FUNCTION.apply(record), record.get(BLOB_ID)));
     }
 

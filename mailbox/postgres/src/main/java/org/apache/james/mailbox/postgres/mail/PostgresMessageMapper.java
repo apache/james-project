@@ -61,6 +61,7 @@ import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.streams.Limit;
 
 import com.google.common.io.ByteSource;
 
@@ -125,9 +126,10 @@ public class PostgresMessageMapper implements MessageMapper {
     }
 
     @Override
-    public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limit) {
+    public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
         return Mono.just(messageRange)
             .flatMapMany(range -> {
+                Limit limit = Limit.from(limitAsInt);
                 switch (messageRange.getType()) {
                     case ALL:
                         return mailboxMessageDAO.findMessagesByMailboxId((PostgresMailboxId) mailbox.getMailboxId(), limit);
