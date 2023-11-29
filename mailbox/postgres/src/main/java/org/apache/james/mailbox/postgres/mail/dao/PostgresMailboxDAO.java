@@ -39,6 +39,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
@@ -237,5 +238,15 @@ public class PostgresMailboxDAO {
                 .returning(MAILBOX_HIGHEST_MODSEQ)))
             .map(record -> record.get(MAILBOX_HIGHEST_MODSEQ))
             .map(ModSeq::of);
+    }
+
+    public Mono<Pair<MessageUid, ModSeq>> incrementAndGetLastUidAndModSeq(MailboxId mailboxId) {
+        int increment = 1;
+        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
+                .set(MAILBOX_LAST_UID, coalesce(MAILBOX_LAST_UID, 0L).add(increment))
+                .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, 0L).add(increment))
+                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))
+                .returning(MAILBOX_LAST_UID, MAILBOX_HIGHEST_MODSEQ)))
+            .map(record -> Pair.of(MessageUid.of(record.get(MAILBOX_LAST_UID)), ModSeq.of(record.get(MAILBOX_HIGHEST_MODSEQ))));
     }
 }

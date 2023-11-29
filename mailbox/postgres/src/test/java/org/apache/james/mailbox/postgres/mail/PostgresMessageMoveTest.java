@@ -17,17 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres;
+package org.apache.james.mailbox.postgres.mail;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.mailbox.store.mail.model.MessageMoveTest;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public interface PostgresMailboxAggregateModule {
+class PostgresMessageMoveTest extends MessageMoveTest {
 
-    PostgresModule MODULE = PostgresModule.aggregateModules(
-        PostgresMailboxModule.MODULE,
-        PostgresSubscriptionModule.MODULE,
-        PostgresMessageModule.MODULE);
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+
+    @Override
+    protected MapperProvider createMapperProvider() {
+        return new PostgresMapperProvider(postgresExtension);
+    }
 }
