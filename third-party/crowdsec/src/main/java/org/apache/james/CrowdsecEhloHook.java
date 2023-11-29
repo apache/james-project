@@ -31,23 +31,19 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 
-import reactor.core.scheduler.Schedulers;
-
 public class CrowdsecEhloHook implements HeloHook {
-    private final CrowdsecClientConfiguration crowdsecClientConfiguration;
+    private final CrowdsecHttpClient crowdsecHttpClient;
 
     @Inject
     public CrowdsecEhloHook(CrowdsecClientConfiguration configuration) {
-        this.crowdsecClientConfiguration = configuration;
+        this.crowdsecHttpClient = new CrowdsecHttpClient(configuration);
     }
 
     @Override
     public HookResult doHelo(SMTPSession session, String helo) {
         String ip = session.getRemoteAddress().toString().split("/")[1].split(":")[0];
-        CrowdsecHttpClient client = new CrowdsecHttpClient(crowdsecClientConfiguration);
-        return client.getCrowdsecDecisions()
-            .map(decision -> apply(decision, ip))
-            .subscribeOn(Schedulers.boundedElastic()).block();
+        return crowdsecHttpClient.getCrowdsecDecisions()
+            .map(decisions -> apply(decisions, ip)).block();
     }
 
     private boolean isBanned(CrowdsecDecision decision, String ip) {
