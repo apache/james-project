@@ -21,7 +21,7 @@ package org.apache.james.modules.mailbox;
 
 import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaManager;
-import org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager;
+import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -37,21 +37,21 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
-public class JpaQuotaModule extends AbstractModule {
+public class PostgresQuotaModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
         bind(JPAPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
         bind(StoreQuotaManager.class).in(Scopes.SINGLETON);
-        bind(JpaCurrentQuotaManager.class).in(Scopes.SINGLETON);
+        bind(PostgresCurrentQuotaManager.class).in(Scopes.SINGLETON);
 
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(QuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
         bind(QuotaRootDeserializer.class).to(DefaultUserQuotaRootResolver.class);
         bind(MaxQuotaManager.class).to(JPAPerUserMaxQuotaManager.class);
         bind(QuotaManager.class).to(StoreQuotaManager.class);
-        bind(CurrentQuotaManager.class).to(JpaCurrentQuotaManager.class);
+        bind(CurrentQuotaManager.class).to(PostgresCurrentQuotaManager.class);
 
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(QuotaUpdater.class).to(ListeningCurrentQuotaUpdater.class);

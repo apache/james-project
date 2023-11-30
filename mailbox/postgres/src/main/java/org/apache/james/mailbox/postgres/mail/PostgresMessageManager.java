@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.openjpa;
+package org.apache.james.mailbox.postgres.mail;
 
 import java.time.Clock;
 import java.util.EnumSet;
@@ -50,21 +50,19 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Mono;
 
-/**
- * OpenJPA implementation of Mailbox
- */
-public class OpenJPAMessageManager extends StoreMessageManager {
+public class PostgresMessageManager extends StoreMessageManager {
+
     private final MailboxSessionMapperFactory mapperFactory;
     private final StoreRightManager storeRightManager;
     private final Mailbox mailbox;
 
-    public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory,
-                                 MessageSearchIndex index, EventBus eventBus,
-                                 MailboxPathLocker locker, Mailbox mailbox,
-                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
-                                 MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                                 StoreRightManager storeRightManager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
-                                 Clock clock) {
+    public PostgresMessageManager(MailboxSessionMapperFactory mapperFactory,
+                                  MessageSearchIndex index, EventBus eventBus,
+                                  MailboxPathLocker locker, Mailbox mailbox,
+                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
+                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
+                                  StoreRightManager storeRightManager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                  Clock clock) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
             new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock));
@@ -73,12 +71,10 @@ public class OpenJPAMessageManager extends StoreMessageManager {
         this.mailbox = mailbox;
     }
 
-    /**
-     * Support user flags
-     */
+
     @Override
     public Flags getPermanentFlags(MailboxSession session) {
-        Flags flags =  super.getPermanentFlags(session);
+        Flags flags = super.getPermanentFlags(session);
         flags.add(Flags.Flag.USER);
         return flags;
     }

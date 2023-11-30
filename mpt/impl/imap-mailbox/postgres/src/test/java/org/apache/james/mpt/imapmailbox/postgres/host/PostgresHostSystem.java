@@ -47,9 +47,9 @@ import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.JPAMailboxFixture;
-import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactoryTODO;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
-import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaDAO;
 import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
@@ -83,7 +83,6 @@ public class PostgresHostSystem extends JamesImapHostSystem {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(
         ImmutableList.<Class<?>>builder()
-            .addAll(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES)
             .addAll(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES)
             .build());
 
@@ -100,7 +99,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
     }
 
     private JPAPerUserMaxQuotaManager maxQuotaManager;
-    private OpenJPAMailboxManager mailboxManager;
+    private PostgresMailboxManager mailboxManager;
     private final PostgresExtension postgresExtension;
 
     public PostgresHostSystem(PostgresExtension postgresExtension) {
@@ -119,7 +118,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         BlobId.Factory blobIdFactory = new HashBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
-        PostgresMailboxSessionMapperFactoryTODO mapperFactory = new PostgresMailboxSessionMapperFactoryTODO(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory);
+        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(postgresExtension.getExecutorFactory(), Clock.systemUTC(), blobStore, blobIdFactory);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
@@ -138,7 +137,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         AttachmentContentLoader attachmentContentLoader = null;
         MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
 
-        mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider, messageParser,
+        mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider, messageParser,
             new PostgresMessageId.Factory(),
             eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
 
@@ -164,7 +163,6 @@ public class PostgresHostSystem extends JamesImapHostSystem {
     @Override
     public void afterTest() {
         JPA_TEST_CLUSTER.clear(ImmutableList.<String>builder()
-            .addAll(JPAMailboxFixture.MAILBOX_TABLE_NAMES)
             .addAll(JPAMailboxFixture.QUOTA_TABLES_NAMES)
             .build());
     }
