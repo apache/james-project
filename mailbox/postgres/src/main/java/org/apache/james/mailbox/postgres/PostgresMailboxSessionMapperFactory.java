@@ -18,21 +18,22 @@
  ****************************************************************/
 package org.apache.james.mailbox.postgres;
 
+import java.time.Clock;
+
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.backends.jpa.EntityManagerUtils;
-import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.postgres.mail.JPAAnnotationMapper;
-import org.apache.james.mailbox.postgres.mail.JPAAttachmentMapper;
-import org.apache.james.mailbox.postgres.mail.JPAMailboxMapper;
-import org.apache.james.mailbox.postgres.mail.JPAMessageMapper;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
+import org.apache.james.mailbox.postgres.mail.PostgresAnnotationMapper;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxMapper;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageMapper;
+import org.apache.james.mailbox.postgres.mail.PostgresModSeqProvider;
+import org.apache.james.mailbox.postgres.mail.PostgresUidProvider;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxAnnotationDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -42,45 +43,41 @@ import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.ModSeqProvider;
-import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
-/**
- * JPA implementation of {@link MailboxSessionMapperFactory}
- *
- */
+
 public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
-    private final EntityManagerFactory entityManagerFactory;
-    private final JPAUidProvider uidProvider;
-    private final JPAModSeqProvider modSeqProvider;
-    private final AttachmentMapper attachmentMapper;
-    private final JPAConfiguration jpaConfiguration;
-
     private final PostgresExecutor.Factory executorFactory;
+    private final BlobStore blobStore;
+    private final BlobId.Factory blobIdFactory;
+    private final Clock clock;
 
     @Inject
-    public PostgresMailboxSessionMapperFactory(EntityManagerFactory entityManagerFactory, JPAUidProvider uidProvider,
-                                               JPAModSeqProvider modSeqProvider, JPAConfiguration jpaConfiguration,
-                                               PostgresExecutor.Factory executorFactory) {
-        this.entityManagerFactory = entityManagerFactory;
-        this.uidProvider = uidProvider;
-        this.modSeqProvider = modSeqProvider;
-        EntityManagerUtils.safelyClose(createEntityManager());
-        this.attachmentMapper = new JPAAttachmentMapper(entityManagerFactory);
-        this.jpaConfiguration = jpaConfiguration;
+    public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
+                                               Clock clock,
+                                               BlobStore blobStore,
+                                               BlobId.Factory blobIdFactory) {
         this.executorFactory = executorFactory;
+        this.blobStore = blobStore;
+        this.blobIdFactory = blobIdFactory;
+        this.clock = clock;
     }
 
     @Override
     public MailboxMapper createMailboxMapper(MailboxSession session) {
-        return new JPAMailboxMapper(entityManagerFactory);
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart()));
+        return new PostgresMailboxMapper(mailboxDAO);
     }
 
     @Override
     public MessageMapper createMessageMapper(MailboxSession session) {
-        return new JPAMessageMapper(uidProvider, modSeqProvider, entityManagerFactory, jpaConfiguration);
+        return new PostgresMessageMapper(executorFactory.create(session.getUser().getDomainPart()),
+            getModSeqProvider(session),
+            getUidProvider(session),
+            blobStore,
+            clock,
+            blobIdFactory);
     }
 
     @Override
@@ -93,38 +90,29 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         return new PostgresSubscriptionMapper(new PostgresSubscriptionDAO(executorFactory.create(session.getUser().getDomainPart())));
     }
 
-    /**
-     * Return a new {@link EntityManager} instance
-     * 
-     * @return manager
-     */
-    private EntityManager createEntityManager() {
-        return entityManagerFactory.createEntityManager();
-    }
-
     @Override
     public AnnotationMapper createAnnotationMapper(MailboxSession session) {
-        return new JPAAnnotationMapper(entityManagerFactory);
+        return new PostgresAnnotationMapper(new PostgresMailboxAnnotationDAO(executorFactory.create(session.getUser().getDomainPart())));
     }
 
     @Override
-    public UidProvider getUidProvider(MailboxSession session) {
-        return uidProvider;
+    public PostgresUidProvider getUidProvider(MailboxSession session) {
+        return new PostgresUidProvider.Factory(executorFactory).create(session);
     }
 
     @Override
-    public ModSeqProvider getModSeqProvider(MailboxSession session) {
-        return modSeqProvider;
+    public PostgresModSeqProvider getModSeqProvider(MailboxSession session) {
+        return new PostgresModSeqProvider.Factory(executorFactory).create(session);
     }
 
     @Override
     public AttachmentMapper createAttachmentMapper(MailboxSession session) {
-        return new JPAAttachmentMapper(entityManagerFactory);
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public AttachmentMapper getAttachmentMapper(MailboxSession session) {
-        return attachmentMapper;
+        throw new NotImplementedException("not implemented");
     }
 
 }
