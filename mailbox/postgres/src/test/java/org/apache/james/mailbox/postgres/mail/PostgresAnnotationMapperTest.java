@@ -37,8 +37,6 @@ public class PostgresAnnotationMapperTest extends AnnotationMapperTest {
     private static final Username BENWA = Username.of("benwa");
     protected static final MailboxPath benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
 
-    private MailboxId mailboxId;
-
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
@@ -50,7 +48,6 @@ public class PostgresAnnotationMapperTest extends AnnotationMapperTest {
     @Override
     protected MailboxId generateMailboxId() {
         MailboxMapper mailboxMapper = new PostgresMailboxMapper(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
-        mailboxId = mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block().getMailboxId();
-        return mailboxId;
+        return mailboxMapper.create(benwaInboxPath, UID_VALIDITY).block().getMailboxId();
     }
 }
