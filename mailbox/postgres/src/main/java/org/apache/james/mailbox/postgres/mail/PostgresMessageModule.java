@@ -127,7 +127,6 @@ public interface PostgresMessageModule {
                 .column(USER_FLAGS)
                 .column(SAVE_DATE)
                 .constraints(DSL.primaryKey(MAILBOX_ID, MESSAGE_UID),
-                    foreignKey(MAILBOX_ID).references(PostgresMailboxTable.TABLE_NAME, PostgresMailboxTable.MAILBOX_ID),
                     foreignKey(MESSAGE_ID).references(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID))
                 .comment("Holds mailbox and flags for each message")))
             .supportsRowLevelSecurity();
