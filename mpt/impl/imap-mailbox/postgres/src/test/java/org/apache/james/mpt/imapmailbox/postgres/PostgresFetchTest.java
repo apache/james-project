@@ -34,10 +34,4 @@ public class PostgresFetchTest extends Fetch {
         return hostSystemExtension.getHostSystem();
     }
 
-    @Override
-    @Test
-    public void testFetchSaveDate() throws Exception {
-        simpleScriptedTestProtocol
-            .run("FetchNILSaveDate");
-    }
 }
