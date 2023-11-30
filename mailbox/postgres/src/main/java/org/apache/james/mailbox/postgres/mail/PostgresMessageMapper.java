@@ -307,8 +307,16 @@ public class PostgresMessageMapper implements MessageMapper {
 
     private Flux<UpdatedFlags> updateFlagsPublisher(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange range) {
         return mailboxMessageDAO.findMessagesMetadata((PostgresMailboxId) mailbox.getMailboxId(), range)
-            .flatMap(currentMetaData -> modSeqProvider.nextModSeqReactive(mailbox.getMailboxId())
-                .flatMap(newModSeq -> updateFlags(currentMetaData, flagsUpdateCalculator, newModSeq)));
+            .collectList()
+            .flatMapMany(listMessagesMetadata -> updatedFlags(listMessagesMetadata, mailbox, flagsUpdateCalculator));
+    }
+
+    private Flux<UpdatedFlags> updatedFlags(List<ComposedMessageIdWithMetaData> listMessagesMetaData,
+                                            Mailbox mailbox,
+                                            FlagsUpdateCalculator flagsUpdateCalculator) {
+        return modSeqProvider.nextModSeqReactive(mailbox.getMailboxId())
+            .flatMapMany(newModSeq -> Flux.fromIterable(listMessagesMetaData)
+                .flatMap(messageMetaData -> updateFlags(messageMetaData, flagsUpdateCalculator, newModSeq)));
     }
 
     private Mono<UpdatedFlags> updateFlags(ComposedMessageIdWithMetaData currentMetaData,
