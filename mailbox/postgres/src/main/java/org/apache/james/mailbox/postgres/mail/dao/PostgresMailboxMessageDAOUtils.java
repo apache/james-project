@@ -21,7 +21,9 @@ package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_TYPE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_LANGUAGE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_LOCATION;
@@ -101,7 +103,7 @@ interface PostgresMailboxMessageDAOUtils {
         .orElse(ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(record.get(MESSAGE_ID))));
 
 
-    Field<?>[] MESSAGE_METADATA_FIELDS_REQUIRE = new Field[] {
+    Field<?>[] MESSAGE_METADATA_FIELDS_REQUIRE = new Field[]{
         MESSAGE_UID,
         MOD_SEQ,
         SIZE,
@@ -147,6 +149,8 @@ interface PostgresMailboxMessageDAOUtils {
             .map(Long::valueOf)
             .orElse(null));
 
+        property.setContentDescription(record.get(CONTENT_DESCRIPTION));
+        property.setContentDispositionType(record.get(CONTENT_DISPOSITION_TYPE));
         property.setContentID(record.get(CONTENT_ID));
         property.setContentMD5(record.get(CONTENT_MD5));
         property.setContentTransferEncoding(record.get(CONTENT_TRANSFER_ENCODING));
@@ -173,6 +177,7 @@ interface PostgresMailboxMessageDAOUtils {
         .messageId(PostgresMessageId.Factory.of(record.get(MESSAGE_ID)))
         .mailboxId(PostgresMailboxId.of(record.get(MAILBOX_ID)))
         .uid(MessageUid.of(record.get(MESSAGE_UID)))
+        .modseq(ModSeq.of(record.get(MOD_SEQ)))
         .threadId(RECORD_TO_THREAD_ID_FUNCTION.apply(record))
         .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageModule.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
         .saveDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(SAVE_DATE, LocalDateTime.class)))
