@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
-import static org.apache.james.mailbox.postgres.PostgresMailboxIdFaker.getMailboxId;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ACL;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_HIGHEST_MODSEQ;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ID;
@@ -36,6 +35,7 @@ import static org.jooq.impl.DSL.count;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -200,6 +200,10 @@ public class PostgresMailboxDAO {
             .map(this::asMailbox);
     }
 
+    private UUID asUUID(MailboxId mailboxId) {
+        return ((PostgresMailboxId)mailboxId).asUuid();
+    }
+
     private Mailbox asMailbox(Record record) {
         Mailbox mailbox = new Mailbox(new MailboxPath(record.get(MAILBOX_NAMESPACE), Username.of(record.get(USER_NAME)), record.get(MAILBOX_NAME)),
             UidValidity.of(record.get(MAILBOX_UID_VALIDITY)), PostgresMailboxId.of(record.get(MAILBOX_ID)));
@@ -210,7 +214,7 @@ public class PostgresMailboxDAO {
     public Mono<MessageUid> findLastUidByMailboxId(MailboxId mailboxId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(MAILBOX_LAST_UID)
                 .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))))
+                .where(MAILBOX_ID.eq(asUUID(mailboxId)))))
             .flatMap(record -> Mono.justOrEmpty(record.get(MAILBOX_LAST_UID)))
             .map(MessageUid::of);
     }
@@ -218,7 +222,7 @@ public class PostgresMailboxDAO {
     public Mono<MessageUid> incrementAndGetLastUid(MailboxId mailboxId, int count) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
                 .set(MAILBOX_LAST_UID, coalesce(MAILBOX_LAST_UID, 0L).add(count))
-                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))
+                .where(MAILBOX_ID.eq(asUUID(mailboxId)))
                 .returning(MAILBOX_LAST_UID)))
             .map(record -> record.get(MAILBOX_LAST_UID))
             .map(MessageUid::of);
@@ -228,7 +232,7 @@ public class PostgresMailboxDAO {
     public Mono<ModSeq> findHighestModSeqByMailboxId(MailboxId mailboxId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(MAILBOX_HIGHEST_MODSEQ)
                 .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))))
+                .where(MAILBOX_ID.eq(asUUID(mailboxId)))))
             .flatMap(record -> Mono.justOrEmpty(record.get(MAILBOX_HIGHEST_MODSEQ)))
             .map(ModSeq::of);
     }
@@ -236,7 +240,7 @@ public class PostgresMailboxDAO {
     public Mono<ModSeq> incrementAndGetModSeq(MailboxId mailboxId) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
                 .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, 0L).add(1))
-                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))
+                .where(MAILBOX_ID.eq(asUUID(mailboxId)))
                 .returning(MAILBOX_HIGHEST_MODSEQ)))
             .map(record -> record.get(MAILBOX_HIGHEST_MODSEQ))
             .map(ModSeq::of);
@@ -247,7 +251,7 @@ public class PostgresMailboxDAO {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.update(TABLE_NAME)
                 .set(MAILBOX_LAST_UID, coalesce(MAILBOX_LAST_UID, 0L).add(increment))
                 .set(MAILBOX_HIGHEST_MODSEQ, coalesce(MAILBOX_HIGHEST_MODSEQ, 0L).add(increment))
-                .where(MAILBOX_ID.eq(getMailboxId(mailboxId).asUuid()))
+                .where(MAILBOX_ID.eq(asUUID(mailboxId)))
                 .returning(MAILBOX_LAST_UID, MAILBOX_HIGHEST_MODSEQ)))
             .map(record -> Pair.of(MessageUid.of(record.get(MAILBOX_LAST_UID)), ModSeq.of(record.get(MAILBOX_HIGHEST_MODSEQ))));
     }

@@ -19,13 +19,14 @@
 
 package org.apache.james.mailbox.postgres;
 
+import java.time.Clock;
 import java.time.Instant;
 
-import javax.persistence.EntityManagerFactory;
-
-import org.apache.james.backends.jpa.JPAConfiguration;
-import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BucketName;
+import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
@@ -34,38 +35,28 @@ import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
-import org.apache.james.mailbox.postgres.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 
-public class JpaMailboxManagerProvider {
+public class PostgresMailboxManagerProvider {
 
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    public static OpenJPAMailboxManager provideMailboxManager(JpaTestCluster jpaTestCluster, PostgresExtension postgresExtension) {
-        EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
-
-        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
-            .driverName("driverName")
-            .driverURL("driverUrl")
-            .attachmentStorage(true)
-            .build();
-
-        PostgresMailboxSessionMapperFactory mf = new PostgresMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(entityManagerFactory), jpaConfiguration, postgresExtension.getExecutorFactory());
+    public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension) {
+        MailboxSessionMapperFactory mf = provideMailboxSessionMapperFactory(postgresExtension);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
@@ -81,9 +72,20 @@ public class JpaMailboxManagerProvider {
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
         MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor(), new JPAAttachmentContentLoader());
 
-        return new OpenJPAMailboxManager(mf, sessionProvider,
-            messageParser, new DefaultMessageId.Factory(),
+        return new PostgresMailboxManager((PostgresMailboxSessionMapperFactory) mf, sessionProvider,
+            messageParser, new PostgresMessageId.Factory(),
             eventBus, annotationManager,
             storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
+    }
+
+    public static MailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension) {
+        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
+
+        return new PostgresMailboxSessionMapperFactory(
+            postgresExtension.getExecutorFactory(),
+            Clock.systemUTC(),
+            blobStore,
+            blobIdFactory);
     }
 }
