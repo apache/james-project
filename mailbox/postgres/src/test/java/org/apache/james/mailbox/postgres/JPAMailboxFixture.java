@@ -21,14 +21,6 @@ package org.apache.james.mailbox.postgres;
 
 import java.util.List;
 
-import org.apache.james.mailbox.postgres.mail.model.JPAAttachment;
-import org.apache.james.mailbox.postgres.mail.model.JPAMailbox;
-import org.apache.james.mailbox.postgres.mail.model.JPAMailboxAnnotation;
-import org.apache.james.mailbox.postgres.mail.model.JPAProperty;
-import org.apache.james.mailbox.postgres.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.AbstractJPAMailboxMessage;
-import org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessage;
-import org.apache.james.mailbox.postgres.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.postgres.quota.model.MaxDomainMessageCount;
 import org.apache.james.mailbox.postgres.quota.model.MaxDomainStorage;
 import org.apache.james.mailbox.postgres.quota.model.MaxGlobalMessageCount;
@@ -40,33 +32,13 @@ import com.google.common.collect.ImmutableList;
 
 public interface JPAMailboxFixture {
 
-    List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.of(
-        JPAMailbox.class,
-        AbstractJPAMailboxMessage.class,
-        JPAMailboxMessage.class,
-        JPAProperty.class,
-        JPAUserFlag.class,
-        JPAMailboxAnnotation.class,
-        JPAAttachment.class
-    );
-
     List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.of(
         MaxGlobalMessageCount.class,
         MaxGlobalStorage.class,
         MaxDomainStorage.class,
         MaxDomainMessageCount.class,
         MaxUserMessageCount.class,
-        MaxUserStorage.class,
-        JpaCurrentQuota.class
-    );
-
-    List<String> MAILBOX_TABLE_NAMES = ImmutableList.of(
-        "JAMES_MAIL_USERFLAG",
-        "JAMES_MAIL_PROPERTY",
-        "JAMES_MAILBOX_ANNOTATION",
-        "JAMES_MAILBOX",
-        "JAMES_MAIL",
-        "JAMES_ATTACHMENT");
+        MaxUserStorage.class);
 
     List<String> QUOTA_TABLES_NAMES = ImmutableList.of(
         "JAMES_MAX_GLOBAL_MESSAGE_COUNT",
@@ -74,7 +46,6 @@ public interface JPAMailboxFixture {
         "JAMES_MAX_USER_MESSAGE_COUNT",
         "JAMES_MAX_USER_STORAGE",
         "JAMES_MAX_DOMAIN_MESSAGE_COUNT",
-        "JAMES_MAX_DOMAIN_STORAGE",
-        "JAMES_QUOTA_CURRENTQUOTA"
+        "JAMES_MAX_DOMAIN_STORAGE"
     );
 }
