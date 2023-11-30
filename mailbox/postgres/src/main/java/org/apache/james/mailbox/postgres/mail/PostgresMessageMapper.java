@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -157,7 +158,9 @@ public class PostgresMessageMapper implements MessageMapper {
                     default:
                         return Flux.error(new RuntimeException("Unknown FetchType " + fetchType));
                 }
-            });
+            })
+            .sort(Comparator.comparing(MailboxMessage::getUid))
+            .map(message -> message);
     }
 
     private Mono<Content> retrieveFullContent(String blobIdString) {
