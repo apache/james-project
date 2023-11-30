@@ -24,12 +24,6 @@
     version="2.0">
 
     <persistence-unit name="Global" transaction-type="RESOURCE_LOCAL">
-        <class>org.apache.james.mailbox.postgres.mail.model.JPAMailbox</class>
-        <class>org.apache.james.mailbox.postgres.mail.model.JPAUserFlag</class>
-        <class>org.apache.james.mailbox.postgres.mail.model.openjpa.AbstractJPAMailboxMessage</class>
-        <class>org.apache.james.mailbox.postgres.mail.model.openjpa.JPAMailboxMessage</class>
-        <class>org.apache.james.mailbox.postgres.mail.model.JPAProperty</class>
-
         <class>org.apache.james.mailrepository.jpa.model.JPAUrl</class>
         <class>org.apache.james.mailrepository.jpa.model.JPAMail</class>
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
@@ -43,10 +37,6 @@
         <class>org.apache.james.mailbox.postgres.quota.model.MaxUserStorage</class>
         <class>org.apache.james.mailbox.postgres.quota.model.MaxDomainStorage</class>
         <class>org.apache.james.mailbox.postgres.quota.model.MaxDomainMessageCount</class>
-        <class>org.apache.james.mailbox.postgres.quota.model.JpaCurrentQuota</class>
-
-        <class>org.apache.james.mailbox.postgres.mail.model.JPAMailboxAnnotation</class>
-        <class>org.apache.james.mailbox.postgres.mail.model.JPAMailboxAnnotationId</class>
 
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
