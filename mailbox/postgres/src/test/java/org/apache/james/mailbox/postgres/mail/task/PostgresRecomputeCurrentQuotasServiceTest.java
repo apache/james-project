@@ -19,56 +19,49 @@
 
 package org.apache.james.mailbox.postgres.mail.task;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
+import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SessionProvider;
-import org.apache.james.mailbox.postgres.JPAMailboxFixture;
-import org.apache.james.mailbox.postgres.JpaMailboxManagerProvider;
-import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
-import org.apache.james.mailbox.postgres.mail.JPAModSeqProvider;
-import org.apache.james.mailbox.postgres.mail.JPAUidProvider;
-import org.apache.james.mailbox.postgres.quota.JpaCurrentQuotaManager;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
+import org.apache.james.mailbox.postgres.PostgresMailboxManagerProvider;
+import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
 import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.jpa.JPAUsersRepository;
-import org.apache.james.user.jpa.model.JPAUser;
-import org.junit.jupiter.api.AfterEach;
+import org.apache.james.user.postgres.PostgresUserModule;
+import org.apache.james.user.postgres.PostgresUsersDAO;
+import org.apache.james.user.postgres.PostgresUsersRepository;
+import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
+class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresSubscriptionModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.aggregateModules(
+        PostgresMailboxAggregateModule.MODULE,
+        PostgresQuotaModule.MODULE,
+        PostgresUserModule.MODULE));
 
     static final DomainList NO_DOMAIN_LIST = null;
 
-    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(ImmutableList.<Class<?>>builder()
-        .addAll(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES)
-        .addAll(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES)
-        .add(JPAUser.class)
-        .add(JPADomain.class)
-        .build());
-
-    JPAUsersRepository usersRepository;
+    PostgresUsersRepository usersRepository;
     StoreMailboxManager mailboxManager;
     SessionProvider sessionProvider;
     CurrentQuotaManager currentQuotaManager;
@@ -77,28 +70,19 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
 
     @BeforeEach
     void setUp() throws Exception {
-        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
+        MailboxSessionMapperFactory mapperFactory = PostgresMailboxManagerProvider.provideMailboxSessionMapperFactory(postgresExtension);
 
-        JPAConfiguration jpaConfiguration = JPAConfiguration.builder()
-            .driverName("driverName")
-            .driverURL("driverUrl")
-            .build();
+        PostgresUsersDAO usersDAO = new PostgresUsersDAO(postgresExtension.getPostgresExecutor(),
+            PostgresUsersRepositoryConfiguration.DEFAULT);
 
-        PostgresMailboxSessionMapperFactory mapperFactory = new PostgresMailboxSessionMapperFactory(entityManagerFactory,
-            new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(entityManagerFactory),
-            jpaConfiguration,
-            postgresExtension.getExecutorFactory());
-
-        usersRepository = new JPAUsersRepository(NO_DOMAIN_LIST);
-        usersRepository.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
+        usersRepository = new PostgresUsersRepository(NO_DOMAIN_LIST, usersDAO);
         BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("enableVirtualHosting", "false");
         usersRepository.configure(configuration);
 
-        mailboxManager = JpaMailboxManagerProvider.provideMailboxManager(JPA_TEST_CLUSTER, postgresExtension);
+        mailboxManager = PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension);
         sessionProvider = mailboxManager.getSessionProvider();
-        currentQuotaManager = new JpaCurrentQuotaManager(entityManagerFactory);
+        currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
 
         userQuotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
 
@@ -111,16 +95,6 @@ class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServ
                     sessionProvider,
                     mailboxManager),
                 RECOMPUTE_JMAP_UPLOAD_CURRENT_QUOTAS_SERVICE));
-    }
-
-    @AfterEach
-    void tearDownJpa() {
-        JPA_TEST_CLUSTER.clear(ImmutableList.<String>builder()
-            .addAll(JPAMailboxFixture.MAILBOX_TABLE_NAMES)
-            .addAll(JPAMailboxFixture.QUOTA_TABLES_NAMES)
-            .add("JAMES_USER")
-            .add("JAMES_DOMAIN")
-            .build());
     }
 
     @Override
