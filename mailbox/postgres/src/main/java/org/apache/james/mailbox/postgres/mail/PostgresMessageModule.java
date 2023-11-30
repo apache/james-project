@@ -28,7 +28,6 @@ import org.apache.james.backends.postgres.PostgresCommons.DataTypes;
 import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
