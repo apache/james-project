@@ -41,7 +41,7 @@ public class CrowdsecEhloHook implements HeloHook {
 
     @Override
     public HookResult doHelo(SMTPSession session, String helo) {
-        String ip = session.getRemoteAddress().toString().split("/")[1].split(":")[0];
+        String ip = session.getRemoteAddress().getAddress().getHostAddress();
         return crowdsecHttpClient.getCrowdsecDecisions()
             .map(decisions -> apply(decisions, ip)).block();
     }
