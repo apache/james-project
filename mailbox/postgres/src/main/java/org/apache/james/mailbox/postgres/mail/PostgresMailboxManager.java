@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.openjpa;
+package org.apache.james.mailbox.postgres.mail;
 
 import java.time.Clock;
 import java.util.EnumSet;
@@ -29,9 +29,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -42,28 +42,27 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
-/**
- * OpenJPA implementation of MailboxManager
- */
-public class OpenJPAMailboxManager extends StoreMailboxManager {
-    public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(MailboxCapabilities.UserFlag,
+public class PostgresMailboxManager extends StoreMailboxManager {
+
+    public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(
+        MailboxCapabilities.UserFlag,
         MailboxCapabilities.Namespace,
         MailboxCapabilities.Move,
         MailboxCapabilities.Annotation);
 
     @Inject
-    public OpenJPAMailboxManager(MailboxSessionMapperFactory mapperFactory,
-                                 SessionProvider sessionProvider,
-                                 MessageParser messageParser,
-                                 MessageId.Factory messageIdFactory,
-                                 EventBus eventBus,
-                                 StoreMailboxAnnotationManager annotationManager,
-                                 StoreRightManager storeRightManager,
-                                 QuotaComponents quotaComponents,
-                                 MessageSearchIndex index,
-                                 ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
-                                 Clock clock) {
-        super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(),
+    public PostgresMailboxManager(PostgresMailboxSessionMapperFactory mapperFactory,
+                                  SessionProvider sessionProvider,
+                                  MessageParser messageParser,
+                                  MessageId.Factory messageIdFactory,
+                                  EventBus eventBus,
+                                  StoreMailboxAnnotationManager annotationManager,
+                                  StoreRightManager storeRightManager,
+                                  QuotaComponents quotaComponents,
+                                  MessageSearchIndex index,
+                                  ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                  Clock clock) {
+        super(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,
             index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, clock);
@@ -71,7 +70,7 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
 
     @Override
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
-        return new OpenJPAMessageManager(getMapperFactory(),
+        return new PostgresMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventBus(),
             getLocker(),

@@ -19,25 +19,37 @@
 
 package org.apache.james.mailbox.postgres;
 
-import java.util.UUID;
+import java.util.Optional;
 
-import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.events.EventBus;
+import org.apache.james.mailbox.MailboxManagerStressContract;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-// TODO remove: this is trick convert JPAId to PostgresMailboxId when implementing PostgresUidProvider.
-// it should be removed when all JPA dependencies are removed
-@Deprecated
-public class PostgresMailboxIdFaker {
-    public static PostgresMailboxId getMailboxId(MailboxId mailboxId) {
-        if (mailboxId instanceof JPAId) {
-            long longValue = ((JPAId) mailboxId).getRawId();
-            return PostgresMailboxId.of(longToUUID(longValue));
+class PostgresMailboxManagerStressTest implements MailboxManagerStressContract<PostgresMailboxManager> {
+
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
+
+    Optional<PostgresMailboxManager> mailboxManager = Optional.empty();
+
+    @Override
+    public PostgresMailboxManager getManager() {
+        return mailboxManager.get();
+    }
+
+    @Override
+    public EventBus retrieveEventBus() {
+        return getManager().getEventBus();
+    }
+
+    @BeforeEach
+    void setUp() {
+        if (mailboxManager.isEmpty()) {
+            mailboxManager = Optional.of(PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension));
         }
-        return (PostgresMailboxId) mailboxId;
     }
 
-    public static UUID longToUUID(Long longValue) {
-        long mostSigBits = longValue << 32;
-        long leastSigBits = 0;
-        return new UUID(mostSigBits, leastSigBits);
-    }
 }
