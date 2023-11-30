@@ -335,6 +335,7 @@ public class PostgresMailboxMessageDAO {
 
         return updateStatement.get()
             .set(USER_FLAGS, updatedFlags.getNewFlags().getUserFlags())
+            .set(MOD_SEQ, updatedFlags.getModSeq().asLong())
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))
             .and(MESSAGE_UID.eq(uid.asLong()));
     }
