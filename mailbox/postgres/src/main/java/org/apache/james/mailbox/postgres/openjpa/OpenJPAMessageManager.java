@@ -36,6 +36,7 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.MessageFactory;
 import org.apache.james.mailbox.store.MessageStorer;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -66,7 +67,7 @@ public class OpenJPAMessageManager extends StoreMessageManager {
                                  Clock clock) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
-            new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None), threadIdGuessingAlgorithm, clock));
+            new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock));
         this.storeRightManager = storeRightManager;
         this.mapperFactory = mapperFactory;
         this.mailbox = mailbox;
