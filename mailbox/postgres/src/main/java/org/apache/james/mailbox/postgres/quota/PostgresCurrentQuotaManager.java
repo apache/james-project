@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -39,6 +41,8 @@ import reactor.core.publisher.Mono;
 public class PostgresCurrentQuotaManager implements CurrentQuotaManager {
 
     private final PostgresQuotaCurrentValueDAO currentValueDao;
+
+    @Inject
 
     public PostgresCurrentQuotaManager(PostgresQuotaCurrentValueDAO currentValueDao) {
         this.currentValueDao = currentValueDao;
