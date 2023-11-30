@@ -21,17 +21,16 @@ package org.apache.james.domainlist.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.UnknownHostException;
 import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.lib.DomainListFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -49,17 +48,17 @@ class CacheDomainListTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDomainListModule.MODULE);
 
-    CassandraDomainList domainList;
+    DomainList domainList;
 
     @BeforeEach
     public void setUp(CassandraCluster cassandra) throws Exception {
-        domainList = new CassandraDomainList(getDNSServer("localhost"), cassandra.getConf());
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .cacheEnabled(true)
-            .cacheExpiracy(Duration.ofSeconds(1))
-            .build());
+        domainList = new DomainListFactory(null, conf -> new CassandraDomainList(cassandra.getConf(), conf))
+            .create(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false)
+                .cacheEnabled(true)
+                .cacheExpiracy(Duration.ofSeconds(1))
+                .build());
     }
 
     @Test
@@ -123,11 +122,5 @@ class CacheDomainListTest {
         domainList.getDomains();
 
         assertThat(domainList.containsDomain(DOMAIN_1)).isEqualTo(true);
-    }
-
-    private DNSService getDNSServer(final String hostName) throws UnknownHostException {
-        return new InMemoryDNSService()
-            .registerMxRecord(hostName, "127.0.0.1")
-            .registerMxRecord("127.0.0.1", "127.0.0.1");
     }
 }

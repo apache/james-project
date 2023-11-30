@@ -20,7 +20,6 @@ package org.apache.james.smtpserver;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -43,7 +42,6 @@ import java.util.List;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
@@ -53,9 +51,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Authorizator;
@@ -182,9 +178,6 @@ public class SMTPServerTest {
         }
     }
 
-    private static final long HALF_SECOND = 500;
-    private static final int MAX_ITERATIONS = 10;
-
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
@@ -206,16 +199,7 @@ public class SMTPServerTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-
-        domainList = new MemoryDomainList(new InMemoryDNSService()
-            .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
-            .registerMxRecord(LOCAL_DOMAIN, "127.0.0.1")
-            .registerMxRecord("examplebis.local", "127.0.0.1")
-            .registerMxRecord("127.0.0.1", "127.0.0.1"));
-        domainList.configure(DomainListConfiguration.builder()
-            .autoDetect(false)
-            .autoDetectIp(false)
-            .build());
+        domainList = new MemoryDomainList();
 
         domainList.addDomain(Domain.of(LOCAL_DOMAIN));
         domainList.addDomain(Domain.of("examplebis.local"));

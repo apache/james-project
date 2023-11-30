@@ -23,6 +23,7 @@ import org.apache.james.CoreDataModule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainList;
+import org.apache.james.domainlist.lib.DomainCreator;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -46,7 +47,7 @@ public class CassandraDomainListModule extends AbstractModule {
     @ProvidesIntoSet
     InitializationOperation configureDomainList(DomainListConfiguration configuration, CassandraDomainList cassandraDomainList) {
         return InitilizationOperationBuilder
-            .forClass(CassandraDomainList.class)
-            .init(() -> cassandraDomainList.configure(configuration));
+            .forClass(DomainCreator.class)
+            .init(() -> new DomainCreator(cassandraDomainList, configuration).createConfiguredDomains());
     }
 }

@@ -38,9 +38,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.UserEntityValidator;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
@@ -153,11 +151,10 @@ public class SetMessagesCreationProcessorTest {
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         recipientRewriteTable = new MemoryRecipientRewriteTable();
 
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.DEFAULT);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.addDomain(Domain.of("example.com"));
         domainList.addDomain(Domain.of("other.org"));
+
         recipientRewriteTable.setUsersRepository(MemoryUsersRepository.withVirtualHosting(domainList));
         recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
         recipientRewriteTable.setDomainList(domainList);

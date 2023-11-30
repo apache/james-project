@@ -22,14 +22,11 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import java.util.Map;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.Mapping;
@@ -58,9 +55,7 @@ class AddressMappingRoutesTest {
     @BeforeEach
     void setUp() throws Exception {
         recipientRewriteTable = new MemoryRecipientRewriteTable();
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.DEFAULT);
+        MemoryDomainList domainList = new MemoryDomainList();
         domainList.addDomain(Domain.of("domain.tld"));
 
         recipientRewriteTable.setDomainList(domainList);

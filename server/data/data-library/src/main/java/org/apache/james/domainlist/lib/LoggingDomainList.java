@@ -17,63 +17,56 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.domainlist.memory;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.inject.Inject;
+package org.apache.james.domainlist.lib;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
-// TODO Fix RecipientRewriteTableProcessorTest
-public class MemoryDomainList implements DomainList {
-    private final List<Domain> domains;
-    private final DomainListConfiguration configuration;
+class LoggingDomainList implements DomainList {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingDomainList.class);
 
-    @Inject
-    public MemoryDomainList() {
-        this(DomainListConfiguration.DEFAULT);
-    }
+    private final DomainList underlying;
 
-    @Inject
-    public MemoryDomainList(DomainListConfiguration configuration) {
-        this.domains = new ArrayList<>();
-        this.configuration = configuration;
+    public LoggingDomainList(DomainList underlying) {
+        this.underlying = underlying;
     }
 
     @Override
-    public List<Domain> getDomains() {
-        return ImmutableList.copyOf(domains);
+    public ImmutableList<Domain> getDomains() throws DomainListException {
+        ImmutableSet<Domain> allDomains = ImmutableSet.copyOf(underlying.getDomains());
+
+        if (LOGGER.isDebugEnabled()) {
+            for (Domain domain : allDomains) {
+                LOGGER.debug("Handling mail for: " + domain.name());
+            }
+        }
+
+        return ImmutableList.copyOf(allDomains);
     }
 
     @Override
-    public boolean containsDomain(Domain domain) {
-        return domains.contains(domain);
+    public boolean containsDomain(Domain domain) throws DomainListException {
+        return underlying.containsDomain(domain);
     }
 
     @Override
     public void addDomain(Domain domain) throws DomainListException {
-        if (containsDomain(domain)) {
-            throw new DomainListException(domain.name() + " already exists.");
-        }
-        domains.add(domain);
+        underlying.addDomain(domain);
     }
 
     @Override
     public void removeDomain(Domain domain) throws DomainListException {
-        if (!domains.remove(domain)) {
-            throw new DomainListException(domain.name() + " was not found");
-        }
+        underlying.removeDomain(domain);
     }
 
     @Override
     public Domain getDefaultDomain() throws DomainListException {
-        return configuration.getDefaultDomain();
+        return underlying.getDefaultDomain();
     }
 }

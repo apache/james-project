@@ -17,53 +17,65 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.domainlist.xml;
+package org.apache.james.domainlist.lib;
 
 import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.DomainCreator;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 
-/**
- * Mimic the old behavior of JAMES
- */
-@Singleton
-public class XMLDomainList implements DomainList, DomainCreator.SkipDomainCreationMarker {
-    private final DomainListConfiguration configuration;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
-    @Inject
-    public XMLDomainList(DomainListConfiguration configuration) {
-        this.configuration = configuration;
-    }
+class CachingDomainList implements DomainList {
+    private final DomainList underlying;
+    private final LoadingCache<Domain, Boolean> cache;
 
-    @Override
-    public List<Domain> getDomains() {
-        return configuration.getConfiguredDomains();
-    }
+    public CachingDomainList(DomainList underlying, DomainListConfiguration configuration) {
+        this.underlying = underlying;
 
-    @Override
-    public boolean containsDomain(Domain domain) throws DomainListException {
-        return configuration.getConfiguredDomains().contains(domain);
-    }
-
-    @Override
-    public void addDomain(Domain domain) throws DomainListException {
-        throw new DomainListException("Read-Only DomainList implementation");
-    }
-
-    @Override
-    public void removeDomain(Domain domain) throws DomainListException {
-        throw new DomainListException("Read-Only DomainList implementation");
+        this.cache = CacheBuilder.newBuilder()
+            .expireAfterWrite(configuration.getCacheExpiracy())
+            .build(new CacheLoader<>() {
+                @Override
+                public Boolean load(Domain key) throws DomainListException {
+                    return underlying.containsDomain(key);
+                }
+            });
     }
 
     @Override
     public Domain getDefaultDomain() throws DomainListException {
-        return configuration.getDefaultDomain();
+        return underlying.getDefaultDomain();
+    }
+
+    @Override
+    public boolean containsDomain(Domain domain) throws DomainListException {
+        try {
+            return cache.get(domain);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof DomainListException) {
+                throw (DomainListException) e.getCause();
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<Domain> getDomains() throws DomainListException {
+        return underlying.getDomains();
+    }
+
+    @Override
+    public void removeDomain(Domain domain) throws DomainListException {
+        underlying.removeDomain(domain);
+    }
+
+    @Override
+    public void addDomain(Domain domain) throws DomainListException {
+        underlying.addDomain(domain);
     }
 }

@@ -16,30 +16,36 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.data;
 
+package org.apache.james.domainlist.lib;
+
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.JPADomainList;
-import org.apache.james.domainlist.lib.DomainCreator;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.lifecycle.api.Startable;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
+import com.github.fge.lambdas.Throwing;
+import javax.inject.Inject;
 
-public class JPADomainListModule extends AbstractModule {
-    @Override
-    public void configure() {
-        bind(JPADomainList.class).in(Scopes.SINGLETON);
-        bind(DomainList.class).to(JPADomainList.class);
+public class DomainCreator implements Startable {
+    public interface SkipDomainCreationMarker {
+
     }
 
-    @ProvidesIntoSet
-    InitializationOperation configureDomainList(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
-        return InitilizationOperationBuilder
-            .forClass(DomainCreator.class)
-            .init(() -> new DomainCreator(jpaDomainList, configuration).createConfiguredDomains());
+    private final DomainList domainList;
+    private final DomainListConfiguration configuration;
+
+    @Inject
+    public DomainCreator(DomainList domainList, DomainListConfiguration configuration) {
+        this.domainList = domainList;
+        this.configuration = configuration;
+    }
+
+    public void createConfiguredDomains() {
+        if (domainList instanceof SkipDomainCreationMarker) {
+            return;
+        }
+        configuration.getConfiguredDomains().stream()
+            .filter(Throwing.predicate((Domain domain) -> !domainList.containsDomain(domain)).sneakyThrow())
+            .forEach(Throwing.consumer(domainList::addDomain).sneakyThrow());
     }
 }

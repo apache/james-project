@@ -46,6 +46,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.lib.DomainListFactory;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
@@ -146,14 +147,7 @@ class DomainsRoutesTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            DNSService dnsService = mock(DNSService.class);
-            when(dnsService.getHostName(any())).thenReturn("localhost");
-            when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
-            MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            domainList.configure(DomainListConfiguration.builder()
-                .autoDetect(false)
-                .autoDetectIp(false)
-                .build());
+            MemoryDomainList domainList = new MemoryDomainList();
             domainList.addDomain(Domain.of("domain.tld"));
 
             recordProcessedUsersStep = new RecordProcessedUsersStep();
@@ -261,15 +255,7 @@ class DomainsRoutesTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            DNSService dnsService = mock(DNSService.class);
-            when(dnsService.getHostName(any())).thenReturn("localhost");
-            when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("localhost"));
-
-            MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            domainList.configure(DomainListConfiguration.builder()
-                .autoDetect(false)
-                .autoDetectIp(false)
-                .build());
+            MemoryDomainList domainList = new MemoryDomainList();
             createServer(domainList);
         }
 
@@ -851,12 +837,12 @@ class DomainsRoutesTest {
             when(dnsService.getAllByName(any())).thenReturn(ImmutableList.of(InetAddress.getByName("172.45.62.13")));
             when(dnsService.getHostName(any())).thenReturn("james.local");
 
-            MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            domainList.configure(DomainListConfiguration.builder()
-                .autoDetect(true)
-                .autoDetectIp(true)
-                .defaultDomain(Domain.of("default.tld"))
-                .build());
+            DomainList domainList = new DomainListFactory(dnsService, MemoryDomainList::new)
+                .createWithAllInitialisation(DomainListConfiguration.builder()
+                    .autoDetect(true)
+                    .autoDetectIp(true)
+                    .defaultDomain(Domain.of("default.tld"))
+                    .build());
             createServer(domainList);
         }
 

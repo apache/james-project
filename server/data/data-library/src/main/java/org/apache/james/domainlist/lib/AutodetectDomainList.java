@@ -24,38 +24,24 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration2.HierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.lifecycle.api.Configurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
-/**
- * All implementations of the DomainList interface should extends this abstract
- * class
- */
-public abstract class AbstractDomainList implements DomainList, Configurable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
+class AutodetectDomainList implements DomainList {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutodetectDomainList.class);
 
     enum DomainType {
         DefaultDomain,
@@ -64,124 +50,25 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         DetectedIp
     }
 
-    public static final String ENV_DOMAIN = "DOMAIN";
-
     private final DNSService dns;
-    private final EnvDetector envDetector;
-    private LoadingCache<Domain, Boolean> cache;
-    private DomainListConfiguration configuration;
-    private Domain defaultDomain;
+    private final DomainList underlying;
+    private final DomainListConfiguration configuration;
 
-    public AbstractDomainList(DNSService dns, EnvDetector envDetector) {
+    public AutodetectDomainList(DNSService dns, DomainList underlying, DomainListConfiguration configuration) {
         this.dns = dns;
-        this.envDetector = envDetector;
-    }
-
-    public AbstractDomainList(DNSService dns) {
-        this(dns, new EnvDetector());
-    }
-
-    @Override
-    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
-        DomainListConfiguration domainListConfiguration = DomainListConfiguration.from(config);
-
-        configure(domainListConfiguration);
-    }
-
-    public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
-        this.configuration = domainListConfiguration;
-
-        this.cache = CacheBuilder.newBuilder()
-            .expireAfterWrite(configuration.getCacheExpiracy())
-            .build(new CacheLoader<>() {
-                @Override
-                public Boolean load(Domain key) throws DomainListException {
-                    return containsDomainInternal(key) || detectedDomainsContains(key);
-                }
-            });
-
-        configureDefaultDomain(domainListConfiguration.getDefaultDomain());
-
-        addEnvDomain();
-        addConfiguredDomains(domainListConfiguration.getConfiguredDomains());
-    }
-    
-    public void configure(DomainListConfiguration.Builder configurationBuilder) throws ConfigurationException {
-        configure(configurationBuilder.build());
-    }
-
-    protected void addConfiguredDomains(List<Domain> domains) {
-        domains.stream()
-            .filter(Throwing.predicate((Domain domain) -> !containsDomainInternal(domain)).sneakyThrow())
-            .forEach(Throwing.consumer(this::addDomain).sneakyThrow());
-    }
-
-
-    private void addEnvDomain() {
-        String envDomain = envDetector.getEnv(ENV_DOMAIN);
-        if (!Strings.isNullOrEmpty(envDomain)) {
-            try {
-                LOGGER.info("Adding environment defined domain {}", envDomain);
-                Domain domain = Domain.of(envDomain);
-                if (!containsDomain(domain)) {
-                    addDomain(domain);
-                }
-            } catch (DomainListException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    @VisibleForTesting void configureDefaultDomain(Domain defaultDomain) throws ConfigurationException {
-        try {
-            setDefaultDomain(defaultDomain);
-
-            String hostName = InetAddress.getLocalHost().getHostName();
-            if (mayChangeDefaultDomain()) {
-                setDefaultDomain(Domain.of(hostName));
-            }
-        } catch (UnknownHostException e) {
-            LOGGER.warn("Unable to retrieve hostname.", e);
-        } catch (DomainListException e) {
-            LOGGER.error("An error occured while creating the default domain", e);
-        }
-    }
-
-    private boolean mayChangeDefaultDomain() {
-        return configuration.isAutoDetect() && Domain.LOCALHOST.equals(defaultDomain);
-    }
-
-    private void setDefaultDomain(Domain defaultDomain) throws DomainListException {
-        if (defaultDomain != null && !containsDomain(defaultDomain)) {
-            addDomain(defaultDomain);
-        }
-        this.defaultDomain = defaultDomain;
+        this.underlying = underlying;
+        this.configuration = configuration;
     }
 
     @Override
     public Domain getDefaultDomain() throws DomainListException {
-        if (defaultDomain != null) {
-            return defaultDomain;
-        } else {
-            throw new DomainListException("Null default domain. Domain list might not be configured yet.");
-        }
+        return underlying.getDefaultDomain();
     }
 
     @Override
     public boolean containsDomain(Domain domain) throws DomainListException {
-        if (configuration.isCacheEnabled()) {
-            try {
-                return cache.get(domain);
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof DomainListException) {
-                    throw (DomainListException) e.getCause();
-                }
-                throw new RuntimeException(e);
-            }
-        } else {
-            boolean internalAnswer = containsDomainInternal(domain);
-            return internalAnswer || detectedDomainsContains(domain);
-        }
+        boolean internalAnswer = underlying.containsDomain(domain);
+        return internalAnswer || detectedDomainsContains(domain);
     }
 
     private boolean detectedDomainsContains(Domain domain) throws DomainListException {
@@ -198,11 +85,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             .stream()
             .collect(ImmutableSet.toImmutableSet());
 
-        if (configuration.isCacheEnabled()) {
-            domainsWithType.get(DomainType.Internal)
-                .forEach(domain -> cache.put(domain, true));
-        }
-
         if (LOGGER.isDebugEnabled()) {
             for (Domain domain : allDomains) {
                 LOGGER.debug("Handling mail for: " + domain.name());
@@ -213,7 +95,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     private Multimap<DomainType, Domain> getDomainsWithType() throws DomainListException {
-        List<Domain> domains = getDomainListInternal();
+        List<Domain> domains = underlying.getDomains();
         ImmutableList<Domain> detectedDomains = detectDomains();
 
         ImmutableList<Domain> domainsWithoutIp = ImmutableList.<Domain>builder()
@@ -226,7 +108,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             .putAll(DomainType.Internal, domains)
             .putAll(DomainType.Detected, detectedDomains)
             .putAll(DomainType.DetectedIp, ips);
-        Optional.ofNullable(defaultDomain)
+        Optional.ofNullable(underlying.getDefaultDomain())
             .ifPresent(domain -> result.put(DomainType.DefaultDomain, domain));
         return result.build();
     }
@@ -294,7 +176,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             throw new AutoDetectedDomainRemovalException(domain);
         }
 
-        doRemoveDomain(domain);
+        underlying.removeDomain(domain);
     }
 
     private boolean isAutoDetected(Domain domain) throws DomainListException {
@@ -305,15 +187,8 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             || domainsWithType.get(DomainType.DefaultDomain).contains(domain);
     }
 
-    /**
-     * Return domainList
-     * 
-     * @return List
-     */
-    protected abstract List<Domain> getDomainListInternal() throws DomainListException;
-
-    protected abstract boolean containsDomainInternal(Domain domain) throws DomainListException;
-
-    protected abstract void doRemoveDomain(Domain domain) throws DomainListException;
-
+    @Override
+    public void addDomain(Domain domain) throws DomainListException {
+        underlying.addDomain(domain);
+    }
 }

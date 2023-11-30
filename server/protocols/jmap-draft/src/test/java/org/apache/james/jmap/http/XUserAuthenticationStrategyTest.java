@@ -27,9 +27,8 @@ import static org.mockito.Mockito.when;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
@@ -54,9 +53,8 @@ public class XUserAuthenticationStrategyTest {
         mockedRequest = mock(HttpServerRequest.class);
         mockedHeaders = mock(HttpHeaders.class);
 
-        DNSService dnsService = mock(DNSService.class);
-        MemoryDomainList domainList = new MemoryDomainList(dnsService);
-        domainList.configure(DomainListConfiguration.DEFAULT);
+        MemoryDomainList domainList = new MemoryDomainList();
+        domainList.addDomain(Domain.LOCALHOST);
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);

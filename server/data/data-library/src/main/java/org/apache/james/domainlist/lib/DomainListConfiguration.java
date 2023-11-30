@@ -19,6 +19,8 @@
 
 package org.apache.james.domainlist.lib;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,10 +34,16 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.StreamUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class DomainListConfiguration {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DomainListConfiguration.class);
+    public static final String ENV_DOMAIN = "DOMAIN";
+
     public static class Builder {
         private Optional<Boolean> autoDetectIp;
         private Optional<Boolean> autoDetect;
@@ -117,6 +125,16 @@ public class DomainListConfiguration {
             return this.addConfiguredDomains(Arrays.asList(domains));
         }
 
+        public Builder addDomainFromEnv(EnvDetector envDetector) {
+            String envDomain = envDetector.getEnv(ENV_DOMAIN);
+            if (!Strings.isNullOrEmpty(envDomain)) {
+                LOGGER.info("Adding environment defined domain {}", envDomain);
+                Domain domain = Domain.of(envDomain);
+                configuredDomains.add(domain);
+            }
+            return this;
+        }
+
         public DomainListConfiguration build() {
             return new DomainListConfiguration(
                 autoDetectIp.orElse(false),
@@ -157,6 +175,7 @@ public class DomainListConfiguration {
             .cacheEnabled(Optional.ofNullable(config.getBoolean(ENABLE_READ_CACHE, null)))
             .cacheExpiracy(Optional.ofNullable(config.getString(READ_CACHE_EXPIRACY, null))
                 .map(DurationParser::parse))
+            .addDomainFromEnv(new EnvDetector())
             .build();
     }
 
@@ -167,7 +186,7 @@ public class DomainListConfiguration {
     private final boolean cacheEnabled;
     private final Duration cacheExpiracy;
 
-    public DomainListConfiguration(boolean autoDetectIp, boolean autoDetect, Domain defaultDomain, List<Domain> configuredDomains, boolean cacheEnabled, Duration cacheExpiracy) {
+    private DomainListConfiguration(boolean autoDetectIp, boolean autoDetect, Domain defaultDomain, List<Domain> configuredDomains, boolean cacheEnabled, Duration cacheExpiracy) {
         this.autoDetectIp = autoDetectIp;
         this.autoDetect = autoDetect;
         this.defaultDomain = defaultDomain;
@@ -198,6 +217,39 @@ public class DomainListConfiguration {
 
     public Duration getCacheExpiracy() {
         return cacheExpiracy;
+    }
+
+    public DomainListConfiguration withDefaultDomainApplied() {
+        Domain newDefaultDomain = defaultDomain();
+
+        return DomainListConfiguration.builder()
+            .autoDetect(isAutoDetect())
+            .autoDetectIp(isAutoDetectIp())
+            .cacheEnabled(isCacheEnabled())
+            .cacheExpiracy(getCacheExpiracy())
+            .defaultDomain(newDefaultDomain)
+            .addConfiguredDomains(ImmutableList.<Domain>builder()
+                .addAll(getConfiguredDomains())
+                .add(getDefaultDomain())
+                .add(newDefaultDomain)
+                .build())
+            .build();
+    }
+
+    private Domain defaultDomain() {
+        if (mayChangeDefaultDomain()) {
+            try {
+                String hostName = InetAddress.getLocalHost().getHostName();
+                return Domain.of(hostName);
+            } catch (UnknownHostException e) {
+                LOGGER.warn("Unable to retrieve hostname.", e);
+            }
+        }
+        return getDefaultDomain();
+    }
+
+    private boolean mayChangeDefaultDomain() {
+        return isAutoDetect() && Domain.LOCALHOST.equals(defaultDomain);
     }
 
     @Override

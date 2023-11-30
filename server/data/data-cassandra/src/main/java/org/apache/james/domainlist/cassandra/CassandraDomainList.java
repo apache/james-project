@@ -32,24 +32,24 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 
-public class CassandraDomainList extends AbstractDomainList {
+public class CassandraDomainList implements DomainList {
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement readAllStatement;
     private final PreparedStatement readStatement;
     private final PreparedStatement insertStatement;
     private final PreparedStatement removeStatement;
+    private final DomainListConfiguration configuration;
 
     @Inject
-    public CassandraDomainList(DNSService dnsService, CqlSession session) {
-        super(dnsService);
+    public CassandraDomainList(CqlSession session, DomainListConfiguration configuration) {
         this.executor = new CassandraAsyncExecutor(session);
         this.readAllStatement = session.prepare(selectFrom(TABLE_NAME)
             .column(DOMAIN)
@@ -69,10 +69,11 @@ public class CassandraDomainList extends AbstractDomainList {
             .whereColumn(DOMAIN).isEqualTo(bindMarker(DOMAIN))
             .ifExists()
             .build());
+        this.configuration = configuration;
     }
 
     @Override
-    protected List<Domain> getDomainListInternal() throws DomainListException {
+    public List<Domain> getDomains() throws DomainListException {
         return executor.executeRows(readAllStatement.bind())
             .map(row -> Domain.of(row.get(0, TypeCodecs.TEXT)))
             .collectList()
@@ -80,7 +81,7 @@ public class CassandraDomainList extends AbstractDomainList {
     }
 
     @Override
-    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
+    public boolean containsDomain(Domain domain) throws DomainListException {
         return executor.executeSingleRowOptional(readStatement.bind()
                 .set(DOMAIN, domain.asString(), TypeCodecs.TEXT))
             .block()
@@ -98,7 +99,7 @@ public class CassandraDomainList extends AbstractDomainList {
     }
 
     @Override
-    public void doRemoveDomain(Domain domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(removeStatement.bind()
                 .set(DOMAIN, domain.asString(), TypeCodecs.TEXT))
             .block();
@@ -107,4 +108,8 @@ public class CassandraDomainList extends AbstractDomainList {
         }
     }
 
+    @Override
+    public Domain getDefaultDomain() throws DomainListException {
+        return configuration.getDefaultDomain();
+    }
 }
