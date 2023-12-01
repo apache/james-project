@@ -27,7 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -40,7 +39,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.jdkim.exceptions.PermFailException;
-import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
@@ -61,7 +59,7 @@ class DKIMSignTest {
 
     @BeforeEach
     void setUp() {
-        fileSystem = new FileSystemImpl(new JamesServerResourceLoader("../testsFileSystemExtension/" + UUID.randomUUID()));
+        fileSystem = FileSystemImpl.forTesting();
     }
 
     @ParameterizedTest

@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 class DSNTest {
     protected Configuration configuration;
 
-    private SMTPServerTestSystem testSystem = new SMTPServerTestSystem();
+    private final SMTPServerTestSystem testSystem = new SMTPServerTestSystem();
 
     @BeforeEach
     void setUp() throws Exception {

@@ -31,7 +31,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.pop3server.POP3ServerTest;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -59,11 +58,7 @@ public class DistributedPop3ServerTest extends POP3ServerTest {
             .build();
         mailboxManager = memoryIntegrationResources
             .getMailboxManager();
-        Configuration configuration = Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build();
-        fileSystem = new FileSystemImpl(configuration.directories());
+        fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
         MemoryPop3MetadataStore metadataStore = new MemoryPop3MetadataStore();
         mailboxManager.getEventBus().register(
             new PopulateMetadataStoreListener(metadataStore));
