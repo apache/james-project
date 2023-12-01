@@ -205,6 +205,13 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
+    void isExistedShouldReturnFalseIfMailboxIdExistAndAnnotationIsNotStored() {
+        annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
+
+        assertThat(annotationMapper.exist(mailboxId, PRIVATE_USER_ANNOTATION)).isFalse();
+    }
+
+    @Test
     void countAnnotationShouldReturnZeroIfNoMoreAnnotationBelongToMailbox() {
         assertThat(annotationMapper.countAnnotations(mailboxId)).isEqualTo(0);
     }
