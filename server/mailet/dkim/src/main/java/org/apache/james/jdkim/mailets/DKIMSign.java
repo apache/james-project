@@ -35,10 +35,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jdkim.DKIMSigner;
 import org.apache.james.jdkim.api.BodyHasher;
 import org.apache.james.jdkim.api.Headers;
@@ -92,7 +94,7 @@ import com.github.fge.lambdas.Throwing;
  * <pre><code>
  * &lt;mailet match=&quot;All&quot; class=&quot;DKIMSign&quot;&gt;
  *   &lt;signatureTemplate&gt;v=1; s=selector; d=example.com; h=from:to:received:received; a=rsa-sha256; bh=; b=;&lt;/signatureTemplate&gt;
- *   &lt;privateKeyFilepath&gt;dkim-signing.pem&lt;/privateKeyFilepath&gt;
+ *   &lt;privateKeyFilepath&gt;conf://dkim-signing.pem&lt;/privateKeyFilepath&gt;
  * &lt;/mailet&gt;
  * </code></pre>
  *
@@ -102,9 +104,15 @@ import com.github.fge.lambdas.Throwing;
  */
 public class DKIMSign extends GenericMailet {
 
+    private final FileSystem fileSystem;
     private String signatureTemplate;
     private PrivateKey privateKey;
     private boolean forceCRLF;
+
+    @Inject
+    public DKIMSign(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
+    }
 
     /**
      * @return the signatureTemplate
@@ -131,7 +139,7 @@ public class DKIMSign extends GenericMailet {
                 .map(String::getBytes)
                 .map(ByteArrayInputStream::new)
                 .map(byteArrayInputStream -> (InputStream) byteArrayInputStream)
-                .orElseGet(Throwing.supplier(() -> ClassLoader.getSystemResourceAsStream(getInitParameter("privateKeyFilepath"))).sneakyThrow());
+                .orElseGet(Throwing.supplier(() -> fileSystem.getResource(getInitParameter("privateKeyFilepath"))).sneakyThrow());
 
             privateKey = extractPrivateKey(pem, passphrase);
         } catch (NoSuchAlgorithmException e) {
