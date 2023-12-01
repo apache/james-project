@@ -588,7 +588,7 @@
             otherwise the set values are used by default.
         -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <target.jdk>11</target.jdk>
+        <target.jdk>21</target.jdk>
         <james-skin.version>1.9-SNAPSHOT</james-skin.version>
         <!--
             This property contains the directory where to deploy when running using "-Psite-reports" profile
