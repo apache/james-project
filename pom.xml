@@ -321,7 +321,7 @@
             </roles>
             <timezone />
         </developer>
-     </developers>
+    </developers>
 
     <contributors>
         <contributor>
@@ -600,7 +600,7 @@
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
         <activemq.version>5.18.2</activemq.version>
         <apache-mime4j.version>0.8.9</apache-mime4j.version>
-        <apache.openjpa.version>3.2.0</apache.openjpa.version>
+        <apache.openjpa.version>4.0.0-SNAPSHOT</apache.openjpa.version>
         <derby.version>10.14.2.0</derby.version>
         <log4j2.version>2.20.0</log4j2.version>
         <javax.inject.version>1</javax.inject.version>
@@ -661,7 +661,7 @@
         <scala.version>${scala.base}.11</scala.version>
         <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
-        <mockito.version>5.2.0</mockito.version>
+        <mockito.version>5.7.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>2.38.0</javacrumbs.json-unit.version>
     </properties>
@@ -2961,6 +2961,34 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>apache.snapshots</id>
+            <name>Apache Development Snapshot Repository</name>
+            <url>https://repository.apache.org/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>apache.snapshots</id>
+            <name>Apache Development Snapshot Repository</name>
+            <url>https://repository.apache.org/content/repositories/snapshots/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
 
     <build>
         <pluginManagement>
