@@ -26,11 +26,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.opensearch.DockerOpenSearchExtension;
+import org.apache.james.backends.opensearch.IndexName;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.opensearch.ReadAliasName;
 import org.apache.james.backends.opensearch.WriteAliasName;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
@@ -49,7 +52,6 @@ import org.apache.james.mailbox.opensearch.IndexAttachments;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.opensearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.opensearch.MailboxIndexCreationUtil;
-import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
 import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
@@ -75,6 +77,8 @@ import org.opensearch.client.opensearch.core.SearchRequest;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 class OpenSearchSearcherTest {
 
@@ -89,12 +93,12 @@ class OpenSearchSearcherTest {
     static TikaExtension tika = new TikaExtension();
 
     @RegisterExtension
-    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(
-        new DockerOpenSearchExtension.DeleteAllIndexDocumentsCleanupStrategy(new WriteAliasName("mailboxWriteAlias")));
+    static DockerOpenSearchExtension openSearch = new DockerOpenSearchExtension(DockerOpenSearchExtension.CleanupStrategy.NONE);
 
     TikaTextExtractor textExtractor;
     ReactorOpenSearchClient client;
     private InMemoryMailboxManager storeMailboxManager;
+    private IndexName indexName;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -104,13 +108,15 @@ class OpenSearchSearcherTest {
                 .port(tika.getPort())
                 .timeoutInMillis(tika.getTimeoutInMillis())
                 .build()));
-
-        client = MailboxIndexCreationUtil.prepareDefaultClient(
-            openSearch.getDockerOpenSearch().clientProvider().get(),
-            openSearch.getDockerOpenSearch().configuration());
+        client = openSearch.getDockerOpenSearch().clientProvider().get();
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
+        ReadAliasName readAliasName = new ReadAliasName(UUID.randomUUID().toString());
+        WriteAliasName writeAliasName = new WriteAliasName(UUID.randomUUID().toString());
+        indexName = new IndexName(UUID.randomUUID().toString());
+        MailboxIndexCreationUtil.prepareClient(client, readAliasName, writeAliasName, indexName,
+            openSearch.getDockerOpenSearch().configuration());
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
@@ -121,10 +127,8 @@ class OpenSearchSearcherTest {
             .listeningSearchIndex(preInstanciationStage -> new OpenSearchListeningMessageSearchIndex(
                 preInstanciationStage.getMapperFactory(),
                 ImmutableSet.of(),
-                new OpenSearchIndexer(client,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
-                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
-                    MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
+                new OpenSearchIndexer(client, writeAliasName),
+                new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, readAliasName, routingKeyFactory),
                 new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
                 OpenSearchMailboxConfiguration.builder().build(), new RecordingMetricFactory()))
@@ -141,7 +145,7 @@ class OpenSearchSearcherTest {
     }
 
     @Test
-    void searchingInALargeNumberOfMailboxesShouldReturnAllMailboxesMessagesUid() throws Exception {
+    void searchingInALargeNumberOfMailboxesShouldReturnAllMailboxesMessagesUid() {
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
         int numberOfMailboxes = 700;
         List<MailboxPath> mailboxPaths = IntStream
@@ -149,13 +153,15 @@ class OpenSearchSearcherTest {
             .mapToObj(index -> MailboxPath.forUser(USERNAME, "mailbox" + index))
             .collect(ImmutableList.toImmutableList());
 
-        List<MailboxId> mailboxIds = mailboxPaths.stream()
-            .map(Throwing.<MailboxPath, MailboxId>function(mailboxPath -> storeMailboxManager.createMailbox(mailboxPath, session).get()).sneakyThrow())
-            .collect(ImmutableList.toImmutableList());
+        List<MailboxId> mailboxIds = Flux.fromIterable(mailboxPaths)
+            .flatMap(mailboxPath -> storeMailboxManager.createMailboxReactive(mailboxPath, session), 16)
+            .collectList()
+            .block();
 
-        List<ComposedMessageId> composedMessageIds = mailboxPaths.stream()
-            .map(Throwing.<MailboxPath, ComposedMessageId>function(mailboxPath -> addMessage(session, mailboxPath)).sneakyThrow())
-            .collect(ImmutableList.toImmutableList());
+        List<ComposedMessageId> composedMessageIds = Flux.fromIterable(mailboxPaths)
+            .flatMap(Throwing.function(mailboxPath -> addMessage(session, mailboxPath)), 16)
+            .collectList()
+            .block();
 
         awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), composedMessageIds.size());
 
@@ -172,23 +178,23 @@ class OpenSearchSearcherTest {
             .containsExactlyInAnyOrderElementsOf(expectedMessageIds);
     }
 
-    private ComposedMessageId addMessage(MailboxSession session, MailboxPath mailboxPath) throws Exception {
+    private Mono<ComposedMessageId> addMessage(MailboxSession session, MailboxPath mailboxPath) throws Exception {
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "user@example.com";
-        return messageManager.appendMessage(MessageManager.AppendCommand.from(
+        return Mono.from(messageManager.appendMessageReactive(MessageManager.AppendCommand.from(
             Message.Builder.of()
                 .setTo(recipient)
                 .setBody("Hello", StandardCharsets.UTF_8)),
-            session)
-            .getId();
+            session))
+            .map(MessageManager.AppendResult::getId);
     }
 
     private void awaitForOpenSearch(Query query, long totalHits) {
         CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
             .untilAsserted(() -> assertThat(client.search(
                     new SearchRequest.Builder()
-                        .index(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX.getValue())
+                        .index(indexName.getValue())
                         .query(query)
                         .build())
                 .block()
