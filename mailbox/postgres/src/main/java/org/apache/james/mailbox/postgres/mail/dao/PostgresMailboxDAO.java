@@ -103,7 +103,7 @@ public class PostgresMailboxDAO {
     }
 
     public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
-        final PostgresMailboxId mailboxId = PostgresMailboxId.generate();
+        PostgresMailboxId mailboxId = PostgresMailboxId.generate();
 
         return postgresExecutor.executeVoid(dslContext ->
                 Mono.from(dslContext.insertInto(TABLE_NAME, MAILBOX_ID, MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE, MAILBOX_UID_VALIDITY)
@@ -178,7 +178,9 @@ public class PostgresMailboxDAO {
                 .and(USER_NAME.eq(query.getFixedUser().asString()))
                 .and(MAILBOX_NAMESPACE.eq(query.getFixedNamespace())))))
             .map(this::asMailbox)
-            .filter(query::matches);
+            .filter(query::matches)
+            .collectList()
+            .flatMapIterable(Function.identity());
     }
 
     public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
