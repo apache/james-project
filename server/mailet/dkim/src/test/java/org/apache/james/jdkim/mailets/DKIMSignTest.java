@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -35,23 +36,33 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMessage.RecipientType;
 
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.jdkim.exceptions.PermFailException;
+import org.apache.james.server.core.JamesServerResourceLoader;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class DKIMSignTest {
-
-    private static final String PKCS1_PEM_FILE = "test-dkim-pkcs1.pem";
-    private static final String PKCS8_PEM_FILE = "test-dkim-pkcs8.pem";
+    private static final String PKCS1_PEM_FILE = "classpath://test-dkim-pkcs1.pem";
+    private static final String PKCS8_PEM_FILE = "classpath://test-dkim-pkcs8.pem";
     private static final FakeMailContext FAKE_MAIL_CONTEXT = FakeMailContext.defaultContext();
+
+    FileSystem fileSystem;
+
+    @BeforeEach
+    void setUp() {
+        fileSystem = new FileSystemImpl(new JamesServerResourceLoader("../testsFileSystemExtension/" + UUID.randomUUID()));
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {PKCS1_PEM_FILE, PKCS8_PEM_FILE})
@@ -59,7 +70,7 @@ class DKIMSignTest {
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
-        Mailet mailet = new DKIMSign();
+        Mailet mailet = new DKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -111,7 +122,7 @@ class DKIMSignTest {
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
-        Mailet mailet = new DKIMSign();
+        Mailet mailet = new DKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -158,7 +169,7 @@ class DKIMSignTest {
             FailException {
         String message = "Received: by 10.XX.XX.12 with SMTP id dfgskldjfhgkljsdfhgkljdhfg;\r\n\tTue, 06 Oct 2009 07:37:34 -0700 (PDT)\r\nReturn-Path: <bounce@example.com>\r\nReceived: from example.co.uk (example.co.uk [XX.XXX.125.19])\r\n\tby mx.example.com with ESMTP id dgdfgsdfgsd.97.2009.10.06.07.37.32;\r\n\tTue, 06 Oct 2009 07:37:32 -0700 (PDT)\r\nFrom: apache@bago.org\r\nTo: apache@bago.org\r\n\r\nbody\r\nprova\r\n";
 
-        Mailet mailet = new DKIMSign();
+        Mailet mailet = new DKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -212,7 +223,7 @@ class DKIMSignTest {
         mm.addRecipient(RecipientType.TO, new InternetAddress("io@bago.org"));
         mm.setText("An 8bit encoded body with €uro symbol.", "ISO-8859-15");
 
-        Mailet mailet = new DKIMSign();
+        Mailet mailet = new DKIMSign(fileSystem);
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -276,7 +287,7 @@ class DKIMSignTest {
             .mimeMessage(mm)
             .build();
 
-        Mailet mailet = new DKIMSign();
+        Mailet mailet = new DKIMSign(fileSystem);
         mailet.init(mci);
 
         Mailet m7bit = new ConvertTo7Bit();
@@ -325,7 +336,7 @@ class DKIMSignTest {
             .mimeMessage(mm)
             .build();
 
-        Mailet mailet = new DKIMSign();
+        Mailet mailet = new DKIMSign(fileSystem);
         mailet.init(mci);
 
         Mailet m7bit = new ConvertTo7Bit();
