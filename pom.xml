@@ -658,7 +658,7 @@
         <scala.version>${scala.base}.11</scala.version>
         <scalatestplus-play.version>5.0.0</scalatestplus-play.version>
         <doclint>none</doclint>
-        <mockito.version>5.2.0</mockito.version>
+        <mockito.version>5.10.0</mockito.version>
         <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
         <javacrumbs.json-unit.version>2.38.0</javacrumbs.json-unit.version>
     </properties>
@@ -2824,11 +2824,6 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>${mockito.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-inline</artifactId>
                 <version>${mockito.version}</version>
             </dependency>
             <dependency>
