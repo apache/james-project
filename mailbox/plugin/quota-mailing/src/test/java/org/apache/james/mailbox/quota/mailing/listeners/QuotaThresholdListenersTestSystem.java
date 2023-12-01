@@ -53,7 +53,7 @@ class QuotaThresholdListenersTestSystem {
     QuotaThresholdListenersTestSystem(MailetContext mailetContext, EventStore eventStore, QuotaMailingListenerConfiguration configuration) throws MailboxException {
         eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
 
-        FileSystem fileSystem = new FileSystemImpl(new JamesServerResourceLoader("."));
+        FileSystem fileSystem = FileSystemImpl.forTesting();
 
         QuotaThresholdCrossingListener thresholdCrossingListener =
             new QuotaThresholdCrossingListener(mailetContext, MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST), fileSystem, eventStore, configuration,

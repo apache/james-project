@@ -19,11 +19,8 @@
 
 package org.apache.james.blob.export.file;
 
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -40,7 +37,7 @@ public class FileSystemExtension implements ParameterResolver, BeforeAllCallback
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        fileSystem = new FileSystemImpl(new JamesServerResourceLoader("../testsFileSystemExtension/" + UUID.randomUUID()));
+        fileSystem = FileSystemImpl.forTesting();
     }
 
     @Override

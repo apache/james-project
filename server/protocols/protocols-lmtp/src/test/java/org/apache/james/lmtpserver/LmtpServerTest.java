@@ -74,7 +74,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -142,10 +141,7 @@ class LmtpServerTest {
         usersRepository.addUser(Username.of("bob@examplebis.local"), "pwd");
         usersRepository.addUser(Username.of("cedric@examplebis.local"), "pwd");
 
-        fileSystem = new FileSystemImpl(Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build().directories());
+        fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
     }
 
     @AfterEach

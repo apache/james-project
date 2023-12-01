@@ -19,15 +19,12 @@
 
 package org.apache.james.blob.file;
 
-import java.util.UUID;
-
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.DeduplicationBlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
-import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -37,7 +34,7 @@ public class FileBlobStoreTest implements MetricableBlobStoreContract, Deduplica
 
     @BeforeEach
     void setUp() {
-        FileSystemImpl fileSystem = new FileSystemImpl(new JamesServerResourceLoader("../testsFileSystemExtension/" + UUID.randomUUID()));
+        FileSystemImpl fileSystem = FileSystemImpl.forTesting();
         blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new FileBlobStoreFactory(fileSystem).builder()
             .blobIdFactory(BLOB_ID_FACTORY)
             .defaultBucketName()

@@ -41,7 +41,6 @@ import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration.RenderingInformation;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
-import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +54,7 @@ class QuotaThresholdNoticeTest {
 
     @BeforeEach
     public void setUp() {
-        fileSystem = new FileSystemImpl(new JamesServerResourceLoader("."));
+        fileSystem = FileSystemImpl.forTesting();
     }
 
     @Test

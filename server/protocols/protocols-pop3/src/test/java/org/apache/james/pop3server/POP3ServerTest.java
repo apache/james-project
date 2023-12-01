@@ -62,7 +62,6 @@ import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -948,11 +947,7 @@ public class POP3ServerTest {
             .storeQuotaManager()
             .build()
             .getMailboxManager();
-        Configuration configuration = Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build();
-        fileSystem = new FileSystemImpl(configuration.directories());
+        fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
 
         protocolHandlerChain = MockProtocolHandlerLoader.builder()
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))

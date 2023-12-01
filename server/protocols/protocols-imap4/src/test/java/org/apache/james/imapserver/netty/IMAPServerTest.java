@@ -92,7 +92,6 @@ import org.apache.james.protocols.api.OIDCSASLHelper;
 import org.apache.james.protocols.api.utils.BogusSslContextFactory;
 import org.apache.james.protocols.api.utils.BogusTrustManagerFactory;
 import org.apache.james.protocols.lib.mock.ConfigLoader;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -165,11 +164,7 @@ class IMAPServerTest {
             new ImapMetrics(metricFactory),
             new NoopGaugeRegistry());
 
-        Configuration configuration = Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build();
-        FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
+        FileSystemImpl fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
         imapServer.setFileSystem(fileSystem);
 
         imapServer.configure(config);

@@ -22,11 +22,26 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.server.core.JamesServerResourceLoader;
+import org.apache.james.server.core.configuration.Configuration;
 
 public class FileSystemImpl implements FileSystem {
+
+    public static FileSystemImpl forTesting() {
+        return new FileSystemImpl(new JamesServerResourceLoader("../testsFileSystemExtension/" + UUID.randomUUID()));
+    }
+
+    public static FileSystemImpl forTestingWithConfigurationFromClasspath() {
+        return new FileSystemImpl(Configuration.builder()
+            .workingDirectory("../")
+            .configurationFromClasspath()
+            .build()
+            .directories());
+    }
 
     private final JamesDirectoriesProvider directoryProvider;
     private final ResourceFactory resourceLoader;

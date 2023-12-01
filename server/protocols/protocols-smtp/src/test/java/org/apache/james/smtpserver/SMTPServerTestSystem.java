@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 
@@ -62,7 +61,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.smtpserver.netty.SMTPServer;
@@ -85,7 +83,6 @@ class SMTPServerTestSystem {
     SMTPServerTest.AlterableDNSServer dnsServer;
     MemoryMailRepositoryStore mailRepositoryStore;
     FileSystemImpl fileSystem;
-    Configuration configuration;
     MockProtocolHandlerLoader chain;
     MemoryMailQueueFactory queueFactory;
     MemoryMailQueueFactory.MemoryCacheableMailQueue queue;
@@ -126,11 +123,7 @@ class SMTPServerTestSystem {
     }
 
     protected void createMailRepositoryStore() throws Exception {
-        configuration = Configuration.builder()
-            .workingDirectory("../")
-            .configurationFromClasspath()
-            .build();
-        fileSystem = new FileSystemImpl(configuration.directories());
+        fileSystem = FileSystemImpl.forTestingWithConfigurationFromClasspath();
         MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
 
         MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.forItems(
