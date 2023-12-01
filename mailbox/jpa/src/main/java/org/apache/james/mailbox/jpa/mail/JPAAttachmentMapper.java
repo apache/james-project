@@ -24,9 +24,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -42,6 +39,9 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
 
 public class JPAAttachmentMapper extends JPATransactionalMapper implements AttachmentMapper {
 

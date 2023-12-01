@@ -18,12 +18,12 @@
  ****************************************************************/
 package org.apache.james.mailbox.tools.jpa.migrator.command;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 import org.apache.openjpa.kernel.DelegatingResultList;
 import org.apache.openjpa.lib.rop.ResultList;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 /**
  * JIRA IMAP-180 is "Add @ElementJoinColumn for Property and Header tables".

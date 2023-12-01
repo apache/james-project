@@ -22,8 +22,6 @@ package org.apache.james.mailbox.jpa.quota;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.backends.jpa.TransactionRunner;
@@ -35,6 +33,8 @@ import org.apache.james.mailbox.model.QuotaOperation;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import reactor.core.publisher.Mono;
 
 public class JpaCurrentQuotaManager implements CurrentQuotaManager {

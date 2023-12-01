@@ -20,14 +20,14 @@ package org.apache.james.mailbox.tools.jpa.migrator;
 
 import java.util.Locale;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
 import org.apache.james.mailbox.tools.jpa.migrator.command.JpaMigrateCommand;
 import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 /**
  * The class that will manage the migration commands for the James JPA database.

@@ -19,8 +19,6 @@
 package org.apache.james.mailbox.jpa;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.EntityManagerUtils;
@@ -43,6 +41,9 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * JPA implementation of {@link MailboxSessionMapperFactory}

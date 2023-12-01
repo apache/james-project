@@ -21,13 +21,6 @@ package org.apache.james.mailbox.jpa.mail;
 
 import java.util.NoSuchElementException;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
-import javax.persistence.TypedQuery;
-
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -48,6 +41,12 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.google.common.base.Preconditions;
 
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
+import jakarta.persistence.TypedQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;

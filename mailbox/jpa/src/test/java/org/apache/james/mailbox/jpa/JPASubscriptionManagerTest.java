@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.events.EventBusTestFixture;
@@ -35,6 +33,8 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+
+import jakarta.persistence.EntityManagerFactory;
 
 class JPASubscriptionManagerTest implements SubscriptionManagerContract {
 

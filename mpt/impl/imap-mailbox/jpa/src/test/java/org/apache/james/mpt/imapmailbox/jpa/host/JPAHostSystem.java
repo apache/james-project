@@ -21,8 +21,6 @@ package org.apache.james.mpt.imapmailbox.jpa.host;
 
 import java.time.Instant;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -71,6 +69,8 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.utils.UpdatableTickingClock;
 
 import com.google.common.collect.ImmutableList;
+
+import jakarta.persistence.EntityManagerFactory;
 
 public class JPAHostSystem extends JamesImapHostSystem {
 

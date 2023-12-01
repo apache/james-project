@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.tools.jpa.migrator.command;
 
-import javax.persistence.EntityManager;
-
 import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
+
+import jakarta.persistence.EntityManager;
 
 /**
  * JIRA IMAP-165 is "Add index annotation on frequently used columns".

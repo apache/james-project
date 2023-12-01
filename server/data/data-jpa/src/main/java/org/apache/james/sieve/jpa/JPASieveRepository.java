@@ -28,11 +28,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.jpa.TransactionRunner;
@@ -57,6 +52,11 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

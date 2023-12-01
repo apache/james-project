@@ -21,9 +21,9 @@ package org.apache.james.mailbox.jpa.mail.model;
 
 import java.io.Serializable;
 
-import javax.persistence.Embeddable;
-
 import com.google.common.base.Objects;
+
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public final class JPAMailboxAnnotationId implements Serializable {

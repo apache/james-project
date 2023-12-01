@@ -25,8 +25,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.jpa.EntityManagerUtils;
@@ -41,6 +40,8 @@ import org.reactivestreams.Publisher;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 

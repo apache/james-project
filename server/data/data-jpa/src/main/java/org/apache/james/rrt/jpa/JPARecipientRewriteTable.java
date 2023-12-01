@@ -30,11 +30,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
-import javax.persistence.PersistenceUnit;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Domain;
@@ -49,6 +44,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PersistenceUnit;
 
 /**
  * Class responsible to implement the Virtual User Table in database with JPA
