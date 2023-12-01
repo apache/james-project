@@ -29,5 +29,6 @@ public interface PostgresMailboxAggregateModule {
     PostgresModule MODULE = PostgresModule.aggregateModules(
         PostgresMailboxModule.MODULE,
         PostgresSubscriptionModule.MODULE,
-        PostgresMessageModule.MODULE);
+        PostgresMessageModule.MODULE,
+        PostgresMailboxAnnotationModule.MODULE);
 }
