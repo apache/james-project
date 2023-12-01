@@ -19,12 +19,9 @@
 
 package org.apache.james.blob.file;
 
-import java.util.UUID;
-
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.server.blob.deduplication.BloomFilterGCAlgorithmContract;
-import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -34,8 +31,7 @@ public class FileBlobStoreGCAlgorithmTest implements BloomFilterGCAlgorithmContr
 
     @BeforeEach
     public void beforeEach() throws Exception {
-        blobStoreDAO = new FileBlobStoreDAO(new FileSystemImpl(new JamesServerResourceLoader("../testsFileSystemExtension/" + UUID.randomUUID())),
-            new HashBlobId.Factory());
+        blobStoreDAO = new FileBlobStoreDAO(FileSystemImpl.forTesting(), new HashBlobId.Factory());
     }
 
     @Override
