@@ -19,19 +19,16 @@
 
 package org.apache.james.lifecycle.api;
 
+import static org.apache.james.lifecycle.api.Disposable.LeakAware;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.TEN_SECONDS;
-import static org.apache.james.lifecycle.api.Disposable.LeakAware;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -76,18 +73,13 @@ class LeakAwareTest {
         return loggingEventListAppender;
     }
 
-    private void forceChangeLevel(String level) throws NoSuchFieldException, IllegalAccessException {
-        forceChangeLevel(LeakAware.Level.parse(level));
+    private void forceChangeLevel(String level) {
+        LeakAware.LEVEL = LeakAware.Level.parse(level);
     }
 
     // using reflect to change LeakAware.LEVEL value
-    private static void forceChangeLevel(LeakAware.Level level) throws NoSuchFieldException, IllegalAccessException {
-        final Field field = LeakAware.class.getDeclaredField("LEVEL");
-        field.setAccessible(true);
-        final Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-        field.set(null, level);
+    private static void forceChangeLevel(LeakAware.Level level) {
+        LeakAware.LEVEL = level;
     }
 
     @Test
