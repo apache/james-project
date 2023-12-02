@@ -155,6 +155,13 @@
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
                     <persistenceXmlFile>${basedir}/src/test/resources/persistence.xml</persistenceXmlFile>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.xbean</groupId>
+                        <artifactId>xbean-asm9-shaded</artifactId>
+                        <version>4.23</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>enhancer</id>
@@ -164,13 +171,6 @@
                         <phase>process-classes</phase>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.apache.xbean</groupId>
-                        <artifactId>xbean-asm9-shaded</artifactId>
-                        <version>4.23</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
