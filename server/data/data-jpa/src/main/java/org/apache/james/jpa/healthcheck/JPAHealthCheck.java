@@ -22,13 +22,13 @@ import static org.apache.james.core.healthcheck.Result.healthy;
 import static org.apache.james.core.healthcheck.Result.unhealthy;
 
 import javax.inject.Inject;
+import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 
-import jakarta.persistence.EntityManagerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 

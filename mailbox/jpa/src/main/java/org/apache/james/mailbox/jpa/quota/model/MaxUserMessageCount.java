@@ -19,10 +19,10 @@
 
 package org.apache.james.mailbox.jpa.quota.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity(name = "MaxUserMessageCount")
 @Table(name = "JAMES_MAX_USER_MESSAGE_COUNT")

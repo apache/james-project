@@ -22,7 +22,7 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import jakarta.persistence.EntityManagerFactory;
+import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JPAConfiguration;

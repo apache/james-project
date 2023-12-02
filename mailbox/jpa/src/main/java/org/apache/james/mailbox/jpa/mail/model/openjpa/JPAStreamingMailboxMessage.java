@@ -23,6 +23,10 @@ import java.io.InputStream;
 import java.util.Date;
 
 import javax.mail.Flags;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Table;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.mailbox.MessageUid;
@@ -34,11 +38,6 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.Persistent;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Table;
 
 /**
  * JPA implementation of {@link AbstractJPAMailboxMessage} which use openjpas {@link Persistent} type to

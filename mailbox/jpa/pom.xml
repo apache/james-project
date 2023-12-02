@@ -164,6 +164,13 @@
                         <phase>process-classes</phase>
                     </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.xbean</groupId>
+                        <artifactId>xbean-asm9-shaded</artifactId>
+                        <version>4.23</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

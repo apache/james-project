@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.jpa.mail.task;
 
+import javax.persistence.EntityManagerFactory;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
@@ -48,7 +50,6 @@ import org.junit.jupiter.api.BeforeEach;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import jakarta.persistence.EntityManagerFactory;
 
 class JPARecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
 

@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.tools.jpa.migrator.command;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 /**
  *

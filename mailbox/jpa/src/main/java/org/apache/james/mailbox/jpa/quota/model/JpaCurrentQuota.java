@@ -19,13 +19,13 @@
 
 package org.apache.james.mailbox.jpa.quota.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 @Entity(name = "CurrentQuota")
 @Table(name = "JAMES_QUOTA_CURRENTQUOTA")

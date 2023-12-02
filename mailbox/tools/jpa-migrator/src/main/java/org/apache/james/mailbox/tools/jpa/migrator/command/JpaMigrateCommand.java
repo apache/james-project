@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.tools.jpa.migrator.command;
 
-import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
+import javax.persistence.EntityManager;
 
-import jakarta.persistence.EntityManager;
+import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 
 /**
  * A command that apply to James database the needed updates.

@@ -19,16 +19,16 @@
 
 package org.apache.james.mailbox.jpa.mail.model;
 
-import com.google.common.base.Objects;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Table;
+import com.google.common.base.Objects;
 
 @Entity(name = "MailboxAnnotation")
 @Table(name = "JAMES_MAILBOX_ANNOTATION")

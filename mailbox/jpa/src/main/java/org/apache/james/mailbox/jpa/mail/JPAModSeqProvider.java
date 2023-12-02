@@ -19,6 +19,9 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.mailbox.ModSeq;
@@ -28,10 +31,6 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceException;
 
 public class JPAModSeqProvider implements ModSeqProvider {
 

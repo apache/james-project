@@ -27,6 +27,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.mail.Flags;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
@@ -59,9 +62,6 @@ import org.apache.openjpa.persistence.ArgumentException;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.Query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;

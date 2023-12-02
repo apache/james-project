@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.tools.jpa.migrator.command;
 
-import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
+import javax.persistence.EntityManager;
 
-import jakarta.persistence.EntityManager;
+import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 
 /**
  * JIRA 176 is "Change users' namespace to #private".

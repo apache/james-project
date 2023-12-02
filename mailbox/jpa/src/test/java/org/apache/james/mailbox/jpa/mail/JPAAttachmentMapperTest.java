@@ -17,10 +17,9 @@
  * under the License.                                           *
  **************************************************************/
 
-package org.apache.james.mailbox.jpa.mail;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.tuple;
+
+package org.apache.james.mailbox.jpa.mail;
 
 import java.nio.charset.StandardCharsets;
 
@@ -39,6 +38,9 @@ import com.google.common.io.ByteSource;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 class JPAAttachmentMapperTest extends AttachmentMapperTest {
 

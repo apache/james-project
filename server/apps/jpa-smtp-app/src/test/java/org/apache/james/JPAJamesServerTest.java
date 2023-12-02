@@ -28,6 +28,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
+import javax.persistence.EntityManagerFactory;
+
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.jpa.model.JPADomain;
 import org.apache.james.mailrepository.jpa.model.JPAUrl;
@@ -40,8 +42,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import jakarta.persistence.EntityManagerFactory;
 
 public class JPAJamesServerTest {
 
