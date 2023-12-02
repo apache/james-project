@@ -3328,7 +3328,14 @@
                         </systemPropertyVariables>
                         <argLine>-Djava.library.path=
                             -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
-                            -Xms512m -Xmx1024m</argLine>
+                            -Xms512m -Xmx1024m --illegal-access=permit
+                            --add-opens java.base/java.lang=ALL-UNNAMED
+                            --add-opens java.base/java.math=ALL-UNNAMED
+                            --add-opens java.base/java.net=ALL-UNNAMED
+                            --add-opens java.base/java.text=ALL-UNNAMED
+                            --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                            --add-opens java.base/java.util.concurrent=ALL-UNNAMED
+                            --add-opens java.base/java.util=ALL-UNNAMED</argLine>
                         <reuseForks>true</reuseForks>
                         <!-- Fail tests longer than 30 minutes, prevent form random locking tests -->
                         <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
