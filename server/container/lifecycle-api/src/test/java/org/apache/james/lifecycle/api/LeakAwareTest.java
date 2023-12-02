@@ -19,19 +19,16 @@
 
 package org.apache.james.lifecycle.api;
 
+import static org.apache.james.lifecycle.api.Disposable.LeakAware;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.TEN_SECONDS;
-import static org.apache.james.lifecycle.api.Disposable.LeakAware;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -76,22 +73,16 @@ class LeakAwareTest {
         return loggingEventListAppender;
     }
 
-    private void forceChangeLevel(String level) throws NoSuchFieldException, IllegalAccessException {
-        forceChangeLevel(LeakAware.Level.parse(level));
+    private void forceChangeLevel(String level) {
+        LeakAware.LEVEL = LeakAware.Level.parse(level);
     }
 
-    // using reflect to change LeakAware.LEVEL value
-    private static void forceChangeLevel(LeakAware.Level level) throws NoSuchFieldException, IllegalAccessException {
-        final Field field = LeakAware.class.getDeclaredField("LEVEL");
-        field.setAccessible(true);
-        final Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-        field.set(null, level);
+    private static void forceChangeLevel(LeakAware.Level level) {
+        LeakAware.LEVEL = level;
     }
 
     @Test
-    void leakDetectionShouldCloseUnclosedResources() throws NoSuchFieldException, IllegalAccessException {
+    void leakDetectionShouldCloseUnclosedResources() {
         forceChangeLevel(LeakAware.Level.SIMPLE);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
         LeakResourceSample resourceSample = LeakResourceSample.create(atomicBoolean);
@@ -105,7 +96,7 @@ class LeakAwareTest {
     }
 
     @Test
-    void leakDetectionShouldNotReportClosedObjects() throws NoSuchFieldException, IllegalAccessException {
+    void leakDetectionShouldNotReportClosedObjects() {
         forceChangeLevel(LeakAware.Level.SIMPLE);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
         LeakResourceSample resourceSample = LeakResourceSample.create(atomicBoolean);
@@ -121,7 +112,7 @@ class LeakAwareTest {
     }
 
     @Test
-    void resourceShouldNotBeDetectedLeakWhenLevelIsNone() throws InterruptedException, NoSuchFieldException, IllegalAccessException {
+    void resourceShouldNotBeDetectedLeakWhenLevelIsNone() throws InterruptedException {
         forceChangeLevel(LeakAware.Level.NONE);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
         LeakResourceSample resourceSample = LeakResourceSample.create(atomicBoolean);
@@ -135,7 +126,7 @@ class LeakAwareTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"simple", "advanced"})
-    void leakDetectionShouldLogWhenDetected(String level) throws NoSuchFieldException, IllegalAccessException {
+    void leakDetectionShouldLogWhenDetected(String level) {
         forceChangeLevel(level);
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(Disposable.LeakAwareFinalizer.class);
 
@@ -155,7 +146,7 @@ class LeakAwareTest {
     }
 
     @Test
-    void leakDetectionShouldLogTraceRecordWhenLevelIsAdvanced() throws NoSuchFieldException, IllegalAccessException {
+    void leakDetectionShouldLogTraceRecordWhenLevelIsAdvanced() {
         forceChangeLevel(LeakAware.Level.ADVANCED);
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(Disposable.LeakAwareFinalizer.class);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
@@ -174,7 +165,7 @@ class LeakAwareTest {
     }
 
     @Test
-    void leakDetectionShouldThrowWhenDetectedAndLevelIsTesting() throws NoSuchFieldException, IllegalAccessException, InterruptedException {
+    void leakDetectionShouldThrowWhenDetectedAndLevelIsTesting() throws InterruptedException {
         forceChangeLevel(LeakAware.Level.TESTING);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
         LeakResourceSample resourceSample = LeakResourceSample.create(atomicBoolean);
@@ -187,7 +178,7 @@ class LeakAwareTest {
     }
 
     @Test
-    void leakDetectionShouldNotLogWhenLevelIsNone() throws InterruptedException, NoSuchFieldException, IllegalAccessException {
+    void leakDetectionShouldNotLogWhenLevelIsNone() throws InterruptedException {
         forceChangeLevel(LeakAware.Level.NONE);
         ListAppender<ILoggingEvent> loggingEvents = getListAppenderForClass(Disposable.LeakAwareFinalizer.class);
         AtomicBoolean atomicBoolean = new AtomicBoolean(false);
