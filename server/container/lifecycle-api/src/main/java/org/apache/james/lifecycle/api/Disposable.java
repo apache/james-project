@@ -86,7 +86,7 @@ public interface Disposable {
 
         public static final ReferenceQueue<LeakAware<?>> REFERENCE_QUEUE = new ReferenceQueue<>();
         public static final ConcurrentHashMap<LeakAwareFinalizer, Boolean> REFERENCES_IN_USE = new ConcurrentHashMap<>();
-        public static final Level LEVEL = Optional.ofNullable(System.getProperty("james.lifecycle.leak.detection.mode"))
+        static Level LEVEL = Optional.ofNullable(System.getProperty("james.lifecycle.leak.detection.mode"))
             .map(Level::parse).orElse(Level.SIMPLE);
 
         public static void track() {
