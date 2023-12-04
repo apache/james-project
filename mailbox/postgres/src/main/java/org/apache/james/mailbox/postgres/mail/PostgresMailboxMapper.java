@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
+import java.util.function.Function;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -62,17 +64,20 @@ public class PostgresMailboxMapper implements MailboxMapper {
 
     @Override
     public Mono<Mailbox> findMailboxByPath(MailboxPath mailboxName) {
-        return postgresMailboxDAO.findMailboxByPath(mailboxName);
+        return postgresMailboxDAO.findMailboxByPath(mailboxName)
+            .map(Function.identity());
     }
 
     @Override
     public Mono<Mailbox> findMailboxById(MailboxId mailboxId) {
-        return postgresMailboxDAO.findMailboxById(mailboxId);
+        return postgresMailboxDAO.findMailboxById(mailboxId)
+            .map(Function.identity());
     }
 
     @Override
     public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
-        return postgresMailboxDAO.findMailboxWithPathLike(query);
+        return postgresMailboxDAO.findMailboxWithPathLike(query)
+            .map(Function.identity());
     }
 
     @Override
@@ -82,12 +87,14 @@ public class PostgresMailboxMapper implements MailboxMapper {
 
     @Override
     public Flux<Mailbox> list() {
-        return postgresMailboxDAO.getAll();
+        return postgresMailboxDAO.getAll()
+            .map(Function.identity());
     }
 
     @Override
     public Flux<Mailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
-        return postgresMailboxDAO.findNonPersonalMailboxes(userName, right);
+        return postgresMailboxDAO.findNonPersonalMailboxes(userName, right)
+            .map(Function.identity());
     }
 
     @Override
@@ -110,4 +117,5 @@ public class PostgresMailboxMapper implements MailboxMapper {
                 return ACLDiff.computeDiff(oldACL, updatedACL);
             });
     }
+
 }
