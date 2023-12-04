@@ -220,13 +220,12 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public Mono<MailboxCounters> getMailboxCountersReactive(Mailbox mailbox) {
-        return mailboxMessageDAO.countTotalMessagesByMailboxId((PostgresMailboxId) mailbox.getMailboxId())
-            .flatMap(totalMessage -> mailboxMessageDAO.countUnseenMessagesByMailboxId((PostgresMailboxId) mailbox.getMailboxId())
-                .map(unseenMessage -> MailboxCounters.builder()
-                    .mailboxId(mailbox.getMailboxId())
-                    .count(totalMessage)
-                    .unseen(unseenMessage)
-                    .build()));
+        return mailboxMessageDAO.countTotalAndUnseenMessagesByMailboxId((PostgresMailboxId) mailbox.getMailboxId())
+            .map(pair -> MailboxCounters.builder()
+                .mailboxId(mailbox.getMailboxId())
+                .count(pair.getLeft())
+                .unseen(pair.getRight())
+                .build());
     }
 
     @Override
