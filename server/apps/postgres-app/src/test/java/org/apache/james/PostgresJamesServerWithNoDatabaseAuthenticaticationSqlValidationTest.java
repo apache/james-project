@@ -22,9 +22,12 @@ package org.apache.james;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest extends PostgresJamesServerWithSqlValidationTest {
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
+
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
@@ -33,8 +36,39 @@ class PostgresJamesServerWithNoDatabaseAuthenticaticationSqlValidationTest exten
             .usersRepository(DEFAULT)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.NoDatabaseAuthentication()))
-        .extension(PostgresExtension.empty())
+            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation.NoDatabaseAuthentication(postgresExtension)))
+        .extension(postgresExtension)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
+
+    @Override
+    @Disabled("PostgresExtension does not support non-authentication mode. SQL validation for JPA code with authentication should be enough.")
+    public void jpaGuiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) {
+
+    }
+
+    @Override
+    @Disabled("PostgresExtension does not support non-authentication mode. SQL validation for JPA code with authentication should be enough.")
+    public void connectIMAPServerShouldSendShabangOnConnect(GuiceJamesServer jamesServer) {
+    }
+
+    @Override
+    @Disabled("PostgresExtension does not support non-authentication mode. SQL validation for JPA code with authentication should be enough.")
+    public void connectOnSecondaryIMAPServerIMAPServerShouldSendShabangOnConnect(GuiceJamesServer jamesServer) {
+    }
+
+    @Override
+    @Disabled("PostgresExtension does not support non-authentication mode. SQL validation for JPA code with authentication should be enough.")
+    public void connectPOP3ServerShouldSendShabangOnConnect(GuiceJamesServer jamesServer) {
+    }
+
+    @Override
+    @Disabled("PostgresExtension does not support non-authentication mode. SQL validation for JPA code with authentication should be enough.")
+    public void connectSMTPServerShouldSendShabangOnConnect(GuiceJamesServer jamesServer) {
+    }
+
+    @Override
+    @Disabled("PostgresExtension does not support non-authentication mode. SQL validation for JPA code with authentication should be enough.")
+    public void connectLMTPServerShouldSendShabangOnConnect(GuiceJamesServer jamesServer) {
+    }
 }
