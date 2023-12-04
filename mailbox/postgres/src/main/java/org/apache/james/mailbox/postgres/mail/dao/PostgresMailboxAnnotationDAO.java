@@ -128,7 +128,7 @@ public class PostgresMailboxAnnotationDAO {
                     .from(TABLE_NAME)
                     .where(MAILBOX_ID.eq(mailboxId.asUuid()))))
             .singleOrEmpty()
-            .map(record -> record.get(0, Integer.class))
+            .flatMap(record -> Mono.justOrEmpty(record.get(0, Integer.class)))
             .defaultIfEmpty(0);
     }
 
