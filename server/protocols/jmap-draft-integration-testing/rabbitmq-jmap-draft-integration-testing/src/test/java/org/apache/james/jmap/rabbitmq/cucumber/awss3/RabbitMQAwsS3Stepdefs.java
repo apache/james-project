@@ -21,6 +21,7 @@ package org.apache.james.jmap.rabbitmq.cucumber.awss3;
 
 import java.util.Arrays;
 
+import io.cucumber.guice.ScenarioScoped;
 import javax.inject.Inject;
 
 import org.apache.james.CassandraRabbitMQJamesConfiguration;
@@ -43,9 +44,8 @@ import org.junit.rules.TemporaryFolder;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.google.inject.multibindings.Multibinder;
 
-import cucumber.api.java.After;
-import cucumber.api.java.Before;
-import cucumber.runtime.java.guice.ScenarioScoped;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
 
 @ScenarioScoped
 public class RabbitMQAwsS3Stepdefs {

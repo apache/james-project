@@ -18,15 +18,16 @@
  ****************************************************************/
 package org.apache.james.rrt.memory;
 
-import org.junit.runner.RunWith;
+import static io.cucumber.core.options.Constants.GLUE_PROPERTY_NAME;
 
-import cucumber.api.CucumberOptions;
-import cucumber.api.junit.Cucumber;
+import org.junit.platform.suite.api.ConfigurationParameter;
+import org.junit.platform.suite.api.IncludeEngines;
+import org.junit.platform.suite.api.SelectClasspathResource;
+import org.junit.platform.suite.api.Suite;
 
-@RunWith(Cucumber.class)
-@CucumberOptions(
-        features = { "classpath:cucumber/" },
-        glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.memory" }
-    )
+@Suite
+@IncludeEngines("cucumber")
+@SelectClasspathResource("cucumber")
+@ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.apache.james.rrt.lib,org.apache.james.rrt.memory")
 public class RewriteTablesTest {
 }

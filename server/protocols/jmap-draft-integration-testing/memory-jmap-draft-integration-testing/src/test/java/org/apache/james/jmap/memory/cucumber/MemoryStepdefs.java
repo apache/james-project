@@ -21,6 +21,7 @@ package org.apache.james.jmap.memory.cucumber;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
+import io.cucumber.guice.ScenarioScoped;
 import javax.inject.Inject;
 
 import org.apache.james.MemoryJamesConfiguration;
@@ -32,14 +33,11 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.rules.TemporaryFolder;
 
-import cucumber.api.java.After;
-import cucumber.api.java.Before;
-import cucumber.runtime.java.guice.ScenarioScoped;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
 
 @ScenarioScoped
 public class MemoryStepdefs {
-
-    private static final long LIMIT_TO_3_MESSAGES = 3;
     private final MainStepdefs mainStepdefs;
     private final ImapStepdefs imapStepdefs;
     private final TemporaryFolder temporaryFolder;

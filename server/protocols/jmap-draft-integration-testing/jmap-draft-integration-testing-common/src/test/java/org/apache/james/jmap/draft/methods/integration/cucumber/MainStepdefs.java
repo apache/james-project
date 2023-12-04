@@ -37,7 +37,7 @@ import org.apache.james.utils.DataProbeImpl;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 
-import cucumber.runtime.java.guice.ScenarioScoped;
+import io.cucumber.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class MainStepdefs {
