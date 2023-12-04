@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
-
 import javax.inject.Inject;
 
 import org.apache.http.HttpResponse;
@@ -48,10 +47,10 @@ import com.google.common.base.CharMatcher;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
-import cucumber.runtime.java.guice.ScenarioScoped;
+import io.cucumber.guice.ScenarioScoped;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 @ScenarioScoped
 public class UploadStepdefs {

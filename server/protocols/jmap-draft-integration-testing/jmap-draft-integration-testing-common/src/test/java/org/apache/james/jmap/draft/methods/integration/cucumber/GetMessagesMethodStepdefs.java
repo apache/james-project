@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import io.cucumber.datatable.DataTable;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
@@ -57,11 +58,10 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
-import cucumber.api.DataTable;
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
-import cucumber.runtime.java.guice.ScenarioScoped;
+import io.cucumber.guice.ScenarioScoped;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import net.minidev.json.JSONArray;
 
 @ScenarioScoped
