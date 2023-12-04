@@ -106,7 +106,7 @@ class RabbitMQConnectionFactoryTest {
 
         assertThatThrownBy(() -> new RabbitMQConnectionFactory(rabbitMQConfiguration))
                 .isInstanceOf(RuntimeException.class)
-                .hasCause(new IOException("Short read of DER length"));
+                .hasCause(new IOException("Tag number over 30 is not supported"));
     }
 
     @Test
@@ -151,7 +151,7 @@ class RabbitMQConnectionFactoryTest {
 
         assertThatThrownBy(() -> new RabbitMQConnectionFactory(rabbitMQConfiguration))
                 .isInstanceOf(RuntimeException.class)
-                .hasCause(new IOException("Short read of DER length"));
+                .hasCause(new IOException("Tag number over 30 is not supported"));
     }
 
     @Test
