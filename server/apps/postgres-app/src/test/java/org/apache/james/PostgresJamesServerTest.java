@@ -41,6 +41,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.base.Strings;
 
 class PostgresJamesServerTest implements JamesServerConcreteContract {
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
+
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
@@ -49,8 +51,8 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
             .usersRepository(DEFAULT)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModule()))
-        .extension(PostgresExtension.empty())
+            .overrideWith(new TestJPAConfigurationModule(postgresExtension)))
+        .extension(postgresExtension)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 
