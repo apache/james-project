@@ -54,6 +54,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
@@ -84,6 +85,18 @@ public class PostgresMailboxDAO {
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)));
+
+    private static final Function<Record, Mailbox> RECORD_TO_MAILBOX_FUNCTION = record -> {
+        Mailbox mailbox = new Mailbox(new MailboxPath(record.get(MAILBOX_NAMESPACE), Username.of(record.get(USER_NAME)), record.get(MAILBOX_NAME)),
+            UidValidity.of(record.get(MAILBOX_UID_VALIDITY)), PostgresMailboxId.of(record.get(MAILBOX_ID)));
+        mailbox.setACL(HSTORE_TO_MAILBOX_ACL_FUNCTION.apply(Hstore.hstore(record.get(MAILBOX_ACL, LinkedHashMap.class))));
+        return mailbox;
+    };
+
+    private static final Function<Record, PostgresMailbox> RECORD_TO_POSTGRES_MAILBOX_FUNCTION = record -> new PostgresMailbox(RECORD_TO_MAILBOX_FUNCTION.apply(record),
+        Optional.ofNullable(record.get(MAILBOX_HIGHEST_MODSEQ)).map(ModSeq::of).orElse(ModSeq.first()),
+        Optional.ofNullable(record.get(MAILBOX_LAST_UID)).map(MessageUid::of).orElse(null));
+
 
     private static Optional<Map.Entry<MailboxACL.EntryKey, MailboxACL.Rfc4314Rights>> deserializeMailboxACLEntry(String key, String value) {
         try {
@@ -140,14 +153,14 @@ public class PostgresMailboxDAO {
             .map(record -> HSTORE_TO_MAILBOX_ACL_FUNCTION.apply(record.get(MAILBOX_ACL)));
     }
 
-    public Flux<Mailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
+    public Flux<PostgresMailbox> findNonPersonalMailboxes(Username userName, MailboxACL.Right right) {
         String mailboxACLEntryByUser = String.format("mailbox_acl -> '%s'", userName.asString());
 
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(TABLE_NAME)
                 .where(MAILBOX_ACL.isNotNull(),
                     DSL.field(mailboxACLEntryByUser).isNotNull(),
                     DSL.field(mailboxACLEntryByUser).contains(Character.toString(right.asCharacter())))))
-            .map(this::asMailbox);
+            .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 
     public Mono<Void> delete(MailboxId mailboxId) {
@@ -155,29 +168,29 @@ public class PostgresMailboxDAO {
             .where(MAILBOX_ID.eq(((PostgresMailboxId) mailboxId).asUuid()))));
     }
 
-    public Mono<Mailbox> findMailboxByPath(MailboxPath mailboxPath) {
+    public Mono<PostgresMailbox> findMailboxByPath(MailboxPath mailboxPath) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.selectFrom(TABLE_NAME)
             .where(MAILBOX_NAME.eq(mailboxPath.getName())
                 .and(USER_NAME.eq(mailboxPath.getUser().asString()))
                 .and(MAILBOX_NAMESPACE.eq(mailboxPath.getNamespace())))))
-            .map(this::asMailbox);
+            .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 
-    public Mono<Mailbox> findMailboxById(MailboxId id) {
+    public Mono<PostgresMailbox> findMailboxById(MailboxId id) {
         return postgresExecutor.executeRow(dsl -> Mono.from(dsl.selectFrom(TABLE_NAME)
             .where(MAILBOX_ID.eq(((PostgresMailboxId) id).asUuid()))))
-            .map(this::asMailbox)
+            .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION)
             .switchIfEmpty(Mono.error(new MailboxNotFoundException(id)));
     }
 
-    public Flux<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
+    public Flux<PostgresMailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
         String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
 
         return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)
             .where(MAILBOX_NAME.like(pathLike)
                 .and(USER_NAME.eq(query.getFixedUser().asString()))
                 .and(MAILBOX_NAMESPACE.eq(query.getFixedNamespace())))))
-            .map(this::asMailbox)
+            .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION)
             .filter(query::matches)
             .collectList()
             .flatMapIterable(Function.identity());
@@ -195,20 +208,13 @@ public class PostgresMailboxDAO {
             .hasElements();
     }
 
-    public Flux<Mailbox> getAll() {
+    public Flux<PostgresMailbox> getAll() {
         return postgresExecutor.executeRows(dsl -> Flux.from(dsl.selectFrom(TABLE_NAME)))
-            .map(this::asMailbox);
+            .map(RECORD_TO_POSTGRES_MAILBOX_FUNCTION);
     }
 
     private UUID asUUID(MailboxId mailboxId) {
-        return ((PostgresMailboxId)mailboxId).asUuid();
-    }
-
-    private Mailbox asMailbox(Record record) {
-        Mailbox mailbox = new Mailbox(new MailboxPath(record.get(MAILBOX_NAMESPACE), Username.of(record.get(USER_NAME)), record.get(MAILBOX_NAME)),
-            UidValidity.of(record.get(MAILBOX_UID_VALIDITY)), PostgresMailboxId.of(record.get(MAILBOX_ID)));
-        mailbox.setACL(HSTORE_TO_MAILBOX_ACL_FUNCTION.apply(Hstore.hstore(record.get(MAILBOX_ACL, LinkedHashMap.class))));
-        return mailbox;
+        return ((PostgresMailboxId) mailboxId).asUuid();
     }
 
     public Mono<MessageUid> findLastUidByMailboxId(MailboxId mailboxId) {
@@ -255,4 +261,5 @@ public class PostgresMailboxDAO {
                 .returning(MAILBOX_LAST_UID, MAILBOX_HIGHEST_MODSEQ)))
             .map(record -> Pair.of(MessageUid.of(record.get(MAILBOX_LAST_UID)), ModSeq.of(record.get(MAILBOX_HIGHEST_MODSEQ))));
     }
+
 }
