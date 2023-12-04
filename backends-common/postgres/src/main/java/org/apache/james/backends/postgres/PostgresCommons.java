@@ -49,11 +49,10 @@ public class PostgresCommons {
         DataType<String[]> STRING_ARRAY = SQLDataType.CLOB.getArrayDataType();
     }
 
-    public interface SimpleTableField {
-        Field<Object> of(Table<Record> table, Field<?> field);
-    }
 
-    public static final SimpleTableField TABLE_FIELD = (table, field) -> DSL.field(table.getName() + "." + field.getName());
+    public static <T> Field<T> tableField(Table<Record> table, Field<T> field) {
+        return DSL.field(table.getName() + "." + field.getName(), field.getDataType());
+    }
 
     public static final Function<Date, LocalDateTime> DATE_TO_LOCAL_DATE_TIME = date -> Optional.ofNullable(date)
         .map(value -> LocalDateTime.ofInstant(value.toInstant(), ZoneOffset.UTC))

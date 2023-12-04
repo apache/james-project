@@ -128,39 +128,41 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
+        Flux<Pair<SimpleMailboxMessage.Builder, String>> fetchMessageWithoutFullContentPublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt);
+        if (fetchType == FetchType.FULL) {
+            return fetchMessageWithoutFullContentPublisher
+                .flatMap(messageBuilderAndBlobId -> {
+                    SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndBlobId.getLeft();
+                    String blobIdAsString = messageBuilderAndBlobId.getRight();
+                    return retrieveFullContent(blobIdAsString)
+                        .map(content -> messageBuilder.content(content).build());
+                })
+                .sort(Comparator.comparing(MailboxMessage::getUid))
+                .map(message -> message);
+        } else {
+            return fetchMessageWithoutFullContentPublisher
+                .map(messageBuilderAndBlobId -> messageBuilderAndBlobId.getLeft().build());
+        }
+    }
+
+    private Flux<Pair<SimpleMailboxMessage.Builder, String>> fetchMessageWithoutFullContent(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
         return Mono.just(messageRange)
             .flatMapMany(range -> {
                 Limit limit = Limit.from(limitAsInt);
                 switch (messageRange.getType()) {
                     case ALL:
-                        return mailboxMessageDAO.findMessagesByMailboxId((PostgresMailboxId) mailbox.getMailboxId(), limit);
+                        return mailboxMessageDAO.findMessagesByMailboxId((PostgresMailboxId) mailbox.getMailboxId(), limit, fetchType);
                     case FROM:
-                        return mailboxMessageDAO.findMessagesByMailboxIdAndAfterUID((PostgresMailboxId) mailbox.getMailboxId(), range.getUidFrom(), limit);
+                        return mailboxMessageDAO.findMessagesByMailboxIdAndAfterUID((PostgresMailboxId) mailbox.getMailboxId(), range.getUidFrom(), limit, fetchType);
                     case ONE:
-                        return mailboxMessageDAO.findMessageByMailboxIdAndUid((PostgresMailboxId) mailbox.getMailboxId(), range.getUidFrom())
+                        return mailboxMessageDAO.findMessageByMailboxIdAndUid((PostgresMailboxId) mailbox.getMailboxId(), range.getUidFrom(), fetchType)
                             .flatMapMany(Flux::just);
                     case RANGE:
-                        return mailboxMessageDAO.findMessagesByMailboxIdAndBetweenUIDs((PostgresMailboxId) mailbox.getMailboxId(), range.getUidFrom(), range.getUidTo(), limit);
+                        return mailboxMessageDAO.findMessagesByMailboxIdAndBetweenUIDs((PostgresMailboxId) mailbox.getMailboxId(), range.getUidFrom(), range.getUidTo(), limit, fetchType);
                     default:
                         throw new RuntimeException("Unknown MessageRange range " + range.getType());
                 }
-            }).flatMap(messageBuilderAndBlobId -> {
-                SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndBlobId.getLeft();
-                String blobIdAsString = messageBuilderAndBlobId.getRight();
-                switch (fetchType) {
-                    case METADATA:
-                    case ATTACHMENTS_METADATA:
-                    case HEADERS:
-                        return Mono.just(messageBuilder.build());
-                    case FULL:
-                        return retrieveFullContent(blobIdAsString)
-                            .map(content -> messageBuilder.content(content).build());
-                    default:
-                        return Flux.error(new RuntimeException("Unknown FetchType " + fetchType));
-                }
-            })
-            .sort(Comparator.comparing(MailboxMessage::getUid))
-            .map(message -> message);
+            });
     }
 
     private Mono<Content> retrieveFullContent(String blobIdString) {
