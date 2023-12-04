@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_TYPE;
@@ -30,7 +29,6 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_MD5;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TRANSFER_ENCODING;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TYPE_PARAMETERS;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_ANSWERED;
@@ -49,9 +47,7 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,9 +65,9 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.jooq.Field;
 import org.jooq.Record;
 
@@ -156,8 +152,8 @@ interface PostgresMailboxMessageDAOUtils {
         property.setContentTransferEncoding(record.get(CONTENT_TRANSFER_ENCODING));
         property.setContentLocation(record.get(CONTENT_LOCATION));
         property.setContentLanguage(Optional.ofNullable(record.get(CONTENT_LANGUAGE)).map(List::of).orElse(null));
-        property.setContentDispositionParameters(record.get(CONTENT_DISPOSITION_PARAMETERS, LinkedHashMap.class));
-        property.setContentTypeParameters(record.get(CONTENT_TYPE_PARAMETERS, LinkedHashMap.class));
+        property.setContentDispositionParameters(record.get(CONTENT_DISPOSITION_PARAMETERS).data());
+        property.setContentTypeParameters(record.get(CONTENT_TYPE_PARAMETERS).data());
         return property.build();
     };
 
@@ -173,19 +169,16 @@ interface PostgresMailboxMessageDAOUtils {
         }
     };
 
-    Function<Record, SimpleMailboxMessage.Builder> RECORD_TO_MAILBOX_MESSAGE_BUILDER_FUNCTION = record -> SimpleMailboxMessage.builder()
-        .messageId(PostgresMessageId.Factory.of(record.get(MESSAGE_ID)))
-        .mailboxId(PostgresMailboxId.of(record.get(MAILBOX_ID)))
-        .uid(MessageUid.of(record.get(MESSAGE_UID)))
-        .modseq(ModSeq.of(record.get(MOD_SEQ)))
-        .threadId(RECORD_TO_THREAD_ID_FUNCTION.apply(record))
-        .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageModule.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
-        .saveDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(SAVE_DATE, LocalDateTime.class)))
-        .flags(RECORD_TO_FLAGS_FUNCTION.apply(record))
-        .size(record.get(PostgresMessageModule.MessageTable.SIZE))
-        .bodyStartOctet(record.get(BODY_START_OCTET))
-        .content(BYTE_TO_CONTENT_FUNCTION.apply(record.get(HEADER_CONTENT)))
-        .properties(RECORD_TO_PROPERTIES_FUNCTION.apply(record));
-
-
+    Function<MessageMapper.FetchType, PostgresMailboxMessageFetchStrategy> FETCH_TYPE_TO_FETCH_STRATEGY = fetchType -> {
+        switch (fetchType) {
+            case METADATA:
+            case ATTACHMENTS_METADATA:
+                return PostgresMailboxMessageFetchStrategy.METADATA;
+            case HEADERS:
+            case FULL:
+                return PostgresMailboxMessageFetchStrategy.FULL;
+            default:
+                throw new RuntimeException("Unknown FetchType " + fetchType);
+        }
+    };
 }
