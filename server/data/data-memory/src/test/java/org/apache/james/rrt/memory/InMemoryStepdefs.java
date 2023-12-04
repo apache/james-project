@@ -28,7 +28,7 @@ import org.apache.james.user.memory.MemoryUsersRepository;
 
 import com.github.fge.lambdas.Throwing;
 
-import cucumber.api.java.Before;
+import io.cucumber.java.Before;
 
 public class InMemoryStepdefs {
 

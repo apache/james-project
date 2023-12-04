@@ -21,7 +21,7 @@ package org.apache.james.rrt.file;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 
-import cucumber.api.java.Before;
+import io.cucumber.java.Before;
 
 public class XMLStepdefs {
 
