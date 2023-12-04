@@ -85,7 +85,8 @@ S: \* METADATA "INBOX" \((\/private\/comment "My own comment" \/shared\/comment 
 S: g3 OK GETMETADATA completed.
 
 C: g4 GETMETADATA "INBOX"
-S: \* METADATA "INBOX" \(\/private\/comment "My own comment" \/shared\/comment "The shared comment"\)
+# Regex used to be order agnostic. Annotation1 Annotation2 OR Annotation2 Annotation1
+S: \* METADATA "INBOX" \((\/private\/comment "My own comment" \/shared\/comment "The shared comment"|\/shared\/comment "The shared comment" \/private\/comment "My own comment")\)
 S: g4 OK GETMETADATA completed.
 
 C: g5 GETMETADATA "INBOX" /shared/comment /private/comment)
@@ -102,7 +103,8 @@ S: \* METADATA "INBOX" \(\/private\/comment "My own comment"\)
 S: g8 OK \[METADATA LONGENTRIES 18\] GETMETADATA completed.
 
 C: g9 GETMETADATA "INBOX" (MAXSIZE 100)
-S: \* METADATA "INBOX" \(\/private\/comment "My own comment" \/shared\/comment "The shared comment"\)
+# Regex used to be order agnostic. Annotation1 Annotation2 OR Annotation2 Annotation1
+S: \* METADATA "INBOX" \((\/private\/comment "My own comment" \/shared\/comment "The shared comment"|\/shared\/comment "The shared comment" \/private\/comment "My own comment")\)
 S: g9 OK GETMETADATA completed.
 
 C: s3 SETMETADATA INBOX (/private/comment/user "My own comment for user")
@@ -169,7 +171,8 @@ C: m03 SETMETADATA mailboxTest (/shared/comment "The mailboxTest shared comment"
 S: m03 OK SETMETADATA completed.
 
 C: m04 GETMETADATA "mailboxTest"
-S: \* METADATA "mailboxTest" \(\/private\/comment "The mailboxTest private comment" \/shared\/comment "The mailboxTest shared comment"\)
+# Regex used to be order agnostic. Annotation1 Annotation2 OR Annotation2 Annotation1
+S: \* METADATA "mailboxTest" \((\/private\/comment "The mailboxTest private comment" \/shared\/comment "The mailboxTest shared comment"|\/shared\/comment "The mailboxTest shared comment" \/private\/comment "The mailboxTest private comment")\)
 S: m04 OK GETMETADATA completed.
 
 C: m05 DELETE mailboxTest
