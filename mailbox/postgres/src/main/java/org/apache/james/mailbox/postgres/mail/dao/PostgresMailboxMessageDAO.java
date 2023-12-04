@@ -73,6 +73,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.Limit;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.SelectFinalStep;
@@ -152,17 +153,21 @@ public class PostgresMailboxMessageDAO {
         }
     }
 
-    public Mono<Integer> countUnseenMessagesByMailboxId(PostgresMailboxId mailboxId) {
-        return postgresExecutor.executeCount(dslContext -> Mono.from(dslContext.selectCount()
-            .from(TABLE_NAME)
-            .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-            .and(IS_SEEN.eq(false))));
-    }
-
     public Mono<Integer> countTotalMessagesByMailboxId(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeCount(dslContext -> Mono.from(dslContext.selectCount()
             .from(TABLE_NAME)
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))));
+    }
+
+    public Mono<Pair<Integer, Integer>> countTotalAndUnseenMessagesByMailboxId(PostgresMailboxId mailboxId) {
+        Name totalCount = DSL.name("total_count");
+        Name unSeenCount = DSL.name("unseen_count");
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(
+                    DSL.count().as(totalCount),
+                    DSL.count().filterWhere(IS_SEEN.eq(false)).as(unSeenCount))
+                .from(TABLE_NAME)
+                .where(MAILBOX_ID.eq(mailboxId.asUuid()))))
+            .map(record -> Pair.of(record.get(totalCount, Integer.class), record.get(unSeenCount, Integer.class)));
     }
 
     public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxId(PostgresMailboxId mailboxId, Limit limit, MessageMapper.FetchType fetchType) {
