@@ -41,6 +41,8 @@ class JamesCapabilitiesServerTest {
         return mailboxManager;
     }
 
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
+
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
@@ -49,9 +51,9 @@ class JamesCapabilitiesServerTest {
             .usersRepository(DEFAULT)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModule())
+            .overrideWith(new TestJPAConfigurationModule(postgresExtension))
             .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .build();
     
     @Test
