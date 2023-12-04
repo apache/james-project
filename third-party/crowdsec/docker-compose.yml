@@ -10,6 +10,10 @@ services:
       - --generate-keystore
     volumes:
       - ./sample-configuration/logback.xml:/root/conf/logback.xml
+      - ./target/apache-james-crowdsec-jar-with-dependencies.jar:/root/extensions-jars/james-server-crowdsec.jar
+      - ./sample-configuration/extensions.properties:/root/conf/extensions.properties
+      - ./sample-configuration/smtpserver.xml:/root/conf/smtpserver.xml
+      - ./sample-configuration/crowdsec.properties:/root/conf/crowdsec.properties
     networks:
       - james
     ports:
