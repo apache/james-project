@@ -21,17 +21,20 @@ package org.apache.james.mailbox.postgres.mail;
 
 import java.time.Clock;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
@@ -46,9 +49,8 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
-import com.github.fge.lambdas.Throwing;
-
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 public class PostgresMessageManager extends StoreMessageManager {
 
@@ -80,21 +82,40 @@ public class PostgresMessageManager extends StoreMessageManager {
     }
 
     public Mono<MailboxMetaData> getMetaDataReactive(MailboxMetaData.RecentMode recentMode, MailboxSession mailboxSession, EnumSet<MailboxMetaData.Item> items) throws MailboxException {
-        MailboxACL resolvedAcl = getResolvedAcl(mailboxSession);
         if (!storeRightManager.hasRight(mailbox, MailboxACL.Right.Read, mailboxSession)) {
-            return Mono.just(MailboxMetaData.sensibleInformationFree(resolvedAcl, getMailboxEntity().getUidValidity(), isWriteable(mailboxSession)));
+            return Mono.just(MailboxMetaData.sensibleInformationFree(getResolvedAcl(mailboxSession), getMailboxEntity().getUidValidity(), isWriteable(mailboxSession)));
         }
+
         Flags permanentFlags = getPermanentFlags(mailboxSession);
-        UidValidity uidValidity = getMailboxEntity().getUidValidity();
         MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
-        return messageMapper.executeReactive(
-            nextUid(messageMapper, items)
-                .flatMap(nextUid -> highestModSeq(messageMapper, items)
-                    .flatMap(highestModSeq -> firstUnseen(messageMapper, items)
-                        .flatMap(Throwing.function(firstUnseen -> recent(recentMode, mailboxSession)
-                            .flatMap(recents -> mailboxCounters(messageMapper, items)
-                                .map(counters -> new MailboxMetaData(recents, permanentFlags, uidValidity, nextUid, highestModSeq, counters.getCount(),
-                                    counters.getUnseen(), firstUnseen.orElse(null), isWriteable(mailboxSession), resolvedAcl))))))));
+        Mono<PostgresMailbox> postgresMailboxMetaDataPublisher = Mono.just(mapperFactory.getMailboxMapper(mailboxSession))
+            .flatMap(postgresMailboxMapper -> postgresMailboxMapper.findMailboxById(getMailboxEntity().getMailboxId())
+                .map(mailbox -> (PostgresMailbox) mailbox));
+
+        Mono<Tuple2<Optional<MessageUid>, List<MessageUid>>> firstUnseenAndRecentPublisher = Mono.zip(firstUnseen(messageMapper, items), recent(recentMode, mailboxSession));
+
+        return messageMapper.executeReactive(Mono.zip(postgresMailboxMetaDataPublisher, mailboxCounters(messageMapper, items))
+            .flatMap(metadataAndCounter -> {
+                PostgresMailbox metadata = metadataAndCounter.getT1();
+                MailboxCounters counters = metadataAndCounter.getT2();
+                return firstUnseenAndRecentPublisher.map(firstUnseenAndRecent -> new MailboxMetaData(
+                    firstUnseenAndRecent.getT2(),
+                    permanentFlags,
+                    metadata.getUidValidity(),
+                    nextUid(metadata),
+                    metadata.getHighestModSeq(),
+                    counters.getCount(),
+                    counters.getUnseen(),
+                    firstUnseenAndRecent.getT1().orElse(null),
+                    isWriteable(mailboxSession),
+                    metadata.getACL()));
+            }));
+    }
+
+    private MessageUid nextUid(PostgresMailbox mailboxMetaData) {
+        return Optional.ofNullable(mailboxMetaData.getLastUid())
+            .map(MessageUid::next)
+            .orElse(MessageUid.MIN_VALUE);
     }
 }
