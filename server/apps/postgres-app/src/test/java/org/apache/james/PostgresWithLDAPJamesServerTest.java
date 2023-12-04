@@ -34,6 +34,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresWithLDAPJamesServerTest {
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
+
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
@@ -42,10 +44,10 @@ class PostgresWithLDAPJamesServerTest {
             .usersRepository(LDAP)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModule()))
+            .overrideWith(new TestJPAConfigurationModule(postgresExtension)))
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .extension(new LdapTestExtension())
-        .extension(PostgresExtension.empty())
+        .extension(postgresExtension)
         .build();
 
 

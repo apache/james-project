@@ -19,14 +19,12 @@
 
 package org.apache.james;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import static org.apache.james.TestJPAConfigurationModule.JDBC_EMBEDDED_DRIVER;
 
 import javax.inject.Singleton;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
+import org.apache.james.backends.postgres.PostgresExtension;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -34,6 +32,12 @@ import com.google.inject.Provides;
 public interface TestJPAConfigurationModuleWithSqlValidation {
 
     class NoDatabaseAuthentication extends AbstractModule {
+        private final PostgresExtension postgresExtension;
+
+        public NoDatabaseAuthentication(PostgresExtension postgresExtension) {
+            this.postgresExtension = postgresExtension;
+        }
+
         @Override
         protected void configure() {
         }
@@ -41,68 +45,42 @@ public interface TestJPAConfigurationModuleWithSqlValidation {
         @Provides
         @Singleton
         JPAConfiguration provideConfiguration() {
-            return jpaConfigurationBuilder().build();
+            return JPAConfiguration.builder()
+                .driverName(JDBC_EMBEDDED_DRIVER)
+                .driverURL(postgresExtension.getJdbcUrl())
+                .testOnBorrow(true)
+                .validationQueryTimeoutSec(2)
+                .validationQuery(VALIDATION_SQL_QUERY)
+                .build();
         }
     }
 
     class WithDatabaseAuthentication extends AbstractModule {
+        private final PostgresExtension postgresExtension;
+
+        public WithDatabaseAuthentication(PostgresExtension postgresExtension) {
+            this.postgresExtension = postgresExtension;
+        }
 
         @Override
         protected void configure() {
-            setupAuthenticationOnDerby();
+
         }
 
         @Provides
         @Singleton
         JPAConfiguration provideConfiguration() {
-            return jpaConfigurationBuilder()
-                .username(DATABASE_USERNAME)
-                .password(DATABASE_PASSWORD)
-                .build();
-        }
-
-        private void setupAuthenticationOnDerby() {
-            try (Connection conn = DriverManager.getConnection(JDBC_EMBEDDED_URL, DATABASE_USERNAME, DATABASE_PASSWORD)) {
-                // Setting and Confirming requireAuthentication
-                setDerbyProperty(conn, "derby.connection.requireAuthentication", "true");
-
-                // Setting authentication scheme and username password to Derby
-                setDerbyProperty(conn, "derby.authentication.provider", "BUILTIN");
-                setDerbyProperty(conn, "derby.user." + DATABASE_USERNAME + "", DATABASE_PASSWORD);
-                setDerbyProperty(conn, "derby.database.propertiesOnly", "true");
-
-                // Setting default connection mode to no access to restrict accesses without authentication information
-                setDerbyProperty(conn, "derby.database.defaultConnectionMode", "noAccess");
-                setDerbyProperty(conn, "derby.database.fullAccessUsers", DATABASE_USERNAME);
-                setDerbyProperty(conn, "derby.database.propertiesOnly", "false");
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private void setDerbyProperty(Connection conn, String key, String value) {
-            try (CallableStatement call = conn.prepareCall("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(?, ?)")) {
-                call.setString(1, key);
-                call.setString(2, value);
-                call.execute();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    String DATABASE_USERNAME = "james";
-    String DATABASE_PASSWORD = "james-secret";
-    String JDBC_EMBEDDED_URL = "jdbc:derby:memory:mailboxintegration;create=true";
-    String JDBC_EMBEDDED_DRIVER = org.apache.derby.jdbc.EmbeddedDriver.class.getName();
-    String VALIDATION_SQL_QUERY = "VALUES 1";
-
-    static JPAConfiguration.ReadyToBuild jpaConfigurationBuilder() {
-        return JPAConfiguration.builder()
+            return JPAConfiguration.builder()
                 .driverName(JDBC_EMBEDDED_DRIVER)
-                .driverURL(JDBC_EMBEDDED_URL)
+                .driverURL(postgresExtension.getJdbcUrl())
                 .testOnBorrow(true)
                 .validationQueryTimeoutSec(2)
-                .validationQuery(VALIDATION_SQL_QUERY);
+                .validationQuery(VALIDATION_SQL_QUERY)
+                .username(postgresExtension.getPostgresConfiguration().getCredential().getUsername())
+                .password(postgresExtension.getPostgresConfiguration().getCredential().getPassword())
+                .build();
+        }
     }
+
+    String VALIDATION_SQL_QUERY = "VALUES 1";
 }
