@@ -194,6 +194,14 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         return executorFactory;
     }
 
+    public PostgresConfiguration getPostgresConfiguration() {
+        return postgresConfiguration;
+    }
+
+    public String getJdbcUrl() {
+        return String.format("jdbc:postgresql://%s:%d/%s", getHost(), getMappedPort(), postgresConfiguration.getDatabaseName());
+    }
+
     private void initTablesAndIndexes() {
         PostgresTableManager postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration.rowLevelSecurityEnabled());
         postgresTableManager.initializeTables().block();
