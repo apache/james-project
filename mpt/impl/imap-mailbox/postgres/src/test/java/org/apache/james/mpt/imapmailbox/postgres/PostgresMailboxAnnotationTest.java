@@ -25,7 +25,6 @@ import org.apache.james.mpt.imapmailbox.suite.MailboxAnnotation;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@Disabled("TODO https://github.com/apache/james-project/pull/1822")
 public class PostgresMailboxAnnotationTest extends MailboxAnnotation {
     @RegisterExtension
     public static PostgresHostSystemExtension hostSystemExtension = new PostgresHostSystemExtension();
