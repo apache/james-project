@@ -26,7 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.model.MessageId;
 
-import cucumber.runtime.java.guice.ScenarioScoped;
+import io.cucumber.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class MessageIdStepdefs {
