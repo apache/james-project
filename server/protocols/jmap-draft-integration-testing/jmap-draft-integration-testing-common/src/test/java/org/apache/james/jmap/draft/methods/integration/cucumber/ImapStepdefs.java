@@ -32,10 +32,10 @@ import org.apache.james.utils.TestIMAPClient;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Maps;
 
-import cucumber.api.java.en.Given;
-import cucumber.api.java.en.Then;
-import cucumber.api.java.en.When;
-import cucumber.runtime.java.guice.ScenarioScoped;
+import io.cucumber.guice.ScenarioScoped;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
 @ScenarioScoped
 public class ImapStepdefs {
