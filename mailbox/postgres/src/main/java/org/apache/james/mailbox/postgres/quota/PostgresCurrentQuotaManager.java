@@ -43,7 +43,6 @@ public class PostgresCurrentQuotaManager implements CurrentQuotaManager {
     private final PostgresQuotaCurrentValueDAO currentValueDao;
 
     @Inject
-
     public PostgresCurrentQuotaManager(PostgresQuotaCurrentValueDAO currentValueDao) {
         this.currentValueDao = currentValueDao;
     }
