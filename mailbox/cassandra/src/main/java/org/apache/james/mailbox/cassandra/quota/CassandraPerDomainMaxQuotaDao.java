@@ -35,6 +35,8 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.cassandra.table.CassandraDomainMaxQuota;
+import org.apache.james.mailbox.quota.Limits;
+import org.apache.james.mailbox.quota.QuotaCodec;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.quota;
 
 import java.util.Optional;
 import java.util.function.Function;
@@ -30,18 +30,18 @@ public class QuotaCodec {
     private static final long INFINITE = -1;
     private static final long NO_RIGHT = 0L;
 
-    static Long quotaValueToLong(QuotaLimitValue<?> value) {
+    public static Long quotaValueToLong(QuotaLimitValue<?> value) {
         if (value.isUnlimited()) {
             return INFINITE;
         }
         return value.asLong();
     }
 
-    static Optional<QuotaSizeLimit> longToQuotaSize(Long value) {
+    public static Optional<QuotaSizeLimit> longToQuotaSize(Long value) {
         return longToQuotaValue(value, QuotaSizeLimit.unlimited(), QuotaSizeLimit::size);
     }
 
-    static Optional<QuotaCountLimit> longToQuotaCount(Long value) {
+    public static Optional<QuotaCountLimit> longToQuotaCount(Long value) {
         return longToQuotaValue(value, QuotaCountLimit.unlimited(), QuotaCountLimit::count);
     }
 

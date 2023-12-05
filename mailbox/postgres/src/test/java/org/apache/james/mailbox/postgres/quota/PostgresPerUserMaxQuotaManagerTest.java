@@ -17,31 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.quota;
+package org.apache.james.mailbox.postgres.quota;
 
-import java.util.Optional;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
+import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.apache.james.core.quota.QuotaCountLimit;
-import org.apache.james.core.quota.QuotaSizeLimit;
+public class PostgresPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
 
-public class Limits {
-    public static Limits empty() {
-        return new Limits(Optional.empty(), Optional.empty());
-    }
-
-    private final Optional<QuotaSizeLimit> sizeLimit;
-    private final Optional<QuotaCountLimit> countLimit;
-
-    public Limits(Optional<QuotaSizeLimit> sizeLimit, Optional<QuotaCountLimit> countLimit) {
-        this.sizeLimit = sizeLimit;
-        this.countLimit = countLimit;
-    }
-
-    public Optional<QuotaSizeLimit> getSizeLimit() {
-        return sizeLimit;
-    }
-
-    public Optional<QuotaCountLimit> getCountLimit() {
-        return countLimit;
+    @Override
+    protected MaxQuotaManager provideMaxQuotaManager() {
+        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor()));
     }
 }
