@@ -23,79 +23,65 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
-import org.apache.james.core.Domain;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.jetbrains.annotations.NotNull;
+import org.jooq.Record;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import io.r2dbc.postgresql.api.PostgresqlConnection;
-import io.r2dbc.postgresql.api.PostgresqlResult;
-import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class ConnectionThreadSafetyTest {
+class PostgresExecutorThreadSafetyTest {
     static final int NUMBER_OF_THREAD = 100;
-    static final String CREATE_TABLE_STATEMENT = "CREATE TABLE IF NOT EXISTS person (\n" +
-        "\tid serial PRIMARY KEY,\n" +
-        "\tname VARCHAR ( 50 ) UNIQUE NOT NULL\n" +
-        ");";
 
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
-    private static PostgresqlConnection postgresqlConnection;
-    private static DomainImplPostgresConnectionFactory jamesPostgresConnectionFactory;
+    private static PostgresExecutor postgresExecutor;
 
     @BeforeAll
     static void beforeAll() {
-        jamesPostgresConnectionFactory = new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory());
-        postgresqlConnection = (PostgresqlConnection) postgresExtension.getConnection().block();
+        postgresExecutor = postgresExtension.getPostgresExecutor();
     }
 
     @BeforeEach
     void beforeEach() {
-        postgresqlConnection.createStatement(CREATE_TABLE_STATEMENT)
-            .execute()
-            .flatMap(PostgresqlResult::getRowsUpdated)
-            .then()
+        postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.createTableIfNotExists("person")
+            .column("id", SQLDataType.INTEGER.identity(true))
+            .column("name", SQLDataType.VARCHAR(50).nullable(false))
+            .constraints(DSL.constraint().primaryKey("id"))
+            .unique("name")))
             .block();
     }
 
     @AfterEach
     void afterEach() {
-        postgresqlConnection.createStatement("DROP TABLE person")
-            .execute()
-            .flatMap(PostgresqlResult::getRowsUpdated)
-            .then()
+        postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.dropTableIfExists("person")))
             .block();
     }
 
     @Test
-    void connectionShouldWorkWellWhenItIsUsedByMultipleThreadsAndAllQueriesAreSelect() throws Exception {
-        createData(NUMBER_OF_THREAD);
-
-        Connection connection = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
+    void postgresExecutorShouldWorkWellWhenItIsUsedByMultipleThreadsAndAllQueriesAreSelect() throws Exception {
+        provisionData(NUMBER_OF_THREAD);
 
         List<String> actual = new Vector<>();
         ConcurrentTestRunner.builder()
-            .reactorOperation((threadNumber, step) -> getData(connection, threadNumber)
-                .doOnNext(s -> actual.add(s))
+            .reactorOperation((threadNumber, step) -> getData(threadNumber)
+                .doOnNext(actual::add)
                 .then())
             .threadCount(NUMBER_OF_THREAD)
             .operationCount(1)
@@ -107,11 +93,9 @@ public class ConnectionThreadSafetyTest {
     }
 
     @Test
-    void connectionShouldWorkWellWhenItIsUsedByMultipleThreadsAndAllQueriesAreInsert() throws Exception {
-        Connection connection = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
-
+    void postgresExecutorShouldWorkWellWhenItIsUsedByMultipleThreadsAndAllQueriesAreInsert() throws Exception {
         ConcurrentTestRunner.builder()
-            .reactorOperation((threadNumber, step) -> createData(connection, threadNumber))
+            .reactorOperation((threadNumber, step) -> createData(threadNumber))
             .threadCount(NUMBER_OF_THREAD)
             .operationCount(1)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
@@ -123,14 +107,12 @@ public class ConnectionThreadSafetyTest {
     }
 
     @Test
-    void connectionShouldWorkWellWhenItIsUsedByMultipleThreadsAndInsertQueriesAreDuplicated() throws Exception {
-        Connection connection = jamesPostgresConnectionFactory.getConnection(Domain.of("james")).block();
-
+    void postgresExecutorShouldWorkWellWhenItIsUsedByMultipleThreadsAndInsertQueriesAreDuplicated() throws Exception {
         AtomicInteger numberOfSuccess = new AtomicInteger(0);
         AtomicInteger numberOfFail = new AtomicInteger(0);
         ConcurrentTestRunner.builder()
-            .reactorOperation((threadNumber, step) -> createData(connection, threadNumber % 10)
-                .then(Mono.fromCallable(() -> numberOfSuccess.incrementAndGet()))
+            .reactorOperation((threadNumber, step) -> createData(threadNumber % 10)
+                .then(Mono.fromCallable(numberOfSuccess::incrementAndGet))
                 .then()
                 .onErrorResume(throwable -> {
                     if (throwable.getMessage().contains("duplicate key value violates unique constraint")) {
@@ -151,20 +133,18 @@ public class ConnectionThreadSafetyTest {
     }
 
     @Test
-    void connectionShouldWorkWellWhenItIsUsedByMultipleThreadsAndQueriesIncludeBothSelectAndInsert() throws Exception {
-        createData(50);
-
-        Connection connection = jamesPostgresConnectionFactory.getConnection(Optional.empty()).block();
+    void postgresExecutorShouldWorkWellWhenItIsUsedByMultipleThreadsAndQueriesIncludeBothSelectAndInsert() throws Exception {
+        provisionData(50);
 
         List<String> actualSelect = new Vector<>();
         ConcurrentTestRunner.builder()
             .reactorOperation((threadNumber, step) -> {
                 if (threadNumber < 50) {
-                    return getData(connection, threadNumber)
-                        .doOnNext(s -> actualSelect.add(s))
+                    return getData(threadNumber)
+                        .doOnNext(actualSelect::add)
                         .then();
                 } else {
-                    return createData(connection, threadNumber);
+                    return createData(threadNumber);
                 }
             })
             .threadCount(NUMBER_OF_THREAD)
@@ -180,40 +160,43 @@ public class ConnectionThreadSafetyTest {
         assertThat(actualInsert).containsExactlyInAnyOrderElementsOf(expectedInsert);
     }
 
-    private Flux<String> getData(Connection connection, int threadNumber) {
-        return Flux.from(connection.createStatement("SELECT id, name FROM PERSON WHERE id = $1")
-                .bind("$1", threadNumber)
-                .execute())
-            .flatMap(result -> result.map((row, rowMetadata) -> row.get("id", Long.class) + "|" + row.get("name", String.class)));
+    public Flux<String> getData(int threadNumber) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext
+                .select(DSL.field("id"), DSL.field("name"))
+                .from(DSL.table("person"))
+                .where(DSL.field("id").eq(threadNumber))))
+            .map(recordToString());
     }
 
-    @NotNull
-    private Mono<Void> createData(Connection connection, int threadNumber) {
-        return Flux.from(connection.createStatement("INSERT INTO person (id, name) VALUES ($1, $2)")
-                .bind("$1", threadNumber)
-                .bind("$2", "Peter" + threadNumber)
-                .execute())
-            .flatMap(Result::getRowsUpdated)
-            .then();
+    public Mono<Void> createData(int threadNumber) {
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext
+            .insertInto(DSL.table("person"), DSL.field("id"), DSL.field("name"))
+            .values(threadNumber, "Peter" + threadNumber)));
     }
 
     private List<String> getData(int lowerBound, int upperBound) {
-        return Flux.from(postgresqlConnection.createStatement("SELECT id, name FROM person WHERE id >= $1 AND id < $2")
-                .bind("$1", lowerBound)
-                .bind("$2", upperBound)
-                .execute())
-            .flatMap(result -> result.map((row, rowMetadata) -> row.get("id", Long.class) + "|" + row.get("name", String.class)))
-            .collect(ImmutableList.toImmutableList()).block();
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext
+            .select(DSL.field("id"), DSL.field("name"))
+            .from(DSL.table("person"))
+            .where(DSL.field("id").greaterOrEqual(lowerBound).and(DSL.field("id").lessThan(upperBound)))))
+            .map(recordToString())
+            .collectList()
+            .block();
     }
 
-    private void createData(int upperBound) {
-        for (int i = 0; i < upperBound; i++) {
-            postgresqlConnection.createStatement("INSERT INTO person (id, name) VALUES ($1, $2)")
-                .bind("$1", i)
-                .bind("$2", "Peter" + i)
-                .execute().flatMap(PostgresqlResult::getRowsUpdated)
-                .then()
-                .block();
-        }
+    private void provisionData(int upperBound) {
+        Flux.range(0, upperBound)
+            .flatMap(i -> insertPerson(i, "Peter" + i))
+            .then()
+            .block();
+    }
+
+    private Mono<Void> insertPerson(int id, String name) {
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(DSL.table("person"), DSL.field("id"), DSL.field("name"))
+            .values(id, name)));
+    }
+
+    private Function<Record, String> recordToString() {
+        return record -> record.get(DSL.field("id", Long.class)) + "|" + record.get(DSL.field("name", String.class));
     }
 }
