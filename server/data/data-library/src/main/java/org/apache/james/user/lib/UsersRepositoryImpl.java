@@ -87,6 +87,8 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
         verifyFailureDelay = Optional.ofNullable(configuration.getString("verifyFailureDelay"))
             .map(string -> DurationParser.parse(string, ChronoUnit.SECONDS).toMillis())
             .orElse(0L);
+        LOGGER.debug("Init configure users repository with virtualHosting {}, administratorId {}, verifyFailureDelay {}",
+            virtualHosting, administratorId, verifyFailureDelay);
     }
 
     private Optional<Set<Username>> parseAdministratorId(HierarchicalConfiguration<ImmutableNode> configuration) {

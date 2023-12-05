@@ -28,12 +28,15 @@ import org.apache.james.user.postgres.PostgresUserModule;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
 import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class PostgresUsersRepositoryModule extends AbstractModule {
     @Override
@@ -53,5 +56,12 @@ public class PostgresUsersRepositoryModule extends AbstractModule {
     public PostgresUsersRepositoryConfiguration provideConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
         return PostgresUsersRepositoryConfiguration.from(
             configurationProvider.getConfiguration("usersrepository"));
+    }
+
+    @ProvidesIntoSet
+    InitializationOperation configureInitialization(ConfigurationProvider configurationProvider, PostgresUsersRepository usersRepository) {
+        return InitilizationOperationBuilder
+            .forClass(PostgresUsersRepository.class)
+            .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
     }
 }
