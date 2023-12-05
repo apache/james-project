@@ -74,7 +74,7 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
     }
     
     @Test
-    void jpaGuiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) throws Exception {
+    void guiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()
             .addDomain(DOMAIN)
