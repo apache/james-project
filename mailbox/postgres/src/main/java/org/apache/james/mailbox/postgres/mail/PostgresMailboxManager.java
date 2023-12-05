@@ -90,4 +90,8 @@ public class PostgresMailboxManager extends StoreMailboxManager {
         return MAILBOX_CAPABILITIES;
     }
 
+    @Override
+    public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
+        return EnumSet.of(MessageCapabilities.UniqueID);
+    }
 }
