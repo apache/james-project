@@ -24,12 +24,6 @@
     version="2.0">
 
     <persistence-unit name="James" transaction-type="RESOURCE_LOCAL">
-        <class>org.apache.james.mailbox.postgres.quota.model.MaxDomainMessageCount</class>
-        <class>org.apache.james.mailbox.postgres.quota.model.MaxDomainStorage</class>
-        <class>org.apache.james.mailbox.postgres.quota.model.MaxGlobalMessageCount</class>
-        <class>org.apache.james.mailbox.postgres.quota.model.MaxGlobalStorage</class>
-        <class>org.apache.james.mailbox.postgres.quota.model.MaxUserMessageCount</class>
-        <class>org.apache.james.mailbox.postgres.quota.model.MaxUserStorage</class>
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
             <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade"/>
