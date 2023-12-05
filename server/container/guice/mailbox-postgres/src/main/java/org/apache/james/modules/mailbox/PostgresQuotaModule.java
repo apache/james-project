@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
 import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.postgres.quota.PostgresPerUserMaxQuotaManager;
@@ -48,6 +49,7 @@ public class PostgresQuotaModule extends AbstractModule {
         bind(DefaultUserQuotaRootResolver.class).in(Scopes.SINGLETON);
         bind(PostgresPerUserMaxQuotaManager.class).in(Scopes.SINGLETON);
         bind(StoreQuotaManager.class).in(Scopes.SINGLETON);
+        bind(PostgresQuotaCurrentValueDAO.class).in(Scopes.SINGLETON);
         bind(PostgresCurrentQuotaManager.class).in(Scopes.SINGLETON);
 
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
