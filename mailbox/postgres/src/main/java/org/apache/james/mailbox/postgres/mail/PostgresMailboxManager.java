@@ -48,7 +48,8 @@ public class PostgresMailboxManager extends StoreMailboxManager {
         MailboxCapabilities.UserFlag,
         MailboxCapabilities.Namespace,
         MailboxCapabilities.Move,
-        MailboxCapabilities.Annotation);
+        MailboxCapabilities.Annotation,
+        MailboxCapabilities.ACL);
 
     @Inject
     public PostgresMailboxManager(PostgresMailboxSessionMapperFactory mapperFactory,
