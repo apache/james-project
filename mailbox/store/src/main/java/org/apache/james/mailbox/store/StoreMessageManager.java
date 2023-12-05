@@ -996,9 +996,4 @@ public class StoreMessageManager implements MessageManager {
         return messageMapper.execute(
             () -> messageMapper.listAllMessageUids(mailbox));
     }
-
-    @Override
-    public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
-        return messageCapabilities;
-    }
 }
