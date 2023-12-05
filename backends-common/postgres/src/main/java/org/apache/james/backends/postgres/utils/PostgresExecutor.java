@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.postgres.utils;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -38,10 +39,13 @@ import com.google.common.annotations.VisibleForTesting;
 import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 public class PostgresExecutor {
 
     public static final String DEFAULT_INJECT = "default";
+    public static final int MAX_RETRY_ATTEMPTS = 5;
+    public static final Duration MIN_BACKOFF = Duration.ofMillis(1);
 
     public static class Factory {
 
@@ -78,22 +82,26 @@ public class PostgresExecutor {
     public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF))
             .then();
     }
 
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return dslContext()
-            .flatMapMany(queryFunction);
+            .flatMapMany(queryFunction)
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF));
     }
 
     public Mono<Record> executeRow(Function<DSLContext, Mono<Record>> queryFunction) {
         return dslContext()
-            .flatMap(queryFunction);
+            .flatMap(queryFunction)
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF));
     }
 
     public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF))
             .map(Record1::value1);
     }
 
