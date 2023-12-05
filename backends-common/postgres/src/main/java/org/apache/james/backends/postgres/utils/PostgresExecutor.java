@@ -22,6 +22,7 @@ package org.apache.james.backends.postgres.utils;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -37,6 +38,7 @@ import org.jooq.impl.DSL;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.r2dbc.spi.Connection;
+import io.r2dbc.spi.R2dbcBadGrammarException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -82,26 +84,30 @@ public class PostgresExecutor {
     public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF))
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                .filter(preparedStatementConflictException()))
             .then();
     }
 
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return dslContext()
             .flatMapMany(queryFunction)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF));
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                .filter(preparedStatementConflictException()));
     }
 
     public Mono<Record> executeRow(Function<DSLContext, Mono<Record>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF));
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                .filter(preparedStatementConflictException()));
     }
 
     public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF))
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                .filter(preparedStatementConflictException()))
             .map(Record1::value1);
     }
 
@@ -112,5 +118,9 @@ public class PostgresExecutor {
     @VisibleForTesting
     public Mono<Void> dispose() {
         return connection.flatMap(con -> Mono.from(con.close()));
+    }
+
+    private Predicate<Throwable> preparedStatementConflictException() {
+        return throwable -> throwable.getCause() instanceof R2dbcBadGrammarException;
     }
 }
