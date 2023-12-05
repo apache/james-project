@@ -38,11 +38,6 @@ class PostgresMailboxManagerTest extends MailboxManagerTest<PostgresMailboxManag
     class HookTests {
     }
 
-    @Disabled("//TODO https://github.com/apache/james-project/pull/1822")
-    @Nested
-    class AnnotationTests {
-    }
-
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
@@ -60,7 +55,6 @@ class PostgresMailboxManagerTest extends MailboxManagerTest<PostgresMailboxManag
     protected SubscriptionManager provideSubscriptionManager() {
         return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory(), provideMailboxManager().getMapperFactory(), provideMailboxManager().getEventBus());
     }
-
 
     @Override
     protected EventBus retrieveEventBus(PostgresMailboxManager mailboxManager) {
