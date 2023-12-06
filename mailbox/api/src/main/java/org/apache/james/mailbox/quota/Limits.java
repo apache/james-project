@@ -17,38 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.quota.model;
+package org.apache.james.mailbox.quota;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import java.util.Optional;
 
-@Entity(name = "MaxGlobalStorage")
-@Table(name = "JAMES_MAX_Global_STORAGE")
-public class MaxGlobalStorage {
-    public static final String DEFAULT_KEY = "default_key";
-   
-    @Id
-    @Column(name = "QUOTAROOT_ID")
-    private String quotaRoot = DEFAULT_KEY;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 
-    @Column(name = "VALUE", nullable = true)
-    private Long value;
-
-    public MaxGlobalStorage(Long value) {
-        this.quotaRoot = DEFAULT_KEY;
-        this.value = value;
+public class Limits {
+    public static Limits empty() {
+        return new Limits(Optional.empty(), Optional.empty());
     }
 
-    public MaxGlobalStorage() {
+    private final Optional<QuotaSizeLimit> sizeLimit;
+    private final Optional<QuotaCountLimit> countLimit;
+
+    public Limits(Optional<QuotaSizeLimit> sizeLimit, Optional<QuotaCountLimit> countLimit) {
+        this.sizeLimit = sizeLimit;
+        this.countLimit = countLimit;
     }
 
-    public Long getValue() {
-        return value;
+    public Optional<QuotaSizeLimit> getSizeLimit() {
+        return sizeLimit;
     }
 
-    public void setValue(Long value) {
-        this.value = value;
+    public Optional<QuotaCountLimit> getCountLimit() {
+        return countLimit;
     }
 }
