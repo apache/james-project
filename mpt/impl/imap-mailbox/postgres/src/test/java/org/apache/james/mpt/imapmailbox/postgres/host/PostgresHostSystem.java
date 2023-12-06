@@ -22,11 +22,9 @@ package org.apache.james.mpt.imapmailbox.postgres.host;
 import java.time.Clock;
 import java.time.Instant;
 
-import javax.persistence.EntityManagerFactory;
-
-import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
+import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
@@ -46,13 +44,11 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.postgres.JPAMailboxFixture;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
-import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaDAO;
-import org.apache.james.mailbox.postgres.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
+import org.apache.james.mailbox.postgres.quota.PostgresPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
@@ -77,14 +73,8 @@ import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 public class PostgresHostSystem extends JamesImapHostSystem {
-
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(
-        ImmutableList.<Class<?>>builder()
-            .addAll(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES)
-            .build());
 
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.USER_FLAGS_SUPPORT,
@@ -98,7 +88,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         return new PostgresHostSystem(postgresExtension);
     }
 
-    private JPAPerUserMaxQuotaManager maxQuotaManager;
+    private PostgresPerUserMaxQuotaManager maxQuotaManager;
     private PostgresMailboxManager mailboxManager;
     private final PostgresExtension postgresExtension;
 
@@ -113,7 +103,6 @@ public class PostgresHostSystem extends JamesImapHostSystem {
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
 
         BlobId.Factory blobIdFactory = new HashBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
@@ -130,7 +119,7 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, authorizator);
         DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
         CurrentQuotaManager currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
-        maxQuotaManager = new JPAPerUserMaxQuotaManager(entityManagerFactory, new JPAPerUserMaxQuotaDAO(entityManagerFactory));
+        maxQuotaManager = new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor()));
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, storeQuotaManager);
         QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, storeQuotaManager, quotaRootResolver);
@@ -158,13 +147,6 @@ public class PostgresHostSystem extends JamesImapHostSystem {
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
             defaultImapProcessorFactory);
-    }
-
-    @Override
-    public void afterTest() {
-        JPA_TEST_CLUSTER.clear(ImmutableList.<String>builder()
-            .addAll(JPAMailboxFixture.QUOTA_TABLES_NAMES)
-            .build());
     }
 
     @Override

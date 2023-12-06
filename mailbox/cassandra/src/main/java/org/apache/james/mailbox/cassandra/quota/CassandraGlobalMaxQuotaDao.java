@@ -39,6 +39,8 @@ import jakarta.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.mailbox.quota.Limits;
+import org.apache.james.mailbox.quota.QuotaCodec;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
