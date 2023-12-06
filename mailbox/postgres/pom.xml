@@ -195,27 +195,6 @@
                         -Xms512m -Xmx1024m -Dopenjpa.Multithreaded=true</argLine>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.openjpa</groupId>
-                <artifactId>openjpa-maven-plugin</artifactId>
-                <version>${apache.openjpa.version}</version>
-                <configuration>
-                    <includes>org/apache/james/mailbox/jpa/*/model/**/*.class</includes>
-                    <excludes>org/apache/james/mailbox/jpa/mail/model/openjpa/EncryptDecryptHelper.class</excludes>
-                    <addDefaultConstructor>true</addDefaultConstructor>
-                    <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
-                    <persistenceXmlFile>${basedir}/src/test/resources/persistence.xml</persistenceXmlFile>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>enhancer</id>
-                        <goals>
-                            <goal>enhance</goal>
-                        </goals>
-                        <phase>process-classes</phase>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 </project>
