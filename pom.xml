@@ -651,7 +651,7 @@
         <lucene.version>3.6.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
         <guice.version>6.0.0</guice.version>
-        <logback.version>1.4.13</logback.version>
+        <logback.version>1.4.14</logback.version>
         <tink.version>1.9.0</tink.version>
         <lettuce.core.version>6.3.0.RELEASE</lettuce.core.version>
 
