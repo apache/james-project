@@ -17,38 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.quota.model;
+package org.apache.james.mailbox.postgres.quota;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.quota.PostgresQuotaLimitDAO;
+import org.apache.james.backends.postgres.quota.PostgresQuotaModule;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
+import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@Entity(name = "MaxGlobalMessageCount")
-@Table(name = "JAMES_MAX_GLOBAL_MESSAGE_COUNT")
-public class MaxGlobalMessageCount {
-    public static final String DEFAULT_KEY = "default_key";
-    
-    @Id
-    @Column(name = "QUOTAROOT_ID")
-    private String quotaRoot = DEFAULT_KEY;
+public class PostgresPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresQuotaModule.MODULE);
 
-    @Column(name = "VALUE", nullable = true)
-    private Long value;
-
-    public MaxGlobalMessageCount(Long value) {
-        this.quotaRoot = DEFAULT_KEY;
-        this.value = value;
-    }
-
-    public MaxGlobalMessageCount() {
-    }
-
-    public Long getValue() {
-        return value;
-    }
-
-    public void setValue(Long value) {
-        this.value = value;
+    @Override
+    protected MaxQuotaManager provideMaxQuotaManager() {
+        return new PostgresPerUserMaxQuotaManager(new PostgresQuotaLimitDAO(postgresExtension.getPostgresExecutor()));
     }
 }
