@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.postgres.mail.task;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.quota.PostgresQuotaCurrentValueDAO;
@@ -48,7 +47,6 @@ import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuotasServiceContract {
