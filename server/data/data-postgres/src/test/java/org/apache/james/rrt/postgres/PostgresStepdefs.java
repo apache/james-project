@@ -16,48 +16,51 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.rrt.jpa;
+package org.apache.james.rrt.postgres;
 
-import static org.mockito.Mockito.mock;
-
-import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableFixture;
 import org.apache.james.rrt.lib.RewriteTablesStepdefs;
+import org.apache.james.user.postgres.PostgresUserModule;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
+import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
 
 import com.github.fge.lambdas.Throwing;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 
-public class JPAStepdefs {
-
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPARecipientRewrite.class);
+public class PostgresStepdefs {
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresRecipientRewriteTableModule.MODULE, PostgresUserModule.MODULE));
 
     private final RewriteTablesStepdefs mainStepdefs;
 
-    public JPAStepdefs(RewriteTablesStepdefs mainStepdefs) {
+    public PostgresStepdefs(RewriteTablesStepdefs mainStepdefs) {
         this.mainStepdefs = mainStepdefs;
     }
 
     @Before
     public void setup() throws Throwable {
+        postgresExtension.beforeAll(null);
+        postgresExtension.beforeEach(null);
         mainStepdefs.setUp(Throwing.supplier(this::getRecipientRewriteTable).sneakyThrow());
     }
 
     @After
     public void tearDown() {
-        JPA_TEST_CLUSTER.clear(JPARecipientRewrite.JAMES_RECIPIENT_REWRITE);
+        postgresExtension.afterEach(null);
+        postgresExtension.afterAll(null);
     }
 
-    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
-        JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
-        localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        localVirtualUserTable.setUsersRepository(new PostgresUsersRepository(RecipientRewriteTableFixture.domainListForCucumberTests(), mock(PostgresUsersDAO.class)));
-        localVirtualUserTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
-        return localVirtualUserTable;
+    private AbstractRecipientRewriteTable getRecipientRewriteTable() throws DomainListException {
+        PostgresRecipientRewriteTable postgresRecipientRewriteTable = new PostgresRecipientRewriteTable(new PostgresRecipientRewriteTableDAO(postgresExtension.getPostgresExecutor()));
+        postgresRecipientRewriteTable.setUsersRepository(new PostgresUsersRepository(RecipientRewriteTableFixture.domainListForCucumberTests(),
+            new PostgresUsersDAO(postgresExtension.getPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT)));
+        postgresRecipientRewriteTable.setDomainList(RecipientRewriteTableFixture.domainListForCucumberTests());
+        return postgresRecipientRewriteTable;
     }
 }

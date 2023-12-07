@@ -16,25 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.rrt.jpa;
 
-import static org.mockito.Mockito.mock;
+package org.apache.james.rrt.postgres;
 
-import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.RecipientRewriteTableContract;
+import org.apache.james.user.postgres.PostgresUserModule;
 import org.apache.james.user.postgres.PostgresUsersDAO;
 import org.apache.james.user.postgres.PostgresUsersRepository;
+import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JPARecipientRewriteTableTest implements RecipientRewriteTableContract {
+public class PostgresRecipientRewriteTableTest implements RecipientRewriteTableContract {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresRecipientRewriteTableModule.MODULE, PostgresUserModule.MODULE));
 
-    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPARecipientRewrite.class);
-
-    AbstractRecipientRewriteTable recipientRewriteTable;
+    private PostgresRecipientRewriteTable postgresRecipientRewriteTable;
 
     @BeforeEach
     void setup() throws Exception {
@@ -48,14 +50,13 @@ class JPARecipientRewriteTableTest implements RecipientRewriteTableContract {
 
     @Override
     public void createRecipientRewriteTable() {
-        JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
-        localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        localVirtualUserTable.setUsersRepository(new PostgresUsersRepository(mock(DomainList.class), mock(PostgresUsersDAO.class)));
-        recipientRewriteTable = localVirtualUserTable;
+        postgresRecipientRewriteTable = new PostgresRecipientRewriteTable(new PostgresRecipientRewriteTableDAO(postgresExtension.getPostgresExecutor()));
+        postgresRecipientRewriteTable.setUsersRepository(new PostgresUsersRepository(new SimpleDomainList(),
+            new PostgresUsersDAO(postgresExtension.getPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT)));
     }
 
     @Override
     public AbstractRecipientRewriteTable virtualUserTable() {
-        return recipientRewriteTable;
+        return postgresRecipientRewriteTable;
     }
 }
