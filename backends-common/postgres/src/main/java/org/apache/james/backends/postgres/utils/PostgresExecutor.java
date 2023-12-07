@@ -121,6 +121,8 @@ public class PostgresExecutor {
     }
 
     private Predicate<Throwable> preparedStatementConflictException() {
-        return throwable -> throwable.getCause() instanceof R2dbcBadGrammarException;
+        return throwable -> throwable.getCause() instanceof R2dbcBadGrammarException
+            && throwable.getMessage().contains("prepared statement")
+            && throwable.getMessage().contains("already exists");
     }
 }
