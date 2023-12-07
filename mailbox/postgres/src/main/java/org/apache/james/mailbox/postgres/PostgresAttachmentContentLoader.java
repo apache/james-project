@@ -26,9 +26,9 @@ import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 
-public class JPAAttachmentContentLoader implements AttachmentContentLoader {
+public class PostgresAttachmentContentLoader implements AttachmentContentLoader {
     @Override
     public InputStream load(AttachmentMetadata attachment, MailboxSession mailboxSession) {
-        throw new NotImplementedException("JPA doesn't support loading attachment separately from Message");
+        throw new NotImplementedException("Postgresql doesn't support loading attachment separately from Message");
     }
 }
