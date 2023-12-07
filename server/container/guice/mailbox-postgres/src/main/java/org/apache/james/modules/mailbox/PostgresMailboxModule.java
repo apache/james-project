@@ -42,7 +42,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.postgres.JPAAttachmentContentLoader;
+import org.apache.james.mailbox.postgres.PostgresAttachmentContentLoader;
 import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
@@ -117,7 +117,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxId.Factory.class).to(PostgresMailboxId.Factory.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
-        bind(AttachmentContentLoader.class).to(JPAAttachmentContentLoader.class);
+        bind(AttachmentContentLoader.class).to(PostgresAttachmentContentLoader.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
 
