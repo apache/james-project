@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.rrt.jpa;
+package org.apache.james.rrt.postgres;
 
 import org.junit.runner.RunWith;
 
@@ -26,7 +26,7 @@ import cucumber.api.junit.Cucumber;
 @RunWith(Cucumber.class)
 @CucumberOptions(
         features = { "classpath:cucumber/" },
-        glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.jpa" }
+        glue = { "org.apache.james.rrt.lib", "org.apache.james.rrt.postgres" }
     )
 public class RewriteTablesTest {
 }
