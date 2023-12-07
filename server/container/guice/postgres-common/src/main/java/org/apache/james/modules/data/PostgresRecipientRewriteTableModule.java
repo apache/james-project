@@ -16,37 +16,44 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.modules.data;
 
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.apache.james.rrt.jpa.JPARecipientRewriteTable;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
 import org.apache.james.rrt.lib.CanSendFromImpl;
+import org.apache.james.rrt.postgres.PostgresRecipientRewriteTable;
+import org.apache.james.rrt.postgres.PostgresRecipientRewriteTableDAO;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
-public class JPARecipientRewriteTableModule extends AbstractModule {
+public class PostgresRecipientRewriteTableModule extends AbstractModule {
     @Override
     public void configure() {
-        bind(JPARecipientRewriteTable.class).in(Scopes.SINGLETON);
-        bind(RecipientRewriteTable.class).to(JPARecipientRewriteTable.class);
+        bind(PostgresRecipientRewriteTable.class).in(Scopes.SINGLETON);
+        bind(PostgresRecipientRewriteTableDAO.class).in(Scopes.SINGLETON);
+        bind(RecipientRewriteTable.class).to(PostgresRecipientRewriteTable.class);
         bind(AliasReverseResolverImpl.class).in(Scopes.SINGLETON);
         bind(AliasReverseResolver.class).to(AliasReverseResolverImpl.class);
         bind(CanSendFromImpl.class).in(Scopes.SINGLETON);
         bind(CanSendFrom.class).to(CanSendFromImpl.class);
+
+        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.MODULE);
     }
 
     @ProvidesIntoSet
-    InitializationOperation configureRRT(ConfigurationProvider configurationProvider, JPARecipientRewriteTable recipientRewriteTable) {
+    InitializationOperation configureRecipientRewriteTable(ConfigurationProvider configurationProvider, PostgresRecipientRewriteTable recipientRewriteTable) {
         return InitilizationOperationBuilder
-            .forClass(JPARecipientRewriteTable.class)
+            .forClass(PostgresRecipientRewriteTable.class)
             .init(() -> recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable")));
     }
 }
