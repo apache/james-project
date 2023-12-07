@@ -27,7 +27,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ import reactor.core.publisher.Mono;
 class PostgresTableManagerTest {
 
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.empty();
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresModule.EMPTY_MODULE);
 
     Function<PostgresModule, PostgresTableManager> tableManagerFactory =
         module -> new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, true);
@@ -340,6 +339,24 @@ class PostgresTableManagerTest {
         Pair<String, String> rlsColumn = Pair.of("domain", "character varying");
         assertThat(getColumnNameAndDataType(tableName))
             .doesNotContain(rlsColumn);
+    }
+
+    @Test
+    void recreateRLSColumnWhenExistedShouldNotFail() {
+        String tableName = "tablename1";
+
+        PostgresTable rlsTable = PostgresTable.name(tableName)
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("colum1", SQLDataType.UUID.notNull()))
+            .supportsRowLevelSecurity();
+
+        PostgresModule module = PostgresModule.table(rlsTable);
+
+        PostgresTableManager testee = tableManagerFactory.apply(module);
+        testee.initializeTables().block();
+
+        assertThatCode(() -> testee.initializeTables().block())
+            .doesNotThrowAnyException();
     }
 
     private List<Pair<String, String>> getColumnNameAndDataType(String tableName) {
