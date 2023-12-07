@@ -28,7 +28,7 @@ public class PostgresDataModule extends AbstractModule {
     protected void configure() {
         install(new CoreDataModule());
         install(new PostgresDomainListModule());
-        install(new JPARecipientRewriteTableModule());
+        install(new PostgresRecipientRewriteTableModule());
         install(new JPAMailRepositoryModule());
     }
 }
