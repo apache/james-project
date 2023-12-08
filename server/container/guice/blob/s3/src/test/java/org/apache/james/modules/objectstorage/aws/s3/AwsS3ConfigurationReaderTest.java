@@ -110,7 +110,7 @@ class AwsS3ConfigurationReaderTest {
         configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_ALGORITHM, trustStoreAlgorithm);
         configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTALL, true);
 
-        assertThatThrownBy(() -> AwsS3ConfigurationReader.from(configuration)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> AwsS3ConfigurationReader.from(configuration)).isInstanceOf(IllegalStateException.class);
     }
 
 
