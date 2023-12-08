@@ -34,6 +34,7 @@ public class AwsS3ConfigurationReader {
     static final String OBJECTSTORAGE_TRUSTSTORE_TYPE = "objectstorage.s3.truststore.type";
     static final String OBJECTSTORAGE_TRUSTSTORE_SECRET = "objectstorage.s3.truststore.secret";
     static final String OBJECTSTORAGE_TRUSTSTORE_ALGORITHM = "objectstorage.s3.truststore.algorithm";
+    static final String OBJECTSTORAGE_TRUSTALL = "objectstorage.s3.trustall";
 
     public static AwsS3AuthConfiguration from(Configuration configuration) {
         String endpoint = configuration.getString(OBJECTSTORAGE_ENDPOINT);
@@ -49,6 +50,7 @@ public class AwsS3ConfigurationReader {
                 .trustStoreType(configuration.getString(OBJECTSTORAGE_TRUSTSTORE_TYPE))
                 .trustStoreSecret(configuration.getString(OBJECTSTORAGE_TRUSTSTORE_SECRET))
                 .trustStoreAlgorithm(configuration.getString(OBJECTSTORAGE_TRUSTSTORE_ALGORITHM))
+                .trustAll(configuration.getBoolean(OBJECTSTORAGE_TRUSTALL, false))
                 .build();
     }
 }

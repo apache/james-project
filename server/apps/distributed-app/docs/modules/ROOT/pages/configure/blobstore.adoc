@@ -143,6 +143,10 @@ Maximum size of stored objects expressed in bytes.
 | objectstorage.s3.truststore.algorithm
 | optional: Use this specific trust store algorithm; default SunX509
 
+| objectstorage.s3.trustall
+| optional: boolean. Defaults to false. Cannot be set to true with other trustore options. Wether James should validate
+S3 endpoint SSL certificates.
+
 | objectstorage.s3.read.timeout
 | optional: HTTP read timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.
 
