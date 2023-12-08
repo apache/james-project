@@ -69,7 +69,7 @@ class PushListenerTest {
     pushSubscriptionRepository = new MemoryPushSubscriptionRepository(Clock.systemUTC())
     webPushClient = mock(classOf[WebPushClient])
     delegationStore = new MemoryDelegationStore()
-    testee = new PushListener(pushSubscriptionRepository, webPushClient, pushSerializer, delegationStore)
+    testee = new PushListener(pushSubscriptionRepository, webPushClient, pushSerializer, delegationStore, Clock.systemUTC())
 
     when(webPushClient.push(any(), any())).thenReturn(SMono.empty[Unit])
   }
