@@ -48,8 +48,8 @@ public class PushSubscriptionHelpers {
             .orElse(maxExpiresTime));
     }
 
-    public static boolean isNotOutdatedSubscription(PushSubscription subscription, Clock clock) {
-        return subscription.expires().isAfter(ZonedDateTime.now(clock));
+    public static boolean isNotOutdatedSubscription(PushSubscription subscription) {
+        return subscription.expires().isAfter(ZonedDateTime.now());
     }
 
     public static boolean isInvalidPushSubscriptionKey(Option<PushSubscriptionKeys> keysOption) {

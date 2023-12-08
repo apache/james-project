@@ -22,7 +22,6 @@ package org.apache.james.jmap.cassandra.pushsubscription;
 import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.evaluateExpiresTime;
 import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isInThePast;
 import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isInvalidPushSubscriptionKey;
-import static org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isNotOutdatedSubscription;
 
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -130,14 +129,12 @@ public class CassandraPushSubscriptionRepository implements PushSubscriptionRepo
     @Override
     public Publisher<PushSubscription> get(Username username, Set<PushSubscriptionId> ids) {
         return dao.selectAll(username)
-            .filter(subscription -> ids.contains(subscription.id()))
-            .filter(subscription -> isNotOutdatedSubscription(subscription, clock));
+            .filter(subscription -> ids.contains(subscription.id()));
     }
 
     @Override
     public Publisher<PushSubscription> list(Username username) {
-        return dao.selectAll(username)
-            .filter(subscription -> isNotOutdatedSubscription(subscription, clock));
+        return dao.selectAll(username);
     }
 
     private Mono<PushSubscription> retrieveByPushSubscriptionId(Username username, PushSubscriptionId id) {
