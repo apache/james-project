@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +36,9 @@ import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -83,6 +86,23 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
+    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            // Always trust
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {
+            // Always trust
+        }
+    };
+
     private static class FileBackedOutputStreamByteSource extends ByteSource {
         private final FileBackedOutputStream stream;
         private final long size;
@@ -158,6 +178,9 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     }
 
     private TlsTrustManagersProvider getTrustManagerProvider(AwsS3AuthConfiguration configuration) {
+        if (configuration.isTrustAll()) {
+            return () -> ImmutableList.of(DUMMY_TRUST_MANAGER).toArray(new TrustManager[0]);
+        }
         try {
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
                 configuration.getTrustStoreAlgorithm().orElse(TrustManagerFactory.getDefaultAlgorithm()));
