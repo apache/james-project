@@ -85,7 +85,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
         if (e instanceof DataAccessException && e.getMessage().contains(String.format("\"%s\" already exists", table.getName()))) {
             return Mono.empty();
         }
-        LOGGER.error("Error while creating table {}", table.getName(), e);
+        LOGGER.error("Error while creating table: {}", table.getName(), e);
         return Mono.error(e);
     }
 
@@ -105,10 +105,14 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     private String rowLevelSecurityAlterStatement(String tableName) {
-        return "SET app.current_domain = ''; ALTER TABLE " + tableName + " ADD DOMAIN varchar(255) not null DEFAULT current_setting('app.current_domain')::text;" +
-            "ALTER TABLE " + tableName + " ENABLE ROW LEVEL SECURITY; " +
-            "ALTER TABLE " + tableName + " FORCE ROW LEVEL SECURITY; " +
-            "CREATE POLICY DOMAIN_" + tableName + "_POLICY ON " + tableName + " USING (DOMAIN = current_setting('app.current_domain')::text);";
+        String policyName = "domain_" + tableName + "_policy";
+        return "set app.current_domain = ''; alter table " + tableName + " add column if not exists domain varchar(255) not null default current_setting('app.current_domain')::text ;" +
+            "do $$ \n" +
+            "begin \n" +
+            "    if not  exists( select policyname from pg_policies where policyname = '" + policyName + "') then \n" +
+            "        execute 'alter table " + tableName + " enable row level security; alter table " + tableName + " force row level security; create policy " + policyName + " on " + tableName + " using (domain = current_setting(''app.current_domain'')::text)';\n" +
+            "    end if;\n" +
+            "end $$;";
     }
 
     public Mono<Void> truncate() {
