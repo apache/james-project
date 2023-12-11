@@ -16,8 +16,9 @@ services:
     hostname: james.local
     volumes:
       - $PWD/postgresql-42.5.4.jar:/root/libs/postgresql-42.5.4.jar
-      - $PWD/sample-configuration/james-database-postgres.properties:/root/conf/james-database.properties
-      - $PWD/src/test/resources/keystore:/root/conf/keystore
+      - ./sample-configuration/james-database-postgres.properties:/root/conf/james-database.properties
+    command:
+      - --generate-keystore
     ports:
       - "80:80"
       - "25:25"
@@ -31,7 +32,7 @@ services:
   postgres:
     image: postgres:16.0
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       - POSTGRES_DB=james
       - POSTGRES_USER=james

@@ -39,7 +39,7 @@ public interface PostgresSubscriptionModule {
     Field<String> USER = DSL.field("user_name", SQLDataType.VARCHAR(255).notNull());
     Table<Record> TABLE_NAME = DSL.table("subscription");
     PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
-        .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
+        .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
             .column(MAILBOX)
             .column(USER)
             .constraint(DSL.unique(MAILBOX, USER))))

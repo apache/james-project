@@ -65,7 +65,7 @@ public interface PostgresQuotaModule {
         Name PK_CONSTRAINT_NAME = DSL.name("quota_limit_pkey");
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
-            .createTableStep(((dsl, tableName) -> dsl.createTable(tableName)
+            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(QUOTA_SCOPE)
                 .column(IDENTIFIER)
                 .column(QUOTA_COMPONENT)
