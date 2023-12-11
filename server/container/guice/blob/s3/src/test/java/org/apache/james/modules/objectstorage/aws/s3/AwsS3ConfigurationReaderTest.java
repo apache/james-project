@@ -20,6 +20,7 @@
 package org.apache.james.modules.objectstorage.aws.s3;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
@@ -87,6 +88,84 @@ class AwsS3ConfigurationReaderTest {
             .build();
         AwsS3AuthConfiguration authConfiguration = AwsS3ConfigurationReader.from(configuration);
         assertThat(authConfiguration).isEqualTo(expected);
+    }
+
+
+    @Test
+    void trustAllAndTrustStoreShouldBeIncompatible() {
+        Configuration configuration = new PropertiesConfiguration();
+        URI endpoint = URI.create("http://myEndpoint");
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ENDPOINT, endpoint);
+        String accessKeyId = "myAccessKeyId";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ACCESKEYID, accessKeyId);
+        String secretKey = "mySecretKey";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_SECRETKEY, secretKey);
+        String trustStorePath = "/some/where/truststore.p12";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_PATH, trustStorePath);
+        String trustStoreType = "PKCS12";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_TYPE, trustStoreType);
+        String trustStoreSecret = "myTrustStoreSecret";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_SECRET, trustStoreSecret);
+        String trustStoreAlgorithm = "myTrustStoreAlgorithm";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_ALGORITHM, trustStoreAlgorithm);
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTALL, true);
+
+        assertThatThrownBy(() -> AwsS3ConfigurationReader.from(configuration)).isInstanceOf(IllegalStateException.class);
+    }
+
+
+    @Test
+    void trustNotAllAndTrustStoreShouldBeCompatible() {
+        Configuration configuration = new PropertiesConfiguration();
+        URI endpoint = URI.create("http://myEndpoint");
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ENDPOINT, endpoint);
+        String accessKeyId = "myAccessKeyId";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ACCESKEYID, accessKeyId);
+        String secretKey = "mySecretKey";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_SECRETKEY, secretKey);
+        String trustStorePath = "/some/where/truststore.p12";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_PATH, trustStorePath);
+        String trustStoreType = "PKCS12";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_TYPE, trustStoreType);
+        String trustStoreSecret = "myTrustStoreSecret";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_SECRET, trustStoreSecret);
+        String trustStoreAlgorithm = "myTrustStoreAlgorithm";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTSTORE_ALGORITHM, trustStoreAlgorithm);
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTALL, false);
+
+        assertThatCode(() -> AwsS3ConfigurationReader.from(configuration)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void trustAllShouldBeFalseByDefault() {
+        Configuration configuration = new PropertiesConfiguration();
+        URI endpoint = URI.create("http://myEndpoint");
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ENDPOINT, endpoint);
+        String accessKeyId = "myAccessKeyId";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ACCESKEYID, accessKeyId);
+        String secretKey = "mySecretKey";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_SECRETKEY, secretKey);
+
+        AwsS3AuthConfiguration testee = AwsS3ConfigurationReader.from(configuration);
+
+        assertThat(testee.isTrustAll()).isFalse();
+    }
+
+
+    @Test
+    void trustAllShouldBeTrueWhenEnabled() {
+        Configuration configuration = new PropertiesConfiguration();
+        URI endpoint = URI.create("http://myEndpoint");
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ENDPOINT, endpoint);
+        String accessKeyId = "myAccessKeyId";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ACCESKEYID, accessKeyId);
+        String secretKey = "mySecretKey";
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_SECRETKEY, secretKey);
+        configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_TRUSTALL, true);
+
+        AwsS3AuthConfiguration testee = AwsS3ConfigurationReader.from(configuration);
+
+        assertThat(testee.isTrustAll()).isTrue();
     }
 
     @Test

@@ -184,6 +184,10 @@ generate salt with : openssl rand -hex 16
                         <dt><strong>objectstorage.s3.truststore.algorithm</strong></dt>
                         <dd><i>optional:</i> Use this specific trust store algorithm; default SunX509</dd>
 
+                        <dt><strong>objectstorage.s3.trustall</strong></dt>
+                        <dd><i>optional:</i>  boolean. Defaults to false. Cannot be set to true with other trustore options. Wether James should validate
+                        S3 endpoint SSL certificates.</dd>
+
                         <dt><strong>objectstorage.s3.read.timeout</strong></dt>
                         <dd><i>optional:</i> HTTP read timeout. duration, default value being second. Leaving it empty relies on S3 driver defaults.</dd>
 

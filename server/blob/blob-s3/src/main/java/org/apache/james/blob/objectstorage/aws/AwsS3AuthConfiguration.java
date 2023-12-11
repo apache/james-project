@@ -53,6 +53,7 @@ public class AwsS3AuthConfiguration {
             private final URI endpoint;
             private final String accessKeyId;
             private final String secretKey;
+            private Optional<Boolean> trustAll;
 
             private Optional<String> trustStorePath;
             private Optional<String> trustStoreType;
@@ -67,6 +68,7 @@ public class AwsS3AuthConfiguration {
                 this.trustStoreType = Optional.empty();
                 this.trustStoreSecret = Optional.empty();
                 this.trustStoreAlgorithm = Optional.empty();
+                this.trustAll = Optional.empty();
             }
 
             public ReadyToBuild trustStorePath(Optional<String> trustStorePath) {
@@ -85,6 +87,11 @@ public class AwsS3AuthConfiguration {
 
             public ReadyToBuild trustStoreType(String trustStoreType) {
                 return trustStoreType(Optional.ofNullable(trustStoreType));
+            }
+
+            public ReadyToBuild trustAll(boolean trustAll) {
+                this.trustAll = Optional.of(trustAll);
+                return this;
             }
 
             public ReadyToBuild trustStoreSecret(Optional<String> trustStoreSecret) {
@@ -114,8 +121,13 @@ public class AwsS3AuthConfiguration {
                 Preconditions.checkNotNull(secretKey, "'secretKey' is mandatory");
                 Preconditions.checkArgument(!secretKey.isEmpty(), "'secretKey' is mandatory");
 
+                boolean trustAll = this.trustAll.orElse(false);
+                Preconditions.checkState(!(trustAll && trustStoreType.isPresent()), "Cannot specify 'trustAll' and 'trustStoreType' simultaneously");
+                Preconditions.checkState(!(trustAll && trustStorePath.isPresent()), "Cannot specify 'trustAll' and 'trustStorePath' simultaneously");
+                Preconditions.checkState(!(trustAll && trustStoreSecret.isPresent()), "Cannot specify 'trustAll' and 'trustStoreSecret' simultaneously");
+
                 return new AwsS3AuthConfiguration(endpoint, accessKeyId, secretKey,
-                    trustStorePath, trustStoreType, trustStoreSecret, trustStoreAlgorithm);
+                    trustStorePath, trustStoreType, trustStoreSecret, trustStoreAlgorithm, trustAll);
             }
         }
     }
@@ -128,6 +140,7 @@ public class AwsS3AuthConfiguration {
     private final Optional<String> trustStoreType;
     private final Optional<String> trustStoreSecret;
     private final Optional<String> trustStoreAlgorithm;
+    private final boolean trustAll;
 
     private AwsS3AuthConfiguration(URI endpoint,
                                    String accessKeyId,
@@ -135,7 +148,8 @@ public class AwsS3AuthConfiguration {
                                    Optional<String> trustStorePath,
                                    Optional<String> trustStoreType,
                                    Optional<String> trustStoreSecret,
-                                   Optional<String> trustStoreAlgorithm) {
+                                   Optional<String> trustStoreAlgorithm,
+                                   boolean trustAll) {
         this.endpoint = endpoint;
         this.accessKeyId = accessKeyId;
         this.secretKey = secretKey;
@@ -143,6 +157,7 @@ public class AwsS3AuthConfiguration {
         this.trustStoreType = trustStoreType;
         this.trustStoreSecret = trustStoreSecret;
         this.trustStoreAlgorithm = trustStoreAlgorithm;
+        this.trustAll = trustAll;
     }
 
     public URI getEndpoint() {
@@ -173,6 +188,10 @@ public class AwsS3AuthConfiguration {
         return trustStoreAlgorithm;
     }
 
+    public boolean isTrustAll() {
+        return trustAll;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof AwsS3AuthConfiguration) {
@@ -183,7 +202,8 @@ public class AwsS3AuthConfiguration {
                 Objects.equal(trustStorePath, that.trustStorePath) &&
                 Objects.equal(trustStoreType, that.trustStoreType) &&
                 Objects.equal(trustStoreSecret, that.trustStoreSecret) &&
-                Objects.equal(trustStoreAlgorithm, that.trustStoreAlgorithm);
+                Objects.equal(trustStoreAlgorithm, that.trustStoreAlgorithm) &&
+                Objects.equal(trustAll, that.trustAll);
         }
         return false;
     }
@@ -191,7 +211,8 @@ public class AwsS3AuthConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hashCode(endpoint, accessKeyId, secretKey,
-                trustStorePath, trustStoreType, trustStoreSecret, trustStoreAlgorithm);
+            trustStorePath, trustStoreType, trustStoreSecret, trustStoreAlgorithm,
+            trustAll);
     }
 
     @Override
@@ -203,6 +224,7 @@ public class AwsS3AuthConfiguration {
             .add("trustStorePath", trustStorePath)
             .add("trustStoreSecret", trustStoreSecret)
             .add("trustStoreAlgorithm", trustStoreAlgorithm)
+            .add("trustAll", trustAll)
             .toString();
     }
 }
