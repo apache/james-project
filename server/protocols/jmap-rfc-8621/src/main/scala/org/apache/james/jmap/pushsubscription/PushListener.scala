@@ -20,6 +20,7 @@
 package org.apache.james.jmap.pushsubscription
 
 import java.nio.charset.StandardCharsets
+import java.time.Clock
 import java.util.Base64
 
 import com.google.common.annotations.VisibleForTesting
@@ -28,6 +29,7 @@ import javax.inject.Inject
 import org.apache.james.events.EventListener.ReactiveGroupEventListener
 import org.apache.james.events.{Event, Group}
 import org.apache.james.jmap.api.model.PushSubscription
+import org.apache.james.jmap.api.pushsubscription.PushSubscriptionHelpers.isNotOutdatedSubscription
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.change.{EmailDeliveryTypeName, StateChangeEvent}
 import org.apache.james.jmap.core.StateChange
@@ -61,7 +63,8 @@ object PushListener {
 class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
                              webPushClient: WebPushClient,
                              pushSerializer: PushSerializer,
-                             delegationStore: DelegationStore) extends ReactiveGroupEventListener {
+                             delegationStore: DelegationStore,
+                             clock: Clock) extends ReactiveGroupEventListener {
 
   override def getDefaultGroup: Group = PushListenerGroup()
 
@@ -71,6 +74,7 @@ class PushListener @Inject()(pushRepository: PushSubscriptionRepository,
         SMono.just(event.username)
           .concatWith(delegationStore.authorizedUsers(event.username))
           .flatMap(pushRepository.list)
+          .filter(isNotOutdatedSubscription(_, clock))
           .filter(_.validated)
           .flatMap(sendNotification(_, event), ReactorUtils.DEFAULT_CONCURRENCY)
           .`then`()

@@ -316,27 +316,19 @@ trait PushSubscriptionRepositoryContract {
   }
 
   @Test
-  def getSubscriptionShouldNotReturnOutdatedSubscriptions(): Unit = {
-    val deviceClientId1 = DeviceClientId("1")
-    val deviceClientId2 = DeviceClientId("2")
+  def getSubscriptionShouldReturnExpiredSubscriptions(): Unit = {
     val validRequest1 = PushSubscriptionCreationRequest(
-      deviceClientId = deviceClientId1,
+      deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URL("https://example.com/push")),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(1))),
       types = Seq(CustomTypeName1))
-    val validRequest2 = PushSubscriptionCreationRequest(
-      deviceClientId = deviceClientId2,
-      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
-      expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(3))),
-      types = Seq(CustomTypeName2))
-    val pushSubscriptionId1 = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
-    val pushSubscriptionId2 = SMono.fromPublisher(testee.save(ALICE, validRequest2)).block().id
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
 
     clock.setInstant(VALID_EXPIRE.plusDays(2).toInstant)
 
-    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId1, pushSubscriptionId2).asJava)).collectSeq().block()
+    val pushSubscriptions = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).collectSeq().block()
 
-    assertThat(pushSubscriptions.map(_.id).toList.asJava).containsExactlyInAnyOrder(pushSubscriptionId2)
+    assertThat(pushSubscriptions.map(_.id).toList.asJava).containsOnly(pushSubscriptionId)
   }
 
   @Test
@@ -363,27 +355,19 @@ trait PushSubscriptionRepositoryContract {
   }
 
   @Test
-  def listSubscriptionShouldNotReturnOutdatedSubscriptions(): Unit = {
-    val deviceClientId1 = DeviceClientId("1")
-    val deviceClientId2 = DeviceClientId("2")
+  def listSubscriptionShouldReturnExpiredSubscriptions(): Unit = {
     val validRequest1 = PushSubscriptionCreationRequest(
-      deviceClientId = deviceClientId1,
+      deviceClientId = DeviceClientId("1"),
       url = PushSubscriptionServerURL(new URL("https://example.com/push")),
       expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(1))),
       types = Seq(CustomTypeName1))
-    val validRequest2 = PushSubscriptionCreationRequest(
-      deviceClientId = deviceClientId2,
-      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
-      expires = Option(PushSubscriptionExpiredTime(VALID_EXPIRE.plusDays(3))),
-      types = Seq(CustomTypeName2))
-    SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
-    val pushSubscriptionId2 = SMono.fromPublisher(testee.save(ALICE, validRequest2)).block().id
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest1)).block().id
 
     clock.setInstant(VALID_EXPIRE.plusDays(2).toInstant)
 
     val pushSubscriptions = SFlux.fromPublisher(testee.list(ALICE)).collectSeq().block()
 
-    assertThat(pushSubscriptions.map(_.id).toList.asJava).containsExactlyInAnyOrder(pushSubscriptionId2)
+    assertThat(pushSubscriptions.map(_.id).toList.asJava).containsOnly(pushSubscriptionId)
   }
 
   @Test
