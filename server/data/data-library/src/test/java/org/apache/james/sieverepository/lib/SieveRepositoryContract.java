@@ -186,6 +186,17 @@ public interface SieveRepositoryContract {
     }
 
     @Test
+    default void setActiveScriptOnNonExistingScriptShouldNotDeactivateTheCurrentActiveScript() throws Exception {
+        sieveRepository().putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository().setActive(USERNAME, SCRIPT_NAME);
+
+        assertThatThrownBy(() -> sieveRepository().setActive(USERNAME, OTHER_SCRIPT_NAME))
+            .isInstanceOf(ScriptNotFoundException.class);
+
+        assertThat(getScriptContent(sieveRepository().getActive(USERNAME))).isEqualTo(SCRIPT_CONTENT);
+    }
+
+    @Test
     default void setActiveScriptShouldWork() throws Exception {
         sieveRepository().putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository().setActive(USERNAME, SCRIPT_NAME);
