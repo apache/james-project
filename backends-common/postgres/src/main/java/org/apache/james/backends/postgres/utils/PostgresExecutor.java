@@ -111,6 +111,14 @@ public class PostgresExecutor {
             .map(Record1::value1);
     }
 
+    public Mono<Long> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
+        return dslContext()
+            .flatMap(queryFunction)
+            .cast(Long.class)
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                .filter(preparedStatementConflictException()));
+    }
+
     public Mono<Connection> connection() {
         return connection;
     }
