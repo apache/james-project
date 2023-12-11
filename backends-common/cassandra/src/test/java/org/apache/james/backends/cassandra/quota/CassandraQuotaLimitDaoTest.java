@@ -70,7 +70,7 @@ public class CassandraQuotaLimitDaoTest {
         QuotaLimit emptyQuotaLimitValue = QuotaLimit.builder().quotaComponent(QuotaComponent.MAILBOX).quotaScope(QuotaScope.DOMAIN).identifier("A").quotaType(QuotaType.COUNT).build();
         cassandraQuotaLimitDao.setQuotaLimit(emptyQuotaLimitValue).block();
 
-        assertThat(cassandraQuotaLimitDao.getQuotaLimit(CassandraQuotaLimitDao.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
+        assertThat(cassandraQuotaLimitDao.getQuotaLimit(QuotaLimit.QuotaLimitKey.of(QuotaComponent.MAILBOX, QuotaScope.DOMAIN, "A", QuotaType.COUNT)).block())
             .isEqualTo(emptyQuotaLimitValue);
     }
 
