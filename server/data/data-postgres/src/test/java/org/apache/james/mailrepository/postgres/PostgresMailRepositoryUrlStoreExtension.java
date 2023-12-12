@@ -17,23 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.jpa;
+package org.apache.james.mailrepository.postgres;
 
-import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
-import org.apache.james.mailrepository.jpa.model.JPAUrl;
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class JPAMailRepositoryUrlStoreExtension implements ParameterResolver, AfterEachCallback {
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAUrl.class);
+public class PostgresMailRepositoryUrlStoreExtension implements ParameterResolver, AfterEachCallback, AfterAllCallback, BeforeEachCallback, BeforeAllCallback {
+    private final PostgresExtension postgresExtension;
+
+    public PostgresMailRepositoryUrlStoreExtension() {
+        postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresMailRepositoryModule.MODULE));
+    }
 
     @Override
     public void afterEach(ExtensionContext context) {
-        JPA_TEST_CLUSTER.clear("JAMES_MAIL_REPOS");
+        postgresExtension.afterEach(context);
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+        postgresExtension.afterAll(extensionContext);
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+        postgresExtension.beforeAll(extensionContext);
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        postgresExtension.beforeEach(extensionContext);
     }
 
     @Override
@@ -43,6 +65,6 @@ public class JPAMailRepositoryUrlStoreExtension implements ParameterResolver, Af
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return new JPAMailRepositoryUrlStore(JPA_TEST_CLUSTER.getEntityManagerFactory());
+        return new PostgresMailRepositoryUrlStore(postgresExtension.getPostgresExecutor());
     }
 }
