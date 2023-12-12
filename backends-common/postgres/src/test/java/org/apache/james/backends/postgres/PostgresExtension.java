@@ -35,6 +35,8 @@ import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+import com.github.dockerjava.api.command.PauseContainerCmd;
+import com.github.dockerjava.api.command.UnpauseContainerCmd;
 import com.github.fge.lambdas.Throwing;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -68,6 +70,16 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private PostgresExecutor postgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
     private PostgresExecutor.Factory executorFactory;
+
+    public void pause() {
+        PG_CONTAINER.getDockerClient().pauseContainerCmd(PG_CONTAINER.getContainerId())
+            .exec();
+    }
+
+    public void unpause() {
+        PG_CONTAINER.getDockerClient().unpauseContainerCmd(PG_CONTAINER.getContainerId())
+            .exec();
+    }
 
     private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
         this.postgresModule = postgresModule;

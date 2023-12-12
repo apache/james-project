@@ -30,7 +30,9 @@ import org.apache.james.backends.postgres.PostgresTableManager;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresHealthCheck;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,9 @@ public class PostgresCommonModule extends AbstractModule {
         bind(PostgresExecutor.Factory.class).in(Scopes.SINGLETON);
 
         bind(PostgresExecutor.class).toProvider(PostgresTableManager.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class)
+            .addBinding().to(PostgresHealthCheck.class);
     }
 
     @Provides
