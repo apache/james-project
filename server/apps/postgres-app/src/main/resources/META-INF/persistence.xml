@@ -25,7 +25,6 @@
 
     <persistence-unit name="Global" transaction-type="RESOURCE_LOCAL">
         <class>org.apache.james.mailrepository.jpa.model.JPAMail</class>
-        <class>org.apache.james.sieve.postgres.model.JPASieveScript</class>
 
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
