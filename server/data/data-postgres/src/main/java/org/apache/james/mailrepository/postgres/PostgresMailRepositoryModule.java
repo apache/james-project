@@ -17,12 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.jpa;
+package org.apache.james.mailrepository.postgres;
 
-import org.apache.james.mailrepository.MailRepositoryUrlStoreContract;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.backends.postgres.PostgresTable;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Table;
+import org.jooq.impl.DSL;
+import org.jooq.impl.SQLDataType;
 
-@ExtendWith(JPAMailRepositoryUrlStoreExtension.class)
-public class JPAMailRepositoryUrlStoreTest implements MailRepositoryUrlStoreContract {
+public interface PostgresMailRepositoryModule {
+    interface PostgresMailRepositoryUrlTable {
+        Table<Record> TABLE_NAME = DSL.table("mail_repository_url");
 
+        Field<String> URL = DSL.field("url", SQLDataType.VARCHAR(255).notNull());
+
+        PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
+                .column(URL)
+                .primaryKey(URL)))
+            .disableRowLevelSecurity();
+    }
+
+    PostgresModule MODULE = PostgresModule.builder()
+        .addTable(PostgresMailRepositoryUrlTable.TABLE)
+        .build();
 }
