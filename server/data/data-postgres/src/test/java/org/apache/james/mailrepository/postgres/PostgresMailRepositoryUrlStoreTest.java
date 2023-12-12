@@ -17,18 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.data;
+package org.apache.james.mailrepository.postgres;
 
-import org.apache.james.CoreDataModule;
+import org.apache.james.mailrepository.MailRepositoryUrlStoreContract;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.google.inject.AbstractModule;
+@ExtendWith(PostgresMailRepositoryUrlStoreExtension.class)
+public class PostgresMailRepositoryUrlStoreTest implements MailRepositoryUrlStoreContract {
 
-public class PostgresDataModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        install(new CoreDataModule());
-        install(new PostgresDomainListModule());
-        install(new PostgresRecipientRewriteTableModule());
-        install(new PostgresMailRepositoryModule());
-    }
 }
