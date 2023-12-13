@@ -44,10 +44,14 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.UsersDAO;
 import org.apache.james.user.lib.model.Algorithm;
 import org.apache.james.user.lib.model.DefaultUser;
+import org.jooq.DSLContext;
 import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.UpdateConditionStep;
 import org.jooq.impl.DSL;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -194,17 +198,26 @@ public class PostgresUsersDAO implements UsersDAO {
     }
 
     private Mono<Void> removeUserFromList(Field<String[]> field, Username baseUser, Username targetUser) {
-        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
+        return postgresExecutor.executeVoid(dslContext ->
+            Mono.from(createQueryRemoveUserFromList(dslContext, field, baseUser, targetUser)));
+    }
+
+    private UpdateConditionStep<Record> createQueryRemoveUserFromList(DSLContext dslContext, Field<String[]> field, Username baseUser, Username targetUser) {
+        return dslContext.update(TABLE_NAME)
             .set(DSL.field(field.getName()),
                 (Object) DSL.field("array_remove(" + field.getName() + ", ?)",
                     targetUser.asString()))
             .where(USERNAME.eq(baseUser.asString()))
-            .and(DSL.field(field.getName()).isNotNull())));
+            .and(DSL.field(field.getName()).isNotNull());
     }
 
     public Mono<Void> removeAllAuthorizedUsers(Username baseUser) {
         return getAuthorizedUsers(baseUser)
-            .flatMap(username -> removeUserInDelegatedList(username, baseUser))
+            .collect(ImmutableList.toImmutableList())
+            .flatMap(usernames -> postgresExecutor.executeVoid(dslContext ->
+                Mono.from(dslContext.batch(usernames.stream()
+                    .map(username -> createQueryRemoveUserFromList(dslContext, DELEGATED_USERS, username, baseUser))
+                    .collect(ImmutableList.toImmutableList())))))
             .then(postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
                 .setNull(AUTHORIZED_USERS)
                 .where(USERNAME.eq(baseUser.asString())))));
