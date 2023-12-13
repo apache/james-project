@@ -32,14 +32,18 @@ public interface PostgresUserModule {
         Table<Record> TABLE_NAME = DSL.table("users");
 
         Field<String> USERNAME = DSL.field("username", SQLDataType.VARCHAR(255).notNull());
-        Field<String> HASHED_PASSWORD = DSL.field("hashed_password", SQLDataType.VARCHAR.notNull());
-        Field<String> ALGORITHM = DSL.field("algorithm", SQLDataType.VARCHAR(100).notNull());
+        Field<String> HASHED_PASSWORD = DSL.field("hashed_password", SQLDataType.VARCHAR);
+        Field<String> ALGORITHM = DSL.field("algorithm", SQLDataType.VARCHAR(100));
+        Field<String[]> AUTHORIZED_USERS = DSL.field("authorized_users", SQLDataType.VARCHAR.getArrayDataType());
+        Field<String[]> DELEGATED_USERS = DSL.field("delegated_users", SQLDataType.VARCHAR.getArrayDataType());
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(USERNAME)
                 .column(HASHED_PASSWORD)
                 .column(ALGORITHM)
+                .column(AUTHORIZED_USERS)
+                .column(DELEGATED_USERS)
                 .constraint(DSL.primaryKey(USERNAME))))
             .disableRowLevelSecurity();
     }
