@@ -24,6 +24,7 @@ import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.PostgresDataModule;
+import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
@@ -79,7 +80,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     private static final Module POSTGRES_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
-        new NaiveDelegationStoreModule(),
+        new PostgresDelegationStoreModule(),
         new DefaultProcessorsConfigurationProviderModule(),
         new PostgresMailboxModule(),
         new PostgresDataModule(),
