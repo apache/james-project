@@ -17,29 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.data;
+package org.apache.james.user.postgres;
 
-import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.postgres.PostgresUsersRepository;
-import org.apache.james.utils.InitializationOperation;
-import org.apache.james.utils.InitilizationOperationBuilder;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.core.Username;
+import org.apache.james.user.api.DelegationStore;
+import org.apache.james.user.api.DelegationStoreContract;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.ProvidesIntoSet;
+import reactor.core.publisher.Mono;
 
-public class PostgresUsersRepositoryModule extends AbstractModule {
-    @Override
-    public void configure() {
-        bind(PostgresUsersRepository.class).in(Scopes.SINGLETON);
-        bind(UsersRepository.class).to(PostgresUsersRepository.class);
+public class PostgresDelegationStoreTest implements DelegationStoreContract {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresUserModule.MODULE);
+
+    private PostgresUsersDAO postgresUsersDAO;
+
+    @BeforeEach
+    void beforeEach() {
+        postgresUsersDAO = new PostgresUsersDAO(postgresExtension.getPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT);
     }
 
-    @ProvidesIntoSet
-    InitializationOperation configureInitialization(ConfigurationProvider configurationProvider, PostgresUsersRepository usersRepository) {
-        return InitilizationOperationBuilder
-            .forClass(PostgresUsersRepository.class)
-            .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
+    @Override
+    public DelegationStore testee() {
+        return new PostgresDelegationStore(postgresUsersDAO, any -> Mono.just(true));
+    }
+
+    @Override
+    public void addUser(Username username) {
+        postgresUsersDAO.addUser(username, "password");
     }
 }
