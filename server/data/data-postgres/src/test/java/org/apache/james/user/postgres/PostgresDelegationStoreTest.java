@@ -19,11 +19,14 @@
 
 package org.apache.james.user.postgres;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
 import org.apache.james.user.api.DelegationStoreContract;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import reactor.core.publisher.Mono;
@@ -33,19 +36,32 @@ public class PostgresDelegationStoreTest implements DelegationStoreContract {
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresUserModule.MODULE);
 
     private PostgresUsersDAO postgresUsersDAO;
+    private PostgresDelegationStore postgresDelegationStore;
 
     @BeforeEach
     void beforeEach() {
         postgresUsersDAO = new PostgresUsersDAO(postgresExtension.getPostgresExecutor(), PostgresUsersRepositoryConfiguration.DEFAULT);
+        postgresDelegationStore = new PostgresDelegationStore(postgresUsersDAO, any -> Mono.just(true));
     }
 
     @Override
     public DelegationStore testee() {
-        return new PostgresDelegationStore(postgresUsersDAO, any -> Mono.just(true));
+        return postgresDelegationStore;
     }
 
     @Override
     public void addUser(Username username) {
         postgresUsersDAO.addUser(username, "password");
+    }
+
+    @Test
+    void virtualUsersShouldNotBeListed() {
+        postgresDelegationStore = new PostgresDelegationStore(postgresUsersDAO, any -> Mono.just(false));
+        addUser(BOB);
+
+        Mono.from(testee().addAuthorizedUser(ALICE).forUser(BOB)).block();
+
+        assertThat(postgresUsersDAO.listReactive().collectList().block())
+            .containsOnly(BOB);
     }
 }
