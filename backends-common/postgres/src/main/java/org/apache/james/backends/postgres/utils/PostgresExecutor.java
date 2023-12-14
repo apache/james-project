@@ -34,6 +34,7 @@ import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;
 import org.jooq.conf.StatementType;
 import org.jooq.impl.DSL;
+import org.reactivestreams.Publisher;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -96,9 +97,9 @@ public class PostgresExecutor {
                 .filter(preparedStatementConflictException()));
     }
 
-    public Mono<Record> executeRow(Function<DSLContext, Mono<Record>> queryFunction) {
+    public Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction) {
         return dslContext()
-            .flatMap(queryFunction)
+            .flatMap(queryFunction.andThen(Mono::from))
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()));
     }
