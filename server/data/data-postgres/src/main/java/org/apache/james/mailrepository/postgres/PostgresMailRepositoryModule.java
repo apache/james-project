@@ -37,7 +37,8 @@ public interface PostgresMailRepositoryModule {
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(URL)
                 .primaryKey(URL)))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
     }
 
     PostgresModule MODULE = PostgresModule.builder()
