@@ -39,8 +39,26 @@ public interface PostgresMailRepositoryModule {
                 .primaryKey(URL)))
             .disableRowLevelSecurity();
     }
+    interface PostgresMailRepositoryContentTable {
+        Table<Record> TABLE_NAME = DSL.table("mail_repository_content");
+
+        Field<String> URL = DSL.field("url", SQLDataType.VARCHAR(255).notNull());
+        Field<String> KEY = DSL.field("key", SQLDataType.VARCHAR.notNull());
+        Field<String> STATE = DSL.field("state", SQLDataType.VARCHAR.notNull());
+        Field<String> ERROR = DSL.field("error", SQLDataType.VARCHAR.notNull());
+
+        PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
+                .column(URL)
+                .column(KEY)
+                .column(STATE)
+                .column(ERROR)
+                .primaryKey(URL, KEY)))
+            .disableRowLevelSecurity();
+    }
 
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(PostgresMailRepositoryUrlTable.TABLE)
+        .addTable(PostgresMailRepositoryContentTable.TABLE)
         .build();
 }
