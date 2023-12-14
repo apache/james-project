@@ -37,7 +37,8 @@ public interface PostgresDomainModule {
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(DOMAIN)
                 .primaryKey(DOMAIN)))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
     }
 
     PostgresModule MODULE = PostgresModule.builder()

@@ -50,7 +50,8 @@ public interface PostgresQuotaModule {
                 .column(CURRENT_VALUE)
                 .constraint(DSL.constraint(PRIMARY_KEY_CONSTRAINT_NAME)
                     .primaryKey(IDENTIFIER, COMPONENT, TYPE))))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
     }
 
     interface PostgresQuotaLimitTable {
@@ -72,7 +73,8 @@ public interface PostgresQuotaModule {
                 .column(QUOTA_TYPE)
                 .column(QUOTA_LIMIT)
                 .constraint(DSL.constraint(PK_CONSTRAINT_NAME).primaryKey(QUOTA_SCOPE, IDENTIFIER, QUOTA_COMPONENT, QUOTA_TYPE))))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
     }
 
     PostgresModule MODULE = PostgresModule.builder()
