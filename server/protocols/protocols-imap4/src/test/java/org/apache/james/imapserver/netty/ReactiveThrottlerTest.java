@@ -171,7 +171,7 @@ class ReactiveThrottlerTest {
         Thread.sleep(100);
 
         Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)), NO_IMAP_MESSAGE)).block();
-        // And the task is not executed
+        // And the task is executed
         assertThat(executed.get()).isTrue();
     }
     @RepeatedTest(10)
