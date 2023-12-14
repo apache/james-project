@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class LdapRepositoryConfiguration {
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
+    public static final String SUPPORTS_VIRTUAL_HOSTING_FALLBACK = "enableVirtualHosting";
 
     private static final int NO_CONNECTION_TIMEOUT = 0;
     private static final int NO_READ_TIME_OUT = 0;
@@ -183,7 +184,8 @@ public class LdapRepositoryConfiguration {
         // Default is to use connection pooling
         int connectionTimeout = configuration.getInt("[@connectionTimeout]", NO_CONNECTION_TIMEOUT);
         int readTimeout = configuration.getInt("[@readTimeout]", NO_READ_TIME_OUT);
-        boolean supportsVirtualHosting = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING, !ENABLE_VIRTUAL_HOSTING);
+        boolean supportsVirtualHostingFallback = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING_FALLBACK, !ENABLE_VIRTUAL_HOSTING);
+        boolean supportsVirtualHosting = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING, supportsVirtualHostingFallback);
 
         HierarchicalConfiguration<ImmutableNode> restrictionConfig = null;
         // Check if we have a restriction we can use
