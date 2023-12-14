@@ -52,7 +52,8 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
 
         PostgresModule module = PostgresModule.table(table);
 
@@ -74,12 +75,14 @@ class PostgresTableManagerTest {
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity();
+                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity()
+            .build();
 
         String tableName2 = "tableName2";
         PostgresTable table2 = PostgresTable.name(tableName2)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity();
+                .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity()
+            .build();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1, table2));
 
@@ -100,7 +103,8 @@ class PostgresTableManagerTest {
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity();
+                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity()
+            .build();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
 
@@ -116,7 +120,8 @@ class PostgresTableManagerTest {
         String tableName1 = "tableName1";
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity();
+                .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity()
+            .build();
 
         tableManagerFactory.apply(PostgresModule.table(table1))
             .initializeTables()
@@ -124,7 +129,8 @@ class PostgresTableManagerTest {
 
         PostgresTable table1Changed = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity();
+                .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity()
+            .build();
 
         tableManagerFactory.apply(PostgresModule.table(table1Changed))
             .initializeTables()
@@ -144,7 +150,8 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
@@ -177,7 +184,8 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
 
         String indexName1 = "idx_test_1";
         PostgresIndex index1 = PostgresIndex.name(indexName1)
@@ -215,7 +223,8 @@ class PostgresTableManagerTest {
                 .column("colum1", SQLDataType.UUID.notNull())
                 .column("colum2", SQLDataType.INTEGER)
                 .column("colum3", SQLDataType.VARCHAR(255).notNull()))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
 
         String indexName = "idx_test_1";
         PostgresIndex index = PostgresIndex.name(indexName)
@@ -243,7 +252,8 @@ class PostgresTableManagerTest {
         String tableName1 = "tbn1";
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
-                .column("column1", SQLDataType.INTEGER.notNull())).disableRowLevelSecurity();
+                .column("column1", SQLDataType.INTEGER.notNull())).disableRowLevelSecurity()
+            .build();
 
         PostgresTableManager testee = tableManagerFactory.apply(PostgresModule.table(table1));
         testee.initializeTables()
@@ -285,7 +295,8 @@ class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("clm1", SQLDataType.UUID.notNull())
                 .column("clm2", SQLDataType.VARCHAR(255).notNull()))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
 
         PostgresModule module = PostgresModule.table(table);
 
@@ -325,7 +336,8 @@ class PostgresTableManagerTest {
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("clm1", SQLDataType.UUID.notNull())
                 .column("clm2", SQLDataType.VARCHAR(255).notNull()))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
 
         PostgresModule module = PostgresModule.table(table);
         boolean disabledRLS = false;
@@ -348,11 +360,57 @@ class PostgresTableManagerTest {
         PostgresTable rlsTable = PostgresTable.name(tableName)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("colum1", SQLDataType.UUID.notNull()))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
 
         PostgresModule module = PostgresModule.table(rlsTable);
 
         PostgresTableManager testee = tableManagerFactory.apply(module);
+        testee.initializeTables().block();
+
+        assertThatCode(() -> testee.initializeTables().block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void additionalAlterQueryToCreateConstraintShouldSucceed() {
+        String constraintName = "exclude_constraint";
+        PostgresTable table = PostgresTable.name("tbn1")
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("clm1", SQLDataType.UUID.notNull())
+                .column("clm2", SQLDataType.VARCHAR(255).notNull()))
+            .disableRowLevelSecurity()
+            .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
+            .build();
+        PostgresModule module = PostgresModule.table(table);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, false);
+
+        testee.initializeTables().block();
+
+        boolean constraintExists = postgresExtension.getConnection()
+            .flatMapMany(connection -> connection.createStatement("SELECT EXISTS(SELECT 1 FROM pg_catalog.pg_constraint WHERE conname = $1) AS constraint_exists;")
+                .bind("$1", constraintName)
+                    .execute())
+            .flatMap(result -> result.map((row, rowMetaData) -> row.get("constraint_exists", Boolean.class)))
+            .single()
+            .block();
+
+        assertThat(constraintExists).isTrue();
+    }
+
+    @Test
+    void additionalAlterQueryToReCreateConstraintShouldNotThrow() {
+        String constraintName = "exclude_constraint";
+        PostgresTable table = PostgresTable.name("tbn1")
+            .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
+                .column("clm1", SQLDataType.UUID.notNull())
+                .column("clm2", SQLDataType.VARCHAR(255).notNull()))
+            .disableRowLevelSecurity()
+            .addAdditionalAlterQueries("ALTER TABLE tbn1 ADD CONSTRAINT " + constraintName + " EXCLUDE (clm2 WITH =)")
+            .build();
+        PostgresModule module = PostgresModule.table(table);
+        PostgresTableManager testee = new PostgresTableManager(postgresExtension.getPostgresExecutor(), module, false);
+
         testee.initializeTables().block();
 
         assertThatCode(() -> testee.initializeTables().block())
