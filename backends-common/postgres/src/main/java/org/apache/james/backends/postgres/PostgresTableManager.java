@@ -90,6 +90,28 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     private Mono<Void> alterTableIfNeeded(PostgresTable table) {
+        return executeAdditionalAlterQueries(table)
+            .then(enableRLSIfNeeded(table));
+    }
+
+    private Mono<Void> executeAdditionalAlterQueries(PostgresTable table) {
+        return Flux.fromIterable(table.getAdditionalAlterQueries())
+            .concatMap(alterSQLQuery -> postgresExecutor.connection()
+                .flatMapMany(connection -> connection.createStatement(alterSQLQuery)
+                    .execute())
+                .flatMap(Result::getRowsUpdated)
+                .then()
+                .onErrorResume(e -> {
+                    if (e.getMessage().contains("already exists")) {
+                        return Mono.empty();
+                    }
+                    LOGGER.error("Error while executing ALTER query for table {}", table.getName(), e);
+                    return Mono.error(e);
+                }))
+            .then();
+    }
+
+    private Mono<Void> enableRLSIfNeeded(PostgresTable table) {
         if (rowLevelSecurityEnabled && table.supportsRowLevelSecurity()) {
             return alterTableEnableRLS(table);
         }
