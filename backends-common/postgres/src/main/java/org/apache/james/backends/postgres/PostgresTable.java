@@ -19,12 +19,14 @@
 
 package org.apache.james.backends.postgres;
 
+import java.util.List;
 import java.util.function.Function;
 
 import org.jooq.DDLQuery;
 import org.jooq.DSLContext;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class PostgresTable {
     @FunctionalInterface
@@ -39,31 +41,59 @@ public class PostgresTable {
 
     @FunctionalInterface
     public interface RequireRowLevelSecurity {
-        PostgresTable supportsRowLevelSecurity(boolean rowLevelSecurityEnabled);
+        FinalStage supportsRowLevelSecurity(boolean rowLevelSecurityEnabled);
 
-        default PostgresTable disableRowLevelSecurity() {
+        default FinalStage disableRowLevelSecurity() {
             return supportsRowLevelSecurity(false);
         }
 
-        default PostgresTable supportsRowLevelSecurity() {
+        default FinalStage supportsRowLevelSecurity() {
             return supportsRowLevelSecurity(true);
+        }
+    }
+
+    public static class FinalStage {
+        private final String tableName;
+        private final boolean supportsRowLevelSecurity;
+        private final Function<DSLContext, DDLQuery> createTableStepFunction;
+        private final ImmutableList.Builder<String> additionalAlterQueries;
+
+        public FinalStage(String tableName, boolean supportsRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction) {
+            this.tableName = tableName;
+            this.supportsRowLevelSecurity = supportsRowLevelSecurity;
+            this.createTableStepFunction = createTableStepFunction;
+            this.additionalAlterQueries = ImmutableList.builder();
+        }
+
+        /**
+         * Raw SQL ALTER queries in case not supported by jOOQ DSL.
+         */
+        public FinalStage addAdditionalAlterQueries(String... additionalAlterQueries) {
+            this.additionalAlterQueries.add(additionalAlterQueries);
+            return this;
+        }
+
+        public PostgresTable build() {
+            return new PostgresTable(tableName, supportsRowLevelSecurity, createTableStepFunction, additionalAlterQueries.build());
         }
     }
 
     public static RequireCreateTableStep name(String tableName) {
         Preconditions.checkNotNull(tableName);
 
-        return createTableFunction -> supportsRowLevelSecurity -> new PostgresTable(tableName, supportsRowLevelSecurity, dsl -> createTableFunction.createTable(dsl, tableName));
+        return createTableFunction -> supportsRowLevelSecurity -> new FinalStage(tableName, supportsRowLevelSecurity, dsl -> createTableFunction.createTable(dsl, tableName));
     }
 
     private final String name;
     private final boolean supportsRowLevelSecurity;
     private final Function<DSLContext, DDLQuery> createTableStepFunction;
+    private final List<String> additionalAlterQueries;
 
-    private PostgresTable(String name, boolean supportsRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction) {
+    private PostgresTable(String name, boolean supportsRowLevelSecurity, Function<DSLContext, DDLQuery> createTableStepFunction, List<String> additionalAlterQueries) {
         this.name = name;
         this.supportsRowLevelSecurity = supportsRowLevelSecurity;
         this.createTableStepFunction = createTableStepFunction;
+        this.additionalAlterQueries = additionalAlterQueries;
     }
 
 
@@ -77,5 +107,9 @@ public class PostgresTable {
 
     public boolean supportsRowLevelSecurity() {
         return supportsRowLevelSecurity;
+    }
+
+    public List<String> getAdditionalAlterQueries() {
+        return additionalAlterQueries;
     }
 }
