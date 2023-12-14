@@ -85,7 +85,8 @@ public interface PostgresMessageModule {
                 .column(CONTENT_DISPOSITION_PARAMETERS)
                 .constraint(DSL.primaryKey(MESSAGE_ID))
                 .comment("Holds the metadata of a mail")))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
     }
 
     interface MessageToMailboxTable {
@@ -128,7 +129,8 @@ public interface PostgresMessageModule {
                 .constraints(DSL.primaryKey(MAILBOX_ID, MESSAGE_UID),
                     foreignKey(MESSAGE_ID).references(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID))
                 .comment("Holds mailbox and flags for each message")))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
 
         PostgresIndex MESSAGE_ID_INDEX = PostgresIndex.name("message_mailbox_message_id_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)

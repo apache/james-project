@@ -47,7 +47,8 @@ public interface PostgresMailboxAnnotationModule {
                 .column(ANNOTATIONS)
                 .primaryKey(MAILBOX_ID)
                 .constraints(DSL.constraint().foreignKey(MAILBOX_ID).references(PostgresMailboxTable.TABLE_NAME, PostgresMailboxTable.MAILBOX_ID).onDeleteCascade())))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
     }
 
     PostgresModule MODULE = PostgresModule.builder()
