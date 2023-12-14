@@ -45,7 +45,8 @@ public interface PostgresUserModule {
                 .column(AUTHORIZED_USERS)
                 .column(DELEGATED_USERS)
                 .constraint(DSL.primaryKey(USERNAME))))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
     }
 
     PostgresModule MODULE = PostgresModule.builder()

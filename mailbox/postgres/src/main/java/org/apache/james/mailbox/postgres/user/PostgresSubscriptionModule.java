@@ -43,7 +43,8 @@ public interface PostgresSubscriptionModule {
             .column(MAILBOX)
             .column(USER)
             .constraint(DSL.unique(MAILBOX, USER))))
-        .supportsRowLevelSecurity();
+        .supportsRowLevelSecurity()
+        .build();
     PostgresIndex INDEX = PostgresIndex.name("subscription_user_index")
         .createIndexStep((dsl, indexName) -> dsl.createIndex(indexName)
             .on(TABLE_NAME, USER));
