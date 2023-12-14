@@ -58,7 +58,8 @@ public interface PostgresMailboxModule {
                 .column(MAILBOX_ACL)
                 .constraint(DSL.primaryKey(MAILBOX_ID))
                 .constraint(DSL.unique(MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE))))
-            .supportsRowLevelSecurity();
+            .supportsRowLevelSecurity()
+            .build();
     }
 
     PostgresModule MODULE = PostgresModule.builder()
