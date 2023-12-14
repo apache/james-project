@@ -144,6 +144,7 @@ class ReactiveThrottlerTest {
         // And the task is executed
         assertThat(executed.get()).isTrue();
     }
+
     @Test
     void throttleShouldHandleDisposal() throws Exception {
         // Given a throttler
@@ -174,6 +175,7 @@ class ReactiveThrottlerTest {
         // And the task is executed
         assertThat(executed.get()).isTrue();
     }
+
     @RepeatedTest(10)
     void throttleShouldBeConcurrentFriendly() throws Exception {
         // Given a throttler
