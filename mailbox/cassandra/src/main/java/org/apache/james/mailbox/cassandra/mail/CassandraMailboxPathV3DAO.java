@@ -185,6 +185,7 @@ public class CassandraMailboxPathV3DAO {
      * or log history might have been dropped)
      */
     private void logReadSuccess(Mailbox mailbox) {
+        System.out.println("mailbox DAO");
         if (GhostMailbox.isDebugEnabled()) {
             GhostMailbox.logger()
                 .field(GhostMailbox.MAILBOX_NAME, mailbox.generateAssociatedPath().asString())
