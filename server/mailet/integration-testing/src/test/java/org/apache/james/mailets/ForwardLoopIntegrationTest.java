@@ -235,4 +235,84 @@ public class ForwardLoopIntegrationTest {
             softly.assertThat(mails.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
         }));
     }
+
+    @Test
+    void regularForwardToSelfShouldNotCreateLoopError() throws Exception {
+        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(ALICE.asString()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .collect(ImmutableList.toImmutableList());
+
+            softly.assertThat(mails.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
+        }));
+    }
+
+    @Test
+    void filterForwardToSelfShouldNotCreateLoopError() throws Exception {
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .collect(ImmutableList.toImmutableList());
+
+            softly.assertThat(mails.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
+        }));
+    }
+
+    @Test
+    void filterForwardToSelfWithLocalCopyShouldNotCreateLoopError() throws Exception {
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(ALICE.asMailAddress()).keepACopy()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .collect(ImmutableList.toImmutableList());
+
+            softly.assertThat(mails.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
+        }));
+    }
+
+    @Test
+    void regularForwardWithSelfShouldNotCreateLoopErrorAndSendEmailToAppropriateReceivers() throws Exception {
+        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(ALICE.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(BOB.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(CEDRIC), Mapping.forward(ALICE.asString()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            List<Mail> mailListOne = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY, ALICE.asMailAddress());
+            softly.assertThat(mailListOne.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
+
+            List<Mail> mailListTwo = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY, CEDRIC.asMailAddress());
+            softly.assertThat(mailListTwo.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
+        }));
+    }
 }
