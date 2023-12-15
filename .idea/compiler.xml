@@ -100,6 +100,7 @@
         <module name="mailrepository-cassandra" />
         <module name="james-server-mailrepository-api" />
         <module name="james-server-mailetcontainer-api" />
+        <module name="apache-james-crowdsec" />
         <module name="queue-memory-guice" />
         <module name="custom-healthcheck" />
         <module name="apache-james-elasticsearch" />
@@ -184,6 +185,7 @@
         <module name="james-server-webadmin-mailbox-deleted-message-vault" />
         <module name="protocols-lmtp" />
         <module name="james-server-protocols-lmtp" />
+        <module name="apache-james-backends-redis" />
         <module name="apache-james-spamassassin" />
         <module name="blob-memory-guice" />
         <module name="metrics-api" />

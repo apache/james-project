@@ -57,7 +57,9 @@
        <mailet match="All" class="PostmasterAlias"/>
 
        <!-- Important check to avoid looping -->
-       <mailet match="RelayLimit=30" class="Null"/>
+       <mailet match="RelayLimit=30" class="ToRepository">
+           <repositoryPath>file://var/mail/relay-limit-exceeded/</repositoryPath>
+       </mailet>
 
         <!-- The WithPriority mailet allows to set a priority attribute on the mail. If the
              attribute is set and priority handling is enabled it will take care of moving the

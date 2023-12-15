@@ -11,6 +11,8 @@
     <file url="file://$PROJECT_DIR$/backends-common/pulsar/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backends-common/rabbitmq/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backends-common/rabbitmq/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backends-common/redis/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/backends-common/redis/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backends-common/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/backends-common/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/code-coverage-report/src/main/java" charset="UTF-8" />

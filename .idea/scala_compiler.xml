@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="Maven 1" modules="apache-james-backends-pulsar,apache-james-mailbox-event-json,blob-storage-strategy,event-sourcing-core,event-sourcing-event-store-api,event-sourcing-event-store-cassandra,event-sourcing-event-store-memory,event-sourcing-pojo,james-mdn,james-server-data-jmap,james-server-data-jmap-cassandra,james-server-jmap-rfc-8621,james-server-mailets,james-server-mailrepository-blob,james-server-queue-pulsar,james-server-rate-limiter,james-server-rate-limiter-redis,james-server-task-api,james-server-task-distributed,james-server-task-memory,jmap-rfc-8621-integration-tests-common">
+    <profile name="Maven 1" modules="apache-james-backends-pulsar,apache-james-backends-redis,apache-james-mailbox-event-json,blob-storage-strategy,event-sourcing-core,event-sourcing-event-store-api,event-sourcing-event-store-cassandra,event-sourcing-event-store-memory,event-sourcing-pojo,james-mdn,james-server-data-jmap,james-server-data-jmap-cassandra,james-server-jmap-rfc-8621,james-server-mailets,james-server-mailrepository-blob,james-server-queue-pulsar,james-server-rate-limiter,james-server-rate-limiter-redis,james-server-task-api,james-server-task-distributed,james-server-task-memory,jmap-rfc-8621-integration-tests-common">
       <option name="deprecationWarnings" value="true" />
       <option name="uncheckedWarnings" value="true" />
       <option name="featureWarnings" value="true" />
