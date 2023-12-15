@@ -66,6 +66,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
@@ -288,15 +289,22 @@ public class RecipientRewriteTableProcessor {
 
         Set<MailAddress> newRecipients = recordedRecipients.nonRecordedRecipients(forwardedRecipients);
 
+        Set<MailAddress> forwardRecipients = Sets.difference(newRecipients, ImmutableSet.of(originalRecipient));
+
         if (recordedRecipients.getRecipients().contains(originalRecipient)) {
             return Stream.of();
         }
 
-        if (!newRecipients.isEmpty()) {
-            return Stream.of(ForwardDecision.sendACopy(mailetContext, originalRecipient, newRecipients),
-                ForwardDecision.removeRecipient(originalRecipient));
+        ImmutableList.Builder<ForwardDecision> result = ImmutableList.builder();
+
+        if (!forwardRecipients.isEmpty()) {
+            result.add(ForwardDecision.sendACopy(mailetContext, originalRecipient, forwardRecipients));
         }
-        return Stream.empty();
+        if (!newRecipients.contains(originalRecipient)) {
+            result.add(ForwardDecision.removeRecipient(originalRecipient));
+        }
+
+        return result.build().stream();
     }
 
     private ImmutableSet<Mapping> getForwards(MailAddress recipient) throws RecipientRewriteTableException {

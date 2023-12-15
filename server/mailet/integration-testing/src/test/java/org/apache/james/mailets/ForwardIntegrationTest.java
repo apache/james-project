@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import java.io.File;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -323,13 +324,19 @@ public class ForwardIntegrationTest {
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, BOB.asString());
 
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             Mail forwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .filter(mail -> mail.getMaybeSender().asString().equals(BOB.asString()))
                 .findAny().get();
-            softly.assertThat(forwardedMail.getRecipients()).containsOnly(DELPHINE.asMailAddress(), BOB.asMailAddress());
+            Mail originalMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .filter(mail -> mail.getMaybeSender().asString().equals(FROM))
+                .findAny().get();
+            softly.assertThat(forwardedMail.getRecipients()).containsOnly(DELPHINE.asMailAddress());
             softly.assertThat(forwardedMail.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
+            softly.assertThat(originalMail.getRecipients()).containsOnly(BOB.asMailAddress());
+            softly.assertThat(originalMail.getMaybeSender().asOptional().map(MailAddress::asString)).contains(FROM);
         }));
     }
 
@@ -349,7 +356,7 @@ public class ForwardIntegrationTest {
             Mail forwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
                 .findAny().get();
             softly.assertThat(forwardedMail.getRecipients()).containsOnly(BOB.asMailAddress());
-            softly.assertThat(forwardedMail.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
+            softly.assertThat(forwardedMail.getMaybeSender().asOptional().map(MailAddress::asString)).contains(FROM);
         }));
     }
 
