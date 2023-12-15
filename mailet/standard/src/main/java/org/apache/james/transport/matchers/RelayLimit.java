@@ -33,13 +33,15 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.base.MailetUtil;
 import org.apache.mailet.base.RFC2822Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Matches mail which has been relayed more than a given number of times.
  * @version 1.0.0, 1/5/2000
  */
-
 public class RelayLimit extends GenericMatcher {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RelayLimit.class);
     int limit = 30;
 
     @Override
@@ -58,6 +60,7 @@ public class RelayLimit extends GenericMatcher {
             }
         }
         if (count >= limit) {
+            LOGGER.error("{} with Message-ID {} exceeded relay limit: {} Received headers", mail.getName(), mail.getMessage().getMessageID(), count);
             return mail.getRecipients();
         } else {
             return null;
