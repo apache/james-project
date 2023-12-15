@@ -334,6 +334,26 @@ public class ForwardIntegrationTest {
     }
 
     @Test
+    void forwardShouldKeepMessageWhenOnlyLocalCopy() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class)
+            .addMapping(MappingSource.fromUser(BOB),
+                Mapping.forward(BOB.asString()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, BOB.asString());
+
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+            Mail forwardedMail = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
+                .findAny().get();
+            softly.assertThat(forwardedMail.getRecipients()).containsOnly(BOB.asMailAddress());
+            softly.assertThat(forwardedMail.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
+        }));
+    }
+
+    @Test
     void forwardShouldSupportSeveralTargets() throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)
             .addMapping(MappingSource.fromUser(BOB),
