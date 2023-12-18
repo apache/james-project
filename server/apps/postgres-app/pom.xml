@@ -205,10 +205,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
         </dependency>
@@ -318,8 +314,6 @@
                             <volume>/root/glowroot/data</volume>
                             <!-- Data for ActiveMQ mailQueue -->
                             <volume>/root/var</volume>
-                            <!-- Data for derby database -->
-                            <volume>/var/store</volume>
                         </volumes>
                     </container>
                     <extraDirectories>
@@ -367,13 +361,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- Isolation issues with Derby inMemory database -->
                     <reuseForks>false</reuseForks>
                     <!-- Speed up a bit things -->
                     <forkCount>1C</forkCount>
                     <argLine>-Djava.library.path=
                         -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
-                        -Xms512m -Xmx1024m -Dopenjpa.Multithreaded=true</argLine>
+                        -Xms512m -Xmx1024m</argLine>
                 </configuration>
             </plugin>
             <plugin>
