@@ -21,13 +21,14 @@ package org.apache.james.mailets;
 
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Comparator.NOT_CONTAINS;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.FROM;
+import static org.apache.james.mailets.configuration.CommonProcessors.RRT_ERROR_REPOSITORY;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -97,7 +98,8 @@ public class ForwardLoopIntegrationTest {
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
-                        .mailet(RecipientRewriteTable.class))
+                        .mailet(RecipientRewriteTable.class)
+                        .addProperty("errorProcessor", "rrt-error"))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(JMAPFiltering.class))
@@ -106,6 +108,12 @@ public class ForwardLoopIntegrationTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString())))
                 .putProcessor(CommonProcessors.error())
+                .putProcessor(ProcessorConfiguration.builder()
+                    .state("rrt-error")
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(ToRepository.class)
+                        .addProperty("repositoryPath", RRT_ERROR_REPOSITORY.asString())))
                 .putProcessor(CommonProcessors.transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
@@ -196,6 +204,82 @@ public class ForwardLoopIntegrationTest {
             softly.assertThat(mail.getRecipients()).containsOnly(SENDER.asMailAddress());
             softly.assertThat(mail.getMaybeSender().asOptional()).contains(CEDRIC.asMailAddress());
         }));
+    }
+
+    @Test
+    void loopShouldLeadToRrtError() throws Exception {
+        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(BOB.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
+        dataProbe.addMapping(MappingSource.fromUser(CEDRIC), Mapping.forward(ALICE.asString()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isEqualTo(1);
+    }
+
+    @Test
+    void shouldDetectSenderInLoopWhenAliasAndForwardRules() throws Exception {
+        dataProbe.addMapping(MappingSource.fromUser(Username.of("sender-alias@" + DEFAULT_DOMAIN)),
+            Mapping.alias(SENDER.asString()));
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(SENDER.asMailAddress()).withoutACopy()));
+        filteringManagementProbe.defineRulesForUser(SENDER, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage("sender-alias@" + DEFAULT_DOMAIN, ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isEqualTo(1);
+    }
+
+    @Test
+    void loopWithRuleShouldLeadToRrtError() throws Exception {
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).withoutACopy()));
+        filteringManagementProbe.defineRulesForUser(BOB, asRule(Forward.to(CEDRIC.asMailAddress()).withoutACopy()));
+        filteringManagementProbe.defineRulesForUser(CEDRIC, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isEqualTo(1);
+    }
+
+    @Test
+    void loopWithLocalCopyShouldLeadToRrtError() throws Exception {
+        filteringManagementProbe.defineRulesForUser(ALICE, asRule(Forward.to(BOB.asMailAddress()).keepACopy()));
+        filteringManagementProbe.defineRulesForUser(BOB, asRule(Forward.to(CEDRIC.asMailAddress()).withoutACopy()));
+        filteringManagementProbe.defineRulesForUser(CEDRIC, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isEqualTo(1);
+    }
+
+    @Test
+    void mixedLoopShouldLeadToRrtError() throws Exception {
+        dataProbe.addMapping(MappingSource.fromUser(ALICE), Mapping.forward(BOB.asString()));
+        filteringManagementProbe.defineRulesForUser(BOB, asRule(Forward.to(CEDRIC.asMailAddress()).withoutACopy()));
+        filteringManagementProbe.defineRulesForUser(CEDRIC, asRule(Forward.to(ALICE.asMailAddress()).withoutACopy()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(SENDER.asString(), PASSWORD)
+            .sendMessage(SENDER.asString(), ALICE.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isEqualTo(1);
     }
 
     @Test
