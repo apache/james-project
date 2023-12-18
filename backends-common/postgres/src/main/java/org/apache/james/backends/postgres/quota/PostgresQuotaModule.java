@@ -73,7 +73,7 @@ public interface PostgresQuotaModule {
                 .column(QUOTA_TYPE)
                 .column(QUOTA_LIMIT)
                 .constraint(DSL.constraint(PK_CONSTRAINT_NAME).primaryKey(QUOTA_SCOPE, IDENTIFIER, QUOTA_COMPONENT, QUOTA_TYPE))))
-            .supportsRowLevelSecurity()
+            .disableRowLevelSecurity()
             .build();
     }
 
