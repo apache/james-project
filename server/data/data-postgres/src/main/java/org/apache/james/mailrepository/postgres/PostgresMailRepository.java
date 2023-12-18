@@ -48,6 +48,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -93,6 +94,7 @@ public class PostgresMailRepository implements MailRepository {
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private final BlobId.Factory blobIdFactory;
 
+    @Inject
     public PostgresMailRepository(PostgresExecutor postgresExecutor,
                                   MailRepositoryUrl url,
                                   MimeMessageStore.Factory mimeMessageStoreFactory,
