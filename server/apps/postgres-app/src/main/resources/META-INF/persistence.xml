@@ -24,8 +24,6 @@
     version="2.0">
 
     <persistence-unit name="Global" transaction-type="RESOURCE_LOCAL">
-        <class>org.apache.james.mailrepository.jpa.model.JPAMail</class>
-
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
             <property name="openjpa.jdbc.MappingDefaults" value="ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade"/>
