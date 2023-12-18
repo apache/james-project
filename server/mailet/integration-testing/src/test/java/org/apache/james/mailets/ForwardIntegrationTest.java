@@ -20,9 +20,11 @@
 package org.apache.james.mailets;
 
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
+import static org.apache.james.mailets.configuration.CommonProcessors.RRT_ERROR_REPOSITORY;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 
@@ -45,6 +47,7 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SpoolerProbe;
 import org.apache.mailet.Mail;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
@@ -358,6 +361,48 @@ public class ForwardIntegrationTest {
             softly.assertThat(forwardedMail.getRecipients()).containsOnly(BOB.asMailAddress());
             softly.assertThat(forwardedMail.getMaybeSender().asOptional().map(MailAddress::asString)).contains(FROM);
         }));
+    }
+
+    @Test
+    void localCopyAloneShouldNotLeadToRecordingRRTError() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class)
+            .addMapping(MappingSource.fromUser(BOB),
+                Mapping.forward(BOB.asString()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, BOB.asString());
+
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isZero();
+    }
+
+    @Test
+    void localCopyShouldNotLeadToRecordingRRTError() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class).addMapping(MappingSource.fromUser(BOB), Mapping.forward(BOB.asString()));
+        jamesServer.getProbe(DataProbeImpl.class).addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, BOB.asString());
+
+        Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isZero();
+    }
+
+    @Test
+    void forwardShouldNotLeadToRecordingRRTError() throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class).addMapping(MappingSource.fromUser(BOB), Mapping.forward(CEDRIC.asString()));
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage(FROM, BOB.asString());
+
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+
+        assertThat(mailRepositoryProbe.getRepositoryMailCount(RRT_ERROR_REPOSITORY)).isZero();
     }
 
     @Test
