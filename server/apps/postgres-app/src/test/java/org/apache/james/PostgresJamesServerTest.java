@@ -50,8 +50,7 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
             .build())
-        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(new TestJPAConfigurationModule(postgresExtension)))
+        .server(PostgresJamesServerMain::createServer)
         .extension(postgresExtension)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
