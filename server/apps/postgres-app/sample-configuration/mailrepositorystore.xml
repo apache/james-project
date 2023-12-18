@@ -22,13 +22,11 @@
 <!-- Read https://james.apache.org/server/config-mailrepositorystore.html for further details -->
 
 <mailrepositorystore>
-    <defaultProtocol>file</defaultProtocol>
+    <defaultProtocol>postgres</defaultProtocol>
     <mailrepositories>
-        <!-- File based repositories.  These repositories store all message data -->
-        <!-- in the file system. -->
-        <mailrepository class="org.apache.james.mailrepository.file.FileMailRepository">
+        <mailrepository class="org.apache.james.mailrepository.postgres.PostgresMailRepository">
             <protocols>
-                <protocol>file</protocol>
+                <protocol>postgres</protocol>
             </protocols>
             <!-- Set if the messages should be listed sorted. False by default -->
             <config FIFO="false" CACHEKEYS="true"/>
