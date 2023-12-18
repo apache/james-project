@@ -170,19 +170,12 @@
                 <artifactId>openjpa-maven-plugin</artifactId>
                 <version>${apache.openjpa.version}</version>
                 <configuration>
-                    <includes>org/apache/james/mailrepository/jpa/model/JPAUrl.class,
-                        org/apache/james/mailrepository/jpa/model/JPAMail.class</includes>
                     <addDefaultConstructor>true</addDefaultConstructor>
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
                     <toolProperties>
                         <property>
                             <name>log</name>
                             <value>TOOL=TRACE</value>
-                        </property>
-                        <property>
-                            <name>metaDataFactory</name>
-                            <value>jpa(Types=org.apache.james.mailrepository.jpa.model.JPAUrl;
-                                org.apache.james.mailrepository.jpa.model.JPAMail)</value>
                         </property>
                     </toolProperties>
                     <persistenceXmlFile>${basedir}/src/test/resources/persistence.xml</persistenceXmlFile>

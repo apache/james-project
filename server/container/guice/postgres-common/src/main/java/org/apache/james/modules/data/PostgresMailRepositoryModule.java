@@ -24,9 +24,9 @@ import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
-import org.apache.james.mailrepository.jpa.JPAMailRepository;
-import org.apache.james.mailrepository.jpa.JPAMailRepositoryFactory;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
+import org.apache.james.mailrepository.postgres.PostgresMailRepository;
+import org.apache.james.mailrepository.postgres.PostgresMailRepositoryFactory;
 import org.apache.james.mailrepository.postgres.PostgresMailRepositoryUrlStore;
 
 import com.google.common.collect.ImmutableList;
@@ -43,12 +43,12 @@ public class PostgresMailRepositoryModule extends AbstractModule {
 
         bind(MailRepositoryStoreConfiguration.Item.class)
             .toProvider(() -> new MailRepositoryStoreConfiguration.Item(
-                ImmutableList.of(new Protocol("jpa")),
-                JPAMailRepository.class.getName(),
+                ImmutableList.of(new Protocol("postgres")),
+                PostgresMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
 
         Multibinder.newSetBinder(binder(), MailRepositoryFactory.class)
-            .addBinding().to(JPAMailRepositoryFactory.class);
+            .addBinding().to(PostgresMailRepositoryFactory.class);
         Multibinder.newSetBinder(binder(), PostgresModule.class)
             .addBinding().toInstance(org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.MODULE);
     }
