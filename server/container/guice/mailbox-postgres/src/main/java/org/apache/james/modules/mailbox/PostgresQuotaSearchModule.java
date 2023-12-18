@@ -17,37 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules.mailbox;
 
-import javax.inject.Singleton;
-
-import org.apache.james.backends.jpa.JPAConfiguration;
-import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.quota.search.QuotaSearcher;
+import org.apache.james.quota.search.scanning.ScanningQuotaSearcher;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+import com.google.inject.Scopes;
 
-public class TestJPAConfigurationModule extends AbstractModule {
-    public static final String JDBC_EMBEDDED_DRIVER = org.postgresql.Driver.class.getName();
-
-    private final PostgresExtension postgresExtension;
-
-    public TestJPAConfigurationModule(PostgresExtension postgresExtension) {
-        this.postgresExtension = postgresExtension;
-    }
-
+public class PostgresQuotaSearchModule extends AbstractModule {
     @Override
     protected void configure() {
-    }
-
-    @Provides
-    @Singleton
-    JPAConfiguration provideConfiguration() {
-        return JPAConfiguration.builder()
-            .driverName(JDBC_EMBEDDED_DRIVER)
-            .driverURL(postgresExtension.getJdbcUrl())
-            .username(postgresExtension.getPostgresConfiguration().getCredential().getUsername())
-            .password(postgresExtension.getPostgresConfiguration().getCredential().getPassword())
-            .build();
+        bind(ScanningQuotaSearcher.class).in(Scopes.SINGLETON);
+        bind(QuotaSearcher.class).to(ScanningQuotaSearcher.class);
     }
 }
