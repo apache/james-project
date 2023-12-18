@@ -29,7 +29,7 @@ Indexes in table message_mailbox:
 - mailbox_id_is_recent_mail_uid_index (mailbox_id, is_recent, message_uid)
 - mailbox_id_is_delete_mail_uid_index (mailbox_id, is_deleted, message_uid)
 
-Indexes are used to find records faster
+Indexes are used to find records faster.
 
 The table structure is mostly normalized which mitigates storage costs and achieves consistency easily.
 
