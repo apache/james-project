@@ -81,7 +81,7 @@ class RemoteDeliveryForwardIntegrationTest {
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)
                     .addProperty("gateway", mockSmtpServerExtension.getMockSmtp().getIPAddress())))
-            .putProcessor(CommonProcessors.rrtErrorProcessor());
+            .putProcessor(CommonProcessors.rrtError());
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
