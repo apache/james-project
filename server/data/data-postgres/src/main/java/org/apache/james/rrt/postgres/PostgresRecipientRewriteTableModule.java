@@ -45,7 +45,7 @@ public interface PostgresRecipientRewriteTableModule {
                 .column(DOMAIN_NAME)
                 .column(TARGET_ADDRESS)
                 .constraint(DSL.constraint(PK_CONSTRAINT_NAME).primaryKey(USERNAME, DOMAIN_NAME, TARGET_ADDRESS))))
-            .supportsRowLevelSecurity()
+            .disableRowLevelSecurity()
             .build();
 
         PostgresIndex INDEX = PostgresIndex.name("idx_rrt_target_address")
