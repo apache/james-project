@@ -14,9 +14,6 @@ services:
     image: apache/james:postgres-latest
     container_name: james
     hostname: james.local
-    volumes:
-      - $PWD/postgresql-42.5.4.jar:/root/libs/postgresql-42.5.4.jar
-      - ./sample-configuration/james-database-postgres.properties:/root/conf/james-database.properties
     command:
       - --generate-keystore
     ports:

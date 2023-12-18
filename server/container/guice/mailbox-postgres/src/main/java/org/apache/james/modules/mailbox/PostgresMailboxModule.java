@@ -62,7 +62,6 @@ import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.BlobMemoryModule;
-import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.modules.data.PostgresCommonModule;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -86,8 +85,7 @@ public class PostgresMailboxModule extends AbstractModule {
         postgresDataDefinitions.addBinding().toInstance(PostgresMailboxAggregateModule.MODULE);
 
         install(new PostgresQuotaModule());
-        install(new JPAQuotaSearchModule());
-        install(new JPAEntityManagerModule());
+        install(new PostgresQuotaSearchModule());
 
         bind(PostgresMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(PostgresMailboxManager.class).in(Scopes.SINGLETON);
