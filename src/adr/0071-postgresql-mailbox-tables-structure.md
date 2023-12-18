@@ -31,7 +31,7 @@ Indexes in table message_mailbox:
 
 Indexes are used to find records faster
 
-The table structure is mostly normalized which mitigates storage costs and achieve consistency easily
+The table structure is mostly normalized which mitigates storage costs and achieves consistency easily.
 
 Foreign key constraints (mailbox_id in mailbox_annotations, message_id in message_mailbox) help to ensure data consistency. For example, message_id 1 in table message_mailbox could not exist if message_id 1 in table message does not exist  
 
