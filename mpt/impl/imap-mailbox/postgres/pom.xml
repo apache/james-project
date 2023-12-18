@@ -31,12 +31,6 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-backends-jpa</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-postgres</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -110,11 +104,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
@@ -129,7 +118,7 @@
                 <configuration>
                     <argLine>-Djava.library.path=
                         -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
-                        -Xms1024m -Xmx2048m -Dopenjpa.Multithreaded=true</argLine>
+                        -Xms1024m -Xmx2048m</argLine>
                 </configuration>
             </plugin>
         </plugins>
