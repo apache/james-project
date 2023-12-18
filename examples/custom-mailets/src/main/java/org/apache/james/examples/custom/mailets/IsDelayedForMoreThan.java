@@ -52,10 +52,10 @@ public class IsDelayedForMoreThan extends GenericMatcher {
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Date sentDate = mail.getMessage().getSentDate();
 
-        if (clock.instant().isAfter(sentDate.toInstant().plusMillis(maxDelay.toMillis()))) {
+        //if (clock.instant().isAfter(sentDate.toInstant().plusMillis(maxDelay.toMillis()))) {
             return ImmutableList.copyOf(mail.getRecipients());
-        }
-        return ImmutableList.of();
+        //}
+        //return ImmutableList.of();
     }
 
     @Override
