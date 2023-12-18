@@ -158,7 +158,7 @@ public class CommonProcessors {
             .addMailetsFrom(CommonProcessors.deliverOnlyTransport());
     }
 
-    public static ProcessorConfiguration.Builder rrtErrorProcessor() {
+    public static ProcessorConfiguration.Builder rrtError() {
         return ProcessorConfiguration.builder()
             .state(RRT_ERROR)
             .addMailet(MailetConfiguration.builder()
