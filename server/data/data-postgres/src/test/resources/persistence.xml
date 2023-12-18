@@ -26,7 +26,6 @@
     <persistence-unit name="James" transaction-type="JTA">
        <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider>
         <jta-data-source>osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=jdbc/james)</jta-data-source>
-        <class>org.apache.james.mailrepository.jpa.model.JPAMail</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema(ForeignKeys=true)"/>
