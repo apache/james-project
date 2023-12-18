@@ -35,8 +35,6 @@ import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import com.github.dockerjava.api.command.PauseContainerCmd;
-import com.github.dockerjava.api.command.UnpauseContainerCmd;
 import com.github.fge.lambdas.Throwing;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -204,14 +202,6 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     public PostgresExecutor.Factory getExecutorFactory() {
         return executorFactory;
-    }
-
-    public PostgresConfiguration getPostgresConfiguration() {
-        return postgresConfiguration;
-    }
-
-    public String getJdbcUrl() {
-        return String.format("jdbc:postgresql://%s:%d/%s", getHost(), getMappedPort(), postgresConfiguration.getDatabaseName());
     }
 
     private void initTablesAndIndexes() {
