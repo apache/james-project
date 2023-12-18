@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -32,9 +33,12 @@ import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
+import org.apache.mailet.ProcessingState;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Mono;
 
@@ -50,7 +54,7 @@ import reactor.core.publisher.Mono;
  *  &lt;mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/&gt;
  */
 public class JMAPFiltering extends GenericMailet {
-
+    static final ProcessingState RRT_ERROR = new ProcessingState("rrt-error");
     private final Logger logger = LoggerFactory.getLogger(JMAPFiltering.class);
 
     private final FilteringManagement filteringManagement;
@@ -93,5 +97,10 @@ public class JMAPFiltering extends GenericMailet {
             logger.error("cannot retrieve user " + recipient.asString(), e);
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Collection<ProcessingState> requiredProcessingState() {
+        return ImmutableList.of(RRT_ERROR);
     }
 }

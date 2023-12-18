@@ -244,6 +244,23 @@ public class RecipientRewriteTableProcessor {
             };
         }
 
+        static ForwardDecision recordLoop(MailetContext context,
+                                          MailAddress originalRecipient,
+                                          ProcessingState errorProcessor) {
+            return mail -> {
+                MailImpl copy = MailImpl.duplicate(mail);
+                try {
+                    copy.setRecipients(ImmutableList.of(originalRecipient));
+                    copy.setState(errorProcessor.getValue());
+                    copy.setName(MailImpl.getId());
+
+                    context.sendMail(copy, errorProcessor.getValue());
+                } finally {
+                    LifecycleUtil.dispose(copy);
+                }
+            };
+        }
+
         private static void recordInAuditTrail(Mail mail, MailImpl copy, MailAddress originalRecipient) {
             AuditTrail.entry()
                 .protocol("mailetcontainer")
@@ -300,8 +317,13 @@ public class RecipientRewriteTableProcessor {
         if (!forwardRecipients.isEmpty()) {
             result.add(ForwardDecision.sendACopy(mailetContext, originalRecipient, forwardRecipients));
         }
-        if (!newRecipients.contains(originalRecipient)) {
+        boolean localCopy = newRecipients.contains(originalRecipient);
+        if (!localCopy) {
             result.add(ForwardDecision.removeRecipient(originalRecipient));
+        }
+        boolean emailIsDropped = !forwardedRecipients.isEmpty() && forwardRecipients.isEmpty() && !localCopy;
+        if (emailIsDropped) {
+            result.add(ForwardDecision.recordLoop(mailetContext, originalRecipient, errorProcessor));
         }
 
         return result.build().stream();
