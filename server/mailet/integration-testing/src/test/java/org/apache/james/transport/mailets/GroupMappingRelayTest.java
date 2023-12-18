@@ -80,7 +80,7 @@ class GroupMappingRelayTest {
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)
                     .addProperty("gateway", fakeSmtp.getContainer().getContainerIp())))
-            .putProcessor(CommonProcessors.rrtErrorProcessor());
+            .putProcessor(CommonProcessors.rrtError());
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)

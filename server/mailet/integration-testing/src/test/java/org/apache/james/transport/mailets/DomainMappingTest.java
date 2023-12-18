@@ -80,7 +80,7 @@ class DomainMappingTest {
     void setup(@TempDir File temporaryFolder) throws Exception {
         MailetContainer.Builder mailetContainer = TemporaryJamesServer.simpleMailetContainerConfiguration()
             .putProcessor(CommonProcessors.rrtErrorEnabledTransport())
-            .putProcessor(CommonProcessors.rrtErrorProcessor());
+            .putProcessor(CommonProcessors.rrtError());
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
