@@ -20,6 +20,7 @@
 package org.apache.james.sieve.postgres;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
@@ -36,6 +37,7 @@ public interface PostgresSieveModule {
 
         Field<String> USERNAME = DSL.field("username", SQLDataType.VARCHAR(255).notNull());
         Field<String> SCRIPT_NAME = DSL.field("script_name", SQLDataType.VARCHAR.notNull());
+        Field<UUID> SCRIPT_ID = DSL.field("script_id", SQLDataType.UUID.notNull());
         Field<Long> SCRIPT_SIZE = DSL.field("script_size", SQLDataType.BIGINT.notNull());
         Field<String> SCRIPT_CONTENT = DSL.field("script_content", SQLDataType.VARCHAR.notNull());
         Field<Boolean> IS_ACTIVE = DSL.field("is_active", SQLDataType.BOOLEAN.notNull());
@@ -43,13 +45,15 @@ public interface PostgresSieveModule {
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
+                .column(SCRIPT_ID)
                 .column(USERNAME)
                 .column(SCRIPT_NAME)
                 .column(SCRIPT_SIZE)
                 .column(SCRIPT_CONTENT)
                 .column(IS_ACTIVE)
                 .column(ACTIVATION_DATE_TIME)
-                .primaryKey(USERNAME, SCRIPT_NAME)))
+                .primaryKey(SCRIPT_ID)
+                .constraint(DSL.unique(USERNAME, SCRIPT_NAME))))
             .disableRowLevelSecurity()
             .build();
 

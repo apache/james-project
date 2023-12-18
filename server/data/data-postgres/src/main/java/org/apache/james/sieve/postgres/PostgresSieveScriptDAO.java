@@ -23,6 +23,7 @@ import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.ACTIVATION_DATE_TIME;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.IS_ACTIVE;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_CONTENT;
+import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_ID;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_NAME;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_SIZE;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.TABLE_NAME;
@@ -37,6 +38,7 @@ import javax.inject.Named;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.sieve.postgres.model.PostgresSieveScript;
+import org.apache.james.sieve.postgres.model.PostgresSieveScriptId;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.jooq.Record;
 
@@ -53,6 +55,7 @@ public class PostgresSieveScriptDAO {
 
     public Mono<Long> upsertScript(PostgresSieveScript sieveScript) {
         return postgresExecutor.executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
+            .set(SCRIPT_ID, sieveScript.getId().getValue())
             .set(USERNAME, sieveScript.getUsername())
             .set(SCRIPT_NAME, sieveScript.getScriptName())
             .set(SCRIPT_SIZE, sieveScript.getScriptSize())
@@ -147,6 +150,7 @@ public class PostgresSieveScriptDAO {
             .scriptSize(record.get(SCRIPT_SIZE))
             .isActive(record.get(IS_ACTIVE))
             .activationDateTime(record.get(ACTIVATION_DATE_TIME))
+            .id(new PostgresSieveScriptId(record.get(SCRIPT_ID)))
             .build();
     }
 }
