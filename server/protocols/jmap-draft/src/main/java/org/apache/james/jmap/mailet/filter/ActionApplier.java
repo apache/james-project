@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.google.common.collect.Sets;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -140,9 +141,13 @@ public class ActionApplier {
                 }
 
                 Set<MailAddress> newRecipients = getNewRecipients(forward, recordedRecipients);
-                if (!newRecipients.isEmpty()) {
+                Set<MailAddress> forwardRecipients = Sets.difference(newRecipients, ImmutableSet.of(mailAddress));
+
+                if (!forwardRecipients.isEmpty()) {
+                    sendACopy(recordedRecipients, forwardRecipients);
+                }
+                if (!newRecipients.contains(mailAddress)) {
                     removeFromRecipients();
-                    sendACopy(mailetContext, mailAddress, recordedRecipients, newRecipients);
                 }
             }));
     }

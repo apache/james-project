@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 
 import java.io.File;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -140,14 +141,7 @@ public class ForwardLoopIntegrationTest {
             .sendMessage(SENDER.asString(), ALICE.asString());
 
         Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
-
-        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .collect(ImmutableList.toImmutableList());
-
-            softly.assertThat(mails.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
-        }));
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 0L);
     }
 
     @Test
@@ -161,14 +155,11 @@ public class ForwardLoopIntegrationTest {
             .sendMessage(SENDER.asString(), ALICE.asString());
 
         Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
             List<Mail> mailListOne = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY, ALICE.asMailAddress());
             softly.assertThat(mailListOne.get(0).getRecipients()).containsOnly(ALICE.asMailAddress());
-
-            List<Mail> mailListTwo = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY, CEDRIC.asMailAddress());
-            softly.assertThat(mailListTwo.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
         }));
     }
 
@@ -218,14 +209,7 @@ public class ForwardLoopIntegrationTest {
             .sendMessage(SENDER.asString(), ALICE.asString());
 
         Awaitility.await().until(() -> jamesServer.getProbe(SpoolerProbe.class).processingFinished());
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
-
-        SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            List<Mail> mails = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .collect(ImmutableList.toImmutableList());
-
-            softly.assertThat(mails.get(0).getRecipients()).containsOnly(CEDRIC.asMailAddress());
-        }));
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 0L);
     }
 
     @Test

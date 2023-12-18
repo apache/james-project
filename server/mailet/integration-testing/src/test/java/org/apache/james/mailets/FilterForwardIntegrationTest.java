@@ -126,14 +126,16 @@ public class FilterForwardIntegrationTest {
             .authenticate(ALICE.asString(), PASSWORD)
             .sendMessage(ALICE.asString(), BOB.asString());
 
-        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1L);
+        Awaitility.await().until(() -> mailRepositoryProbe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2L);
 
         SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-            Mail mail1 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY)
-                .findAny().get();
+            Mail mail1 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY, BOB.asMailAddress()).get(0);
+            softly.assertThat(mail1.getRecipients()).containsOnly(BOB.asMailAddress());
+            softly.assertThat(mail1.getMaybeSender().asOptional()).contains(ALICE.asMailAddress());
 
-            softly.assertThat(mail1.getRecipients()).containsOnly(BOB.asMailAddress(), CEDRIC.asMailAddress());
-            softly.assertThat(mail1.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
+            Mail mail2 = mailRepositoryProbe.listMails(CUSTOM_REPOSITORY, CEDRIC.asMailAddress()).get(0);
+            softly.assertThat(mail2.getRecipients()).containsOnly(CEDRIC.asMailAddress());
+            softly.assertThat(mail2.getMaybeSender().asOptional()).contains(BOB.asMailAddress());
         }));
     }
 
