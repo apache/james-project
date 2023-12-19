@@ -219,6 +219,13 @@
         <property name="objectName" value="connector:name=rmi"/>
         <property name="serviceUrl"
                   value="service:jmx:rmi://${jmx.address}/jndi/rmi://${jmx.address}:${jmx.port}/jmxrmi"/>
+        <property name="environment">
+            <map>
+                <entry key="jmx.remote.x.password.file" value="../conf/jmxremote.password" />
+                <entry key="jmx.remote.x.access.file" value="../conf/jmxremote.access" />
+                <entry key="jmx.remote.rmi.server.credentials.filter.pattern" value="java.lang.String;!*"/>
+            </map>
+        </property>
     </bean>
 
     <bean id="registry" class="org.springframework.remoting.rmi.RmiRegistryFactoryBean">
