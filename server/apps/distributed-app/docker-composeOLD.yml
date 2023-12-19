@@ -17,9 +17,10 @@ services:
     image: apache/james:distributed-latest
     container_name: james
     hostname: james.local
+    volumes:
+      - $PWD/conf/mailetcontainer.xml:/root/conf/mailetcontainer.xml
     command:
       - --generate-keystore
-      - $PWD/conf:/root/conf
     networks:
       - james
     ports:
