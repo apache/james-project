@@ -93,4 +93,9 @@
         </mailet>
     </processor>
 
+    <processor state="rrt-error" enableJmx="false">
+        <mailet match="IsSenderInRRTLoop" class="Null"/>
+        <mailet match="All" class="Bounce"/>
+    </processor>
+
 </processors>

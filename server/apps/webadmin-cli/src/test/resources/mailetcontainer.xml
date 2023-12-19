@@ -47,6 +47,12 @@
         </processor>
 
 
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>memory://var/mail/rrt-error/</repositoryPath>
+            </mailet>
+        </processor>
+
         <processor state="transport" enableJmx="false">
             <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
                 <matcher match="SMTPAuthSuccessful"/>

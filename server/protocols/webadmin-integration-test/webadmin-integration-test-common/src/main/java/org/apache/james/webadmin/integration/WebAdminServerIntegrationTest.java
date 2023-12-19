@@ -151,7 +151,8 @@ public abstract class WebAdminServerIntegrationTest {
             .body("repository", containsInAnyOrder(
                 "var/mail/error",
                 "var/mail/relay-denied",
-                "var/mail/address-error"));
+                "var/mail/address-error",
+                "var/mail/rrt-error"));
     }
 
 
@@ -168,7 +169,8 @@ public abstract class WebAdminServerIntegrationTest {
             .body("repository", containsInAnyOrder(
                 "var/mail/error",
                 "var/mail/relay-denied",
-                "var/mail/address-error"));
+                "var/mail/address-error",
+                "var/mail/rrt-error"));
     }
 
     @Test

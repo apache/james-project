@@ -50,7 +50,7 @@ class DomainManageTest {
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
             .build())
-        .server(configuration -> MemoryJamesServerMain.createServer(configuration))
+        .server(MemoryJamesServerMain::createServer)
         .build();
 
     private final ByteArrayOutputStream outputStreamCaptor = new ByteArrayOutputStream();
