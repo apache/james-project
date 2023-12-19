@@ -80,7 +80,8 @@ public interface PostgresMailRepositoryModule {
                 .column(LAST_UPDATED)
                 .column(PER_RECIPIENT_SPECIFIC_HEADERS)
                 .primaryKey(URL, KEY)))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
     }
 
     PostgresModule MODULE = PostgresModule.builder()
