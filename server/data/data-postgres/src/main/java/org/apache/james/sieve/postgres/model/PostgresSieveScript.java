@@ -41,6 +41,7 @@ public class PostgresSieveScript {
         private long scriptSize;
         private boolean isActive;
         private OffsetDateTime activationDateTime;
+        private PostgresSieveScriptId id;
 
         public Builder username(String username) {
             Preconditions.checkNotNull(username);
@@ -64,6 +65,11 @@ public class PostgresSieveScript {
             return this;
         }
 
+        public Builder id(PostgresSieveScriptId id) {
+            this.id = id;
+            return this;
+        }
+
         public Builder isActive(boolean isActive) {
             this.isActive = isActive;
             return this;
@@ -77,11 +83,13 @@ public class PostgresSieveScript {
         public PostgresSieveScript build() {
             Preconditions.checkState(StringUtils.isNotBlank(username), "'username' is mandatory");
             Preconditions.checkState(StringUtils.isNotBlank(scriptName), "'scriptName' is mandatory");
+            Preconditions.checkState(id != null, "'id' is mandatory");
 
-            return new PostgresSieveScript(username, scriptName, scriptContent, scriptSize, isActive, activationDateTime);
+            return new PostgresSieveScript(id, username, scriptName, scriptContent, scriptSize, isActive, activationDateTime);
         }
     }
 
+    private final PostgresSieveScriptId id;
     private final String username;
     private final String scriptName;
     private final String scriptContent;
@@ -89,13 +97,19 @@ public class PostgresSieveScript {
     private final boolean isActive;
     private final OffsetDateTime activationDateTime;
 
-    private PostgresSieveScript(String username, String scriptName, String scriptContent, long scriptSize, boolean isActive, OffsetDateTime activationDateTime) {
+    private PostgresSieveScript(PostgresSieveScriptId id, String username, String scriptName, String scriptContent,
+                                long scriptSize, boolean isActive, OffsetDateTime activationDateTime) {
+        this.id = id;
         this.username = username;
         this.scriptName = scriptName;
         this.scriptContent = scriptContent;
         this.scriptSize = scriptSize;
         this.isActive = isActive;
         this.activationDateTime = activationDateTime;
+    }
+
+    public PostgresSieveScriptId getId() {
+        return id;
     }
 
     public String getUsername() {
