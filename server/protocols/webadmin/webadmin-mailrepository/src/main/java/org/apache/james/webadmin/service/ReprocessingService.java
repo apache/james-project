@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.apache.mailet.LoopPrevention.RECORDED_RECIPIENTS_ATTRIBUTE_NAME;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
@@ -112,6 +114,7 @@ public class ReprocessingService {
             try {
                 incrementRetries(mail);
                 configuration.getTargetProcessor().ifPresent(mail::setState);
+                mail.removeAttribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME);
                 mailQueue.enQueue(mail);
                 if (configuration.isConsume()) {
                     repository.remove(key);
