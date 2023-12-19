@@ -131,8 +131,9 @@ public class JMXServer implements Startable {
             Map<String, String> environment = Optional.of(existJmxPasswordFile())
                 .filter(FunctionalUtils.identityPredicate())
                 .map(hasJmxPasswordFile -> ImmutableMap.of("jmx.remote.x.password.file", jmxPasswordFilePath,
-                    "jmx.remote.x.access.file", jmxAccessFilePath))
-                .orElse(ImmutableMap.of());
+                    "jmx.remote.x.access.file", jmxAccessFilePath,
+                    "jmx.remote.rmi.server.credentials.filter.pattern", "java.lang.String;!*"))
+                .orElse(ImmutableMap.of("jmx.remote.rmi.server.credentials.filter.pattern", "java.lang.String;!*"));
 
             jmxConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(new JMXServiceURL(serviceURL),
                 environment,
