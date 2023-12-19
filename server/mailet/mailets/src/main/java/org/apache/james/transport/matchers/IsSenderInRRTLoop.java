@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,14 @@ public class IsSenderInRRTLoop extends GenericMatcher {
         } catch (Exception e) {
             LoggerFactory.getLogger(IsSenderInRRTLoop.class).warn("Error while executing RRT");
         }
-        return ImmutableList.of();
+        return mail.getMaybeSender()
+            .asOptional()
+            .filter(sender -> recordedRecipientsContainSender(mail, sender))
+            .map(any -> mail.getRecipients())
+            .orElse(ImmutableList.of());
+    }
+
+    private static boolean recordedRecipientsContainSender(Mail mail, MailAddress sender) {
+        return LoopPrevention.RecordedRecipients.fromMail(mail).getRecipients().contains(sender);
     }
 }
