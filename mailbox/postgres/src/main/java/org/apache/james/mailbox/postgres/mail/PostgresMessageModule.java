@@ -111,19 +111,19 @@ public interface PostgresMessageModule {
         String ARRAY_REMOVE_JAMES_FUNCTION_NAME = "array_remove_james";
         String CREATE_ARRAY_REMOVE_JAMES_FUNCTION =
             "CREATE OR REPLACE FUNCTION " + ARRAY_REMOVE_JAMES_FUNCTION_NAME + "(\n" +
-                "    p_remove_flags_1 text[],\n" +
-                "    p_remove_flags_2 text[])\n" +
+                "    source text[],\n" +
+                "    elements_to_remove text[])\n" +
                 "    RETURNS text[]\n" +
                 "AS\n" +
                 "$$\n" +
                 "DECLARE\n" +
-                "    merged_flags text[];\n" +
+                "    result text[];\n" +
                 "BEGIN\n" +
-                "    select array_agg(elements) INTO merged_flags\n" +
-                "    from (select unnest(p_remove_flags_1)\n" +
+                "    select array_agg(elements) INTO result\n" +
+                "    from (select unnest(source)\n" +
                 "          except\n" +
-                "          select unnest(p_remove_flags_2)) t (elements);\n" +
-                "    RETURN merged_flags;\n" +
+                "          select unnest(elements_to_remove)) t (elements);\n" +
+                "    RETURN result;\n" +
                 "END;\n" +
                 "$$ LANGUAGE plpgsql;";
 

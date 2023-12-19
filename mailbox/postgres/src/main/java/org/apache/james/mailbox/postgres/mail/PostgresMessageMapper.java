@@ -321,8 +321,8 @@ public class PostgresMessageMapper implements MessageMapper {
     }
 
     private Mono<UpdatedFlags> updateFlags(ComposedMessageIdWithMetaData currentMetaData,
-                                            FlagsUpdateCalculator flagsUpdateCalculator,
-                                            ModSeq newModSeq) {
+                                           FlagsUpdateCalculator flagsUpdateCalculator,
+                                           ModSeq newModSeq) {
         Flags oldFlags = currentMetaData.getFlags();
         ComposedMessageId composedMessageId = currentMetaData.getComposedMessageId();
 

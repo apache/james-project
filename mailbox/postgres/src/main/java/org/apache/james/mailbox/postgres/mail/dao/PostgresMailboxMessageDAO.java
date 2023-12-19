@@ -353,7 +353,7 @@ public class PostgresMailboxMessageDAO {
     }
 
     private UpdateConditionStep<Record> buildReplaceFlagsStatement(DSLContext dslContext, Flags newFlags,
-                                                               PostgresMailboxId mailboxId, MessageUid uid, ModSeq newModSeq) {
+                                                                   PostgresMailboxId mailboxId, MessageUid uid, ModSeq newModSeq) {
         AtomicReference<UpdateSetStep<Record>> updateStatement = new AtomicReference<>(dslContext.update(TABLE_NAME));
 
         BOOLEAN_FLAGS_MAPPING.forEach((flagColumn, flagMapped) -> {
@@ -368,7 +368,7 @@ public class PostgresMailboxMessageDAO {
     }
 
     private UpdateConditionStep<Record> buildRemoveFlagsStatement(DSLContext dslContext, Flags removeFlags,
-                                                               PostgresMailboxId mailboxId, MessageUid uid, ModSeq newModSeq) {
+                                                                  PostgresMailboxId mailboxId, MessageUid uid, ModSeq newModSeq) {
         AtomicReference<UpdateSetStep<Record>> updateStatement = new AtomicReference<>(dslContext.update(TABLE_NAME));
 
         BOOLEAN_FLAGS_MAPPING.forEach((flagColumn, flagMapped) -> {
