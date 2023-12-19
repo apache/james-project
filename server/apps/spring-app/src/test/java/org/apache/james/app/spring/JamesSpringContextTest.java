@@ -21,6 +21,9 @@ package org.apache.james.app.spring;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
+import java.io.FileOutputStream;
+
 import org.apache.james.container.spring.context.JamesServerApplicationContext;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
@@ -34,7 +37,20 @@ class JamesSpringContextTest {
     private JamesServerApplicationContext context;
 
     @BeforeEach
-    void setup() {
+    void setup() throws Exception {
+        File accessFile = new File("../conf/jmxremote.access");
+        accessFile.getParentFile().mkdirs();
+        accessFile.createNewFile();
+        try (FileOutputStream out = new FileOutputStream(accessFile)) {
+            out.write("james-admin readwrite\r\n".getBytes());
+            out.flush();
+        }
+        File passwordFile = new File("../conf/jmxremote.password");
+        passwordFile.createNewFile();
+        try (FileOutputStream out = new FileOutputStream(passwordFile)) {
+            out.write("james-admin changeme\r\n".getBytes());
+            out.flush();
+        }
         context = new JamesServerApplicationContext(new String[] { "META-INF/org/apache/james/spring-server.xml" });
         context.registerShutdownHook();
         context.start();
