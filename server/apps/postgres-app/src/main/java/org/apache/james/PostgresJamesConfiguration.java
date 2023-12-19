@@ -30,14 +30,19 @@ import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
+import org.apache.james.utils.PropertiesProvider;
+
+import com.github.fge.lambdas.Throwing;
 
 public class PostgresJamesConfiguration implements Configuration {
     public static class Builder {
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
+        private Optional<SearchConfiguration> searchConfiguration;
 
         private Builder() {
+            searchConfiguration = Optional.empty();
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
@@ -76,12 +81,21 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder searchConfiguration(SearchConfiguration searchConfiguration) {
+            this.searchConfiguration = Optional.of(searchConfiguration);
+            return this;
+        }
+
         public PostgresJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
                 .orElseThrow(() -> new MissingArgumentException("Server needs a working.directory env entry")));
 
             FileSystemImpl fileSystem = new FileSystemImpl(directories);
+            PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
+
+            SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
+                () -> SearchConfiguration.parse(propertiesProvider)));
 
             FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()
                 .configurationPath(configurationPath)
@@ -93,6 +107,7 @@ public class PostgresJamesConfiguration implements Configuration {
             return new PostgresJamesConfiguration(
                 configurationPath,
                 directories,
+                searchConfiguration,
                 usersRepositoryChoice);
         }
     }
@@ -103,11 +118,14 @@ public class PostgresJamesConfiguration implements Configuration {
 
     private final ConfigurationPath configurationPath;
     private final JamesDirectoriesProvider directories;
+    private final SearchConfiguration searchConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
 
-    public PostgresJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    public PostgresJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
+                                      SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
         this.configurationPath = configurationPath;
         this.directories = directories;
+        this.searchConfiguration = searchConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
     }
 
@@ -119,6 +137,10 @@ public class PostgresJamesConfiguration implements Configuration {
     @Override
     public JamesDirectoriesProvider directories() {
         return directories;
+    }
+
+    public SearchConfiguration searchConfiguration() {
+        return searchConfiguration;
     }
 
     public UsersRepositoryModuleChooser.Implementation getUsersRepositoryImplementation() {
