@@ -65,6 +65,9 @@ This behaviour can be disabled via the RecipientRewriteTable mailet configuratio
 <mailet/>>
 ```
 
+Note that now `JMAPFiltering` mailet requires the `rrt-error` processor for handling forward loops. We thus recommand adding
+this processor, that is part of the default configuration of your distribution.
+
 ### Change compaction strategy of blob_cache table
 Date: 18/09/2023
 

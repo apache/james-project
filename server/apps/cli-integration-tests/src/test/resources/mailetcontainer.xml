@@ -44,6 +44,10 @@
             <mailet match="All" class="Bounce"/>
         </processor>
 
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="Bounce"/>
+        </processor>
+
 
         <processor state="transport" enableJmx="false">
             <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">

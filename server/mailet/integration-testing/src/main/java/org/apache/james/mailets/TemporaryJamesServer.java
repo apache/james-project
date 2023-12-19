@@ -55,6 +55,7 @@ public class TemporaryJamesServer {
         return MailetContainer.builder()
             .putProcessor(CommonProcessors.root())
             .putProcessor(CommonProcessors.error())
+            .putProcessor(CommonProcessors.rrtError())
             .putProcessor(CommonProcessors.transport())
             .putProcessor(CommonProcessors.bounces());
     }
@@ -63,6 +64,7 @@ public class TemporaryJamesServer {
         return MailetContainer.builder()
             .putProcessor(CommonProcessors.simpleRoot())
             .putProcessor(CommonProcessors.error())
+            .putProcessor(CommonProcessors.rrtError())
             .putProcessor(CommonProcessors.transport())
             .putProcessor(CommonProcessors.bounces());
     }

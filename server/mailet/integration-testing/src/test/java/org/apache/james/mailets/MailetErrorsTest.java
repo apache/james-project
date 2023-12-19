@@ -21,6 +21,7 @@ package org.apache.james.mailets;
 
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
 import static org.apache.james.mailets.configuration.CommonProcessors.ERROR_REPOSITORY;
+import static org.apache.james.mailets.configuration.CommonProcessors.rrtError;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -136,6 +137,7 @@ class MailetErrorsTest {
             .withMailetContainer(MailetContainer.builder()
                 .putProcessor(CommonProcessors.transport())
                 .putProcessor(errorProcessor())
+                .putProcessor(rrtError())
                 .putProcessor(CommonProcessors.bounces())
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
@@ -174,6 +176,7 @@ class MailetErrorsTest {
                         .addProperty("onMailetException", "propagate"))
                     .addMailetsFrom(CommonProcessors.transport()))
                 .putProcessor(errorProcessor())
+                .putProcessor(rrtError())
                 .putProcessor(CommonProcessors.bounces())
                 .putProcessor(CommonProcessors.root()))
             .withSmtpConfiguration(SmtpConfiguration.builder()
@@ -213,6 +216,7 @@ class MailetErrorsTest {
                         .addProperty("onMatchException", "propagate"))
                     .addMailetsFrom(CommonProcessors.transport()))
                 .putProcessor(errorProcessor())
+                .putProcessor(rrtError())
                 .putProcessor(CommonProcessors.bounces())
                 .putProcessor(CommonProcessors.root()))
             .withSmtpConfiguration(SmtpConfiguration.builder()
@@ -270,6 +274,7 @@ class MailetErrorsTest {
                         .addProperty("onMailetException", "propagate"))
                     .addMailetsFrom(CommonProcessors.transport()))
                 .putProcessor(errorProcessor())
+                .putProcessor(rrtError())
                 .putProcessor(CommonProcessors.bounces())
                 .putProcessor(CommonProcessors.root()))
             .withSmtpConfiguration(SmtpConfiguration.builder()
@@ -330,6 +335,7 @@ class MailetErrorsTest {
             .withMailetContainer(MailetContainer.builder()
                 .putProcessor(CommonProcessors.deliverOnlyTransport())
                 .putProcessor(errorProcessor())
+                .putProcessor(rrtError())
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
@@ -383,6 +389,7 @@ class MailetErrorsTest {
             .withMailetContainer(MailetContainer.builder()
                 .putProcessor(CommonProcessors.deliverOnlyTransport())
                 .putProcessor(errorProcessor())
+                .putProcessor(rrtError())
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
