@@ -85,6 +85,7 @@ import org.apache.james.webadmin.service.WebAdminClearMailRepositoryTaskAddition
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailet.Attribute;
+import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.test.FakeMail;
@@ -1426,6 +1427,35 @@ class MailRepositoriesRoutesTest {
             .extracting(ManageableMailQueue.MailQueueItemView::getMail)
             .extracting(Mail::getName)
             .containsOnly(NAME_1, NAME_2);
+    }
+
+    @Test
+    void reprocessingAllTaskShouldResetLoopDetection() throws Exception {
+        MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
+        FakeMail mail = FakeMail.builder()
+            .name(NAME_1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build();
+        LoopPrevention.RecordedRecipients.fromMail(mail).merge(new MailAddress("bob@domain.tld")).recordOn(mail);
+        mailRepository1.store(mail);
+
+        String taskId = with()
+            .param("action", "reprocess")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(spoolQueue.browse())
+            .toIterable()
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(LoopPrevention.RecordedRecipients::fromMail)
+            .extracting(LoopPrevention.RecordedRecipients::getRecipients)
+            .allSatisfy(recordedRecipients -> assertThat(recordedRecipients).isEmpty());
     }
 
     @Test
