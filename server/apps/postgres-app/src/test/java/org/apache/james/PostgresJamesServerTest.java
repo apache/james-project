@@ -48,9 +48,11 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.openSearch())
             .usersRepository(DEFAULT)
             .build())
         .server(PostgresJamesServerMain::createServer)
+        .extension(new DockerOpenSearchExtension())
         .extension(postgresExtension)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
