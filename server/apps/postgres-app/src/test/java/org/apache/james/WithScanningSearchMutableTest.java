@@ -16,31 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.EnumSet;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.mailbox.MailboxManager;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JamesCapabilitiesServerTest {
-    private static MailboxManager mailboxManager() {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
-        when(mailboxManager.getSupportedMailboxCapabilities())
-            .thenReturn(EnumSet.noneOf(MailboxManager.MailboxCapabilities.class));
-        when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.noneOf(MailboxManager.MessageCapabilities.class));
-        when(mailboxManager.getSupportedSearchCapabilities())
-            .thenReturn(EnumSet.noneOf(MailboxManager.SearchCapabilities.class));
-        return mailboxManager;
-    }
-
+public class WithScanningSearchMutableTest implements MailsShouldBeWellReceivedConcreteContract {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
@@ -48,17 +32,11 @@ class JamesCapabilitiesServerTest {
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.openSearch())
+            .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
             .build())
-        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
-        .extension(new DockerOpenSearchExtension())
+        .server(PostgresJamesServerMain::createServer)
         .extension(postgresExtension)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
         .build();
-    
-    @Test
-    void startShouldSucceedWhenRequiredCapabilities(GuiceJamesServer server) {
-
-    }
 }

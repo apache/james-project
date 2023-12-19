@@ -85,7 +85,6 @@ public class PostgresMailboxModule extends AbstractModule {
         postgresDataDefinitions.addBinding().toInstance(PostgresMailboxAggregateModule.MODULE);
 
         install(new PostgresQuotaModule());
-        install(new PostgresQuotaSearchModule());
 
         bind(PostgresMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(PostgresMailboxManager.class).in(Scopes.SINGLETON);
