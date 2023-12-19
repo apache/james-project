@@ -25,6 +25,14 @@ Change list:
  - [Set up TTL on the mailbox_change and email_change tables](#set-up-ttl-on-the-mailboxchange-and-emailchange-tables)
  - [Change compaction strategy of blob_cache table](#change-compaction-strategy-of-blobcache-table)
  - [RRT forwards now rewrite senders](#rrt-forwards-now-rewrite-senders)
+ - [Increase RabbitMQ consumer timeout on the task queue](#increase-rabbitmq-consumer-timeout-on-the-task-queue)
+ - [JMX authentication for Spring](#jmx-authentication-for-spring)
+
+### JMX authentication for Spring
+
+Date: 19/12/2023
+
+Spring distribution now requires `jmxremote.access` and `jmxremote.password` files within the `/conf` folder in order to start.
 
 ### Increase RabbitMQ consumer timeout on the task queue
 
