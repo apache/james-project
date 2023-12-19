@@ -50,7 +50,8 @@ public interface PostgresSieveModule {
                 .column(IS_ACTIVE)
                 .column(ACTIVATION_DATE_TIME)
                 .primaryKey(USERNAME, SCRIPT_NAME)))
-            .disableRowLevelSecurity();
+            .disableRowLevelSecurity()
+            .build();
 
         PostgresIndex MAXIMUM_ONE_ACTIVE_SCRIPT_PER_USER_UNIQUE_INDEX = PostgresIndex.name("maximum_one_active_script_per_user")
             .createIndexStep(((dsl, indexName) -> dsl.createUniqueIndexIfNotExists(indexName)
