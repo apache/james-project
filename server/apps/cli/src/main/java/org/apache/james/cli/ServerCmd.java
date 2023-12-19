@@ -121,7 +121,7 @@ public class ServerCmd {
     public static void executeAndOutputToStream(String[] args, PrintStream printStream) throws Exception {
         Stopwatch stopWatch = Stopwatch.createStarted();
         CommandLine cmd = parseCommandLine(args);
-        JmxConnection jmxConnection = new JmxConnection(getHost(cmd), getPort(cmd), getAuthCredential(cmd, JMX_PASSWORD_FILE_PATH_DEFAULT));
+        JmxConnection jmxConnection = new JmxConnection(getHost(cmd), getPort(cmd), getAuthCredential(cmd, locateJmxConfiguration()));
 
         CmdType cmdType = new ServerCmd(
                 new JmxDataProbe().connect(jmxConnection),
@@ -133,6 +133,16 @@ public class ServerCmd {
                 .join(cmdType.getCommand(), "command executed sucessfully in", stopWatch.elapsed(TimeUnit.MILLISECONDS), "ms.")},
             printStream);
         stopWatch.stop();
+    }
+
+    private static String locateJmxConfiguration() {
+        if (!new File(JMX_PASSWORD_FILE_PATH_DEFAULT).exists()) {
+            return JMX_PASSWORD_FILE_PATH_DEFAULT;
+        }
+        if (!new File("conf/jmxremote.password").exists()) {
+            return "conf/jmxremote.password";
+        }
+        return "../conf/jmxremote.password";
     }
 
     private final JmxDataProbe probe;
