@@ -21,7 +21,6 @@ package org.apache.james.mailbox.postgres.mail.dao;
 
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
-import static org.apache.james.backends.postgres.PostgresCommons.EMPTY_STRING_ARRAY_FIELD;
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
 import static org.apache.james.backends.postgres.PostgresCommons.UNNEST_FIELD;
 import static org.apache.james.backends.postgres.PostgresCommons.tableField;
@@ -52,7 +51,6 @@ import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageD
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_MESSAGE_UID_FUNCTION;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -75,7 +73,6 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.Limit;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Record1;
@@ -345,8 +342,15 @@ public class PostgresMailboxMessageDAO {
             }
         });
 
+        if (addFlags.getUserFlags() != null && addFlags.getUserFlags().length > 0) {
+            if (addFlags.getUserFlags().length == 1) {
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, PostgresDSL.arrayAppend(USER_FLAGS, addFlags.getUserFlags()[0])));
+            } else {
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, PostgresDSL.arrayCat(USER_FLAGS, addFlags.getUserFlags())));
+            }
+        }
+
         return updateStatement.get()
-            .set(USER_FLAGS, PostgresDSL.arrayCat(USER_FLAGS, addFlags.getUserFlags()))
             .set(MOD_SEQ, newModSeq.asLong())
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))
             .and(MESSAGE_UID.eq(uid.asLong()));
@@ -377,15 +381,17 @@ public class PostgresMailboxMessageDAO {
             }
         });
 
-        Field<String[]> removeFlagsAsFields = Optional.ofNullable(removeFlags.getUserFlags())
-            .filter(flags -> flags.length > 0)
-            .map(DSL::array)
-            .orElse(EMPTY_STRING_ARRAY_FIELD);
+        if (removeFlags.getUserFlags() != null && removeFlags.getUserFlags().length > 0) {
+            if (removeFlags.getUserFlags().length == 1) {
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, PostgresDSL.arrayRemove(USER_FLAGS, removeFlags.getUserFlags()[0])));
+            } else {
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, DSL.function(ARRAY_REMOVE_JAMES_FUNCTION_NAME, String[].class,
+                    USER_FLAGS,
+                    DSL.array(removeFlags.getUserFlags()))));
+            }
+        }
 
         return updateStatement.get()
-            .set(USER_FLAGS, DSL.function(ARRAY_REMOVE_JAMES_FUNCTION_NAME, String[].class,
-                USER_FLAGS,
-                removeFlagsAsFields))
             .set(MOD_SEQ, newModSeq.asLong())
             .where(MAILBOX_ID.eq(mailboxId.asUuid()))
             .and(MESSAGE_UID.eq(uid.asLong()));

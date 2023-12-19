@@ -66,6 +66,4 @@ public class PostgresCommons {
 
     public static final int IN_CLAUSE_MAX_SIZE = 32;
 
-    public static final Field<String[]> EMPTY_STRING_ARRAY_FIELD =  DSL.array("");
-
 }
