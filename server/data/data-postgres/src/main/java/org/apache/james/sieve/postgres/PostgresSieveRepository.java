@@ -34,6 +34,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.sieve.postgres.model.PostgresSieveScript;
+import org.apache.james.sieve.postgres.model.PostgresSieveScriptId;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -74,6 +75,7 @@ public class PostgresSieveRepository implements SieveRepository {
                 .scriptContent(content.getValue())
                 .scriptSize(content.length())
                 .isActive(false)
+                .id(PostgresSieveScriptId.generate())
                 .build())
             .flatMap(upsertedScripts -> {
                 if (upsertedScripts > 0) {
