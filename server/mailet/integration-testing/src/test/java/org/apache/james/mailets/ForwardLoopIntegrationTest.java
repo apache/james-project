@@ -108,12 +108,7 @@ public class ForwardLoopIntegrationTest {
                         .mailet(ToRepository.class)
                         .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString())))
                 .putProcessor(CommonProcessors.error())
-                .putProcessor(ProcessorConfiguration.builder()
-                    .state("rrt-error")
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", RRT_ERROR_REPOSITORY.asString())))
+                .putProcessor(CommonProcessors.rrtError())
                 .putProcessor(CommonProcessors.transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);

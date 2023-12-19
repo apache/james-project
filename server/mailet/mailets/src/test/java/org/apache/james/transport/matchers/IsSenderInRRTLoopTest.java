@@ -34,6 +34,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
+import org.apache.mailet.LoopPrevention;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,32 @@ class IsSenderInRRTLoopTest {
             .sender(SENDER)
             .recipient(RECIPIENT1)
             .build());
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void matchShouldReturnRecipientsWhenSenderIsRecorded() throws Exception {
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(SENDER)
+            .recipient(RECIPIENT1)
+            .build();
+        LoopPrevention.RecordedRecipients.fromMail(mail).merge(SENDER).recordOn(mail);
+        Collection<MailAddress> result = testee.match(mail);
+
+        assertThat(result).containsOnly(RECIPIENT1);
+    }
+
+    @Test
+    void matchShouldReturnEmptyWhenOnlyRecipientIsRecorded() throws Exception {
+        FakeMail mail = FakeMail.builder()
+            .name("name")
+            .sender(SENDER)
+            .recipient(RECIPIENT1)
+            .build();
+        LoopPrevention.RecordedRecipients.fromMail(mail).merge(RECIPIENT1).recordOn(mail);
+        Collection<MailAddress> result = testee.match(mail);
 
         assertThat(result).isEmpty();
     }
