@@ -18,11 +18,28 @@
  ****************************************************************/
 package org.apache.james.app.spring;
 
+import java.io.File;
+import java.io.FileOutputStream;
+
 import org.junit.jupiter.api.Test;
 
 class JamesAppSpringMainTest {
     @Test
     void testServer() throws Exception {
+        File accessFile = new File("../conf/jmxremote.access");
+        accessFile.getParentFile().mkdirs();
+        accessFile.createNewFile();
+        try (FileOutputStream out = new FileOutputStream(accessFile)) {
+            out.write("james-admin readwrite\r\n".getBytes());
+            out.flush();
+        }
+        File passwordFile = new File("../conf/jmxremote.password");
+        passwordFile.createNewFile();
+        try (FileOutputStream out = new FileOutputStream(passwordFile)) {
+            out.write("james-admin changeme\r\n".getBytes());
+            out.flush();
+        }
+
         JamesAppSpringMain.main(null);
     }
 }
