@@ -238,7 +238,6 @@ public class ActionApplier {
         try {
             copy.setRecipients(ImmutableList.of(mailAddress));
             copy.setState(RRT_ERROR.getValue());
-            copy.setName(MailImpl.getId());
 
             mailetContext.sendMail(copy);
         } finally {

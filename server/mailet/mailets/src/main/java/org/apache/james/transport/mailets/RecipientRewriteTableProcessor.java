@@ -252,7 +252,6 @@ public class RecipientRewriteTableProcessor {
                 try {
                     copy.setRecipients(ImmutableList.of(originalRecipient));
                     copy.setState(errorProcessor.getValue());
-                    copy.setName(MailImpl.getId());
 
                     context.sendMail(copy, errorProcessor.getValue());
                 } finally {
