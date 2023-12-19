@@ -100,7 +100,8 @@ public abstract class WebAdminServerIntegrationImmutableTest {
             .body("repository", containsInAnyOrder(
                 "var/mail/error",
                 "var/mail/relay-denied",
-                "var/mail/address-error"));
+                "var/mail/address-error",
+                "var/mail/rrt-error"));
     }
 
     @Test
@@ -115,7 +116,8 @@ public abstract class WebAdminServerIntegrationImmutableTest {
             .body("repository", containsInAnyOrder(
                 "var/mail/error",
                 "var/mail/relay-denied",
-                "var/mail/address-error"));
+                "var/mail/address-error",
+                "var/mail/rrt-error"));
     }
 
     @Test

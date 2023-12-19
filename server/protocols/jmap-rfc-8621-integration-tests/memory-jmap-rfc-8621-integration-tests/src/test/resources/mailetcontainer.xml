@@ -43,6 +43,12 @@
             </mailet>
         </processor>
 
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="Bounce">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
+        </processor>
+
         <processor state="transport" enableJmx="false">
             <matcher name="mdn-matcher" match="org.apache.james.mailetcontainer.impl.matchers.And">
                 <matcher match="HasMimeType=multipart/report"/>
