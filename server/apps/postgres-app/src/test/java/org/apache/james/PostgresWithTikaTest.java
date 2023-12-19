@@ -17,18 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james;
 
-import org.apache.james.quota.search.QuotaSearcher;
-import org.apache.james.quota.search.scanning.ScanningQuotaSearcher;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class PostgresQuotaSearchModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(ScanningQuotaSearcher.class).in(Scopes.SINGLETON);
-        bind(QuotaSearcher.class).to(ScanningQuotaSearcher.class);
-    }
+public class PostgresWithTikaTest implements JamesServerConcreteContract {
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
+
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
+        PostgresJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.openSearch())
+            .usersRepository(DEFAULT)
+            .build())
+        .server(PostgresJamesServerMain::createServer)
+        .extension(new DockerOpenSearchExtension())
+        .extension(new TikaExtension())
+        .extension(postgresExtension)
+        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
+        .build();
 }
