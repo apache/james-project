@@ -28,9 +28,9 @@ import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
-import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.mailbox.MemoryDeadLetterModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
+import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
@@ -85,13 +85,13 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new PostgresMailboxModule(),
         new PostgresDataModule(),
         new MailboxModule(),
-        new LuceneSearchMailboxModule(),
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
         new SievePostgresRepositoryModules(),
         new DefaultEventModule(),
         new TaskManagerModule(),
-        new MemoryDeadLetterModule());
+        new MemoryDeadLetterModule(),
+        new TikaMailboxModule());
 
     private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
         new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS);
@@ -112,7 +112,10 @@ public class PostgresJamesServerMain implements JamesServerMain {
     }
 
     static GuiceJamesServer createServer(PostgresJamesConfiguration configuration) {
+        SearchConfiguration searchConfiguration = configuration.searchConfiguration();
+
         return GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
             .combineWith(new UsersRepositoryModuleChooser(new PostgresUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(POSTGRES_MODULE_AGGREGATE);

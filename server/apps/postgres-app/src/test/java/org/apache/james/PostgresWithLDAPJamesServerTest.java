@@ -41,11 +41,13 @@ class PostgresWithLDAPJamesServerTest {
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.openSearch())
             .usersRepository(LDAP)
             .build())
         .server(PostgresJamesServerMain::createServer)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .extension(new LdapTestExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(postgresExtension)
         .build();
 
