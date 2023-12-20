@@ -38,6 +38,7 @@ public class MemoryPerDomainAddressBlackList implements PerDomainAddressBlackLis
 
     @Override
     public void add(Domain domain, MailAddress address) {
+
         map.put(domain, address);
     }
 

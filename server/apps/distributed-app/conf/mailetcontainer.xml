@@ -37,19 +37,17 @@
     <processors>
         <processor state="root" enableJmx="true">
             <mailet match="All" class="PostmasterAlias"/>
-
+            <mailet match="RelayLimit=30" class="Null"/>
             <mailet match="mailets.NotInBlackList" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
-
-            <mailet match="RelayLimit=30" class="Null"/>
             <mailet match="All" class="ToProcessor">
-                <processor>transport</processor>
+                <processor>blacklisted</processor>
             </mailet>
         </processor>
 
 
-        <processor state="backlisted" enableJmx="true">
+        <processor state="blacklisted" enableJmx="true">
             <mailet match="All" class="MetricsMailet">
                 <metricName>blacklisted</metricName>
             </mailet>

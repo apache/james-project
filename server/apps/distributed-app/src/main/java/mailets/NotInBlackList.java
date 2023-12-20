@@ -49,6 +49,8 @@ public class NotInBlackList extends GenericMatcher {
 
     private Boolean isSenderBlackListed(MaybeSender maybeSender, MailAddress recipient) {
         Domain domain = recipient.getDomain();
+
+        System.out.println("is sender blacklisted: " + domain.toString());
         return maybeSender.asOptional()
             .map(sender -> isBlackListed(domain, sender))
             .orElse(false);
