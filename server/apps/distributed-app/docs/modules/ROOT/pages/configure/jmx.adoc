@@ -1,6 +1,16 @@
 = Distributed James Server &mdash; jmx.properties
 :navtitle: jmx.properties
 
+== Disclaimer
+
+JMX poses several security concerns and had been leveraged to conduct arbitrary code execution.
+This threat is mitigated by not allowing remote connections to JMX, setting up authentication and pre-authentication filters.
+However, we recommend to either run James in isolation (docker / own virtual machine) or disable JMX altogether.<br/>
+
+James JMX endpoint provides command line utilities and exposes a few metrics, also available on the metric endpoint.</p>
+
+== Configuration
+
 This is used to configure the JMX MBean server via which all management is achieved.
 
 Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/jmx.properties[example]
@@ -22,7 +32,6 @@ in GIT to get some examples and hints.
 
 To access from a remote location, it has been reported that `-Dcom.sun.management.jmxremote.ssl=false` is needed as
 a JVM argument.
-
 
 == JMX Security
 

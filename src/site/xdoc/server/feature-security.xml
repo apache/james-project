@@ -48,6 +48,13 @@
 
   </section>
 
+  <section name="JMX">
+      <p><b>Disclaimer: </b> JMX poses several security concerns and had been leveraged to conduct arbitrary code execution.
+          This threat is mitigated by not allowing remote connections to JMX, setting up authentication and pre-authentication filters.
+          However, we recommend to either run James in isolation (docker / own virtual machine) or disable JMX altogether.<br/>
+          James JMX endpoint provides command line utilities and exposes a few metrics, also available on the metric endpoint.</p>
+  </section>
+
     <section name="Reported vulnerabilities">
         <subsection name="Reporting vulnerabilities">
             We follow the standard procedures within the ASF regarding
