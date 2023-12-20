@@ -8,8 +8,8 @@ Not-Implemented
 
 ## Context
 
-When IMAP server support THREAD_SAFE_FLAGS_UPDATE capability, it means that the server can update flags concurrently.
-We are facing a concurrency issue when multiple queries from clients simultaneously access the `user_flags` column of the `message_mailbox` table in PostgreSQL.
+We are facing a concurrency issue when update flags concurrently.
+The multiple queries from clients simultaneously access the `user_flags` column of the `message_mailbox` table in PostgreSQL.
 Currently, the James fetches the current data, performs changes, and then updates to database.
 However, this approach does not ensure thread safety and may lead to concurrency issues.
 
@@ -41,10 +41,18 @@ Cons:
 However, this may increase the complexity of the code and require careful management of data versions.
 The chosen solution using PostgreSQL functions was preferred for its simplicity and direct support for array operations.
 
+- Read-Then-Write Logic into Transactions: Transactions come with associated costs, including extra locking, coordination overhead, 
+and dependency on connection pooling. By avoiding the use of transactions, we aim to reduce these potential drawbacks 
+and explore other mechanisms for ensuring data consistency.
+
+- Semantic Alignment with CRDT Principles: Considering a re-implementation of the logic with a semantic alignment to CRDT (commutative replicated data types) principles.
+This alternative explores a different paradigm for addressing concurrency challenges without resorting to traditional transactions.
+
 ## References
 
 - [JIRA](https://issues.apache.org/jira/browse/JAMES-2586)
 - [PostgreSQL Array Functions and Operators](https://www.postgresql.org/docs/current/functions-array.html)
+- [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)
 
 
 
