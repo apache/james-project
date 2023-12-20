@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package com.linagora.james.blacklist.matcher;
+package mailets;
 
 import java.util.Collection;
 
@@ -30,7 +30,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.github.steveash.guavate.Guavate;
-import com.linagora.james.blacklist.api.PerDomainAddressBlackList;
 
 public class NotInBlackList extends GenericMatcher {
     private final PerDomainAddressBlackList blackList;

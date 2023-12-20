@@ -38,16 +38,23 @@
         <processor state="root" enableJmx="true">
             <mailet match="All" class="PostmasterAlias"/>
 
-            <mailet match="mailets.IsDelayedForMoreThan=1 day"
-                    class="mailets.SendPromotionCode">
-                <reason>Your email had been delayed for a long time. Because we are sorry about it, please find the
-                    following promotion code.</reason>
-                <promotionCode>1542-2563-5469</promotionCode>
+            <mailet match="mailets.NotInBlackList" class="ToProcessor">
+                <processor>transport</processor>
             </mailet>
 
             <mailet match="RelayLimit=30" class="Null"/>
             <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
+            </mailet>
+        </processor>
+
+
+        <processor state="backlisted" enableJmx="true">
+            <mailet match="All" class="MetricsMailet">
+                <metricName>blacklisted</metricName>
+            </mailet>
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/blacklisted/</repositoryPath>
             </mailet>
         </processor>
 

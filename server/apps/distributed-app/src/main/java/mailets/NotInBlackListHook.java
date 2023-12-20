@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package com.linagora.james.blacklist.smtp;
+package mailets;
 
 import javax.inject.Inject;
 
@@ -29,7 +29,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.RcptHook;
 
-import com.linagora.james.blacklist.api.PerDomainAddressBlackList;
 
 public class NotInBlackListHook implements RcptHook {
     private final PerDomainAddressBlackList blackList;

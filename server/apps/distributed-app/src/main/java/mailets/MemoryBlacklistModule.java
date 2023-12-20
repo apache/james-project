@@ -17,11 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package com.linagora.james.blacklist.memory;
+package mailets;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.linagora.james.blacklist.api.PerDomainAddressBlackList;
 
 public class MemoryBlacklistModule extends AbstractModule {
     @Override

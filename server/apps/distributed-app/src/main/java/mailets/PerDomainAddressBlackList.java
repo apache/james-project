@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package com.linagora.james.blacklist.api;
+package mailets;
 
 import java.util.List;
 

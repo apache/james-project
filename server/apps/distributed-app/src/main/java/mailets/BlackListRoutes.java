@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package com.linagora.james.blacklist.webadmin;
+package mailets;
 
 import javax.inject.Inject;
 
@@ -28,7 +28,6 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
 
 import com.github.steveash.guavate.Guavate;
-import com.linagora.james.blacklist.api.PerDomainAddressBlackList;
 
 import spark.Service;
 

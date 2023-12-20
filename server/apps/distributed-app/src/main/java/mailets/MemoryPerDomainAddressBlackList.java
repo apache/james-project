@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package com.linagora.james.blacklist.memory;
+package mailets;
 
 import java.util.List;
 
@@ -28,7 +28,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.linagora.james.blacklist.api.PerDomainAddressBlackList;
 
 public class MemoryPerDomainAddressBlackList implements PerDomainAddressBlackList {
     private final Multimap<Domain, MailAddress> map;
