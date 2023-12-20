@@ -17,55 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
-package mailets;
+package com.linagora.james.blacklist.memory;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 
-import javax.mail.MessagingException;
-
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.util.DurationParser;
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMatcher;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.linagora.james.blacklist.api.PerDomainAddressBlackList;
 
-public class IsDelayedForMoreThan extends GenericMatcher {
+public class MemoryPerDomainAddressBlackList implements PerDomainAddressBlackList {
+    private final Multimap<Domain, MailAddress> map;
 
-    public static final ChronoUnit DEFAULT_UNIT = ChronoUnit.HOURS;
-    private final Clock clock;
-    private Duration maxDelay;
-
-    public IsDelayedForMoreThan(Clock clock) {
-        this.clock = clock;
-    }
-
-    public IsDelayedForMoreThan() {
-        this(Clock.systemDefaultZone());
+    public MemoryPerDomainAddressBlackList() {
+        this.map = Multimaps.synchronizedSetMultimap(HashMultimap.create());
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Date sentDate = mail.getMessage().getSentDate();
-
-        //if (clock.instant().isAfter(sentDate.toInstant().plusMillis(maxDelay.toMillis()))) {
-        return ImmutableList.copyOf(mail.getRecipients());
-        //}
-        //return ImmutableList.of();
+    public void add(Domain domain, MailAddress address) {
+        map.put(domain, address);
     }
 
     @Override
-    public void init() {
-        String condition = getCondition();
-        maxDelay = DurationParser.parse(condition, DEFAULT_UNIT);
+    public void remove(Domain domain, MailAddress address) {
+        map.remove(domain, address);
     }
 
     @Override
-    public String getMatcherName() {
-        return "IsDelayedForMoreThan";
+    public void clear(Domain domain) {
+        map.removeAll(domain);
+    }
+
+    @Override
+    public List<MailAddress> list(Domain domain) {
+        return ImmutableList.copyOf(map.get(domain));
     }
 }
