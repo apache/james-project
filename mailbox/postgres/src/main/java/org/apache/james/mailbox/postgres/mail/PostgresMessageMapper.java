@@ -324,24 +324,37 @@ public class PostgresMessageMapper implements MessageMapper {
                                            FlagsUpdateCalculator flagsUpdateCalculator,
                                            ModSeq newModSeq) {
         Flags oldFlags = currentMetaData.getFlags();
-        Flags newFlags = flagsUpdateCalculator.buildNewFlags(oldFlags);
-
         ComposedMessageId composedMessageId = currentMetaData.getComposedMessageId();
 
-        return Mono.just(UpdatedFlags.builder()
+        if (oldFlags.equals(flagsUpdateCalculator.buildNewFlags(oldFlags))) {
+            return Mono.just(UpdatedFlags.builder()
                 .messageId(composedMessageId.getMessageId())
                 .oldFlags(oldFlags)
-                .newFlags(newFlags)
-                .uid(composedMessageId.getUid()))
-            .flatMap(builder -> {
-                if (oldFlags.equals(newFlags)) {
-                    return Mono.just(builder.modSeq(currentMetaData.getModSeq())
-                        .build());
-                }
-                return Mono.fromCallable(() -> builder.modSeq(newModSeq).build())
-                    .flatMap(updatedFlags -> mailboxMessageDAO.updateFlag((PostgresMailboxId) composedMessageId.getMailboxId(), composedMessageId.getUid(), updatedFlags)
-                        .thenReturn(updatedFlags));
-            });
+                .newFlags(oldFlags)
+                .uid(composedMessageId.getUid())
+                .modSeq(currentMetaData.getModSeq())
+                .build());
+        } else {
+            return Mono.just(flagsUpdateCalculator.getMode())
+                .flatMap(mode -> {
+                    switch (mode) {
+                        case ADD:
+                            return mailboxMessageDAO.addFlags((PostgresMailboxId) composedMessageId.getMailboxId(), composedMessageId.getUid(), flagsUpdateCalculator.providedFlags(), newModSeq);
+                        case REMOVE:
+                            return mailboxMessageDAO.removeFlags((PostgresMailboxId) composedMessageId.getMailboxId(), composedMessageId.getUid(), flagsUpdateCalculator.providedFlags(), newModSeq);
+                        case REPLACE:
+                            return mailboxMessageDAO.replaceFlags((PostgresMailboxId) composedMessageId.getMailboxId(), composedMessageId.getUid(), flagsUpdateCalculator.providedFlags(), newModSeq);
+                        default:
+                            throw new RuntimeException("Unknown MessageRange type " + mode);
+                    }
+                }).map(updatedFlags -> UpdatedFlags.builder()
+                    .messageId(composedMessageId.getMessageId())
+                    .oldFlags(oldFlags)
+                    .newFlags(updatedFlags)
+                    .uid(composedMessageId.getUid())
+                    .modSeq(newModSeq)
+                    .build());
+        }
     }
 
     @Override
