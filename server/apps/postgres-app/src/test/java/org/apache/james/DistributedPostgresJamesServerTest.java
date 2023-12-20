@@ -26,7 +26,9 @@ import static org.awaitility.Durations.ONE_MINUTE;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.QuotaProbesImpl;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -40,7 +42,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-class PostgresJamesServerTest implements JamesServerConcreteContract {
+class DistributedPostgresJamesServerTest implements JamesServerConcreteContract {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
@@ -48,11 +50,18 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
+            .blobStore(BlobStoreConfiguration.builder()
+                .s3()
+                .disableCache()
+                .deduplication()
+                .noCryptoConfig())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .server(PostgresJamesServerMain::createServer)
         .extension(postgresExtension)
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new DockerOpenSearchExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 

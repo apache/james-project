@@ -48,12 +48,11 @@ class JamesCapabilitiesServerTest {
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.openSearch())
+            .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
-        .extension(new DockerOpenSearchExtension())
         .extension(postgresExtension)
         .build();
     
