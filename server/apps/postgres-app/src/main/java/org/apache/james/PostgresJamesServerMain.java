@@ -19,14 +19,20 @@
 
 package org.apache.james;
 
+import java.util.List;
+
+import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
+import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
+import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
+import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.MemoryDeadLetterModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
@@ -52,8 +58,11 @@ import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.server.blob.deduplication.StorageStrategy;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.util.Modules;
 
 public class PostgresJamesServerMain implements JamesServerMain {
@@ -91,6 +100,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new DefaultEventModule(),
         new TaskManagerModule(),
         new MemoryDeadLetterModule(),
+        new MemoryEventStoreModule(),
         new TikaMailboxModule());
 
     private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
@@ -118,6 +128,20 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
             .combineWith(new UsersRepositoryModuleChooser(new PostgresUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
+            .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(POSTGRES_MODULE_AGGREGATE);
+    }
+
+    private static List<Module> chooseBlobStoreModules(PostgresJamesConfiguration configuration) {
+        ImmutableList.Builder<Module> builder = ImmutableList.<Module>builder()
+            .addAll(BlobStoreModulesChooser.chooseModules(configuration.blobStoreConfiguration()))
+            .add(new BlobStoreCacheModulesChooser.CacheDisabledModule());
+
+        // should remove this after https://github.com/linagora/james-project/issues/4998
+        if (configuration.blobStoreConfiguration().storageStrategy().equals(StorageStrategy.DEDUPLICATION)) {
+            builder.add(binder -> Multibinder.newSetBinder(binder, BlobReferenceSource.class));
+        }
+
+        return builder.build();
     }
 }
