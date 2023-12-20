@@ -13,6 +13,9 @@ The multiple queries from clients simultaneously access the `user_flags` column 
 Currently, the James fetches the current data, performs changes, and then updates to database.
 However, this approach does not ensure thread safety and may lead to concurrency issues.
 
+Considering a re-implementation of the logic with a semantic alignment to CRDT (conflict-free replicated data types) principles.
+This alternative explores a different paradigm for addressing concurrency challenges without resorting to traditional transactions.
+
 ## Decision
 
 To address the concurrency issue when clients make changes to the user_flags column,
@@ -44,9 +47,6 @@ The chosen solution using PostgreSQL functions was preferred for its simplicity 
 - Read-Then-Write Logic into Transactions: Transactions come with associated costs, including extra locking, coordination overhead, 
 and dependency on connection pooling. By avoiding the use of transactions, we aim to reduce these potential drawbacks 
 and explore other mechanisms for ensuring data consistency.
-
-- Semantic Alignment with CRDT Principles: Considering a re-implementation of the logic with a semantic alignment to CRDT (commutative replicated data types) principles.
-This alternative explores a different paradigm for addressing concurrency challenges without resorting to traditional transactions.
 
 ## References
 
