@@ -143,3 +143,11 @@ docker-compose up -d mariadb
 # 4. Start James
 docker-compose up james
 ....
+
+=== Docker compose distributed
+
+We also have a distributed version of the James postgresql app (with OpenSearch as a search indexer). To run it, simply type:
+
+....
+docker compose -f docker-compose-distributed.yml up -d
+....
