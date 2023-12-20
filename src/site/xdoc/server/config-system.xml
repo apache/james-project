@@ -131,6 +131,11 @@
 
             <subsection name="jmx.properties">
 
+                <p><b>Disclaimer: </b> JMX poses several security concerns and had been leveraged to conduct arbitrary code execution.
+                This threat is mitigated by not allowing remote connections to JMX, setting up authentication and pre-authentication filters.
+                However, we recommend to either run James in isolation (docker / own virtual machine) or disable JMX altogether.<br/>
+                James JMX endpoint provides command line utilities and exposes a few metrics, also available on the metric endpoint.</p>
+
                 <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/apps/spring-app/src/main/resources/jmx.properties">jmx.properties</a> in GIT to get some examples and hints.</p>
 
                 <p>This is used to configure the JMX MBean server via which all management is achieved (also used by via the james-cli).</p>
@@ -145,7 +150,7 @@
                 </dl>
 
                 <p>To access from a remote location, it has been reported that <code>-Dcom.sun.management.jmxremote.ssl=false</code> is
-                    needed in the startup script.</p>
+                    needed in the startup script. Exposing JMX remotely poses numerous security issues and as such is strongly discouraged.</p>
 
                 <b>JMX Security</b>
 
