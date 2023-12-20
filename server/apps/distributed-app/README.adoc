@@ -15,7 +15,6 @@ Third party compulsory dependencies:
  * RabbitMQ-Management 3.8.18
  * Zenko Cloudserver or AWS S3
 
-[source]
 ----
 $ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:4.1.3
 $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.1.0
@@ -35,7 +34,6 @@ You will need to update its content to match your needs.
 
 You also need to generate a keystore with the following command:
 
-[source]
 ----
 $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 ----
@@ -119,3 +117,95 @@ Note that you can create a domain via an environment variable. This domain will 
 ----
 --environment DOMAIN=domain.tld
 ----
+
+
+[source]
+== Running the modified server
+-----
+
+$ cd server/apps/distributed-app/
+
+$ mvn clean install -DskipTests
+ OR
+$ mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.predefinedSortOrder=custom_1
+
+$ docker compose -f docker-compose.yml up -d
+
+$ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar target/james-server-distributed-app.jar --generate-keystore
+
+-----
+
+[source]
+
+== Testing the blacklist
+
+
+ - Create a domain:
+
+```
+curl --location --request PUT 'http://127.0.0.1:8000/domains/domain.tld'
+```
+
+ - Create a recipient
+
+```
+curl --location --request PUT 'http://127.0.0.1:8000/users/recipient@domain.tld' \
+--header 'Content-Type: application/json' \
+--data '{"password":"password"}'
+```
+
+ - Add someone in the blacklist
+
+```
+curl --location --request PUT 'http://127.0.0.1:8000/blacklist/domain.tld/sender@spammer.com' \
+--header 'Content-Type: application/json' \
+--data '{"password":"password"}'
+```
+
+ - To check the content of the black list:
+
+```
+curl -XGET http://127.0.0.1:8000/blacklist/domain.tld
+```
+
+ - Send emails using telnet for instance
+
+```
+telnet 127.0.0.1 25
+EHLO spammer.com
+MAIL FROM: <sender@spammer.com>
+RCPT TO: <recipient@domain.tld>
+DATA
+Subject: This mail should be blocked
+
+Is it?
+.
+quit
+```
+
+```
+telnet 127.0.0.1 25
+EHLO spammer.com
+MAIL FROM: <another@spammer.com>
+RCPT TO: <recipient@domain.tld>
+DATA
+Subject: This mail should be received
+
+Is it?
+.
+quit
+```
+
+To see rejected messages:
+
+```
+curl -XGET  http://127.0.0.1:8000/mailRepositories/var%2Fmail%2Fblacklisted
+```
+
+To see accepted messages:
+
+```
+telnet 127.0.0.1 143
+a001 LOGIN recipient@domain.tld pass
+a002 select INBOX
+a003 FETCH 1:* BODY[HEADER.FIELDS (SUBJECT)]
