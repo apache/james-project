@@ -151,13 +151,17 @@ public class BlobStoreConfiguration {
     }
 
     public static BlobStoreConfiguration parse(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        return parse(propertiesProvider, BlobStoreImplName.CASSANDRA);
+    }
+
+    public static BlobStoreConfiguration parse(PropertiesProvider propertiesProvider, BlobStoreImplName defaultBlobStore) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
             return BlobStoreConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using cassandra blobstore as the default");
+            LOGGER.warn("Could not find " + ConfigurationComponent.NAME + " configuration file, using " + defaultBlobStore.getName() + " blobstore as the default");
             return BlobStoreConfiguration.builder()
-                .cassandra()
+                .implementation(defaultBlobStore)
                 .disableCache()
                 .passthrough()
                 .noCryptoConfig();
@@ -238,7 +242,7 @@ public class BlobStoreConfiguration {
         return storageStrategy;
     }
 
-    BlobStoreImplName getImplementation() {
+    public BlobStoreImplName getImplementation() {
         return implementation;
     }
 
