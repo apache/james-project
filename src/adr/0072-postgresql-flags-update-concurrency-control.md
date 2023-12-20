@@ -13,8 +13,7 @@ The multiple queries from clients simultaneously access the `user_flags` column 
 Currently, the James fetches the current data, performs changes, and then updates to database.
 However, this approach does not ensure thread safety and may lead to concurrency issues.
 
-Considering a re-implementation of the logic with a semantic alignment to CRDT (conflict-free replicated data types) principles.
-This alternative explores a different paradigm for addressing concurrency challenges without resorting to traditional transactions.
+CRDT (conflict-free replicated data types) principles semantic can lay the ground to solving concurrency issues in a lock-free manner, and could thus be used for the problem at hand. This explores a different paradigm for addressing concurrency challenges without resorting to traditional transactions.
 
 ## Decision
 
