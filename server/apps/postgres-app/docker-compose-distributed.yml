@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+
+  james:
+    depends_on:
+      postgres:
+        condition: service_started
+      opensearch:
+        condition: service_healthy
+    image: apache/james:postgres-latest
+    container_name: james
+    hostname: james.local
+    command:
+      - --generate-keystore
+    ports:
+      - "80:80"
+      - "25:25"
+      - "110:110"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+      - "8000:8000"
+    volumes:
+      - ./sample-configuration-distributed/opensearch.properties:/root/conf/opensearch.properties
+    networks:
+      - james
+
+  opensearch:
+    image: opensearchproject/opensearch:2.8.0
+    container_name: opensearch
+    healthcheck:
+      test: curl -s http://opensearch:9200 >/dev/null || exit 1
+      interval: 3s
+      timeout: 10s
+      retries: 5
+    environment:
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    networks:
+      - james
+
+  postgres:
+    image: postgres:16.0
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=james
+      - POSTGRES_USER=james
+      - POSTGRES_PASSWORD=secret1
+    networks:
+      - james
+
+networks:
+  james:
