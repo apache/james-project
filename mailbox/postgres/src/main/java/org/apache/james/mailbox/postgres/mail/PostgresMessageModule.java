@@ -108,9 +108,9 @@ public interface PostgresMessageModule {
         Field<String[]> USER_FLAGS = DSL.field("user_flags", DataTypes.STRING_ARRAY);
         Field<LocalDateTime> SAVE_DATE = DSL.field("save_date", DataTypes.TIMESTAMP);
 
-        String ARRAY_REMOVE_JAMES_FUNCTION_NAME = "array_remove_james";
+        String REMOVE_ELEMENTS_FROM_ARRAY_FUNCTION_NAME = "remove_elements_from_array";
         String CREATE_ARRAY_REMOVE_JAMES_FUNCTION =
-            "CREATE OR REPLACE FUNCTION " + ARRAY_REMOVE_JAMES_FUNCTION_NAME + "(\n" +
+            "CREATE OR REPLACE FUNCTION " + REMOVE_ELEMENTS_FROM_ARRAY_FUNCTION_NAME + "(\n" +
                 "    source text[],\n" +
                 "    elements_to_remove text[])\n" +
                 "    RETURNS text[]\n" +

@@ -27,7 +27,6 @@ import static org.apache.james.backends.postgres.PostgresCommons.tableField;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.ARRAY_REMOVE_JAMES_FUNCTION_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_ANSWERED;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_DELETED;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_DRAFT;
@@ -38,6 +37,7 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MESSAGE_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MESSAGE_UID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.MOD_SEQ;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.REMOVE_ELEMENTS_FROM_ARRAY_FUNCTION_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.SAVE_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.THREAD_ID;
@@ -385,7 +385,7 @@ public class PostgresMailboxMessageDAO {
             if (removeFlags.getUserFlags().length == 1) {
                 updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, PostgresDSL.arrayRemove(USER_FLAGS, removeFlags.getUserFlags()[0])));
             } else {
-                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, DSL.function(ARRAY_REMOVE_JAMES_FUNCTION_NAME, String[].class,
+                updateStatement.getAndUpdate(currentStatement -> currentStatement.set(USER_FLAGS, DSL.function(REMOVE_ELEMENTS_FROM_ARRAY_FUNCTION_NAME, String[].class,
                     USER_FLAGS,
                     DSL.array(removeFlags.getUserFlags()))));
             }
