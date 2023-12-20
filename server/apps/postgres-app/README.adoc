@@ -4,7 +4,7 @@ This server targets reactive James deployments with postgresql database.
 
 == Requirements
 
- * Java 11 SDK
+* Java 11 SDK
 
 === With Postgresql only
 
@@ -32,6 +32,13 @@ For now, dependencies supported are:
 [source]
 ----
 $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.8.0
+----
+
+* Zenko Cloudserver or AWS S3
+
+[source]
+----
+$ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 registry.scality.com/cloudserver/cloudserver:8.7.25
 ----
 
 == Running manually
@@ -99,7 +106,7 @@ docker compose up -d
 
 === Distributed
 
-We also have a distributed version of the James postgresql app (with OpenSearch as a search indexer). To run it, simply type:
+We also have a distributed version of the James postgresql app (with OpenSearch as a search indexer and S3 as the object storage). To run it, simply type:
 
 ....
 docker compose -f docker-compose-distributed.yml up -d
