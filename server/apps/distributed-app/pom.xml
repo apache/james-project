@@ -51,6 +51,7 @@
     </dependencyManagement>
 
     <dependencies>
+
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>
@@ -331,6 +332,11 @@
             <version>1.0.0</version>
         </dependency>
         <dependency>
+            <groupId>com.github.steveash.guavate</groupId>
+            <artifactId>guavate</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>33.4.0-jre</version>
@@ -354,8 +360,25 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.1</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -422,12 +445,12 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:21-jre-jammy</image>
+                        <image>eclipse-temurin:21.0.1_12-jre-jammy</image>
                     </from>
                     <to>
                         <image>apache/james</image>
                         <tags>
-                            <tag>distributed-latest</tag>
+                            <tag>distributedBlacklist-latest</tag>
                         </tags>
                     </to>
                     <container>
@@ -470,7 +493,7 @@
                     <extraDirectories>
                         <paths>
                             <path>
-                                <from>sample-configuration</from>
+                                <from>conf</from>
                                 <into>/root/conf</into>
                             </path>
                             <path>
