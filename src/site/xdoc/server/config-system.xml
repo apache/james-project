@@ -149,8 +149,6 @@
 
                 <b>JMX Security</b>
 
-                <p>Guice only</p>
-
                 <p>In order to set up JMX authentication, we need to put <code>jmxremote.password</code> and <code>jmxremote.access</code> file
                     to <code>/conf</code> directory.</p>
 
@@ -168,11 +166,11 @@
                 james-admin readwrite
                 </code></pre>
 
-                <p>When James runs with option <code>-Djames.jmx.credential.generation=true</code>, James will automatically
+                <p>(Guice only) When James runs with option <code>-Djames.jmx.credential.generation=true</code>, James will automatically
                     generate <code>jmxremote.password</code> if the file does not exist.
                     Then the default username is <code>james-admin</code> and a random password. This option defaults to true.</p>
 
-
+                <p>(Spring only) Presence of JMX credentials is compulsory to start the server.</p>
             </subsection>
 
             <subsection name="sqlResources.xml">
