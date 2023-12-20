@@ -108,6 +108,24 @@ public interface PostgresMessageModule {
         Field<String[]> USER_FLAGS = DSL.field("user_flags", DataTypes.STRING_ARRAY);
         Field<LocalDateTime> SAVE_DATE = DSL.field("save_date", DataTypes.TIMESTAMP);
 
+        String REMOVE_ELEMENTS_FROM_ARRAY_FUNCTION_NAME = "remove_elements_from_array";
+        String CREATE_ARRAY_REMOVE_JAMES_FUNCTION =
+            "CREATE OR REPLACE FUNCTION " + REMOVE_ELEMENTS_FROM_ARRAY_FUNCTION_NAME + "(\n" +
+                "    source text[],\n" +
+                "    elements_to_remove text[])\n" +
+                "    RETURNS text[]\n" +
+                "AS\n" +
+                "$$\n" +
+                "DECLARE\n" +
+                "    result text[];\n" +
+                "BEGIN\n" +
+                "    select array_agg(elements) INTO result\n" +
+                "    from (select unnest(source)\n" +
+                "          except\n" +
+                "          select unnest(elements_to_remove)) t (elements);\n" +
+                "    RETURN result;\n" +
+                "END;\n" +
+                "$$ LANGUAGE plpgsql;";
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
@@ -130,6 +148,7 @@ public interface PostgresMessageModule {
                     foreignKey(MESSAGE_ID).references(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID))
                 .comment("Holds mailbox and flags for each message")))
             .supportsRowLevelSecurity()
+            .addAdditionalAlterQueries(CREATE_ARRAY_REMOVE_JAMES_FUNCTION)
             .build();
 
         PostgresIndex MESSAGE_ID_INDEX = PostgresIndex.name("message_mailbox_message_id_index")
