@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
 import org.apache.james.server.core.configuration.Configuration;
@@ -33,19 +34,24 @@ import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 public class PostgresJamesConfiguration implements Configuration {
+    private static BlobStoreConfiguration.BlobStoreImplName DEFAULT_BLOB_STORE = BlobStoreConfiguration.BlobStoreImplName.FILE;
+
     public static class Builder {
         private Optional<String> rootDirectory;
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<SearchConfiguration> searchConfiguration;
+        private Optional<BlobStoreConfiguration> blobStoreConfiguration;
 
         private Builder() {
             searchConfiguration = Optional.empty();
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
+            blobStoreConfiguration = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -86,6 +92,11 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder blobStore(BlobStoreConfiguration blobStoreConfiguration) {
+            this.blobStoreConfiguration = Optional.of(blobStoreConfiguration);
+            return this;
+        }
+
         public PostgresJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -96,6 +107,11 @@ public class PostgresJamesConfiguration implements Configuration {
 
             SearchConfiguration searchConfiguration = this.searchConfiguration.orElseGet(Throwing.supplier(
                 () -> SearchConfiguration.parse(propertiesProvider)));
+
+            BlobStoreConfiguration blobStoreConfiguration = this.blobStoreConfiguration.orElseGet(Throwing.supplier(
+                () -> BlobStoreConfiguration.parse(propertiesProvider, DEFAULT_BLOB_STORE)));
+            Preconditions.checkState(!blobStoreConfiguration.getImplementation().equals(BlobStoreConfiguration.BlobStoreImplName.CASSANDRA), "Cassandra BlobStore is not supported by postgres-app.");
+            Preconditions.checkState(!blobStoreConfiguration.cacheEnabled(), "BlobStore caching is not supported by postgres-app.");
 
             FileConfigurationProvider configurationProvider = new FileConfigurationProvider(fileSystem, Basic.builder()
                 .configurationPath(configurationPath)
@@ -108,7 +124,8 @@ public class PostgresJamesConfiguration implements Configuration {
                 configurationPath,
                 directories,
                 searchConfiguration,
-                usersRepositoryChoice);
+                usersRepositoryChoice,
+                blobStoreConfiguration);
         }
     }
 
@@ -120,13 +137,18 @@ public class PostgresJamesConfiguration implements Configuration {
     private final JamesDirectoriesProvider directories;
     private final SearchConfiguration searchConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
+    private final BlobStoreConfiguration blobStoreConfiguration;
 
-    public PostgresJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
-                                      SearchConfiguration searchConfiguration, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation) {
+    private PostgresJamesConfiguration(ConfigurationPath configurationPath,
+                                       JamesDirectoriesProvider directories,
+                                       SearchConfiguration searchConfiguration,
+                                       UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
+                                       BlobStoreConfiguration blobStoreConfiguration) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
+        this.blobStoreConfiguration = blobStoreConfiguration;
     }
 
     @Override
@@ -145,5 +167,9 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public UsersRepositoryModuleChooser.Implementation getUsersRepositoryImplementation() {
         return usersRepositoryImplementation;
+    }
+
+    public BlobStoreConfiguration blobStoreConfiguration() {
+        return blobStoreConfiguration;
     }
 }
