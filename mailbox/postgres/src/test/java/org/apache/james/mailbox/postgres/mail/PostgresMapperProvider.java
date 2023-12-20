@@ -65,7 +65,7 @@ public class PostgresMapperProvider implements MapperProvider {
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE, Capabilities.ATTACHMENT);
+        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE, Capabilities.ATTACHMENT, Capabilities.THREAD_SAFE_FLAGS_UPDATE);
     }
 
     @Override
