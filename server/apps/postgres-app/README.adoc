@@ -1,19 +1,52 @@
 = Guice-Postgres Server How-to
 
-// TODO: rewrite this doc by using Postgres instead of JPA
-This server target single node James deployments. By default, the derby database is used.
+This server targets reactive James deployments with postgresql database.
 
 == Requirements
 
  * Java 11 SDK
 
-== Running
+=== With Postgresql only
 
-To run james, you have to create a directory containing required configuration files.
+Firstly, create your own user network on Docker for the James environment:
+
+    $ docker network create --driver bridge james
+
+Third party compulsory dependencies:
+
+* Postgresql 16.0
+
+[source]
+----
+$ docker run -d --network james -p 5432:5432 --name=postgres --env 'POSTGRES_DB=james' --env 'POSTGRES_USER=james' --env 'POSTGRES_PASSWORD=secret1' postgres:16.0
+----
+
+=== Distributed version
+
+Here you have the choice of using other third party softwares to handle object data storage, search indexing and event bus.
+
+For now, dependencies supported are:
+
+* OpenSearch 2.8.0
+
+[source]
+----
+$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.8.0
+----
+
+== Running manually
+
+=== Running with Postgresql only
+
+To run James manually, you have to create a directory containing required configuration files.
 
 James requires the configuration to be in a subfolder of working directory that is called
-**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/jpa-guice/sample-configuration)
+**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration)
 is provided with some default values you may need to replace. You will need to update its content to match your needs.
+
+Also you might need to add the files like in the
+[sample directory](https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration-single)
+to not have OpenSearch indexing enabled by default for the search.
 
 You also need to generate a keystore with the following command:
 
@@ -26,16 +59,28 @@ Once everything is set up, you just have to run the jar with:
 
 [source]
 ----
-$ java -javaagent:james-server-postgres-app.lib/openjpa-3.1.2.jar \
-  -Dworking.directory=. \
-  -Djdk.tls.ephemeralDHKeySize=2048 \
-  -Dlogback.configurationFile=conf/logback.xml \
-  -jar james-server-postgres-app.jar
+$ java -Dworking.directory=. -Djdk.tls.ephemeralDHKeySize=2048 -Dlogback.configurationFile=conf/logback.xml -jar james-server-postgres-app.jar
+----
+
+In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument
+`--generate-keystore` when running, James will auto-generate keystore file with the default setting that is declared in
+`jmap.properties` (tls.keystoreURL, tls.secret).
+
+[source]
+----
+$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar james-server-postgres-app.jar --generate-keystore
 ----
 
 Note that binding ports below 1024 requires administrative rights.
 
-== Docker distribution
+=== Running distributed
+
+If you want to use the distributed version of James Postgres app, you will need to add configuration in the **conf** folder like in the
+[sample directory](https://github.com/apache/james-project/tree/master/server/apps/postgres-app/sample-configuration-distributed).
+
+Then you need to generate the keystore, rebuild the application jar and run it like above.
+
+== Docker compose
 
 To import the image locally:
 
@@ -44,107 +89,15 @@ To import the image locally:
 docker image load -i target/jib-image.tar
 ----
 
-Then run it:
+=== With Postgresql only
 
-[source]
-----
-docker run apache/james:jpa-latest
-----
-
-Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags)
-to pass extra JVM flags. For instance:
-
-[source]
-----
-docker run -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:jpa-latest
-----
-
-For security reasons you are required to generate your own keystore, that you can mount into the container via a volume:
-
-[source]
-----
-keytool -genkey -alias james -keyalg RSA -keystore keystore
-docker run -v $PWD/keystore:/root/conf/keystore apache/james:jpa-latest
-----
-
-In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `--generate-keystore` when running,
-James will auto-generate keystore file with the default setting that is declared in `jmap.properties` (tls.keystoreURL, tls.secret)
-
-[source]
-----
-docker run --network james apache/james:jpa-latest --generate-keystore
-----
-
-[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
-Disabled by default, its java agent can easily be enabled:
-
-
-[source]
-----
-docker run -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:jpa-latest
-----
-
-The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
-
-
-[source]
-----
-docker exec CONTAINER-ID james-cli ListDomains
-----
-
-Note that you can create a domain via an environment variable. This domain will be created upon James start:
-
-[source]
-----
---environment DOMAIN=domain.tld
-----
-
-
-=== Using alternative JDBC drivers
-
-==== Using alternative JDBC drivers with the ZIP package
-
-We will need to add the driver JAR on the classpath.
-
-This can be done with the following command:
+We have a docker compose for running James Postgresql app alongside Postgresql. To run it, simply type:
 
 ....
-java \
-   -javaagent:james-server-postgres-app.lib/openjpa-3.2.0.jar \
-   -Dworking.directory=. \
-   -Djdk.tls.ephemeralDHKeySize=2048 \
-   -Dlogback.configurationFile=conf/logback.xml \
-   -cp "james-server-postgres-app.jar:james-server-postgres-app.lib/*:jdbc-driver.jar" \
-   org.apache.james.JPAJamesServerMain
+docker compose up -d
 ....
 
-With `jdbc-driver.jar` being the JAR file of your driver, placed in the current directory.
-
-==== Using alternative JDBC drivers with docker
-
-In `james-database.properties`, one can specify any JDBC driver on the class path.
-
-With docker, such drivers can be added to the classpath by placing the driver JAR in a volume
-and mounting it within `/root/libs` directory.
-
-We do ship a [docker-compose](https://github.com/apache/james-project/blob/master/server/apps/jpa-smtp-app/docker-compose.yml)
-file demonstrating James JPA app usage with MariaDB. In order to run it:
-
-....
-# 1. Download the driver:
-wget https://repo1.maven.org/maven2/org/mariadb/jdbc/mariadb-java-client/2.7.2/mariadb-java-client-2.7.2.jar
-
-# 2. Generate the keystore with the default password `james72laBalle`:
-keytool -genkey -alias james -keyalg RSA -keystore keystore
-
-# 3. Start MariaDB
-docker-compose up -d mariadb
-
-# 4. Start James
-docker-compose up james
-....
-
-=== Docker compose distributed
+=== Distributed
 
 We also have a distributed version of the James postgresql app (with OpenSearch as a search indexer). To run it, simply type:
 
