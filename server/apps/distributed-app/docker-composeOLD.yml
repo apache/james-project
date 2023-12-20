@@ -14,11 +14,9 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: apache/james:distributed-latest
+    image: apache/james:distributedBlacklist-latest
     container_name: james
     hostname: james.local
-    volumes:
-      - $PWD/conf/mailetcontainer.xml:/root/conf/mailetcontainer.xml
     command:
       - --generate-keystore
     networks:
