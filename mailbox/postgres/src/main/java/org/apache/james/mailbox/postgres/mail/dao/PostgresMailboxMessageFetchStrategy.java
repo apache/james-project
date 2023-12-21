@@ -76,7 +76,7 @@ public interface PostgresMailboxMessageFetchStrategy {
             tableField(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID).as(MessageTable.MESSAGE_ID),
             tableField(MessageTable.TABLE_NAME, MessageTable.INTERNAL_DATE).as(MessageTable.INTERNAL_DATE),
             tableField(MessageTable.TABLE_NAME, MessageTable.SIZE).as(MessageTable.SIZE),
-            MessageTable.BLOB_ID,
+            MessageTable.BODY_BLOB_ID,
             MessageTable.MIME_TYPE,
             MessageTable.MIME_SUBTYPE,
             MessageTable.BODY_START_OCTET,
