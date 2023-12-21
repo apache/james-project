@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
 
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.mailbox.MailboxManager;
 import org.junit.jupiter.api.Test;
@@ -50,12 +51,13 @@ class JamesCapabilitiesServerTest {
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
+            .eventBusImpl(EventBusImpl.IN_MEMORY)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
         .extension(postgresExtension)
         .build();
-    
+
     @Test
     void startShouldSucceedWhenRequiredCapabilities(GuiceJamesServer server) {
 
