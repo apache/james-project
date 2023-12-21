@@ -50,10 +50,26 @@ public class NotInBlackList extends GenericMatcher {
     private Boolean isSenderBlackListed(MaybeSender maybeSender, MailAddress recipient) {
         Domain domain = recipient.getDomain();
 
-        System.out.println("is sender blacklisted: " + domain.toString());
-        return maybeSender.asOptional()
-            .map(sender -> isBlackListed(domain, sender))
-            .orElse(false);
+        System.out.println("receiver: " + recipient.getLocalPart() + " " + domain.toString());
+        System.out.println("sender: " + maybeSender.get().getLocalPart() + " " + maybeSender.get().getDomain().toString());
+
+        if (giveOrg(recipient.getLocalPart()).equals(giveOrg(maybeSender.get().getLocalPart())) && domain.toString().equals(maybeSender.get().getDomain().toString())) {
+            System.out.println("valid email");
+            return Boolean.FALSE;
+        }
+        System.out.printf("invalid email");
+        return Boolean.TRUE;
+    }
+
+    public String giveOrg(String localpart) {
+        int startIndex = 0;
+        for (int i = localpart.length() - 2; i >= 0; i--) {
+           if (localpart.charAt(i) == '.') {
+               startIndex = i + 1;
+               break;
+           }
+        }
+        return localpart.substring(startIndex, localpart.length() - 1);
     }
 
     private boolean isBlackListed(Domain domain, MailAddress sender) {
