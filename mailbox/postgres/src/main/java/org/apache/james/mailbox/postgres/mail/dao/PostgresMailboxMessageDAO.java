@@ -24,7 +24,6 @@ import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_D
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
 import static org.apache.james.backends.postgres.PostgresCommons.UNNEST_FIELD;
 import static org.apache.james.backends.postgres.PostgresCommons.tableField;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_ANSWERED;
@@ -171,7 +170,7 @@ public class PostgresMailboxMessageDAO {
             .map(record -> Pair.of(record.get(totalCount, Integer.class), record.get(unSeenCount, Integer.class)));
     }
 
-    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxId(PostgresMailboxId mailboxId, Limit limit, MessageMapper.FetchType fetchType) {
+    public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMailboxId(PostgresMailboxId mailboxId, Limit limit, MessageMapper.FetchType fetchType) {
         PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
         Function<DSLContext, SelectSeekStep1<Record, Long>> queryWithoutLimit = dslContext -> dslContext.select(fetchStrategy.fetchFields())
             .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
@@ -181,10 +180,10 @@ public class PostgresMailboxMessageDAO {
         return postgresExecutor.executeRows(dslContext -> limit.getLimit()
                 .map(limitValue -> Flux.from(queryWithoutLimit.andThen(step -> step.limit(limitValue)).apply(dslContext)))
                 .orElse(Flux.from(queryWithoutLimit.apply(dslContext))))
-            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record.get(BLOB_ID)));
+            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record));
     }
 
-    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxIdAndBetweenUIDs(PostgresMailboxId mailboxId, MessageUid from, MessageUid to, Limit limit, FetchType fetchType) {
+    public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMailboxIdAndBetweenUIDs(PostgresMailboxId mailboxId, MessageUid from, MessageUid to, Limit limit, FetchType fetchType) {
         PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
         Function<DSLContext, SelectSeekStep1<Record, Long>> queryWithoutLimit = dslContext -> dslContext.select(fetchStrategy.fetchFields())
             .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
@@ -196,19 +195,19 @@ public class PostgresMailboxMessageDAO {
         return postgresExecutor.executeRows(dslContext -> limit.getLimit()
                 .map(limitValue -> Flux.from(queryWithoutLimit.andThen(step -> step.limit(limitValue)).apply(dslContext)))
                 .orElse(Flux.from(queryWithoutLimit.apply(dslContext))))
-            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record.get(BLOB_ID)));
+            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record));
     }
 
-    public Mono<Pair<SimpleMailboxMessage.Builder, String>> findMessageByMailboxIdAndUid(PostgresMailboxId mailboxId, MessageUid uid, FetchType fetchType) {
+    public Mono<Pair<SimpleMailboxMessage.Builder, Record>> findMessageByMailboxIdAndUid(PostgresMailboxId mailboxId, MessageUid uid, FetchType fetchType) {
         PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(fetchStrategy.fetchFields())
                 .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(MESSAGE_UID.eq(uid.asLong()))))
-            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record.get(BLOB_ID)));
+            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record));
     }
 
-    public Flux<Pair<SimpleMailboxMessage.Builder, String>> findMessagesByMailboxIdAndAfterUID(PostgresMailboxId mailboxId, MessageUid from, Limit limit, FetchType fetchType) {
+    public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMailboxIdAndAfterUID(PostgresMailboxId mailboxId, MessageUid from, Limit limit, FetchType fetchType) {
         PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
         Function<DSLContext, SelectSeekStep1<Record, Long>> queryWithoutLimit = dslContext -> dslContext.select(fetchStrategy.fetchFields())
             .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
@@ -219,7 +218,7 @@ public class PostgresMailboxMessageDAO {
         return postgresExecutor.executeRows(dslContext -> limit.getLimit()
                 .map(limitValue -> Flux.from(queryWithoutLimit.andThen(step -> step.limit(limitValue)).apply(dslContext)))
                 .orElse(Flux.from(queryWithoutLimit.apply(dslContext))))
-            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record.get(BLOB_ID)));
+            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record));
     }
 
     public Flux<SimpleMailboxMessage.Builder> findMessagesByMailboxIdAndUIDs(PostgresMailboxId mailboxId, List<MessageUid> uids) {
