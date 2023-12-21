@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BLOB_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DISPOSITION_PARAMETERS;
@@ -59,12 +59,12 @@ public class PostgresMessageDAO {
         this.postgresExecutor = postgresExecutor;
     }
 
-    public Mono<Void> insert(MailboxMessage message, String blobId) {
+    public Mono<Void> insert(MailboxMessage message, String bodyBlobId) {
         return Mono.fromCallable(() -> IOUtils.toByteArray(message.getHeaderContent(), message.getHeaderOctets()))
             .subscribeOn(Schedulers.boundedElastic())
             .flatMap(headerContentAsByte -> postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
                 .set(MESSAGE_ID, ((PostgresMessageId) message.getMessageId()).asUuid())
-                .set(BLOB_ID, blobId)
+                .set(BODY_BLOB_ID, bodyBlobId)
                 .set(MIME_TYPE, message.getMediaType())
                 .set(MIME_SUBTYPE, message.getSubType())
                 .set(INTERNAL_DATE, DATE_TO_LOCAL_DATE_TIME.apply(message.getInternalDate()))

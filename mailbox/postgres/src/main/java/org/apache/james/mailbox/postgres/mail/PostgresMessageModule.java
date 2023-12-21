@@ -44,7 +44,7 @@ public interface PostgresMessageModule {
     interface MessageTable {
         Table<Record> TABLE_NAME = DSL.table("message");
         Field<UUID> MESSAGE_ID = PostgresMessageModule.MESSAGE_ID;
-        Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR(200).notNull());
+        Field<String> BODY_BLOB_ID = DSL.field("body_blob_id", SQLDataType.VARCHAR(200).notNull());
         Field<String> MIME_TYPE = DSL.field("mime_type", SQLDataType.VARCHAR(200));
         Field<String> MIME_SUBTYPE = DSL.field("mime_subtype", SQLDataType.VARCHAR(200));
         Field<LocalDateTime> INTERNAL_DATE = PostgresMessageModule.INTERNAL_DATE;
@@ -66,7 +66,7 @@ public interface PostgresMessageModule {
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(MESSAGE_ID)
-                .column(BLOB_ID)
+                .column(BODY_BLOB_ID)
                 .column(MIME_TYPE)
                 .column(MIME_SUBTYPE)
                 .column(INTERNAL_DATE)
