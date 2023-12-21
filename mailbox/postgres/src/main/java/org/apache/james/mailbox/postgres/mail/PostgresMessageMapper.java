@@ -21,8 +21,9 @@ package org.apache.james.mailbox.postgres.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
@@ -48,6 +49,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -63,6 +65,7 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.Limit;
+import org.jooq.Record;
 
 import com.google.common.io.ByteSource;
 
@@ -71,11 +74,11 @@ import reactor.core.publisher.Mono;
 
 public class PostgresMessageMapper implements MessageMapper {
 
-    private static final Function<MailboxMessage, ByteSource> MESSAGE_FULL_CONTENT_LOADER = (mailboxMessage) -> new ByteSource() {
+    private static final Function<MailboxMessage, ByteSource> MESSAGE_BODY_CONTENT_LOADER = (mailboxMessage) -> new ByteSource() {
         @Override
         public InputStream openStream() {
             try {
-                return mailboxMessage.getFullContent();
+                return mailboxMessage.getBodyContent();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -83,7 +86,7 @@ public class PostgresMessageMapper implements MessageMapper {
 
         @Override
         public long size() {
-            return mailboxMessage.metaData().getSize();
+            return mailboxMessage.getBodyOctets();
         }
     };
 
@@ -128,14 +131,13 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
-        Flux<Pair<SimpleMailboxMessage.Builder, String>> fetchMessageWithoutFullContentPublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt);
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContentPublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt);
         if (fetchType == FetchType.FULL) {
             return fetchMessageWithoutFullContentPublisher
-                .flatMap(messageBuilderAndBlobId -> {
-                    SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndBlobId.getLeft();
-                    String blobIdAsString = messageBuilderAndBlobId.getRight();
-                    return retrieveFullContent(blobIdAsString)
-                        .map(content -> messageBuilder.content(content).build());
+                .flatMap(messageBuilderAndRecord -> {
+                    SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
+                    return retrieveFullContent(messageBuilderAndRecord.getRight())
+                        .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
                 })
                 .sort(Comparator.comparing(MailboxMessage::getUid))
                 .map(message -> message);
@@ -145,7 +147,7 @@ public class PostgresMessageMapper implements MessageMapper {
         }
     }
 
-    private Flux<Pair<SimpleMailboxMessage.Builder, String>> fetchMessageWithoutFullContent(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
+    private Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContent(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
         return Mono.just(messageRange)
             .flatMapMany(range -> {
                 Limit limit = Limit.from(limitAsInt);
@@ -165,19 +167,12 @@ public class PostgresMessageMapper implements MessageMapper {
             });
     }
 
-    private Mono<Content> retrieveFullContent(String blobIdString) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(blobIdString), SIZE_BASED))
-            .map(contentAsBytes -> new Content() {
-                @Override
-                public InputStream getInputStream() {
-                    return new ByteArrayInputStream(contentAsBytes);
-                }
-
-                @Override
-                public long size() {
-                    return contentAsBytes.length;
-                }
-            });
+    private Mono<Content> retrieveFullContent(Record messageRecord) {
+        byte[] headerBytes = messageRecord.get(HEADER_CONTENT);
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(),
+                blobIdFactory.from(messageRecord.get(BODY_BLOB_ID)),
+                SIZE_BASED))
+            .map(bodyBytes -> new HeaderAndBodyByteContent(headerBytes, bodyBytes));
     }
 
     @Override
@@ -282,14 +277,14 @@ public class PostgresMessageMapper implements MessageMapper {
                 return message;
             })
             .flatMap(this::setNewUidAndModSeq)
-            .then(saveFullContent(message)
-                .flatMap(blobId -> messageDAO.insert(message, blobId.asString())))
+            .then(saveBodyContent(message)
+                .flatMap(bodyBlobId -> messageDAO.insert(message, bodyBlobId.asString())))
             .then(Mono.defer(() -> mailboxMessageDAO.insert(message)))
             .then(Mono.fromCallable(message::metaData));
     }
 
-    private Mono<BlobId> saveFullContent(MailboxMessage message) {
-        return Mono.fromCallable(() -> MESSAGE_FULL_CONTENT_LOADER.apply(message))
+    private Mono<BlobId> saveBodyContent(MailboxMessage message) {
+        return Mono.fromCallable(() -> MESSAGE_BODY_CONTENT_LOADER.apply(message))
             .flatMap(bodyByteSource -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyByteSource, LOW_COST)));
     }
 
@@ -345,7 +340,7 @@ public class PostgresMessageMapper implements MessageMapper {
                         case REPLACE:
                             return mailboxMessageDAO.replaceFlags((PostgresMailboxId) composedMessageId.getMailboxId(), composedMessageId.getUid(), flagsUpdateCalculator.providedFlags(), newModSeq);
                         default:
-                            throw new RuntimeException("Unknown MessageRange type " + mode);
+                            return Mono.error(() -> new RuntimeException("Unknown MessageRange type " + mode));
                     }
                 }).map(updatedFlags -> UpdatedFlags.builder()
                     .messageId(composedMessageId.getMessageId())
@@ -417,8 +412,7 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) {
-        var t = moveReactive(mailbox, original).block();
-        return t;
+        return moveReactive(mailbox, original).block();
     }
 
     @Override
