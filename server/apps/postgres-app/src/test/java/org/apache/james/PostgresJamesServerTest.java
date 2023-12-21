@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.ONE_MINUTE;
 
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -50,6 +51,7 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
+            .eventBusImpl(EventBusImpl.IN_MEMORY)
             .build())
         .server(PostgresJamesServerMain::createServer)
         .extension(postgresExtension)
@@ -72,7 +74,7 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
         this.testIMAPClient = new TestIMAPClient();
         this.smtpMessageSender = new SMTPMessageSender(DOMAIN);
     }
-    
+
     @Test
     void guiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) throws Exception {
         jamesServer.getProbe(DataProbeImpl.class)

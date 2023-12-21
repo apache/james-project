@@ -10,6 +10,8 @@ services:
         condition: service_healthy
       s3:
         condition: service_started
+      rabbitmq:
+        condition: service_started
     image: apache/james:postgres-latest
     container_name: james
     hostname: james.local
@@ -27,6 +29,7 @@ services:
     volumes:
       - ./sample-configuration-distributed/opensearch.properties:/root/conf/opensearch.properties
       - ./sample-configuration-distributed/blob.properties:/root/conf/blob.properties
+      - ./sample-configuration-distributed/rabbitmq.properties:/root/conf/rabbitmq.properties
     networks:
       - james
 
@@ -65,6 +68,14 @@ services:
       - SCALITY_SECRET_ACCESS_KEY=secretKey1
       - LOG_LEVEL=trace
       - REMOTE_MANAGEMENT_DISABLE=1
+    networks:
+      - james
+
+  rabbitmq:
+    image: rabbitmq:3.12.1-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - james
 

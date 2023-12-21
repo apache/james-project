@@ -32,6 +32,7 @@ import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
+import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.MemoryDeadLetterModule;
@@ -44,6 +45,7 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
+import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
@@ -97,7 +99,6 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
         new SievePostgresRepositoryModules(),
-        new DefaultEventModule(),
         new TaskManagerModule(),
         new MemoryDeadLetterModule(),
         new MemoryEventStoreModule(),
@@ -129,6 +130,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(new UsersRepositoryModuleChooser(new PostgresUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseBlobStoreModules(configuration))
+            .combineWith(chooseEventBusModules(configuration))
             .combineWith(POSTGRES_MODULE_AGGREGATE);
     }
 
@@ -143,5 +145,17 @@ public class PostgresJamesServerMain implements JamesServerMain {
         }
 
         return builder.build();
+    }
+
+    public static List<Module> chooseEventBusModules(PostgresJamesConfiguration configuration) {
+        switch (configuration.eventBusImpl()) {
+            case IN_MEMORY:
+                return List.of(new DefaultEventModule());
+            case RABBITMQ:
+                return List.of(new RabbitMQModule(),
+                    Modules.override(new DefaultEventModule()).with(new RabbitMQEventBusModule()));
+            default:
+                throw new RuntimeException("Unsupported event-bus implementation " + configuration.eventBusImpl().name());
+        }
     }
 }

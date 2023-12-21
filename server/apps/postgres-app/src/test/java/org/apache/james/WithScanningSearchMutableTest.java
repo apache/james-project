@@ -21,6 +21,7 @@ package org.apache.james;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -36,6 +37,7 @@ public class WithScanningSearchMutableTest implements MailsShouldBeWellReceived 
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
+            .eventBusImpl(EventBusImpl.IN_MEMORY)
             .build())
         .server(PostgresJamesServerMain::createServer)
         .extension(postgresExtension)
