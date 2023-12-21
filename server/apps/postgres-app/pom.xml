@@ -58,6 +58,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-backends-rabbitmq</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-opensearch</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -227,6 +233,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>queue-activemq-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>queue-rabbitmq-guice</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
