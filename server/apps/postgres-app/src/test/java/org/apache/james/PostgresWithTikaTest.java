@@ -21,6 +21,7 @@ package org.apache.james;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,6 +35,7 @@ public class PostgresWithTikaTest implements JamesServerConcreteContract {
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.openSearch())
             .usersRepository(DEFAULT)
+            .eventBusImpl(EventBusImpl.IN_MEMORY)
             .build())
         .server(PostgresJamesServerMain::createServer)
         .extension(new DockerOpenSearchExtension())
