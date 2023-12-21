@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
+
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,6 +56,7 @@ public class PostgresWithOpenSearchDisabledTest implements MailsShouldBeWellRece
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.openSearchDisabled())
             .usersRepository(DEFAULT)
+            .eventBusImpl(EventBusImpl.IN_MEMORY)
             .build())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(binder -> binder.bind(OpenSearchConfiguration.class)

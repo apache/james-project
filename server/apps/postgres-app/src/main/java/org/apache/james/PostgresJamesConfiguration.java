@@ -20,8 +20,10 @@
 package org.apache.james;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Optional;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
@@ -32,12 +34,34 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.PropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
 public class PostgresJamesConfiguration implements Configuration {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresJamesConfiguration.class);
+
     private static BlobStoreConfiguration.BlobStoreImplName DEFAULT_BLOB_STORE = BlobStoreConfiguration.BlobStoreImplName.FILE;
+
+    public enum EventBusImpl {
+        IN_MEMORY, RABBITMQ;
+
+        public static EventBusImpl from(PropertiesProvider configurationProvider) {
+            try {
+                configurationProvider.getConfiguration("rabbitmq");
+                return EventBusImpl.RABBITMQ;
+            } catch (FileNotFoundException e) {
+                LOGGER.info("RabbitMQ configuration was not found, defaulting to in memory event bus");
+                return EventBusImpl.IN_MEMORY;
+            } catch (ConfigurationException e) {
+                LOGGER.warn("Error reading rabbitmq.xml, defaulting to in memory event bus", e);
+                return EventBusImpl.IN_MEMORY;
+            }
+        }
+    }
 
     public static class Builder {
         private Optional<String> rootDirectory;
@@ -46,12 +70,15 @@ public class PostgresJamesConfiguration implements Configuration {
         private Optional<SearchConfiguration> searchConfiguration;
         private Optional<BlobStoreConfiguration> blobStoreConfiguration;
 
+        private Optional<EventBusImpl> eventBusImpl;
+
         private Builder() {
             searchConfiguration = Optional.empty();
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
             blobStoreConfiguration = Optional.empty();
+            eventBusImpl = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -97,6 +124,11 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder eventBusImpl(EventBusImpl eventBusImpl) {
+            this.eventBusImpl = Optional.of(eventBusImpl);
+            return this;
+        }
+
         public PostgresJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -120,12 +152,15 @@ public class PostgresJamesConfiguration implements Configuration {
             UsersRepositoryModuleChooser.Implementation usersRepositoryChoice = usersRepositoryImplementation.orElseGet(
                 () -> UsersRepositoryModuleChooser.Implementation.parse(configurationProvider));
 
+            EventBusImpl eventBusImpl = this.eventBusImpl.orElseGet(() -> EventBusImpl.from(propertiesProvider));
+
             return new PostgresJamesConfiguration(
                 configurationPath,
                 directories,
                 searchConfiguration,
                 usersRepositoryChoice,
-                blobStoreConfiguration);
+                blobStoreConfiguration,
+                eventBusImpl);
         }
     }
 
@@ -138,17 +173,20 @@ public class PostgresJamesConfiguration implements Configuration {
     private final SearchConfiguration searchConfiguration;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final BlobStoreConfiguration blobStoreConfiguration;
+    private final EventBusImpl eventBusImpl;
+
 
     private PostgresJamesConfiguration(ConfigurationPath configurationPath,
                                        JamesDirectoriesProvider directories,
                                        SearchConfiguration searchConfiguration,
                                        UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
-                                       BlobStoreConfiguration blobStoreConfiguration) {
+                                       BlobStoreConfiguration blobStoreConfiguration, EventBusImpl eventBusImpl) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.blobStoreConfiguration = blobStoreConfiguration;
+        this.eventBusImpl = eventBusImpl;
     }
 
     @Override
@@ -171,5 +209,9 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public BlobStoreConfiguration blobStoreConfiguration() {
         return blobStoreConfiguration;
+    }
+
+    public EventBusImpl eventBusImpl() {
+        return eventBusImpl;
     }
 }
