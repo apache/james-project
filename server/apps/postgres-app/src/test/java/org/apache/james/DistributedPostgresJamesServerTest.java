@@ -24,10 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.ONE_MINUTE;
 
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.QuotaProbesImpl;
+import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -46,6 +48,9 @@ class DistributedPostgresJamesServerTest implements JamesServerConcreteContract 
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
+    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
+
+    @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -57,11 +62,13 @@ class DistributedPostgresJamesServerTest implements JamesServerConcreteContract 
                 .deduplication()
                 .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
+            .eventBusImpl(EventBusImpl.RABBITMQ)
             .build())
         .server(PostgresJamesServerMain::createServer)
         .extension(postgresExtension)
         .extension(new AwsS3BlobStoreExtension())
         .extension(new DockerOpenSearchExtension())
+        .extension(rabbitMQExtension)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 

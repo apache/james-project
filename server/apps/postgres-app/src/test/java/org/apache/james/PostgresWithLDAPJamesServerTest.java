@@ -32,7 +32,7 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.user.ldap.DockerLdapSingleton;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
+import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 class PostgresWithLDAPJamesServerTest {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
@@ -43,6 +43,7 @@ class PostgresWithLDAPJamesServerTest {
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.openSearch())
             .usersRepository(LDAP)
+            .eventBusImpl(EventBusImpl.IN_MEMORY)
             .build())
         .server(PostgresJamesServerMain::createServer)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
