@@ -41,6 +41,13 @@ $ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.
 $ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 registry.scality.com/cloudserver/cloudserver:8.7.25
 ----
 
+* RabbitMQ 3.12.1
+
+[source]
+----
+$ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.12.1-management
+----
+
 == Running manually
 
 === Running with Postgresql only
@@ -106,7 +113,13 @@ docker compose up -d
 
 === Distributed
 
-We also have a distributed version of the James postgresql app (with OpenSearch as a search indexer and S3 as the object storage). To run it, simply type:
+We also have a distributed version of the James postgresql app with:
+
+- OpenSearch as a search indexer
+- S3 as the object storage
+- RabbitMQ as the event bus
+
+To run it, simply type:
 
 ....
 docker compose -f docker-compose-distributed.yml up -d
