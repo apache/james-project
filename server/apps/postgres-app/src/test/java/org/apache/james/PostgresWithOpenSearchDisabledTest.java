@@ -31,6 +31,8 @@ import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.util.Host;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
@@ -42,7 +44,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.io.Resources;
 
-public class PostgresWithOpenSearchDisabledTest implements MailsShouldBeWellReceivedConcreteContract {
+public class PostgresWithOpenSearchDisabledTest implements MailsShouldBeWellReceived {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
@@ -60,6 +62,16 @@ public class PostgresWithOpenSearchDisabledTest implements MailsShouldBeWellRece
                 .build())))
         .extension(postgresExtension)
         .build();
+
+    @Override
+    public int imapPort(GuiceJamesServer server) {
+        return server.getProbe(ImapGuiceProbe.class).getImapPort();
+    }
+
+    @Override
+    public int smtpPort(GuiceJamesServer server) {
+        return server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue();
+    }
 
     @Test
     void mailsShouldBeKeptInDeadLetterForLaterIndexing(GuiceJamesServer server) throws Exception {
