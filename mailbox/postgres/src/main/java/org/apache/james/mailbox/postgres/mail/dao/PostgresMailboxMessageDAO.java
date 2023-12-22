@@ -130,6 +130,23 @@ public class PostgresMailboxMessageDAO {
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
     }
 
+    public Flux<MessageUid> listUids(PostgresMailboxId mailboxId, MessageRange range) {
+        if (range.getType() == MessageRange.Type.ALL) {
+            return listAllMessageUid(mailboxId);
+        }
+        return doListUids(mailboxId, range);
+    }
+
+    private Flux<MessageUid> doListUids(PostgresMailboxId mailboxId, MessageRange range) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
+                .from(TABLE_NAME)
+                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+                .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+                .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
+                .orderBy(DEFAULT_SORT_ORDER_BY)))
+            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+    }
+
     public Mono<MessageMetaData> deleteByMailboxIdAndMessageUid(PostgresMailboxId mailboxId, MessageUid messageUid) {
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
