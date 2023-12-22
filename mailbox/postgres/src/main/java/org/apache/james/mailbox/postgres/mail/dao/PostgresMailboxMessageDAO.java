@@ -278,6 +278,17 @@ public class PostgresMailboxMessageDAO {
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
     }
 
+    public Flux<MessageUid> listNotDeletedUids(PostgresMailboxId mailboxId, MessageRange range) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID, IS_DELETED)
+                .from(TABLE_NAME)
+                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+                .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+                .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
+                .orderBy(DEFAULT_SORT_ORDER_BY)))
+            .filter(record -> !record.get(IS_DELETED))
+            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+    }
+
     public Flux<ComposedMessageIdWithMetaData> findMessagesMetadata(PostgresMailboxId mailboxId, MessageRange range) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
                 .from(TABLE_NAME)
