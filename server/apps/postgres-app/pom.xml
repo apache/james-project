@@ -92,12 +92,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-cassandra-app</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-cli</artifactId>
             <scope>runtime</scope>
         </dependency>
@@ -110,18 +104,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-postgres</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-distributed-app</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>${james.groupId}</groupId>
-                    <artifactId>james-server-guice-distributed</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -174,6 +156,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-opensearch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-opensearch</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
