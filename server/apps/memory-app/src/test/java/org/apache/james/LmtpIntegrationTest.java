@@ -19,8 +19,6 @@
 
 package org.apache.james;
 
-import static org.apache.james.MailsShouldBeWellReceived.CALMLY_AWAIT;
-import static org.apache.james.MailsShouldBeWellReceived.JAMES_SERVER_HOST;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
@@ -33,10 +31,8 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.LmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.TestIMAPClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -59,6 +55,34 @@ public class LmtpIntegrationTest {
             .addDomain(DOMAIN)
             .addUser("error@" + DOMAIN, "pass1")
             .addUser("user@" + DOMAIN, "pass1");
+    }
+
+    @Test
+    void lmtpShouldBeConfigurableToReport(GuiceJamesServer guiceJamesServer) throws Exception {
+        SocketChannel server = SocketChannel.open();
+        server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(LmtpGuiceProbe.class).getLmtpPort()));
+        readBytes(server);
+
+        server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("MAIL FROM: <user@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <user@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <error@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server); // needed to synchronize
+        server.write(ByteBuffer.wrap(("header:value\r\n\r\nbody").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap((".").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("\r\n").getBytes(StandardCharsets.UTF_8)));
+        byte[] dataResponse = readBytes(server);
+        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+            .contains("250 2.6.0 Message received <user@domain.tld>\r\n" +
+                "451 4.0.0 Temporary error deliver message <error@domain.tld>");
     }
 
     @Test
@@ -94,7 +118,6 @@ public class LmtpIntegrationTest {
         line.rewind();
         byte[] bline = new byte[line.remaining()];
         line.get(bline);
-        System.out.println(new String(bline));
         return bline;
     }
 }
