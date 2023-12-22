@@ -17,39 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules.mailbox;
 
+import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backends.opensearch.DockerOpenSearch;
-import org.apache.james.backends.opensearch.DockerOpenSearchSingleton;
-import org.apache.james.modules.TestDockerOpenSearchModule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 
-import com.google.inject.Module;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-public class DockerOpenSearchRule implements GuiceModuleTestRule {
-    private final DockerOpenSearch openSearch = DockerOpenSearchSingleton.INSTANCE;
+public class TestDockerOpenSearchModule extends AbstractModule {
 
-    @Override
-    public Statement apply(Statement base, Description description) {
-        return base;
+    private static class ESContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
+
+        private final DockerOpenSearch elasticSearch;
+
+        private ESContainerCleanUp(DockerOpenSearch elasticSearch) {
+            this.elasticSearch = elasticSearch;
+        }
+
+        @Override
+        public Result run() {
+            elasticSearch.cleanUpData();
+
+            return Result.COMPLETED;
+        }
+    }
+
+    private final DockerOpenSearch elasticSearch;
+
+    public TestDockerOpenSearchModule(DockerOpenSearch elasticSearch) {
+        this.elasticSearch = elasticSearch;
     }
 
     @Override
-    public void await() {
-        openSearch.flushIndices();
+    protected void configure() {
+        bind(OpenSearchConfiguration.class).toInstance(elasticSearch.configuration());
+        Multibinder.newSetBinder(binder(), CleanupTasksPerformer.CleanupTask.class)
+            .addBinding()
+            .toInstance(new ESContainerCleanUp(elasticSearch));
     }
 
-    @Override
-    public Module getModule() {
-        return new TestDockerOpenSearchModule(openSearch);
-    }
-
-    public DockerOpenSearch getDockerEs() {
-        return openSearch;
-    }
-
-    public void start() {
-        openSearch.start();
-    }
 }
