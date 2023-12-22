@@ -118,6 +118,46 @@ public class PostgresMailboxMessageDAO {
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
     }
 
+    public Flux<MessageUid> listUnseen(PostgresMailboxId mailboxId) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(selectMessageUidByMailboxIdAndExtraConditionQuery(mailboxId,
+                IS_SEEN.eq(false), Limit.unlimited(), dslContext)))
+            .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+    }
+
+    public Flux<MessageUid> listUnseen(PostgresMailboxId mailboxId, MessageRange range) {
+        switch (range.getType()) {
+            case ALL:
+                return listUnseen(mailboxId);
+            case FROM:
+                return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
+                        .from(TABLE_NAME)
+                        .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+                        .and(IS_SEEN.eq(false))
+                        .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+                        .orderBy(DEFAULT_SORT_ORDER_BY)))
+                    .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+            case RANGE:
+                return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
+                        .from(TABLE_NAME)
+                        .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+                        .and(IS_SEEN.eq(false))
+                        .and(MESSAGE_UID.greaterOrEqual(range.getUidFrom().asLong()))
+                        .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
+                        .orderBy(DEFAULT_SORT_ORDER_BY)))
+                    .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+            case ONE:
+                return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
+                        .from(TABLE_NAME)
+                        .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+                        .and(IS_SEEN.eq(false))
+                        .and(MESSAGE_UID.eq(range.getUidFrom().asLong()))
+                        .orderBy(DEFAULT_SORT_ORDER_BY)))
+                    .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+            default:
+                throw new RuntimeException("Unsupported range type " + range.getType());
+        }
+    }
+
     public Flux<MessageUid> findAllRecentMessageUid(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(selectMessageUidByMailboxIdAndExtraConditionQuery(mailboxId,
                 IS_RECENT.eq(true), Limit.unlimited(), dslContext)))
