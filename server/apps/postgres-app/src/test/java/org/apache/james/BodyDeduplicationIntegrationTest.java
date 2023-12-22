@@ -46,7 +46,7 @@ import com.google.common.io.Resources;
 
 import reactor.core.publisher.Mono;
 
-class BodyDeduplicationIntegrationTest implements MailsShouldBeWellReceivedConcreteContract {
+class BodyDeduplicationIntegrationTest implements MailsShouldBeWellReceived {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
@@ -76,6 +76,16 @@ class BodyDeduplicationIntegrationTest implements MailsShouldBeWellReceivedConcr
     void setUp() {
         this.testIMAPClient = new TestIMAPClient();
         this.smtpMessageSender = new SMTPMessageSender(DOMAIN);
+    }
+
+    @Override
+    public int imapPort(GuiceJamesServer server) {
+        return server.getProbe(ImapGuiceProbe.class).getImapPort();
+    }
+
+    @Override
+    public int smtpPort(GuiceJamesServer server) {
+        return server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue();
     }
 
     @Test
