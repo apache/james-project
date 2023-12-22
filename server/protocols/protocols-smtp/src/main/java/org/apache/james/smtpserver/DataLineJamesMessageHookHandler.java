@@ -72,8 +72,9 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
     private static void detectSMTPSmuggling(byte[] line) {
         if (DETECT_SMTP_SMUGGLING) {
             if (line.length < 2
-                || line[line.length - 2] == '\r'
-                || line[line.length - 1] == '\n') {
+                || line[line.length - 2] != '\r'
+                || line[line.length - 1] != '\n') {
+
                 throw new CommandInjectionDetectedException();
             }
         }
