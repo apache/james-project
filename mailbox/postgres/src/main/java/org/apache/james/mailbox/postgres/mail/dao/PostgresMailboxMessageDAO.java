@@ -298,7 +298,7 @@ public class PostgresMailboxMessageDAO {
 
     public Flux<MessageUid> findDeletedMessagesByMailboxId(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+                .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(IS_DELETED.eq(true))
                 .orderBy(DEFAULT_SORT_ORDER_BY)))
@@ -307,7 +307,7 @@ public class PostgresMailboxMessageDAO {
 
     public Flux<MessageUid> findDeletedMessagesByMailboxIdAndBetweenUIDs(PostgresMailboxId mailboxId, MessageUid from, MessageUid to) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+                .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(IS_DELETED.eq(true))
                 .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
@@ -318,7 +318,7 @@ public class PostgresMailboxMessageDAO {
 
     public Flux<MessageUid> findDeletedMessagesByMailboxIdAndAfterUID(PostgresMailboxId mailboxId, MessageUid from) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_UID)
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+                .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(IS_DELETED.eq(true))
                 .and(MESSAGE_UID.greaterOrEqual(from.asLong()))
@@ -328,7 +328,7 @@ public class PostgresMailboxMessageDAO {
 
     public Mono<MessageUid> findDeletedMessageByMailboxIdAndUid(PostgresMailboxId mailboxId, MessageUid uid) {
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(MESSAGE_UID)
-                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+                .from(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(IS_DELETED.eq(true))
                 .and(MESSAGE_UID.eq(uid.asLong()))))
