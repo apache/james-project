@@ -22,9 +22,11 @@ package org.apache.james;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class WithScanningSearchMutableTest implements MailsShouldBeWellReceivedConcreteContract {
+public class WithScanningSearchMutableTest implements MailsShouldBeWellReceived {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @RegisterExtension
@@ -39,4 +41,14 @@ public class WithScanningSearchMutableTest implements MailsShouldBeWellReceivedC
         .extension(postgresExtension)
         .lifeCycle(JamesServerExtension.Lifecycle.PER_TEST)
         .build();
+
+    @Override
+    public int imapPort(GuiceJamesServer server) {
+        return server.getProbe(ImapGuiceProbe.class).getImapPort();
+    }
+
+    @Override
+    public int smtpPort(GuiceJamesServer server) {
+        return server.getProbe(SmtpGuiceProbe.class).getSmtpPort().getValue();
+    }
 }
