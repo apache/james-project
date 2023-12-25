@@ -36,6 +36,8 @@ import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
@@ -55,8 +57,13 @@ public class PostgresMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
+    private static PostgresMessageDAO postgresMessageDAO;
+    private static PostgresMailboxMessageDAO postgresMailboxMessageDAO;
+
     public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension) {
-        MailboxSessionMapperFactory mf = provideMailboxSessionMapperFactory(postgresExtension);
+        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
+        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
+        MailboxSessionMapperFactory mf = provideMailboxSessionMapperFactory(postgresExtension, blobIdFactory, blobStore);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
@@ -71,6 +78,11 @@ public class PostgresMailboxManagerProvider {
         SessionProviderImpl sessionProvider = new SessionProviderImpl(noAuthenticator, noAuthorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
         MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor(), new PostgresAttachmentContentLoader());
+        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getExecutorFactory().create(), blobIdFactory);
+        postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getExecutorFactory().create());
+        eventBus.register(new DeleteMessageListener(postgresMessageDAO,
+            postgresMailboxMessageDAO,
+            blobStore));
 
         return new PostgresMailboxManager((PostgresMailboxSessionMapperFactory) mf, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
@@ -82,10 +94,24 @@ public class PostgresMailboxManagerProvider {
         BlobId.Factory blobIdFactory = new HashBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
+        return provideMailboxSessionMapperFactory(postgresExtension, blobIdFactory, blobStore);
+    }
+
+    public static MailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension,
+                                                                                 BlobId.Factory blobIdFactory,
+                                                                                 DeDuplicationBlobStore blobStore) {
         return new PostgresMailboxSessionMapperFactory(
             postgresExtension.getExecutorFactory(),
             Clock.systemUTC(),
             blobStore,
             blobIdFactory);
+    }
+
+    public static PostgresMessageDAO providePostgresMessageDAO() {
+        return postgresMessageDAO;
+    }
+
+    public static PostgresMailboxMessageDAO providePostgresMailboxMessageDAO() {
+        return postgresMailboxMessageDAO;
     }
 }
