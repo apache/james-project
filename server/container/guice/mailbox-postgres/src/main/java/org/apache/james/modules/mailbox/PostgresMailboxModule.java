@@ -42,12 +42,15 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.postgres.DeleteMessageListener;
 import org.apache.james.mailbox.postgres.PostgresAttachmentContentLoader;
 import org.apache.james.mailbox.postgres.PostgresMailboxAggregateModule;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
@@ -116,6 +119,9 @@ public class PostgresMailboxModule extends AbstractModule {
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
 
+        bind(PostgresMessageDAO.class).in(Scopes.SINGLETON);
+        bind(PostgresMailboxMessageDAO.class).in(Scopes.SINGLETON);
+
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(PostgresMailboxManagerDefinition.class);
 
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
@@ -125,6 +131,9 @@ public class PostgresMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
             .addBinding()
             .to(MailboxSubscriptionListener.class);
+
+        Multibinder.newSetBinder(binder(), EventListener.ReactiveGroupEventListener.class)
+            .addBinding().to(DeleteMessageListener.class);
 
         bind(MailboxManager.class).annotatedWith(Names.named(MAILBOXMANAGER_NAME)).to(MailboxManager.class);
         bind(MailboxManagerConfiguration.class).toInstance(MailboxManagerConfiguration.DEFAULT);
