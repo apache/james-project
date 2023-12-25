@@ -1206,6 +1206,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>dead-letter-postgres</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>event-bus-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
