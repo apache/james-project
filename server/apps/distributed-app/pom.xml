@@ -292,6 +292,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>queue-rabbitmq-guice</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>queue-rabbitmq-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
