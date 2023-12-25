@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
+import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -108,6 +109,7 @@ public class PostgresMailboxMessageDAO {
 
     private final PostgresExecutor postgresExecutor;
 
+    @Inject
     public PostgresMailboxMessageDAO(PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
@@ -208,6 +210,13 @@ public class PostgresMailboxMessageDAO {
             return Flux.fromIterable(Iterables.partition(uids, IN_CLAUSE_MAX_SIZE))
                 .flatMap(deletePublisherFunction);
         }
+    }
+
+    public Flux<PostgresMessageId> deleteByMailboxId(PostgresMailboxId mailboxId) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.deleteFrom(TABLE_NAME)
+                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
+                .returning(MESSAGE_ID)))
+            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
     }
 
     public Mono<Integer> countTotalMessagesByMailboxId(PostgresMailboxId mailboxId) {
@@ -344,6 +353,13 @@ public class PostgresMailboxMessageDAO {
                 .orderBy(DEFAULT_SORT_ORDER_BY)))
             .filter(record -> !record.get(IS_DELETED))
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+    }
+
+    public Mono<Long> countByMessageId(PostgresMessageId messageId) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.selectCount()
+                .from(TABLE_NAME)
+                .where(MESSAGE_ID.eq(messageId.asUuid()))))
+            .map(record -> record.get(0, Long.class));
     }
 
     public Flux<ComposedMessageIdWithMetaData> findMessagesMetadata(PostgresMailboxId mailboxId, MessageRange range) {
