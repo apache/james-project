@@ -19,24 +19,26 @@
 
 package org.apache.james.mailbox.postgres.search;
 
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.mailboxMessageDAO;
+
 import javax.inject.Inject;
 
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
 import reactor.core.publisher.Flux;
 
 public class AllSearchOverride implements ListeningMessageSearchIndex.SearchOverride {
-    private final PostgresMailboxMessageDAO dao;
+    private final PostgresExecutor.Factory executorFactory;
 
     @Inject
-    public AllSearchOverride(PostgresMailboxMessageDAO dao) {
-        this.dao = dao;
+    public AllSearchOverride(PostgresExecutor.Factory executorFactory) {
+        this.executorFactory = executorFactory;
     }
 
     @Override
@@ -65,6 +67,7 @@ public class AllSearchOverride implements ListeningMessageSearchIndex.SearchOver
 
     @Override
     public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
-        return dao.listAllMessageUid((PostgresMailboxId) mailbox.getMailboxId());
+        return mailboxMessageDAO(executorFactory, session)
+            .flatMapMany(dao -> dao.listAllMessageUid((PostgresMailboxId) mailbox.getMailboxId()));
     }
 }

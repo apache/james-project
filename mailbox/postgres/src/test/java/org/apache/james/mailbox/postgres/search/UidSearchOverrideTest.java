@@ -51,7 +51,7 @@ public class UidSearchOverrideTest {
     void setUp() {
         postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor());
         postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
-        testee = new UidSearchOverride(postgresMailboxMessageDAO);
+        testee = new UidSearchOverride(postgresExtension.getExecutorFactory());
     }
 
     @Test

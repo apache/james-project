@@ -51,7 +51,7 @@ public class AllSearchOverrideTest {
     void setUp() {
         postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor());
         postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
-        testee = new AllSearchOverride(postgresMailboxMessageDAO);
+        testee = new AllSearchOverride(postgresExtension.getExecutorFactory());
     }
 
     @Test

@@ -55,6 +55,8 @@ import java.util.function.Function;
 
 import javax.mail.Flags;
 
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -71,7 +73,9 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.jooq.Field;
 import org.jooq.Record;
 
-interface PostgresMailboxMessageDAOUtils {
+import reactor.core.publisher.Mono;
+
+public interface PostgresMailboxMessageDAOUtils {
     Map<Field<Boolean>, Flags.Flag> BOOLEAN_FLAGS_MAPPING = Map.of(
         IS_ANSWERED, Flags.Flag.ANSWERED,
         IS_DELETED, Flags.Flag.DELETED,
@@ -181,4 +185,10 @@ interface PostgresMailboxMessageDAOUtils {
                 throw new RuntimeException("Unknown FetchType " + fetchType);
         }
     };
+
+    static Mono<PostgresMailboxMessageDAO> mailboxMessageDAO(PostgresExecutor.Factory executorFactory, MailboxSession session) {
+        return Mono.just(session.getUser().getDomainPart())
+            .map(executorFactory::create)
+            .map(PostgresMailboxMessageDAO::new);
+    }
 }
