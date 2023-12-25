@@ -34,5 +34,6 @@
         <module>cassandra</module>
         <module>distributed</module>
         <module>in-vm</module>
+        <module>postgres</module>
     </modules>
 </project>
