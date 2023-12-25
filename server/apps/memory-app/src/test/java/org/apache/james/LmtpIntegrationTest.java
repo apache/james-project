@@ -85,6 +85,32 @@ public class LmtpIntegrationTest {
                 "451 4.0.0 Temporary error deliver message <error@domain.tld>");
     }
 
+    @Test
+    void preventSMTPSmugglingAttacksByEnforcingCRLF(GuiceJamesServer guiceJamesServer) throws Exception {
+        SocketChannel server = SocketChannel.open();
+        server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(LmtpGuiceProbe.class).getLmtpPort()));
+        readBytes(server);
+
+        server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("MAIL FROM: <user@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("RCPT TO: <user@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server);
+        server.write(ByteBuffer.wrap(("DATA\r\n").getBytes(StandardCharsets.UTF_8)));
+        readBytes(server); // needed to synchronize
+        server.write(ByteBuffer.wrap((
+            "header:value\r\n\r\nbody 1\r\n.\nMAIL FROM: <a@toto.com>\r\n" +
+                "RCPT TO: <user@domain.tld>\r\n" +
+                "DATA\r\n" +
+                "header: yolo 2\r\n" +
+                "\r\nbody 2\r\n.\r\n").getBytes(StandardCharsets.UTF_8)));
+        byte[] dataResponse = readBytes(server);
+        server.write(ByteBuffer.wrap(("QUIT\r\n").getBytes(StandardCharsets.UTF_8)));
+
+        assertThat(new String(dataResponse, StandardCharsets.UTF_8))
+            .contains("500 5.0.0 line delimiter must be CRLF");
+    }
 
     private byte[] readBytes(SocketChannel channel) throws IOException {
         ByteBuffer line = ByteBuffer.allocate(1024);
