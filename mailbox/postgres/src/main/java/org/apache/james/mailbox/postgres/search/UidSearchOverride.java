@@ -60,9 +60,7 @@ public class UidSearchOverride implements ListeningMessageSearchIndex.SearchOver
             .orElseThrow(() -> new RuntimeException("Missing Uid argument"));
 
         SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
-        return Mono.just(session.getUser().getDomainPart())
-            .map(executorFactory::create)
-            .map(PostgresMailboxMessageDAO::new)
+        return Mono.fromCallable(() -> new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())))
             .flatMapMany(dao -> Flux.fromIterable(ImmutableList.copyOf(uidRanges))
                 .concatMap(range -> dao.listUids((PostgresMailboxId) mailbox.getMailboxId(),
                     MessageRange.range(range.getLowValue(), range.getHighValue()))));

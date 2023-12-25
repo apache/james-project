@@ -88,9 +88,7 @@ public class UnseenSearchOverride implements ListeningMessageSearchIndex.SearchO
             .map(SearchQuery.UidCriterion.class::cast)
             .findFirst();
 
-        return Mono.just(session.getUser().getDomainPart())
-            .map(executorFactory::create)
-            .map(PostgresMailboxMessageDAO::new)
+        return Mono.fromCallable(() -> new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())))
             .flatMapMany(dao -> maybeUidCriterion
                 .map(uidCriterion -> Flux.fromIterable(ImmutableList.copyOf(uidCriterion.getOperator().getRange()))
                     .concatMap(range -> dao.listUnseen((PostgresMailboxId) mailbox.getMailboxId(),

@@ -75,9 +75,7 @@ public class NotDeletedWithRangeSearchOverride implements ListeningMessageSearch
 
         SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
 
-        return Mono.just(session.getUser().getDomainPart())
-            .map(executorFactory::create)
-            .map(PostgresMailboxMessageDAO::new)
+        return Mono.fromCallable(() -> new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())))
             .flatMapMany(dao -> Flux.fromArray(uidRanges)
                 .concatMap(range -> dao.listNotDeletedUids((PostgresMailboxId) mailbox.getMailboxId(),
                     MessageRange.range(range.getLowValue(), range.getHighValue()))));

@@ -67,9 +67,7 @@ public class AllSearchOverride implements ListeningMessageSearchIndex.SearchOver
 
     @Override
     public Flux<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) {
-        return Mono.just(session.getUser().getDomainPart())
-            .map(executorFactory::create)
-            .map(PostgresMailboxMessageDAO::new)
+        return Mono.fromCallable(() -> new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())))
             .flatMapMany(dao -> dao.listAllMessageUid((PostgresMailboxId) mailbox.getMailboxId()));
     }
 }

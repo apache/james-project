@@ -63,9 +63,7 @@ public class DeletedWithRangeSearchOverride implements ListeningMessageSearchInd
 
         SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
 
-        return Mono.just(session.getUser().getDomainPart())
-            .map(executorFactory::create)
-            .map(PostgresMailboxMessageDAO::new)
+        return Mono.fromCallable(() -> new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())))
             .flatMapMany(dao -> Flux.fromIterable(ImmutableList.copyOf(uidRanges))
                 .concatMap(range -> dao.findDeletedMessagesByMailboxIdAndBetweenUIDs((PostgresMailboxId) mailbox.getMailboxId(),
                     range.getLowValue(), range.getHighValue())));
