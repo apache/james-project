@@ -20,8 +20,6 @@
 package org.apache.james.mailbox.postgres.search;
 
 
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.mailboxMessageDAO;
-
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -34,11 +32,13 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class UnseenSearchOverride implements ListeningMessageSearchIndex.SearchOverride {
 
@@ -88,7 +88,9 @@ public class UnseenSearchOverride implements ListeningMessageSearchIndex.SearchO
             .map(SearchQuery.UidCriterion.class::cast)
             .findFirst();
 
-        return mailboxMessageDAO(executorFactory, session)
+        return Mono.just(session.getUser().getDomainPart())
+            .map(executorFactory::create)
+            .map(PostgresMailboxMessageDAO::new)
             .flatMapMany(dao -> maybeUidCriterion
                 .map(uidCriterion -> Flux.fromIterable(ImmutableList.copyOf(uidCriterion.getOperator().getRange()))
                     .concatMap(range -> dao.listUnseen((PostgresMailboxId) mailbox.getMailboxId(),

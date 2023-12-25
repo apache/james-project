@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.postgres.search;
 
-import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.mailboxMessageDAO;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -30,11 +28,13 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class UidSearchOverride implements ListeningMessageSearchIndex.SearchOverride {
     private final PostgresExecutor.Factory executorFactory;
@@ -60,7 +60,9 @@ public class UidSearchOverride implements ListeningMessageSearchIndex.SearchOver
             .orElseThrow(() -> new RuntimeException("Missing Uid argument"));
 
         SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
-        return mailboxMessageDAO(executorFactory, session)
+        return Mono.just(session.getUser().getDomainPart())
+            .map(executorFactory::create)
+            .map(PostgresMailboxMessageDAO::new)
             .flatMapMany(dao -> Flux.fromIterable(ImmutableList.copyOf(uidRanges))
                 .concatMap(range -> dao.listUids((PostgresMailboxId) mailbox.getMailboxId(),
                     MessageRange.range(range.getLowValue(), range.getHighValue()))));
