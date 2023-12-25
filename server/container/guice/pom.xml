@@ -312,6 +312,12 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>queue-rabbitmq-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
                 <groupId>com.linagora</groupId>
                 <artifactId>logback-elasticsearch-appender</artifactId>
                 <version>1.8.0</version>

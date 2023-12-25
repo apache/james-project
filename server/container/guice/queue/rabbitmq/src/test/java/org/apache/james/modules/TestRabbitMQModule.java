@@ -33,6 +33,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueManagement;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
+import org.apache.james.task.Task;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -102,7 +103,7 @@ public class TestRabbitMQModule extends AbstractModule {
         public Result run() {
             api.deleteAllQueues();
 
-            return Result.COMPLETED;
+            return Task.Result.COMPLETED;
         }
     }
 }
