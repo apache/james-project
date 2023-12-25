@@ -42,8 +42,11 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.postgres.extensions.types.Hstore;
@@ -54,9 +57,12 @@ import reactor.core.scheduler.Schedulers;
 public class PostgresMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
     private final PostgresExecutor postgresExecutor;
+    private final BlobId.Factory blobIdFactory;
 
-    public PostgresMessageDAO(PostgresExecutor postgresExecutor) {
+    @Inject
+    public PostgresMessageDAO(PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
+        this.blobIdFactory = blobIdFactory;
     }
 
     public Mono<Void> insert(MailboxMessage message, String bodyBlobId) {
@@ -86,6 +92,13 @@ public class PostgresMessageDAO {
     public Mono<Void> deleteByMessageId(PostgresMessageId messageId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
             .where(MESSAGE_ID.eq(messageId.asUuid()))));
+    }
+
+    public Mono<BlobId> getBlobId(PostgresMessageId messageId) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(BODY_BLOB_ID)
+            .from(TABLE_NAME)
+            .where(MESSAGE_ID.eq(messageId.asUuid()))))
+            .map(record -> blobIdFactory.from(record.get(BODY_BLOB_ID)));
     }
 
 }
