@@ -14,6 +14,18 @@
 
     <name>Apache James :: Server :: JMAP (draft) :: RabbitMQ + Object Store + Cassandra Integration testing</name>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -111,6 +123,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>queue-rabbitmq-guice</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
         </dependency>
@@ -188,7 +206,7 @@
                             <groupId>org.apache.maven.plugins</groupId>
                             <artifactId>maven-surefire-plugin</artifactId>
                             <configuration>
-                                <excludedGroups />
+                                <excludedGroups/>
                                 <groups combine.self="override">org.apache.james.junit.categories.Unstable</groups>
                             </configuration>
                         </plugin>
