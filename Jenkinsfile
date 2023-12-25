@@ -45,7 +45,8 @@ pipeline {
                 'server/container/guice/postgres-common,' +
                 'server/container/guice/mailbox-postgres,' +
                 'server/apps/postgres-app,' +
-                'mpt/impl/imap-mailbox/postgres'
+                'mpt/impl/imap-mailbox/postgres,' +
+                'event-bus/postgres'
     }
 
     tools {

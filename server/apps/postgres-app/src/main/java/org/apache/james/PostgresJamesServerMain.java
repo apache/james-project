@@ -33,9 +33,9 @@ import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
+import org.apache.james.modules.events.PostgresDeadLetterModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
-import org.apache.james.modules.mailbox.MemoryDeadLetterModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -94,13 +94,13 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new PostgresDelegationStoreModule(),
         new DefaultProcessorsConfigurationProviderModule(),
         new PostgresMailboxModule(),
+        new PostgresDeadLetterModule(),
         new PostgresDataModule(),
         new MailboxModule(),
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
         new SievePostgresRepositoryModules(),
         new TaskManagerModule(),
-        new MemoryDeadLetterModule(),
         new MemoryEventStoreModule(),
         new TikaMailboxModule());
 

@@ -46,6 +46,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>dead-letter-postgres</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-file</artifactId>
         </dependency>
         <dependency>
