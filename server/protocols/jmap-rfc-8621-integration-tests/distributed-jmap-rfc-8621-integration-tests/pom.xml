@@ -30,6 +30,18 @@
     <name>Apache James :: Server :: JMAP RFC-8621 :: Distributed Integration Testing</name>
     <description>Distributed Integration testing for JMAP RFC-8621</description>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -125,6 +137,12 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>jmap-rfc-8621-integration-tests-common</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>queue-rabbitmq-guice</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
