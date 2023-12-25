@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.Flags;
 
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -49,7 +50,7 @@ public class UnseenSearchOverrideTest {
 
     @BeforeEach
     void setUp() {
-        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor());
+        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), new HashBlobId.Factory());
         postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
         testee = new UnseenSearchOverride(postgresMailboxMessageDAO);
     }

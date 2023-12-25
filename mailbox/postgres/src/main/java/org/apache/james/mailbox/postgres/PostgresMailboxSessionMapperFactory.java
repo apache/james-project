@@ -114,5 +114,4 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     public AttachmentMapper getAttachmentMapper(MailboxSession session) {
         throw new NotImplementedException("not implemented");
     }
-
 }

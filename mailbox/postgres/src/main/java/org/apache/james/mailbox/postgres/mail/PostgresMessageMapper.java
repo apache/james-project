@@ -106,7 +106,7 @@ public class PostgresMessageMapper implements MessageMapper {
                                  BlobStore blobStore,
                                  Clock clock,
                                  BlobId.Factory blobIdFactory) {
-        this.messageDAO = new PostgresMessageDAO(postgresExecutor);
+        this.messageDAO = new PostgresMessageDAO(postgresExecutor, blobIdFactory);
         this.mailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExecutor);
         this.mailboxDAO = new PostgresMailboxDAO(postgresExecutor);
         this.modSeqProvider = modSeqProvider;
