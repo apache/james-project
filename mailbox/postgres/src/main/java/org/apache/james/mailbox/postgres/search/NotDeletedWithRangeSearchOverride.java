@@ -22,6 +22,7 @@ package org.apache.james.mailbox.postgres.search;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.Mailbox;
@@ -32,13 +33,15 @@ import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class NotDeletedWithRangeSearchOverride implements ListeningMessageSearchIndex.SearchOverride {
-    private final PostgresMailboxMessageDAO dao;
+
+    private final PostgresExecutor.Factory executorFactory;
 
     @Inject
-    public NotDeletedWithRangeSearchOverride(PostgresMailboxMessageDAO dao) {
-        this.dao = dao;
+    public NotDeletedWithRangeSearchOverride(PostgresExecutor.Factory executorFactory) {
+        this.executorFactory = executorFactory;
     }
 
     @Override
@@ -72,8 +75,9 @@ public class NotDeletedWithRangeSearchOverride implements ListeningMessageSearch
 
         SearchQuery.UidRange[] uidRanges = uidArgument.getOperator().getRange();
 
-        return Flux.fromArray(uidRanges)
-            .concatMap(range -> dao.listNotDeletedUids((PostgresMailboxId) mailbox.getMailboxId(),
-                MessageRange.range(range.getLowValue(), range.getHighValue())));
+        return Mono.fromCallable(() -> new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())))
+            .flatMapMany(dao -> Flux.fromArray(uidRanges)
+                .concatMap(range -> dao.listNotDeletedUids((PostgresMailboxId) mailbox.getMailboxId(),
+                    MessageRange.range(range.getLowValue(), range.getHighValue()))));
     }
 }
