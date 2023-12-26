@@ -52,7 +52,7 @@ public class UnseenSearchOverrideTest {
     void setUp() {
         postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), new HashBlobId.Factory());
         postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
-        testee = new UnseenSearchOverride(postgresMailboxMessageDAO);
+        testee = new UnseenSearchOverride(postgresExtension.getExecutorFactory());
     }
 
     @Test
