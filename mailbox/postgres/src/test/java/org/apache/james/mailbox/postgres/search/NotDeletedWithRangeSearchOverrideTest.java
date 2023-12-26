@@ -53,7 +53,7 @@ public class NotDeletedWithRangeSearchOverrideTest {
     void setUp() {
         postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), new HashBlobId.Factory());
         postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
-        testee = new NotDeletedWithRangeSearchOverride(postgresMailboxMessageDAO);
+        testee = new NotDeletedWithRangeSearchOverride(postgresExtension.getExecutorFactory());
     }
 
     @Test
