@@ -21,7 +21,10 @@ package org.apache.james.imap.api;
 
 import java.util.Set;
 
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
+
 @FunctionalInterface
 public interface ConnectionCheckFactory {
-    Set<ConnectionCheck> create(ImapConfiguration imapConfiguration);
+    Set<ConnectionCheck> create(HierarchicalConfiguration<ImmutableNode> config);
 }

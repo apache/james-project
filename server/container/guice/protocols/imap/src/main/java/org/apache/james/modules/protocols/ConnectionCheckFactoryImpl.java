@@ -19,14 +19,15 @@
 
 package org.apache.james.modules.protocols;
 
-import java.util.Optional;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.api.ConnectionCheckFactory;
-import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
 
@@ -42,9 +43,9 @@ public class ConnectionCheckFactoryImpl implements ConnectionCheckFactory {
     }
 
     @Override
-    public Set<ConnectionCheck> create(ImapConfiguration imapConfiguration) {
-        return Optional.ofNullable(imapConfiguration.getAdditionalConnectionChecks())
-            .orElse(ImmutableSet.of())
+    public Set<ConnectionCheck> create(HierarchicalConfiguration<ImmutableNode> config) {
+        return Arrays.stream(config.getStringArray("additionalConnectionChecks"))
+            .collect(ImmutableSet.toImmutableSet())
             .stream()
             .map(ClassName::new)
             .map(Throwing.function(loader::instantiate))

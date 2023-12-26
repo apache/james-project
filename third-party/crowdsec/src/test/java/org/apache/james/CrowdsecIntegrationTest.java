@@ -23,8 +23,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 import static org.apache.james.model.CrowdsecClientConfiguration.DEFAULT_API_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Files;
@@ -37,6 +39,7 @@ import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.model.CrowdsecClientConfiguration;
 import org.apache.james.model.CrowdsecDecision;
 import org.apache.james.model.CrowdsecHttpClient;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.TestIMAPClient;
@@ -101,9 +104,12 @@ class CrowdsecIntegrationTest {
     }
 
     private Path createHaProxyConfigFile(GuiceJamesServer server, Path tempDir) throws IOException {
-        String smtpServerWithProxySupportIp = crowdsecExtension.getCrowdsecContainer().getContainerInfo().getNetworkSettings()
+        String jamesServerWithProxySupportIp = crowdsecExtension.getCrowdsecContainer().getContainerInfo().getNetworkSettings()
             .getGateway(); // James server listens at the docker bridge network's gateway IP
         int smtpWithProxySupportPort = server.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort().getValue();
+        int imapWithProxySupportPort = server.getProbe(ImapGuiceProbe.class)
+            .getPort(asyncServer -> asyncServer.getHelloName().equals("imapServerWithProxyEnabled"))
+            .get();
         String haproxyConfigContent = String.format("global\n" +
                 "  log stdout format raw local0 info\n" +
                 "\n" +
@@ -120,8 +126,16 @@ class CrowdsecIntegrationTest {
                 "  default_backend james-server-smtp\n" +
                 "\n" +
                 "backend james-server-smtp\n" +
-                "  server james1 %s:%d send-proxy\n",
-            smtpServerWithProxySupportIp, smtpWithProxySupportPort);
+                "  server james1 %s:%d send-proxy\n" +
+                "\n" +
+                "frontend imap-frontend\n" +
+                "  bind :143\n" +
+                "  default_backend james-server-imap\n" +
+                "\n" +
+                "backend james-server-imap\n" +
+                "  server james2 %s:%d send-proxy\n",
+            jamesServerWithProxySupportIp, smtpWithProxySupportPort,
+            jamesServerWithProxySupportIp, imapWithProxySupportPort);
         Path haProxyConfigFile = tempDir.resolve("haproxy.cfg");
         Files.write(haProxyConfigFile, haproxyConfigContent.getBytes());
 
@@ -131,6 +145,76 @@ class CrowdsecIntegrationTest {
     @AfterEach
     void teardown() {
         haProxyExtension.stop();
+    }
+
+    @Nested
+    class IMAP {
+        @Test
+        void ipShouldBeBannedByCrowdSecWhenFailingToImapLoginThreeTimes(GuiceJamesServer server) {
+            // GIVEN an IP failed to log in 3 consecutive times in a short period
+            IntStream.range(0, 3)
+                .forEach(any ->
+                    assertThatThrownBy(() -> testIMAPClient.connect("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort())
+                        .login(BOB, BAD_PASSWORD))
+                        .isInstanceOf(IOException.class)
+                        .hasMessage("Login failed"));
+
+            // THEN connection from the IP would be blocked. CrowdSec takes time to processing the ban decision therefore the await below.
+            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThatThrownBy(() -> testIMAPClient.connect("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort()))
+                    .isInstanceOf(EOFException.class)
+                    .hasMessage("Connection closed without indication."));
+        }
+
+        @Test
+        void imapConnectionShouldRejectedAfterThreeFailedIMAPAuthenticationsViaProxy() {
+            // GIVEN a client connected via proxy failed to log in 3 consecutive times in a short period
+            IntStream.range(0, 3)
+                .forEach(Throwing.intConsumer(any -> {
+                    assertThatThrownBy(() -> testIMAPClient.connect(LOCALHOST_IP, haProxyExtension.getProxiedImapPort())
+                        .login(BOB, BAD_PASSWORD))
+                        .isInstanceOf(IOException.class)
+                        .hasMessage("Login failed");
+                }));
+
+            // THEN IMAP connection from the client would be blocked.
+            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThatThrownBy(() -> testIMAPClient.connect(LOCALHOST_IP, haProxyExtension.getProxiedImapPort())
+                    .login(BOB, BOB_PASSWORD))
+                    .isInstanceOf(EOFException.class)
+                    .hasMessage("Connection closed without indication."));
+        }
+
+        @Test
+        void shouldBanRealClientIpAndNotProxyIp() {
+            // GIVEN a client connected via proxy failed to log in 3 consecutive times in a short period
+            IntStream.range(0, 3)
+                .forEach(Throwing.intConsumer(any -> {
+                    assertThatThrownBy(() -> testIMAPClient.connect(LOCALHOST_IP, haProxyExtension.getProxiedImapPort())
+                        .login(BOB, BAD_PASSWORD))
+                        .isInstanceOf(IOException.class)
+                        .hasMessage("Login failed");
+                }));
+
+            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThatThrownBy(() -> testIMAPClient.connect(LOCALHOST_IP, haProxyExtension.getProxiedImapPort())
+                    .login(BOB, BOB_PASSWORD))
+                    .isInstanceOf(EOFException.class)
+                    .hasMessage("Connection closed without indication."));
+
+            // THEN real client IP must be banned, not proxy IP
+            String realClientIp = haProxyExtension.getHaproxyContainer().getContainerInfo().getNetworkSettings()
+                .getGateway(); // client connect to HAProxy container via the docker bridge network's gateway IP
+            String haProxyIp = haProxyExtension.getHaproxyContainer().getContainerInfo().getNetworkSettings()
+                .getIpAddress();
+
+            List<CrowdsecDecision> decisions = crowdsecClient.getCrowdsecDecisions().block();
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(decisions).hasSize(1);
+                softly.assertThat(decisions.get(0).getValue()).isEqualTo(realClientIp);
+                softly.assertThat(decisions.get(0).getValue()).isNotEqualTo(haProxyIp);
+            });
+        }
     }
 
     @Nested

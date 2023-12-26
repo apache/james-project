@@ -27,8 +27,6 @@ import javax.inject.Inject;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -41,7 +39,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 public class CrowdsecHttpClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CrowdsecHttpClient.class);
     private static final String GET_DECISION = "/decisions";
 
     private final HttpClient httpClient;
@@ -88,6 +85,7 @@ public class CrowdsecHttpClient {
 
     private HttpClient buildReactorNettyHttpClient(CrowdsecClientConfiguration configuration) {
         return HttpClient.create()
+            .disableRetry(true)
             .responseTimeout(DEFAULT_TIMEOUT)
             .baseUrl(configuration.getUrl().toString())
             .headers(headers -> headers.add("X-Api-Key", configuration.getApiKey()))

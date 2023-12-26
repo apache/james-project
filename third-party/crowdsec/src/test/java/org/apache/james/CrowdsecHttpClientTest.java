@@ -33,18 +33,12 @@ import org.apache.james.model.CrowdsecClientConfiguration;
 import org.apache.james.model.CrowdsecDecision;
 import org.apache.james.model.CrowdsecHttpClient;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CrowdsecHttpClientTest {
     @RegisterExtension
     static CrowdsecExtension crowdsecExtension = new CrowdsecExtension();
-
-    @BeforeAll
-    static void setUp() throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "bouncer", "add", "bouncer", "-k", DEFAULT_API_KEY);
-    }
 
     @Test
     void getDecisionsWhenBanningAnIP() throws IOException, InterruptedException {

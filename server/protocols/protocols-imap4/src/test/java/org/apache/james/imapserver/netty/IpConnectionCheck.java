@@ -25,16 +25,19 @@ import java.util.Set;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.reactivestreams.Publisher;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Mono;
 
 public class IpConnectionCheck implements ConnectionCheck {
     private Set<String> bannedIps = Set.of();
 
     @Override
+    @VisibleForTesting
     public Publisher<Void> validate(InetSocketAddress remoteAddress) {
-        String ip = remoteAddress.getHostName();
+        String ip = remoteAddress.getAddress().getHostAddress();
         // check against bannedIps
-        if (bannedIps.stream().anyMatch(bannedIp -> bannedIp.equals(ip))) {
+        if (bannedIps.contains(ip)) {
             return Mono.error(() -> new RuntimeException("Banned"));
         } else {
             return Mono.empty();
