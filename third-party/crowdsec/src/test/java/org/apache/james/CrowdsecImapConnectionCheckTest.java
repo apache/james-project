@@ -28,7 +28,6 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 
 import org.apache.james.model.CrowdsecClientConfiguration;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -37,11 +36,6 @@ import reactor.core.publisher.Mono;
 public class CrowdsecImapConnectionCheckTest {
     @RegisterExtension
     static CrowdsecExtension crowdsecExtension = new CrowdsecExtension();
-
-    @BeforeAll
-    static void setUp() throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "bouncer", "add", "bouncer", "-k", DEFAULT_API_KEY);
-    }
 
     @Test
     void givenIPBannedByCrowdsecDecisionIp() throws IOException, InterruptedException {

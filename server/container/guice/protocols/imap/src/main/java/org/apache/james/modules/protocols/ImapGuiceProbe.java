@@ -59,7 +59,7 @@ public class ImapGuiceProbe implements GuiceProbe {
             .orElseThrow(() -> new IllegalStateException("IMAPS server not defined"));
     }
 
-    private Optional<Integer> getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
+    public Optional<Integer> getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
         return imapServerFactory.getServers().stream()
             .filter(filter)
             .findFirst()

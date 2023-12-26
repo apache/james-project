@@ -20,7 +20,6 @@
 package org.apache.james;
 
 import static org.apache.james.CrowdsecExtension.CROWDSEC_PORT;
-import static org.apache.james.model.CrowdsecClientConfiguration.DEFAULT_API_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -30,7 +29,6 @@ import org.apache.james.model.CrowdsecClientConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,11 +38,6 @@ class CrowdsecEhloHookTest {
 
     @RegisterExtension
     static CrowdsecExtension crowdsecExtension = new CrowdsecExtension();
-
-    @BeforeAll
-    static void setUp() throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "bouncer", "add", "bouncer", "-k", DEFAULT_API_KEY);
-    }
 
     @BeforeEach
     void setUpEach() throws IOException {

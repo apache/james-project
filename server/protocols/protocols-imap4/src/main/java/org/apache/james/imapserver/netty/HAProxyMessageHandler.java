@@ -69,7 +69,8 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
                 LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
                 // Refresh MDC info to account for proxying
                 MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx);
-                Flux.fromIterable(connectionChecks).concatMap(connectionCheck -> connectionCheck.validate(sourceIP)).then().block();
+
+                performConnectionCheck(sourceIP);
 
                 if (imapSession != null) {
                     imapSession.setAttribute(MDC_KEY, boundMDC);
@@ -82,6 +83,15 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
             super.channelReadComplete(ctx);
         } else {
             super.channelRead(ctx, msg);
+        }
+    }
+
+    private void performConnectionCheck(InetSocketAddress realClientIp) {
+        if (!connectionChecks.isEmpty()) {
+            Flux.fromIterable(connectionChecks)
+                .concatMap(connectionCheck -> connectionCheck.validate(realClientIp))
+                .then()
+                .block();
         }
     }
 }

@@ -19,7 +19,6 @@
 package org.apache.james.imapserver.netty;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -29,7 +28,6 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.imap.ImapSuite;
 import org.apache.james.imap.api.ConnectionCheckFactory;
-import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.encode.ImapEncoder;
@@ -39,7 +37,6 @@ import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.protocols.lib.netty.AbstractServerFactory;
 
 import com.github.fge.lambdas.functions.ThrowingFunction;
-import com.google.common.collect.ImmutableSet;
 
 public class IMAPServerFactory extends AbstractServerFactory {
 
@@ -71,11 +68,8 @@ public class IMAPServerFactory extends AbstractServerFactory {
 
     protected IMAPServer createServer(HierarchicalConfiguration<ImmutableNode> config) {
         ImapSuite imapSuite = imapSuiteProvider.apply(config);
-        ImmutableSet<String> connectionChecks = Arrays.stream(config.getStringArray("additionalConnectionChecks")).collect(ImmutableSet.toImmutableSet());
 
-        return new IMAPServer(imapSuite.getDecoder(), imapSuite.getEncoder(), imapSuite.getProcessor(), imapMetrics, gaugeRegistry, connectionCheckFactory.create(ImapConfiguration.builder()
-            .connectionChecks(connectionChecks)
-            .build()));
+        return new IMAPServer(imapSuite.getDecoder(), imapSuite.getEncoder(), imapSuite.getProcessor(), imapMetrics, gaugeRegistry, connectionCheckFactory.create(config));
     }
 
     @Override
@@ -91,7 +85,7 @@ public class IMAPServerFactory extends AbstractServerFactory {
         }
 
         return servers;
-        
+
     }
 
 }
