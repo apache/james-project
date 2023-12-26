@@ -197,10 +197,10 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         ctx.channel().attr(LINEARALIZER_ATTRIBUTE_KEY).set(new Linearalizer());
         MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx)
             .addToContext(MDCBuilder.SESSION_ID, sessionId.asString());
-        if (!proxyRequired) {
-            Flux.fromIterable(connectionChecks).concatMap(connectionCheck -> connectionCheck.validate(imapsession.getRemoteAddress())).then().block();
-        }
         imapsession.setAttribute(MDC_KEY, boundMDC);
+
+        performConnectionCheck(imapsession.getRemoteAddress());
+
         try (Closeable closeable = mdc(imapsession).build()) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             LOGGER.info("Connection established from {}", address.getAddress().getHostAddress());
@@ -214,6 +214,15 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             super.channelActive(ctx);
         }
 
+    }
+
+    private void performConnectionCheck(InetSocketAddress clientIp) {
+        if (!connectionChecks.isEmpty() && !proxyRequired) {
+            Flux.fromIterable(connectionChecks)
+                .concatMap(connectionCheck -> connectionCheck.validate(clientIp))
+                .then()
+                .block();
+        }
     }
 
     private MDCBuilder mdc(ChannelHandlerContext ctx) {
