@@ -59,6 +59,10 @@ public class BlobStoreConfiguration {
         default RequireCache s3() {
             return implementation(BlobStoreImplName.S3);
         }
+
+        default RequireCache postgres() {
+            return implementation(BlobStoreImplName.POSTGRES);
+        }
     }
 
     @FunctionalInterface
@@ -108,7 +112,8 @@ public class BlobStoreConfiguration {
     public enum BlobStoreImplName {
         CASSANDRA("cassandra"),
         FILE("file"),
-        S3("s3");
+        S3("s3"),
+        POSTGRES("postgres");
 
         static String supportedImplNames() {
             return Stream.of(BlobStoreImplName.values())
