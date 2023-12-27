@@ -37,6 +37,7 @@
         <module>blob/deduplication-gc</module>
         <module>blob/export</module>
         <module>blob/memory</module>
+        <module>blob/postgres</module>
         <module>blob/s3</module>
         <module>cassandra</module>
         <module>common</module>
