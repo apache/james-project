@@ -38,7 +38,7 @@ import java.util.function.Function;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
@@ -100,7 +100,7 @@ public class PostgresMessageMapper implements MessageMapper {
     private final Clock clock;
     private final BlobId.Factory blobIdFactory;
 
-    public PostgresMessageMapper(PostgresExecutor postgresExecutor,
+    public PostgresMessageMapper(DefaultPostgresExecutor postgresExecutor,
                                  PostgresModSeqProvider modSeqProvider,
                                  PostgresUidProvider uidProvider,
                                  BlobStore blobStore,

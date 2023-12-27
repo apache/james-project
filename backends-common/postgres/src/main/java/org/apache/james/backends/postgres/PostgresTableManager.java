@@ -22,7 +22,7 @@ package org.apache.james.backends.postgres;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,14 +33,14 @@ import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PostgresTableManager implements Provider<PostgresExecutor> {
+public class PostgresTableManager implements Provider<DefaultPostgresExecutor> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
     private final PostgresModule module;
     private final boolean rowLevelSecurityEnabled;
 
     @Inject
-    public PostgresTableManager(PostgresExecutor.Factory factory,
+    public PostgresTableManager(DefaultPostgresExecutor.Factory factory,
                                 PostgresModule module,
                                 PostgresConfiguration postgresConfiguration) {
         this.postgresExecutor = factory.create();
@@ -50,7 +50,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     @VisibleForTesting
-    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, boolean rowLevelSecurityEnabled) {
+    public PostgresTableManager(DefaultPostgresExecutor postgresExecutor, PostgresModule module, boolean rowLevelSecurityEnabled) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
@@ -72,8 +72,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     public Mono<Void> initializeTables() {
-        return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tables())
+        return postgresExecutor.executeVoid(dsl -> Flux.fromIterable(module.tables())
                 .flatMap(table -> Mono.from(table.getCreateTableStepFunction().apply(dsl))
                     .then(alterTableIfNeeded(table))
                     .doOnSuccess(any -> LOGGER.info("Table {} created", table.getName()))
@@ -138,8 +137,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     public Mono<Void> truncate() {
-        return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tables())
+        return postgresExecutor.executeVoid(dsl -> Flux.fromIterable(module.tables())
                 .flatMap(table -> Mono.from(dsl.truncateTable(table.getName()))
                     .doOnSuccess(any -> LOGGER.info("Table {} truncated", table.getName()))
                     .doOnError(e -> LOGGER.error("Error while truncating table {}", table.getName(), e)))
@@ -147,8 +145,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     public Mono<Void> initializeTableIndexes() {
-        return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tableIndexes())
+        return postgresExecutor.executeVoid(dsl -> Flux.fromIterable(module.tableIndexes())
                 .concatMap(index -> Mono.from(index.getCreateIndexStepFunction().apply(dsl))
                     .doOnSuccess(any -> LOGGER.info("Index {} created", index.getName()))
                     .onErrorResume(e -> handleIndexCreationException(index, e)))
@@ -164,7 +161,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     @Override
-    public PostgresExecutor get() {
+    public DefaultPostgresExecutor get() {
         return postgresExecutor;
     }
 }

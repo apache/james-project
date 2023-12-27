@@ -57,7 +57,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -107,10 +107,10 @@ public class PostgresMailboxMessageDAO {
             .orElse(queryWithoutLimit);
     }
 
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresMailboxMessageDAO(PostgresExecutor postgresExecutor) {
+    public PostgresMailboxMessageDAO(DefaultPostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

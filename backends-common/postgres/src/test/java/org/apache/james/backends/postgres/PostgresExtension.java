@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -65,9 +65,9 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private final boolean rlsEnabled;
     private final PostgresFixture.Database selectedDatabase;
     private PostgresConfiguration postgresConfiguration;
-    private PostgresExecutor postgresExecutor;
+    private DefaultPostgresExecutor postgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
-    private PostgresExecutor.Factory executorFactory;
+    private DefaultPostgresExecutor.Factory executorFactory;
 
     public void pause() {
         PG_CONTAINER.getDockerClient().pauseContainerCmd(PG_CONTAINER.getContainerId())
@@ -139,9 +139,9 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
 
         if (rlsEnabled) {
-            executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory));
+            executorFactory = new DefaultPostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory));
         } else {
-            executorFactory = new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connectionFactory.create()
+            executorFactory = new DefaultPostgresExecutor.Factory(new SinglePostgresConnectionFactory(connectionFactory.create()
                 .cache()
                 .cast(Connection.class).block()));
         }
@@ -192,7 +192,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         return postgresExecutor.connection();
     }
 
-    public PostgresExecutor getPostgresExecutor() {
+    public DefaultPostgresExecutor getPostgresExecutor() {
         return postgresExecutor;
     }
 
@@ -200,7 +200,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         return connectionFactory;
     }
 
-    public PostgresExecutor.Factory getExecutorFactory() {
+    public DefaultPostgresExecutor.Factory getExecutorFactory() {
         return executorFactory;
     }
 

@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository.postgres;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.DefaultPostgresExecutor.DEFAULT_INJECT;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryUrlTable.TABLE_NAME;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryUrlTable.URL;
 
@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
@@ -37,10 +37,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresMailRepositoryUrlStore implements MailRepositoryUrlStore {
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresMailRepositoryUrlStore(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor) {
+    public PostgresMailRepositoryUrlStore(@Named(DEFAULT_INJECT) DefaultPostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

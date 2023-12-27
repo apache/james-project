@@ -54,7 +54,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
@@ -89,13 +89,13 @@ import reactor.core.publisher.Mono;
 public class PostgresMailRepository implements MailRepository {
     private static final String HEADERS_SEPARATOR = ";  ";
 
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
     private final MailRepositoryUrl url;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMailRepository(PostgresExecutor postgresExecutor,
+    public PostgresMailRepository(DefaultPostgresExecutor postgresExecutor,
                                   MailRepositoryUrl url,
                                   MimeMessageStore.Factory mimeMessageStoreFactory,
                                   BlobId.Factory blobIdFactory) {

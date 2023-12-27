@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.postgres.mail;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -34,14 +34,14 @@ public class PostgresModSeqProvider implements ModSeqProvider {
 
     public static class Factory {
 
-        private final PostgresExecutor.Factory executorFactory;
+        private final DefaultPostgresExecutor.Factory executorFactory;
 
-        public Factory(PostgresExecutor.Factory executorFactory) {
+        public Factory(DefaultPostgresExecutor.Factory executorFactory) {
             this.executorFactory = executorFactory;
         }
 
         public PostgresModSeqProvider create(MailboxSession session) {
-            PostgresExecutor postgresExecutor = executorFactory.create(session.getUser().getDomainPart());
+            DefaultPostgresExecutor postgresExecutor = executorFactory.create(session.getUser().getDomainPart());
             return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExecutor));
         }
     }

@@ -33,10 +33,10 @@ import reactor.core.publisher.Mono;
 
 public class PostgresHealthCheck implements HealthCheck {
     public static final ComponentName COMPONENT_NAME = new ComponentName("Postgres");
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresHealthCheck(PostgresExecutor postgresExecutor) {
+    public PostgresHealthCheck(DefaultPostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

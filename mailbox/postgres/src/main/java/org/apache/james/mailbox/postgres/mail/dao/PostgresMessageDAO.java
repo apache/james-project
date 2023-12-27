@@ -45,7 +45,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -56,11 +56,11 @@ import reactor.core.scheduler.Schedulers;
 
 public class PostgresMessageDAO {
     public static final long DEFAULT_LONG_VALUE = 0L;
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMessageDAO(PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
+    public PostgresMessageDAO(DefaultPostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
         this.blobIdFactory = blobIdFactory;
     }

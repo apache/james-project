@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.LongStream;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -41,14 +41,14 @@ public class PostgresUidProvider implements UidProvider {
 
     public static class Factory {
 
-        private final PostgresExecutor.Factory executorFactory;
+        private final DefaultPostgresExecutor.Factory executorFactory;
 
-        public Factory(PostgresExecutor.Factory executorFactory) {
+        public Factory(DefaultPostgresExecutor.Factory executorFactory) {
             this.executorFactory = executorFactory;
         }
 
         public PostgresUidProvider create(MailboxSession session) {
-            PostgresExecutor postgresExecutor = executorFactory.create(session.getUser().getDomainPart());
+            DefaultPostgresExecutor postgresExecutor = executorFactory.create(session.getUser().getDomainPart());
             return new PostgresUidProvider(new PostgresMailboxDAO(postgresExecutor));
         }
     }

@@ -20,118 +20,43 @@
 package org.apache.james.backends.postgres.utils;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
-import javax.inject.Inject;
-
-import org.apache.james.core.Domain;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;
 import org.jooq.conf.StatementType;
-import org.jooq.impl.DSL;
 import org.reactivestreams.Publisher;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.R2dbcBadGrammarException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
+import reactor.util.retry.RetryBackoffSpec;
 
-public class PostgresExecutor {
-
-    public static final String DEFAULT_INJECT = "default";
-    public static final int MAX_RETRY_ATTEMPTS = 5;
-    public static final Duration MIN_BACKOFF = Duration.ofMillis(1);
-
-    public static class Factory {
-
-        private final JamesPostgresConnectionFactory jamesPostgresConnectionFactory;
-
-        @Inject
-        public Factory(JamesPostgresConnectionFactory jamesPostgresConnectionFactory) {
-            this.jamesPostgresConnectionFactory = jamesPostgresConnectionFactory;
-        }
-
-        public PostgresExecutor create(Optional<Domain> domain) {
-            return new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(domain));
-        }
-
-        public PostgresExecutor create() {
-            return create(Optional.empty());
-        }
-    }
-
-    private static final SQLDialect PGSQL_DIALECT = SQLDialect.POSTGRES;
-    private static final Settings SETTINGS = new Settings()
+public interface PostgresExecutor {
+    SQLDialect PGSQL_DIALECT = SQLDialect.POSTGRES;
+    Settings SETTINGS = new Settings()
         .withRenderFormatted(true)
         .withStatementType(StatementType.PREPARED_STATEMENT);
-    private final Mono<Connection> connection;
-
-    private PostgresExecutor(Mono<Connection> connection) {
-        this.connection = connection;
-    }
-
-    public Mono<DSLContext> dslContext() {
-        return connection.map(con -> DSL.using(con, PGSQL_DIALECT, SETTINGS));
-    }
-
-    public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
-        return dslContext()
-            .flatMap(queryFunction)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                .filter(preparedStatementConflictException()))
-            .then();
-    }
-
-    public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
-        return dslContext()
-            .flatMapMany(queryFunction)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                .filter(preparedStatementConflictException()));
-    }
-
-    public Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction) {
-        return dslContext()
-            .flatMap(queryFunction.andThen(Mono::from))
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                .filter(preparedStatementConflictException()));
-    }
-
-    public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
-        return dslContext()
-            .flatMap(queryFunction)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                .filter(preparedStatementConflictException()))
-            .map(Record1::value1);
-    }
-
-    public Mono<Long> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
-        return dslContext()
-            .flatMap(queryFunction)
-            .cast(Long.class)
-            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                .filter(preparedStatementConflictException()));
-    }
-
-    public Mono<Connection> connection() {
-        return connection;
-    }
-
-    @VisibleForTesting
-    public Mono<Void> dispose() {
-        return connection.flatMap(con -> Mono.from(con.close()));
-    }
-
-    private Predicate<Throwable> preparedStatementConflictException() {
-        return throwable -> throwable.getCause() instanceof R2dbcBadGrammarException
+    RetryBackoffSpec RETRY_BACKOFF_SPEC = Retry.backoff(5, Duration.ofMillis(1))
+        .filter(throwable -> throwable.getCause() instanceof R2dbcBadGrammarException
             && throwable.getMessage().contains("prepared statement")
-            && throwable.getMessage().contains("already exists");
-    }
+            && throwable.getMessage().contains("already exists"));
+
+    Mono<Connection> connection();
+
+    Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction);
+
+    Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction);
+
+    Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction);
+
+    Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction);
+
+    Mono<Long> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction);
+
 }

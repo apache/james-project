@@ -19,7 +19,7 @@
 
 package org.apache.james.user.postgres;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.DefaultPostgresExecutor.DEFAULT_INJECT;
 import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.ALGORITHM;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.AUTHORIZED_USERS;
@@ -36,7 +36,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -57,12 +57,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresUsersDAO implements UsersDAO {
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
     private final Algorithm algorithm;
     private final Algorithm.HashingMode fallbackHashingMode;
 
     @Inject
-    public PostgresUsersDAO(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor,
+    public PostgresUsersDAO(@Named(DEFAULT_INJECT) DefaultPostgresExecutor postgresExecutor,
                             PostgresUsersRepositoryConfiguration postgresUsersRepositoryConfiguration) {
         this.postgresExecutor = postgresExecutor;
         this.algorithm = postgresUsersRepositoryConfiguration.getPreferredAlgorithm();

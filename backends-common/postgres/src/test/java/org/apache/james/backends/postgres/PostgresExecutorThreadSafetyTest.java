@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
@@ -51,7 +51,7 @@ class PostgresExecutorThreadSafetyTest {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.empty();
 
-    private static PostgresExecutor postgresExecutor;
+    private static DefaultPostgresExecutor postgresExecutor;
 
     @BeforeAll
     static void beforeAll() {

@@ -25,7 +25,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.Mailbox;
@@ -42,10 +42,10 @@ import reactor.core.publisher.Mono;
 
 public class UnseenSearchOverride implements ListeningMessageSearchIndex.SearchOverride {
 
-    private final PostgresExecutor.Factory executorFactory;
+    private final DefaultPostgresExecutor.Factory executorFactory;
 
     @Inject
-    public UnseenSearchOverride(PostgresExecutor.Factory executorFactory) {
+    public UnseenSearchOverride(DefaultPostgresExecutor.Factory executorFactory) {
         this.executorFactory = executorFactory;
     }
 

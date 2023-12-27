@@ -21,7 +21,7 @@ package org.apache.james.mailrepository.postgres;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -29,12 +29,12 @@ import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 public class PostgresMailRepositoryFactory implements MailRepositoryFactory {
-    private final PostgresExecutor executor;
+    private final DefaultPostgresExecutor executor;
     private final MimeMessageStore.Factory mimeMessageStoreFactory;
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMailRepositoryFactory(PostgresExecutor executor, MimeMessageStore.Factory mimeMessageStoreFactory, BlobId.Factory blobIdFactory) {
+    public PostgresMailRepositoryFactory(DefaultPostgresExecutor executor, MimeMessageStore.Factory mimeMessageStoreFactory, BlobId.Factory blobIdFactory) {
         this.executor = executor;
         this.mimeMessageStoreFactory = mimeMessageStoreFactory;
         this.blobIdFactory = blobIdFactory;

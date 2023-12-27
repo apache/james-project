@@ -26,7 +26,7 @@ import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEve
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.jooq.Record;
 
 import com.github.fge.lambdas.Throwing;
@@ -36,11 +36,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresEventDeadLetters implements EventDeadLetters {
-    private final PostgresExecutor postgresExecutor;
+    private final DefaultPostgresExecutor postgresExecutor;
     private final EventSerializer eventSerializer;
 
     @Inject
-    public PostgresEventDeadLetters(PostgresExecutor postgresExecutor, EventSerializer eventSerializer) {
+    public PostgresEventDeadLetters(DefaultPostgresExecutor postgresExecutor, EventSerializer eventSerializer) {
         this.postgresExecutor = postgresExecutor;
         this.eventSerializer = eventSerializer;
     }
