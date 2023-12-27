@@ -235,6 +235,23 @@ class BlobStoreConfigurationTest {
     }
 
     @Test
+    void provideChoosingConfigurationShouldReturnPostgresFactoryWhenConfigurationImplIsPostgres() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.POSTGRES.getName());
+        configuration.addProperty("deduplication.enable", "false");
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(parse(propertyProvider))
+            .isEqualTo(BlobStoreConfiguration.builder()
+                .postgres()
+                .disableCache()
+                .passthrough()
+                .noCryptoConfig());
+    }
+
+    @Test
     void fromShouldThrowWhenBlobStoreImplIsMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
