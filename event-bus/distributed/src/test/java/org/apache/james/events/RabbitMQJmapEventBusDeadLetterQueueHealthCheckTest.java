@@ -47,19 +47,17 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-class RabbitMQEventBusDeadLetterQueueHealthCheckTest {
+class RabbitMQJmapEventBusDeadLetterQueueHealthCheckTest {
     @RegisterExtension
     RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
         .isolationPolicy(RabbitMQExtension.IsolationPolicy.STRONG);
 
     public static final ImmutableMap<String, Object> NO_QUEUE_DECLARE_ARGUMENTS = ImmutableMap.of();
-    public static final NamingStrategy MAILBOX_EVENTS_NAMING_STRATEGY = new NamingStrategy(new EventBusName("mailboxEvents"));
-    public static final String ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS = "mailboxEventsRoutingKey";
-    public static final String ROUTING_KEY_JMAP_EVENTS_EVENT_BUS = "mailboxEventsRoutingKey";
+    public static final String ROUTING_KEY_JMAP_EVENTS_EVENT_BUS = "jmapEventsRoutingKey";
 
     private Connection connection;
     private Channel channel;
-    private RabbitMQEventBusDeadLetterQueueHealthCheck testee;
+    private RabbitMQJmapEventBusDeadLetterQueueHealthCheck testee;
 
     @BeforeEach
     void setup(DockerRabbitMQ rabbitMQ) throws IOException, TimeoutException, URISyntaxException {
@@ -67,7 +65,7 @@ class RabbitMQEventBusDeadLetterQueueHealthCheckTest {
         connectionFactory.setNetworkRecoveryInterval(1000);
         connection = connectionFactory.newConnection();
         channel = connection.createChannel();
-        testee = new RabbitMQEventBusDeadLetterQueueHealthCheck(rabbitMQ.getConfiguration(), MAILBOX_EVENTS_NAMING_STRATEGY);
+        testee = new RabbitMQJmapEventBusDeadLetterQueueHealthCheck(rabbitMQ.getConfiguration());
     }
 
     @AfterEach
@@ -84,8 +82,7 @@ class RabbitMQEventBusDeadLetterQueueHealthCheckTest {
     }
 
     @Test
-    void healthCheckShouldReturnHealthyWhenDeadLetterQueuesAreEmpty() throws Exception {
-        createDeadLetterQueue(channel, MAILBOX_EVENTS_NAMING_STRATEGY, ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS);
+    void healthCheckShouldReturnHealthyWhenJmapEventBusDeadLetterQueueIsEmpty() throws Exception {
         createDeadLetterQueue(channel, NamingStrategy.JMAP_NAMING_STRATEGY, ROUTING_KEY_JMAP_EVENTS_EVENT_BUS);
 
         assertThat(testee.check().block().isHealthy()).isTrue();
@@ -97,29 +94,8 @@ class RabbitMQEventBusDeadLetterQueueHealthCheckTest {
     }
 
     @Test
-    void healthCheckShouldReturnDegradedWhenMailboxEventBusDeadLetterQueueIsNotEmpty() throws Exception {
-        createDeadLetterQueue(channel, MAILBOX_EVENTS_NAMING_STRATEGY, ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS);
-        createDeadLetterQueue(channel, NamingStrategy.JMAP_NAMING_STRATEGY, ROUTING_KEY_JMAP_EVENTS_EVENT_BUS);
-        publishAMessage(channel, ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS);
-
-        awaitAtMostOneMinute.until(() -> testee.check().block().isDegraded());
-    }
-
-    @Test
     void healthCheckShouldReturnDegradedWhenJmapEventBusDeadLetterQueueIsNotEmpty() throws Exception {
-        createDeadLetterQueue(channel, MAILBOX_EVENTS_NAMING_STRATEGY, ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS);
         createDeadLetterQueue(channel, NamingStrategy.JMAP_NAMING_STRATEGY, ROUTING_KEY_JMAP_EVENTS_EVENT_BUS);
-        publishAMessage(channel, ROUTING_KEY_JMAP_EVENTS_EVENT_BUS);
-
-        awaitAtMostOneMinute.until(() -> testee.check().block().isDegraded());
-    }
-
-    @Test
-    void healthCheckShouldReturnDegradedWhenDeadLetterQueuesAreNotEmpty() throws Exception {
-        createDeadLetterQueue(channel, MAILBOX_EVENTS_NAMING_STRATEGY, ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS);
-        createDeadLetterQueue(channel, NamingStrategy.JMAP_NAMING_STRATEGY, ROUTING_KEY_JMAP_EVENTS_EVENT_BUS);
-
-        publishAMessage(channel, ROUTING_KEY_MAILBOX_EVENTS_EVENT_BUS);
         publishAMessage(channel, ROUTING_KEY_JMAP_EVENTS_EVENT_BUS);
 
         awaitAtMostOneMinute.until(() -> testee.check().block().isDegraded());

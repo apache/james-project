@@ -136,9 +136,10 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
 
         assertThat(listComponentNames).containsOnly("Guice application lifecycle", "EmptyErrorMailRepository",
             "RabbitMQ backend", "RabbitMQMailQueueDeadLetterQueueHealthCheck",
-            "RabbitMQEventBusDeadLetterQueueHealthCheck", "MailReceptionCheck",
+            "RabbitMQMailboxEventBusDeadLetterQueueHealthCheck", "MailReceptionCheck",
             "Cassandra backend", "EventDeadLettersHealthCheck", "MessageFastViewProjection",
             "RabbitMQMailQueue BrowseStart", "OpenSearch Backend", "ObjectStorage", "DistributedTaskManagerConsumers",
-            "EventbusConsumers-jmapEvent", "MailQueueConsumers", "EventbusConsumers-mailboxEvent");
+            "EventbusConsumers-jmapEvent", "MailQueueConsumers", "EventbusConsumers-mailboxEvent",
+            "RabbitMQJmapEventBusDeadLetterQueueHealthCheck");
     }
 }
