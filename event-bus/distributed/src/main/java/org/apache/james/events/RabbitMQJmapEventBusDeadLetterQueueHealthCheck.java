@@ -30,18 +30,16 @@ import org.apache.james.core.healthcheck.Result;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class RabbitMQEventBusDeadLetterQueueHealthCheck implements HealthCheck {
-    public static final ComponentName COMPONENT_NAME = new ComponentName("RabbitMQEventBusDeadLetterQueueHealthCheck");
+public class RabbitMQJmapEventBusDeadLetterQueueHealthCheck implements HealthCheck {
+    public static final ComponentName COMPONENT_NAME = new ComponentName("RabbitMQJmapEventBusDeadLetterQueueHealthCheck");
     private static final String DEFAULT_VHOST = "/";
 
     private final RabbitMQConfiguration configuration;
-    private final NamingStrategy mailboxEventNamingStrategy;
     private final RabbitMQManagementAPI api;
 
     @Inject
-    public RabbitMQEventBusDeadLetterQueueHealthCheck(RabbitMQConfiguration configuration, NamingStrategy mailboxEventNamingStrategy) {
+    public RabbitMQJmapEventBusDeadLetterQueueHealthCheck(RabbitMQConfiguration configuration) {
         this.configuration = configuration;
-        this.mailboxEventNamingStrategy = mailboxEventNamingStrategy;
         this.api = RabbitMQManagementAPI.from(configuration);
     }
 
@@ -52,16 +50,14 @@ public class RabbitMQEventBusDeadLetterQueueHealthCheck implements HealthCheck {
 
     @Override
     public Mono<Result> check() {
-        return Mono.fromCallable(() -> api.queueDetails(configuration.getVhost().orElse(DEFAULT_VHOST), mailboxEventNamingStrategy.deadLetterQueue().getName()).getQueueLength())
-            .mergeWith(Mono.fromCallable(() -> api.queueDetails(configuration.getVhost().orElse(DEFAULT_VHOST), NamingStrategy.JMAP_NAMING_STRATEGY.deadLetterQueue().getName()).getQueueLength()))
-            .reduce(Long::sum)
+        return Mono.fromCallable(() -> api.queueDetails(configuration.getVhost().orElse(DEFAULT_VHOST), NamingStrategy.JMAP_NAMING_STRATEGY.deadLetterQueue().getName()).getQueueLength())
             .map(queueSize -> {
                 if (queueSize != 0) {
-                    return Result.degraded(COMPONENT_NAME, "RabbitMQ dead letter queue of the event bus contain events. This might indicate transient failure on event processing.");
+                    return Result.degraded(COMPONENT_NAME, "RabbitMQ dead letter queue of the JMAP event bus contain events. This might indicate transient failure on event processing.");
                 }
                 return Result.healthy(COMPONENT_NAME);
             })
-            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking RabbitMQEventBusDeadLetterHealthCheck", e)))
-            .subscribeOn(Schedulers.boundedElastic()); // Reading the management API is blocking
+            .onErrorResume(e -> Mono.just(Result.unhealthy(COMPONENT_NAME, "Error checking RabbitMQJmapEventBusDeadLetterQueueHealthCheck", e)))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 }
