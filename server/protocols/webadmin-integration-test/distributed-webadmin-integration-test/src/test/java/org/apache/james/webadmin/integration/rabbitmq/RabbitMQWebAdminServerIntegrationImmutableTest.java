@@ -58,6 +58,7 @@ class RabbitMQWebAdminServerIntegrationImmutableTest extends WebAdminServerInteg
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
+            .enableJMAP()
             .blobStore(BlobStoreConfiguration.builder()
                     .s3()
                     .disableCache()
