@@ -23,9 +23,11 @@ import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.FIVE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Durations.ONE_MINUTE;
+import static org.hamcrest.Matchers.equalTo;
 
 import org.apache.james.PostgresJamesConfiguration.EventBusImpl;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.core.healthcheck.ResultStatus;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -36,13 +38,18 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
+import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
+
+import io.restassured.specification.RequestSpecification;
 
 class DistributedPostgresJamesServerTest implements JamesServerConcreteContract {
     static PostgresExtension postgresExtension = PostgresExtension.empty();
@@ -82,11 +89,13 @@ class DistributedPostgresJamesServerTest implements JamesServerConcreteContract 
 
     private TestIMAPClient testIMAPClient;
     private SMTPMessageSender smtpMessageSender;
+    private RequestSpecification webAdminApi;
 
     @BeforeEach
-    void setUp() {
+    void setUp(GuiceJamesServer guiceJamesServer) {
         this.testIMAPClient = new TestIMAPClient();
         this.smtpMessageSender = new SMTPMessageSender(DOMAIN);
+        this.webAdminApi = WebAdminUtils.spec(guiceJamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
     
     @Test
@@ -113,5 +122,14 @@ class DistributedPostgresJamesServerTest implements JamesServerConcreteContract 
             .startsWith("* QUOTAROOT \"INBOX\" #private&toto@james.local\r\n" +
                 "* QUOTA #private&toto@james.local (STORAGE 12 50)\r\n")
             .endsWith("OK GETQUOTAROOT completed.\r\n"));
+    }
+
+    @Test
+    void healthCheckShouldBeHealthy() {
+        webAdminApi.when()
+            .get("/healthcheck")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("status", equalTo(ResultStatus.HEALTHY.getValue()));
     }
 }
