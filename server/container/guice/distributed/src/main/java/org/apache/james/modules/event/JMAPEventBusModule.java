@@ -35,6 +35,7 @@ import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
+import org.apache.james.events.RabbitMQJmapEventBusDeadLetterQueueHealthCheck;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.jmap.InjectionKeys;
@@ -85,6 +86,11 @@ public class JMAPEventBusModule extends AbstractModule {
     HealthCheck healthCheck(@Named(InjectionKeys.JMAP) RabbitMQEventBus eventBus,
                             SimpleConnectionPool connectionPool) {
         return new RabbitEventBusConsumerHealthCheck(eventBus, JMAP_NAMING_STRATEGY, connectionPool);
+    }
+
+    @ProvidesIntoSet
+    HealthCheck jmapEventBusDeadLetterQueueHealthCheck(RabbitMQConfiguration rabbitMQConfiguration) {
+        return new RabbitMQJmapEventBusDeadLetterQueueHealthCheck(rabbitMQConfiguration);
     }
 
     @Provides
