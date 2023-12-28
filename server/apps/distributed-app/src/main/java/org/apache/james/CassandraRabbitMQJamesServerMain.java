@@ -176,7 +176,6 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
 
     protected static final Module MODULES = Modules.override(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule())
         .with(new RabbitMQModule(),
-            new JMAPEventBusModule(),
             new RabbitMQEventBusModule(),
             new DistributedTaskSerializationModule());
 
@@ -209,7 +208,7 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
             .combineWith(chooseQuotaModule(configuration))
-            .combineWith(chooseJmapModule(configuration));
+            .overrideWith(chooseJmapModules(configuration));
     }
 
     private static Module chooseMailQueue(CassandraRabbitMQJamesConfiguration configuration) {
@@ -237,9 +236,9 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         };
     }
 
-    private static Module chooseJmapModule(CassandraRabbitMQJamesConfiguration configuration) {
+    private static Module chooseJmapModules(CassandraRabbitMQJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
-            return new JMAPListenerModule();
+            return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
         }
         return binder -> {
 
