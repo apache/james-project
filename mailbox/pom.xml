@@ -49,6 +49,7 @@
 
         <module>plugin/deleted-messages-vault</module>
         <module>plugin/deleted-messages-vault-cassandra</module>
+        <module>plugin/deleted-messages-vault-postgres</module>
 
         <module>plugin/quota-mailing</module>
         <module>plugin/quota-mailing-cassandra</module>
