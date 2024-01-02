@@ -136,10 +136,10 @@ public class ServerCmd {
     }
 
     private static String locateJmxConfiguration() {
-        if (!new File(JMX_PASSWORD_FILE_PATH_DEFAULT).exists()) {
+        if (new File(JMX_PASSWORD_FILE_PATH_DEFAULT).exists()) {
             return JMX_PASSWORD_FILE_PATH_DEFAULT;
         }
-        if (!new File("conf/jmxremote.password").exists()) {
+        if (new File("conf/jmxremote.password").exists()) {
             return "conf/jmxremote.password";
         }
         return "../conf/jmxremote.password";
