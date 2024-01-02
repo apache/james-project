@@ -46,7 +46,8 @@ pipeline {
                 'server/container/guice/mailbox-postgres,' +
                 'server/apps/postgres-app,' +
                 'mpt/impl/imap-mailbox/postgres,' +
-                'event-bus/postgres'
+                'event-bus/postgres,' +
+                'mailbox/plugin/deleted-messages-vault-postgres'
     }
 
     tools {
