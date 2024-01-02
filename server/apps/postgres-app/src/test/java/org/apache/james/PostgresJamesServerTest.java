@@ -33,6 +33,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.TestIMAPClient;
+import org.apache.james.vault.VaultConfiguration;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,6 +53,7 @@ class PostgresJamesServerTest implements JamesServerConcreteContract {
             .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
             .eventBusImpl(EventBusImpl.IN_MEMORY)
+            .deletedMessageVaultConfiguration(VaultConfiguration.ENABLED_DEFAULT)
             .build())
         .server(PostgresJamesServerMain::createServer)
         .extension(postgresExtension)
