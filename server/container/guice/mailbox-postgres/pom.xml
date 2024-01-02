@@ -35,6 +35,10 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-mailbox-deleted-messages-vault-postgres</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-postgres</artifactId>
         </dependency>
         <dependency>
