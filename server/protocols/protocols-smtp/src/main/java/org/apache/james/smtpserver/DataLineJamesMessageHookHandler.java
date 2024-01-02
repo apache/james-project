@@ -103,14 +103,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
                     out.flush();
                     out.close();
 
-                    List<MailAddress> recipientCollection = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
-                    MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
-
-                    MailImpl mail = MailImpl.builder()
-                        .name(mailName)
-                        .sender(sender)
-                        .addRecipients(recipientCollection)
-                        .build();
+                    MailImpl mail = createMail(session, mailName);
 
                     // store mail in the session so we can be sure it get disposed later
                     session.setAttachment(SMTPConstants.MAIL, mail, State.Transaction);
@@ -160,6 +153,17 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
         }
         return null;
+    }
+
+    private static MailImpl createMail(SMTPSession session, String mailName) {
+        List<MailAddress> recipientCollection = session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction).orElse(ImmutableList.of());
+        MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
+
+        return MailImpl.builder()
+            .name(mailName)
+            .sender(sender)
+            .addRecipients(recipientCollection)
+            .build();
     }
 
     protected Response processExtensions(SMTPSession session, Mail mail, MimeMessageInputStreamSource mmiss) {
