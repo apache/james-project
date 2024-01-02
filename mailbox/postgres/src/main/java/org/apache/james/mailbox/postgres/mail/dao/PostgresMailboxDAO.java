@@ -40,7 +40,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -109,9 +109,9 @@ public class PostgresMailboxDAO {
         }
     }
 
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
 
-    public PostgresMailboxDAO(DefaultPostgresExecutor postgresExecutor) {
+    public PostgresMailboxDAO(PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

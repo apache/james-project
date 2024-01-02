@@ -24,6 +24,7 @@ import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_D
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
 import static org.apache.james.backends.postgres.PostgresCommons.UNNEST_FIELD;
 import static org.apache.james.backends.postgres.PostgresCommons.tableField;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_ANSWERED;
@@ -54,10 +55,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -107,10 +109,10 @@ public class PostgresMailboxMessageDAO {
             .orElse(queryWithoutLimit);
     }
 
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresMailboxMessageDAO(DefaultPostgresExecutor postgresExecutor) {
+    public PostgresMailboxMessageDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

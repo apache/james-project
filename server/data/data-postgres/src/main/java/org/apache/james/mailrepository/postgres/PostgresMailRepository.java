@@ -21,6 +21,7 @@ package org.apache.james.mailrepository.postgres;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryContentTable.ATTRIBUTES;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryContentTable.BODY_BLOB_ID;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryContentTable.ERROR;
@@ -49,12 +50,13 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
@@ -89,13 +91,13 @@ import reactor.core.publisher.Mono;
 public class PostgresMailRepository implements MailRepository {
     private static final String HEADERS_SEPARATOR = ";  ";
 
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
     private final MailRepositoryUrl url;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMailRepository(DefaultPostgresExecutor postgresExecutor,
+    public PostgresMailRepository(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor,
                                   MailRepositoryUrl url,
                                   MimeMessageStore.Factory mimeMessageStoreFactory,
                                   BlobId.Factory blobIdFactory) {

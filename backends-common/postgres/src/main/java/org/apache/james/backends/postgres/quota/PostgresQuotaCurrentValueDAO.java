@@ -25,14 +25,14 @@ import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.Postg
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.PRIMARY_KEY_CONSTRAINT_NAME;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TABLE_NAME;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TYPE;
-import static org.apache.james.backends.postgres.utils.DefaultPostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 
 import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaType;
@@ -46,10 +46,10 @@ import reactor.core.publisher.Mono;
 public class PostgresQuotaCurrentValueDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresQuotaCurrentValueDAO.class);
 
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresQuotaCurrentValueDAO(@Named(DEFAULT_INJECT) DefaultPostgresExecutor postgresExecutor) {
+    public PostgresQuotaCurrentValueDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

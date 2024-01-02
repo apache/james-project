@@ -23,15 +23,15 @@ import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule.
 import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule.USER;
 
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresSubscriptionDAO {
-    protected final DefaultPostgresExecutor executor;
+    protected final PostgresExecutor executor;
 
-    public PostgresSubscriptionDAO(DefaultPostgresExecutor executor) {
+    public PostgresSubscriptionDAO(PostgresExecutor executor) {
         this.executor = executor;
     }
 

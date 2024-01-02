@@ -39,8 +39,6 @@ import reactor.core.publisher.Mono;
 
 public class DefaultPostgresExecutor implements PostgresExecutor {
 
-    public static final String DEFAULT_INJECT = "default";
-
     public static class Factory {
 
         private final JamesPostgresConnectionFactory jamesPostgresConnectionFactory;

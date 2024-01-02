@@ -19,14 +19,16 @@
 
 package org.apache.james.events;
 
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.EVENT;
 import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.GROUP;
 import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.INSERTION_ID;
 import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.TABLE_NAME;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.jooq.Record;
 
 import com.github.fge.lambdas.Throwing;
@@ -36,11 +38,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresEventDeadLetters implements EventDeadLetters {
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
     private final EventSerializer eventSerializer;
 
     @Inject
-    public PostgresEventDeadLetters(DefaultPostgresExecutor postgresExecutor, EventSerializer eventSerializer) {
+    public PostgresEventDeadLetters(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor, EventSerializer eventSerializer) {
         this.postgresExecutor = postgresExecutor;
         this.eventSerializer = eventSerializer;
     }

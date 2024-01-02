@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
@@ -48,9 +48,9 @@ public class PostgresMailboxAnnotationDAO {
     private static final String ANNOTATION_VALUE_FIELD_NAME = "annotation_value";
     private static final String EMPTY_ANNOTATION_VALUE = null;
 
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
 
-    public PostgresMailboxAnnotationDAO(DefaultPostgresExecutor postgresExecutor) {
+    public PostgresMailboxAnnotationDAO(PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

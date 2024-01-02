@@ -19,9 +19,12 @@
 
 package org.apache.james.backends.postgres.utils;
 
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
+
 import java.time.Duration;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
@@ -33,10 +36,10 @@ import reactor.core.publisher.Mono;
 
 public class PostgresHealthCheck implements HealthCheck {
     public static final ComponentName COMPONENT_NAME = new ComponentName("Postgres");
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresHealthCheck(DefaultPostgresExecutor postgresExecutor) {
+    public PostgresHealthCheck(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

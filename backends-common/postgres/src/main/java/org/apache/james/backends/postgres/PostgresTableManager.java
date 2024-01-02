@@ -22,7 +22,7 @@ package org.apache.james.backends.postgres;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,24 +33,24 @@ import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PostgresTableManager implements Provider<DefaultPostgresExecutor> {
+public class PostgresTableManager implements Provider<PostgresExecutor> {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
-    private final DefaultPostgresExecutor postgresExecutor;
+    private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
     private final boolean rowLevelSecurityEnabled;
 
     @Inject
-    public PostgresTableManager(DefaultPostgresExecutor.Factory factory,
+    public PostgresTableManager(PostgresExecutor postgresExecutor,
                                 PostgresModule module,
                                 PostgresConfiguration postgresConfiguration) {
-        this.postgresExecutor = factory.create();
+        this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurityEnabled = postgresConfiguration.rowLevelSecurityEnabled();
         initPostgres();
     }
 
     @VisibleForTesting
-    public PostgresTableManager(DefaultPostgresExecutor postgresExecutor, PostgresModule module, boolean rowLevelSecurityEnabled) {
+    public PostgresTableManager(PostgresExecutor postgresExecutor, PostgresModule module, boolean rowLevelSecurityEnabled) {
         this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
@@ -161,7 +161,7 @@ public class PostgresTableManager implements Provider<DefaultPostgresExecutor> {
     }
 
     @Override
-    public DefaultPostgresExecutor get() {
+    public PostgresExecutor get() {
         return postgresExecutor;
     }
 }

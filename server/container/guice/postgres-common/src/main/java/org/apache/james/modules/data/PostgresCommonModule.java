@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import static org.apache.james.backends.postgres.utils.DefaultPostgresExecutor.DEFAULT_INJECT;
 import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 
 import java.io.FileNotFoundException;
@@ -60,7 +59,7 @@ public class PostgresCommonModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), PostgresModule.class);
         bind(DefaultPostgresExecutor.Factory.class).in(Scopes.SINGLETON);
 
-        bind(DefaultPostgresExecutor.class).toProvider(PostgresTableManager.class);
+        bind(PostgresExecutor.class).toProvider(PostgresTableManager.class).asEagerSingleton();
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding().to(PostgresHealthCheck.class);
@@ -105,25 +104,12 @@ public class PostgresCommonModule extends AbstractModule {
 
     @Provides
     @Singleton
-    PostgresTableManager postgresTableManager(DefaultPostgresExecutor.Factory factory,
+    PostgresTableManager postgresTableManager(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor,
                                               PostgresModule postgresModule,
                                               PostgresConfiguration postgresConfiguration) {
-        return new PostgresTableManager(factory, postgresModule, postgresConfiguration);
+        return new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration);
     }
 
-    @Provides
-    @Named(DEFAULT_INJECT)
-    @Singleton
-    DefaultPostgresExecutor defaultPostgresExecutor(PostgresTableManager postgresTableManager) {
-        return postgresTableManager.get();
-    }
-
-    @Provides
-    @Named(DEFAULT_INJECT)
-    @Singleton
-    PostgresExecutor provideDefaultPostgresExecutor(DefaultPostgresExecutor defaultPostgresExecutor) {
-        return defaultPostgresExecutor;
-    }
 
     @Provides
     @Named(POOL_INJECT_NAME)
