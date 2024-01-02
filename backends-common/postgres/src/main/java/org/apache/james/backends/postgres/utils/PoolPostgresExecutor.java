@@ -19,17 +19,20 @@
 
 package org.apache.james.backends.postgres.utils;
 
-import java.time.Duration;
+import java.util.Optional;
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.lifecycle.api.Disposable;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.impl.DSL;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
@@ -40,18 +43,52 @@ import reactor.core.publisher.Mono;
 
 public class PoolPostgresExecutor implements PostgresExecutor, Disposable {
     public static final String POOL_INJECT_NAME = "pool";
-    static int INITIAL_SIZE = 10;
-    static int MAX_SIZE = 50;
-    static Duration MAX_IDLE_TIME = Duration.ofMillis(5000);
+    public static final Logger LOGGER = LoggerFactory.getLogger(PoolPostgresExecutor.class);
+
+    private static ConnectionPoolConfiguration getConnectionPoolConfiguration(ConnectionFactory connectionFactory, PostgresConfiguration postgresConfiguration) {
+        return postgresConfiguration.pool()
+            .map(poolConfiguration -> Optional.of(ConnectionPoolConfiguration.builder(connectionFactory))
+                .map(builder -> poolConfiguration.getInitialSize()
+                    .map(builder::initialSize)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getMaxSize()
+                    .map(builder::maxSize)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getMaxIdleTime()
+                    .map(builder::maxIdleTime)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getAcquireRetry()
+                    .map(builder::acquireRetry)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getMinIdle()
+                    .map(builder::minIdle)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getMaxLifeTime()
+                    .map(builder::maxLifeTime)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getMaxAcquireTime()
+                    .map(builder::maxAcquireTime)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getMaxCreateConnectionTime()
+                    .map(builder::maxCreateConnectionTime)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getMaxValidationTime()
+                    .map(builder::maxValidationTime)
+                    .orElse(builder))
+                .map(builder -> poolConfiguration.getPoolName()
+                    .map(builder::name)
+                    .orElse(builder))
+                .get().build())
+            .orElseGet(() -> ConnectionPoolConfiguration.builder(connectionFactory).build());
+    }
+
     private final ConnectionPool pool;
 
     @Inject
-    public PoolPostgresExecutor(ConnectionFactory connectionFactory) {
-        ConnectionPoolConfiguration configuration = ConnectionPoolConfiguration.builder(connectionFactory)
-            .maxIdleTime(MAX_IDLE_TIME)
-            .initialSize(INITIAL_SIZE)
-            .maxSize(MAX_SIZE)
-            .build();
+    public PoolPostgresExecutor(ConnectionFactory connectionFactory, PostgresConfiguration postgresConfiguration) {
+        ConnectionPoolConfiguration configuration = getConnectionPoolConfiguration(connectionFactory, postgresConfiguration);
+        LOGGER.info("Starting PoolPostgresExecutor with configuration: {}", postgresConfiguration.pool().map(Object::toString)
+            .orElse("No pool configuration, using default one"));
         pool = new ConnectionPool(configuration);
     }
 
@@ -74,8 +111,7 @@ public class PoolPostgresExecutor implements PostgresExecutor, Disposable {
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return Flux.usingWhen(pool.create(),
             connection -> dslContext(connection)
-                .flatMapMany(queryFunction)
-                .retryWhen(RETRY_BACKOFF_SPEC),
+                .flatMapMany(queryFunction),
             Connection::close);
     }
 
@@ -83,8 +119,7 @@ public class PoolPostgresExecutor implements PostgresExecutor, Disposable {
     public Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction) {
         return Mono.usingWhen(pool.create(),
             connection -> dslContext(connection)
-                .flatMap(queryFunction.andThen(Mono::from))
-                .retryWhen(RETRY_BACKOFF_SPEC),
+                .flatMap(queryFunction.andThen(Mono::from)),
             Connection::close);
     }
 
@@ -93,7 +128,6 @@ public class PoolPostgresExecutor implements PostgresExecutor, Disposable {
         return Mono.usingWhen(pool.create(),
             connection -> dslContext(connection)
                 .flatMap(queryFunction)
-                .retryWhen(RETRY_BACKOFF_SPEC)
                 .map(Record1::value1),
             Connection::close);
     }
@@ -103,8 +137,7 @@ public class PoolPostgresExecutor implements PostgresExecutor, Disposable {
         return Mono.usingWhen(pool.create(),
             connection -> dslContext(connection)
                 .flatMap(queryFunction)
-                .cast(Long.class)
-                .retryWhen(RETRY_BACKOFF_SPEC),
+                .cast(Long.class),
             Connection::close);
     }
 

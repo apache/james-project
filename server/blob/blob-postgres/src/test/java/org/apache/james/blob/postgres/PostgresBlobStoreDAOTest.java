@@ -19,6 +19,12 @@
 
 package org.apache.james.blob.postgres;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.utils.PoolPostgresExecutor;
 import org.apache.james.blob.api.BlobStoreDAO;
@@ -39,7 +45,11 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
 
     @BeforeAll
     static void setUpClass() {
-        poolPostgresExecutor = new PoolPostgresExecutor(postgresExtension.getConnectionFactory());
+        PostgresConfiguration configuration = mock(PostgresConfiguration.class);
+        when(configuration.pool())
+            .thenReturn(Optional.of(new PostgresConfiguration.Pool(Optional.of(50),
+                Optional.of(50), Optional.empty())));
+        poolPostgresExecutor = new PoolPostgresExecutor(postgresExtension.getConnectionFactory(), configuration);
     }
 
     @AfterAll

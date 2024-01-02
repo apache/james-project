@@ -20,6 +20,7 @@
 package org.apache.james.backends.postgres;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.Configuration;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -57,11 +59,122 @@ public class PostgresConfiguration {
         }
     }
 
+    public static class Pool {
+        public static Pool from(Configuration propertiesConfiguration) {
+            Optional<Integer> initialSize = Optional.ofNullable(propertiesConfiguration.getInteger("pool.initialSize", null));
+            Optional<Integer> maxSize = Optional.ofNullable(propertiesConfiguration.getInteger("pool.maxSize", null));
+            Optional<Duration> maxIdleTime = Optional.ofNullable(propertiesConfiguration.getInteger("pool.maxIdleTime", null))
+                .map(Duration::ofSeconds);
+            Optional<Integer> acquireRetry = Optional.ofNullable(propertiesConfiguration.getInteger("pool.acquireRetry", null));
+            Optional<Integer> minIdle = Optional.ofNullable(propertiesConfiguration.getInteger("pool.minIdle", null));
+            Optional<Duration> maxLifeTime = Optional.ofNullable(propertiesConfiguration.getInteger("pool.maxLifeTime", null))
+                .map(Duration::ofSeconds);
+            Optional<Duration> maxAcquireTime = Optional.ofNullable(propertiesConfiguration.getInteger("pool.maxAcquireTime", null))
+                .map(Duration::ofSeconds);
+            Optional<Duration> maxCreateConnectionTime = Optional.ofNullable(propertiesConfiguration.getInteger("pool.maxCreateConnectionTime", null))
+                .map(Duration::ofSeconds);
+            Optional<Duration> maxValidationTime = Optional.ofNullable(propertiesConfiguration.getInteger("pool.maxValidationTime", null))
+                .map(Duration::ofSeconds);
+            Optional<String> poolName = Optional.ofNullable(propertiesConfiguration.getString("pool.poolName", null));
+            return new Pool(initialSize, maxSize, maxIdleTime, acquireRetry, minIdle, maxLifeTime, maxAcquireTime,
+                maxCreateConnectionTime, maxValidationTime, poolName);
+        }
+
+        private final Optional<Integer> initialSize;
+        private final Optional<Integer> maxSize;
+        private final Optional<Duration> maxIdleTime;
+
+        private final Optional<Integer> acquireRetry;
+        private final Optional<Integer> minIdle;
+        private final Optional<Duration> maxLifeTime;
+        private final Optional<Duration> maxAcquireTime;
+        private final Optional<Duration> maxCreateConnectionTime;
+        private final Optional<Duration> maxValidationTime;
+        private final Optional<String> poolName;
+
+        public Pool(Optional<Integer> initialSize, Optional<Integer> maxSize, Optional<Duration> maxIdleTime) {
+            this(initialSize, maxSize, maxIdleTime, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+        }
+
+        private Pool(Optional<Integer> initialSize, Optional<Integer> maxSize, Optional<Duration> maxIdleTime,
+                     Optional<Integer> acquireRetry, Optional<Integer> minIdle, Optional<Duration> maxLifeTime,
+                     Optional<Duration> maxAcquireTime, Optional<Duration> maxCreateConnectionTime,
+                     Optional<Duration> maxValidationTime, Optional<String> poolName) {
+            this.initialSize = initialSize;
+            this.maxSize = maxSize;
+            this.maxIdleTime = maxIdleTime;
+            this.acquireRetry = acquireRetry;
+            this.minIdle = minIdle;
+            this.maxLifeTime = maxLifeTime;
+            this.maxAcquireTime = maxAcquireTime;
+            this.maxCreateConnectionTime = maxCreateConnectionTime;
+            this.maxValidationTime = maxValidationTime;
+            this.poolName = poolName;
+        }
+
+        public Optional<Integer> getInitialSize() {
+            return initialSize;
+        }
+
+        public Optional<Integer> getMaxSize() {
+            return maxSize;
+        }
+
+        public Optional<Duration> getMaxIdleTime() {
+            return maxIdleTime;
+        }
+
+        public Optional<Integer> getAcquireRetry() {
+            return acquireRetry;
+        }
+
+        public Optional<Integer> getMinIdle() {
+            return minIdle;
+        }
+
+        public Optional<Duration> getMaxLifeTime() {
+            return maxLifeTime;
+        }
+
+        public Optional<Duration> getMaxAcquireTime() {
+            return maxAcquireTime;
+        }
+
+        public Optional<Duration> getMaxCreateConnectionTime() {
+            return maxCreateConnectionTime;
+        }
+
+        public Optional<Duration> getMaxValidationTime() {
+            return maxValidationTime;
+        }
+
+        public Optional<String> getPoolName() {
+            return poolName;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("initialSize", initialSize)
+                .add("maxSize", maxSize)
+                .add("maxIdleTime", maxIdleTime)
+                .add("acquireRetry", acquireRetry)
+                .add("minIdle", minIdle)
+                .add("maxLifeTime", maxLifeTime)
+                .add("maxAcquireTime", maxAcquireTime)
+                .add("maxCreateConnectionTime", maxCreateConnectionTime)
+                .add("maxValidationTime", maxValidationTime)
+                .add("poolName", poolName)
+                .toString();
+        }
+    }
+
     public static class Builder {
         private Optional<String> url = Optional.empty();
         private Optional<String> databaseName = Optional.empty();
         private Optional<String> databaseSchema = Optional.empty();
         private Optional<Boolean> rowLevelSecurityEnabled = Optional.empty();
+        private Optional<Pool> poolConfiguration = Optional.empty();
 
         public Builder url(String url) {
             this.url = Optional.of(url);
@@ -98,6 +211,11 @@ public class PostgresConfiguration {
             return this;
         }
 
+        public Builder configuration(Pool configuration) {
+            this.poolConfiguration = Optional.of(configuration);
+            return this;
+        }
+
         public PostgresConfiguration build() {
             Preconditions.checkArgument(url.isPresent() && !url.get().isBlank(), "You need to specify Postgres URI");
             URI postgresURI = asURI(url.get());
@@ -106,7 +224,8 @@ public class PostgresConfiguration {
                 parseCredential(postgresURI),
                 databaseName.orElse(DATABASE_NAME_DEFAULT_VALUE),
                 databaseSchema.orElse(DATABASE_SCHEMA_DEFAULT_VALUE),
-                rowLevelSecurityEnabled.orElse(false));
+                rowLevelSecurityEnabled.orElse(false),
+                poolConfiguration);
         }
 
         private Credential parseCredential(URI postgresURI) {
@@ -141,6 +260,7 @@ public class PostgresConfiguration {
             .databaseName(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_NAME)))
             .databaseSchema(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_SCHEMA)))
             .rowLevelSecurityEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
+            .configuration(Pool.from(propertiesConfiguration))
             .build();
     }
 
@@ -149,13 +269,17 @@ public class PostgresConfiguration {
     private final String databaseName;
     private final String databaseSchema;
     private final boolean rowLevelSecurityEnabled;
+    private final Optional<Pool> pool;
 
-    private PostgresConfiguration(URI uri, Credential credential, String databaseName, String databaseSchema, boolean rowLevelSecurityEnabled) {
+    private PostgresConfiguration(URI uri, Credential credential, String databaseName,
+                                  String databaseSchema, boolean rowLevelSecurityEnabled,
+                                  Optional<Pool> pool) {
         this.uri = uri;
         this.credential = credential;
         this.databaseName = databaseName;
         this.databaseSchema = databaseSchema;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
+        this.pool = pool;
     }
 
     public URI getUri() {
@@ -176,6 +300,10 @@ public class PostgresConfiguration {
 
     public boolean rowLevelSecurityEnabled() {
         return rowLevelSecurityEnabled;
+    }
+
+    public Optional<Pool> pool() {
+        return pool;
     }
 
     @Override
