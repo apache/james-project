@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.data.UsersRepositoryModuleChooser;
+import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -36,6 +37,7 @@ import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.events.PostgresDeadLetterModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
+import org.apache.james.modules.mailbox.PostgresDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
@@ -60,7 +62,9 @@ import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
+import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
@@ -91,6 +95,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     private static final Module POSTGRES_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
+        new BlobExportMechanismModule(),
         new PostgresDelegationStoreModule(),
         new DefaultProcessorsConfigurationProviderModule(),
         new PostgresMailboxModule(),
@@ -131,6 +136,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseEventBusModules(configuration))
+            .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
             .combineWith(POSTGRES_MODULE_AGGREGATE);
     }
 
@@ -157,5 +163,13 @@ public class PostgresJamesServerMain implements JamesServerMain {
             default:
                 throw new RuntimeException("Unsupported event-bus implementation " + configuration.eventBusImpl().name());
         }
+    }
+
+    private static Module chooseDeletedMessageVaultModules(VaultConfiguration vaultConfiguration) {
+        if (vaultConfiguration.isEnabled()) {
+            return Modules.combine(new PostgresDeletedMessageVaultModule(), new DeletedMessageVaultRoutesModule());
+        }
+
+        return Modules.EMPTY_MODULE;
     }
 }

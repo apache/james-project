@@ -34,6 +34,7 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.PropertiesProvider;
+import org.apache.james.vault.VaultConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +70,8 @@ public class PostgresJamesConfiguration implements Configuration {
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<SearchConfiguration> searchConfiguration;
         private Optional<BlobStoreConfiguration> blobStoreConfiguration;
-
         private Optional<EventBusImpl> eventBusImpl;
+        private Optional<VaultConfiguration> deletedMessageVaultConfiguration;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -79,6 +80,7 @@ public class PostgresJamesConfiguration implements Configuration {
             usersRepositoryImplementation = Optional.empty();
             blobStoreConfiguration = Optional.empty();
             eventBusImpl = Optional.empty();
+            deletedMessageVaultConfiguration = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -129,6 +131,11 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder deletedMessageVaultConfiguration(VaultConfiguration vaultConfiguration) {
+            this.deletedMessageVaultConfiguration = Optional.of(vaultConfiguration);
+            return this;
+        }
+
         public PostgresJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -154,13 +161,24 @@ public class PostgresJamesConfiguration implements Configuration {
 
             EventBusImpl eventBusImpl = this.eventBusImpl.orElseGet(() -> EventBusImpl.from(propertiesProvider));
 
+            VaultConfiguration deletedMessageVaultConfiguration = this.deletedMessageVaultConfiguration.orElseGet(() -> {
+                try {
+                    return VaultConfiguration.from(propertiesProvider.getConfiguration("deletedMessageVault"));
+                } catch (FileNotFoundException e) {
+                    return VaultConfiguration.DEFAULT;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             return new PostgresJamesConfiguration(
                 configurationPath,
                 directories,
                 searchConfiguration,
                 usersRepositoryChoice,
                 blobStoreConfiguration,
-                eventBusImpl);
+                eventBusImpl,
+                deletedMessageVaultConfiguration);
         }
     }
 
@@ -174,19 +192,22 @@ public class PostgresJamesConfiguration implements Configuration {
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final BlobStoreConfiguration blobStoreConfiguration;
     private final EventBusImpl eventBusImpl;
-
+    private final VaultConfiguration deletedMessageVaultConfiguration;
 
     private PostgresJamesConfiguration(ConfigurationPath configurationPath,
                                        JamesDirectoriesProvider directories,
                                        SearchConfiguration searchConfiguration,
                                        UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
-                                       BlobStoreConfiguration blobStoreConfiguration, EventBusImpl eventBusImpl) {
+                                       BlobStoreConfiguration blobStoreConfiguration,
+                                       EventBusImpl eventBusImpl,
+                                       VaultConfiguration deletedMessageVaultConfiguration) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.blobStoreConfiguration = blobStoreConfiguration;
         this.eventBusImpl = eventBusImpl;
+        this.deletedMessageVaultConfiguration = deletedMessageVaultConfiguration;
     }
 
     @Override
@@ -213,5 +234,9 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public EventBusImpl eventBusImpl() {
         return eventBusImpl;
+    }
+
+    public VaultConfiguration getDeletedMessageVaultConfiguration() {
+        return deletedMessageVaultConfiguration;
     }
 }
