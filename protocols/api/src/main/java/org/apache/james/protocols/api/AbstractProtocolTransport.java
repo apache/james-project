@@ -23,14 +23,18 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * Abstract base class for {@link ProtocolTransport} implementation which already takes care of all the complex
  * stuff when handling {@link Response}'s.
  */
 public abstract class AbstractProtocolTransport implements ProtocolTransport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractProtocolTransport.class);
     private static final String CRLF = "\r\n";
-    
+
     @Override
     public final void writeResponse(Response response, ProtocolSession session) {
         if (response != null) {
@@ -57,6 +61,11 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
             }
 
             if (response.isEndSession()) {
+                // We can close the channel only after the client
+                session.pushLineHandler((session1, buffer) -> {
+                    LOGGER.info("Received a command after close, discarding it.");
+                    return null;
+                });
                 // close the channel if needed after the message was written out
                 close();
             }
