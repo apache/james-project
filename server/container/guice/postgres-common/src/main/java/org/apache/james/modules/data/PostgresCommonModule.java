@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
+import static org.apache.james.backends.postgres.PostgresTableManager.INITIALIZATION_PRIORITY;
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 
 import java.io.FileNotFoundException;
@@ -33,6 +34,8 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresHealthCheck;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Named;
 
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
@@ -56,8 +60,6 @@ public class PostgresCommonModule extends AbstractModule {
     public void configure() {
         Multibinder.newSetBinder(binder(), PostgresModule.class);
         bind(PostgresExecutor.Factory.class).in(Scopes.SINGLETON);
-
-        bind(PostgresExecutor.class).toProvider(PostgresTableManager.class);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding().to(PostgresHealthCheck.class);
@@ -102,16 +104,29 @@ public class PostgresCommonModule extends AbstractModule {
 
     @Provides
     @Singleton
-    PostgresTableManager postgresTableManager(PostgresExecutor.Factory factory,
+    PostgresTableManager postgresTableManager(PostgresExecutor postgresExecutor,
                                               PostgresModule postgresModule,
                                               PostgresConfiguration postgresConfiguration) {
-        return new PostgresTableManager(factory, postgresModule, postgresConfiguration);
+        return new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration);
     }
 
     @Provides
     @Named(DEFAULT_INJECT)
     @Singleton
-    PostgresExecutor defaultPostgresExecutor(PostgresTableManager postgresTableManager) {
-        return postgresTableManager.get();
+    PostgresExecutor defaultPostgresExecutor(PostgresExecutor.Factory factory) {
+        return factory.create();
+    }
+
+    @Provides
+    @Singleton
+    PostgresExecutor postgresExecutor(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor) {
+        return postgresExecutor;
+    }
+
+    @ProvidesIntoSet
+    InitializationOperation provisionPostgresTablesAndIndexes(PostgresTableManager postgresTableManager) {
+        return InitilizationOperationBuilder
+            .forClass(PostgresTableManager.class, INITIALIZATION_PRIORITY)
+            .init(postgresTableManager::initPostgres);
     }
 }

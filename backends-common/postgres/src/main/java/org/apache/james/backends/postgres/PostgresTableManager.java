@@ -20,9 +20,9 @@
 package org.apache.james.backends.postgres;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.lifecycle.api.Startable;
 import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,20 +33,20 @@ import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class PostgresTableManager implements Provider<PostgresExecutor> {
+public class PostgresTableManager implements Startable {
+    public static final int INITIALIZATION_PRIORITY = 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
     private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
     private final boolean rowLevelSecurityEnabled;
 
     @Inject
-    public PostgresTableManager(PostgresExecutor.Factory factory,
+    public PostgresTableManager(PostgresExecutor postgresExecutor,
                                 PostgresModule module,
                                 PostgresConfiguration postgresConfiguration) {
-        this.postgresExecutor = factory.create();
+        this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurityEnabled = postgresConfiguration.rowLevelSecurityEnabled();
-        initPostgres();
     }
 
     @VisibleForTesting
@@ -56,7 +56,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
     }
 
-    private void initPostgres() {
+    public void initPostgres() {
         initializePostgresExtension()
             .then(initializeTables())
             .then(initializeTableIndexes())
@@ -163,8 +163,4 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
         return Mono.error(e);
     }
 
-    @Override
-    public PostgresExecutor get() {
-        return postgresExecutor;
-    }
 }
