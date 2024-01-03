@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 
 public interface InitializationOperation {
 
+    int DEFAULT_PRIORITY = 0;
+
     void initModule() throws Exception;
 
     /**
@@ -41,4 +43,9 @@ public interface InitializationOperation {
     default List<Class<?>> requires() {
         return ImmutableList.of();
     }
+
+    default int priority() {
+        return DEFAULT_PRIORITY;
+    }
+
 }
