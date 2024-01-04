@@ -21,32 +21,21 @@ package org.apache.james.mailrepository.postgres;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.mail.MimeMessageStore;
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryFactory;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.blob.api.BlobReferenceSource;
 
-public class PostgresMailRepositoryFactory implements MailRepositoryFactory {
-    private final PostgresExecutor executor;
-    private final MimeMessageStore.Factory mimeMessageStoreFactory;
-    private final BlobId.Factory blobIdFactory;
+import reactor.core.publisher.Flux;
+
+public class PostgresMailRepositoryBlobReferenceSource implements BlobReferenceSource {
+    private final PostgresMailRepositoryContentDAO postgresMailRepositoryContentDAO;
 
     @Inject
-    public PostgresMailRepositoryFactory(PostgresExecutor executor, MimeMessageStore.Factory mimeMessageStoreFactory, BlobId.Factory blobIdFactory) {
-        this.executor = executor;
-        this.mimeMessageStoreFactory = mimeMessageStoreFactory;
-        this.blobIdFactory = blobIdFactory;
+    public PostgresMailRepositoryBlobReferenceSource(PostgresMailRepositoryContentDAO postgresMailRepositoryContentDAO) {
+        this.postgresMailRepositoryContentDAO = postgresMailRepositoryContentDAO;
     }
 
     @Override
-    public Class<? extends MailRepository> mailRepositoryClass() {
-        return PostgresMailRepository.class;
-    }
-
-    @Override
-    public MailRepository create(MailRepositoryUrl url) {
-        return new PostgresMailRepository(url, new PostgresMailRepositoryContentDAO(executor, mimeMessageStoreFactory, blobIdFactory));
+    public Flux<BlobId> listReferencedBlobs() {
+        return postgresMailRepositoryContentDAO.listBlobs();
     }
 }

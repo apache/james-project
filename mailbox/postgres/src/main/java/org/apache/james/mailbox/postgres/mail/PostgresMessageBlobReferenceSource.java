@@ -17,36 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.postgres;
+package org.apache.james.mailbox.postgres.mail;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.mail.MimeMessageStore;
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryFactory;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.blob.api.BlobReferenceSource;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 
-public class PostgresMailRepositoryFactory implements MailRepositoryFactory {
-    private final PostgresExecutor executor;
-    private final MimeMessageStore.Factory mimeMessageStoreFactory;
-    private final BlobId.Factory blobIdFactory;
+import reactor.core.publisher.Flux;
+
+public class PostgresMessageBlobReferenceSource implements BlobReferenceSource {
+    private PostgresMessageDAO postgresMessageDAO;
 
     @Inject
-    public PostgresMailRepositoryFactory(PostgresExecutor executor, MimeMessageStore.Factory mimeMessageStoreFactory, BlobId.Factory blobIdFactory) {
-        this.executor = executor;
-        this.mimeMessageStoreFactory = mimeMessageStoreFactory;
-        this.blobIdFactory = blobIdFactory;
+    public PostgresMessageBlobReferenceSource(PostgresMessageDAO postgresMessageDAO) {
+        this.postgresMessageDAO = postgresMessageDAO;
     }
 
     @Override
-    public Class<? extends MailRepository> mailRepositoryClass() {
-        return PostgresMailRepository.class;
-    }
-
-    @Override
-    public MailRepository create(MailRepositoryUrl url) {
-        return new PostgresMailRepository(url, new PostgresMailRepositoryContentDAO(executor, mimeMessageStoreFactory, blobIdFactory));
+    public Flux<BlobId> listReferencedBlobs() {
+        return postgresMessageDAO.listBlobs();
     }
 }
