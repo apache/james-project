@@ -58,6 +58,6 @@ public class PostgresMailRepositoryTest implements MailRepositoryContract {
             .blobIdFactory(BLOB_ID_FACTORY)
             .defaultBucketName()
             .passthrough();
-        return new PostgresMailRepository(postgresExtension.getPostgresExecutor(), url, MimeMessageStore.factory(blobStore), BLOB_ID_FACTORY);
+        return new PostgresMailRepository(url, new PostgresMailRepositoryContentDAO(postgresExtension.getPostgresExecutor(), MimeMessageStore.factory(blobStore), BLOB_ID_FACTORY));
     }
 }
