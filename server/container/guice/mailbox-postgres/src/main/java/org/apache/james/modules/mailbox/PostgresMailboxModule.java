@@ -29,6 +29,7 @@ import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.Authenticator;
@@ -49,6 +50,8 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageBlobReferenceSource;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
@@ -117,6 +120,8 @@ public class PostgresMailboxModule extends AbstractModule {
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
 
+        bind(PostgresMessageDAO.class).in(Scopes.SINGLETON);
+
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(PostgresMailboxManagerDefinition.class);
 
         Multibinder.newSetBinder(binder(), EventListener.GroupEventListener.class)
@@ -141,6 +146,9 @@ public class PostgresMailboxModule extends AbstractModule {
 
         Multibinder<DeleteUserDataTaskStep> deleteUserDataTaskStepMultibinder = Multibinder.newSetBinder(binder(), DeleteUserDataTaskStep.class);
         deleteUserDataTaskStepMultibinder.addBinding().to(MailboxUserDeletionTaskStep.class);
+
+        Multibinder<BlobReferenceSource> blobReferenceSourceMultibinder = Multibinder.newSetBinder(binder(), BlobReferenceSource.class);
+        blobReferenceSourceMultibinder.addBinding().to(PostgresMessageBlobReferenceSource.class);
     }
 
     @Singleton
