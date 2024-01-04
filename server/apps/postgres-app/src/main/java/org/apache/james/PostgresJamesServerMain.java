@@ -21,7 +21,6 @@ package org.apache.james;
 
 import java.util.List;
 
-import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
@@ -63,12 +62,10 @@ import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
-import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.util.Modules;
 
 public class PostgresJamesServerMain implements JamesServerMain {
@@ -144,11 +141,6 @@ public class PostgresJamesServerMain implements JamesServerMain {
         ImmutableList.Builder<Module> builder = ImmutableList.<Module>builder()
             .addAll(BlobStoreModulesChooser.chooseModules(configuration.blobStoreConfiguration()))
             .add(new BlobStoreCacheModulesChooser.CacheDisabledModule());
-
-        // should remove this after https://github.com/linagora/james-project/issues/4998
-        if (configuration.blobStoreConfiguration().storageStrategy().equals(StorageStrategy.DEDUPLICATION)) {
-            builder.add(binder -> Multibinder.newSetBinder(binder, BlobReferenceSource.class));
-        }
 
         return builder.build();
     }
