@@ -46,6 +46,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
@@ -60,6 +61,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.Record;
 import org.jooq.postgres.extensions.types.Hstore;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -85,7 +87,8 @@ public class PostgresMessageDAO {
     private final PostgresExecutor postgresExecutor;
     private final BlobId.Factory blobIdFactory;
 
-    public PostgresMessageDAO(PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
+    @Inject
+    public PostgresMessageDAO(@Named(PostgresExecutor.NON_RLS_INJECT) PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
         this.blobIdFactory = blobIdFactory;
     }
@@ -141,6 +144,12 @@ public class PostgresMessageDAO {
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(BODY_BLOB_ID)
             .from(TABLE_NAME)
             .where(MESSAGE_ID.eq(messageId.asUuid()))))
+            .map(record -> blobIdFactory.from(record.get(BODY_BLOB_ID)));
+    }
+
+    public Flux<BlobId> listBlobs() {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(BODY_BLOB_ID)
+            .from(TABLE_NAME)))
             .map(record -> blobIdFactory.from(record.get(BODY_BLOB_ID)));
     }
 
