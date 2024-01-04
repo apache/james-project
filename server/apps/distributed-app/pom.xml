@@ -436,12 +436,12 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:11-jre-jammy</image>
+                        <image>eclipse-temurin:21.0.1_12-jre-jammy</image>
                     </from>
                     <to>
                         <image>apache/james</image>
                         <tags>
-                            <tag>distributed-latest</tag>
+                            <tag>distributedBlacklist-latest</tag>
                         </tags>
                     </to>
                     <container>
@@ -484,7 +484,7 @@
                     <extraDirectories>
                         <paths>
                             <path>
-                                <from>sample-configuration</from>
+                                <from>conf</from>
                                 <into>/root/conf</into>
                             </path>
                             <path>

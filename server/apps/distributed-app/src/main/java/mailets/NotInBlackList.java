@@ -21,8 +21,6 @@ package mailets;
 
 import java.util.Collection;
 
-import javax.inject.Inject;
-
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -32,11 +30,8 @@ import org.apache.mailet.base.GenericMatcher;
 import com.github.steveash.guavate.Guavate;
 
 public class NotInBlackList extends GenericMatcher {
-    private final PerDomainAddressBlackList blackList;
+    NotInBlackList() {
 
-    @Inject
-    NotInBlackList(PerDomainAddressBlackList blackList) {
-        this.blackList = blackList;
     }
 
     @Override
@@ -70,10 +65,5 @@ public class NotInBlackList extends GenericMatcher {
            }
         }
         return localpart.substring(startIndex, localpart.length() - 1);
-    }
-
-    private boolean isBlackListed(Domain domain, MailAddress sender) {
-        return blackList.list(domain)
-            .contains(sender);
     }
 }
