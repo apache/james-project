@@ -25,9 +25,9 @@ import static org.apache.james.backends.postgres.PostgresFixture.Database.ROW_LE
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -114,23 +114,22 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         PG_CONTAINER.execInContainer("psql", "-U", selectedDatabase.dbUser(), selectedDatabase.dbName(), "-c", String.format("CREATE EXTENSION IF NOT EXISTS hstore SCHEMA %s;", selectedDatabase.schema()));
     }
 
-    private void initPostgresSession() throws URISyntaxException {
+    private void initPostgresSession() {
         postgresConfiguration = PostgresConfiguration.builder()
-            .url(new URIBuilder()
-                .setScheme("postgresql")
-                .setHost(getHost())
-                .setPort(getMappedPort())
-                .setUserInfo(selectedDatabase.dbUser(), selectedDatabase.dbPassword())
-                .build()
-                .toString())
             .databaseName(selectedDatabase.dbName())
             .databaseSchema(selectedDatabase.schema())
+            .host(getHost())
+            .port(getMappedPort())
+            .username(selectedDatabase.dbUser())
+            .password(selectedDatabase.dbPassword())
+            .nonRLSUser(DEFAULT_DATABASE.dbUser())
+            .nonRLSPassword(DEFAULT_DATABASE.dbPassword())
             .rowLevelSecurityEnabled(rlsEnabled)
             .build();
 
         connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
-            .host(postgresConfiguration.getUri().getHost())
-            .port(postgresConfiguration.getUri().getPort())
+            .host(postgresConfiguration.getHost())
+            .port(postgresConfiguration.getPort())
             .username(postgresConfiguration.getCredential().getUsername())
             .password(postgresConfiguration.getCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
