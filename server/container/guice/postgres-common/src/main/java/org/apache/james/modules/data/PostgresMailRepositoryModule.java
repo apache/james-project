@@ -21,11 +21,14 @@ package org.apache.james.modules.data;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.mailrepository.api.MailRepositoryFactory;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.postgres.PostgresMailRepository;
+import org.apache.james.mailrepository.postgres.PostgresMailRepositoryBlobReferenceSource;
+import org.apache.james.mailrepository.postgres.PostgresMailRepositoryContentDAO;
 import org.apache.james.mailrepository.postgres.PostgresMailRepositoryFactory;
 import org.apache.james.mailrepository.postgres.PostgresMailRepositoryUrlStore;
 
@@ -37,6 +40,7 @@ import com.google.inject.multibindings.Multibinder;
 public class PostgresMailRepositoryModule extends AbstractModule {
     @Override
     protected void configure() {
+        bind(PostgresMailRepositoryContentDAO.class).in(Scopes.SINGLETON);
         bind(PostgresMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
 
         bind(MailRepositoryUrlStore.class).to(PostgresMailRepositoryUrlStore.class);
@@ -51,5 +55,8 @@ public class PostgresMailRepositoryModule extends AbstractModule {
             .addBinding().to(PostgresMailRepositoryFactory.class);
         Multibinder.newSetBinder(binder(), PostgresModule.class)
             .addBinding().toInstance(org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.MODULE);
+
+        Multibinder<BlobReferenceSource> blobReferenceSourceMultibinder = Multibinder.newSetBinder(binder(), BlobReferenceSource.class);
+        blobReferenceSourceMultibinder.addBinding().to(PostgresMailRepositoryBlobReferenceSource.class);
     }
 }

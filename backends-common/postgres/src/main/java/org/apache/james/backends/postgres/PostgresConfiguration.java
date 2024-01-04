@@ -19,31 +19,34 @@
 
 package org.apache.james.backends.postgres;
 
-import java.net.URI;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 public class PostgresConfiguration {
-    public static final String URL = "url";
     public static final String DATABASE_NAME = "database.name";
     public static final String DATABASE_NAME_DEFAULT_VALUE = "postgres";
     public static final String DATABASE_SCHEMA = "database.schema";
     public static final String DATABASE_SCHEMA_DEFAULT_VALUE = "public";
+    public static final String HOST = "database.host";
+    public static final String HOST_DEFAULT_VALUE = "localhost";
+    public static final String PORT = "database.port";
+    public static final int PORT_DEFAULT_VALUE = 5432;
+    public static final String USERNAME = "database.username";
+    public static final String PASSWORD = "database.password";
+    public static final String NON_RLS_USERNAME = "database.non-rls.username";
+    public static final String NON_RLS_PASSWORD = "database.non-rls.password";
     public static final String RLS_ENABLED = "row.level.security.enabled";
 
     public static class Credential {
         private final String username;
         private final String password;
 
-        Credential(String username, String password) {
+
+        public Credential(String username, String password) {
             this.username = username;
             this.password = password;
         }
@@ -58,15 +61,15 @@ public class PostgresConfiguration {
     }
 
     public static class Builder {
-        private Optional<String> url = Optional.empty();
         private Optional<String> databaseName = Optional.empty();
         private Optional<String> databaseSchema = Optional.empty();
+        private Optional<String> host = Optional.empty();
+        private Optional<Integer> port = Optional.empty();
+        private Optional<String> username = Optional.empty();
+        private Optional<String> password = Optional.empty();
+        private Optional<String> nonRLSUser = Optional.empty();
+        private Optional<String> nonRLSPassword = Optional.empty();
         private Optional<Boolean> rowLevelSecurityEnabled = Optional.empty();
-
-        public Builder url(String url) {
-            this.url = Optional.of(url);
-            return this;
-        }
 
         public Builder databaseName(String databaseName) {
             this.databaseName = Optional.of(databaseName);
@@ -88,6 +91,66 @@ public class PostgresConfiguration {
             return this;
         }
 
+        public Builder host(String host) {
+            this.host = Optional.of(host);
+            return this;
+        }
+
+        public Builder host(Optional<String> host) {
+            this.host = host;
+            return this;
+        }
+
+        public Builder port(Integer port) {
+            this.port = Optional.of(port);
+            return this;
+        }
+
+        public Builder port(Optional<Integer> port) {
+            this.port = port;
+            return this;
+        }
+
+        public Builder username(String username) {
+            this.username = Optional.of(username);
+            return this;
+        }
+
+        public Builder username(Optional<String> username) {
+            this.username = username;
+            return this;
+        }
+
+        public Builder password(String password) {
+            this.password = Optional.of(password);
+            return this;
+        }
+
+        public Builder password(Optional<String> password) {
+            this.password = password;
+            return this;
+        }
+
+        public Builder nonRLSUser(String nonRLSUser) {
+            this.nonRLSUser = Optional.of(nonRLSUser);
+            return this;
+        }
+
+        public Builder nonRLSUser(Optional<String> nonRLSUser) {
+            this.nonRLSUser = nonRLSUser;
+            return this;
+        }
+
+        public Builder nonRLSPassword(String nonRLSPassword) {
+            this.nonRLSPassword = Optional.of(nonRLSPassword);
+            return this;
+        }
+
+        public Builder nonRLSPassword(Optional<String> nonRLSPassword) {
+            this.nonRLSPassword = nonRLSPassword;
+            return this;
+        }
+
         public Builder rowLevelSecurityEnabled(boolean rlsEnabled) {
             this.rowLevelSecurityEnabled = Optional.of(rlsEnabled);
             return this;
@@ -99,35 +162,21 @@ public class PostgresConfiguration {
         }
 
         public PostgresConfiguration build() {
-            Preconditions.checkArgument(url.isPresent() && !url.get().isBlank(), "You need to specify Postgres URI");
-            URI postgresURI = asURI(url.get());
+            Preconditions.checkArgument(username.isPresent() && !username.get().isBlank(), "You need to specify username");
+            Preconditions.checkArgument(password.isPresent() && !password.get().isBlank(), "You need to specify password");
 
-            return new PostgresConfiguration(postgresURI,
-                parseCredential(postgresURI),
+            if (rowLevelSecurityEnabled.isPresent() && rowLevelSecurityEnabled.get()) {
+                Preconditions.checkArgument(nonRLSUser.isPresent() && !nonRLSUser.get().isBlank(), "You need to specify nonRLSUser");
+                Preconditions.checkArgument(nonRLSPassword.isPresent() && !nonRLSPassword.get().isBlank(), "You need to specify nonRLSPassword");
+            }
+
+            return new PostgresConfiguration(host.orElse(HOST_DEFAULT_VALUE),
+                port.orElse(PORT_DEFAULT_VALUE),
                 databaseName.orElse(DATABASE_NAME_DEFAULT_VALUE),
                 databaseSchema.orElse(DATABASE_SCHEMA_DEFAULT_VALUE),
+                new Credential(username.get(), password.get()),
+                new Credential(nonRLSUser.orElse(username.get()), nonRLSPassword.orElse(password.get())),
                 rowLevelSecurityEnabled.orElse(false));
-        }
-
-        private Credential parseCredential(URI postgresURI) {
-            Preconditions.checkArgument(postgresURI.getUserInfo() != null, "Postgres URI need to contains user credential");
-            Preconditions.checkArgument(postgresURI.getUserInfo().contains(":"), "User info needs a password part");
-
-            List<String> parts = Splitter.on(':')
-                .splitToList(postgresURI.getUserInfo());
-            ImmutableList<String> passwordParts = parts.stream()
-                .skip(1)
-                .collect(ImmutableList.toImmutableList());
-
-            return new Credential(parts.get(0), Joiner.on(':').join(passwordParts));
-        }
-
-        private URI asURI(String uri) {
-            try {
-                return URI.create(uri);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("You need to specify a valid Postgres URI", e);
-            }
         }
     }
 
@@ -137,33 +186,43 @@ public class PostgresConfiguration {
 
     public static PostgresConfiguration from(Configuration propertiesConfiguration) {
         return builder()
-            .url(propertiesConfiguration.getString(URL, null))
             .databaseName(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_NAME)))
             .databaseSchema(Optional.ofNullable(propertiesConfiguration.getString(DATABASE_SCHEMA)))
+            .host(Optional.ofNullable(propertiesConfiguration.getString(HOST)))
+            .port(propertiesConfiguration.getInt(PORT, PORT_DEFAULT_VALUE))
+            .username(Optional.ofNullable(propertiesConfiguration.getString(USERNAME)))
+            .password(Optional.ofNullable(propertiesConfiguration.getString(PASSWORD)))
+            .nonRLSUser(Optional.ofNullable(propertiesConfiguration.getString(NON_RLS_USERNAME)))
+            .nonRLSPassword(Optional.ofNullable(propertiesConfiguration.getString(NON_RLS_PASSWORD)))
             .rowLevelSecurityEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
             .build();
     }
 
-    private final URI uri;
-    private final Credential credential;
+    private final String host;
+    private final int port;
     private final String databaseName;
     private final String databaseSchema;
+    private final Credential credential;
+    private final Credential nonRLSCredential;
     private final boolean rowLevelSecurityEnabled;
 
-    private PostgresConfiguration(URI uri, Credential credential, String databaseName, String databaseSchema, boolean rowLevelSecurityEnabled) {
-        this.uri = uri;
-        this.credential = credential;
+    private PostgresConfiguration(String host, int port, String databaseName, String databaseSchema,
+                                  Credential credential, Credential nonRLSCredential, boolean rowLevelSecurityEnabled) {
+        this.host = host;
+        this.port = port;
         this.databaseName = databaseName;
         this.databaseSchema = databaseSchema;
+        this.credential = credential;
+        this.nonRLSCredential = nonRLSCredential;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
     }
 
-    public URI getUri() {
-        return uri;
+    public String getHost() {
+        return host;
     }
 
-    public Credential getCredential() {
-        return credential;
+    public int getPort() {
+        return port;
     }
 
     public String getDatabaseName() {
@@ -174,8 +233,21 @@ public class PostgresConfiguration {
         return databaseSchema;
     }
 
+    public Credential getCredential() {
+        return credential;
+    }
+
+    public Credential getNonRLSCredential() {
+        return nonRLSCredential;
+    }
+
     public boolean rowLevelSecurityEnabled() {
         return rowLevelSecurityEnabled;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(host, port, databaseName, databaseSchema, credential, nonRLSCredential, rowLevelSecurityEnabled);
     }
 
     @Override
@@ -184,16 +256,13 @@ public class PostgresConfiguration {
             PostgresConfiguration that = (PostgresConfiguration) o;
 
             return Objects.equals(this.rowLevelSecurityEnabled, that.rowLevelSecurityEnabled)
-                && Objects.equals(this.uri, that.uri)
+                && Objects.equals(this.host, that.host)
+                && Objects.equals(this.port, that.port)
                 && Objects.equals(this.credential, that.credential)
+                && Objects.equals(this.nonRLSCredential, that.nonRLSCredential)
                 && Objects.equals(this.databaseName, that.databaseName)
                 && Objects.equals(this.databaseSchema, that.databaseSchema);
         }
         return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(uri, credential, databaseName, databaseSchema, rowLevelSecurityEnabled);
     }
 }
