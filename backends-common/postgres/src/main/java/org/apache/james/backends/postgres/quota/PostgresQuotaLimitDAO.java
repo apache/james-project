@@ -26,7 +26,7 @@ import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.Postg
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.QUOTA_SCOPE;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.QUOTA_TYPE;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.TABLE_NAME;
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -47,7 +47,7 @@ public class PostgresQuotaLimitDAO {
     private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresQuotaLimitDAO(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor) {
+    public PostgresQuotaLimitDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

@@ -21,6 +21,7 @@ package org.apache.james.mailrepository.postgres;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryContentTable.ATTRIBUTES;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryContentTable.BODY_BLOB_ID;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryContentTable.ERROR;
@@ -49,6 +50,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -95,7 +97,7 @@ public class PostgresMailRepository implements MailRepository {
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMailRepository(PostgresExecutor postgresExecutor,
+    public PostgresMailRepository(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor,
                                   MailRepositoryUrl url,
                                   MimeMessageStore.Factory mimeMessageStoreFactory,
                                   BlobId.Factory blobIdFactory) {

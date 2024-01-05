@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 
 import java.io.FileNotFoundException;
 import java.util.Set;
@@ -27,8 +27,10 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTableManager;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PoolPostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresHealthCheck;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
@@ -55,9 +57,9 @@ public class PostgresCommonModule extends AbstractModule {
     @Override
     public void configure() {
         Multibinder.newSetBinder(binder(), PostgresModule.class);
-        bind(PostgresExecutor.Factory.class).in(Scopes.SINGLETON);
+        bind(DefaultPostgresExecutor.Factory.class).in(Scopes.SINGLETON);
 
-        bind(PostgresExecutor.class).toProvider(PostgresTableManager.class);
+        bind(PostgresExecutor.class).toProvider(PostgresTableManager.class).asEagerSingleton();
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding().to(PostgresHealthCheck.class);
@@ -102,16 +104,17 @@ public class PostgresCommonModule extends AbstractModule {
 
     @Provides
     @Singleton
-    PostgresTableManager postgresTableManager(PostgresExecutor.Factory factory,
+    PostgresTableManager postgresTableManager(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor,
                                               PostgresModule postgresModule,
                                               PostgresConfiguration postgresConfiguration) {
-        return new PostgresTableManager(factory, postgresModule, postgresConfiguration);
+        return new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration);
     }
 
+
     @Provides
-    @Named(DEFAULT_INJECT)
+    @Named(POOL_INJECT_NAME)
     @Singleton
-    PostgresExecutor defaultPostgresExecutor(PostgresTableManager postgresTableManager) {
-        return postgresTableManager.get();
+    PostgresExecutor providePoolPostgresExecutor(PoolPostgresExecutor poolPostgresExecutor) {
+        return poolPostgresExecutor;
     }
 }

@@ -25,7 +25,7 @@ import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.Postg
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.PRIMARY_KEY_CONSTRAINT_NAME;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TABLE_NAME;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TYPE;
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 
 import java.util.function.Function;
 
@@ -49,7 +49,7 @@ public class PostgresQuotaCurrentValueDAO {
     private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresQuotaCurrentValueDAO(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor) {
+    public PostgresQuotaCurrentValueDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

@@ -19,7 +19,7 @@
 
 package org.apache.james.sieve.postgres;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.ACTIVATION_DATE_TIME;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.IS_ACTIVE;
 import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveScriptTable.SCRIPT_CONTENT;
@@ -49,7 +49,7 @@ public class PostgresSieveScriptDAO {
     private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresSieveScriptDAO(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor) {
+    public PostgresSieveScriptDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

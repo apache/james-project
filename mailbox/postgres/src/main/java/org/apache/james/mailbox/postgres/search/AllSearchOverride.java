@@ -21,7 +21,7 @@ package org.apache.james.mailbox.postgres.search;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.Mailbox;
@@ -34,10 +34,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class AllSearchOverride implements ListeningMessageSearchIndex.SearchOverride {
-    private final PostgresExecutor.Factory executorFactory;
+    private final DefaultPostgresExecutor.Factory executorFactory;
 
     @Inject
-    public AllSearchOverride(PostgresExecutor.Factory executorFactory) {
+    public AllSearchOverride(DefaultPostgresExecutor.Factory executorFactory) {
         this.executorFactory = executorFactory;
     }
 

@@ -40,10 +40,10 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     private final boolean rowLevelSecurityEnabled;
 
     @Inject
-    public PostgresTableManager(PostgresExecutor.Factory factory,
+    public PostgresTableManager(PostgresExecutor postgresExecutor,
                                 PostgresModule module,
                                 PostgresConfiguration postgresConfiguration) {
-        this.postgresExecutor = factory.create();
+        this.postgresExecutor = postgresExecutor;
         this.module = module;
         this.rowLevelSecurityEnabled = postgresConfiguration.rowLevelSecurityEnabled();
         initPostgres();
@@ -72,8 +72,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     public Mono<Void> initializeTables() {
-        return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tables())
+        return postgresExecutor.executeVoid(dsl -> Flux.fromIterable(module.tables())
                 .flatMap(table -> Mono.from(table.getCreateTableStepFunction().apply(dsl))
                     .then(alterTableIfNeeded(table))
                     .doOnSuccess(any -> LOGGER.info("Table {} created", table.getName()))
@@ -138,8 +137,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     public Mono<Void> truncate() {
-        return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tables())
+        return postgresExecutor.executeVoid(dsl -> Flux.fromIterable(module.tables())
                 .flatMap(table -> Mono.from(dsl.truncateTable(table.getName()))
                     .doOnSuccess(any -> LOGGER.info("Table {} truncated", table.getName()))
                     .doOnError(e -> LOGGER.error("Error while truncating table {}", table.getName(), e)))
@@ -147,8 +145,7 @@ public class PostgresTableManager implements Provider<PostgresExecutor> {
     }
 
     public Mono<Void> initializeTableIndexes() {
-        return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tableIndexes())
+        return postgresExecutor.executeVoid(dsl -> Flux.fromIterable(module.tableIndexes())
                 .concatMap(index -> Mono.from(index.getCreateIndexStepFunction().apply(dsl))
                     .doOnSuccess(any -> LOGGER.info("Index {} created", index.getName()))
                     .onErrorResume(e -> handleIndexCreationException(index, e)))

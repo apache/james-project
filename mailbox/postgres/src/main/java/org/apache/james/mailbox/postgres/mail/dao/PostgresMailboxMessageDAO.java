@@ -24,6 +24,7 @@ import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_D
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
 import static org.apache.james.backends.postgres.PostgresCommons.UNNEST_FIELD;
 import static org.apache.james.backends.postgres.PostgresCommons.tableField;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_ANSWERED;
@@ -54,6 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -110,7 +112,7 @@ public class PostgresMailboxMessageDAO {
     private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresMailboxMessageDAO(PostgresExecutor postgresExecutor) {
+    public PostgresMailboxMessageDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

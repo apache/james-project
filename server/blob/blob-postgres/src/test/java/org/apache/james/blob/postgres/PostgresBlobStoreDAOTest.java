@@ -19,10 +19,19 @@
 
 package org.apache.james.blob.postgres;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.backends.postgres.utils.PoolPostgresExecutor;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.HashBlobId;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,10 +41,26 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresBlobStorageModule.MODULE);
 
     private PostgresBlobStoreDAO blobStore;
+    private static PoolPostgresExecutor poolPostgresExecutor;
+
+    @BeforeAll
+    static void setUpClass() {
+        PostgresConfiguration configuration = mock(PostgresConfiguration.class);
+        when(configuration.pool())
+            .thenReturn(Optional.of(new PostgresConfiguration.Pool(Optional.of(50),
+                Optional.of(50), Optional.empty())));
+        poolPostgresExecutor = new PoolPostgresExecutor(postgresExtension.getConnectionFactory(), configuration);
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        poolPostgresExecutor.dispose();
+    }
+
 
     @BeforeEach
     void setUp() {
-        blobStore = new PostgresBlobStoreDAO(postgresExtension.getPostgresExecutor(), new HashBlobId.Factory());
+        blobStore = new PostgresBlobStoreDAO(poolPostgresExecutor, new HashBlobId.Factory());
     }
 
     @Override

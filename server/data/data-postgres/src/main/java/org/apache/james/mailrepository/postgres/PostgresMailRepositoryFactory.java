@@ -19,7 +19,10 @@
 
 package org.apache.james.mailrepository.postgres;
 
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
@@ -34,7 +37,7 @@ public class PostgresMailRepositoryFactory implements MailRepositoryFactory {
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMailRepositoryFactory(PostgresExecutor executor, MimeMessageStore.Factory mimeMessageStoreFactory, BlobId.Factory blobIdFactory) {
+    public PostgresMailRepositoryFactory(@Named(POOL_INJECT_NAME) PostgresExecutor executor, MimeMessageStore.Factory mimeMessageStoreFactory, BlobId.Factory blobIdFactory) {
         this.executor = executor;
         this.mimeMessageStoreFactory = mimeMessageStoreFactory;
         this.blobIdFactory = blobIdFactory;

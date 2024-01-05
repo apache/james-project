@@ -23,7 +23,7 @@ import java.time.Clock;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.DefaultPostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.MailboxSession;
@@ -48,13 +48,13 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
 public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
-    private final PostgresExecutor.Factory executorFactory;
+    private final DefaultPostgresExecutor.Factory executorFactory;
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
 
     @Inject
-    public PostgresMailboxSessionMapperFactory(PostgresExecutor.Factory executorFactory,
+    public PostgresMailboxSessionMapperFactory(DefaultPostgresExecutor.Factory executorFactory,
                                                Clock clock,
                                                BlobStore blobStore,
                                                BlobId.Factory blobIdFactory) {

@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository.postgres;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryUrlTable.TABLE_NAME;
 import static org.apache.james.mailrepository.postgres.PostgresMailRepositoryModule.PostgresMailRepositoryUrlTable.URL;
 
@@ -40,7 +40,7 @@ public class PostgresMailRepositoryUrlStore implements MailRepositoryUrlStore {
     private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresMailRepositoryUrlStore(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor) {
+    public PostgresMailRepositoryUrlStore(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

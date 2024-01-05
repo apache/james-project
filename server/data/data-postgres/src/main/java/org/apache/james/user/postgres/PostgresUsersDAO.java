@@ -19,7 +19,7 @@
 
 package org.apache.james.user.postgres;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.ALGORITHM;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.AUTHORIZED_USERS;
@@ -62,7 +62,7 @@ public class PostgresUsersDAO implements UsersDAO {
     private final Algorithm.HashingMode fallbackHashingMode;
 
     @Inject
-    public PostgresUsersDAO(@Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor,
+    public PostgresUsersDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor,
                             PostgresUsersRepositoryConfiguration postgresUsersRepositoryConfiguration) {
         this.postgresExecutor = postgresExecutor;
         this.algorithm = postgresUsersRepositoryConfiguration.getPreferredAlgorithm();

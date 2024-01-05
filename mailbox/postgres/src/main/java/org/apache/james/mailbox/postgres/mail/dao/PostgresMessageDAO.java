@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
@@ -43,6 +44,7 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -60,7 +62,7 @@ public class PostgresMessageDAO {
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresMessageDAO(PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
+    public PostgresMessageDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
         this.blobIdFactory = blobIdFactory;
     }

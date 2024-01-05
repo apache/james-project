@@ -19,7 +19,7 @@
 
 package org.apache.james.domainlist.postgres;
 
-import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.domainlist.postgres.PostgresDomainModule.PostgresDomainTable.DOMAIN;
 
 import java.util.List;
@@ -41,7 +41,7 @@ public class PostgresDomainList extends AbstractDomainList {
     private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresDomainList(DNSService dnsService, @Named(DEFAULT_INJECT) PostgresExecutor postgresExecutor) {
+    public PostgresDomainList(DNSService dnsService, @Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         super(dnsService);
         this.postgresExecutor = postgresExecutor;
     }

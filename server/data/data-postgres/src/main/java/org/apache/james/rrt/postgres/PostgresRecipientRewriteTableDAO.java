@@ -19,6 +19,7 @@
 
 package org.apache.james.rrt.postgres;
 
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.DOMAIN_NAME;
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.PK_CONSTRAINT_NAME;
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.TABLE_NAME;
@@ -26,6 +27,7 @@ import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.USERNAME;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -43,7 +45,7 @@ public class PostgresRecipientRewriteTableDAO {
     private final PostgresExecutor postgresExecutor;
 
     @Inject
-    public PostgresRecipientRewriteTableDAO(PostgresExecutor postgresExecutor) {
+    public PostgresRecipientRewriteTableDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
 

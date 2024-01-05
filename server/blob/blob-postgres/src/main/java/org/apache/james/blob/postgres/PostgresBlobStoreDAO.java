@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.postgres;
 
+import static org.apache.james.backends.postgres.utils.PoolPostgresExecutor.POOL_INJECT_NAME;
 import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.BLOB_ID;
 import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.BUCKET_NAME;
 import static org.apache.james.blob.postgres.PostgresBlobStorageModule.PostgresBlobStorageTable.DATA;
@@ -31,6 +32,7 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
@@ -52,7 +54,7 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
     private final BlobId.Factory blobIdFactory;
 
     @Inject
-    public PostgresBlobStoreDAO(PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
+    public PostgresBlobStoreDAO(@Named(POOL_INJECT_NAME) PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
         this.blobIdFactory = blobIdFactory;
     }
