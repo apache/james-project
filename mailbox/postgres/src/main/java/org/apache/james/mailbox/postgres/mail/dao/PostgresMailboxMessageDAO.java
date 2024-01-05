@@ -50,14 +50,17 @@ import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageD
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_MESSAGE_UID_FUNCTION;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -92,6 +95,20 @@ import reactor.core.publisher.Mono;
 
 public class PostgresMailboxMessageDAO {
 
+    public static class Factory {
+        private final PostgresExecutor.Factory executorFactory;
+
+        @Inject
+        @Singleton
+        public Factory(PostgresExecutor.Factory executorFactory) {
+            this.executorFactory = executorFactory;
+        }
+
+        public PostgresMailboxMessageDAO create(Optional<Domain> domain) {
+            return new PostgresMailboxMessageDAO(executorFactory.create(domain));
+        }
+    }
+
     private static final TableOnConditionStep<Record> MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP = TABLE_NAME.join(MessageTable.TABLE_NAME)
         .on(tableField(TABLE_NAME, MESSAGE_ID).eq(tableField(MessageTable.TABLE_NAME, MessageTable.MESSAGE_ID)));
 
@@ -109,7 +126,6 @@ public class PostgresMailboxMessageDAO {
 
     private final PostgresExecutor postgresExecutor;
 
-    @Inject
     public PostgresMailboxMessageDAO(PostgresExecutor postgresExecutor) {
         this.postgresExecutor = postgresExecutor;
     }
