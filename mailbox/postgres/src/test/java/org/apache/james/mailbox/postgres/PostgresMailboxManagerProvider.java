@@ -57,13 +57,11 @@ public class PostgresMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
 
-    private static PostgresMessageDAO postgresMessageDAO;
-    private static PostgresMailboxMessageDAO postgresMailboxMessageDAO;
+    public static final BlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension) {
-        BlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
-        MailboxSessionMapperFactory mf = provideMailboxSessionMapperFactory(postgresExtension, blobIdFactory, blobStore);
+        DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
+        MailboxSessionMapperFactory mf = provideMailboxSessionMapperFactory(postgresExtension, BLOB_ID_FACTORY, blobStore);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
@@ -78,11 +76,11 @@ public class PostgresMailboxManagerProvider {
         SessionProviderImpl sessionProvider = new SessionProviderImpl(noAuthenticator, noAuthorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
         MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor(), new PostgresAttachmentContentLoader());
-        postgresMessageDAO = new PostgresMessageDAO(postgresExtension.getExecutorFactory().create(), blobIdFactory);
-        postgresMailboxMessageDAO = new PostgresMailboxMessageDAO(postgresExtension.getExecutorFactory().create());
-        eventBus.register(new DeleteMessageListener(postgresMessageDAO,
-            postgresMailboxMessageDAO,
-            blobStore));
+
+        PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(BLOB_ID_FACTORY, postgresExtension.getExecutorFactory());
+        PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory());
+
+        eventBus.register(new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory));
 
         return new PostgresMailboxManager((PostgresMailboxSessionMapperFactory) mf, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
@@ -107,11 +105,4 @@ public class PostgresMailboxManagerProvider {
             blobIdFactory);
     }
 
-    public static PostgresMessageDAO providePostgresMessageDAO() {
-        return postgresMessageDAO;
-    }
-
-    public static PostgresMailboxMessageDAO providePostgresMailboxMessageDAO() {
-        return postgresMailboxMessageDAO;
-    }
 }
