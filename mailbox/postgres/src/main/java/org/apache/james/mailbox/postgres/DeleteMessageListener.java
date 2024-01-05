@@ -40,16 +40,18 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     public static class DeleteMessageListenerGroup extends Group {
     }
 
-    private final PostgresMessageDAO postgresMessageDAO;
-    private final PostgresMailboxMessageDAO postgresMailboxMessageDAO;
     private final BlobStore blobStore;
 
+    private final PostgresMessageDAO.Factory messageDAOFactory;
+    private final PostgresMailboxMessageDAO.Factory mailboxMessageDAOFactory;
+
+
     @Inject
-    public DeleteMessageListener(PostgresMessageDAO postgresMessageDAO,
-                                 PostgresMailboxMessageDAO postgresMailboxMessageDAO,
-                                 BlobStore blobStore) {
-        this.postgresMessageDAO = postgresMessageDAO;
-        this.postgresMailboxMessageDAO = postgresMailboxMessageDAO;
+    public DeleteMessageListener(BlobStore blobStore,
+                                 PostgresMailboxMessageDAO.Factory mailboxMessageDAOFactory,
+                                 PostgresMessageDAO.Factory messageDAOFactory) {
+        this.messageDAOFactory = messageDAOFactory;
+        this.mailboxMessageDAOFactory = mailboxMessageDAOFactory;
         this.blobStore = blobStore;
     }
 
@@ -71,30 +73,38 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         }
         if (event instanceof MailboxDeletion) {
             MailboxDeletion mailboxDeletion = (MailboxDeletion) event;
-            PostgresMailboxId mailboxId = (PostgresMailboxId) mailboxDeletion.getMailboxId();
-            return handleMailboxDeletion(mailboxId);
+            return handleMailboxDeletion(mailboxDeletion);
         }
         return Mono.empty();
     }
 
-    private Mono<Void> handleMailboxDeletion(PostgresMailboxId mailboxId) {
-        return postgresMailboxMessageDAO.deleteByMailboxId(mailboxId)
-            .flatMap(this::handleMessageDeletion)
+    private Mono<Void> handleMailboxDeletion(MailboxDeletion event) {
+        PostgresMessageDAO postgresMessageDAO = messageDAOFactory.create(event.getUsername().getDomainPart());
+        PostgresMailboxMessageDAO postgresMailboxMessageDAO = mailboxMessageDAOFactory.create(event.getUsername().getDomainPart());
+
+        return postgresMailboxMessageDAO.deleteByMailboxId((PostgresMailboxId) event.getMailboxId())
+            .flatMap(msgId -> handleMessageDeletion(msgId, postgresMessageDAO, postgresMailboxMessageDAO))
             .then();
     }
 
-    private Mono<Void> handleMessageDeletion(Expunged expunged) {
-        return Flux.fromIterable(expunged.getExpunged()
-            .values())
+    private Mono<Void> handleMessageDeletion(Expunged event) {
+        PostgresMessageDAO postgresMessageDAO = messageDAOFactory.create(event.getUsername().getDomainPart());
+        PostgresMailboxMessageDAO postgresMailboxMessageDAO = mailboxMessageDAOFactory.create(event.getUsername().getDomainPart());
+
+        return Flux.fromIterable(event.getExpunged()
+                .values())
             .map(MessageMetaData::getMessageId)
             .map(PostgresMessageId.class::cast)
-            .flatMap(this::handleMessageDeletion)
+            .flatMap(msgId -> handleMessageDeletion(msgId, postgresMessageDAO, postgresMailboxMessageDAO))
             .then();
     }
 
-    private Mono<Void> handleMessageDeletion(PostgresMessageId messageId) {
+
+    private Mono<Void> handleMessageDeletion(PostgresMessageId messageId,
+                                             PostgresMessageDAO postgresMessageDAO,
+                                             PostgresMailboxMessageDAO postgresMailboxMessageDAO) {
         return Mono.just(messageId)
-            .filterWhen(this::isUnreferenced)
+            .filterWhen(msgId -> isUnreferenced(msgId, postgresMailboxMessageDAO))
             .flatMap(id -> postgresMessageDAO.getBlobId(messageId)
                 .flatMap(this::deleteMessageBlobs)
                 .then(postgresMessageDAO.deleteByMessageId(messageId)));
@@ -105,7 +115,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
             .then();
     }
 
-    private Mono<Boolean> isUnreferenced(PostgresMessageId id) {
+    private Mono<Boolean> isUnreferenced(PostgresMessageId id, PostgresMailboxMessageDAO postgresMailboxMessageDAO) {
         return postgresMailboxMessageDAO.countByMessageId(id)
             .filter(count -> count == 0)
             .map(count -> true)
