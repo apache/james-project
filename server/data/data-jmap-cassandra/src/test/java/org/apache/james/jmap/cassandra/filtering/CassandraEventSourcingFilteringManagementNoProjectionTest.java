@@ -20,7 +20,6 @@
 package org.apache.james.jmap.cassandra.filtering;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule$;
@@ -34,9 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraEventSourcingFilteringManagementNoProjectionTest implements FilteringManagementContract {
     @RegisterExtension
-    static CassandraClusterExtension eventStoreExtension = new CassandraClusterExtension(CassandraModule.aggregateModules(
-        CassandraEventStoreModule$.MODULE$.MODULE(),
-        CassandraFilteringProjectionModule.MODULE));
+    static CassandraClusterExtension eventStoreExtension = new CassandraClusterExtension(CassandraEventStoreModule$.MODULE$.MODULE());
 
     private EventStore eventStore;
 

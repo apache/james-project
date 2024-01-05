@@ -22,7 +22,6 @@ package org.apache.james.jmap.api.filtering.impl;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -51,7 +50,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
 
         Publisher<Version> getLatestVersion(Username username);
 
-        Optional<ReactiveSubscriber> subscriber(Function<Username, Publisher<Rules>> ruleLoader);
+        Optional<ReactiveSubscriber> subscriber();
     }
 
     public static class NoReadProjection implements ReadProjection {
@@ -86,7 +85,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
         }
 
         @Override
-        public Optional<ReactiveSubscriber> subscriber(Function<Username, Publisher<Rules>> ruleLoader) {
+        public Optional<ReactiveSubscriber> subscriber() {
             return Optional.empty();
         }
     }
@@ -102,11 +101,13 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
     }
 
     public EventSourcingFilteringManagement(EventStore eventStore, ReadProjection readProjection) {
-        this.readProjection = new NoReadProjection(eventStore);
+        this.readProjection = readProjection;
         this.eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(new DefineRulesCommandHandler(eventStore)),
-            readProjection.subscriber(aggregateId -> new NoReadProjection(eventStore).listRulesForUser(aggregateId))
-                .map(Subscriber.class::cast).map(ImmutableSet::of).orElse(NO_SUBSCRIBER),
+            readProjection.subscriber()
+                .map(Subscriber.class::cast)
+                .map(ImmutableSet::of)
+                .orElse(NO_SUBSCRIBER),
             eventStore);
     }
 
@@ -121,11 +122,13 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
 
     @Override
     public Publisher<Rules> listRulesForUser(Username username) {
-        return readProjection.listRulesForUser(username);
+        return Mono.from(readProjection.listRulesForUser(username))
+            .defaultIfEmpty(new Rules(ImmutableList.of(), Version.INITIAL));
     }
 
     @Override
     public Publisher<Version> getLatestVersion(Username username) {
-        return readProjection.getLatestVersion(username);
+        return Mono.from(readProjection.getLatestVersion(username))
+            .defaultIfEmpty(Version.INITIAL);
     }
 }
