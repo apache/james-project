@@ -16,48 +16,41 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.postgres;
 
-import java.util.Optional;
+import static org.apache.james.mailbox.postgres.PostgresMailboxManagerProvider.BLOB_ID_FACTORY;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.events.EventBus;
-import org.apache.james.mailbox.MailboxManagerTest;
-import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
-import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Nested;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class PostgresMailboxManagerTest extends MailboxManagerTest<PostgresMailboxManager> {
-
-    @Disabled("JPAMailboxManager is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
-        " element of the Vault")
-    @Nested
-    class HookTests {
-    }
-
+public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
-    Optional<PostgresMailboxManager> mailboxManager = Optional.empty();
+    private static PostgresMailboxManager mailboxManager;
 
-    @Override
-    protected PostgresMailboxManager provideMailboxManager() {
-        if (mailboxManager.isEmpty()) {
-            mailboxManager = Optional.of(PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension));
-        }
-        return mailboxManager.get();
+    @BeforeAll
+    static void beforeAll() {
+        mailboxManager = PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension);
     }
 
     @Override
-    protected SubscriptionManager provideSubscriptionManager() {
-        return new StoreSubscriptionManager(provideMailboxManager().getMapperFactory(), provideMailboxManager().getMapperFactory(), provideMailboxManager().getEventBus());
+    PostgresMailboxManager provideMailboxManager() {
+        return mailboxManager;
     }
 
     @Override
-    protected EventBus retrieveEventBus(PostgresMailboxManager mailboxManager) {
-        return mailboxManager.getEventBus();
+    PostgresMessageDAO providePostgresMessageDAO() {
+        return new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), BLOB_ID_FACTORY);
+    }
+
+    @Override
+    PostgresMailboxMessageDAO providePostgresMailboxMessageDAO() {
+        return new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
     }
 }
