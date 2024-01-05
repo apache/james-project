@@ -43,10 +43,12 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.postgres.extensions.types.Hstore;
@@ -55,11 +57,27 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class PostgresMessageDAO {
+
+    public static class Factory {
+        private final BlobId.Factory blobIdFactory;
+        private final PostgresExecutor.Factory executorFactory;
+
+        @Inject
+        @Singleton
+        public Factory(BlobId.Factory blobIdFactory, PostgresExecutor.Factory executorFactory) {
+            this.blobIdFactory = blobIdFactory;
+            this.executorFactory = executorFactory;
+        }
+
+        public PostgresMessageDAO create(Optional<Domain> domain) {
+            return new PostgresMessageDAO(executorFactory.create(domain), blobIdFactory);
+        }
+    }
+
     public static final long DEFAULT_LONG_VALUE = 0L;
     private final PostgresExecutor postgresExecutor;
     private final BlobId.Factory blobIdFactory;
 
-    @Inject
     public PostgresMessageDAO(PostgresExecutor postgresExecutor, BlobId.Factory blobIdFactory) {
         this.postgresExecutor = postgresExecutor;
         this.blobIdFactory = blobIdFactory;
