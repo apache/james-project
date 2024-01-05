@@ -88,7 +88,7 @@ public interface PostgresFixture {
         }
     }
 
-    String IMAGE = "postgres:16";
+    String IMAGE = "postgres:16.1";
     Integer PORT = POSTGRESQL_PORT;
     Supplier<PostgreSQLContainer<?>> PG_CONTAINER = () -> new PostgreSQLContainer<>(IMAGE)
         .withDatabaseName(DEFAULT_DATABASE.dbName())
