@@ -23,7 +23,7 @@ services:
       - ./sample-configuration-single/search.properties:/root/conf/search.properties
 
   postgres:
-    image: postgres:16.0
+    image: postgres:16.1
     ports:
       - "5432:5432"
     environment:
