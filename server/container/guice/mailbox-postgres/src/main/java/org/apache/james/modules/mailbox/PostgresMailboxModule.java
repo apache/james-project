@@ -49,8 +49,6 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
@@ -118,9 +116,6 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(AttachmentContentLoader.class).to(PostgresAttachmentContentLoader.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
-
-        bind(PostgresMessageDAO.class).in(Scopes.SINGLETON);
-        bind(PostgresMailboxMessageDAO.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(PostgresMailboxManagerDefinition.class);
 
