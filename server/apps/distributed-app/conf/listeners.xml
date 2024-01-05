@@ -26,10 +26,6 @@
     <class>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</class>
   </listener>
 
-  <listener>
-    <class>mailets.BlacklistListener</class>
-  </listener>
-
   <!-- Enable to populate JMAP EmailQueryView -->
   <!--
   <listener>
