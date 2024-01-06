@@ -29,7 +29,7 @@
     <name>Apache James :: Backends Common :: Postgres</name>
 
     <properties>
-        <jooq.version>3.16.22</jooq.version>
+        <jooq.version>3.16.23</jooq.version>
         <r2dbc.postgresql.version>1.0.2.RELEASE</r2dbc.postgresql.version>
     </properties>
 
