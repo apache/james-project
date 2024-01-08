@@ -62,11 +62,12 @@ public class PostgresMailboxManager extends StoreMailboxManager {
                                   QuotaComponents quotaComponents,
                                   MessageSearchIndex index,
                                   ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
+                                  PreDeletionHooks preDeletionHooks,
                                   Clock clock) {
         super(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,
-            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK, threadIdGuessingAlgorithm, clock);
+            index, MailboxManagerConfiguration.DEFAULT, preDeletionHooks, threadIdGuessingAlgorithm, clock);
     }
 
     @Override
@@ -82,7 +83,8 @@ public class PostgresMailboxManager extends StoreMailboxManager {
             configuration.getBatchSizes(),
             getStoreRightManager(),
             getThreadIdGuessingAlgorithm(),
-            getClock());
+            getClock(),
+            getPreDeletionHooks());
     }
 
     @Override

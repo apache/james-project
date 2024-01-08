@@ -50,6 +50,7 @@ import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.quota.PostgresCurrentQuotaManager;
 import org.apache.james.mailbox.postgres.quota.PostgresPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -128,7 +129,8 @@ public class PostgresHostSystem extends JamesImapHostSystem {
 
         mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider, messageParser,
             new PostgresMessageId.Factory(),
-            eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(),
+            PreDeletionHooks.NO_PRE_DELETION_HOOK, new UpdatableTickingClock(Instant.now()));
 
         eventBus.register(quotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));

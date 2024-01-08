@@ -25,19 +25,12 @@ import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Nested;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresMailboxManagerTest extends MailboxManagerTest<PostgresMailboxManager> {
-
-    @Disabled("JPAMailboxManager is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
-        " element of the Vault")
-    @Nested
-    class HookTests {
-    }
-
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
@@ -46,7 +39,8 @@ class PostgresMailboxManagerTest extends MailboxManagerTest<PostgresMailboxManag
     @Override
     protected PostgresMailboxManager provideMailboxManager() {
         if (mailboxManager.isEmpty()) {
-            mailboxManager = Optional.of(PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension));
+            mailboxManager = Optional.of(PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension,
+                new PreDeletionHooks(preDeletionHooks(), new RecordingMetricFactory())));
         }
         return mailboxManager.get();
     }
