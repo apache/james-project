@@ -1,0 +1,18 @@
+---
+layout: post
+title:  "Apache James MIME4J 0.8.10"
+date:   2024-01-08  03:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce the 0.8.10 release of the MIME4J library.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
+
+The Apache James PMC would like to thanks all contributors who made this release possible!
+
+[CHANGELOG]: https://github.com/apache/james-mime4j/blob/master/CHANGELOG.md
+[tracker]: https://issues.apache.org/jira/browse/MIME4J
+[download]: https://james.apache.org/download.cgi#Apache_Mime4J
