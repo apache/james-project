@@ -64,9 +64,9 @@ public class PostgresMessageManager extends StoreMessageManager {
                                   QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
                                   MessageId.Factory messageIdFactory, BatchSizes batchSizes,
                                   StoreRightManager storeRightManager, ThreadIdGuessingAlgorithm threadIdGuessingAlgorithm,
-                                  Clock clock) {
+                                  Clock clock, PreDeletionHooks preDeletionHooks) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
-            quotaManager, quotaRootResolver, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
+            quotaManager, quotaRootResolver, batchSizes, storeRightManager, preDeletionHooks,
             new MessageStorer.WithoutAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), threadIdGuessingAlgorithm, clock));
         this.storeRightManager = storeRightManager;
         this.mapperFactory = mapperFactory;
