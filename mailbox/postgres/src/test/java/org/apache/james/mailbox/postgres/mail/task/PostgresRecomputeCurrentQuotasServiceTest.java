@@ -36,6 +36,7 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasServiceContract;
 import org.apache.james.mailbox.quota.task.RecomputeMailboxCurrentQuotasService;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -78,7 +79,7 @@ class PostgresRecomputeCurrentQuotasServiceTest implements RecomputeCurrentQuota
         configuration.addProperty("enableVirtualHosting", "false");
         usersRepository.configure(configuration);
 
-        mailboxManager = PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension);
+        mailboxManager = PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension, PreDeletionHooks.NO_PRE_DELETION_HOOK);
         sessionProvider = mailboxManager.getSessionProvider();
         currentQuotaManager = new PostgresCurrentQuotaManager(new PostgresQuotaCurrentValueDAO(postgresExtension.getPostgresExecutor()));
 
