@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
+import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
@@ -39,7 +40,9 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.TEXTUAL_LINE_COUNT;
+import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.BYTE_TO_CONTENT_FUNCTION;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -49,8 +52,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.Domain;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.jooq.Record;
 import org.jooq.postgres.extensions.types.Hstore;
 
 import reactor.core.publisher.Mono;
@@ -107,12 +114,30 @@ public class PostgresMessageDAO {
                 .set(HEADER_CONTENT, headerContentAsByte))));
     }
 
+    public Mono<MessageRepresentation> retrieveMessage(PostgresMessageId messageId) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(
+                    INTERNAL_DATE, SIZE, BODY_START_OCTET, HEADER_CONTENT, BODY_BLOB_ID)
+                .from(TABLE_NAME)
+                .where(MESSAGE_ID.eq(messageId.asUuid()))))
+            .map(record -> toMessageRepresentation(record, messageId));
+    }
+
+    private MessageRepresentation toMessageRepresentation(Record record, MessageId messageId) {
+        return MessageRepresentation.builder()
+            .messageId(messageId)
+            .internalDate(LOCAL_DATE_TIME_DATE_FUNCTION.apply(record.get(PostgresMessageModule.MessageTable.INTERNAL_DATE, LocalDateTime.class)))
+            .size(record.get(PostgresMessageModule.MessageTable.SIZE))
+            .headerContent(BYTE_TO_CONTENT_FUNCTION.apply(record.get(HEADER_CONTENT)))
+            .bodyBlobId(blobIdFactory.from(record.get(BODY_BLOB_ID)))
+            .build();
+    }
+
     public Mono<Void> deleteByMessageId(PostgresMessageId messageId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
             .where(MESSAGE_ID.eq(messageId.asUuid()))));
     }
 
-    public Mono<BlobId> getBlobId(PostgresMessageId messageId) {
+    public Mono<BlobId> getBodyBlobId(PostgresMessageId messageId) {
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(BODY_BLOB_ID)
             .from(TABLE_NAME)
             .where(MESSAGE_ID.eq(messageId.asUuid()))))
