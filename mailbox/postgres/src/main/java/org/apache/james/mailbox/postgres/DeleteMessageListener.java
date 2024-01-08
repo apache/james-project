@@ -19,16 +19,21 @@
 
 package org.apache.james.mailbox.postgres;
 
+import java.util.Set;
+import java.util.function.Function;
+
 import javax.inject.Inject;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.reactivestreams.Publisher;
@@ -37,10 +42,18 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class DeleteMessageListener implements EventListener.ReactiveGroupEventListener {
+    @FunctionalInterface
+    public interface DeletionCallback {
+        Mono<Void> forMessage(MessageRepresentation messageRepresentation, MailboxId mailboxId, Username owner);
+    }
+
     public static class DeleteMessageListenerGroup extends Group {
     }
 
+    public static final int LOW_CONCURRENCY = 4;
+
     private final BlobStore blobStore;
+    private final Set<DeletionCallback> deletionCallbackList;
 
     private final PostgresMessageDAO.Factory messageDAOFactory;
     private final PostgresMailboxMessageDAO.Factory mailboxMessageDAOFactory;
@@ -49,10 +62,12 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     @Inject
     public DeleteMessageListener(BlobStore blobStore,
                                  PostgresMailboxMessageDAO.Factory mailboxMessageDAOFactory,
-                                 PostgresMessageDAO.Factory messageDAOFactory) {
+                                 PostgresMessageDAO.Factory messageDAOFactory,
+                                 Set<DeletionCallback> deletionCallbackList) {
         this.messageDAOFactory = messageDAOFactory;
         this.mailboxMessageDAOFactory = mailboxMessageDAOFactory;
         this.blobStore = blobStore;
+        this.deletionCallbackList = deletionCallbackList;
     }
 
     @Override
@@ -83,7 +98,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         PostgresMailboxMessageDAO postgresMailboxMessageDAO = mailboxMessageDAOFactory.create(event.getUsername().getDomainPart());
 
         return postgresMailboxMessageDAO.deleteByMailboxId((PostgresMailboxId) event.getMailboxId())
-            .flatMap(msgId -> handleMessageDeletion(msgId, postgresMessageDAO, postgresMailboxMessageDAO))
+            .flatMap(msgId -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, msgId, event.getMailboxId(), event.getMailboxPath().getUser()))
             .then();
     }
 
@@ -95,24 +110,33 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .values())
             .map(MessageMetaData::getMessageId)
             .map(PostgresMessageId.class::cast)
-            .flatMap(msgId -> handleMessageDeletion(msgId, postgresMessageDAO, postgresMailboxMessageDAO))
+            .flatMap(msgId -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, msgId, event.getMailboxId(), event.getMailboxPath().getUser()), LOW_CONCURRENCY)
             .then();
     }
 
-
-    private Mono<Void> handleMessageDeletion(PostgresMessageId messageId,
-                                             PostgresMessageDAO postgresMessageDAO,
-                                             PostgresMailboxMessageDAO postgresMailboxMessageDAO) {
+    private Mono<Void> handleMessageDeletion(PostgresMessageDAO postgresMessageDAO,
+                                             PostgresMailboxMessageDAO postgresMailboxMessageDAO,
+                                             PostgresMessageId messageId,
+                                             MailboxId mailboxId, 
+                                             Username owner) {
         return Mono.just(messageId)
-            .filterWhen(msgId -> isUnreferenced(msgId, postgresMailboxMessageDAO))
-            .flatMap(id -> postgresMessageDAO.getBlobId(messageId)
-                .flatMap(this::deleteMessageBlobs)
-                .then(postgresMessageDAO.deleteByMessageId(messageId)));
+            .filterWhen(msgId -> isUnreferenced(messageId, postgresMailboxMessageDAO))
+            .flatMap(msgId -> postgresMessageDAO.retrieveMessage(messageId)
+                .flatMap(executeDeletionCallbacks(mailboxId, owner))
+                .then(deleteBodyBlob(msgId, postgresMessageDAO))
+                .then(postgresMessageDAO.deleteByMessageId(msgId)));
     }
 
-    private Mono<Void> deleteMessageBlobs(BlobId blobId) {
-        return Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId))
+    private Function<MessageRepresentation, Mono<Void>> executeDeletionCallbacks(MailboxId mailboxId, Username owner) {
+        return messageRepresentation -> Flux.fromIterable(deletionCallbackList)
+            .concatMap(callback -> callback.forMessage(messageRepresentation, mailboxId, owner))
             .then();
+    }
+
+    private Mono<Void> deleteBodyBlob(PostgresMessageId id, PostgresMessageDAO postgresMessageDAO) {
+        return postgresMessageDAO.getBodyBlobId(id)
+            .flatMap(blobId -> Mono.from(blobStore.delete(blobStore.getDefaultBucketName(), blobId))
+                .then());
     }
 
     private Mono<Boolean> isUnreferenced(PostgresMessageId id, PostgresMailboxMessageDAO postgresMailboxMessageDAO) {
