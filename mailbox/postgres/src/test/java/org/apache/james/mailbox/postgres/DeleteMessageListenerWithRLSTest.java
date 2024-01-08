@@ -28,6 +28,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -40,7 +41,7 @@ public class DeleteMessageListenerWithRLSTest extends DeleteMessageListenerContr
 
     @BeforeAll
     static void beforeAll() {
-        mailboxManager = PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension);
+        mailboxManager = PostgresMailboxManagerProvider.provideMailboxManager(postgresExtension, PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 
     @Override
