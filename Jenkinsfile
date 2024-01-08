@@ -45,6 +45,7 @@ pipeline {
                 'server/container/guice/postgres-common,' +
                 'server/container/guice/mailbox-postgres,' +
                 'server/apps/postgres-app,' +
+                'server/protocols/webadmin-integration-test/postgres-webadmin-integration-test,' +
                 'mpt/impl/imap-mailbox/postgres,' +
                 'event-bus/postgres,' +
                 'mailbox/plugin/deleted-messages-vault-postgres'

@@ -127,7 +127,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
         JamesServerMain.main(server);
     }
 
-    static GuiceJamesServer createServer(PostgresJamesConfiguration configuration) {
+    public static GuiceJamesServer createServer(PostgresJamesConfiguration configuration) {
         SearchConfiguration searchConfiguration = configuration.searchConfiguration();
 
         return GuiceJamesServer.forConfiguration(configuration)
