@@ -7,6 +7,84 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 No changes yet.
 
+### Fixes
+
+### Security
+
+- [FIX] JMX password auto-detection
+- [FIX] Enforce CRLF as part of SMTP DATA transaction (#1876)
+- [FIX] Set up JMX auth for Spring
+- [FIX] Set up JMX auth filter for Guice
+
+### New Features
+
+- JAMES-3942 Audit trail
+- JAMES-3897 Crowdsec integration for SMTP
+- JAMES-3964 Implement and test disabledCaps for SMTP
+- JAMES-3962 JMAP Email/set: specific headers for body parts (#1801)
+- JAMES-3960 Hints to ensure UID/ModSeq consistency in case of disaster
+- JAMES-3959 Starting distributed James without OpenSearch (#1784)
+- JAMES-3954 Implement RFC-9394 PARTIAL for IMAP FETCH/SEARCH
+- JAMES-3944 JMAP FILTER: More features: forward, flag, discard, etc...
+- JAMES-3930 ReadOnlyUsersLDAPRepository::test should allow authentication using localPart as login username
+- Supporting several LDAP hosts
+- JAMES 3822 SMTP FutureRelease Extension
+- JAMES-2434 IsFromMailingList matcher (#1606)
+- JAMES-3906 SSL hot reload for IMAP /SMTP
+- JAMES-3908 Storage directive with several folder (#1575)
+- JAMES-3909 Fully delete one user data webadmin endpoint
+
+### Improvements
+
+ - JAMES-3967 RelayLimit: add error log
+ - JAMES-3967 Store mails when relay is exceeded
+ - [FIX] LdapRepositoryConfiguration should interoperate with UsersRepositoryImpl (#1855)
+ - JAMES-3539 PushSubscription/get should return expired subscriptions (#1845)
+ - [ENHANCEMENT] Allow to trust all certificates with S3 blobstore (#1846)
+ - Numerous dependency updates
+ - [IMPROVEMENT] JMAP: Display message/disposition-notification in main message body
+ - JAMES-3965 DKIMSign: Use fileSystem in order to resolve privateKeyFilepath
+ - JAMES-3963 Full text search: AND for combining phrase terms (#1810)
+ - JAMES-3963 Sort From To Cc on display name first (#1811)
+ - JAMES-3955 Increase consumer timeout for TaskManagerWorkQueue
+ - JAMES-3955 WARNING logs upon closing RABBITMQ channels
+ - JAMES-3955 Applicative timeouts before Rabbit timeouts
+ - JAMES-3958 DKIM: Be resilient when updating mails with invalid headers (#1783)
+ - JAMES-3874 LMTP should handle overQuota exceptions
+ - JAMES-3944 Forwards should rewrite MAIL FROM
+ - JAMES-3887 MailboxManager::createMailboxReactive should subscribe parent mailboes it creates (#1752)
+ - JAMES-3828 ICALAttributeDTO: support missing uid, method and dtstamp fields
+ - [IMPROVMENT] Add Cassandra statements to the logs (#1723)
+ - JAMES-3925 Rework JMAP quota cleanup
+ - JAMES-3926 Move mutualized quota DAOs to backend/cassandra
+ - JAMES-3604 Enable to use quorum queues onto DTM work queue (#1708)
+ - JAMES-3938 IMAP MOVE should not fail on empty mailbox (#1713)
+ - [FIX] VerifySenderIdentity makes sense when auth is not announced (#1693)
+ - [FIX] PropagateLookupRightListener should not fail on missing mailbox
+ - [FIX] Some S3 like object storage, like MinIO, don't accept underscores in their bucket names
+ - JAMES-3914 Sieve actions fails when several recipients
+ - JAMES-3911 JPA: Prevent concurrent operations on the same EntityManager
+
+## [Unreleased 3.8.x]
+
+### Security
+
+- [FIX] JMX password auto-detection
+- [FIX] Enforce CRLF as part of SMTP DATA transaction (#1876)
+- [FIX] Set up JMX auth for Spring
+- [FIX] Set up JMX auth filter for Guice
+
+### Enhancements 
+
+ - JAMES-3938 IMAP MOVE should not fail on empty mailbox (#1716)
+ - JAMES-3604 Enable to use quorum queues onto DTM work queue (#1714)
+ - JAMES-3924 Allow conditional Cassandra statement recording
+ - JAMES-3934 Allow external scheduling for RabbitMQ mailQueue browse st… (#1682)
+ - JAMES-3918 Force deletion of user mailboxes (#1608) (#1611)
+ - FIX Proxy for SMTPS (#1594)
+ - JAMES-3914 Sieve actions fails when several recipients
+ - Small JPA enhancements
+
 ## [3.8.0] - 2023-05-17
 
 This release brings the following significant changes:
@@ -292,6 +370,22 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - JAMES-3900 Snapshots for polled updates (#1533)
  - JAMES-3440 RFC-8621 support for emailQueryView before + inMailbox sorted by receivedAt
  - JAMES-2080 Allow turning off header indexing in OpenSearch (#1516)
+
+## [Unreleased 3.7.x]
+
+### Security
+
+- [FIX] JMX password auto-detection
+- [FIX] Enforce CRLF as part of SMTP DATA transaction (#1876)
+- [FIX] Set up JMX auth for Spring
+- [FIX] Set up JMX auth filter for Guice
+
+### Enhancements
+
+
+- JAMES-3604 Enable to use quorum queues onto DTM work queue (#1714)
+- JAMES-3934 Allow external scheduling for RabbitMQ mailQueue browse st… (#1682)
+- JAMES-3918 Force deletion of user mailboxes (#1608) (#1611)
 
 ## [3.7.4] - 2023-03-20
 
