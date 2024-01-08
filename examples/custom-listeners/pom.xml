@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.james.examples</groupId>
     <artifactId>examples</artifactId>
-    <version>3.7.5-SNAPSHOT</version>
+    <version>3.7.5</version>
   </parent>
   <artifactId>custom-listeners</artifactId>
   <name>Apache James :: Examples :: Custom Listeners</name>
