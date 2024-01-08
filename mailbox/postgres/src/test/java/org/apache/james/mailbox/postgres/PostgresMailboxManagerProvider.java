@@ -52,6 +52,8 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 
+import com.google.common.collect.ImmutableSet;
+
 public class PostgresMailboxManagerProvider {
 
     private static final int LIMIT_ANNOTATIONS = 3;
@@ -80,7 +82,8 @@ public class PostgresMailboxManagerProvider {
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(BLOB_ID_FACTORY, postgresExtension.getExecutorFactory());
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory());
 
-        eventBus.register(new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory));
+        eventBus.register(new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
+            ImmutableSet.of()));
 
         return new PostgresMailboxManager((PostgresMailboxSessionMapperFactory) mf, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
