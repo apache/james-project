@@ -39,6 +39,7 @@ import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -61,7 +62,7 @@ public class PostgresMailboxManagerProvider {
 
     public static final BlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension) {
+    public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension, PreDeletionHooks preDeletionHooks) {
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
         MailboxSessionMapperFactory mf = provideMailboxSessionMapperFactory(postgresExtension, BLOB_ID_FACTORY, blobStore);
 
@@ -88,7 +89,8 @@ public class PostgresMailboxManagerProvider {
         return new PostgresMailboxManager((PostgresMailboxSessionMapperFactory) mf, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
             eventBus, annotationManager,
-            storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(), new UpdatableTickingClock(Instant.now()));
+            storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(),
+            preDeletionHooks, new UpdatableTickingClock(Instant.now()));
     }
 
     public static MailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension) {
