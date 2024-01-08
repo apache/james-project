@@ -83,7 +83,7 @@ public abstract class DeleteMessageListenerContract {
             PostgresMessageId messageId = (PostgresMessageId) appendResult.getId().getMessageId();
             PostgresMailboxId mailboxId = (PostgresMailboxId) appendResult.getId().getMailboxId();
 
-            softly.assertThat(postgresMessageDAO.getBlobId(messageId).blockOptional())
+            softly.assertThat(postgresMessageDAO.getBodyBlobId(messageId).blockOptional())
                 .isEmpty();
 
             softly.assertThat(postgresMailboxMessageDAO.countTotalMessagesByMailboxId(mailboxId).block())
@@ -102,7 +102,7 @@ public abstract class DeleteMessageListenerContract {
         assertSoftly(softly -> {
             PostgresMessageId messageId = (PostgresMessageId) appendResult.getId().getMessageId();
 
-            softly.assertThat(postgresMessageDAO.getBlobId(messageId).blockOptional())
+            softly.assertThat(postgresMessageDAO.getBodyBlobId(messageId).blockOptional())
                 .isNotEmpty();
 
             softly.assertThat(postgresMailboxMessageDAO.countTotalMessagesByMailboxId((PostgresMailboxId) otherBoxManager.getId())
@@ -121,7 +121,7 @@ public abstract class DeleteMessageListenerContract {
         assertSoftly(softly -> {
             PostgresMessageId messageId = (PostgresMessageId) appendResult.getId().getMessageId();
 
-            softly.assertThat(postgresMessageDAO.getBlobId(messageId).blockOptional())
+            softly.assertThat(postgresMessageDAO.getBodyBlobId(messageId).blockOptional())
                 .isEmpty();
         });
     }
@@ -136,7 +136,7 @@ public abstract class DeleteMessageListenerContract {
         PostgresMessageId messageId = (PostgresMessageId) appendResult.getId().getMessageId();
 
         assertSoftly(softly -> {
-            softly.assertThat(postgresMessageDAO.getBlobId(messageId).blockOptional())
+            softly.assertThat(postgresMessageDAO.getBodyBlobId(messageId).blockOptional())
                 .isNotEmpty();
 
             softly.assertThat(postgresMailboxMessageDAO.countTotalMessagesByMailboxId((PostgresMailboxId) otherBoxManager.getId())
