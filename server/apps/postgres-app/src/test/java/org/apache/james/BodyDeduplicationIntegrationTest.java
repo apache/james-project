@@ -56,7 +56,7 @@ class BodyDeduplicationIntegrationTest implements MailsShouldBeWellReceived {
             .configurationFromClasspath()
             .searchConfiguration(SearchConfiguration.scanning())
             .blobStore(BlobStoreConfiguration.builder()
-                .file()
+                .postgres()
                 .disableCache()
                 .deduplication()
                 .noCryptoConfig())
