@@ -21,6 +21,7 @@ services:
       - "8000:8000"
     volumes:
       - ./sample-configuration-single/search.properties:/root/conf/search.properties
+      - ./sample-configuration/blob.properties:/root/conf/blob.properties
 
   postgres:
     image: postgres:16.1
