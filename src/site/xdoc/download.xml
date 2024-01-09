@@ -95,13 +95,13 @@
 
     </subsection>
 
-    <subsection name="Apache James 3.7.4 is the latest stable version">
+    <subsection name="Apache James 3.7.5 is the latest stable version">
 
       <ul>
         <li>Source code (ZIP Format):
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.4/james-project-3.7.4-source-release.zip">james-project-3.7.4-source-release.zip</a>
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-project-3.7.4-source-release.zip.sha512">SHA-512</a>]
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-project-3.7.4-source-release.zip.asc">PGP</a>]</li>
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.5/james-project-3.7.5-source-release.zip">james-project-3.7.5-source-release.zip</a>
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-project-3.7.5-source-release.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-project-3.7.5-source-release.zip.asc">PGP</a>]</li>
 
         <p><b>JPA James server</b>:</p>
 
@@ -109,9 +109,9 @@
           (defaults to an embedded Derby database) that can be configured with an external SQL database.</p>
 
         <li>Binary (ZIP Format) for the JPA James server:
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.4/james-server-jpa-guice.zip">james-server-jpa-guice.zip</a>
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-server-jpa-guice.zip.sha512">SHA-512</a>]
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-server-jpa-guice.zip.asc">PGP</a>]
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.5/james-server-jpa-guice.zip">james-server-jpa-guice.zip</a>
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-server-jpa-guice.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-server-jpa-guice.zip.asc">PGP</a>]
         </li>
 
         <p><b>Distributed James server</b>:</p>
@@ -120,17 +120,17 @@
           RabbitMQ, and S3 API. It is intended for large scale deployments where scalability is required.</p>
 
         <li>Binary (ZIP Format) for the Distributed James server:
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.4/james-server-distributed-guice.zip">james-server-distributed-guice.zip</a>
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-server-distributed-guice.zip.sha512">SHA-512</a>]
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-server-distributed-guice.zip.asc">PGP</a>]
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.5/james-server-distributed-guice.zip">james-server-distributed-guice.zip</a>
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-server-distributed-guice.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-server-distributed-guice.zip.asc">PGP</a>]
         </li>
 
         <p><b>Spring wiring</b>:</p>
 
         <li>Binary (ZIP Format) for Spring wiring:
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.4/james-server-app-3.7.4-app.zip">james-server-app-3.7.4-app.zip</a>
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-server-app-3.7.4-app.zip.sha512">SHA-512</a>]
-          [<a href="https://downloads.apache.org/james/server/3.7.4/james-server-app-3.7.4-app.zip.asc">PGP</a>]
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.7.5/james-server-app-3.7.5-app.zip">james-server-app-3.7.5-app.zip</a>
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-server-app-3.7.5-app.zip.sha512">SHA-512</a>]
+          [<a href="https://downloads.apache.org/james/server/3.7.5/james-server-app-3.7.5-app.zip.asc">PGP</a>]
         </li>
 
       </ul>
