@@ -1,0 +1,24 @@
+---
+layout: post
+title:  "Apache James Server 3.8.1"
+date:   2024-01-09  02:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce James server 3.8.1 release.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+The Apache James PMC would like to thank all contributors who made this release possible!
+
+## Announcement
+
+This release comprise minor bug fixes enhancing Apache James stability.
+
+## Release changelog
+
+The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
+
+[CHANGELOG]: https://github.com/apache/james-project/blob/master/CHANGELOG.md#381---2024-01-09
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
