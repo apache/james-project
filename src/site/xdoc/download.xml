@@ -147,12 +147,12 @@
 
   <section name="Apache Mime4J">
   
-    <p>Apache Mime4J 0.8.9 is the latest stable version.</p>
+    <p>Apache Mime4J 0.8.10 is the latest stable version.</p>
 
     <p>Sources:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.9/james-mime4j-sources-0.8.9.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/james-mime4j-sources-0.8.9.zip.sha512">SHA-512</a>]
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/james-mime4j-sources-0.8.9.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.10/james-mime4j-sources-0.8.10.zip">(Zip)</a>
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/james-mime4j-sources-0.8.10.zip.sha512">SHA-512</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/james-mime4j-sources-0.8.10.zip.asc">PGP</a>]
     </p>
 
     <p>You can directly use the core library with maven:</p>
@@ -162,15 +162,15 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mime4j-core&lt;/artifactId&gt;
-    &lt;version&gt;0.8.9&lt;/version&gt;
+    &lt;version&gt;0.8.10&lt;/version&gt;
   &lt;/dependency&gt;
      </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.9/apache-mime4j-core-0.8.9.jar">(Jar)</a>
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/apache-mime4j-core-0.8.9.jar.sha512">SHA-512</a>]
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/apache-mime4j-core-0.8.9.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.10/apache-mime4j-core-0.8.10.jar">(Jar)</a>
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/apache-mime4j-core-0.8.10.jar.sha512">SHA-512</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/apache-mime4j-core-0.8.10.jar.asc">PGP</a>]
       </p>
 
     <p>In order to use Mime-4j DOM:</p>
@@ -180,15 +180,15 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mime4j-dom&lt;/artifactId&gt;
-    &lt;version&gt;0.8.9&lt;/version&gt;
+    &lt;version&gt;0.8.10&lt;/version&gt;
   &lt;/dependency&gt;
      </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.9/apache-mime4j-dom-0.8.9.jar">(Jar)</a>
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/apache-mime4j-dom-0.8.9.jar.sha512">SHA-512</a>]
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/apache-mime4j-dom-0.8.9.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.10/apache-mime4j-dom-0.8.10.jar">(Jar)</a>
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/apache-mime4j-dom-0.8.10.jar.sha512">SHA-512</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/apache-mime4j-dom-0.8.10.jar.asc">PGP</a>]
     </p>
 
     <p>An aggregator project is also available:</p>
@@ -198,15 +198,15 @@
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mime4j&lt;/artifactId&gt;
-    &lt;version&gt;0.8.9&lt;/version&gt;
+    &lt;version&gt;0.8.10&lt;/version&gt;
   &lt;/dependency&gt;
      </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.9/apache-mime4j-0.8.9-bin.zip">(Zip)</a>
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/apache-mime4j-0.8.9-bin.zip.sha512">SHA-512</a>]
-      [<a href="https://downloads.apache.org/james/mime4j/0.8.9/apache-mime4j-0.8.9-bin.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mime4j/0.8.10/apache-mime4j-0.8.10-bin.zip">(Zip)</a>
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/apache-mime4j-0.8.10-bin.zip.sha512">SHA-512</a>]
+      [<a href="https://downloads.apache.org/james/mime4j/0.8.10/apache-mime4j-0.8.10-bin.zip.asc">PGP</a>]
     </p>
   
   </section>
