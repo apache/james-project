@@ -44,7 +44,7 @@
       <i>
         <b>Horizontally scalable email server</b>
       </i>  Apache James uses resource abstraction (see below) to provide and assemble
-        the components of a <a href="https://james.staged.apache.org/james-distributed-app/3.8.0/index.html">Distributed Email server</a>
+        the components of a <a href="https://james.staged.apache.org/james-distributed-app/3.8.1/index.html">Distributed Email server</a>
         based on modern, scalable NoSQL solutions: Cassandra, objectstorage, OpenSearch, RabbitMQ/Pulsar.</p>
     <p>
       <i>

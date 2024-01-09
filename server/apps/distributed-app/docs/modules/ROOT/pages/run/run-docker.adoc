@@ -44,7 +44,7 @@ Then load the distributed server docker image:
 
 Alternatively we provide convenience distribution for the latest release:
 
-    docker pull apache/james:distributed-3.8.0
+    docker pull apache/james:distributed-3.8.1
 
 === Running
 Firstly, create your own user network on Docker for the James environment:
@@ -76,7 +76,7 @@ You can find more explanation on the need of Tika in this xref:configure/tika.ad
 To run this container :
 
     $ docker run --network james --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" -p "127.0.0.1:8000:8000" --name james_run
-        -v $PWD/keystore:/root/conf/keystore -t apache/james:distributed-3.8.0 --generate-keystore
+        -v $PWD/keystore:/root/conf/keystore -t apache/james:distributed-3.8.1 --generate-keystore
 
 Where :
 
