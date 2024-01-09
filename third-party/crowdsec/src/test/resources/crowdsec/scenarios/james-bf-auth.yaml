@@ -1,0 +1,14 @@
+type: leaky
+name: apache-james/bf-auth
+debug: true
+description: "Detect login james bruteforce"
+filter: "evt.Meta.log_type == 'imap-auth-fail' || evt.Meta.log_type == 'smtp-auth-fail'"
+leakspeed: "5m"
+capacity: 2 # 3rd failed authentication would trigger the ban decision
+groupby: evt.Meta.source_ip
+blackhole: 0m # to enable rapidly trigger new ban decision across tests. cf https://docs.crowdsec.net/docs/scenarios/format/#blackhole
+reprocess: true
+labels:
+ service: ssh
+ type: bruteforce
+ remediation: true
