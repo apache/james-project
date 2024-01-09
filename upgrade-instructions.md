@@ -147,6 +147,10 @@ Date: 27/06/2023
 
 `imapserver.xml` needs to be modified to relocate `imapPackages` from imapServers tag into `imapServer` tags.
 
+## 3.8.1 version
+
+No specific operation to conduct from a 3.8.0 version.
+
 ## 3.8.0 version
 
 Changes to apply between 3.7.x and 3.8.0 are reported here.
@@ -370,6 +374,10 @@ In order to add this `authorized_users` column you need to run the following CQL
 ```
 ALTER TABLE james_keyspace.user ADD authorized_users set<text>;
 ```
+
+## 3.7.5 version
+
+No specific operation to conduct from a 3.7.4 version.
 
 ## 3.7.4 version
 
