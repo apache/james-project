@@ -8,15 +8,9 @@
  - Docker
  - Maven (optional)
 
-### Compile the artifacts
+### Download the artifacts
 
-Run:
-
-```
-mvn clean install -T 4 -DskipTests --am --pl :james-server-jpa-smtp-app
-```
-
-You will find the artifacts within `server/apps/jpa-smtp-app/target`.
+Download james-jpa-smtp-guice-3.8.1.zip from [the download page](http://james.apache.org/download.cgi#Apache_James_Server) and deflate it.
 
 ### (alternative) Building the artifacts
 

@@ -29,11 +29,11 @@
 
   <subsection name="Java Virtual Machine">
 
-    <p>James 3.8.0 requires a Java Runtime Environment. Java version 11 is required to run the
+    <p>James 3.8.1 requires a Java Runtime Environment. Java version 11 is required to run the
        James application. The exact JREs available depends on the platform. In addition, the environment variable JAVA_HOME should be set to
        the JRE home directory before running James.</p>
     
-    <p>James 3.8.0 has been successfully tested on OpenJDK 11</p>
+    <p>James 3.8.1 has been successfully tested on OpenJDK 11</p>
   
   </subsection>
   
@@ -72,8 +72,8 @@
   </section>
 
   <section name="Build instructions">
-      <p>Checkout code from the chosen version on <a href="https://github.com/apache/james-project/tree/james-project-3.8.0">
-          GitHub</a>. Follow <a href="https://github.com/apache/james-project/blob/james-project-3.8.0/README.adoc">README instructions</a> about compilation.</p>
+      <p>Checkout code from the chosen version on <a href="https://github.com/apache/james-project/tree/james-project-3.8.1">
+          GitHub</a>. Follow <a href="https://github.com/apache/james-project/blob/james-project-3.8.1/README.adoc">README instructions</a> about compilation.</p>
 
       <ul>Using these instructions, you can build the following images:
           <li>Guice + JPA + Lucene</li>
