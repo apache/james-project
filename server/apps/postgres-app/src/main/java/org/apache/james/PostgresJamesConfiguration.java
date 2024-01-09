@@ -43,9 +43,9 @@ import com.google.common.base.Preconditions;
 
 public class PostgresJamesConfiguration implements Configuration {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresJamesConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("org.apache.james.CONFIGURATION");
 
-    private static BlobStoreConfiguration.BlobStoreImplName DEFAULT_BLOB_STORE = BlobStoreConfiguration.BlobStoreImplName.FILE;
+    private static final BlobStoreConfiguration.BlobStoreImplName DEFAULT_BLOB_STORE = BlobStoreConfiguration.BlobStoreImplName.POSTGRES;
 
     public enum EventBusImpl {
         IN_MEMORY, RABBITMQ;
@@ -171,6 +171,7 @@ public class PostgresJamesConfiguration implements Configuration {
                 }
             });
 
+            LOGGER.info("BlobStore configuration {}", blobStoreConfiguration);
             return new PostgresJamesConfiguration(
                 configurationPath,
                 directories,
