@@ -56,7 +56,8 @@ class CrowdsecHttpClientTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(decisions).hasSize(1);
-            softly.assertThat(decisions.get(0).getValue().equals("192.168.0.4") && decisions.get(0).getType().equals(BAN));
+            softly.assertThat(decisions.get(0).getValue()).isEqualTo("192.168.0.4");
+            softly.assertThat(decisions.get(0).getType()).isEqualTo(BAN);
         });
     }
 
@@ -70,7 +71,8 @@ class CrowdsecHttpClientTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(decisions).hasSize(1);
-            softly.assertThat(decisions.get(0).getValue().equals("192.168.0.0/16") && decisions.get(0).getType().equals(BAN));
+            softly.assertThat(decisions.get(0).getValue()).isEqualTo("192.168.0.0/16");
+            softly.assertThat(decisions.get(0).getType()).isEqualTo(BAN);
         });
     }
 
@@ -103,7 +105,7 @@ class CrowdsecHttpClientTest {
         CrowdsecHttpClient httpClient = new CrowdsecHttpClient(config);
         List<CrowdsecDecision> decisions = httpClient.getCrowdsecDecisions().block();
 
-        assertThat(decisions).hasSize(0);
+        assertThat(decisions).isEmpty();
     }
 
     @Test
@@ -117,8 +119,10 @@ class CrowdsecHttpClientTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(decisions).hasSize(2);
-            softly.assertThat(decisions.get(0).getValue().equals("192.168.0.4") && decisions.get(0).getType().equals(BAN));
-            softly.assertThat(decisions.get(1).getValue().equals("192.168.0.5") && decisions.get(1).getType().equals(BAN));
+            softly.assertThat(decisions).extracting(CrowdsecDecision::getValue)
+                .containsExactlyInAnyOrder("192.168.0.4", "192.168.0.5");
+            softly.assertThat(decisions).extracting(CrowdsecDecision::getType)
+                .containsOnly(BAN);
         });
     }
 
