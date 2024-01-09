@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.file;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,7 +36,6 @@ import java.util.Collection;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -97,13 +95,23 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return readReactive(bucketName, blobId)
-            .map(Throwing.<InputStream, byte[]>function(IOUtils::toByteArray).sneakyThrow());
+        return Mono.fromCallable(() -> {
+            File bucketRoot = getBucketRoot(bucketName);
+            File blob = new File(bucketRoot, blobId.asString());
+            return FileUtils.readFileToByteArray(blob);
+        }).onErrorResume(NoSuchFileException.class, e -> Mono.error(new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e)))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
-        return save(bucketName, blobId, new ByteArrayInputStream(data));
+        Preconditions.checkNotNull(data);
+        File bucketRoot = getBucketRoot(bucketName);
+        File blob = new File(bucketRoot, blobId.asString());
+
+        return Mono.fromRunnable(() -> save(data, blob))
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
     }
 
     @Override
@@ -127,6 +135,20 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
              FileChannel channel = out.getChannel();
              FileLock fileLock = channel.lock()) {
             inputStream.transferTo(out);
+        } catch (IOException e) {
+            throw new ObjectStoreIOException("IOException occured", e);
+        }
+    }
+
+    private void save(byte[] data, File blob) {
+        if (blob.exists()) {
+            return;
+        }
+
+        try (FileOutputStream out = new FileOutputStream(blob);
+             FileChannel channel = out.getChannel();
+             FileLock fileLock = channel.lock()) {
+            out.write(data);
         } catch (IOException e) {
             throw new ObjectStoreIOException("IOException occured", e);
         }
