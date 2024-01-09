@@ -1,0 +1,7 @@
+parsers:
+  - crowdsecurity/syslog-logs
+  - linagora/james-auth
+  - linagora/james-dictionary-attack
+scenarios:
+  - apache-james/bf-auth
+author: linagora

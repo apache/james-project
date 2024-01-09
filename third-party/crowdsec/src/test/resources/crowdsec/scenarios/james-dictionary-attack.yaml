@@ -1,0 +1,14 @@
+type: leaky
+name: linagora/james-dictionary-attack
+debug: true
+description: "Detect login james bruteforce"
+filter: "evt.Meta.log_type == 'dictionary-attack'"
+leakspeed: "1m"
+capacity: 5
+groupby: evt.Meta.source_ip
+blackhole: 1m
+reprocess: true
+labels:
+  service: ssh
+  type: bruteforce
+  remediation: true
