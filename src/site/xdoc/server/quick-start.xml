@@ -44,16 +44,16 @@ Step 0: Requirements
 Step 1: Download
 #################
 
-  * Download apache-james-3.8.0-app.zip from https://james.apache.org/download.cgi#Apache_James_Server
+  * Download apache-james-3.8.1-app.zip from https://james.apache.org/download.cgi#Apache_James_Server
 
 Step 2: Deploy
 ##############
 
-  * Unzip apache-james-3.8.0-app.zip.
+  * Unzip apache-james-3.8.1-app.zip.
   * You should have a folder with sub-folders bin, conf, lib, log, var and four text files.
 
-$ unzip apache-james-3.8.0-app.zip
-$ cd apache-james-3.8.0-app
+$ unzip apache-james-3.8.1-app.zip
+$ cd apache-james-3.8.1-app
 $ ls (linux) / dir (windows)
 bin
 BUILD.txt

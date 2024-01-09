@@ -132,7 +132,7 @@ layout: howTo
                     Before deleting a mail in James, PreDeletionHooks will be triggered to execute all declared hooks. If all hook executions success, then James will process to delete that mail.
                     There is already a DeletedMessageVaultHook in James, its job is to store deleted mails into Deleted Messages Vault. Thus, you need to configure this hook in listeners.xml configuration file.
                 </p>
-                <p><b>NOTE:</b> From James 3.8.0 onward the DeletedMessageVaultHook should no longer be specified for Cassandra based products.</p>
+                <p><b>NOTE:</b> From James 3.8.1 onward the DeletedMessageVaultHook should no longer be specified for Cassandra based products.</p>
 
                 <p>
                     Sample DeletedMessageVaultHook configuration:

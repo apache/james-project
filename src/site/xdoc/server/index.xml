@@ -40,22 +40,22 @@
           <a href="manage.html">manage</a>, <a href="monitor.html">monitor</a>
           and <a href="dev.html">develop</a> Apache James Server.</p>
 
-        <p>Download Apache James Mail Server 3.8.0 and <a href="quick-start.html">quick-start</a> it!</p>
+        <p>Download Apache James Mail Server 3.8.1 and <a href="quick-start.html">quick-start</a> it!</p>
         <p>
           <span class="minibutton btn-download">
             <a href="http://james.apache.org/download.cgi#Apache_James_Server">
-              <span><span class="icon"></span>Apache James Server 3.8.0</span>
+              <span><span class="icon"></span>Apache James Server 3.8.1</span>
             </a>
           </span>
         </p>
          <p>You can also have a look to the last stable version</p>
 
-        <p>Apache James Server 3.8.0 represents the leading edge of development. This code stream has many more
+        <p>Apache James Server 3.8.1 represents the leading edge of development. This code stream has many more
           features than the 2.3 code, but is not be as well tested in production. Reasonable
           configuration compatibility has been retained with 2.3.2.</p>
           
-        <p>Apache James Server 3.8.0 and following versions require Java 1.11. A migration guide for
-           users willing to upgrade from 2.3 to 3.8.0 is <a href="upgrade-2.3.html">available</a>. If relying on Guice
+        <p>Apache James Server 3.8.1 and following versions require Java 1.11. A migration guide for
+           users willing to upgrade from 2.3 to 3.8.1 is <a href="upgrade-2.3.html">available</a>. If relying on Guice
            wiring, you can use some additional components (Cassandra, OpenSearch, ...).</p>
     
 

@@ -88,7 +88,7 @@
                     Storing messages about being deleted into <code>org.apache.james.vault.DeletedMessageVault</code>
                 </li>
             </ul>
-            <p><b>NOTE:</b> From James 3.8.0 onward the DeletedMessageVaultHook should no longer be specified for Cassandra based products.</p>
+            <p><b>NOTE:</b> From James 3.8.1 onward the DeletedMessageVaultHook should no longer be specified for Cassandra based products.</p>
         </section>
 
         <section name="Add custom Guice injections for extensions">
