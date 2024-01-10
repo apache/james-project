@@ -26,6 +26,7 @@ import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,10 +43,14 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.opensearch.events.OpenSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
@@ -78,6 +83,7 @@ import org.opensearch.client.opensearch.core.GetResponse;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -567,6 +573,43 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
 
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "domain-test.tld")), session)).toStream())
             .containsOnly(messageId1.getUid());
+    }
+    @Test
+    void shouldSortOnBaseSubject() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "def");
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        storeMailboxManager.createMailbox(mailboxPath, session);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(messageWithSubject("abc"), session).getId();
+        ComposedMessageId messageId2 = messageManager.appendMessage(messageWithSubject("Re: abd"), session).getId();
+        ComposedMessageId messageId3 = messageManager.appendMessage(messageWithSubject("Fwd: abe"), session).getId();
+        ComposedMessageId messageId4 = messageManager.appendMessage(messageWithSubject("bbc"), session).getId();
+        ComposedMessageId messageId5 = messageManager.appendMessage(messageWithSubject("bBc"), session).getId();
+        ComposedMessageId messageId6 = messageManager.appendMessage(messageWithSubject("def"), session).getId();
+        ComposedMessageId messageId7 = messageManager.appendMessage(messageWithSubject("ABC"), session).getId();
+
+        openSearch.awaitForOpenSearch();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 20);
+
+        assertThat(Flux.from(
+            messageManager.search(SearchQuery.allSortedWith(new SearchQuery.Sort(SearchQuery.Sort.SortClause.BaseSubject)), session)).toStream())
+            .containsExactly(messageId1.getUid(),
+                messageId7.getUid(),
+                messageId2.getUid(),
+                messageId3.getUid(),
+                messageId4.getUid(),
+                messageId5.getUid(),
+                messageId6.getUid());
+    }
+
+    private static MessageManager.AppendCommand messageWithSubject(String subject) throws IOException {
+        return MessageManager.AppendCommand.builder().build(
+            Message.Builder
+                .of()
+                .setBody("testmail", StandardCharsets.UTF_8)
+                .addField(new RawField("Subject", subject)));
     }
 
     private void awaitForOpenSearch(Query query, long totalHits) {

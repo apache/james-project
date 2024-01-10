@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mailbox.store.search.comparator.SentDateComparator;
 import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.Field;
@@ -133,7 +134,7 @@ public class HeaderCollection {
                     manageAddressField(headerName, rawHeaderValue);
                     break;
                 case SUBJECT:
-                    subjectSet.add(headerValue);
+                    subjectSet.add(SearchUtil.getBaseSubject(headerValue));
                     break;
                 case DATE:
                     sentDate = SentDateComparator.toISODate(headerValue);
