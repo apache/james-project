@@ -38,10 +38,16 @@ public class MatchPlusSign extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) {
         System.out.println("plus sign reached");
-        return mail.getRecipients()
+        mail.setRecipients(mail.getRecipients()
                 .stream()
                 .map(recipient -> trimPlusSign(recipient))
-                .collect(Guavate.toImmutableList());
+                .collect(Guavate.toImmutableList()));
+
+        System.out.println("modified recipients: ");
+        for (var k : mail.getRecipients()) {
+            System.out.println(k.asString());
+        }
+        return mail.getRecipients();
     }
 
     private MailAddress trimPlusSign(MailAddress recipient) {
@@ -61,7 +67,7 @@ public class MatchPlusSign extends GenericMatcher {
         }
 
         try {
-            return new MailAddress(localPart.substring(0, firstPlusSign - 1), domainPart);
+            return new MailAddress(localPart.substring(0, firstPlusSign), domainPart);
         } catch (AddressException e) {
             throw new RuntimeException(e);
         }
