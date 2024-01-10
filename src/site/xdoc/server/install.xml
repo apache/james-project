@@ -85,8 +85,9 @@
       <p>Alternatively, if you don't want your build to be handled via Docker, you can follow <a href="quick-start-cassandra.html">
           Guice Cassandra quick-start</a> </p>
 
-      <p>Note that install instructions from command line are available for <a href="install/cassandra-guice.html">Cassandra-Guice</a>,
-          <a href="install/jpa-guice.html">JPA-Guice</a> and <a href="install/jpa-smtp-guice.html">JPA-SMTP-Guice</a>.
+      <p>Note that install instructions from command line are available for <a href="install/guice-cassandra.html">Cassandra-Guice</a>,
+          <a href="install/guice-cassandra-rabbitmq-s3.html">Distributed Guice</a>,
+          <a href="install/guice-jpa.html">JPA-Guice</a> and <a href="install/guice-jpa-smtp.html">JPA-SMTP-Guice</a>.
       </p>
 
       <p>A <a href="https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docker-compose.yml">
