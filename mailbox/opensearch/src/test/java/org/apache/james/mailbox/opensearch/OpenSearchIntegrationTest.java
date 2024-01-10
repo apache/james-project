@@ -574,6 +574,7 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
         assertThat(Flux.from(messageManager.search(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "domain-test.tld")), session)).toStream())
             .containsOnly(messageId1.getUid());
     }
+    
     @Test
     void shouldSortOnBaseSubject() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "def");
