@@ -64,6 +64,7 @@ import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
 import org.jooq.Record;
 
@@ -138,7 +139,7 @@ public class PostgresMessageMapper implements MessageMapper {
                     SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
                     return retrieveFullContent(messageBuilderAndRecord.getRight())
                         .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
-                })
+                }, ReactorUtils.DEFAULT_CONCURRENCY)
                 .sort(Comparator.comparing(MailboxMessage::getUid))
                 .map(message -> message);
         } else {
