@@ -17,53 +17,54 @@
  * under the License.                                           *
  ****************************************************************/
 
-package mailets;
+package matchers;
 
 import java.util.Collection;
 
-import org.apache.james.core.Domain;
+import javax.mail.internet.AddressException;
+
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.MaybeSender;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.github.steveash.guavate.Guavate;
 
-public class NotInBlackList extends GenericMatcher {
-    NotInBlackList() {
+
+public class MatchPlusSign extends GenericMatcher {
+    MatchPlusSign() {
 
     }
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
+        System.out.println("plus sign reached");
         return mail.getRecipients()
-            .stream()
-            .filter(recipient -> !isSenderBlackListed(mail.getMaybeSender(), recipient))
-            .collect(Guavate.toImmutableList());
+                .stream()
+                .map(recipient -> trimPlusSign(recipient))
+                .collect(Guavate.toImmutableList());
     }
 
-    private Boolean isSenderBlackListed(MaybeSender maybeSender, MailAddress recipient) {
-        Domain domain = recipient.getDomain();
+    private MailAddress trimPlusSign(MailAddress recipient) {
+        String localPart = recipient.getLocalPart();
+        String domainPart = String.valueOf(recipient.getDomain().asString());
 
-        System.out.println("receiver: " + recipient.getLocalPart() + " " + domain.toString());
-        System.out.println("sender: " + maybeSender.get().getLocalPart() + " " + maybeSender.get().getDomain().toString());
-
-        if (giveOrg(recipient.getLocalPart()).equals(giveOrg(maybeSender.get().getLocalPart())) && domain.toString().equals(maybeSender.get().getDomain().toString())) {
-            System.out.println("valid email");
-            return Boolean.FALSE;
+        int firstPlusSign = localPart.length();
+        for (int i = 0; i < localPart.length(); i++) {
+            if (localPart.charAt(i) == '+') {
+                firstPlusSign = i;
+                break;
+            }
         }
-        System.out.printf("invalid email");
-        return Boolean.TRUE;
+
+        if (firstPlusSign == 0) {
+            firstPlusSign = 1;
+        }
+
+        try {
+            return new MailAddress(localPart.substring(0, firstPlusSign - 1), domainPart);
+        } catch (AddressException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public String giveOrg(String localpart) {
-        int startIndex = 0;
-        for (int i = localpart.length() - 2; i >= 0; i--) {
-           if (localpart.charAt(i) == '.') {
-               startIndex = i + 1;
-               break;
-           }
-        }
-        return localpart.substring(startIndex, localpart.length() - 1);
-    }
 }
