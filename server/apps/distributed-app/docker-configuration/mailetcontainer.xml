@@ -37,11 +37,23 @@
     <processors>
         <processor state="root" enableJmx="true">
             <mailet match="All" class="PostmasterAlias"/>
-            <mailet match="RelayLimit=30" class="ToRepository">
-                <repositoryPath>cassandra://var/mail/relay-limit-exceeded/</repositoryPath>
+            <mailet match="RelayLimit=30" class="Null"/>
+            <mailet match="All" class="mailets.IgnoreSuffixOfPlusSign"/>
+            <mailet match="matchers.NotInBlackList" class="ToProcessor">
+                <processor>transport</processor>
             </mailet>
             <mailet match="All" class="ToProcessor">
-                <processor>transport</processor>
+                <processor>blacklisted</processor>
+            </mailet>
+        </processor>
+
+
+        <processor state="blacklisted" enableJmx="true">
+            <mailet match="All" class="MetricsMailet">
+                <metricName>blacklisted</metricName>
+            </mailet>
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/blacklisted/</repositoryPath>
             </mailet>
         </processor>
 

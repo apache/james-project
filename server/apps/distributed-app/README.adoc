@@ -4,10 +4,6 @@
 
  * Java 21 SDK
 
-Firstly, create your own user network on Docker for the James environment:
-
-    $ docker network create --driver bridge james
-
 Third party compulsory dependencies:
 
  * Cassandra 4.0
@@ -15,21 +11,24 @@ Third party compulsory dependencies:
  * RabbitMQ-Management 3.8.18
  * Zenko Cloudserver or AWS S3
 
-----
-$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:4.1.5
-$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' --env 'DISABLE_SECURITY_PLUGIN=true' --env 'DISABLE_INSTALL_DEMO_CONFIG=true' opensearchproject/opensearch:2.14.0
-$ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.13.3-management
-$ docker run -d --network james -p 8000:8000 --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 ghcr.io/scality/cloudserver:8cbe2c066b3505b26d339dc67315d1041b8c7f3a
-----
-
-== Docker distribution
-
-To import the image locally:
 
 [source]
-----
-docker image load -i target/jib-image.tar
-----
+
+== Running the server method 1
+-----
+
+$ docker compose -f docker-composeOLD.yml up
+
+-----
+
+== Running the server method 2
+-----
+
+$ cd server/apps/distributed-app/
+
+$ mvn clean install -DskipTests
+ OR
+$ mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.predefinedSortOrder=custom_1 -DskipTests clean install
 
 Then run it along with its dependency:
 
@@ -60,6 +59,13 @@ Disabled by default, its java agent can easily be enabled:
     environment:
       - JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar
 ----
+=======
+$ docker compose -f docker-compose.yml up -d
+
+$ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar target/james-server-distributed-app.jar --generate-keystore
+
+-----
+
 The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 
 
@@ -79,55 +85,8 @@ Note that you can create a domain via an environment variable. This domain will 
 ----
 
 [source]
-== Running the modified server
------
 
-$ cd server/apps/distributed-app/
-
-$ mvn clean install -DskipTests
- OR
-$ mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.predefinedSortOrder=custom_1 -DskipTests clean install
-
-$ docker compose -f docker-compose.yml up -d
-
-$ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar target/james-server-distributed-app.jar --generate-keystore
-
------
-
-[source]
-
-== Testing the blacklist
-
-
- - Create a domain:
-
-```
-curl --location --request PUT 'http://127.0.0.1:8000/domains/domain.tld'
-```
-
- - Create a recipient
-
-```
-curl --location --request PUT 'http://127.0.0.1:8000/users/recipient@domain.tld' \
---header 'Content-Type: application/json' \
---data '{"password":"password"}'
-```
-
- - Add someone in the blacklist
-
-```
-curl --location --request PUT 'http://127.0.0.1:8000/blacklist/domain.tld/sender@spammer.com' \
---header 'Content-Type: application/json' \
---data '{"password":"password"}'
-```
-
- - To check the content of the black list:
-
-```
-curl -XGET http://127.0.0.1:8000/blacklist/domain.tld
-```
-
- - Send emails using telnet for instance
+== Send emails using telnet
 
 ```
 telnet 127.0.0.1 25
@@ -154,17 +113,3 @@ Is it?
 .
 quit
 ```
-
-To see rejected messages:
-
-```
-curl -XGET  http://127.0.0.1:8000/mailRepositories/var%2Fmail%2Fblacklisted
-```
-
-To see accepted messages:
-
-```
-telnet 127.0.0.1 143
-a001 LOGIN recipient@domain.tld pass
-a002 select INBOX
-a003 FETCH 1:* BODY[HEADER.FIELDS (SUBJECT)]

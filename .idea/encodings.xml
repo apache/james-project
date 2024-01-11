@@ -397,6 +397,8 @@
     <file url="file://$PROJECT_DIR$/server/dns-service/dnsservice-library/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/dns-service/dnsservice-test/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/dns-service/dnsservice-test/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/server/helpers/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/server/helpers/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/mailet/dkim/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/mailet/dkim/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/mailet/integration-testing/src/main/java" charset="UTF-8" />
