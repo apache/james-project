@@ -17,40 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package mailets;
+package helpers;
 
-import static helpers.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
+import javax.mail.internet.AddressException;
 
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMailet;
+import org.apache.james.core.MailAddress;
 
-import com.github.steveash.guavate.Guavate;
+public final class TrimSuffixOfPlusSign {
+    public static MailAddress trimSuffixOfPlusSign(MailAddress recipient) throws RuntimeException {
+        String localPart = recipient.getLocalPart();
+        String domainPart = String.valueOf(recipient.getDomain().asString());
 
-
-public class IgnoreSuffixOfPlusSign extends GenericMailet {
-    IgnoreSuffixOfPlusSign() {
-
-    }
-
-    @Override
-    public void service(Mail mail) {
-        System.out.println("\n\n-----------");
-        System.out.println("plus sign reached");
-        System.out.println("Initial recipients: ");
-
-        for (var k : mail.getRecipients()) {
-            System.out.println(k.asString());
+        int firstPlusSign = localPart.length();
+        for (int i = 0; i < localPart.length(); i++) {
+            if (localPart.charAt(i) == '+') {
+                firstPlusSign = i;
+                break;
+            }
         }
 
-        mail.setRecipients(mail.getRecipients()
-                .stream()
-                .map(recipient -> trimSuffixOfPlusSign(recipient))
-                .collect(Guavate.toImmutableList()));
-
-        System.out.println("\nModified recipients: ");
-        for (var k : mail.getRecipients()) {
-            System.out.println(k.asString());
+        try {
+            return new MailAddress(localPart.substring(0, firstPlusSign), domainPart);
+        } catch (AddressException e) {
+            throw new RuntimeException(e);
         }
-        System.out.println("\n\n-----------");
     }
 }

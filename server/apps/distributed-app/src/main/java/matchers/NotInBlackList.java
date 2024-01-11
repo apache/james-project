@@ -19,6 +19,8 @@
 
 package matchers;
 
+import static helpers.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
+
 import java.util.Collection;
 
 import org.apache.james.core.Domain;
@@ -28,6 +30,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.github.steveash.guavate.Guavate;
+
 
 public class NotInBlackList extends GenericMatcher {
     NotInBlackList() {
@@ -48,7 +51,10 @@ public class NotInBlackList extends GenericMatcher {
         System.out.println("receiver: " + recipient.getLocalPart() + " " + domain.toString());
         System.out.println("sender: " + maybeSender.get().getLocalPart() + " " + maybeSender.get().getDomain().toString());
 
-        if (giveOrg(recipient.getLocalPart()).equals(giveOrg(maybeSender.get().getLocalPart())) && domain.toString().equals(maybeSender.get().getDomain().toString())) {
+        String senderLocalPart = trimSuffixOfPlusSign(recipient).getLocalPart();
+        String recipientLocalPart = trimSuffixOfPlusSign(maybeSender.get()).getLocalPart();
+
+        if (giveOrg(senderLocalPart).equals(giveOrg(recipientLocalPart)) && domain.toString().equals(maybeSender.get().getDomain().toString())) {
             System.out.println("valid email");
             return Boolean.FALSE;
         }
