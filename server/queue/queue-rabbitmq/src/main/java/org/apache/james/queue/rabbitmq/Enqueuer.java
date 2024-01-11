@@ -122,7 +122,7 @@ class Enqueuer {
             .build();
 
         OutboundMessage data = new OutboundMessage(
-            name.   toRabbitExchangeName().asString(),
+            name.toRabbitExchangeName().asString(),
             EMPTY_ROUTING_KEY,
             basicProperties,
             getMailReferenceBytes(mailReference));
