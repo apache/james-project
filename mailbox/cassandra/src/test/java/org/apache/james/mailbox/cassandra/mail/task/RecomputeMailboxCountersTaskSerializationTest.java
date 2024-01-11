@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -79,7 +80,8 @@ class RecomputeMailboxCountersTaskSerializationTest {
             .deserialize(SERIALIZED_TASK_OLD);
 
         assertThat(domainObject)
-            .isEqualToComparingFieldByFieldRecursively(TASK_UNTRUSTED);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(TASK_UNTRUSTED);
     }
 
     @Test

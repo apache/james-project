@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -55,6 +56,7 @@ class RecomputeAllFastViewProjectionItemsTaskSerializationTest {
             RunningOptions.DEFAULT);
 
         assertThat(legacyTask)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 }
