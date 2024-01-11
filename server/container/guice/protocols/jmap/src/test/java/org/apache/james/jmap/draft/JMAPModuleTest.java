@@ -39,19 +39,11 @@ class JMAPModuleTest {
 
         private RequiredCapabilitiesStartUpCheck testee;
         private MailboxManager mockMailboxManager;
-        private EnumSet<MailboxManager.MessageCapabilities> mockMessageCapabilities;
-        private EnumSet<MailboxManager.SearchCapabilities> mockSearchCapabilities;
 
         @SuppressWarnings("unchecked")
         @BeforeEach
         void beforeEach() {
             mockMailboxManager = mock(MailboxManager.class);
-            mockMessageCapabilities = (EnumSet<MailboxManager.MessageCapabilities>) mock(EnumSet.class);
-            mockSearchCapabilities = (EnumSet<MailboxManager.SearchCapabilities>) mock(EnumSet.class);
-            when(mockMailboxManager.getSupportedMessageCapabilities())
-                .thenReturn(mockMessageCapabilities);
-            when(mockMailboxManager.getSupportedSearchCapabilities())
-                .thenReturn(mockSearchCapabilities);
 
             testee = new RequiredCapabilitiesStartUpCheck(mockMailboxManager);
         }
@@ -60,10 +52,12 @@ class JMAPModuleTest {
         void checkShouldReturnGoodWhenAllChecksSatisfy() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(true);
-            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
-                .thenReturn(true);
-            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
-                .thenReturn(true);
+
+
+            when(mockMailboxManager.getSupportedMessageCapabilities())
+                .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+            when(mockMailboxManager.getSupportedSearchCapabilities())
+                .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
             assertThat(testee.check().isGood())
                 .isTrue();
@@ -73,10 +67,10 @@ class JMAPModuleTest {
         void checkShouldReturnBadWhenMailboxManagerDoesntHaveCapabilities() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(false);
-            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
-                .thenReturn(true);
-            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
-                .thenReturn(true);
+            when(mockMailboxManager.getSupportedMessageCapabilities())
+                .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+            when(mockMailboxManager.getSupportedSearchCapabilities())
+                .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
             assertThat(testee.check().isBad())
                 .isTrue();
@@ -86,10 +80,10 @@ class JMAPModuleTest {
         void checkShouldReturnBadWhenMailboxManagerDoesntHaveMessagesCapabilities() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(true);
-            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
-                .thenReturn(false);
-            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
-                .thenReturn(true);
+            when(mockMailboxManager.getSupportedMessageCapabilities())
+                .thenReturn(EnumSet.noneOf(MailboxManager.MessageCapabilities.class));
+            when(mockMailboxManager.getSupportedSearchCapabilities())
+                .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 
             assertThat(testee.check().isBad())
                 .isTrue();
@@ -99,10 +93,10 @@ class JMAPModuleTest {
         void checkShouldReturnBadWhenMailboxManagerDoesntHaveSearchCapabilities() {
             when(mockMailboxManager.hasCapability(any()))
                 .thenReturn(true);
-            when(mockMessageCapabilities.contains(any(MailboxManager.MessageCapabilities.class)))
-                .thenReturn(true);
-            when(mockSearchCapabilities.contains(any(MailboxManager.SearchCapabilities.class)))
-                .thenReturn(false);
+            when(mockMailboxManager.getSupportedMessageCapabilities())
+                .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+            when(mockMailboxManager.getSupportedSearchCapabilities())
+                .thenReturn(EnumSet.noneOf(MailboxManager.SearchCapabilities.class));
 
             assertThat(testee.check().isBad())
                 .isTrue();
