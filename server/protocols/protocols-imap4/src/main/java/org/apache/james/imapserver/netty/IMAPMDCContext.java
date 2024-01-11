@@ -46,7 +46,7 @@ public class IMAPMDCContext {
         Optional.ofNullable(ctx.channel().attr(HAProxyMessageHandler.PROXY_INFO)
             .get())
             .ifPresentOrElse(proxyInformation -> {
-                    mdcBuilder.addToContext(MDCBuilder.IP, proxyInformation.getSource().toString());
+                    mdcBuilder.addToContext(MDCBuilder.IP, proxyInformation.getSource().getAddress().getHostAddress());
                     mdcBuilder.addToContext("proxy.source", proxyInformation.getSource().toString());
                     mdcBuilder.addToContext("proxy.destination", proxyInformation.getDestination().toString());
                     mdcBuilder.addToContext("proxy.ip", retrieveIp(ctx));
