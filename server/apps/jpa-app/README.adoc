@@ -11,7 +11,7 @@ This server target single node James deployments. By default, the derby database
 To run james, you have to create a directory containing required configuration files.
 
 James requires the configuration to be in a subfolder of working directory that is called
-**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/jpa-guice/sample-configuration)
+**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/apps/jpa-app/sample-configuration)
 is provided with some default values you may need to replace. You will need to update its content to match your needs.
 
 You also need to generate a keystore with the following command:
