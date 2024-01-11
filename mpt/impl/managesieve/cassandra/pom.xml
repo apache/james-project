@@ -30,7 +30,6 @@
 
     <name>Apache James :: MPT :: ManageSieve :: Cassandra</name>
 
-
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>

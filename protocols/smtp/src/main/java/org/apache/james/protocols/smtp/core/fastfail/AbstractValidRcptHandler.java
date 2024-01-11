@@ -31,6 +31,7 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Handler which want to do a recipient check should extend this
  */

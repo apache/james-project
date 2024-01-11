@@ -76,6 +76,7 @@
         <module>dns-service/dnsservice-dnsjava</module>
         <module>dns-service/dnsservice-library</module>
         <module>dns-service/dnsservice-test</module>
+        <module>helpers</module>
 
         <module>mailet/dkim</module>
         <module>mailet/integration-testing</module>

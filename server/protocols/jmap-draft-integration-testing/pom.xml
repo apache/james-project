@@ -38,7 +38,6 @@
         <module>rabbitmq-jmap-draft-integration-testing</module>
     </modules>
 
-
     <build>
         <plugins>
             <plugin>

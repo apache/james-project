@@ -54,8 +54,7 @@
             ${javamail.system-property3} ${javamail.system-property4} ${javamail.system-property5}
             ${javamail.system-property6} ${javamail.system-property7} ${javamail.system-property8}
             ${javamail.system-property9} ${javamail.system-property10} ${javamail.system-property11}
-            ${javamail.system-property12}
-        </javamail.system-properties>
+            ${javamail.system-property12}</javamail.system-properties>
 
         <!-- JMX system properties -->
         <!-- For more details see -->
@@ -812,21 +811,21 @@
                                 <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
                                     from the lib dir to make windows happy again
                                 -->
-                                <replace file="${project.build.directory}/appassembler/bin/run.bat" token="%BASEDIR%\lib" value="..\lib" />
-                                <replace file="${project.build.directory}/appassembler/bin/run.sh" token="setenv" value="setenv.sh" />
+                                <replace file="${project.build.directory}/appassembler/bin/run.bat" token="%BASEDIR%\lib" value="..\lib"/>
+                                <replace file="${project.build.directory}/appassembler/bin/run.sh" token="setenv" value="setenv.sh"/>
 
                                 <!-- this is needed because appassembler is not really smart on some settings -->
-                                <replace file="${project.build.directory}/appassembler/jsw/james/conf/wrapper.conf" token="lib/wrapper.jar" value="%REPO_DIR%/wrapper.jar" />
-                                <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="logs" value="var" />
-                                <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="setenv" value="setenv.sh" />
+                                <replace file="${project.build.directory}/appassembler/jsw/james/conf/wrapper.conf" token="lib/wrapper.jar" value="%REPO_DIR%/wrapper.jar"/>
+                                <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="logs" value="var"/>
+                                <replace file="${project.build.directory}/appassembler/jsw/james/bin/james" token="setenv" value="setenv.sh"/>
 
                                 <!-- copy the linux wrapper-linux-x86-32 to wrapper, so use it as default if no matching wrapper was found -->
-                                <copy file="${project.build.directory}/appassembler/jsw/james/bin/wrapper-linux-x86-32" tofile="${project.build.directory}/appassembler/jsw/james/bin/wrapper" />
+                                <copy file="${project.build.directory}/appassembler/jsw/james/bin/wrapper-linux-x86-32" tofile="${project.build.directory}/appassembler/jsw/james/bin/wrapper"/>
                                 <!-- this is only needed because windows freak out on long cmd lines, so we strip of the absolute path
                                     from the lib dir to make windows happy again
                                 -->
-                                <replace file="${project.build.directory}/appassembler/bin/james-cli.bat" token="%BASEDIR%\lib" value="..\lib" />
-                                <replace file="${project.build.directory}/appassembler/bin/james-cli.sh" token="setenv" value="setenv.sh" />
+                                <replace file="${project.build.directory}/appassembler/bin/james-cli.bat" token="%BASEDIR%\lib" value="..\lib"/>
+                                <replace file="${project.build.directory}/appassembler/bin/james-cli.sh" token="setenv" value="setenv.sh"/>
                             </tasks>
 
                         </configuration>

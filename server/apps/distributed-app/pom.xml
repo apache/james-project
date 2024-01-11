@@ -51,7 +51,6 @@
     </dependencyManagement>
 
     <dependencies>
-
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-cassandra</artifactId>
@@ -343,6 +342,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.james</groupId>
+            <artifactId>james-server-helpers</artifactId>
+            <version>3.9.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.james</groupId>
             <artifactId>queue-pulsar-guice</artifactId>
         </dependency>
         <dependency>
@@ -441,7 +445,7 @@
                     <to>
                         <image>apache/james</image>
                         <tags>
-                            <tag>distributedBlacklist-latest</tag>
+                            <tag>distributedMailetTest2</tag>
                         </tags>
                     </to>
                     <container>
@@ -483,10 +487,6 @@
                     </container>
                     <extraDirectories>
                         <paths>
-                            <path>
-                                <from>conf</from>
-                                <into>/root/conf</into>
-                            </path>
                             <path>
                                 <from>docker-configuration</from>
                                 <into>/root/conf</into>

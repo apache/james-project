@@ -75,6 +75,7 @@
         <module name="rabbitmq-webadmin-integration-test" />
         <module name="james-server-core" />
         <module name="custom-smtp-command" />
+        <module name="helpers" />
         <module name="apache-james-mailbox-quota-search-scanning" />
         <module name="apache-james-mailbox-tika" />
         <module name="james-server-guice-mailbox" />
@@ -142,6 +143,7 @@
         <module name="james-server-data-cassandra" />
         <module name="apache-james-mailbox-opensearch" />
         <module name="blob-api-guice" />
+        <module name="james-server-helpers" />
         <module name="james-server-dnsservice-library" />
         <module name="apache-james-backends-pulsar" />
         <module name="custom-james-assembly" />

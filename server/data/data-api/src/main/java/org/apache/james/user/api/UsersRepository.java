@@ -19,8 +19,11 @@
 
 package org.apache.james.user.api;
 
+import static org.apache.james.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
+
 import java.util.Iterator;
 import java.util.Optional;
+
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -29,6 +32,8 @@ import org.apache.james.user.api.model.User;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
+
+
 
 /**
  * Interface for a repository of users. A repository represents a logical
@@ -145,9 +150,9 @@ public interface UsersRepository {
      */
     default Username getUsername(MailAddress mailAddress) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
-            return Username.of(mailAddress.asString());
+            return Username.of(trimSuffixOfPlusSign(mailAddress).asString());
         } else {
-            return Username.of(mailAddress.getLocalPart());
+            return Username.of(trimSuffixOfPlusSign(mailAddress).getLocalPart());
         }
     }
 

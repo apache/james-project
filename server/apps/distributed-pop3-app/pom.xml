@@ -34,7 +34,6 @@
     <description>An advanced email server - Cassandra backend and RabbitMQ messaging with guice injection.
         The use of messageId as an identifier enables to use safely Cassandra multi-datacenters set up.</description>
 
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -398,12 +397,17 @@
                     <container>
                         <mainClass>org.apache.james.DistributedPOP3JamesServerMain</mainClass>
                         <ports>
-                            <port>25</port> <!-- SMTP -->
-                            <port>110</port> <!-- POP3 -->
-                            <port>465</port> <!-- SMTP + STARTTLS -->
-                            <port>587</port> <!-- SMTPS -->
+                            <port>25</port>
+                            <!-- SMTP -->
+                            <port>110</port>
+                            <!-- POP3 -->
+                            <port>465</port>
+                            <!-- SMTP + STARTTLS -->
+                            <port>587</port>
+                            <!-- SMTPS -->
 
-                            <port>8000</port> <!-- WEBADMIN -->
+                            <port>8000</port>
+                            <!-- WEBADMIN -->
                         </ports>
                         <appRoot>/root</appRoot>
                         <jvmFlags>
@@ -446,7 +450,8 @@
                         <permissions>
                             <permission>
                                 <file>/usr/bin/james-cli</file>
-                                <mode>755</mode> <!-- Read/write/execute for owner, read/execute for group/other -->
+                                <mode>755</mode>
+                                <!-- Read/write/execute for owner, read/execute for group/other -->
                             </permission>
                         </permissions>
                     </extraDirectories>

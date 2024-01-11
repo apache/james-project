@@ -18,38 +18,38 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.apache.james.examples</groupId>
-        <artifactId>examples</artifactId>
-        <version>3.9.0-SNAPSHOT</version>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.james.examples</groupId>
+    <artifactId>examples</artifactId>
+    <version>3.9.0-SNAPSHOT</version>
+  </parent>
 
-    <artifactId>custom-webadmin-route</artifactId>
+  <artifactId>custom-webadmin-route</artifactId>
 
-    <name>Apache James :: Examples :: Custom WebAdmin route</name>
-    <description>Example of how to extend James by adding your own webadmin routes</description>
+  <name>Apache James :: Examples :: Custom WebAdmin route</name>
+  <description>Example of how to extend James by adding your own webadmin routes</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-webadmin-core</artifactId>
-            <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>${james.groupId}</groupId>
+      <artifactId>james-server-webadmin-core</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 
-    <build>
-        <finalName>custom-webadmin-route</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+  <build>
+    <finalName>custom-webadmin-route</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -27,7 +27,7 @@
         <groupId>org.apache</groupId>
         <artifactId>apache</artifactId>
         <version>21</version>
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <groupId>org.apache.james</groupId>
@@ -82,7 +82,7 @@
             <roles>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
             <properties>
                 <Donator>Serge was the original donator of the James code, which has since been massively
                     improved by people smarter than him. He tries to answer questions on the listserv and make
@@ -97,7 +97,7 @@
             <roles>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>sbrewin</id>
@@ -107,7 +107,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>hilmer</id>
@@ -117,7 +117,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>noel</id>
@@ -127,7 +127,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>danny</id>
@@ -139,7 +139,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
             <properties>
                 <Description>Danny is a member of the Apache Software Foundation and married father
                     of two by night, and by day works as lead technical consultant for the Student Loans
@@ -179,7 +179,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>rdonkin</id>
@@ -189,7 +189,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>niklas</id>
@@ -216,7 +216,7 @@
             <roles>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>olegk</id>
@@ -226,7 +226,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>manolo</id>
@@ -236,7 +236,7 @@
                 <role>Developer</role>
                 <role>PMC Member</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>eric</id>
@@ -246,7 +246,7 @@
                 <role>Developer</role>
                 <role>PMC Chair</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>felixk</id>
@@ -265,7 +265,7 @@
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>matthieu</id>
@@ -275,7 +275,7 @@
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>btellier</id>
@@ -287,7 +287,7 @@
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>aduprat</id>
@@ -299,7 +299,7 @@
                 <role>PMC Member</role>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>rouazana</id>
@@ -310,7 +310,7 @@
             <roles>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
         <developer>
             <id>jhelou</id>
@@ -319,9 +319,9 @@
             <roles>
                 <role>Developer</role>
             </roles>
-            <timezone />
+            <timezone/>
         </developer>
-     </developers>
+    </developers>
 
     <contributors>
         <contributor>
@@ -594,7 +594,7 @@
             This property contains the directory where to deploy when running using "-Psite-reports" profile
             to avoid accidently overriding the common modules website. Empty by default.
         -->
-        <deployTechnicalSiteDirectory />
+        <deployTechnicalSiteDirectory/>
 
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
@@ -3404,7 +3404,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore />
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -3420,7 +3420,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore />
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -3436,7 +3436,7 @@
                                         <execute>
                                             <runOnIncremental>false</runOnIncremental>
                                         </execute>
-                                        <ignore />
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -3450,7 +3450,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore />
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -3756,7 +3756,7 @@
                             <artifactId>maven-surefire-plugin</artifactId>
                             <version>3.1.2</version>
                             <configuration>
-                                <excludedGroups />
+                                <excludedGroups/>
                                 <groups>unstable</groups>
                             </configuration>
                         </plugin>
