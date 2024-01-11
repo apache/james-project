@@ -39,11 +39,12 @@
             <mailet match="All" class="PostmasterAlias"/>
             <mailet match="RelayLimit=30" class="Null"/>
             <mailet match="All" class="mailets.IgnoreSuffixOfPlusSign"/>
-            <mailet match="matchers.NotInBlackList" class="ToProcessor">
+            <mailet match="All" class="mailets.IgnoreSuffixOfPlusSign"/>
+            <!--mailet match="matchers.NotInBlackList" class="ToProcessor">
                 <processor>transport</processor>
-            </mailet>
+            </mailet-->
             <mailet match="All" class="ToProcessor">
-                <processor>blacklisted</processor>
+                <processor>transport</processor>
             </mailet>
         </processor>
 

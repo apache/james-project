@@ -19,8 +19,6 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static helpers.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
-
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -46,7 +44,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
             if (!isLocalDomain(session, rcpt.getDomain())) {
                 return HookResult.DECLINED;
             }
-            if (!isValidRecipient(session, trimSuffixOfPlusSign(rcpt))) {
+            if (!isValidRecipient(session, rcpt)) {
                 return reject(rcpt);
             }
             return HookResult.DECLINED;

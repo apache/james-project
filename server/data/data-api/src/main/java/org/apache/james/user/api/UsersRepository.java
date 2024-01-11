@@ -19,6 +19,8 @@
 
 package org.apache.james.user.api;
 
+import static helpers.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
+
 import java.util.Iterator;
 import java.util.Optional;
 
@@ -145,9 +147,9 @@ public interface UsersRepository {
      */
     default Username getUsername(MailAddress mailAddress) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
-            return Username.of(mailAddress.asString());
+            return Username.of(trimSuffixOfPlusSign(mailAddress).asString());
         } else {
-            return Username.of(mailAddress.getLocalPart());
+            return Username.of(trimSuffixOfPlusSign(mailAddress).getLocalPart());
         }
     }
 
