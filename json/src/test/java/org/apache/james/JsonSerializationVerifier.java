@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.json.DTO;
@@ -71,6 +72,7 @@ public class JsonSerializationVerifier<T, U extends DTO> {
         recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
         recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
         recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.toString().equalsIgnoreCase(o2.toString()), Pattern.class);
 
         return (a, b) -> assertThat(a)
             .describedAs("Deserialization test [" + b + "]")
