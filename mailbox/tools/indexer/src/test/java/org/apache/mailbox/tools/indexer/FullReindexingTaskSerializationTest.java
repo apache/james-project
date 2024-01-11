@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -83,7 +84,8 @@ class FullReindexingTaskSerializationTest {
         FullReindexingTask expected = new FullReindexingTask(reIndexerPerformer, RunningOptions.DEFAULT);
 
         assertThat(legacyTask)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 
     @Test
@@ -116,7 +118,8 @@ class FullReindexingTaskSerializationTest {
         );
 
         assertThat(legacyAdditionalInformation)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 }
 

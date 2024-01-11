@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.quota.task;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -89,7 +90,8 @@ class RecomputeCurrentQuotasTaskSerializationTest {
             .deserialize(SERIALIZED_TASK_LEGACY);
 
         assertThat(legacyTask)
-            .isEqualToComparingFieldByFieldRecursively(TASK_DEFAULT);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(TASK_DEFAULT);
     }
 
     @Test
@@ -99,6 +101,7 @@ class RecomputeCurrentQuotasTaskSerializationTest {
             .deserialize(SERIALIZED_ADDITIONAL_INFORMATION_LEGACY);
 
         assertThat(legacyDetails)
-            .isEqualToComparingFieldByFieldRecursively(DETAILS_DEFAULT);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(DETAILS_DEFAULT);
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.quota.task;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -198,7 +199,9 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot()).isEqualToComparingFieldByFieldRecursively(new Context().snapshot());
+        assertThat(context.snapshot())
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new Context().snapshot());
     }
 
     @Test

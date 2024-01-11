@@ -94,6 +94,11 @@ class StateChangeEventSerializerTest {
       .withoutNestedType())
       .bean(EVENT)
       .json(EVENT_JSON)
+      .equalityTester((a, b) => {
+        assertThat(a.eventId).isEqualTo(b.eventId)
+        assertThat(a.username).isEqualTo(b.username)
+        assertThat(a.asStateChange).isEqualTo(b.asStateChange)
+      })
       .verify()
 
   @Test

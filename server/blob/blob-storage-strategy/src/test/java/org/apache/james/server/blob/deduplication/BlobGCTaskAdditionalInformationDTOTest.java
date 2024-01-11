@@ -19,6 +19,7 @@
 
 package org.apache.james.server.blob.deduplication;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
@@ -54,7 +55,8 @@ class BlobGCTaskAdditionalInformationDTOTest {
             .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/blobGC-legacy.additionalInformation.json"));
 
         assertThat(gcTask)
-            .isEqualToComparingFieldByFieldRecursively(new BlobGCTask.AdditionalInformation(
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new BlobGCTask.AdditionalInformation(
                 1,
                 2,
                 3,
