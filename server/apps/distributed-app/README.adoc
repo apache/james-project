@@ -137,38 +137,7 @@ $ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logba
 
 [source]
 
-== Testing the blacklist
-
-
- - Create a domain:
-
-```
-curl --location --request PUT 'http://127.0.0.1:8000/domains/domain.tld'
-```
-
- - Create a recipient
-
-```
-curl --location --request PUT 'http://127.0.0.1:8000/users/recipient@domain.tld' \
---header 'Content-Type: application/json' \
---data '{"password":"password"}'
-```
-
- - Add someone in the blacklist
-
-```
-curl --location --request PUT 'http://127.0.0.1:8000/blacklist/domain.tld/sender@spammer.com' \
---header 'Content-Type: application/json' \
---data '{"password":"password"}'
-```
-
- - To check the content of the black list:
-
-```
-curl -XGET http://127.0.0.1:8000/blacklist/domain.tld
-```
-
- - Send emails using telnet for instance
+== Send emails using telnet
 
 ```
 telnet 127.0.0.1 25
