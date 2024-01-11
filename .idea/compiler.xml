@@ -143,6 +143,7 @@
         <module name="james-server-data-cassandra" />
         <module name="apache-james-mailbox-opensearch" />
         <module name="blob-api-guice" />
+        <module name="james-server-helpers" />
         <module name="james-server-dnsservice-library" />
         <module name="apache-james-backends-pulsar" />
         <module name="custom-james-assembly" />
