@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -80,8 +81,10 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
 
         SolveMessageInconsistenciesTask expected = new SolveMessageInconsistenciesTask(service, RunningOptions.DEFAULT);
 
+
         assertThat(legacyTask)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 
     @Test
@@ -111,6 +114,7 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
             );
 
         assertThat(legacyDetails)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 }

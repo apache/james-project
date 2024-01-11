@@ -19,6 +19,7 @@
 
 package org.apache.james.server.blob.deduplication;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -89,9 +90,9 @@ class BlobGCTaskSerializationTest {
                 clock))
             .withoutNestedType()
             .deserialize(ClassLoaderUtils.getSystemResourceAsString("json/blobGC-legacy.task.json"));
-
         assertThat(gcTask)
-            .isEqualToComparingFieldByFieldRecursively(new BlobGCTask(
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new BlobGCTask(
                 blobStoreDAO,
                 generationAwareBlobIdFactory,
                 generationAwareBlobIdConfiguration,

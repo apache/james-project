@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
@@ -58,6 +59,7 @@ class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
             INSTANT);
 
         assertThat(legacyDetails)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 }
