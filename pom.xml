@@ -3021,12 +3021,17 @@
                 <plugin>
                     <groupId>io.github.evis</groupId>
                     <artifactId>scalafix-maven-plugin_2.13</artifactId>
-                    <version>0.1.6_0.9.34</version>
+                    <version>0.1.8_0.11.0</version>
                     <configuration>
                         <config>${basedir}/.scalafix.conf</config>
                         <mode>CHECK</mode>
                     </configuration>
                     <dependencies>
+                        <dependency>
+                            <groupId>ch.epfl.scala</groupId>
+                            <artifactId>scalafix-core_${scala.base}</artifactId>
+                            <version>0.11.0</version>
+                        </dependency>
                         <dependency>
                             <groupId>com.nequissimus</groupId>
                             <artifactId>sort-imports_${scala.base}</artifactId>
