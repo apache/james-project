@@ -22,6 +22,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.json.JsonGenericSerializer;
@@ -30,6 +34,7 @@ import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.mailbox.tools.indexer.ReIndexingContextInformationDTO.ReIndexingContextInformationForFullReindexingTask;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +60,7 @@ class FullReindexingTaskSerializationTest {
 
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
     private ReIndexerPerformer reIndexerPerformer;
+    private RecursiveComparisonConfiguration recursiveComparisonConfiguration;
 
     @BeforeEach
     void setUp() {
@@ -64,6 +70,13 @@ class FullReindexingTaskSerializationTest {
                 new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
                 new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId2, messageUid2)),
             ImmutableList.of(mailboxId3));
+
+        recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
     }
 
     @Test
@@ -83,7 +96,8 @@ class FullReindexingTaskSerializationTest {
         FullReindexingTask expected = new FullReindexingTask(reIndexerPerformer, RunningOptions.DEFAULT);
 
         assertThat(legacyTask)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 
     @Test
@@ -116,7 +130,8 @@ class FullReindexingTaskSerializationTest {
         );
 
         assertThat(legacyAdditionalInformation)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 }
 

@@ -23,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaComponent;
@@ -43,6 +47,7 @@ import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.Running
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.task.Task;
 import org.apache.james.user.api.UsersRepository;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -198,7 +203,17 @@ public interface RecomputeCurrentQuotasServiceContract {
         Context context = new Context();
         testee().recomputeCurrentQuotas(context, RunningOptions.DEFAULT).block();
 
-        assertThat(context.snapshot()).isEqualToComparingFieldByFieldRecursively(new Context().snapshot());
+
+        RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+
+        assertThat(context.snapshot())
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new Context().snapshot());
     }
 
     @Test

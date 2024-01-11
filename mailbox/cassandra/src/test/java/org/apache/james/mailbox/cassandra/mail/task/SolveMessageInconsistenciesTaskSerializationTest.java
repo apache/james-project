@@ -23,12 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService.RunningOptions;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask.Details;
 import org.apache.james.util.ClassLoaderUtils;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -61,6 +67,17 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
         .messageUid(MESSAGE_UID_3);
 
     private static final Details DETAILS = new SolveMessageInconsistenciesTask.Details(INSTANT, 2, 1, 1, 0, 1, new SolveMessageInconsistenciesService.RunningOptions(2), ImmutableList.of(MESSAGE_1, MESSAGE_2), ImmutableList.of(MESSAGE_3));
+    private RecursiveComparisonConfiguration recursiveComparisonConfiguration;
+
+    @BeforeEach
+    void setUp() {
+        recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+    }
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -80,8 +97,10 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
 
         SolveMessageInconsistenciesTask expected = new SolveMessageInconsistenciesTask(service, RunningOptions.DEFAULT);
 
+
         assertThat(legacyTask)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 
     @Test
@@ -111,6 +130,7 @@ public class SolveMessageInconsistenciesTaskSerializationTest {
             );
 
         assertThat(legacyDetails)
-            .isEqualToComparingFieldByFieldRecursively(expected);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(expected);
     }
 }

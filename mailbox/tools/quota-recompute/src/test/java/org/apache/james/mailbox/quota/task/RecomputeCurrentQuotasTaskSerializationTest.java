@@ -23,11 +23,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.json.JsonGenericSerializer;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.quota.task.RecomputeCurrentQuotasService.RunningOptions;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -65,6 +72,17 @@ class RecomputeCurrentQuotasTaskSerializationTest {
         "  \"runningOptions\":{\"usersPerSecond\":17,\"quotaComponents\":[\"MAILBOX\"]}," +
         "  \"timestamp\":\"2018-11-13T12:00:55Z\"" +
         "}";
+    private RecursiveComparisonConfiguration recursiveComparisonConfiguration;
+
+    @BeforeEach
+    void setUp() {
+        recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+    }
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -89,7 +107,8 @@ class RecomputeCurrentQuotasTaskSerializationTest {
             .deserialize(SERIALIZED_TASK_LEGACY);
 
         assertThat(legacyTask)
-            .isEqualToComparingFieldByFieldRecursively(TASK_DEFAULT);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(TASK_DEFAULT);
     }
 
     @Test
@@ -99,6 +118,7 @@ class RecomputeCurrentQuotasTaskSerializationTest {
             .deserialize(SERIALIZED_ADDITIONAL_INFORMATION_LEGACY);
 
         assertThat(legacyDetails)
-            .isEqualToComparingFieldByFieldRecursively(DETAILS_DEFAULT);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(DETAILS_DEFAULT);
     }
 }

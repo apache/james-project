@@ -27,7 +27,11 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.mailrepository.api.MailKey;
@@ -36,6 +40,8 @@ import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.util.streams.Limit;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -55,6 +61,17 @@ class ReprocessingOneMailTaskTest {
     public static final boolean CONSUME = true;
     private static final Optional<Integer> NO_MAX_RETRIES = Optional.empty();
     private static final Optional<String> NO_PROCESSOR = Optional.empty();
+    private RecursiveComparisonConfiguration recursiveComparisonConfiguration;
+
+    @BeforeEach
+    void setUp() {
+        recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+    }
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -105,7 +122,8 @@ class ReprocessingOneMailTaskTest {
         JsonTaskSerializer testee = JsonTaskSerializer.of(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
 
         assertThat(testee.deserialize(SERIALIZED_TASK_OLD))
-            .isEqualToComparingFieldByFieldRecursively(taskWithTargetProcessor);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(taskWithTargetProcessor);
     }
 
     @Test
@@ -115,6 +133,7 @@ class ReprocessingOneMailTaskTest {
         JsonTaskAdditionalInformationSerializer testee = JsonTaskAdditionalInformationSerializer.of(ReprocessingOneMailTaskAdditionalInformationDTO.module());
 
         assertThat(testee.deserialize(SERIALIZED_TASK_OLD_ADDITIONAL_INFORMATION))
-            .isEqualToComparingFieldByFieldRecursively(details);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(details);
     }
 }

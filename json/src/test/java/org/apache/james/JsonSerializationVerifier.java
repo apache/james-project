@@ -23,14 +23,20 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.json.JsonGenericSerializer;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
@@ -59,9 +65,17 @@ public class JsonSerializationVerifier<T, U extends DTO> {
     }
 
     private static <T> EqualityTester<T> defaultEqualityTester() {
+        RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+
         return (a, b) -> assertThat(a)
             .describedAs("Deserialization test [" + b + "]")
-            .isEqualToComparingFieldByFieldRecursively(b);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(b);
     }
 
     private final List<Pair<String, T>> testValues;

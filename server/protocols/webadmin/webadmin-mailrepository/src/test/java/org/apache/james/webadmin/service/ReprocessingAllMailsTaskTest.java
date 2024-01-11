@@ -24,7 +24,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -32,6 +36,8 @@ import org.apache.james.queue.api.MailQueueName;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.util.streams.Limit;
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -55,6 +61,18 @@ class ReprocessingAllMailsTaskTest {
 
     private static final String OLD_SERIALIZED_TASK = "{\"type\":\"reprocessing-all\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\"}";
     private static final String OLD_SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"reprocessing-all\", \"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\",\"initialCount\":5,\"remainingCount\":3, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+
+    private RecursiveComparisonConfiguration recursiveComparisonConfiguration;
+
+    @BeforeEach
+    void setUp() {
+        recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+    }
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -118,11 +136,13 @@ class ReprocessingAllMailsTaskTest {
         JsonTaskSerializer testee = JsonTaskSerializer.of(ReprocessingAllMailsTaskDTO.module(REPROCESSING_SERVICE));
 
         assertThat(testee.deserialize(OLD_SERIALIZED_TASK))
-            .isEqualToComparingFieldByFieldRecursively(taskWithTargetProcessor);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(taskWithTargetProcessor);
 
         String serializedTaskWithLimit = "{\"type\":\"reprocessing-all\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\", \"limit\":10}";
         assertThat(testee.deserialize(serializedTaskWithLimit))
-            .isEqualToComparingFieldByFieldRecursively(new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.limit(10))));
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.limit(10))));
     }
 
     @Test
@@ -131,7 +151,8 @@ class ReprocessingAllMailsTaskTest {
 
         String serializedTaskWithLimit = "{\"type\":\"reprocessing-all\", \"maxRetries\":6,\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\", \"limit\":10}";
         assertThat(testee.deserialize(serializedTaskWithLimit))
-            .isEqualToComparingFieldByFieldRecursively(new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.of(6), CONSUME, Limit.limit(10))));
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new ReprocessingAllMailsTask(REPROCESSING_SERVICE, REPOSITORY_SIZE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, Optional.of(6), CONSUME, Limit.limit(10))));
     }
 
     @Test
@@ -142,12 +163,14 @@ class ReprocessingAllMailsTaskTest {
         JsonTaskAdditionalInformationSerializer testee = JsonTaskAdditionalInformationSerializer.of(ReprocessingAllMailsTaskAdditionalInformationDTO.module());
 
         assertThat(testee.deserialize(OLD_SERIALIZED_TASK_ADDITIONAL_INFORMATION))
-            .isEqualToComparingFieldByFieldRecursively(details);
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(details);
 
         String serializedTaskAdditionalInformation = "{\"type\":\"reprocessing-all\", \"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\",\"initialCount\":5,\"remainingCount\":3, \"timestamp\":\"2018-11-13T12:00:55Z\", \"limit\": 10}";
 
         assertThat(testee.deserialize(serializedTaskAdditionalInformation))
-            .isEqualToComparingFieldByFieldRecursively(new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH,
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new ReprocessingAllMailsTask.AdditionalInformation(REPOSITORY_PATH,
                 new ReprocessingService.Configuration(TARGET_QUEUE, SOME_TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.limit(10)),
                 REPOSITORY_SIZE, REMAINING_COUNT, TIMESTAMP));
     }
