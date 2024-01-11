@@ -34,7 +34,6 @@
     <description>Provides a mailet forwarding mail attributes over AMQP</description>
     <inceptionYear>2021</inceptionYear>
 
-
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>

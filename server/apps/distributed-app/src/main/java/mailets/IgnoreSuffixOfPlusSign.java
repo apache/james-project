@@ -19,7 +19,7 @@
 
 package mailets;
 
-import static helpers.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
+import static org.apache.james.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;

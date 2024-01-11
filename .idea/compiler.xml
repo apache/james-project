@@ -75,6 +75,7 @@
         <module name="rabbitmq-webadmin-integration-test" />
         <module name="james-server-core" />
         <module name="custom-smtp-command" />
+        <module name="helpers" />
         <module name="apache-james-mailbox-quota-search-scanning" />
         <module name="apache-james-mailbox-tika" />
         <module name="james-server-guice-mailbox" />

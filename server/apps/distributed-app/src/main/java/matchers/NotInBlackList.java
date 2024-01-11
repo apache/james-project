@@ -19,7 +19,7 @@
 
 package matchers;
 
-import static helpers.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
+import static org.apache.james.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
 
 import java.util.Collection;
 

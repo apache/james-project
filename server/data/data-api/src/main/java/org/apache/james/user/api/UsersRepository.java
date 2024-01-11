@@ -19,10 +19,11 @@
 
 package org.apache.james.user.api;
 
-import static helpers.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
+import static org.apache.james.TrimSuffixOfPlusSign.trimSuffixOfPlusSign;
 
 import java.util.Iterator;
 import java.util.Optional;
+
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -31,6 +32,8 @@ import org.apache.james.user.api.model.User;
 import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
+
+
 
 /**
  * Interface for a repository of users. A repository represents a logical

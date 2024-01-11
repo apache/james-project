@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package helpers;
+package org.apache.james;
 
 import javax.mail.internet.AddressException;
 
