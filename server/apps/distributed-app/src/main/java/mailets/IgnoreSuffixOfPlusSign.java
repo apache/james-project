@@ -17,40 +17,45 @@
  * under the License.                                           *
  ****************************************************************/
 
-package matchers;
-
-import java.util.Collection;
+package mailets;
 
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
-import org.apache.mailet.base.GenericMatcher;
+import org.apache.mailet.base.GenericMailet;
 
 import com.github.steveash.guavate.Guavate;
 
 
-public class MatchPlusSign extends GenericMatcher {
-    MatchPlusSign() {
+public class IgnoreSuffixOfPlusSign extends GenericMailet {
+    IgnoreSuffixOfPlusSign() {
 
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) {
+    public void service(Mail mail) {
+        System.out.println("\n\n-----------");
         System.out.println("plus sign reached");
-        mail.setRecipients(mail.getRecipients()
-                .stream()
-                .map(recipient -> trimPlusSign(recipient))
-                .collect(Guavate.toImmutableList()));
+        System.out.println("Initial recipients: ");
 
-        System.out.println("modified recipients: ");
         for (var k : mail.getRecipients()) {
             System.out.println(k.asString());
         }
-        return mail.getRecipients();
+
+        mail.setRecipients(mail.getRecipients()
+                .stream()
+                .map(recipient -> trimSuffixOfPlusSign(recipient))
+                .collect(Guavate.toImmutableList()));
+
+        System.out.println("\nModified recipients: ");
+        for (var k : mail.getRecipients()) {
+            System.out.println(k.asString());
+        }
+        System.out.println("\n\n-----------");
     }
 
-    private MailAddress trimPlusSign(MailAddress recipient) {
+    private MailAddress trimSuffixOfPlusSign(MailAddress recipient) throws RuntimeException {
         String localPart = recipient.getLocalPart();
         String domainPart = String.valueOf(recipient.getDomain().asString());
 
@@ -60,10 +65,6 @@ public class MatchPlusSign extends GenericMatcher {
                 firstPlusSign = i;
                 break;
             }
-        }
-
-        if (firstPlusSign == 0) {
-            firstPlusSign = 1;
         }
 
         try {

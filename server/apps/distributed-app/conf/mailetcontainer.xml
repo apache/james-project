@@ -38,7 +38,7 @@
         <processor state="root" enableJmx="true">
             <mailet match="All" class="PostmasterAlias"/>
             <mailet match="RelayLimit=30" class="Null"/>
-            <mailet match="matchers.MatchPlusSign" class="PostmasterAlias"/>
+            <mailet match="All" class="mailets.IgnoreSuffixOfPlusSign"/>
             <mailet match="matchers.NotInBlackList" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
