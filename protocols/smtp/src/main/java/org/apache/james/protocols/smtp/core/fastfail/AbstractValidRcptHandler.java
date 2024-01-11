@@ -19,6 +19,8 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import javax.mail.internet.AddressException;
+
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -31,11 +33,31 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Handler which want to do a recipient check should extend this
  */
 public abstract class AbstractValidRcptHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractValidRcptHandler.class);
+
+    public static MailAddress trimSuffixOfPlusSign(MailAddress recipient) throws RuntimeException {
+        String localPart = recipient.getLocalPart();
+        String domainPart = String.valueOf(recipient.getDomain().asString());
+
+        int firstPlusSign = localPart.length();
+        for (int i = 0; i < localPart.length(); i++) {
+            if (localPart.charAt(i) == '+') {
+                firstPlusSign = i;
+                break;
+            }
+        }
+
+        try {
+            return new MailAddress(localPart.substring(0, firstPlusSign), domainPart);
+        } catch (AddressException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
@@ -43,7 +65,7 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
             if (!isLocalDomain(session, rcpt.getDomain())) {
                 return HookResult.DECLINED;
             }
-            if (!isValidRecipient(session, rcpt)) {
+            if (!isValidRecipient(session, trimSuffixOfPlusSign(rcpt))) {
                 return reject(rcpt);
             }
             return HookResult.DECLINED;
