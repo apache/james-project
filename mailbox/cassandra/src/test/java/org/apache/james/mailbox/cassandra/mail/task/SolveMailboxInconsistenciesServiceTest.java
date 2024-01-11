@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -167,7 +168,9 @@ class SolveMailboxInconsistenciesServiceTest {
 
         testee.fixMailboxInconsistencies(context).block();
 
-        assertThat(context.snapshot()).isEqualToComparingFieldByFieldRecursively(new Context().snapshot());
+        assertThat(context.snapshot())
+            .usingRecursiveComparison(recursiveComparisonConfiguration)
+            .isEqualTo(new Context().snapshot());
     }
 
     @Test
