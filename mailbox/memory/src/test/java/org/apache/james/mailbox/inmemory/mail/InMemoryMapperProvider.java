@@ -90,7 +90,7 @@ public class InMemoryMapperProvider implements MapperProvider {
     }
 
     @Override
-    public MessageUid generateMessageUid() {
+    public MessageUid generateMessageUid(Mailbox mailbox) {
         return messageUidProvider.next();
     }
 

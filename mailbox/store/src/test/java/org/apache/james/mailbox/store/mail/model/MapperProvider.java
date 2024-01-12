@@ -59,7 +59,7 @@ public interface MapperProvider {
 
     MailboxId generateId();
 
-    MessageUid generateMessageUid();
+    MessageUid generateMessageUid(Mailbox mailbox);
 
     ModSeq generateModSeq(Mailbox mailbox) throws MailboxException;
 
