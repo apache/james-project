@@ -47,7 +47,7 @@ public class PostgresDelegationStore implements DelegationStore {
         }
     }
 
-    private PostgresUsersDAO postgresUsersDAO;
+    private final PostgresUsersDAO postgresUsersDAO;
     private final UserExistencePredicate userExistencePredicate;
 
     @Inject
