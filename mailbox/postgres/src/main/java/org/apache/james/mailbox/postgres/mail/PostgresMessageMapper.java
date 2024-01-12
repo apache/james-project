@@ -39,6 +39,7 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
@@ -64,6 +65,7 @@ import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
 import org.jooq.Record;
 
@@ -138,7 +140,7 @@ public class PostgresMessageMapper implements MessageMapper {
                     SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
                     return retrieveFullContent(messageBuilderAndRecord.getRight())
                         .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
-                })
+                }, ReactorUtils.DEFAULT_CONCURRENCY)
                 .sort(Comparator.comparing(MailboxMessage::getUid))
                 .map(message -> message);
         } else {
@@ -278,7 +280,8 @@ public class PostgresMessageMapper implements MessageMapper {
             })
             .flatMap(this::setNewUidAndModSeq)
             .then(saveBodyContent(message)
-                .flatMap(bodyBlobId -> messageDAO.insert(message, bodyBlobId.asString())))
+                .flatMap(bodyBlobId -> messageDAO.insert(message, bodyBlobId.asString())
+                    .onErrorResume(PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE, e -> Mono.empty())))
             .then(Mono.defer(() -> mailboxMessageDAO.insert(message)))
             .then(Mono.fromCallable(message::metaData));
     }
