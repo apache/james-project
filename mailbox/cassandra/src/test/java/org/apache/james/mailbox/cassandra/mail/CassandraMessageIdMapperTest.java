@@ -152,7 +152,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                     .whenQueryStartsWith("UPDATE messagev3"));
 
             try {
-                message1.setUid(mapperProvider.generateMessageUid());
+                message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
                 message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
                 sut.save(message1);
             } catch (Exception e) {
@@ -176,7 +176,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                     .whenQueryStartsWith("INSERT INTO blobparts (id,chunknumber,data)"));
 
             try {
-                message1.setUid(mapperProvider.generateMessageUid());
+                message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
                 message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
                 sut.save(message1);
             } catch (Exception e) {
@@ -200,7 +200,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                     .whenQueryStartsWith("INSERT INTO blobs (id,position) VALUES (:id,:position)"));
 
             try {
-                message1.setUid(mapperProvider.generateMessageUid());
+                message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
                 message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
                 sut.save(message1);
             } catch (Exception e) {
@@ -224,7 +224,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                     .whenQueryStartsWith("INSERT INTO imapuidtable"));
 
             try {
-                message1.setUid(mapperProvider.generateMessageUid());
+                message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
                 message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
                 sut.save(message1);
             } catch (Exception e) {
@@ -248,7 +248,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                     .whenQueryStartsWith("INSERT INTO messageidtable"));
 
             try {
-                message1.setUid(mapperProvider.generateMessageUid());
+                message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
                 message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
                 sut.save(message1);
             } catch (Exception e) {
@@ -275,7 +275,7 @@ class CassandraMessageIdMapperTest extends MessageIdMapperTest {
                     .times(5)
                     .whenQueryStartsWith("INSERT INTO messageidtable"));
 
-            message1.setUid(mapperProvider.generateMessageUid());
+            message1.setUid(mapperProvider.generateMessageUid(benwaInboxMailbox));
             message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
             sut.save(message1);
 
