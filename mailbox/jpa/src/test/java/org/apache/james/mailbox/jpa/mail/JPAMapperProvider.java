@@ -105,7 +105,7 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public MessageUid generateMessageUid() {
+    public MessageUid generateMessageUid(Mailbox mailbox) {
         throw new NotImplementedException("not implemented");
     }
 
