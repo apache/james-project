@@ -129,12 +129,17 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
-            .combineWith(new UsersRepositoryModuleChooser(new PostgresUsersRepositoryModule())
-                .chooseModules(configuration.getUsersRepositoryImplementation()))
+            .combineWith(chooseUsersRepositoryModule(configuration))
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseEventBusModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
             .combineWith(POSTGRES_MODULE_AGGREGATE);
+    }
+
+    private static List<Module> chooseUsersRepositoryModule(PostgresJamesConfiguration configuration) {
+        return List.of(PostgresUsersRepositoryModule.USER_CONFIGURATION_MODULE,
+            Modules.combine(new UsersRepositoryModuleChooser(new PostgresUsersRepositoryModule())
+                .chooseModules(configuration.getUsersRepositoryImplementation())));
     }
 
     private static List<Module> chooseBlobStoreModules(PostgresJamesConfiguration configuration) {
