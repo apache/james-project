@@ -29,11 +29,14 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.postgres.mail.PostgresAnnotationMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxMapper;
+import org.apache.james.mailbox.postgres.mail.PostgresMessageIdMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.PostgresUidProvider;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxAnnotationDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -44,7 +47,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
-
 
 public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
@@ -82,7 +84,13 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Override
     public MessageIdMapper createMessageIdMapper(MailboxSession session) {
-        throw new NotImplementedException("not implemented");
+        return new PostgresMessageIdMapper(new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart())),
+            new PostgresMessageDAO(executorFactory.create(session.getUser().getDomainPart()), blobIdFactory),
+            new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())),
+            getModSeqProvider(session),
+            blobStore,
+            blobIdFactory,
+            clock);
     }
 
     @Override

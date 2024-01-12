@@ -31,20 +31,27 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.mailbox.store.mail.model.MessageUidProvider;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
+import org.testcontainers.utility.ThrowingFunction;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class PostgresMapperProvider implements MapperProvider {
@@ -54,6 +61,7 @@ public class PostgresMapperProvider implements MapperProvider {
     private final UpdatableTickingClock updatableTickingClock;
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
+    private final UidProvider messageUidProvider;
 
     public PostgresMapperProvider(PostgresExtension postgresExtension) {
         this.postgresExtension = postgresExtension;
@@ -61,11 +69,13 @@ public class PostgresMapperProvider implements MapperProvider {
         this.messageIdFactory = new PostgresMessageId.Factory();
         this.blobIdFactory = new HashBlobId.Factory();
         this.blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
+        this.messageUidProvider = new PostgresUidProvider(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()));
     }
 
     @Override
     public List<Capabilities> getSupportedCapabilities() {
-        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE, Capabilities.ATTACHMENT, Capabilities.THREAD_SAFE_FLAGS_UPDATE);
+        return ImmutableList.of(Capabilities.ANNOTATION, Capabilities.MAILBOX, Capabilities.MESSAGE, Capabilities.MOVE,
+            Capabilities.ATTACHMENT, Capabilities.THREAD_SAFE_FLAGS_UPDATE, Capabilities.UNIQUE_MESSAGE_ID);
     }
 
     @Override
@@ -91,7 +101,12 @@ public class PostgresMapperProvider implements MapperProvider {
 
     @Override
     public MessageIdMapper createMessageIdMapper() {
-        throw new NotImplementedException("not implemented");
+        PostgresMailboxDAO mailboxDAO = new PostgresMailboxDAO(postgresExtension.getPostgresExecutor());
+        return new PostgresMessageIdMapper(mailboxDAO,
+            new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), blobIdFactory),
+            new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor()),
+            new PostgresModSeqProvider(mailboxDAO),
+            blobStore, blobIdFactory, updatableTickingClock);
     }
 
     @Override
@@ -105,18 +120,28 @@ public class PostgresMapperProvider implements MapperProvider {
     }
 
     @Override
-    public MessageUid generateMessageUid() {
-        throw new NotImplementedException("not implemented");
+    public MessageUid generateMessageUid(Mailbox mailbox) {
+        try {
+            return messageUidProvider.nextUid(mailbox);
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public ModSeq generateModSeq(Mailbox mailbox) {
-        throw new NotImplementedException("not implemented");
+        try {
+            return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()))
+                .nextModSeq(mailbox);
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public ModSeq highestModSeq(Mailbox mailbox) {
-        throw new NotImplementedException("not implemented");
+        return new PostgresModSeqProvider(new PostgresMailboxDAO(postgresExtension.getPostgresExecutor()))
+            .highestModSeq(mailbox);
     }
 
     @Override

@@ -49,6 +49,7 @@ import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageD
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_MESSAGE_METADATA_FUNCTION;
 import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAOUtils.RECORD_TO_MESSAGE_UID_FUNCTION;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,6 +65,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
@@ -88,6 +90,7 @@ import org.jooq.UpdateSetStep;
 import org.jooq.impl.DSL;
 import org.jooq.util.postgres.PostgresDSL;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
@@ -233,6 +236,17 @@ public class PostgresMailboxMessageDAO {
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .returning(MESSAGE_ID)))
             .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+    }
+
+    public Mono<Void> deleteByMessageIdAndMailboxIds(PostgresMessageId messageId, Collection<PostgresMailboxId> mailboxIds) {
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
+            .where(MESSAGE_ID.eq(messageId.asUuid()))
+            .and(MAILBOX_ID.in(mailboxIds.stream().map(PostgresMailboxId::asUuid).collect(ImmutableList.toImmutableList())))));
+    }
+
+    public Mono<Void> deleteByMessageId(PostgresMessageId messageId) {
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
+            .where(MESSAGE_ID.eq(messageId.asUuid()))));
     }
 
     public Mono<Integer> countTotalMessagesByMailboxId(PostgresMailboxId mailboxId) {
@@ -388,22 +402,6 @@ public class PostgresMailboxMessageDAO {
             .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION);
     }
 
-    public Flux<ComposedMessageIdWithMetaData> findMessagesMetadata(PostgresMailboxId mailboxId, List<MessageUid> messageUids) {
-        Function<List<MessageUid>, Flux<ComposedMessageIdWithMetaData>> queryPublisherFunction = uidsToFetch -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
-                .from(TABLE_NAME)
-                .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .and(MESSAGE_UID.in(uidsToFetch.stream().map(MessageUid::asLong).toArray(Long[]::new)))
-                .orderBy(DEFAULT_SORT_ORDER_BY)))
-            .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION);
-
-        if (messageUids.size() <= IN_CLAUSE_MAX_SIZE) {
-            return queryPublisherFunction.apply(messageUids);
-        } else {
-            return Flux.fromIterable(Iterables.partition(messageUids, IN_CLAUSE_MAX_SIZE))
-                .flatMap(queryPublisherFunction);
-        }
-    }
-
     public Flux<ComposedMessageIdWithMetaData> findAllRecentMessageMetadata(PostgresMailboxId mailboxId) {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
                 .from(TABLE_NAME)
@@ -527,8 +525,12 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Mono<Void> insert(MailboxMessage mailboxMessage) {
+        return insert(mailboxMessage, PostgresMailboxId.class.cast(mailboxMessage.getMailboxId()));
+    }
+
+    public Mono<Void> insert(MailboxMessage mailboxMessage, PostgresMailboxId mailboxId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
-            .set(MAILBOX_ID, ((PostgresMailboxId) mailboxMessage.getMailboxId()).asUuid())
+            .set(MAILBOX_ID, mailboxId.asUuid())
             .set(MESSAGE_UID, mailboxMessage.getUid().asLong())
             .set(MOD_SEQ, mailboxMessage.getModSeq().asLong())
             .set(MESSAGE_ID, ((PostgresMessageId) mailboxMessage.getMessageId()).asUuid())
@@ -543,6 +545,38 @@ public class PostgresMailboxMessageDAO {
             .set(IS_SEEN, mailboxMessage.isSeen())
             .set(USER_FLAGS, mailboxMessage.createFlags().getUserFlags())
             .set(SAVE_DATE, mailboxMessage.getSaveDate().map(DATE_TO_LOCAL_DATE_TIME).orElse(null))));
+    }
+
+    public Flux<MailboxId> findMailboxes(PostgresMessageId messageId) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MAILBOX_ID)
+                .from(TABLE_NAME)
+                .where(MESSAGE_ID.eq(messageId.asUuid()))))
+            .map(record -> PostgresMailboxId.of(record.get(MAILBOX_ID)));
+    }
+
+    public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMessageIds(Collection<PostgresMessageId> messageIds, MessageMapper.FetchType fetchType) {
+        PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
+
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(fetchStrategy.fetchFields())
+                .from(MESSAGES_JOIN_MAILBOX_MESSAGES_CONDITION_STEP)
+                .where(DSL.field(TABLE_NAME.getName() + "." + MESSAGE_ID.getName())
+                    .in(messageIds.stream().map(PostgresMessageId::asUuid).collect(ImmutableList.toImmutableList())))))
+            .map(record -> Pair.of(fetchStrategy.toMessageBuilder().apply(record), record));
+    }
+
+    public Flux<ComposedMessageIdWithMetaData> findMetadataByMessageId(PostgresMessageId messageId) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
+                .from(TABLE_NAME)
+                .where(MESSAGE_ID.eq(messageId.asUuid()))))
+            .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION);
+    }
+
+    public Flux<ComposedMessageIdWithMetaData> findMetadataByMessageId(PostgresMessageId messageId, PostgresMailboxId mailboxId) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select()
+                .from(TABLE_NAME)
+                .where(MESSAGE_ID.eq(messageId.asUuid()))
+                .and(MAILBOX_ID.eq(mailboxId.asUuid()))))
+            .map(RECORD_TO_COMPOSED_MESSAGE_ID_WITH_META_DATA_FUNCTION);
     }
 
 }
