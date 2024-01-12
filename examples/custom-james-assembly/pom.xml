@@ -18,81 +18,83 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.apache.james.examples</groupId>
-        <artifactId>examples</artifactId>
-        <version>3.9.0-SNAPSHOT</version>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.james.examples</groupId>
+    <artifactId>examples</artifactId>
+    <version>3.9.0-SNAPSHOT</version>
+  </parent>
 
-    <artifactId>custom-james-assembly</artifactId>
+  <artifactId>custom-james-assembly</artifactId>
 
-    <name>Apache James :: Examples :: Custom James server assembly</name>
-    <description>Assemble your own James server tailored to your needs.</description>
+  <name>Apache James :: Examples :: Custom James server assembly</name>
+  <description>Assemble your own James server tailored to your needs.</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-memory-app</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>${james.groupId}</groupId>
+      <artifactId>james-server-memory-app</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>jib-maven-plugin</artifactId>
-                <version>3.3.2</version>
-                <configuration>
-                    <from>
-                        <image>eclipse-temurin:11-jre-jammy</image>
-                    </from>
-                    <to>
-                        <image>apache/james</image>
-                        <tags>
-                            <tag>custom-latest</tag>
-                        </tags>
-                    </to>
-                    <container>
-                        <mainClass>org.apache.james.examples.CustomJamesServerMain</mainClass>
-                        <ports>
-                            <port>25</port> <!-- JMAP -->
-                            <port>143</port> <!-- IMAP -->
-                        </ports>
-                        <appRoot>/root</appRoot>
-                        <jvmFlags>
-                            <jvmFlag>-Dlogback.configurationFile=/root/conf/logback.xml</jvmFlag>
-                            <jvmFlag>-Dworking.directory=/root/</jvmFlag>
-                        </jvmFlags>
-                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
-                    </container>
-                    <extraDirectories>
-                        <paths>
-                            <path>
-                                <from>sample-configuration</from>
-                                <into>/root/conf</into>
-                            </path>
-                        </paths>
-                    </extraDirectories>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>buildTar</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>11</source>
+          <target>11</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>3.3.2</version>
+        <configuration>
+          <from>
+            <image>eclipse-temurin:11-jre-jammy</image>
+          </from>
+          <to>
+            <image>apache/james</image>
+            <tags>
+              <tag>custom-latest</tag>
+            </tags>
+          </to>
+          <container>
+            <mainClass>org.apache.james.examples.CustomJamesServerMain</mainClass>
+            <ports>
+              <port>25</port>
+              <!-- JMAP -->
+              <port>143</port>
+              <!-- IMAP -->
+            </ports>
+            <appRoot>/root</appRoot>
+            <jvmFlags>
+              <jvmFlag>-Dlogback.configurationFile=/root/conf/logback.xml</jvmFlag>
+              <jvmFlag>-Dworking.directory=/root/</jvmFlag>
+            </jvmFlags>
+            <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+          </container>
+          <extraDirectories>
+            <paths>
+              <path>
+                <from>sample-configuration</from>
+                <into>/root/conf</into>
+              </path>
+            </paths>
+          </extraDirectories>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>buildTar</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

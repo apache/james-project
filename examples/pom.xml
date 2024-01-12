@@ -23,7 +23,7 @@
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>23</version>
-    <relativePath />
+    <relativePath></relativePath>
   </parent>
 
   <groupId>org.apache.james.examples</groupId>
@@ -31,14 +31,6 @@
   <version>3.9.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Apache James :: Examples</name>
-
-  <properties>
-    <james.groupId>org.apache.james</james.groupId>
-    <james.baseVersion>${project.version}</james.baseVersion>
-    <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
-    <maven.compiler.target>1.11</maven.compiler.target>
-    <maven.compiler.source>1.11</maven.compiler.source>
-  </properties>
 
   <modules>
     <module>custom-james-assembly</module>
@@ -51,6 +43,14 @@
     <module>custom-healthcheck</module>
     <module>custom-imap</module>
   </modules>
+
+  <properties>
+    <james.groupId>org.apache.james</james.groupId>
+    <james.baseVersion>${project.version}</james.baseVersion>
+    <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
+    <maven.compiler.target>1.11</maven.compiler.target>
+    <maven.compiler.source>1.11</maven.compiler.source>
+  </properties>
 
   <build>
     <plugins>

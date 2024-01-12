@@ -31,7 +31,6 @@
     <name>Apache James :: Server :: Guice :: Mailbox :: Plugin :: Deleted messages vault</name>
     <description>Mailbox modules for Guice implementation of Deleted messages vault</description>
 
-
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>

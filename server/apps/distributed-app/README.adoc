@@ -164,17 +164,3 @@ Is it?
 .
 quit
 ```
-
-To see rejected messages:
-
-```
-curl -XGET  http://127.0.0.1:8000/mailRepositories/var%2Fmail%2Fblacklisted
-```
-
-To see accepted messages:
-
-```
-telnet 127.0.0.1 143
-a001 LOGIN recipient@domain.tld pass
-a002 select INBOX
-a003 FETCH 1:* BODY[HEADER.FIELDS (SUBJECT)]
