@@ -26,6 +26,7 @@
         <constructor-arg index="3" ref="imapProcessor" />
         <constructor-arg index="4" ref="metricFactory" />
         <constructor-arg index="5" ref="gaugeRegistry" />
+        <constructor-arg index="6" ref="connectionCheckFactory" />
     </bean>
 
     <!-- The imapProcessor configuration will be reviewed when IMAP will be integrated into Protocols project -->
@@ -50,4 +51,5 @@
 
     <bean id="timeMetricFactory" class="org.apache.james.metrics.logger.DefaultMetricFactory"/>
 
+    <bean id="connectionCheckFactory" class="org.apache.james.imap.api.DefaultConnectionCheckFactory" />
 </beans>
