@@ -23,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -137,26 +138,13 @@ public class MailboxChange implements JmapChange {
         }
 
         public List<JmapChange> fromMailboxRenamed(MailboxRenamed mailboxRenamed, ZonedDateTime now, List<AccountId> sharees) {
-            MailboxChange ownerChange = MailboxChange.builder()
+            return MailboxChange.builder()
                 .accountId(AccountId.fromUsername(mailboxRenamed.getUsername()))
                 .state(stateFactory.generate())
                 .date(now)
                 .isCountChange(false)
                 .updated(ImmutableList.of(mailboxRenamed.getMailboxId()))
-                .build();
-
-            Stream<MailboxChange> shareeChanges = sharees.stream()
-                .map(shareeId -> MailboxChange.builder()
-                    .accountId(shareeId)
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isCountChange(false)
-                    .updated(ImmutableList.of(mailboxRenamed.getMailboxId()))
-                    .shared()
-                    .build());
-
-            return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(ImmutableList.toImmutableList());
+                .build().propagateToSharee(sharees, stateFactory);
         }
 
         public JmapChange fromMailboxSubscribed(MailboxEvents.MailboxSubscribedEvent mailboxSubscribedEvent, ZonedDateTime now) {
@@ -295,6 +283,26 @@ public class MailboxChange implements JmapChange {
 
     public List<MailboxId> getDestroyed() {
         return destroyed;
+    }
+
+    public MailboxChange forSharee(AccountId accountId, Supplier<State> state) {
+        return MailboxChange.builder()
+            .accountId(accountId)
+            .state(state.get())
+            .date(date)
+            .isCountChange(isCountChange)
+            .shared()
+            .created(created)
+            .updated(updated)
+            .destroyed(destroyed)
+            .build();
+    }
+
+    @Override
+    public boolean isNoop() {
+        return created.isEmpty()
+            && updated.isEmpty()
+            && destroyed.isEmpty();
     }
 
     @Override
