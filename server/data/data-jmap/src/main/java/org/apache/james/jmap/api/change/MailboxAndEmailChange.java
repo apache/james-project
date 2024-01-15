@@ -60,14 +60,34 @@ public class MailboxAndEmailChange implements JmapChange {
         }
 
         public List<JmapChange> fromAdded(MailboxEvents.Added messageAdded, ZonedDateTime now, List<AccountId> sharees) {
-            return EmailChange.builder()
-                .accountId(AccountId.fromUsername(messageAdded.getUsername()))
+            AccountId accountId = AccountId.fromUsername(messageAdded.getUsername());
+            EmailChange.Builder emailChangeBuilder = EmailChange.builder()
+                .accountId(accountId)
                 .state(stateFactory.generate())
                 .date(now)
                 .isShared(false)
-                .isDelivery(messageAdded.isDelivery())
-                .created(messageAdded.getMessageIds())
-                .build()
+                .isDelivery(messageAdded.isDelivery());
+            MailboxChange mailboxChange = MailboxChange.builder()
+                .accountId(accountId)
+                .state(stateFactory.generate())
+                .date(now)
+                .isCountChange(true)
+                .updated(ImmutableList.of(messageAdded.getMailboxId()))
+                .build();
+
+            if (messageAdded.isAppended()) {
+                return new MailboxAndEmailChange(accountId,
+                    emailChangeBuilder
+                        .created(messageAdded.getMessageIds())
+                        .build(),
+                    mailboxChange)
+                    .propagateToSharee(sharees, stateFactory);
+            }
+            return new MailboxAndEmailChange(accountId,
+                emailChangeBuilder
+                    .updated(messageAdded.getMessageIds())
+                    .build(),
+                mailboxChange)
                 .propagateToSharee(sharees, stateFactory);
         }
 
