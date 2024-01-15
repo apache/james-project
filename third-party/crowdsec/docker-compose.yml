@@ -15,6 +15,7 @@ services:
       - ./sample-configuration/smtpserver.xml:/root/conf/smtpserver.xml
       - ./sample-configuration/crowdsec.properties:/root/conf/crowdsec.properties
       - ./sample-configuration/imapserver.xml:/root/conf/imapserver.xml
+      - ./sample-configuration/pop3server.xml:/root/conf/pop3server.xml
     networks:
       - james
     ports:

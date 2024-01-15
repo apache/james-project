@@ -59,6 +59,11 @@
         </dependency>
         <dependency>
             <groupId>${james.protocols.groupId}</groupId>
+            <artifactId>protocols-pop3</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-smtp</artifactId>
             <version>${project.version}</version>
         </dependency>

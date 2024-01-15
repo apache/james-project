@@ -20,4 +20,48 @@
 
 
 <pop3servers>
+    <pop3server enabled="true">
+        <jmxName>pop3server</jmxName>
+        <bind>0.0.0.0:0</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <tls socketTLS="false" startTLS="false">
+            <!-- To create a new keystore execute:
+                  keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+             -->
+            <keystore>file://conf/keystore</keystore>
+            <secret>james72laBalle</secret>
+            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        </tls>
+        <connectiontimeout>1200</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <handlerchain>
+            <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
+            <handler class="org.apache.james.CrowdsecPOP3CheckHandler"/>
+        </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
+    </pop3server>
+    <pop3server enabled="true">
+        <jmxName>pop3server</jmxName>
+        <bind>0.0.0.0:0</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <tls socketTLS="false" startTLS="false">
+            <!-- To create a new keystore execute:
+                  keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+             -->
+            <keystore>file://conf/keystore</keystore>
+            <secret>james72laBalle</secret>
+            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        </tls>
+        <connectiontimeout>1200</connectiontimeout>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <helloName autodetect="false">pop3ServerWithProxyEnabled</helloName>
+        <handlerchain>
+            <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
+            <handler class="org.apache.james.CrowdsecPOP3CheckHandler"/>
+        </handlerchain>
+        <gracefulShutdown>false</gracefulShutdown>
+        <proxyRequired>true</proxyRequired>
+    </pop3server>
 </pop3servers>

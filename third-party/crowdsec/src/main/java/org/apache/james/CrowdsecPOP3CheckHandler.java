@@ -20,38 +20,39 @@
 package org.apache.james;
 
 import static org.apache.james.CrowdsecUtils.isBanned;
+import static org.apache.james.protocols.api.Response.DISCONNECT;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.james.model.CrowdsecClientConfiguration;
 import org.apache.james.model.CrowdsecDecision;
 import org.apache.james.model.CrowdsecHttpClient;
-import org.apache.james.protocols.smtp.SMTPSession;
-import org.apache.james.protocols.smtp.hook.HeloHook;
-import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.protocols.api.Response;
+import org.apache.james.protocols.api.handler.ConnectHandler;
+import org.apache.james.protocols.pop3.POP3Response;
+import org.apache.james.protocols.pop3.POP3Session;
 
-public class CrowdsecEhloHook implements HeloHook {
+public class CrowdsecPOP3CheckHandler implements ConnectHandler<POP3Session> {
     private final CrowdsecHttpClient crowdsecHttpClient;
 
     @Inject
-    public CrowdsecEhloHook(CrowdsecClientConfiguration configuration) {
-        this.crowdsecHttpClient = new CrowdsecHttpClient(configuration);
+    public CrowdsecPOP3CheckHandler(CrowdsecHttpClient crowdsecHttpClient) {
+        this.crowdsecHttpClient = crowdsecHttpClient;
     }
 
     @Override
-    public HookResult doHelo(SMTPSession session, String helo) {
+    public Response onConnect(POP3Session session) {
         String ip = session.getRemoteAddress().getAddress().getHostAddress();
         return crowdsecHttpClient.getCrowdsecDecisions()
             .map(decisions -> apply(decisions, ip)).block();
     }
 
-    private HookResult apply(List<CrowdsecDecision> decisions, String ip) {
+    private Response apply(List<CrowdsecDecision> decisions, String ip) {
         return decisions.stream()
             .filter(decision -> isBanned(decision, ip))
             .findFirst()
-            .map(banned -> HookResult.DENY)
-            .orElse(HookResult.DECLINED);
+            .map(banned -> DISCONNECT)
+            .orElse(POP3Response.OK);
     }
 }
