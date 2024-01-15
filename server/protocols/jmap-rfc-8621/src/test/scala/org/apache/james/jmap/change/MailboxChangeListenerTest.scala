@@ -265,6 +265,52 @@ class MailboxChangeListenerTest {
     }
 
     @Test
+    def shouldUpdateWhenCopy(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path1 = MailboxPath.forUser(BOB, "test")
+      val mailboxId1: MailboxId = mailboxManager.createMailbox(path1, mailboxSession).get
+      val messageManager1: MessageManager = mailboxManager.getMailbox(mailboxId1, mailboxSession)
+      val appendResult1: AppendResult = messageManager1.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val path2 = MailboxPath.forUser(BOB, "test2")
+      val mailboxId2: MailboxId = mailboxManager.createMailbox(path2, mailboxSession).get
+      val messageManager2: MessageManager = mailboxManager.getMailbox(mailboxId2, mailboxSession)
+
+      val state = dummyState()
+
+      mailboxManager.copyMessages(MessageRange.one(appendResult1.getId.getUid), mailboxId1, mailboxId2, mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getUpdated).containsExactly(mailboxId2)
+      })
+    }
+
+    @Test
+    def shouldUpdateWhenMove(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path1 = MailboxPath.forUser(BOB, "test")
+      val mailboxId1: MailboxId = mailboxManager.createMailbox(path1, mailboxSession).get
+      val messageManager1: MessageManager = mailboxManager.getMailbox(mailboxId1, mailboxSession)
+      val appendResult1: AppendResult = messageManager1.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val path2 = MailboxPath.forUser(BOB, "test2")
+      val mailboxId2: MailboxId = mailboxManager.createMailbox(path2, mailboxSession).get
+      val messageManager2: MessageManager = mailboxManager.getMailbox(mailboxId2, mailboxSession)
+
+      val state = dummyState()
+
+      mailboxManager.moveMessages(MessageRange.one(appendResult1.getId.getUid), mailboxId1, mailboxId2, mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getUpdated).containsOnly(mailboxId1, mailboxId2)
+      })
+    }
+
+    @Test
     def setDeleteFlagShouldUpdateWhenWithSeenFlag(): Unit = {
       val mailboxSession = MailboxSessionUtil.create(BOB)
       val path = MailboxPath.forUser(BOB, "test")
@@ -520,6 +566,52 @@ class MailboxChangeListenerTest {
         softly.assertThat(changes.getCreated).isEmpty()
         softly.assertThat(changes.getUpdated).isEmpty()
         softly.assertThat(changes.getDestroyed).containsExactly(appendResult2.getId.getMessageId)
+      })
+    }
+
+    @Test
+    def shouldUpdateWhenCopy(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path1 = MailboxPath.forUser(BOB, "test")
+      val mailboxId1: MailboxId = mailboxManager.createMailbox(path1, mailboxSession).get
+      val messageManager1: MessageManager = mailboxManager.getMailbox(mailboxId1, mailboxSession)
+      val appendResult1: AppendResult = messageManager1.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val path2 = MailboxPath.forUser(BOB, "test2")
+      val mailboxId2: MailboxId = mailboxManager.createMailbox(path2, mailboxSession).get
+      val messageManager2: MessageManager = mailboxManager.getMailbox(mailboxId2, mailboxSession)
+
+      val state = dummyState()
+
+      mailboxManager.copyMessages(MessageRange.one(appendResult1.getId.getUid), mailboxId1, mailboxId2, mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getUpdated).containsExactly(appendResult1.getId.getMessageId)
+      })
+    }
+
+    @Test
+    def shouldUpdateWhenMove(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path1 = MailboxPath.forUser(BOB, "test")
+      val mailboxId1: MailboxId = mailboxManager.createMailbox(path1, mailboxSession).get
+      val messageManager1: MessageManager = mailboxManager.getMailbox(mailboxId1, mailboxSession)
+      val appendResult1: AppendResult = messageManager1.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val path2 = MailboxPath.forUser(BOB, "test2")
+      val mailboxId2: MailboxId = mailboxManager.createMailbox(path2, mailboxSession).get
+      val messageManager2: MessageManager = mailboxManager.getMailbox(mailboxId2, mailboxSession)
+
+      val state = dummyState()
+
+      mailboxManager.moveMessages(MessageRange.one(appendResult1.getId.getUid), mailboxId1, mailboxId2, mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getUpdated).containsExactly(appendResult1.getId.getMessageId)
       })
     }
 
