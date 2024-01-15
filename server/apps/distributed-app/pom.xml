@@ -445,7 +445,7 @@
                     <to>
                         <image>apache/james</image>
                         <tags>
-                            <tag>distributedBlacklist-latest</tag>
+                            <tag>distributedMailetTest2</tag>
                         </tags>
                     </to>
                     <container>
@@ -488,7 +488,7 @@
                     <extraDirectories>
                         <paths>
                             <path>
-                                <from>conf</from>
+                                <from>sample-configuration</from>
                                 <into>/root/conf</into>
                             </path>
                             <path>
