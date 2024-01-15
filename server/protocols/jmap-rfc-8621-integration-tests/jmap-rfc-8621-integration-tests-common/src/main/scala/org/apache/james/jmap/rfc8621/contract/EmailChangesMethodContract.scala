@@ -388,7 +388,7 @@ trait EmailChangesMethodContract {
              |  "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
              |  "oldState": "${oldState.getValue}",
              |  "hasMoreChanges": false,
-             |  "created": ["${messageId.serialize()}"],
+             |  "created": [],
              |  "updated": ["${messageId.serialize()}"],
              |  "destroyed": []
              |}""".stripMargin)
