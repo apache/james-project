@@ -19,8 +19,14 @@
 
 package org.apache.james.jmap.api.change;
 
+import java.util.function.Supplier;
+
 import org.apache.james.jmap.api.model.AccountId;
 
 public interface JmapChange {
     AccountId getAccountId();
+
+    JmapChange forSharee(AccountId accountId, Supplier<State> state);
+
+    boolean isNoop();
 }

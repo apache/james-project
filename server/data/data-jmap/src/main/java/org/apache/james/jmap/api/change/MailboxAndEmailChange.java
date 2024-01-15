@@ -21,6 +21,10 @@ package org.apache.james.jmap.api.change;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -31,6 +35,10 @@ import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.UpdatedFlags;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -100,61 +108,66 @@ public class MailboxAndEmailChange implements JmapChange {
         }
 
         public List<JmapChange> fromFlagsUpdated(MailboxEvents.FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
-            boolean isSeenChanged = messageFlagUpdated.getUpdatedFlags()
-                .stream()
-                .anyMatch(flags -> flags.isChanged(Flags.Flag.SEEN));
-            AccountId accountId = AccountId.fromUsername(messageFlagUpdated.getUsername());
-            EmailChange ownerEmailChange = EmailChange.builder()
+            Optional<JmapChange> ownerChanges = ownerChange(messageFlagUpdated, now);
+
+            if(ownerChanges.isEmpty()) {
+                return ImmutableList.of();
+            }
+
+            return Stream.concat(Stream.of(ownerChanges.get()), sharees.stream()
+                .map(shareeId -> ownerChanges.get().forSharee(shareeId, stateFactory::generate)))
+                .collect(ImmutableList.toImmutableList());
+        }
+
+        private Optional<JmapChange> ownerChange(MailboxEvents.FlagsUpdated event, ZonedDateTime now) {
+            AccountId accountId = AccountId.fromUsername(event.getUsername());
+            EmailChange.Builder emailChangeBuilder = EmailChange.builder()
                 .accountId(accountId)
                 .state(stateFactory.generate())
                 .date(now)
-                .isShared(false)
-                .updated(messageFlagUpdated.getMessageIds())
-                .build();
+                .isShared(false);
+            ImmutableSet.Builder<MailboxId> updatedMailboxes = ImmutableSet.builder();
 
-            if (isSeenChanged) {
-                MailboxChange ownerMailboxChange = MailboxChange.builder()
-                    .accountId(AccountId.fromUsername(messageFlagUpdated.getUsername()))
+            event.getUpdatedFlags().forEach(updatedFLags -> handleFlagUpdate(updatedFLags, event.getMailboxId())
+                .accept(emailChangeBuilder, updatedMailboxes));
+
+            return new MailboxAndEmailChange(
+                accountId,
+                emailChangeBuilder.build(),
+                MailboxChange.builder()
+                    .accountId(accountId)
                     .state(stateFactory.generate())
                     .date(now)
                     .isCountChange(true)
-                    .updated(ImmutableList.of(messageFlagUpdated.getMailboxId()))
-                    .build();
-                MailboxAndEmailChange ownerChange = new MailboxAndEmailChange(accountId, ownerEmailChange, ownerMailboxChange);
+                    .updated(ImmutableList.copyOf(updatedMailboxes.build()))
+                    .build())
+                .normalize();
+        }
 
-                Stream<MailboxAndEmailChange> shareeChanges = sharees.stream()
-                    .map(shareeId -> new MailboxAndEmailChange(shareeId,
-                        EmailChange.builder()
-                            .accountId(shareeId)
-                            .state(stateFactory.generate())
-                            .date(now)
-                            .isShared(true)
-                            .updated(messageFlagUpdated.getMessageIds())
-                            .build(),
-                        MailboxChange.builder()
-                            .accountId(shareeId)
-                            .state(stateFactory.generate())
-                            .date(now)
-                            .isCountChange(true)
-                            .shared(true)
-                            .updated(ImmutableList.of(messageFlagUpdated.getMailboxId()))
-                            .shared()
-                            .build()));
-
-                return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                    .collect(ImmutableList.toImmutableList());
-            }
-            Stream<EmailChange> shareeChanges = sharees.stream()
-                .map(shareeId -> EmailChange.builder()
-                    .accountId(shareeId)
-                    .state(stateFactory.generate())
-                    .date(now)
-                    .isShared(true)
-                    .updated(messageFlagUpdated.getMessageIds())
-                    .build());
-
-            return Stream.concat(Stream.of(ownerEmailChange), shareeChanges)
-                .collect(ImmutableList.toImmutableList());
+        private BiConsumer<EmailChange.Builder, ImmutableSet.Builder<MailboxId>> handleFlagUpdate(UpdatedFlags updatedFlags, MailboxId mailboxId) {
+            return (emailChangeBuilder, mailboxChangeBuilder) -> {
+                MessageId messageId = updatedFlags.getMessageId().get();
+                if (updatedFlags.isModifiedToSet(Flags.Flag.DELETED)) {
+                    emailChangeBuilder.destroyed(messageId);
+                    mailboxChangeBuilder.add(mailboxId);
+                    return;
+                }
+                if (updatedFlags.isModifiedToUnset(Flags.Flag.DELETED)) {
+                    emailChangeBuilder.created(messageId);
+                    mailboxChangeBuilder.add(mailboxId);
+                    return;
+                }
+                if (updatedFlags.getOldFlags().contains(Flags.Flag.DELETED)) {
+                    return;
+                }
+                if (!updatedFlags.flagsChangedIgnoringRecent()) {
+                    return;
+                }
+                emailChangeBuilder.updated(messageId);
+                if (updatedFlags.isChanged(Flags.Flag.SEEN)) {
+                    mailboxChangeBuilder.add(mailboxId);
+                }
+            };
         }
 
         public Flux<JmapChange> fromExpunged(MailboxEvents.Expunged expunged, ZonedDateTime now, List<Username> sharees) {
@@ -170,6 +183,16 @@ public class MailboxAndEmailChange implements JmapChange {
 
         private Mono<JmapChange> fromExpunged(MailboxEvents.Expunged expunged, ZonedDateTime now, Username username, State state, boolean delegated) {
             AccountId accountId = AccountId.fromUsername(username);
+            ImmutableSet<MessageId> changedMessageIds = expunged.getExpunged().values()
+                .stream()
+                .filter(metadata -> !metadata.getFlags().contains(Flags.Flag.DELETED))
+                .map(MessageMetaData::getMessageId)
+                .collect(ImmutableSet.toImmutableSet());
+
+            if (changedMessageIds.isEmpty()) {
+                return Mono.empty();
+            }
+
             MailboxChange mailboxChange = MailboxChange.builder()
                 .accountId(accountId)
                 .state(state)
@@ -186,8 +209,8 @@ public class MailboxAndEmailChange implements JmapChange {
                         .state(state)
                         .date(now)
                         .isShared(delegated)
-                        .updated(Sets.intersection(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
-                        .destroyed(Sets.difference(ImmutableSet.copyOf(expunged.getMessageIds()), accessibleMessageIds))
+                        .updated(Sets.intersection(changedMessageIds, accessibleMessageIds))
+                        .destroyed(Sets.difference(changedMessageIds, accessibleMessageIds))
                         .build(), mailboxChange))
                 .switchIfEmpty(Mono.<JmapChange>just(mailboxChange));
         }
@@ -217,5 +240,26 @@ public class MailboxAndEmailChange implements JmapChange {
 
     public MailboxChange getMailboxChange() {
         return mailboxChange;
+    }
+
+    public Optional<JmapChange> normalize() {
+        if (isNoop()) {
+            return Optional.empty();
+        }
+        if (mailboxChange.isNoop()) {
+            return Optional.of(emailChange);
+        }
+        return Optional.of(this);
+    }
+
+    @Override
+    public boolean isNoop() {
+        return mailboxChange.isNoop() && emailChange.isNoop();
+    }
+
+    public MailboxAndEmailChange forSharee(AccountId accountId, Supplier<State> state) {
+        return new MailboxAndEmailChange(accountId,
+            emailChange.forSharee(accountId, state),
+            mailboxChange.forSharee(accountId, state));
     }
 }
