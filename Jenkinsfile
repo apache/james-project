@@ -42,6 +42,7 @@ pipeline {
         POSTGRES_MODULES = 'backends-common/postgres,' +
                 'mailbox/postgres,' +
                 'server/data/data-postgres,' +
+                'server/data/data-jmap-postgres,' +
                 'server/container/guice/postgres-common,' +
                 'server/container/guice/mailbox-postgres,' +
                 'server/apps/postgres-app,' +
