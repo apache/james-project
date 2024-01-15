@@ -68,6 +68,7 @@
         <module>data/data-file</module>
         <module>data/data-jmap</module>
         <module>data/data-jmap-cassandra</module>
+        <module>data/data-jmap-postgres</module>
         <module>data/data-jpa</module>
         <module>data/data-ldap</module>
         <module>data/data-library</module>
