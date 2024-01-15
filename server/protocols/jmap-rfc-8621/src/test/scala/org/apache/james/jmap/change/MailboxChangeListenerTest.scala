@@ -19,12 +19,13 @@
 
 package org.apache.james.jmap.change
 
-import java.time.{Clock, ZonedDateTime}
-import java.util
 
+import java.time.{Clock, ZonedDateTime}
+
+import com.google.common.collect.ImmutableList
 import javax.mail.Flags
 import org.apache.james.events.delivery.InVmEventDelivery
-import org.apache.james.events.{Event, EventBus, EventBusName, EventListener, Group, InVMEventBus, MemoryEventDeadLetters, Registration, RegistrationKey, RetryBackoffConfiguration}
+import org.apache.james.events.{Event, EventBus, InVMEventBus, MemoryEventDeadLetters, RegistrationKey, RetryBackoffConfiguration}
 import org.apache.james.jmap.api.change.{EmailChange, EmailChangeRepository, Limit, MailboxAndEmailChange, MailboxChange, MailboxChangeRepository, State}
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.change.MailboxChangeListenerTest.{ACCOUNT_ID, DEFAULT_NUMBER_OF_CHANGES}
@@ -37,8 +38,10 @@ import org.apache.james.mailbox.store.StoreSubscriptionManager
 import org.apache.james.mailbox.{MailboxManager, MailboxSessionUtil, MessageManager, SubscriptionManager}
 import org.apache.james.metrics.tests.RecordingMetricFactory
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Nested, Test}
-import org.reactivestreams.Publisher
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
 import reactor.core.publisher.Mono
 
 import scala.jdk.CollectionConverters._
@@ -77,17 +80,9 @@ class MailboxChangeListenerTest {
     mailboxChangeRepository = new MemoryMailboxChangeRepository(DEFAULT_NUMBER_OF_CHANGES)
     emailChangeFactory = new MailboxAndEmailChange.Factory(stateFactory, resources.getMessageIdManager, resources.getMailboxManager)
     emailChangeRepository = new MemoryEmailChangeRepository(DEFAULT_NUMBER_OF_CHANGES)
-    val eventBus = new EventBus {
-      override def register(listener: EventListener.ReactiveEventListener, key: RegistrationKey): Publisher[Registration] = Mono.empty()
-
-      override def register(listener: EventListener.ReactiveEventListener, group: Group): Registration = () => Mono.empty()
-
-      override def dispatch(event: Event, key: util.Set[RegistrationKey]): Mono[Void] = Mono.empty()
-
-      override def reDeliver(group: Group, event: Event): Mono[Void] = Mono.empty()
-
-      override def eventBusName(): EventBusName = new EventBusName("test")
-    }
+    val eventBus = Mockito.mock(classOf[EventBus])
+    Mockito.when(eventBus.dispatch(any(classOf[Event]), any(classOf[RegistrationKey])))
+      .thenReturn(Mono.empty())
 
     subscriptionManager = new StoreSubscriptionManager(resources.getMailboxManager.getMapperFactory,
       resources.getMailboxManager.getMapperFactory,
@@ -176,6 +171,122 @@ class MailboxChangeListenerTest {
     }
 
     @Test
+    def addDeleteFlagsShouldStoreUpdatedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getUpdated).containsExactly(inboxId)
+      })
+    }
+
+    private def dummyState(): State = {
+      val state = stateFactory.generate()
+      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      state
+    }
+
+    @Test
+    def expungeShouldNotAlterState(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.expunge(MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def removeDeleteFlagsShouldStoreUpdatedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getUpdated).containsExactly(inboxId)
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def updatingAnAlreadyDeletedMessageShouldNoop(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def setDeleteFlagShouldUpdateWhenWithSeenFlag(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = dummyState()
+
+      val flags = new Flags(Flags.Flag.SEEN)
+      flags.add(Flags.Flag.DELETED)
+      messageManager.setFlags(flags, FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).containsExactly(inboxId)
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
     def removeSeenFlagsShouldStoreUpdateEvent(): Unit = {
       val mailboxSession = MailboxSessionUtil.create(BOB)
       val path = MailboxPath.forUser(BOB, "test")
@@ -185,8 +296,7 @@ class MailboxChangeListenerTest {
         .withFlags(new Flags(Flags.Flag.SEEN))
         .build("header: value\r\n\r\nbody"), mailboxSession)
 
-      val state = stateFactory.generate()
-      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = dummyState()
 
       messageManager.setFlags(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
 
@@ -202,8 +312,7 @@ class MailboxChangeListenerTest {
       val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
       messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-      val state = stateFactory.generate()
-      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = dummyState()
 
       messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
 
@@ -221,10 +330,9 @@ class MailboxChangeListenerTest {
         .withFlags(new Flags(Flags.Flag.ANSWERED))
         .build("header: value\r\n\r\nbody"), mailboxSession)
 
-      val state = stateFactory.generate()
-      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = dummyState()
 
-      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession)
+      messageManager.setFlags(new Flags(Flags.Flag.DRAFT), FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession)
 
       assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
         .isEmpty()
@@ -238,8 +346,8 @@ class MailboxChangeListenerTest {
       val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
       val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-      val state = stateFactory.generate()
-      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = dummyState()
+
       messageManager.delete(List(appendResult.getId.getUid).asJava, mailboxSession)
 
       assertThat(mailboxChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
@@ -252,8 +360,7 @@ class MailboxChangeListenerTest {
       val path = MailboxPath.forUser(BOB, "test")
       val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
 
-      val state = stateFactory.generate()
-      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = dummyState()
 
       mailboxManager.deleteMailbox(inboxId, mailboxSession)
 
@@ -267,8 +374,7 @@ class MailboxChangeListenerTest {
       val path = MailboxPath.forUser(BOB, "test")
       val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
 
-      val state = stateFactory.generate()
-      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = dummyState()
 
       subscriptionManager.subscribe(mailboxSession, path)
       Thread.sleep(200)
@@ -282,8 +388,7 @@ class MailboxChangeListenerTest {
       val path = MailboxPath.forUser(BOB, "test")
       val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
 
-      val state = stateFactory.generate()
-      mailboxChangeRepository.save(MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(ZonedDateTime.now).isCountChange(false).created(List[MailboxId](TestId.of(0)).asJava).build).block()
+      val state = dummyState()
 
       subscriptionManager.unsubscribe(mailboxSession, path)
       Thread.sleep(200)
@@ -300,22 +405,18 @@ class MailboxChangeListenerTest {
       val path = MailboxPath.forUser(BOB, "test")
       val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
 
-      val state = stateFactory.generate()
-      emailChangeRepository.save(EmailChange.builder()
-          .accountId(ACCOUNT_ID)
-          .state(state)
-          .date(ZonedDateTime.now)
-          .isShared(false)
-          .created(TestMessageId.of(0))
-          .build)
-        .block()
+      val state = dummyState()
 
       val appendResult: AppendResult = mailboxManager
         .getMailbox(inboxId, mailboxSession)
         .appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getCreated)
-        .containsExactly(appendResult.getId.getMessageId)
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getCreated).containsExactly(appendResult.getId.getMessageId)
+      })
     }
 
     @Test
@@ -326,20 +427,16 @@ class MailboxChangeListenerTest {
       val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
       val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-      val state = stateFactory.generate()
-      emailChangeRepository.save(EmailChange.builder()
-          .accountId(ACCOUNT_ID)
-          .state(state)
-          .date(ZonedDateTime.now)
-          .isShared(false)
-          .created(TestMessageId.of(0))
-          .build)
-        .block()
+      val state = dummyState()
 
       messageManager.setFlags(new Flags(Flags.Flag.ANSWERED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
 
-      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-        .containsExactly(appendResult.getId.getMessageId)
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getUpdated).containsExactly(appendResult.getId.getMessageId)
+      })
     }
 
     @Test
@@ -352,20 +449,16 @@ class MailboxChangeListenerTest {
         .withFlags(new Flags(Flags.Flag.DRAFT))
         .build("header: value\r\n\r\nbody"), mailboxSession)
 
-      val state = stateFactory.generate()
-      emailChangeRepository.save(EmailChange.builder()
-          .accountId(ACCOUNT_ID)
-          .state(state)
-          .date(ZonedDateTime.now)
-          .isShared(false)
-          .created(TestMessageId.of(0))
-          .build)
-        .block()
+      val state = dummyState()
 
       messageManager.setFlags(new Flags(Flags.Flag.DRAFT), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
 
-      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getUpdated)
-        .containsExactly(appendResult.getId.getMessageId)
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+        softly.assertThat(changes.getUpdated).containsExactly(appendResult.getId.getMessageId)
+      })
     }
 
     @Test
@@ -376,20 +469,247 @@ class MailboxChangeListenerTest {
       val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
       val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
 
-      val state = stateFactory.generate()
-      emailChangeRepository.save(EmailChange.builder()
-          .accountId(ACCOUNT_ID)
-          .state(state)
-          .date(ZonedDateTime.now)
-          .isShared(false)
-          .created(TestMessageId.of(0))
-          .build)
-        .block()
+      val state = dummyState()
 
       messageManager.delete(List(appendResult.getId.getUid).asJava, mailboxSession)
 
-      assertThat(emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block().getDestroyed)
-        .containsExactly(appendResult.getId.getMessageId)
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).containsExactly(appendResult.getId.getMessageId)
+      })
+    }
+
+    @Test
+    def addDeleteFlagsShouldStoreDestroyedEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).containsExactly(appendResult.getId.getMessageId)
+      })
+    }
+
+    @Test
+    def addDeleteFlagsShouldStoreDestroyedEventWhenMixedCase(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult1: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val appendResult2: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.one(appendResult1.getId.getUid), mailboxSession)
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).containsExactly(appendResult2.getId.getMessageId)
+      })
+    }
+
+    @Test
+    def expungeShouldNotAlterState(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.expunge(MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def expungeShouldHandleMixedCase(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult1: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val appendResult2: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.one(appendResult1.getId.getUid), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.delete(ImmutableList.of(appendResult1.getId.getUid, appendResult2.getId.getUid), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).containsExactly(appendResult2.getId.getMessageId)
+      })
+    }
+
+    @Test
+    def setFlagsShouldNotTriggerChangeWhenNoop(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult1: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val appendResult2: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.ADD, MessageRange.one(appendResult1.getId.getUid), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.ADD, MessageRange.one(appendResult1.getId.getUid), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+    @Test
+    def setFlagsShouldIgnoreRecent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().notRecent().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.RECENT), FlagsUpdateMode.ADD, MessageRange.one(appendResult.getId.getUid), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def removeDeleteFlagsShouldStoreCreateEvent(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).containsExactly(appendResult.getId.getMessageId)
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def removeDeleteFlagsShouldStoreCreateEventWhenMixedCase(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult1: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+      val appendResult2: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.one(appendResult1.getId.getUid), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.REMOVE, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).containsExactly(appendResult1.getId.getMessageId)
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def updatingAnAlreadyDeletedMessageShouldNoop(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      messageManager.setFlags(new Flags(Flags.Flag.DELETED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      val state = dummyState()
+
+      messageManager.setFlags(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).isEmpty()
+      })
+    }
+
+    @Test
+    def setDeleteFlagShouldDestroyWhenWithOtherFlags(): Unit = {
+      val mailboxSession = MailboxSessionUtil.create(BOB)
+      val path = MailboxPath.forUser(BOB, "test")
+      val inboxId: MailboxId = mailboxManager.createMailbox(path, mailboxSession).get
+      val messageManager: MessageManager = mailboxManager.getMailbox(inboxId, mailboxSession)
+      val appendResult: AppendResult = messageManager.appendMessage(AppendCommand.builder().build("header: value\r\n\r\nbody"), mailboxSession)
+
+      val state = dummyState()
+
+      val flags = new Flags(Flags.Flag.FLAGGED)
+      flags.add(Flags.Flag.DELETED)
+      messageManager.setFlags(flags, FlagsUpdateMode.ADD, MessageRange.all(), mailboxSession)
+
+      SoftAssertions.assertSoftly(softly => {
+        val changes = emailChangeRepository.getSinceState(ACCOUNT_ID, state, None.toJava).block()
+        softly.assertThat(changes.getCreated).isEmpty()
+        softly.assertThat(changes.getUpdated).isEmpty()
+        softly.assertThat(changes.getDestroyed).containsExactly(appendResult.getId.getMessageId)
+      })
+    }
+
+    private def dummyState(): State = {
+      val state = stateFactory.generate()
+      emailChangeRepository.save(EmailChange.builder()
+        .accountId(ACCOUNT_ID)
+        .state(state)
+        .date(ZonedDateTime.now)
+        .isShared(false)
+        .created(TestMessageId.of(0))
+        .build)
+        .block()
+      state
     }
   }
 }

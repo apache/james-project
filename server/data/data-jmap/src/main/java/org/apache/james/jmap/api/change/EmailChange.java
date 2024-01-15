@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.model.MessageId;
@@ -172,6 +173,25 @@ public class EmailChange implements JmapChange {
 
     public boolean isDelivery() {
         return isDelivery;
+    }
+
+    public EmailChange forSharee(AccountId accountId, Supplier<State> state) {
+        return EmailChange.builder()
+            .accountId(accountId)
+            .state(state.get())
+            .date(date)
+            .isShared(true)
+            .created(created)
+            .updated(updated)
+            .destroyed(destroyed)
+            .build();
+    }
+
+    @Override
+    public boolean isNoop() {
+        return created.isEmpty()
+            && updated.isEmpty()
+            && destroyed.isEmpty();
     }
 
     @Override
