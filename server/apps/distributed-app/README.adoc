@@ -4,10 +4,6 @@
 
  * Java 11 SDK
 
-Firstly, create your own user network on Docker for the James environment:
-
-    $ docker network create --driver bridge james
-
 Third party compulsory dependencies:
 
  * Cassandra 4.0
@@ -15,94 +11,31 @@ Third party compulsory dependencies:
  * RabbitMQ-Management 3.8.18
  * Zenko Cloudserver or AWS S3
 
-----
-$ docker run -d --network james -p 9042:9042 --name=cassandra cassandra:4.1.3
-$ docker run -d --network james -p 9200:9200 --name=opensearch --env 'discovery.type=single-node' opensearchproject/opensearch:2.1.0
-$ docker run -d --network james -p 5672:5672 -p 15672:15672 --name=rabbitmq rabbitmq:3.12.1-management
-$ docker run -d --network james --env 'REMOTE_MANAGEMENT_DISABLE=1' --env 'SCALITY_ACCESS_KEY_ID=accessKey1' --env 'SCALITY_SECRET_ACCESS_KEY=secretKey1' --name=s3 registry.scality.com/cloudserver/cloudserver:8.7.25
-----
-
-== Running
-
-To run james, you have to create a directory containing required configuration files.
-
-James requires the configuration to be in a subfolder of working directory that is called
-**conf**. A [sample directory](https://github.com/apache/james-project/tree/master/server/container/guice/cassandra-rabbitmq-guice/sample-configuration)
-is provided with some default values you may need to replace, especially compulsory third party software endpoints.
-
-You will need to update its content to match your needs.
-
-You also need to generate a keystore with the following command:
-
-----
-$ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
-----
-
-Once everything is set up, you just have to run the jar with:
 
 [source]
-----
-$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar james-server-distributed-app.jar
-----
 
-In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `--generate-keystore` when running,
-James will auto-generate keystore file with the default setting that is declared in `jmap.properties` (tls.keystoreURL, tls.secret)
+== Running the server method 1
+-----
 
-[source]
-----
-$ java -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar james-server-distributed-app.jar --generate-keystore
-----
+$ docker compose -f docker-composeOLD.yml up
 
-Note that binding ports below 1024 requires administrative rights.
+-----
 
-== Docker distribution
+== Running the server method 2
+-----
 
-To import the image locally:
+$ cd server/apps/distributed-app/
 
-[source]
-----
-docker image load -i target/jib-image.tar
-----
+$ mvn clean install -DskipTests
+ OR
+$ mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.predefinedSortOrder=custom_1 -DskipTests clean install
 
-Then run it:
+$ docker compose -f docker-compose.yml up -d
 
-[source]
-----
-docker run --network james apache/james:distributed-latest
-----
+$ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar target/james-server-distributed-app.jar --generate-keystore
 
-For security reasons you are required to generate your own keystore, that you can mount into the container via a volume:
+-----
 
-[source]
-----
-keytool -genkey -alias james -keyalg RSA -keystore keystore
-docker run --network james -v $PWD/keystore:/root/conf/keystore apache/james:distributed-latest
-----
-
-In the case of quick start James without manually creating a keystore (e.g. for development), just input the command argument `--generate-keystore` when running,
-James will auto-generate keystore file with the default setting that is declared in `jmap.properties` (tls.keystoreURL, tls.secret)
-
-[source]
-----
-docker run --network james apache/james:distributed-latest --generate-keystore
-----
-
-Use the [JAVA_TOOL_OPTIONS environment option](https://github.com/GoogleContainerTools/jib/blob/master/docs/faq.md#jvm-flags)
-to pass extra JVM flags. For instance:
-
-[source]
-----
-docker run --network james -e "JAVA_TOOL_OPTIONS=-Xmx500m -Xms500m" apache/james:distributed-latest
-----
-
-[Glowroot APM](https://glowroot.org/) is packaged as part of the docker distribution to easily enable valuable performances insights.
-Disabled by default, its java agent can easily be enabled:
-
-
-[source]
-----
-docker run --network james -e "JAVA_TOOL_OPTIONS=-javaagent:/root/glowroot.jar" apache/james:distributed-latest
-----
 The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
 
 
@@ -118,22 +51,6 @@ Note that you can create a domain via an environment variable. This domain will 
 --environment DOMAIN=domain.tld
 ----
 
-
-[source]
-== Running the modified server
------
-
-$ cd server/apps/distributed-app/
-
-$ mvn clean install -DskipTests
- OR
-$ mvn com.github.ekryd.sortpom:sortpom-maven-plugin:sort -Dsort.keepBlankLines -Dsort.predefinedSortOrder=custom_1 -DskipTests clean install
-
-$ docker compose -f docker-compose.yml up -d
-
-$ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logback.xml -Djdk.tls.ephemeralDHKeySize=2048 -jar target/james-server-distributed-app.jar --generate-keystore
-
------
 
 [source]
 

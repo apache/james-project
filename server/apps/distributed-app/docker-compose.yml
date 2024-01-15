@@ -2,21 +2,6 @@ version: '3'
 
 services:
 
-  james:
-    image: sami7786/distributed-james-test:latest
-    container_name: james
-    command:
-      - --generate-keystore
-    ports:
-      - "80:80"
-      - "25:25"
-      - "110:110"
-      - "143:143"
-      - "465:465"
-      - "587:587"
-      - "993:993"
-      - "8000:8000"
-
   opensearch:
     image: opensearchproject/opensearch:2.1.0
     ports:
