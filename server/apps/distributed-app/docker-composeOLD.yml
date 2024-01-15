@@ -14,11 +14,7 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: apache/james:distributedMailetTest2
-    volumes:
-      - $PWD/conf/jmap.properties:/root/conf/jmap.properties
-      - $PWD/conf/mailetcontainer.xml:/root/conf/mailetcontainer.xml
-      - $PWD/conf/rs256-4096-public.pem:/root/conf/rs256-4096-public.pem
+    image: sami7786/distributed-james-test:latest
     container_name: james
     hostname: james.local
     command:
