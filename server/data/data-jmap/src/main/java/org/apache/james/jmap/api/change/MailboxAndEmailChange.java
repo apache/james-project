@@ -23,9 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -62,64 +60,24 @@ public class MailboxAndEmailChange implements JmapChange {
         }
 
         public List<JmapChange> fromAdded(MailboxEvents.Added messageAdded, ZonedDateTime now, List<AccountId> sharees) {
-            AccountId accountId = AccountId.fromUsername(messageAdded.getUsername());
-            State state = stateFactory.generate();
-            EmailChange ownerEmailChange = EmailChange.builder()
-                .accountId(accountId)
-                .state(state)
+            return EmailChange.builder()
+                .accountId(AccountId.fromUsername(messageAdded.getUsername()))
+                .state(stateFactory.generate())
                 .date(now)
                 .isShared(false)
                 .isDelivery(messageAdded.isDelivery())
                 .created(messageAdded.getMessageIds())
-                .build();
-
-            MailboxChange ownerMailboxChange = MailboxChange.builder()
-                .accountId(AccountId.fromUsername(messageAdded.getUsername()))
-                .state(state)
-                .date(now)
-                .isCountChange(true)
-                .shared(false)
-                .updated(ImmutableList.of(messageAdded.getMailboxId()))
-                .build();
-
-            MailboxAndEmailChange ownerChange = new MailboxAndEmailChange(accountId, ownerEmailChange, ownerMailboxChange);
-
-            Stream<MailboxAndEmailChange> shareeChanges = sharees.stream()
-                .map(shareeId -> new MailboxAndEmailChange(shareeId,
-                        EmailChange.builder()
-                            .accountId(shareeId)
-                            .state(state)
-                            .date(now)
-                            .isShared(true)
-                            .isDelivery(messageAdded.isDelivery())
-                            .created(messageAdded.getMessageIds())
-                            .build(),
-                        MailboxChange.builder()
-                            .accountId(shareeId)
-                            .state(state)
-                            .date(now)
-                            .isCountChange(true)
-                            .shared(true)
-                            .updated(ImmutableList.of(messageAdded.getMailboxId()))
-                            .build()));
-
-            return Stream.concat(Stream.of(ownerChange), shareeChanges)
-                .collect(ImmutableList.toImmutableList());
+                .build()
+                .propagateToSharee(sharees, stateFactory);
         }
 
         public List<JmapChange> fromFlagsUpdated(MailboxEvents.FlagsUpdated messageFlagUpdated, ZonedDateTime now, List<AccountId> sharees) {
-            Optional<JmapChange> ownerChanges = ownerChange(messageFlagUpdated, now);
-
-            if(ownerChanges.isEmpty()) {
-                return ImmutableList.of();
-            }
-
-            return Stream.concat(Stream.of(ownerChanges.get()), sharees.stream()
-                .map(shareeId -> ownerChanges.get().forSharee(shareeId, stateFactory::generate)))
-                .collect(ImmutableList.toImmutableList());
+            return flagUpdateChange(messageFlagUpdated, now)
+                .map(change -> change.propagateToSharee(sharees, stateFactory))
+                .orElse(ImmutableList.of());
         }
 
-        private Optional<JmapChange> ownerChange(MailboxEvents.FlagsUpdated event, ZonedDateTime now) {
+        private Optional<JmapChange> flagUpdateChange(MailboxEvents.FlagsUpdated event, ZonedDateTime now) {
             AccountId accountId = AccountId.fromUsername(event.getUsername());
             EmailChange.Builder emailChangeBuilder = EmailChange.builder()
                 .accountId(accountId)
