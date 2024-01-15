@@ -1577,7 +1577,7 @@ trait PushSubscriptionSetMethodContract {
            |                "notCreated": {
            |                    "4f29": {
            |                        "type": "invalidArguments",
-           |                        "description": "java.security.spec.InvalidKeySpecException: java.security.InvalidKeyException: IOException: null"
+           |                        "description": "java.security.spec.InvalidKeySpecException: java.security.InvalidKeyException: IOException: Unable to decode key"
            |                    }
            |                }
            |            },
