@@ -35,6 +35,6 @@ import org.junit.platform.suite.api.Suite;
 @SelectClasspathResource("cucumber/UploadEndpoint.feature")
 @IncludeEngines("cucumber")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.apache.james.jmap.draft.methods.integration,org.apache.james.jmap.rabbitmq.cucumber.awss3")
-@ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "not @Ignore, @BasicFeature")
+@ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "@BasicFeature")
 public class RabbitMQUploadCucumberTest {
 }

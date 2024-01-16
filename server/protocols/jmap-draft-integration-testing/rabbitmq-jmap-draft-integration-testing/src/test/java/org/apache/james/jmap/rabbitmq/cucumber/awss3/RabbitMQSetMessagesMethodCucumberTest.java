@@ -35,6 +35,6 @@ import org.junit.platform.suite.api.Suite;
 @IncludeEngines("cucumber")
 @SelectClasspathResource("cucumber/SetMessages.feature")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.apache.james.jmap.draft.methods.integration,org.apache.james.jmap.rabbitmq.cucumber.awss3")
-@ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "not @Ignore, @BasicFeature")
+@ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "@BasicFeature")
 public class RabbitMQSetMessagesMethodCucumberTest {
 }
