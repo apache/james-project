@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.base.Splitter;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -90,10 +91,10 @@ public class UserStepdefs {
         domains.add(domain);
     }
 
-    @Given("^some users (.*)$")
-    public void createUsers(List<String> users) {
-        users.stream()
-            .map(this::unquote)
+    @Given("^some users \"(.*)\"$")
+    public void createUsers(String users) {
+        Splitter.on(',').trimResults()
+            .splitToStream(users)
             .forEach(Throwing.consumer(this::createUser));
     }
     

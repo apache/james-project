@@ -59,32 +59,32 @@ Feature: Share parent mailbox without sharing submailbox
     And the mailbox "secret" has 1 messages
 
   Scenario: Alice can get message from her root shared mailbox
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the list should contain 1 message
 
   Scenario: Alice can get message from her children shared mailbox
-    When "alice@domain.tld" ask for messages "m3"
+    When "alice@domain.tld" ask for message "m3"
     Then no error is returned
     And the list should contain 1 message
 
   Scenario: Alice can get message from her not shared mailbox
-    When "alice@domain.tld" ask for messages "m2"
+    When "alice@domain.tld" ask for message "m2"
     Then no error is returned
     And the list should contain 1 message
 
   Scenario: Bob can get message from root shared mailbox
-    When "bob@domain.tld" ask for messages "m1"
+    When "bob@domain.tld" ask for message "m1"
     Then no error is returned
     And the list should contain 1 message
 
   Scenario: Bob can get message from children shared mailbox
-    When "bob@domain.tld" ask for messages "m3"
+    When "bob@domain.tld" ask for message "m3"
     Then no error is returned
     And the list should contain 1 message
 
   Scenario: Bob can not get message from mailbox not shared with him
-    When "bob@domain.tld" ask for messages "m2"
+    When "bob@domain.tld" ask for message "m2"
     Then the list should contain 0 message
 
   Scenario: Alice can list message from her shared root mailbox

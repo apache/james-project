@@ -25,6 +25,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Splitter;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.model.MessageId;
@@ -50,25 +51,25 @@ public class GetMessageListMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" asks for message list in mailboxes \"([^\"]*)\" with flag \"([^\"]*)\"$")
-    public void getMessageListWithFlag(String username, List<String> mailboxes, String flag) throws Exception {
+    public void getMessageListWithFlag(String username, String mailboxes, String flag) throws Exception {
         httpClient.post(String.format(
                 "[[\"getMessageList\", {\"filter\":{" +
                 "    \"inMailboxes\":[\"%s\"]," +
                 "    \"hasKeyword\":\"%s\"" +
                 "}}, \"#0\"]]",
-            mainStepdefs.getMailboxIds(username, mailboxes),
+            mainStepdefs.getMailboxIds(username, Splitter.on(',').trimResults().splitToList(mailboxes)),
             flag));
     }
 
     @When("^\"([^\"]*)\" asks for message list in (?:mailboxes|mailbox) \"([^\"]*)\"$")
-    public void getMessageList(String username, List<String> mailboxes) throws Exception {
-        getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(username, mailboxes));
+    public void getMessageList(String username, String mailboxes) throws Exception {
+        getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(username, Splitter.on(',').trimResults().splitToList(mailboxes)));
     }
 
     @When("^\"([^\"]*)\" asks for message list in delegated (?:mailboxes|mailbox) \"([^\"]*)\" from \"([^\"]*)\"$")
-    public void getMessageListFromDelegated(String sharee, List<String> mailboxes, String sharer) throws Exception {
+    public void getMessageListFromDelegated(String sharee, String mailboxes, String sharer) throws Exception {
         userStepdefs.execWithUser(sharee, () ->
-            getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(sharer, mailboxes)));
+            getMessageListFromMailboxIds(mainStepdefs.getMailboxIds(sharer, Splitter.on(',').trimResults().splitToList(mailboxes))));
     }
 
     private void getMessageListFromMailboxIds(String mailboxIds) throws Exception {

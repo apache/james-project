@@ -20,7 +20,7 @@ Feature: Keywords consistency on delegation mailbox
 
   Background:
     Given a domain named "domain.tld"
-    And some users "alice@domain.tld", "bob@domain.tld"
+    And some users "alice@domain.tld, bob@domain.tld"
     And "alice@domain.tld" has a mailbox "notShared"
     And "alice@domain.tld" has a mailbox "shared"
     And "alice@domain.tld" shares its mailbox "shared" with rights "lrw" with "bob@domain.tld"
@@ -59,20 +59,20 @@ Feature: Keywords consistency on delegation mailbox
 
   Scenario: getMessage with shared user should return message with combine flag when delegation mailbox
     Given message "m1" has flags $Flagged in mailbox "shared" of user "alice@domain.tld"
-    When "bob@domain.tld" ask for messages "m1"
+    When "bob@domain.tld" ask for message "m1"
     Then no error is returned
     And the keywords of the message is $Flagged
 
   Scenario: getMessage of owner mailbox should return message with combine flag when delegation mailbox
     Given message "m1" has flags $Flagged in mailbox "shared" of user "alice@domain.tld"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the keywords of the message is $Flagged
 
   Scenario: message should update message status based on delegation mailbox
     Given "alice@domain.tld" sets flags "$Flagged,$Seen" on message "m1"
     And "bob@domain.tld" sets flags "$Seen" on message "m1"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the message has IMAP flag "\Flagged \Seen" in mailbox "notShared" for "alice@domain.tld"
     And the message has IMAP flag "\Seen" in mailbox "shared" for "alice@domain.tld"
@@ -80,7 +80,7 @@ Feature: Keywords consistency on delegation mailbox
   Scenario: message should keep origin message status when cut the sharing
     Given "bob@domain.tld" sets flags "$Flagged" on message "m1"
     And "alice@domain.tld" shares its mailbox "shared" with rights "" with "bob@domain.tld"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the message has IMAP flag "\Flagged" in mailbox "shared" for "alice@domain.tld"
     And the message has IMAP flag "" in mailbox "notShared" for "alice@domain.tld"
@@ -89,52 +89,52 @@ Feature: Keywords consistency on delegation mailbox
     Given message "m1" has flags $Flagged in mailbox "notShared" of user "alice@domain.tld"
     And message "m1" has flags $Seen in mailbox "shared" of user "alice@domain.tld"
     And "alice@domain.tld" shares its mailbox "shared" with rights "" with "bob@domain.tld"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the keywords of the message is $Flagged,$Seen
 
   Scenario: getMessage on mailbox should keep its flag as it is when owner
     Given "alice@domain.tld" sets flags "$Flagged" on message "m1"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the message has IMAP flag "\Flagged" in mailbox "shared" for "alice@domain.tld"
     And the message has IMAP flag "\Flagged" in mailbox "notShared" for "alice@domain.tld"
 
   Scenario: messages should keep Draft flag as it is when onwer
     Given message "m1" has flags $Draft in mailbox "shared" of user "alice@domain.tld"
-    When "bob@domain.tld" ask for messages "m1"
+    When "bob@domain.tld" ask for message "m1"
     Then no error is returned
     And the keywords of the message is $Draft
 
   Scenario: message should intersect flag when Draft
     Given message "m1" has flags $Draft in mailbox "shared" of user "alice@domain.tld"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the message has no keyword
 
   Scenario: message should intersect flag when Draft after cut sharing
     Given message "m1" has flags $Draft in mailbox "shared" of user "alice@domain.tld"
     And "alice@domain.tld" shares its mailbox "shared" with rights "" with "bob@domain.tld"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the message has no keyword
 
   Scenario: message should combine flag if not Draft
     Given the user has an open IMAP connection with mailbox "shared" selected
     And the user set flags via IMAP to "\FLAGGED" for all messages in mailbox "shared"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the keywords of the message is $Flagged
 
   Scenario: message should combine flag if not Draft on all mailboxes
     Given "alice@domain.tld" sets flags "$Flagged" on message "m1"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the keywords of the message is $Flagged
 
   Scenario: message should intersect Draft flag with onwer mailbox
     Given the user has an open IMAP connection with mailbox "shared" selected
     And the user set flags via IMAP to "\DRAFT" for all messages in mailbox "shared"
-    When "alice@domain.tld" ask for messages "m1"
+    When "alice@domain.tld" ask for message "m1"
     Then no error is returned
     And the message has no keyword

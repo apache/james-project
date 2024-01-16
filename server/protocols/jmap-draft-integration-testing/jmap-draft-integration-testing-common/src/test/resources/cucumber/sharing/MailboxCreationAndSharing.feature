@@ -22,7 +22,7 @@ Feature: Mailbox creation and sharing
 
   Background:
     Given a domain named "domain.tld"
-    And some users "alice@domain.tld", "bob@domain.tld"
+    And some users "alice@domain.tld, bob@domain.tld"
     And "alice@domain.tld" has a mailbox "shared"
     And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "aeilrwt" rights
 

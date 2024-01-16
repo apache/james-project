@@ -70,7 +70,7 @@ Feature: Download GET
 
   Scenario: Getting a message then getting its blob
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
-    And "alice@domain.tld" ask for messages "m1"
+    And "alice@domain.tld" ask for message "m1"
     When "alice@domain.tld" downloads the message by its blobId
     Then she can read that blob
     And the blob size is 36
