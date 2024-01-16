@@ -27,6 +27,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
+import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.MissingArgumentException;
@@ -72,6 +73,7 @@ public class PostgresJamesConfiguration implements Configuration {
         private Optional<BlobStoreConfiguration> blobStoreConfiguration;
         private Optional<EventBusImpl> eventBusImpl;
         private Optional<VaultConfiguration> deletedMessageVaultConfiguration;
+        private Optional<Boolean> jmapEnabled;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -81,6 +83,7 @@ public class PostgresJamesConfiguration implements Configuration {
             blobStoreConfiguration = Optional.empty();
             eventBusImpl = Optional.empty();
             deletedMessageVaultConfiguration = Optional.empty();
+            jmapEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -136,6 +139,11 @@ public class PostgresJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder jmapEnabled(Optional<Boolean> jmapEnabled) {
+            this.jmapEnabled = jmapEnabled;
+            return this;
+        }
+
         public PostgresJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -171,6 +179,16 @@ public class PostgresJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean jmapEnabled = this.jmapEnabled.orElseGet(() -> {
+                try {
+                    return JMAPModule.parseConfiguration(propertiesProvider).isEnabled();
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             LOGGER.info("BlobStore configuration {}", blobStoreConfiguration);
             return new PostgresJamesConfiguration(
                 configurationPath,
@@ -179,7 +197,8 @@ public class PostgresJamesConfiguration implements Configuration {
                 usersRepositoryChoice,
                 blobStoreConfiguration,
                 eventBusImpl,
-                deletedMessageVaultConfiguration);
+                deletedMessageVaultConfiguration,
+                jmapEnabled);
         }
     }
 
@@ -194,6 +213,7 @@ public class PostgresJamesConfiguration implements Configuration {
     private final BlobStoreConfiguration blobStoreConfiguration;
     private final EventBusImpl eventBusImpl;
     private final VaultConfiguration deletedMessageVaultConfiguration;
+    private final boolean jmapEnabled;
 
     private PostgresJamesConfiguration(ConfigurationPath configurationPath,
                                        JamesDirectoriesProvider directories,
@@ -201,7 +221,8 @@ public class PostgresJamesConfiguration implements Configuration {
                                        UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
                                        BlobStoreConfiguration blobStoreConfiguration,
                                        EventBusImpl eventBusImpl,
-                                       VaultConfiguration deletedMessageVaultConfiguration) {
+                                       VaultConfiguration deletedMessageVaultConfiguration,
+                                       boolean jmapEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.searchConfiguration = searchConfiguration;
@@ -209,6 +230,7 @@ public class PostgresJamesConfiguration implements Configuration {
         this.blobStoreConfiguration = blobStoreConfiguration;
         this.eventBusImpl = eventBusImpl;
         this.deletedMessageVaultConfiguration = deletedMessageVaultConfiguration;
+        this.jmapEnabled = jmapEnabled;
     }
 
     @Override
@@ -239,5 +261,9 @@ public class PostgresJamesConfiguration implements Configuration {
 
     public VaultConfiguration getDeletedMessageVaultConfiguration() {
         return deletedMessageVaultConfiguration;
+    }
+
+    public boolean isJmapEnabled() {
+        return jmapEnabled;
     }
 }
