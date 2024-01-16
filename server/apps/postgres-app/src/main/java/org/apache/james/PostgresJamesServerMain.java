@@ -35,6 +35,7 @@ import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
+import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.events.PostgresDeadLetterModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
@@ -108,12 +109,11 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     public static final Module JMAP = Modules.combine(
         new PostgresJmapModule(),
-        new JmapEventBusModule(),
         new PostgresDataJmapModule(),
         new MemoryPushSubscriptionModule(),
+        new JmapEventBusModule(),
         new JMAPServerModule(),
-        new JmapTasksModule(),
-        new JMAPListenerModule());
+        new JmapTasksModule());
 
     private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
         new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP);
@@ -142,7 +142,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseEventBusModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
-            .combineWith(POSTGRES_MODULE_AGGREGATE);
+            .combineWith(POSTGRES_MODULE_AGGREGATE)
+            .overrideWith(chooseJmapModules(configuration));
     }
 
     private static List<Module> chooseUsersRepositoryModule(PostgresJamesConfiguration configuration) {
@@ -177,5 +178,13 @@ public class PostgresJamesServerMain implements JamesServerMain {
         }
 
         return Modules.EMPTY_MODULE;
+    }
+
+    private static Module chooseJmapModules(PostgresJamesConfiguration configuration) {
+        if (configuration.isJmapEnabled()) {
+            return Modules.combine(new JMAPEventBusModule(), new JMAPListenerModule());
+        }
+        return binder -> {
+        };
     }
 }
