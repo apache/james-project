@@ -22,7 +22,7 @@ Feature: Download endpoint and shared mailbox
 
   Background:
     Given a domain named "domain.tld"
-    And some users "alice@domain.tld", "bob@domain.tld", "someone@domain.tld"
+    And some users "alice@domain.tld, bob@domain.tld, someone@domain.tld"
     And "alice@domain.tld" has a mailbox "shared"
     And "alice@domain.tld" mailbox "shared" contains a message "m1" with an attachment "a1"
     And "alice@domain.tld" shares his mailbox "shared" with "bob@domain.tld" with "lr" rights

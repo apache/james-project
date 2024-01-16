@@ -30,7 +30,7 @@ Feature: Impact of IMAP on JMAP keywords consistency
     And "username@domain.tld" copies "m1" from mailbox "source" to mailbox "mailbox"
     And the user has an open IMAP connection with mailbox "<mailbox>" selected
     And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "<mailbox>"
-    When the user ask for messages "m1"
+    When the user ask for message "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -46,7 +46,7 @@ Feature: Impact of IMAP on JMAP keywords consistency
     And "username@domain.tld" copies "m1" from mailbox "source" to mailbox "mailbox"
     And the user has an open IMAP connection with mailbox "<mailbox>" selected
     And the user set flags via IMAP to "(\Draft)" for all messages in mailbox "<mailbox>"
-    When the user ask for messages "m1"
+    When the user ask for message "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -102,7 +102,7 @@ Feature: Impact of IMAP on JMAP keywords consistency
     And the user has an open IMAP connection with mailbox "mailbox" selected
     And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "mailbox"
     When "username@domain.tld" sets flags "$Flagged" on message "m1"
-    Then the user ask for messages "m1"
+    Then the user ask for message "m1"
     And no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
@@ -131,7 +131,7 @@ Feature: Impact of IMAP on JMAP keywords consistency
     And the user has an open IMAP connection with mailbox "mailbox" selected
     And the user set flags via IMAP to "(\Flagged)" for all messages in mailbox "mailbox"
     When "username@domain.tld" sets flags "$Answered" on message "m1"
-    Then the user ask for messages "m1"
+    Then the user ask for message "m1"
     And no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"

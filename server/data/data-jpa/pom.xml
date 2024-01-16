@@ -122,7 +122,6 @@
         <dependency>
             <groupId>io.cucumber</groupId>
             <artifactId>messages</artifactId>
-            <version>22.0.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
