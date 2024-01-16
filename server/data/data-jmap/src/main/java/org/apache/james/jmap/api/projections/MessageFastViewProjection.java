@@ -28,6 +28,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -45,6 +46,7 @@ public interface MessageFastViewProjection {
 
     Publisher<Void> delete(MessageId messageId);
 
+    @VisibleForTesting
     Publisher<Void> clear();
 
     default Publisher<Map<MessageId, MessageFastViewPrecomputedProperties>> retrieve(Collection<MessageId> messageIds) {
