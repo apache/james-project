@@ -41,10 +41,12 @@ class FileConfigurationProviderTest {
     private static final String CONFIG_KEY_ENV = "env";
     private static final String CONFIG_KEY_ENV_WITH_COMMA = "envWithComma";
     private static final String CONFIG_KEY_NOT_ENV = "notEnv";
+    private static final String CONFIG_KEY_ENV_WITH_FALLBACK_VALUE = "envWithFallbackValue";
     private static final String VALUE_1 = "0";
     private static final String VALUE_2 = "awesome";
     private static final String VALUE_3 = "james";
     private static final String VALUE_NOT_ENV = "${env:MY_NOT_IN_ENV_VAR}";
+    private static final String FALLBACK_VALUE = "fallbackValue";
     private static final String ENVIRONMENT_SET_VALUE = "testvalue";
     private static final String ENVIRONMENT_WITH_COMMA = "testvalue,testvalue2,testvalue3";
     private static final String FAKE_CONFIG_KEY = "fake";
@@ -95,7 +97,8 @@ class FileConfigurationProviderTest {
             .containsOnly(CONFIG_KEY_1,
                 String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_2),
                 String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_5, CONFIG_KEY_2),
-                CONFIG_KEY_ENV, CONFIG_KEY_ENV_WITH_COMMA, CONFIG_KEY_NOT_ENV);
+                CONFIG_KEY_ENV, CONFIG_KEY_ENV_WITH_COMMA, CONFIG_KEY_NOT_ENV,
+                CONFIG_KEY_ENV_WITH_FALLBACK_VALUE);
         assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_1)).isEqualTo(VALUE_1);
     }
 
@@ -164,5 +167,11 @@ class FileConfigurationProviderTest {
                 HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
                 assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_ENV_WITH_COMMA)).isEqualTo(ENVIRONMENT_WITH_COMMA);
             });
+    }
+
+    @Test
+    void getEnvironmentVariableShouldDefaultToFallbackValueIfSet() throws Exception {
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_ENV_WITH_FALLBACK_VALUE)).isEqualTo(FALLBACK_VALUE);
     }
 }

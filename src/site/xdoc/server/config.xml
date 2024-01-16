@@ -41,7 +41,8 @@
 
     <p>In every configuration files, you can use the following notation to use an environment variable: <code>${env:MY_VAR}</code>.
     If <code>MY_VAR</code> exists, it will be replaced by the matching environment variable.
-    If it does not, <code>${env:MY_VAR}</code> will be kept as is.</p>
+    If it does not, <code>${env:MY_VAR}</code> will be kept as is.
+    If you want to configure a fallback value for the environment variable, you can use <code>${env:MY_VAR:-fallbackValue}</code>.</p>
     
     <p>You can/must configure James for the following:</p>
     
