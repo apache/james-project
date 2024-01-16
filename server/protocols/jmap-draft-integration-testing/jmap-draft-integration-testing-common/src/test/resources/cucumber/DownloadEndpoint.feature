@@ -23,7 +23,7 @@ Feature: Download endpoint
 
   Background:
     Given a domain named "domain.tld"
-    And some users "usera@domain.tld", "userb@domain.tld"
+    And some users "usera@domain.tld, userb@domain.tld"
     And "usera@domain.tld" has a mailbox "INBOX"
     And "usera@domain.tld" mailbox "INBOX" contains a message "m1" with an attachment "a1"
 
