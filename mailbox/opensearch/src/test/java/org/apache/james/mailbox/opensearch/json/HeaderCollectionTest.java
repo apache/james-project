@@ -85,6 +85,16 @@ class HeaderCollectionTest {
     }
 
     @Test
+    void shouldNormalizeSubject() {
+        HeaderCollection headerCollection = HeaderCollection.builder()
+            .add(new FieldImpl("Subject", "Re: test"))
+            .build();
+
+        assertThat(headerCollection.getSubjectSet())
+            .containsOnly("test");
+    }
+
+    @Test
     void displayNamesShouldBeRetreived() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("To", "Christophe Hamerling <chri.hamerling@linagora.com>"))
