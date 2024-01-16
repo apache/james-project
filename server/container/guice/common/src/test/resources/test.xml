@@ -28,4 +28,5 @@
     <env>${env:MY_ENV_VAR}</env>
     <envWithComma>${env:MY_ENV_VAR_WITH_COMMA}</envWithComma>
     <notEnv>${env:MY_NOT_IN_ENV_VAR}</notEnv>
+    <envWithFallbackValue>${env:MY_NOT_IN_ENV_VAR:-fallbackValue}</envWithFallbackValue>
 </test>
