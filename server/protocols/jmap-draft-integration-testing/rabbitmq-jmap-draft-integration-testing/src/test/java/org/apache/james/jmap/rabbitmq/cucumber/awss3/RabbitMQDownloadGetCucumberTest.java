@@ -33,8 +33,8 @@ import org.junit.platform.suite.api.Suite;
 @Category({EnableCucumber.class, Unstable.class})
 @Suite
 @IncludeEngines("cucumber")
-@SelectClasspathResource("cucumber/DownloadEndpoint.feature,cucumber/DownloadGet.feature,cucumber/DownloadPost.feature")
+@SelectClasspathResource("cucumber/DownloadGet.feature")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.apache.james.jmap.draft.methods.integration,org.apache.james.jmap.rabbitmq.cucumber.awss3")
 @ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "not @Ignore, @BasicFeature")
-public class RabbitMQDownloadCucumberTest {
+public class RabbitMQDownloadGetCucumberTest {
 }

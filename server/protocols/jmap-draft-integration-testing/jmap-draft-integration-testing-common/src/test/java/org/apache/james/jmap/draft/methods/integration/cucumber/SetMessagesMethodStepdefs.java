@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Splitter;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
@@ -82,10 +83,10 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^the user moves \"([^\"]*)\" to user mailbox \"([^\"]*)\" and set flags \"([^\"]*)\"$")
-    public void moveMessageToMailboxAndChangeFlags(String message, String mailbox, List<String> keywords) throws Throwable {
+    public void moveMessageToMailboxAndChangeFlags(String message, String mailbox, String keywords) throws Throwable {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.getMailboxId(userStepdefs.getConnectedUser(), mailbox);
-        String keywordString = toKeywordsString(keywords);
+        String keywordString = toKeywordsString(Splitter.on(',').trimResults().omitEmptyStrings().splitToList(keywords));
 
         httpClient.post("[" +
             "  [" +
@@ -176,7 +177,7 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^\"([^\"]*)\" sets flags \"([^\"]*)\" on message \"([^\"]*)\"$")
-    public void setFlags(String username, List<String> keywords, String message) {
+    public void setFlags(String username, String keywords, String message) {
         userStepdefs.execWithUser(username, () -> setFlags(keywords, message));
     }
 
@@ -266,9 +267,9 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^the user sets flags \"([^\"]*)\" on message \"([^\"]*)\"$")
-    public void setFlags(List<String> keywords, String message) throws Throwable {
+    public void setFlags(String keywords, String message) throws Throwable {
         MessageId messageId = messageIdStepdefs.getMessageId(message);
-        String keywordString = toKeywordsString(keywords);
+        String keywordString = toKeywordsString(Splitter.on(',').omitEmptyStrings().trimResults().splitToList(keywords));
 
         httpClient.post("[" +
             "  [" +
@@ -292,8 +293,8 @@ public class SetMessagesMethodStepdefs {
     }
 
     @When("^message \"([^\"]*)\" has flags (.*) in mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
-    public void setMessageFlagsInSpecifiedMailbox(String message, List<String> flags, String mailbox, String mailboxOwner) throws Exception {
-        Flags newFlags = Keywords.lenientFactory().fromCollection(flags).asFlags();
+    public void setMessageFlagsInSpecifiedMailbox(String message, String flags, String mailbox, String mailboxOwner) throws Exception {
+        Flags newFlags = Keywords.lenientFactory().fromCollection(Splitter.on(',').trimResults().splitToList(flags)).asFlags();
         Username username = Username.of(userStepdefs.getConnectedUser());
         MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.getMailboxId(mailboxOwner, mailbox);

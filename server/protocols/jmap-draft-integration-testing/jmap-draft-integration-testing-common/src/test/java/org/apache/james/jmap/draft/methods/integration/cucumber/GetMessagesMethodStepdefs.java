@@ -26,6 +26,7 @@ import static org.apache.james.mailbox.model.MailboxConstants.INBOX;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Date;
@@ -41,6 +42,7 @@ import io.cucumber.datatable.DataTable;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.james.core.Username;
@@ -367,18 +369,18 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
-    public void appendMessageWithFlags(String username, String messageName, String mailbox, List<String> flagList) throws Throwable {
+    public void appendMessageWithFlags(String username, String messageName, String mailbox, String flagList) throws Throwable {
         userStepdefs.execWithUser(username, () -> appendMessageWithFlags(messageName, mailbox, flagList));
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in \"([^\"]*)\" mailbox$")
     public void appendSimpleMessage(String username, String messageName, String mailbox) throws Throwable {
-        userStepdefs.execWithUser(username, () -> appendMessageWithFlags(messageName, mailbox, ImmutableList.of()));
+        userStepdefs.execWithUser(username, () -> appendMessageWithFlags(messageName, mailbox, ""));
     }
 
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
-    public void appendMessageWithFlags(String messageName, String mailbox, List<String> flagList) throws Exception {
-        appendMessage(messageName, mailbox, StringListToFlags.fromFlagList(flagList));
+    public void appendMessageWithFlags(String messageName, String mailbox, String flagList) throws Exception {
+        appendMessage(messageName, mailbox, StringListToFlags.fromFlagList(Splitter.on(',').trimResults().omitEmptyStrings().splitToList(flagList)));
     }
 
     @Given("^\"([^\"]*)\" receives a SMTP message specified in file \"([^\"]*)\" as message \"([^\"]*)\"$")
@@ -467,16 +469,27 @@ public class GetMessagesMethodStepdefs {
     }
 
     @When("^the user ask for messages \"(.*?)\"$")
-    public void postWithAListOfIds(List<String> ids) throws Exception {
-        requestedMessageIds = ids.stream()
+    public void postWithAListOfIds(String id) throws Exception {
+        requestedMessageIds = ImmutableList.of(messageIdStepdefs.getMessageId(id));
+        askMessages(requestedMessageIds);
+    }
+
+    @When("^the user ask for message \"(.*?)\"$")
+    public void postWithAnId(String ids) throws Exception {
+        requestedMessageIds = Splitter.on(',').trimResults().splitToStream(ids)
             .map(messageIdStepdefs::getMessageId)
             .collect(ImmutableList.toImmutableList());
         askMessages(requestedMessageIds);
     }
 
-    @When("^\"(.*?)\" ask for (?:messages|message) \"(.*?)\"$")
-    public void postWithAListOfIds(String user, List<String> ids) throws Throwable {
+    @When("^\"(.*?)\" ask for messages \"(.*?)\"$")
+    public void postWithAListOfIds(String user, String ids) {
         userStepdefs.execWithUser(user, () -> postWithAListOfIds(ids));
+    }
+
+    @When("^\"(.*?)\" ask for message \"(.*?)\"$")
+    public void postWithAnId(String user, String id) {
+        userStepdefs.execWithUser(user, () -> postWithAListOfIds(id));
     }
 
     @When("^\"(.*?)\" ask for an unknown message$")
@@ -502,14 +515,14 @@ public class GetMessagesMethodStepdefs {
         return string -> "\"" + string + "\"";
     }
 
-    @When("^\"(.*?)\" is getting messages \"(.*?)\" with properties \"(.*?)\"$")
-    public void postWithParameters(String username, List<String> ids, List<String> properties) throws Throwable {
-        userStepdefs.execWithUser(username, () -> postWithParameters(ids, properties));
+    @When("^\"(.*?)\" is getting message \"(.*?)\" with properties \"(.*?)\"$")
+    public void postWithParameters(String username, String id, String properties) throws Throwable {
+        userStepdefs.execWithUser(username, () -> postWithParameters(id, properties));
     }
 
     @When("^the user is getting messages \"(.*?)\" with properties \"(.*?)\"$")
-    public void postWithParameters(List<String> ids, List<String> properties) throws Exception {
-        requestedMessageIds = ids.stream()
+    public void postWithParameters(String ids, String properties) throws Exception {
+        requestedMessageIds = Splitter.on(',').trimResults().splitToStream(ids)
             .map(messageIdStepdefs::getMessageId)
             .collect(ImmutableList.toImmutableList());
 
@@ -518,7 +531,7 @@ public class GetMessagesMethodStepdefs {
             .map(toJsonString())
             .collect(Collectors.joining(",", "[", "]"));
 
-        String serializedProperties = properties.stream()
+        String serializedProperties = Splitter.on(',').trimResults().splitToStream(properties)
             .map(toJsonString())
             .collect(Collectors.joining(",", "[", "]"));
 
@@ -592,7 +605,7 @@ public class GetMessagesMethodStepdefs {
 
     @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" in mailboxes:$")
     public void assertMailboxesOfMessage(String user, String messageId, DataTable userMailboxes) throws Exception {
-        userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
+        userStepdefs.execWithUser(user, () -> postWithAListOfIds(messageId));
 
         List<String> mailboxIds = userMailboxes.asMap(String.class, String.class).entrySet().stream()
             .map(Throwing.function(userMailbox ->
@@ -703,16 +716,16 @@ public class GetMessagesMethodStepdefs {
         assertAttachment(SECOND_ATTACHMENT, attachmentProperties);
     }
 
-    @Then("^the preview of the message contains: (.*)$")
-    public void assertPreviewOfMessageShouldBePrintedWithEncoding(List<String> preview) {
+    @Then("^the preview of the message contains: \"(.*)\"$")
+    public void assertPreviewOfMessageShouldBePrintedWithEncoding(String preview) {
         String actual = httpClient.jsonPath.<String>read(FIRST_MESSAGE + ".preview");
         assertThat(actual).contains(preview);
     }
 
     @Then("^the keywords of the message is (.*)$")
-    public void assertKeywordsOfMessageShouldDisplay(List<String> keywords) {
+    public void assertKeywordsOfMessageShouldDisplay(String keywords) {
         assertThat(httpClient.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
-            .containsOnly(keywords.toArray(new String[0]));
+            .containsOnly(Splitter.on(',').trimResults().omitEmptyStrings().splitToList(keywords).toArray(new String[0]));
     }
 
     @Then("^the message has no keyword$")
@@ -722,24 +735,33 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" with keywords \"([^\"]*)\"$")
-    public void assertKeywordsOfMessage(String user, String messageId, List<String> keywords) throws Exception {
-        userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
+    public void assertKeywordsOfMessage(String user, String messageId, String keywords) throws Exception {
+        userStepdefs.execWithUser(user, () -> postWithAListOfIds(messageId));
 
         assertThat(httpClient.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
-            .containsOnly(keywords.toArray(new String[0]));
+            .containsOnly(Splitter.on(',').trimResults().splitToList(keywords).toArray(new String[0]));
     }
 
     @Then("^\"([^\"]*)\" should see message \"([^\"]*)\" without keywords$")
     public void assertKeywordsEmpty(String user, String messageId) throws Exception {
-        userStepdefs.execWithUser(user, () -> postWithAListOfIds(ImmutableList.of(messageId)));
+        userStepdefs.execWithUser(user, () -> postWithAListOfIds(messageId));
 
         assertThat(httpClient.jsonPath.<Map<String, Boolean>>read(FIRST_MESSAGE + ".keywords").keySet())
             .isEmpty();
     }
 
     private void assertAttachment(String attachment, DataTable attachmentProperties) {
-        attachmentProperties.asList(TableRow.class)
-            .forEach(entry -> assertThat(httpClient.jsonPath.<Object>read(attachment + "." + entry.getKey())).isEqualTo(entry.getValue()));
+        try {
+            System.out.println(IOUtils.toString(httpClient.response.getEntity().getContent()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        attachmentProperties.asMap(String.class, String.class)
+            .forEach((key, value) -> {
+                System.out.println(key + " : " + value);
+                System.out.println(httpClient.jsonPath.<Object>read(attachment + "." + key));
+                assertThat(String.valueOf(httpClient.jsonPath.<Object>read(attachment + "." + key))).isEqualTo(value);
+            });
     }
 
     public String getBlobId() {

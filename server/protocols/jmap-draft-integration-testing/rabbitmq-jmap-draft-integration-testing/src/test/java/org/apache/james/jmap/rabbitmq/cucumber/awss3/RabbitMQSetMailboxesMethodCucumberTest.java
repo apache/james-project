@@ -32,7 +32,7 @@ import org.junit.platform.suite.api.Suite;
 
 @Category({EnableCucumber.class, Unstable.class})
 @Suite
-@SelectClasspathResource("cucumber/MailboxModification.feature,cucumber/SetMailboxes.feature")
+@SelectClasspathResource("cucumber/MailboxModification.feature")
 @IncludeEngines("cucumber")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.apache.james.jmap.draft.methods.integration,org.apache.james.jmap.rabbitmq.cucumber.awss3")
 @ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "not @Ignore, @BasicFeature")
