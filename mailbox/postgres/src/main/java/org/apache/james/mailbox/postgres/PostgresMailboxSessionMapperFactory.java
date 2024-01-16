@@ -22,17 +22,18 @@ import java.time.Clock;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.postgres.mail.PostgresAnnotationMapper;
+import org.apache.james.mailbox.postgres.mail.PostgresAttachmentMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageIdMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageMapper;
 import org.apache.james.mailbox.postgres.mail.PostgresModSeqProvider;
 import org.apache.james.mailbox.postgres.mail.PostgresUidProvider;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxAnnotationDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
@@ -117,12 +118,13 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
 
     @Override
     public AttachmentMapper createAttachmentMapper(MailboxSession session) {
-        throw new NotImplementedException("not implemented");
+        PostgresAttachmentDAO postgresAttachmentDAO = new PostgresAttachmentDAO(executorFactory.create(session.getUser().getDomainPart()), blobIdFactory);
+        return new PostgresAttachmentMapper(postgresAttachmentDAO, blobStore);
     }
 
     @Override
     public AttachmentMapper getAttachmentMapper(MailboxSession session) {
-        throw new NotImplementedException("not implemented");
+        return createAttachmentMapper(session);
     }
 
     protected DeleteMessageListener deleteMessageListener() {
