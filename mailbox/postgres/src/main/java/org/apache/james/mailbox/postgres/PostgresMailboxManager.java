@@ -50,6 +50,8 @@ public class PostgresMailboxManager extends StoreMailboxManager {
         MailboxCapabilities.Annotation,
         MailboxCapabilities.ACL);
 
+    private final PostgresMailboxSessionMapperFactory mapperFactory;
+
     @Inject
     public PostgresMailboxManager(PostgresMailboxSessionMapperFactory mapperFactory,
                                   SessionProvider sessionProvider,
@@ -67,17 +69,19 @@ public class PostgresMailboxManager extends StoreMailboxManager {
             messageParser, messageIdFactory, annotationManager,
             eventBus, storeRightManager, quotaComponents,
             index, MailboxManagerConfiguration.DEFAULT, preDeletionHooks, threadIdGuessingAlgorithm, clock);
+        this.mapperFactory = mapperFactory;
     }
 
     @Override
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
-        return new PostgresMessageManager(getMapperFactory(),
+        return new PostgresMessageManager(mapperFactory,
             getMessageSearchIndex(),
             getEventBus(),
             getLocker(),
             mailboxRow,
             getQuotaComponents().getQuotaManager(),
             getQuotaComponents().getQuotaRootResolver(),
+            getMessageParser(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),
             getStoreRightManager(),
