@@ -81,6 +81,7 @@ public interface PostgresMailboxMessageFetchStrategy {
             MessageTable.MIME_SUBTYPE,
             MessageTable.BODY_START_OCTET,
             MessageTable.TEXTUAL_LINE_COUNT,
+            MessageTable.ATTACHMENT_METADATA,
             MessageToMailboxTable.MAILBOX_ID,
             MessageToMailboxTable.MESSAGE_UID,
             MessageToMailboxTable.MOD_SEQ,
