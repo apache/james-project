@@ -53,8 +53,7 @@ class JamesCapabilitiesServerTest {
             .usersRepository(DEFAULT)
             .eventBusImpl(EventBusImpl.IN_MEMORY)
             .build())
-        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
-            .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
+        .server(configuration -> PostgresJamesServerMain.createServer(configuration))
         .extension(postgresExtension)
         .build();
 
