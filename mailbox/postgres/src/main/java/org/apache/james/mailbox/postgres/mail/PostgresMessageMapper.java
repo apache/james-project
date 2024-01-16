@@ -57,6 +57,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
@@ -101,6 +102,7 @@ public class PostgresMessageMapper implements MessageMapper {
     private final BlobStore blobStore;
     private final Clock clock;
     private final BlobId.Factory blobIdFactory;
+    private final AttachmentLoader attachmentLoader;
 
     public PostgresMessageMapper(PostgresExecutor postgresExecutor,
                                  PostgresModSeqProvider modSeqProvider,
@@ -116,6 +118,7 @@ public class PostgresMessageMapper implements MessageMapper {
         this.blobStore = blobStore;
         this.clock = clock;
         this.blobIdFactory = blobIdFactory;
+        this.attachmentLoader = new AttachmentLoader(new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExecutor, blobIdFactory), blobStore));
     }
 
 
@@ -134,8 +137,10 @@ public class PostgresMessageMapper implements MessageMapper {
     @Override
     public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
         Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContentPublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt);
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = attachmentLoader.addAttachmentToMessage(fetchMessageWithoutFullContentPublisher, fetchType);
+
         if (fetchType == FetchType.FULL) {
-            return fetchMessageWithoutFullContentPublisher
+            return fetchMessagePublisher
                 .flatMap(messageBuilderAndRecord -> {
                     SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
                     return retrieveFullContent(messageBuilderAndRecord.getRight())
@@ -144,8 +149,9 @@ public class PostgresMessageMapper implements MessageMapper {
                 .sort(Comparator.comparing(MailboxMessage::getUid))
                 .map(message -> message);
         } else {
-            return fetchMessageWithoutFullContentPublisher
-                .map(messageBuilderAndBlobId -> messageBuilderAndBlobId.getLeft().build());
+            return fetchMessagePublisher
+                .map(messageBuilderAndBlobId -> messageBuilderAndBlobId.getLeft()
+                    .build());
         }
     }
 
