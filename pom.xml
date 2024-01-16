@@ -2350,11 +2350,15 @@
                 <artifactId>cucumber-junit-platform-engine</artifactId>
                 <version>${cucumber.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>io.cucumber</groupId>
                 <artifactId>cucumber-picocontainer</artifactId>
                 <version>${cucumber.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>messages</artifactId>
+                <version>22.0.0</version>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>

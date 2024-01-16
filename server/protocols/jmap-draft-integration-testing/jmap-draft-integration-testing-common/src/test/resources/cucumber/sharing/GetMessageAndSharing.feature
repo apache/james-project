@@ -22,7 +22,7 @@ Feature: GetMessages method on shared mailbox
 
   Background:
     Given a domain named "domain.tld"
-    And some users "alice@domain.tld", "bob@domain.tld", "someone@domain.tld"
+    And some users "alice@domain.tld, bob@domain.tld, someone@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
     And "alice@domain.tld" has a mailbox "shared"
     And "alice@domain.tld" shares her mailbox "shared" with "bob@domain.tld" with "lr" rights
@@ -30,20 +30,20 @@ Feature: GetMessages method on shared mailbox
 
   @BasicFeature
   Scenario: Retrieving a message in a mailbox delegated to me
-    When "bob@domain.tld" ask for messages "m1"
+    When "bob@domain.tld" ask for message "m1"
     Then no error is returned
     And the list should contain 1 message
     And the id of the message is "m1"
 
   Scenario: Retrieving a message in a mailbox delegated to someone else
-    When "someone@domain.tld" ask for messages "m1"
+    When "someone@domain.tld" ask for message "m1"
     Then no error is returned
     And the list of messages is empty
 
   Scenario: Retrieving a message in a mailbox not delegated to me
     Given "alice@domain.tld" has a mailbox "notShared"
     And "alice@domain.tld" has a message "m2" in "notShared" mailbox with subject "my test subject", content "testmail"
-    When "bob@domain.tld" ask for messages "m2"
+    When "bob@domain.tld" ask for message "m2"
     Then no error is returned
     And the list should contain 0 message
 
