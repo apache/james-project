@@ -22,12 +22,15 @@ package org.apache.james;
 import java.util.List;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
+import org.apache.james.jmap.draft.JMAPListenerModule;
+import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
+import org.apache.james.modules.data.PostgresDataJmapModule;
 import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
@@ -40,6 +43,8 @@ import org.apache.james.modules.mailbox.PostgresDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
+import org.apache.james.modules.protocols.JMAPServerModule;
+import org.apache.james.modules.protocols.JmapEventBusModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
@@ -48,14 +53,12 @@ import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DataRoutesModules;
-import org.apache.james.modules.server.DefaultProcessorsConfigurationProviderModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.JmapTasksModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
-import org.apache.james.modules.server.NoJwtModule;
-import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
@@ -94,20 +97,26 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new ActiveMQQueueModule(),
         new BlobExportMechanismModule(),
         new PostgresDelegationStoreModule(),
-        new DefaultProcessorsConfigurationProviderModule(),
         new PostgresMailboxModule(),
         new PostgresDeadLetterModule(),
         new PostgresDataModule(),
         new MailboxModule(),
-        new NoJwtModule(),
-        new RawPostDequeueDecoratorModule(),
         new SievePostgresRepositoryModules(),
         new TaskManagerModule(),
         new MemoryEventStoreModule(),
         new TikaMailboxModule());
 
+    public static final Module JMAP = Modules.combine(
+        new PostgresJmapModule(),
+        new JmapEventBusModule(),
+        new PostgresDataJmapModule(),
+        new MemoryPushSubscriptionModule(),
+        new JMAPServerModule(),
+        new JmapTasksModule(),
+        new JMAPListenerModule());
+
     private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
-        new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS);
+        new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP);
 
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
