@@ -28,6 +28,7 @@ import org.apache.james.backends.postgres.PostgresCommons.DataTypes;
 import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
+import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Table;
@@ -62,6 +63,10 @@ public interface PostgresMessageModule {
         Field<String[]> CONTENT_LANGUAGE = DSL.field("content_language", DataTypes.STRING_ARRAY);
         Field<Hstore> CONTENT_TYPE_PARAMETERS = DSL.field("content_type_parameters", DataTypes.HSTORE);
         Field<Hstore> CONTENT_DISPOSITION_PARAMETERS = DSL.field("content_disposition_parameters", DataTypes.HSTORE);
+        Field<AttachmentsDTO> ATTACHMENT_METADATA = DSL.field("attachment_metadata",
+            SQLDataType.JSONB
+                .asConvertedDataType(new AttachmentsDTO.AttachmentsDTOBinding()));
+
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
@@ -83,6 +88,7 @@ public interface PostgresMessageModule {
                 .column(CONTENT_LANGUAGE)
                 .column(CONTENT_TYPE_PARAMETERS)
                 .column(CONTENT_DISPOSITION_PARAMETERS)
+                .column(ATTACHMENT_METADATA)
                 .constraint(DSL.primaryKey(MESSAGE_ID))
                 .comment("Holds the metadata of a mail")))
             .supportsRowLevelSecurity()
