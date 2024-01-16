@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.postgres;
 
 import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.mailbox.postgres.mail.PostgresAttachmentModule;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
@@ -30,5 +31,6 @@ public interface PostgresMailboxAggregateModule {
         PostgresMailboxModule.MODULE,
         PostgresSubscriptionModule.MODULE,
         PostgresMessageModule.MODULE,
-        PostgresMailboxAnnotationModule.MODULE);
+        PostgresMailboxAnnotationModule.MODULE,
+        PostgresAttachmentModule.MODULE);
 }
