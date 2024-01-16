@@ -137,6 +137,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-jmap</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-jmx</artifactId>
         </dependency>
         <dependency>
@@ -188,6 +194,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-webadmin-jmap</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
