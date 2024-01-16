@@ -82,7 +82,7 @@ public class DeletedMessageVaultDeletionCallback implements DeleteMessageListene
                     .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
                     .sender(retrieveSender(mimeMessage))
                     .recipients(retrieveRecipients(mimeMessage))
-                    .hasAttachment(false) // todo return actual value in ticket: https://github.com/linagora/james-project/issues/5011
+                    .hasAttachment(!message.getAttachments().isEmpty())
                     .size(message.getSize())
                     .subject(mimeMessage.map(Message::getSubject))
                     .build();

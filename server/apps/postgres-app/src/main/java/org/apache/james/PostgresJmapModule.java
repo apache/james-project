@@ -30,11 +30,9 @@ import org.apache.james.jmap.memory.upload.InMemoryUploadUsageRepository;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.RightManager;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationService;
@@ -73,7 +71,6 @@ public class PostgresJmapModule extends AbstractModule {
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
         bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
-        bind(AttachmentMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(RightManager.class).to(StoreRightManager.class);
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
 
