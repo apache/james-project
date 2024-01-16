@@ -63,6 +63,14 @@
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
             <mailet match="All" class="AddDeliveredToHeader"/>
+
+            <mailet match="RecipientIsLocal" class="VacationMailet">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
+            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering">
+                <onMailetException>ignore</onMailetException>
+            </mailet>
+
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
