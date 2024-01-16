@@ -21,6 +21,7 @@ package org.apache.james.mailbox.postgres.mail.dao;
 
 import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_DATE_TIME;
 import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_DATE_FUNCTION;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.ATTACHMENT_METADATA;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_START_OCTET;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_DESCRIPTION;
@@ -57,6 +58,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.Record;
 import org.jooq.postgres.extensions.types.Hstore;
@@ -114,12 +116,13 @@ public class PostgresMessageDAO {
                 .set(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
                 .set(CONTENT_TYPE_PARAMETERS, Hstore.hstore(message.getProperties().getContentTypeParameters()))
                 .set(CONTENT_DISPOSITION_PARAMETERS, Hstore.hstore(message.getProperties().getContentDispositionParameters()))
+                .set(ATTACHMENT_METADATA, AttachmentsDTO.from(message.getAttachments()))
                 .set(HEADER_CONTENT, headerContentAsByte))));
     }
 
     public Mono<MessageRepresentation> retrieveMessage(PostgresMessageId messageId) {
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(
-                    INTERNAL_DATE, SIZE, BODY_START_OCTET, HEADER_CONTENT, BODY_BLOB_ID)
+                    INTERNAL_DATE, SIZE, BODY_START_OCTET, HEADER_CONTENT, BODY_BLOB_ID, ATTACHMENT_METADATA)
                 .from(TABLE_NAME)
                 .where(MESSAGE_ID.eq(messageId.asUuid()))))
             .map(record -> toMessageRepresentation(record, messageId));
@@ -132,6 +135,7 @@ public class PostgresMessageDAO {
             .size(record.get(PostgresMessageModule.MessageTable.SIZE))
             .headerContent(BYTE_TO_CONTENT_FUNCTION.apply(record.get(HEADER_CONTENT)))
             .bodyBlobId(blobIdFactory.from(record.get(BODY_BLOB_ID)))
+            .attachments(record.get(ATTACHMENT_METADATA))
             .build();
     }
 
