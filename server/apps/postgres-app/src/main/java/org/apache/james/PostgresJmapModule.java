@@ -27,6 +27,7 @@ import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.memory.change.MemoryEmailChangeRepository;
 import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
 import org.apache.james.jmap.memory.upload.InMemoryUploadUsageRepository;
+import org.apache.james.jmap.postgres.change.PostgresEmailChangeRepository;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.RightManager;
@@ -49,8 +50,8 @@ public class PostgresJmapModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(EmailChangeRepository.class).to(MemoryEmailChangeRepository.class);
-        bind(MemoryEmailChangeRepository.class).in(Scopes.SINGLETON);
+        bind(EmailChangeRepository.class).to(PostgresEmailChangeRepository.class);
+        bind(PostgresEmailChangeRepository.class).in(Scopes.SINGLETON);
 
         bind(MailboxChangeRepository.class).to(MemoryMailboxChangeRepository.class);
         bind(MemoryMailboxChangeRepository.class).in(Scopes.SINGLETON);
