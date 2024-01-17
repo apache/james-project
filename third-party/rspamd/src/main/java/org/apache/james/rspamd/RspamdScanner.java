@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
@@ -34,6 +35,7 @@ import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rspamd.client.RspamdClientConfiguration;
 import org.apache.james.rspamd.client.RspamdHttpClient;
 import org.apache.james.rspamd.model.AnalysisResult;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -48,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -92,18 +95,36 @@ public class RspamdScanner extends GenericMailet {
         Flux.fromIterable(mail.getRecipients())
             .flatMap(Throwing.function(rcpt -> rspamdHttpClient.checkV2(mail, RspamdHttpClient.Options.forMailAddress(rcpt))
                 .map(result -> Pair.of(rcpt, result))), ReactorUtils.DEFAULT_CONCURRENCY)
-            .concatMap(rcptAndResult -> Mono.fromRunnable(Throwing.runnable(() -> {
-                if (AnalysisResult.Action.REJECT == rcptAndResult.getValue().getAction()) {
-                    rejectSpamProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
-                }
-
-                appendRspamdResultHeader(mail, rcptAndResult.getKey(), rcptAndResult.getRight());
-
-                if (rcptAndResult.getRight().hasVirus()) {
-                    virusProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
-                }
-            })).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
+            .concatMap(rcptAndResult -> Mono.fromRunnable(() -> handleScanResult(mail, rcptAndResult))
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER))
             .blockLast();
+    }
+
+    private void handleScanResult(Mail mail, Pair<MailAddress, AnalysisResult> rcptAndResult) {
+        AuditTrail.entry()
+            .protocol("mailetcontainer")
+            .action("RspamdScanner")
+            .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function(MimeMessage::getMessageID))
+                    .orElse(""),
+                "sender", mail.getMaybeSender().asString(),
+                "recipient", rcptAndResult.getKey().asString(),
+                "rspamDAction", rcptAndResult.getValue().getAction().name(),
+                "rspamDRequiredScore", Float.toString(rcptAndResult.getValue().getRequiredScore()),
+                "rspamRewrittenSubject", rcptAndResult.getValue().getDesiredRewriteSubject().orElse(""),
+                "rspamDScore", Float.toString(rcptAndResult.getValue().getScore()))))
+            .log("Mail scanned with RSpamD.");
+
+        if (AnalysisResult.Action.REJECT == rcptAndResult.getValue().getAction()) {
+            rejectSpamProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
+        }
+
+        appendRspamdResultHeader(mail, rcptAndResult.getKey(), rcptAndResult.getRight());
+
+        if (rcptAndResult.getRight().hasVirus()) {
+            virusProcessor.ifPresent(processor -> processorPerUser(mail, rcptAndResult.getKey(), processor));
+        }
     }
 
     private void processorPerUser(Mail mail, MailAddress rcpt, String processor) {
@@ -127,7 +148,6 @@ public class RspamdScanner extends GenericMailet {
             mail.setState(processor);
         }
     }
-
 
     private void scanAll(Mail mail) throws MessagingException {
         AnalysisResult rspamdResult = rspamdHttpClient.checkV2(mail).block();
