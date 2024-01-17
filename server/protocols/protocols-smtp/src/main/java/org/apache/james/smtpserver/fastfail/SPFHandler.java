@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.smtpserver.fastfail;
 
+import java.util.Optional;
+
+import javax.inject.Inject;
+
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MaybeSender;
@@ -43,16 +47,11 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.util.Optional;
-
 public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SPFHandler.class);
 
-    /**
-     * This log is the fall back shared by all instances
-     */
+    /** This log is the fall back shared by all instances */
     private static final Logger FALLBACK_LOG = LoggerFactory.getLogger(SPFHandler.class);
 
     /**
@@ -71,9 +70,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     private static final AttributeName SPF_HEADER_MAIL_ATTRIBUTE_NAME = AttributeName.of("org.apache.james.spf.header");
 
-    /**
-     * If set to true the mail will also be rejected on a softfail
-     */
+    /** If set to true the mail will also be rejected on a softfail */
     private boolean blockSoftFail = false;
 
     private boolean blockPermError = true;
@@ -83,7 +80,8 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
     /**
      * block the email on a softfail
      *
-     * @param blockSoftFail true or false
+     * @param blockSoftFail
+     *            true or false
      */
     public void setBlockSoftFail(boolean blockSoftFail) {
         this.blockSoftFail = blockSoftFail;
@@ -92,7 +90,8 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
     /**
      * block the email on a permerror
      *
-     * @param blockPermError true or false
+     * @param blockPermError
+     *            true or false
      */
     public void setBlockPermError(boolean blockPermError) {
         this.blockPermError = blockPermError;
@@ -101,7 +100,8 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
     /**
      * DNSService to use
      *
-     * @param dnsService The DNSService
+     * @param dnsService
+     *            The DNSService
      */
     @Inject
     public void setDNSService(DNSService dnsService) {
@@ -111,7 +111,8 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
     /**
      * Calls a SPF check
      *
-     * @param session SMTP session object
+     * @param session
+     *            SMTP session object
      */
     private void doSPFCheck(SMTPSession session, MaybeSender sender) {
         Optional<String> heloEhlo = session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection);
@@ -160,15 +161,15 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
             if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction).isPresent()) {
 
                 return HookResult.builder()
-                        .hookReturnCode(HookReturnCode.deny())
-                        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction).orElse(false))
-                        .build();
+                    .hookReturnCode(HookReturnCode.deny())
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction).orElse(false))
+                    .build();
             } else if (session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction).isPresent()) {
                 return HookResult.builder()
-                        .hookReturnCode(HookReturnCode.denySoft())
-                        .smtpReturnCode(SMTPRetCode.LOCAL_ERROR)
-                        .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " Temporarily rejected: Problem on SPF lookup")
-                        .build();
+                    .hookReturnCode(HookReturnCode.denySoft())
+                    .smtpReturnCode(SMTPRetCode.LOCAL_ERROR)
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " Temporarily rejected: Problem on SPF lookup")
+                    .build();
             }
         }
         return HookResult.DECLINED;
