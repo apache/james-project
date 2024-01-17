@@ -22,7 +22,6 @@ package org.apache.james.mailbox.postgres;
 import static org.apache.james.mailbox.postgres.PostgresMailboxManagerProvider.BLOB_ID_FACTORY;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.PreDeletionHooks;
