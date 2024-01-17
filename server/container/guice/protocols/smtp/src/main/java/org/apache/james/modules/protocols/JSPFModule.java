@@ -19,6 +19,7 @@
 
 package org.apache.james.modules.protocols;
 
+import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.impl.DNSServiceXBillImpl;
 
 import com.google.inject.AbstractModule;
@@ -29,7 +30,7 @@ public class JSPFModule extends AbstractModule {
 
     @Override
     protected void configure() {
-
+        bind(DNSService.class).to(DNSServiceXBillImpl.class);
     }
 
     @Singleton
