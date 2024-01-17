@@ -35,7 +35,6 @@ import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
