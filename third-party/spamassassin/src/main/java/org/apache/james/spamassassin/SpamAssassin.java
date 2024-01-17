@@ -19,6 +19,8 @@
 
 package org.apache.james.spamassassin;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -27,6 +29,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.AuditTrail;
 import org.apache.james.util.Host;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
@@ -34,6 +37,7 @@ import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 
 
 /**
@@ -85,6 +89,19 @@ public class SpamAssassin extends GenericMailet {
 
     private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, MailAddress recipient) throws MessagingException, UsersRepositoryException {
         SpamAssassinResult result = sa.scanMail(message, usersRepository.getUsername(recipient));
+
+        AuditTrail.entry()
+            .protocol("mailetcontainer")
+            .action("SpamAssassin")
+            .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function(MimeMessage::getMessageID))
+                    .orElse(""),
+                "sender", mail.getMaybeSender().asString(),
+                "recipient", recipient.asString(),
+                "spamAssassinHits", result.getHits(),
+                "status", result.getStatus().name())))
+            .log("Mail scanned with SpamAssassin.");
 
         // Add headers per recipient to mail object
         for (Attribute attribute : result.getHeadersAsAttributes()) {
