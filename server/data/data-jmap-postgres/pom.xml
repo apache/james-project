@@ -33,6 +33,10 @@
 
     <name>Apache James :: Server :: Data :: JMAP :: PostgreSQL persistence</name>
 
+    <properties>
+        <uuid-creator.version>5.3.7</uuid-creator.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -100,6 +104,11 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.f4b6a3</groupId>
+            <artifactId>uuid-creator</artifactId>
+            <version>${uuid-creator.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
