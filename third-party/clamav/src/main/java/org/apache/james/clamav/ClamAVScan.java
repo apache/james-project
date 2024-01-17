@@ -36,12 +36,14 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.util.AuditTrail;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -51,6 +53,8 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 
@@ -587,6 +591,17 @@ public class ClamAVScan extends GenericMailet {
 
         try {
             if (hasVirus(new MimeMessageInputStream(mimeMessage))) {
+                AuditTrail.entry()
+                    .protocol("mailetcontainer")
+                    .action("ClamAVScan")
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                        "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                            .map(Throwing.function(MimeMessage::getMessageID))
+                            .orElse(""),
+                        "sender", mail.getMaybeSender().asString(),
+                        "infected", "true")))
+                    .log("Mail scanned with ClamAV.");
+
                 LOGGER.info("Detected mail {} containing virus, adding infected header/attribute.", mail);
 
                 // mark the mail with a mail attribute to check later on by other matchers/mailets
@@ -595,6 +610,16 @@ public class ClamAVScan extends GenericMailet {
                 // mark the message with a header string
                 mimeMessage.setHeader(INFECTED_HEADER_NAME, "true");
             } else {
+                AuditTrail.entry()
+                    .protocol("mailetcontainer")
+                    .action("ClamAVScan")
+                    .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
+                        "mimeMessageId", Optional.ofNullable(mail.getMessage())
+                            .map(Throwing.function(MimeMessage::getMessageID))
+                            .orElse(""),
+                        "sender", mail.getMaybeSender().asString(),
+                        "infected", "false")))
+                    .log("Mail scanned with ClamAV.");
                 mail.setAttribute(makeInfectedAttribute(false));
                 // mark the message with a header string
                 mimeMessage.setHeader(INFECTED_HEADER_NAME, "false");
