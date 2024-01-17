@@ -24,7 +24,6 @@ import java.util.Optional;
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerStressContract;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
