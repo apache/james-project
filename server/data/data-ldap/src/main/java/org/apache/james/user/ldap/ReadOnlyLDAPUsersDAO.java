@@ -131,7 +131,6 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
      *             specified LDAP host.
      */
     public void init() throws Exception {
-
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(this.getClass().getName() + ".init()" + '\n' + "LDAP hosts: " + ldapConfiguration.getLdapHosts()
                 + '\n' + "User baseDN: " + ldapConfiguration.getUserBase() + '\n' + "userIdAttribute: "
@@ -236,7 +235,7 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         return username.getDomainPart().map(this::userBase).orElse(ldapConfiguration.getUserBase());
     }
 
-    private Set<DN> getAllUsersDNFromLDAP() throws LDAPException {
+    private Set<DN> getAllUsersDNFromLDAP() {
         return allDNs()
             .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(this::entriesFromDN).sneakyThrow())
             .map(Throwing.function(Entry::getParsedDN))
@@ -265,9 +264,10 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
     }
 
     private Stream<Username> getAllUsernamesFromLDAP() throws LDAPException {
+        String usernameAttribute = ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
         return allDNs()
-            .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(s -> entriesFromDN(s, ldapConfiguration.getUserIdAttribute())).sneakyThrow())
-            .flatMap(entry -> Optional.ofNullable(entry.getAttribute(ldapConfiguration.getUserIdAttribute())).stream())
+            .flatMap(Throwing.<String, Stream<SearchResultEntry>>function(s -> entriesFromDN(s, usernameAttribute)).sneakyThrow())
+            .flatMap(entry -> Optional.ofNullable(entry.getAttribute(usernameAttribute)).stream())
             .map(Attribute::getValue)
             .map(Username::of)
             .distinct();
@@ -300,12 +300,11 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     private Optional<ReadOnlyLDAPUser> searchAndBuildUser(Username retrievalName) throws LDAPException {
         Optional<String> resolveLocalPartAttribute = ldapConfiguration.getResolveLocalPartAttribute();
-        String[] returnedAttributes = { ldapConfiguration.getUserIdAttribute() };
 
         SearchResult searchResult = ldapConnectionPool.search(userBase(retrievalName),
             SearchScope.SUB,
             createFilter(retrievalName.asString(), evaluateLdapUserRetrievalAttribute(retrievalName, resolveLocalPartAttribute)),
-            returnedAttributes);
+            getReturnedAttributes());
 
         SearchResultEntry result = searchResult.getSearchEntries()
             .stream()
@@ -319,10 +318,19 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
         if (!ldapConfiguration.getRestriction().isActivated()
             || userInGroupsMembershipList(result.getParsedDN(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapConnectionPool))) {
 
-            Username translatedUsername = Username.of(result.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
+            String usernameAttribute = ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
+            Username translatedUsername = Username.of(result.getAttributeValue(usernameAttribute));
             return Optional.of(new ReadOnlyLDAPUser(translatedUsername, result.getParsedDN(), ldapConnectionPool));
         }
         return Optional.empty();
+    }
+
+    private String[] getReturnedAttributes() {
+        if (ldapConfiguration.getUsernameAttribute().isPresent()) {
+            return new String[]{ldapConfiguration.getUserIdAttribute(), ldapConfiguration.getUsernameAttribute().get()};
+        } else {
+            return new String[]{ldapConfiguration.getUserIdAttribute()};
+        }
     }
 
     private String evaluateLdapUserRetrievalAttribute(Username retrievalName, Optional<String> resolveLocalPartAttribute) {
@@ -335,7 +343,8 @@ public class ReadOnlyLDAPUsersDAO implements UsersDAO, Configurable {
 
     private Optional<ReadOnlyLDAPUser> buildUser(DN userDN) throws LDAPException {
         SearchResultEntry userAttributes = ldapConnectionPool.getEntry(userDN.toString());
-        Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(ldapConfiguration.getUserIdAttribute()));
+        String usernameAttribute = ldapConfiguration.getUsernameAttribute().orElse(ldapConfiguration.getUserIdAttribute());
+        Optional<String> userName = Optional.ofNullable(userAttributes.getAttributeValue(usernameAttribute));
         return userName
             .map(Username::of)
             .map(username -> new ReadOnlyLDAPUser(username, userDN, ldapConnectionPool));
