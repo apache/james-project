@@ -29,7 +29,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.util.ClassLoaderUtils;
