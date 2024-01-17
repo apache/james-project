@@ -48,6 +48,8 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 
+import com.google.common.collect.ImmutableSet;
+
 public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFactory implements AttachmentMapperFactory {
 
     private final PostgresExecutor.Factory executorFactory;
@@ -121,5 +123,12 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     @Override
     public AttachmentMapper getAttachmentMapper(MailboxSession session) {
         throw new NotImplementedException("not implemented");
+    }
+
+    public DeleteMessageListener deleteMessageListener() {
+        PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, executorFactory);
+        PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(executorFactory);
+
+        return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory, ImmutableSet.of());
     }
 }
