@@ -14,7 +14,7 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: sami7786/distributed-james-test:webadminauth
+    image: sami7786/distributed-james-test:jwtenabled
     container_name: james
     hostname: james.local
     command:
