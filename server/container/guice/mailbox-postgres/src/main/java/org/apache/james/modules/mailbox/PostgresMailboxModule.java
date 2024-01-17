@@ -36,6 +36,8 @@ import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
@@ -57,6 +59,8 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxSubscriptionListener;
@@ -99,6 +103,8 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(NaiveThreadIdGuessingAlgorithm.class).in(Scopes.SINGLETON);
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
         bind(SessionProviderImpl.class).in(Scopes.SINGLETON);
+        bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
+        bind(StoreRightManager.class).in(Scopes.SINGLETON);
 
         bind(SubscriptionMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
         bind(MessageMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
@@ -117,6 +123,8 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(MailboxId.Factory.class).to(PostgresMailboxId.Factory.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(AttachmentContentLoader.class).to(PostgresAttachmentContentLoader.class);
+        bind(MessageIdManager.class).to(StoreMessageIdManager.class);
+        bind(RightManager.class).to(StoreRightManager.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
 
