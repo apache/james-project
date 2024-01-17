@@ -24,7 +24,6 @@ import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
