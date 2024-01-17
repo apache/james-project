@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.postgres.mail;
+package org.apache.james.mailbox.postgres;
 
 import java.time.Clock;
 import java.util.EnumSet;
@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.postgres.mail.PostgresMailbox;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
