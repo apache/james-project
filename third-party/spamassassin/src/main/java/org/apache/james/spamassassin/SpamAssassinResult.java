@@ -116,6 +116,10 @@ public class SpamAssassinResult {
         return requiredHits;
     }
 
+    public SpamStatus getStatus() {
+        return status;
+    }
+
     public List<Attribute> getHeadersAsAttributes() {
         return headersAsAttributes;
     }
