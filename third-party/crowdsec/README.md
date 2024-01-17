@@ -27,6 +27,16 @@ guice.extension.module=org.apache.james.crowdsec.module.CrowdsecModule
     <handler class="org.apache.james.crowdsec.CrowdsecEhloHook"/>
 </handlerchain>
 ```
+or 
+```
+<handlerchain>
+    <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
+    <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+    <handler class="org.apache.james.crowdsec.CrowdsecSMTPConnectHandler"/>
+</handlerchain>
+```
+
+The EHLO hook will block banned clients with `554 Email rejected` whereas the connect handler will terminate the connection even before the SMTP greeting. 
 
 ### CrowdSec support for IMAP
 - Declare the `CrowdsecImapConnectionCheck` in `imapserver.xml`. Eg:

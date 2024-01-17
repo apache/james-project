@@ -126,4 +126,8 @@ public class CrowdsecExtension implements GuiceModuleTestExtension {
     public GenericContainer<?> getCrowdsecContainer() {
         return crowdsecContainer;
     }
+
+    public void banIP(String type, String value) throws IOException, InterruptedException {
+        this.getCrowdsecContainer().execInContainer("cscli", "decision", "add", type, value);
+    }
 }
