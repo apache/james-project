@@ -90,7 +90,7 @@ public class PostgresCommonModule extends AbstractModule {
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactoryWithRLSBypass(PostgresConfiguration postgresConfiguration,
                                                                                       @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT) ConnectionFactory connectionFactory) {
-        LOGGER.info("Implementation for PostgreSQL connection factory: {}", SinglePostgresConnectionFactory.class.getName());
+        LOGGER.info("Implementation for PostgresSQL connection factory: {}", SinglePostgresConnectionFactory.class.getName());
         return new SinglePostgresConnectionFactory(Mono.from(connectionFactory.create()).block());
     }
 
