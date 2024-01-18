@@ -52,6 +52,8 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.mailbox.postgres.mail.PostgresAttachmentBlobReferenceSource;
+import org.apache.james.mailbox.postgres.mail.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageBlobReferenceSource;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
@@ -124,7 +126,6 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxId.Factory.class).to(PostgresMailboxId.Factory.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
-        bind(AttachmentContentLoader.class).to(PostgresAttachmentContentLoader.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(RightManager.class).to(StoreRightManager.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
@@ -162,6 +163,7 @@ public class PostgresMailboxModule extends AbstractModule {
 
         Multibinder<BlobReferenceSource> blobReferenceSourceMultibinder = Multibinder.newSetBinder(binder(), BlobReferenceSource.class);
         blobReferenceSourceMultibinder.addBinding().to(PostgresMessageBlobReferenceSource.class);
+        blobReferenceSourceMultibinder.addBinding().to(PostgresAttachmentBlobReferenceSource.class);
     }
 
     @Singleton
