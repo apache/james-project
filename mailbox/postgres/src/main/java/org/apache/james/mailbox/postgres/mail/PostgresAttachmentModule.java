@@ -21,6 +21,7 @@ package org.apache.james.mailbox.postgres.mail;
 
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
@@ -50,9 +51,14 @@ public interface PostgresAttachmentModule {
                 .constraint(DSL.primaryKey(ID))))
             .supportsRowLevelSecurity()
             .build();
+
+        PostgresIndex MESSAGE_ID_INDEX = PostgresIndex.name("attachment_message_id_index")
+            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, MESSAGE_ID));
     }
 
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(PostgresAttachmentTable.TABLE)
+        .addIndex(PostgresAttachmentTable.MESSAGE_ID_INDEX)
         .build();
 }
