@@ -35,9 +35,6 @@ import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
@@ -52,8 +49,6 @@ import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 
-import com.google.common.collect.ImmutableSet;
-
 public class PostgresMailboxManagerProvider {
 
     private static final int LIMIT_ANNOTATIONS = 3;
@@ -63,7 +58,7 @@ public class PostgresMailboxManagerProvider {
 
     public static PostgresMailboxManager provideMailboxManager(PostgresExtension postgresExtension, PreDeletionHooks preDeletionHooks) {
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, BLOB_ID_FACTORY);
-        MailboxSessionMapperFactory mf = provideMailboxSessionMapperFactory(postgresExtension, BLOB_ID_FACTORY, blobStore);
+        PostgresMailboxSessionMapperFactory mapperFactory = provideMailboxSessionMapperFactory(postgresExtension, BLOB_ID_FACTORY, blobStore);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         MessageParser messageParser = new MessageParser();
@@ -72,34 +67,30 @@ public class PostgresMailboxManagerProvider {
         Authorizator noAuthorizator = null;
 
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
-        StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, eventBus);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager,
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, eventBus);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager,
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
         SessionProviderImpl sessionProvider = new SessionProviderImpl(noAuthenticator, noAuthorizator);
-        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor(), new PostgresAttachmentContentLoader());
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mapperFactory);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), new PostgresAttachmentContentLoader());
 
-        PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(BLOB_ID_FACTORY, postgresExtension.getExecutorFactory());
-        PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory());
+        eventBus.register(mapperFactory.deleteMessageListener());
 
-        eventBus.register(new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
-            ImmutableSet.of()));
-
-        return new PostgresMailboxManager((PostgresMailboxSessionMapperFactory) mf, sessionProvider,
+        return new PostgresMailboxManager(mapperFactory, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
             eventBus, annotationManager,
             storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(),
             preDeletionHooks, new UpdatableTickingClock(Instant.now()));
     }
 
-    public static MailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension) {
+    public static PostgresMailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension) {
         BlobId.Factory blobIdFactory = new HashBlobId.Factory();
         DeDuplicationBlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory);
 
         return provideMailboxSessionMapperFactory(postgresExtension, blobIdFactory, blobStore);
     }
 
-    public static MailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension,
+    public static PostgresMailboxSessionMapperFactory provideMailboxSessionMapperFactory(PostgresExtension postgresExtension,
                                                                                  BlobId.Factory blobIdFactory,
                                                                                  DeDuplicationBlobStore blobStore) {
         return new PostgresMailboxSessionMapperFactory(
