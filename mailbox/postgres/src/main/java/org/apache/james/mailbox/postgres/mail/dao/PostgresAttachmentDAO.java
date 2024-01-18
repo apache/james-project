@@ -19,10 +19,15 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
+import java.util.Optional;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
@@ -32,6 +37,22 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresAttachmentDAO {
+
+    public static class Factory {
+        private final PostgresExecutor.Factory executorFactory;
+        private final BlobId.Factory blobIdFactory;
+
+        @Inject
+        @Singleton
+        public Factory(PostgresExecutor.Factory executorFactory, BlobId.Factory blobIdFactory) {
+            this.executorFactory = executorFactory;
+            this.blobIdFactory = blobIdFactory;
+        }
+
+        public PostgresAttachmentDAO create(Optional<Domain> domain) {
+            return new PostgresAttachmentDAO(executorFactory.create(domain), blobIdFactory);
+        }
+    }
 
     private final PostgresExecutor postgresExecutor;
     private final BlobId.Factory blobIdFactory;
@@ -68,9 +89,16 @@ public class PostgresAttachmentDAO {
             .set(PostgresAttachmentTable.SIZE, attachment.getSize())));
     }
 
-    public Mono<Void> delete(AttachmentId attachmentId) {
+    public Mono<Void> deleteByMessageId(PostgresMessageId messageId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(PostgresAttachmentTable.TABLE_NAME)
-            .where(PostgresAttachmentTable.ID.eq(attachmentId.asUUID()))));
+            .where(PostgresAttachmentTable.MESSAGE_ID.eq(messageId.asUuid()))));
+    }
+
+    public Flux<BlobId> listBlobsByMessageId(PostgresMessageId messageId) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(PostgresAttachmentTable.BLOB_ID)
+                .from(PostgresAttachmentTable.TABLE_NAME)
+                .where(PostgresAttachmentTable.MESSAGE_ID.eq(messageId.asUuid()))))
+            .map(row -> blobIdFactory.from(row.get(PostgresAttachmentTable.BLOB_ID)));
     }
 
     public Flux<BlobId> listBlobs() {
