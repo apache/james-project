@@ -125,7 +125,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         throw new NotImplementedException("not implemented");
     }
 
-    public DeleteMessageListener deleteMessageListener() {
+    protected DeleteMessageListener deleteMessageListener() {
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, executorFactory);
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(executorFactory);
 
