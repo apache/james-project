@@ -47,8 +47,6 @@ import org.apache.james.webadmin.dto.VerifyUserRequest;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
-import org.apache.james.webadmin.utils.JsonExtractException;
-import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
@@ -76,9 +74,7 @@ public class UserRoutes implements Routes {
 
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
-    private final JsonExtractor<VerifyUserRequest> jsonExtractorVerify;
     private final CanSendFrom canSendFrom;
-    private final JsonExtractor<AddUserRequest> jsonExtractor;
     private final DelegationStore delegationStore;
     private final Map<String, UserCondition> userConditionMap;
 
@@ -93,8 +89,6 @@ public class UserRoutes implements Routes {
         this.userService = userService;
         this.jsonTransformer = jsonTransformer;
         this.canSendFrom = canSendFrom;
-        this.jsonExtractor = new JsonExtractor<>(AddUserRequest.class);
-        this.jsonExtractorVerify = new JsonExtractor<>(VerifyUserRequest.class);
         this.delegationStore = delegationStore;
         this.userConditionMap = userConditionMap;
     }
@@ -214,10 +208,15 @@ public class UserRoutes implements Routes {
         Username username = extractUsername(request);
         try {
             boolean isForced = request.queryParams().contains(FORCE_PARAM);
-            if (isForced) {
+            /*if (isForced) {
                 userService.upsertUser(username, jsonExtractor.parse(request.body()).getPassword());
             } else {
                 userService.insertUser(username, jsonExtractor.parse(request.body()).getPassword());
+            }*/
+            if (isForced) {
+                userService.upsertUser(username, "".toCharArray());
+            } else {
+                userService.insertUser(username, "".toCharArray());
             }
             return halt(HttpStatus.NO_CONTENT_204);
         } catch (InvalidUsernameException e) {
@@ -251,21 +250,12 @@ public class UserRoutes implements Routes {
     private String verifyUser(Request request, Response response) throws UsersRepositoryException {
         Username username = extractUsername(request);
         try {
-            if (userService.verifyUser(username,
-                    jsonExtractorVerify.parse(request.body()).getPassword())) {
+            if (userService.verifyUser(username, "")) {
                 response.status(HttpStatus.NO_CONTENT_204);
             } else {
                 response.status(HttpStatus.UNAUTHORIZED_401);
             }
             return Constants.EMPTY_BODY;
-        } catch (JsonExtractException e) {
-            LOGGER.info("Error while deserializing verifyUser request", e);
-            throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Error while deserializing verifyUser request")
-                    .cause(e)
-                    .haltError();
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid user path", e);
             throw ErrorResponder.builder()
