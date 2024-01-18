@@ -43,7 +43,7 @@
                 <processor>transport</processor>
             </mailet>
             <mailet match="All" class="ToProcessor">
-                <processor>transport</processor>
+                <processor>blacklisted</processor>
             </mailet>
         </processor>
 
