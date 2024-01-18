@@ -79,7 +79,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     /**
      * block the email on a softfail
-     * 
+     *
      * @param blockSoftFail
      *            true or false
      */
@@ -89,7 +89,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     /**
      * block the email on a permerror
-     * 
+     *
      * @param blockPermError
      *            true or false
      */
@@ -99,7 +99,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     /**
      * DNSService to use
-     * 
+     *
      * @param dnsService
      *            The DNSService
      */
@@ -110,7 +110,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     /**
      * Calls a SPF check
-     * 
+     *
      * @param session
      *            SMTP session object
      */
@@ -177,8 +177,10 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
-        // Store the spf header as attribute for later using
-        mail.setAttribute(new Attribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, AttributeValue.of(session.getAttachment(SPF_HEADER, State.Transaction).get())));
+        // Store the spf header as attribute for later using (when present)
+        session.getAttachment(SPF_HEADER, State.Transaction).ifPresent(s ->
+                mail.setAttribute(new Attribute(SPF_HEADER_MAIL_ATTRIBUTE_NAME, AttributeValue.of(s)))
+        );
 
         return null;
     }
@@ -186,6 +188,6 @@ public class SPFHandler implements JamesMessageHook, MailHook, ProtocolHandler {
     @Override
     public void init(Configuration config) throws ConfigurationException {
         setBlockSoftFail(config.getBoolean("blockSoftFail", false));
-        setBlockPermError(config.getBoolean("blockPermError", true));        
+        setBlockPermError(config.getBoolean("blockPermError", true));
     }
 }
