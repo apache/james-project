@@ -19,15 +19,16 @@
 
 package org.apache.james.crowdsec.client;
 
-import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_TIMEOUT;
-
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 import org.apache.james.crowdsec.model.CrowdsecDecision;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,15 +41,19 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 public class CrowdsecHttpClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrowdsecHttpClient.class);
+
     private static final String GET_DECISION = "/decisions";
 
     private final HttpClient httpClient;
     private final ObjectMapper mapper;
+    private final CrowdsecClientConfiguration crowdsecConfiguration;
 
     @Inject
     public CrowdsecHttpClient(CrowdsecClientConfiguration configuration) {
         this.httpClient = buildReactorNettyHttpClient(configuration);
         this.mapper = new ObjectMapper().registerModule(new Jdk8Module());
+        this.crowdsecConfiguration = configuration;
     }
 
     public Mono<List<CrowdsecDecision>> getCrowdsecDecisions() {
@@ -60,12 +65,13 @@ public class CrowdsecHttpClient {
                         return body.asString().map(this::parseCrowdsecDecisions);
                     case HttpStatus.SC_FORBIDDEN:
                         return Mono.error(new RuntimeException("Invalid api-key bouncer"));
-                    case HttpStatus.SC_NOT_FOUND:
-                        return Mono.error(new RuntimeException("Crowdsec url not found"));
                     default:
                         return Mono.error(new RuntimeException("Request failed with status code " + response.status().code()));
                 }
-            });
+            })
+            .timeout(crowdsecConfiguration.getTimeout())
+            .onErrorResume(TimeoutException.class, e -> Mono.fromRunnable(() -> LOGGER.warn("Timeout while questioning to CrowdSec. May need to check the CrowdSec configuration."))
+                .thenReturn(ImmutableList.of()));
     }
 
     private List<CrowdsecDecision> parseCrowdsecDecisions(String json) {
@@ -87,7 +93,7 @@ public class CrowdsecHttpClient {
     private HttpClient buildReactorNettyHttpClient(CrowdsecClientConfiguration configuration) {
         return HttpClient.create()
             .disableRetry(true)
-            .responseTimeout(DEFAULT_TIMEOUT)
+            .responseTimeout(configuration.getTimeout())
             .baseUrl(configuration.getUrl().toString())
             .headers(headers -> headers.add("X-Api-Key", configuration.getApiKey()))
             .headers(headers -> headers.add(HttpHeaderNames.ACCEPT, ContentType.APPLICATION_JSON.getMimeType()));

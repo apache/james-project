@@ -82,17 +82,6 @@ class CrowdsecHttpClientTest {
     }
 
     @Test
-    void getDecisionsWithWrongCrowdsecUrl() throws IOException, InterruptedException {
-        banIP("--range", "192.168.0.0/16");
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v2"), DEFAULT_API_KEY);
-        CrowdsecHttpClient httpClient = new CrowdsecHttpClient(config);
-
-        assertThatThrownBy(() -> httpClient.getCrowdsecDecisions().block())
-            .hasMessage("Crowdsec url not found");
-    }
-
-    @Test
     void getDecisionsWhenNoBanning() throws IOException {
         int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
         CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
