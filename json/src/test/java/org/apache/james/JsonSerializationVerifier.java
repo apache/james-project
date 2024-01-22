@@ -52,6 +52,7 @@ public class JsonSerializationVerifier<T, U extends DTO> {
         recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
         recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
         recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.toString().equalsIgnoreCase(o2.toString()), Pattern.class);
     }
 
     @FunctionalInterface
