@@ -288,7 +288,7 @@ public class LdapRepositoryConfiguration {
      * The value of this field is taken from the configuration attribute
      * &quot;userIdAttribute&quot;. This is the LDAP attribute type which holds
      * the userId value. This value is used to identify the LDAP entry used for authentication,
-     * and by default is used to retrie the associated username.
+     * and by default is used to retrieve the associated username.
      */
     private final String userIdAttribute;
     /**
