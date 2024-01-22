@@ -46,9 +46,9 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 Once everything is set up, you just have to run the jar with:
 
 ```bash
-$ java -classpath 'james-server-jpa-guice.jar:james-server-jpa-guice.lib/*' \
-    -javaagent:james-server-jpa-guice.lib/openjpa-3.0.0.jar \
+$ java -javaagent:james-server-jpa-guice.lib/openjpa-3.2.0.jar \
     -Dlogback.configurationFile=conf/logback.xml \
+    -Djdk.tls.ephemeralDHKeySize=2048 \
     -Dworking.directory=. \
-    org.apache.james.JPAJamesServerMain
+    -jar james-server-jpa-app.jar
 ```

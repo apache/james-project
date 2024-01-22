@@ -111,7 +111,7 @@ This can be done with the following command:
 
 ....
 java \
-   -javaagent:james-server-jpa-smtp-app.lib/openjpa-3.1.2.jar \
+   -javaagent:james-server-jpa-smtp-app.lib/openjpa-3.2.0.jar \
    -Dworking.directory=. \
    -Djdk.tls.ephemeralDHKeySize=2048 \
    -Dlogback.configurationFile=conf/logback.xml \
