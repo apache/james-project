@@ -17,9 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.model;
+package org.apache.james.crowdsec.client;
 
-import static org.apache.james.model.CrowdsecClientConfiguration.DEFAULT_TIMEOUT;
+import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_TIMEOUT;
 
 import java.util.List;
 
@@ -27,6 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
+import org.apache.james.crowdsec.model.CrowdsecDecision;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

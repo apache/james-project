@@ -12,7 +12,7 @@ This module is for developing and delivering extensions to James for the [Crowds
 - Declare the `extensions.properties` for this module.
 
 ```
-guice.extension.module=org.apache.james.module.CrowdsecModule
+guice.extension.module=org.apache.james.crowdsec.module.CrowdsecModule
 ```
 
 ### CrowdSec support for SMTP
@@ -22,7 +22,7 @@ guice.extension.module=org.apache.james.module.CrowdsecModule
 <handlerchain>
     <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
     <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
-    <handler class="org.apache.james.CrowdsecEhloHook"/>
+    <handler class="org.apache.james.crowdsec.CrowdsecEhloHook"/>
 </handlerchain>
 ```
 
@@ -32,7 +32,7 @@ guice.extension.module=org.apache.james.module.CrowdsecModule
 ```
 <imapserver enabled="true">
         ...
-        <additionalConnectionChecks>org.apache.james.CrowdsecImapConnectionCheck</additionalConnectionChecks>
+        <additionalConnectionChecks>org.apache.james.crowdsec.CrowdsecImapConnectionCheck</additionalConnectionChecks>
 </imapserver>
 ```
 
@@ -43,7 +43,7 @@ guice.extension.module=org.apache.james.module.CrowdsecModule
 <pop3server enabled="true">
     <handlerchain>
         <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
-        <handler class="org.apache.james.CrowdsecPOP3CheckHandler"/>
+        <handler class="org.apache.james.crowdsec.CrowdsecPOP3CheckHandler"/>
     </handlerchain>
 </pop3server>
 ```

@@ -37,7 +37,7 @@
         <connectionLimitPerIP>0</connectionLimitPerIP>
         <handlerchain>
             <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
-            <handler class="org.apache.james.CrowdsecPOP3CheckHandler"/>
+            <handler class="org.apache.james.crowdsec.CrowdsecPOP3CheckHandler"/>
         </handlerchain>
         <gracefulShutdown>false</gracefulShutdown>
     </pop3server>
@@ -59,7 +59,7 @@
         <helloName autodetect="false">pop3ServerWithProxyEnabled</helloName>
         <handlerchain>
             <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
-            <handler class="org.apache.james.CrowdsecPOP3CheckHandler"/>
+            <handler class="org.apache.james.crowdsec.CrowdsecPOP3CheckHandler"/>
         </handlerchain>
         <gracefulShutdown>false</gracefulShutdown>
         <proxyRequired>true</proxyRequired>

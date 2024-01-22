@@ -17,23 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.crowdsec.module;
 
-import org.apache.commons.net.util.SubnetUtils;
-import org.apache.james.model.CrowdsecDecision;
+import java.io.FileNotFoundException;
 
-public class CrowdsecUtils {
-    public static boolean isBanned(CrowdsecDecision decision, String ip) {
-        if (decision.getScope().equals("Ip") && ip.contains(decision.getValue())) {
-            return true;
-        }
-        return decision.getScope().equals("Range") && belongToNetwork(decision.getValue(), ip);
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
+import org.apache.james.crowdsec.client.CrowdsecHttpClient;
+import org.apache.james.utils.PropertiesProvider;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+
+public class CrowdsecModule extends AbstractModule {
+
+    @Provides
+    @Singleton
+    public CrowdsecClientConfiguration crowdsecClientConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, FileNotFoundException {
+        return CrowdsecClientConfiguration.from(propertiesProvider.getConfiguration("crowdsec"));
     }
 
-    private static boolean belongToNetwork(String value, String ip) {
-        SubnetUtils subnetUtils = new SubnetUtils(value);
-        subnetUtils.setInclusiveHostCount(true);
-
-        return subnetUtils.getInfo().isInRange(ip);
+    @Provides
+    @Singleton
+    public CrowdsecHttpClient crowdsecHttpClient(CrowdsecClientConfiguration crowdsecClientConfiguration) {
+        return new CrowdsecHttpClient(crowdsecClientConfiguration);
     }
 }
