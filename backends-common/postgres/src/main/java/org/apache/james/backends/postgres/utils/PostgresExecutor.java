@@ -28,6 +28,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.jooq.DSLContext;
+import org.jooq.DeleteResultStep;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.SQLDialect;
@@ -94,6 +95,15 @@ public class PostgresExecutor {
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return dslContext()
             .flatMapMany(queryFunction)
+            .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                .filter(preparedStatementConflictException()));
+    }
+
+    public Flux<Record> executeDeleteAndReturnList(Function<DSLContext, DeleteResultStep<Record>> queryFunction) {
+        return dslContext()
+            .flatMapMany(queryFunction)
+            .collectList()
+            .flatMapIterable(list -> list) // The convert Flux -> Mono<List> -> Flux to avoid a hanging issue. See: https://github.com/jOOQ/jOOQ/issues/16055
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()));
     }
