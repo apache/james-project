@@ -43,6 +43,17 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class JsonSerializationVerifier<T, U extends DTO> {
+
+    public static final RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
+
+    static {
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
+        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
+    }
+
     @FunctionalInterface
     public interface RequireJson<T, U extends DTO> {
         JsonSerializationVerifier<T, U> json(String json);
@@ -66,14 +77,6 @@ public class JsonSerializationVerifier<T, U extends DTO> {
     }
 
     private static <T> EqualityTester<T> defaultEqualityTester() {
-        RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
-        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
-        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
-        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
-        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
-        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
-        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.toString().equalsIgnoreCase(o2.toString()), Pattern.class);
-
         return (a, b) -> assertThat(a)
             .describedAs("Deserialization test [" + b + "]")
             .usingRecursiveComparison(recursiveComparisonConfiguration)

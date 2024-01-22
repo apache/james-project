@@ -53,7 +53,6 @@ class CassandraMappingsSolveInconsistenciesTaskTest {
 
     @Test
     void taskShouldBeDeserializable() throws IOException {
-
         RecursiveComparisonConfiguration recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
         recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
         recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);

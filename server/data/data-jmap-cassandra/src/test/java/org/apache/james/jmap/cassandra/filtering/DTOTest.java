@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.cassandra.filtering;
 
+import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_4;
@@ -34,11 +35,6 @@ import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDT
 import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Comparator;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventId;
@@ -49,8 +45,6 @@ import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.SoftAssertions;
-import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
@@ -103,17 +97,6 @@ class DTOTest {
         ImmutableList.of(RULE_RECIPIENT_2),
         ImmutableSet.of(Rule.Id.of("abdcd")),
         ImmutableList.of(RULE_SUBJECT_2));
-    private RecursiveComparisonConfiguration recursiveComparisonConfiguration;
-
-    @BeforeEach
-    void setUp() {
-        recursiveComparisonConfiguration = new RecursiveComparisonConfiguration();
-        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingInt(AtomicInteger::get), AtomicInteger.class);
-        recursiveComparisonConfiguration.registerComparatorForType(Comparator.comparingLong(AtomicLong::get), AtomicLong.class);
-        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicInteger.class);
-        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicLong.class);
-        recursiveComparisonConfiguration.registerEqualsForType((o, o2) -> o.get() == o2.get(), AtomicBoolean.class);
-    }
 
     @Test
     void shouldSerializeRule() throws Exception {
