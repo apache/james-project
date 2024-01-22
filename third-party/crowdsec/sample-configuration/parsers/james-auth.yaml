@@ -8,8 +8,8 @@ pattern_syntax:
   IMAP_AUTH_FAIL_BAD_CREDENTIALS: 'IMAP Authentication failed%{DATA:data}because of bad credentials.'
   IMAP_AUTH_FAIL_DELEGATION_BAD_CREDENTIALS: 'IMAP Authentication with delegation failed%{DATA:data}because of bad credentials.'
   IMAP_AUTH_FAIL_NO_EXISTING_DELEGATION: 'IMAP Authentication with delegation failed%{DATA:data}because of non existing delegation.'
-
   SMTP_AUTH_FAIL: 'SMTP Authentication%{DATA:data}failed.'
+  POP3_AUTH_FAIL: 'Bad credential supplied for %{DATA:user} with remote address %{IP:source_ip}'
 nodes:
   - grok:
       name: "IMAP_AUTH_FAIL_BAD_CREDENTIALS"
@@ -73,3 +73,11 @@ nodes:
           expression: evt.Parsed.mdc_remoteIP
         - meta: user
           expression: evt.Parsed.mdc_username
+  - grok:
+      name: "POP3_AUTH_FAIL"
+      apply_on: message
+      statics:
+        - meta: log_type
+          value: pop3-auth-fail
+        - meta: source_ip
+          expression: evt.Parsed.source_ip

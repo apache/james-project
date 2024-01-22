@@ -15,6 +15,7 @@ This module is for developing and delivering extensions to James for the [Crowds
 guice.extension.module=org.apache.james.module.CrowdsecModule
 ```
 
+### CrowdSec support for SMTP
 - Declare the Crowdsec EhloHook in `smtpserver.xml`. Eg:
 
 ```
@@ -23,6 +24,28 @@ guice.extension.module=org.apache.james.module.CrowdsecModule
     <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
     <handler class="org.apache.james.CrowdsecEhloHook"/>
 </handlerchain>
+```
+
+### CrowdSec support for IMAP
+- Declare the `CrowdsecImapConnectionCheck` in `imapserver.xml`. Eg:
+
+```
+<imapserver enabled="true">
+        ...
+        <additionalConnectionChecks>org.apache.james.CrowdsecImapConnectionCheck</additionalConnectionChecks>
+</imapserver>
+```
+
+### CrowdSec support for POP3
+- Declare the `CrowdsecPOP3CheckHandler` in `pop3server.xml`. Eg:
+- 
+```
+<pop3server enabled="true">
+    <handlerchain>
+        <handler class="org.apache.james.pop3server.core.CoreCmdHandlerLoader"/>
+        <handler class="org.apache.james.CrowdsecPOP3CheckHandler"/>
+    </handlerchain>
+</pop3server>
 ```
 
 - Docker compose file example: [docker-compose.yml](docker-compose.yml).
