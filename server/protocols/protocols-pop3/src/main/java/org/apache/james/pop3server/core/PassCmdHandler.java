@@ -106,7 +106,7 @@ public class PassCmdHandler extends AbstractPassCmdHandler  {
         } catch (BadCredentialsException e) {
             LOGGER.info("Bad credential supplied for {} with remote address {}",
                 session.getUsername().asString(),
-                session.getRemoteAddress().getAddress());
+                session.getRemoteAddress().getAddress().getHostAddress());
             return null;
         } catch (MailboxException e) {
             throw new IOException("Unable to access mailbox for user " + session.getUsername().asString(), e);
