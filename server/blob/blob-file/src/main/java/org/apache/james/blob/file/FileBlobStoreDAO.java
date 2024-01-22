@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.file;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,7 +36,6 @@ import java.util.Collection;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -97,21 +95,35 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return readReactive(bucketName, blobId)
-            .map(Throwing.<InputStream, byte[]>function(IOUtils::toByteArray).sneakyThrow());
+        return Mono.fromCallable(() -> {
+            File bucketRoot = getBucketRoot(bucketName);
+            File blob = new File(bucketRoot, blobId.asString());
+            return FileUtils.readFileToByteArray(blob);
+        }).onErrorResume(NoSuchFileException.class, e -> Mono.error(new ObjectNotFoundException(String.format("Cannot locate %s within %s", blobId.asString(), bucketName.asString()), e)))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
-        return save(bucketName, blobId, new ByteArrayInputStream(data));
+        Preconditions.checkNotNull(data);
+
+        return Mono.fromRunnable(() -> {
+                File bucketRoot = getBucketRoot(bucketName);
+                File blob = new File(bucketRoot, blobId.asString());
+                save(data, blob);
+            })
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
     }
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream) {
         Preconditions.checkNotNull(inputStream);
-        File bucketRoot = getBucketRoot(bucketName);
-        File blob = new File(bucketRoot, blobId.asString());
-        return Mono.fromRunnable(() -> save(inputStream, blob))
+        return Mono.fromRunnable(() -> {
+                File bucketRoot = getBucketRoot(bucketName);
+                File blob = new File(bucketRoot, blobId.asString());
+                save(inputStream, blob);
+            })
             .subscribeOn(Schedulers.boundedElastic())
             .then()
             .retryWhen(Retry.backoff(10, Duration.ofMillis(100))
@@ -132,6 +144,20 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
         }
     }
 
+    private void save(byte[] data, File blob) {
+        if (blob.exists()) {
+            return;
+        }
+
+        try (FileOutputStream out = new FileOutputStream(blob);
+             FileChannel channel = out.getChannel();
+             FileLock fileLock = channel.lock()) {
+            out.write(data);
+        } catch (IOException e) {
+            throw new ObjectStoreIOException("IOException occured", e);
+        }
+    }
+
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
         return Mono.fromCallable(() -> {
@@ -147,9 +173,12 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
         Preconditions.checkNotNull(bucketName);
-        File bucketRoot = getBucketRoot(bucketName);
-        File blob = new File(bucketRoot, blobId.asString());
-        return Mono.fromRunnable(Throwing.runnable(() -> FileUtils.deleteQuietly(blob)))
+
+        return Mono.fromRunnable(Throwing.runnable(() -> {
+                File bucketRoot = getBucketRoot(bucketName);
+                File blob = new File(bucketRoot, blobId.asString());
+                FileUtils.deleteQuietly(blob);
+            }))
             .subscribeOn(Schedulers.boundedElastic())
             .then();
     }
@@ -163,8 +192,10 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
-        File bucketRoot = new File(root, bucketName.asString());
-        return Mono.fromRunnable(Throwing.runnable(() -> FileUtils.deleteQuietly(bucketRoot)))
+        return Mono.fromRunnable(Throwing.runnable(() -> {
+                File bucketRoot = new File(root, bucketName.asString());
+                FileUtils.deleteQuietly(bucketRoot);
+            }))
             .subscribeOn(Schedulers.boundedElastic())
             .then();
     }
@@ -180,8 +211,10 @@ public class FileBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Publisher<BlobId> listBlobs(BucketName bucketName) {
-        File bucketRoot = getBucketRoot(bucketName);
-        return Mono.fromCallable(() -> Files.list(bucketRoot.toPath()))
+        return Mono.fromCallable(() -> {
+                File bucketRoot = getBucketRoot(bucketName);
+                return Files.list(bucketRoot.toPath());
+            })
             .flatMapMany(Flux::fromStream)
             .map(path -> blobIdFactory.from(path.getFileName().toString()))
             .subscribeOn(Schedulers.boundedElastic());
