@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.exception;
+package org.apache.james.crowdsec.exception;
 
 public class CrowdsecException extends RuntimeException {
     public CrowdsecException(String message) {

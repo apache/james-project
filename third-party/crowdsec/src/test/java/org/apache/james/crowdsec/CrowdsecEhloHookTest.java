@@ -17,15 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.crowdsec;
 
-import static org.apache.james.CrowdsecExtension.CROWDSEC_PORT;
+import static org.apache.james.crowdsec.CrowdsecExtension.CROWDSEC_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.URL;
 
-import org.apache.james.model.CrowdsecClientConfiguration;
+import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;

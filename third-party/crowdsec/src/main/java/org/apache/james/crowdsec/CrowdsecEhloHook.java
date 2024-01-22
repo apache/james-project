@@ -17,44 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.crowdsec;
 
-import static org.apache.james.CrowdsecUtils.isBanned;
-import static org.apache.james.protocols.api.Response.DISCONNECT;
-import static org.apache.james.protocols.pop3.POP3Response.OK;
+import static org.apache.james.crowdsec.CrowdsecUtils.isBanned;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.james.model.CrowdsecDecision;
-import org.apache.james.model.CrowdsecHttpClient;
-import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.handler.ConnectHandler;
-import org.apache.james.protocols.pop3.POP3Session;
+import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
+import org.apache.james.crowdsec.client.CrowdsecHttpClient;
+import org.apache.james.crowdsec.model.CrowdsecDecision;
+import org.apache.james.protocols.smtp.SMTPSession;
+import org.apache.james.protocols.smtp.hook.HeloHook;
+import org.apache.james.protocols.smtp.hook.HookResult;
 
-public class CrowdsecPOP3CheckHandler implements ConnectHandler<POP3Session> {
+public class CrowdsecEhloHook implements HeloHook {
     private final CrowdsecHttpClient crowdsecHttpClient;
 
     @Inject
-    public CrowdsecPOP3CheckHandler(CrowdsecHttpClient crowdsecHttpClient) {
-        this.crowdsecHttpClient = crowdsecHttpClient;
+    public CrowdsecEhloHook(CrowdsecClientConfiguration configuration) {
+        this.crowdsecHttpClient = new CrowdsecHttpClient(configuration);
     }
 
     @Override
-    public Response onConnect(POP3Session session) {
-        // rely on the Netty transport layer to get the real client IP, and just be application layer agnostic
-        String realClientIp = session.getLocalAddress().getAddress().getHostAddress();
-
+    public HookResult doHelo(SMTPSession session, String helo) {
+        String ip = session.getRemoteAddress().getAddress().getHostAddress();
         return crowdsecHttpClient.getCrowdsecDecisions()
-            .map(decisions -> toResponse(decisions, realClientIp))
-            .block();
+            .map(decisions -> apply(decisions, ip)).block();
     }
 
-    private Response toResponse(List<CrowdsecDecision> decisions, String ip) {
-        if (decisions.stream().anyMatch(decision -> isBanned(decision, ip))) {
-            return DISCONNECT;
-        }
-        return OK;
+    private HookResult apply(List<CrowdsecDecision> decisions, String ip) {
+        return decisions.stream()
+            .filter(decision -> isBanned(decision, ip))
+            .findFirst()
+            .map(banned -> HookResult.DENY)
+            .orElse(HookResult.DECLINED);
     }
 }

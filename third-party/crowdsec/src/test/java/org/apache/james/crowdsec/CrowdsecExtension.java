@@ -17,9 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.crowdsec;
 
-import static org.apache.james.model.CrowdsecClientConfiguration.DEFAULT_API_KEY;
+import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_API_KEY;
 
 import java.io.IOException;
 import java.net.URL;
@@ -28,8 +28,9 @@ import java.util.UUID;
 
 import javax.inject.Singleton;
 
-import org.apache.james.model.CrowdsecClientConfiguration;
-import org.apache.james.model.CrowdsecHttpClient;
+import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
+import org.apache.james.crowdsec.client.CrowdsecHttpClient;
 import org.apache.james.util.docker.RateLimiters;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.BindMode;

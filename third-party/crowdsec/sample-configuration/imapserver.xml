@@ -36,6 +36,6 @@ under the License.
         <customProperties>pong.response=customImapParameter</customProperties>
         <customProperties>prop.b=anotherValue</customProperties>
         <gracefulShutdown>false</gracefulShutdown>
-        <additionalConnectionChecks>org.apache.james.CrowdsecImapConnectionCheck</additionalConnectionChecks>
+        <additionalConnectionChecks>org.apache.james.crowdsec.CrowdsecImapConnectionCheck</additionalConnectionChecks>
     </imapserver>
 </imapservers>

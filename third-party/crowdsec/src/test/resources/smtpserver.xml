@@ -45,7 +45,7 @@
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
-            <handler class="org.apache.james.CrowdsecEhloHook"/>
+            <handler class="org.apache.james.crowdsec.CrowdsecEhloHook"/>
         </handlerchain>
         <gracefulShutdown>false</gracefulShutdown>
     </smtpserver>
@@ -74,7 +74,7 @@
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
-            <handler class="org.apache.james.CrowdsecEhloHook"/>
+            <handler class="org.apache.james.crowdsec.CrowdsecEhloHook"/>
         </handlerchain>
         <gracefulShutdown>false</gracefulShutdown>
         <proxyRequired>true</proxyRequired>

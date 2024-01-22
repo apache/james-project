@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.model;
+package org.apache.james.crowdsec.client;
 
 import java.net.URL;
 import java.time.Duration;

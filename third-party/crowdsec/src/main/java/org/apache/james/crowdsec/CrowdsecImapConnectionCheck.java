@@ -17,20 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.crowdsec;
 
-import static org.apache.james.CrowdsecUtils.isBanned;
-import static org.apache.james.model.CrowdsecClientConfiguration.DEFAULT_TIMEOUT;
+import static org.apache.james.crowdsec.CrowdsecUtils.isBanned;
+import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_TIMEOUT;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
-import org.apache.james.exception.CrowdsecException;
+import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
+import org.apache.james.crowdsec.client.CrowdsecHttpClient;
+import org.apache.james.crowdsec.exception.CrowdsecException;
 import org.apache.james.imap.api.ConnectionCheck;
-import org.apache.james.model.CrowdsecClientConfiguration;
-import org.apache.james.model.CrowdsecHttpClient;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
