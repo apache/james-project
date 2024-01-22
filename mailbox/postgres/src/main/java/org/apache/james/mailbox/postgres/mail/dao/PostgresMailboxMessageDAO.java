@@ -217,10 +217,10 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<MessageMetaData> deleteByMailboxIdAndMessageUids(PostgresMailboxId mailboxId, List<MessageUid> uids) {
-        Function<List<MessageUid>, Flux<MessageMetaData>> deletePublisherFunction = uidsToDelete -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.deleteFrom(TABLE_NAME)
+        Function<List<MessageUid>, Flux<MessageMetaData>> deletePublisherFunction = uidsToDelete -> postgresExecutor.executeDeleteAndReturnList(dslContext -> dslContext.deleteFrom(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(MESSAGE_UID.in(uidsToDelete.stream().map(MessageUid::asLong).toArray(Long[]::new)))
-                .returning(MESSAGE_METADATA_FIELDS_REQUIRE)))
+                .returning(MESSAGE_METADATA_FIELDS_REQUIRE))
             .map(RECORD_TO_MESSAGE_METADATA_FUNCTION);
 
         if (uids.size() <= IN_CLAUSE_MAX_SIZE) {
