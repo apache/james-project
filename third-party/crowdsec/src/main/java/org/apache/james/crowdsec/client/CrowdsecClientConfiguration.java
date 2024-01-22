@@ -42,7 +42,8 @@ public class CrowdsecClientConfiguration {
             .orElseThrow(() -> new IllegalArgumentException("Crowdsec's url is invalid."));
 
         String apiKey = Optional.of(config.getString("apiKey"))
-            .orElseThrow(() -> new IllegalArgumentException("Missing apiKey!"));
+            .orElseThrow(() -> new IllegalArgumentException("Missing CrowdSec apiKey!"));
+
         return new CrowdsecClientConfiguration(crowdsecUrl, apiKey);
     }
 
