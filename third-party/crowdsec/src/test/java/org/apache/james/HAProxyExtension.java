@@ -29,6 +29,7 @@ import org.testcontainers.utility.MountableFile;
 public class HAProxyExtension {
     private static final String HAPROXY_IMAGE = "haproxytech/haproxy-alpine:2.9.1";
     private static final int SMTP_PORT = 25;
+    private static final int POP3_PORT = 110;
     private static final int IMAP_PORT = 143;
 
     private final GenericContainer<?> haproxyContainer;
@@ -36,7 +37,7 @@ public class HAProxyExtension {
     public HAProxyExtension(MountableFile haProxyConfigFile) {
         this.haproxyContainer = new GenericContainer<>(HAPROXY_IMAGE)
             .withCreateContainerCmdModifier(cmd -> cmd.withName("james-haproxy-test-" + UUID.randomUUID()))
-            .withExposedPorts(SMTP_PORT, IMAP_PORT)
+            .withExposedPorts(SMTP_PORT, POP3_PORT, IMAP_PORT)
             .withCopyFileToContainer(haProxyConfigFile, "/usr/local/etc/haproxy/")
             .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
@@ -59,6 +60,10 @@ public class HAProxyExtension {
 
     public int getProxiedImapPort() {
         return haproxyContainer.getMappedPort(IMAP_PORT);
+    }
+
+    public int getProxiedPop3Port() {
+        return haproxyContainer.getMappedPort(POP3_PORT);
     }
 
     public GenericContainer<?> getHaproxyContainer() {

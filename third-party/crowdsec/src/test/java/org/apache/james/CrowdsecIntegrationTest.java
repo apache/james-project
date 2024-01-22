@@ -35,11 +35,13 @@ import java.util.Base64;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.james.model.CrowdsecClientConfiguration;
 import org.apache.james.model.CrowdsecDecision;
 import org.apache.james.model.CrowdsecHttpClient;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.protocols.Pop3GuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.TestIMAPClient;
@@ -88,6 +90,7 @@ class CrowdsecIntegrationTest {
 
     private HAProxyExtension haProxyExtension;
     private SMTPClient smtpProtocol;
+    private POP3Client pop3Client;
     private CrowdsecHttpClient crowdsecClient;
 
     @BeforeEach
@@ -101,6 +104,7 @@ class CrowdsecIntegrationTest {
 
         smtpProtocol = new SMTPClient();
         crowdsecClient = new CrowdsecHttpClient(new CrowdsecClientConfiguration(crowdsecExtension.getCrowdSecUrl(), DEFAULT_API_KEY));
+        pop3Client = new POP3Client();
     }
 
     private Path createHaProxyConfigFile(GuiceJamesServer server, Path tempDir) throws IOException {
@@ -109,6 +113,9 @@ class CrowdsecIntegrationTest {
         int smtpWithProxySupportPort = server.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort().getValue();
         int imapWithProxySupportPort = server.getProbe(ImapGuiceProbe.class)
             .getPort(asyncServer -> asyncServer.getHelloName().equals("imapServerWithProxyEnabled"))
+            .get();
+        int pop3WithProxySupportPort = server.getProbe(Pop3GuiceProbe.class).getPort(
+                asyncServer -> asyncServer.getHelloName().equals("pop3ServerWithProxyEnabled"))
             .get();
         String haproxyConfigContent = String.format("global\n" +
                 "  log stdout format raw local0 info\n" +
@@ -133,9 +140,17 @@ class CrowdsecIntegrationTest {
                 "  default_backend james-server-imap\n" +
                 "\n" +
                 "backend james-server-imap\n" +
-                "  server james2 %s:%d send-proxy\n",
+                "  server james2 %s:%d send-proxy\n" +
+                "\n" +
+                "frontend pop3-frontend\n" +
+                "  bind :110\n" +
+                "  default_backend james-server-pop3\n" +
+                "\n" +
+                "backend james-server-pop3\n" +
+                "  server james3 %s:%d send-proxy\n",
             jamesServerWithProxySupportIp, smtpWithProxySupportPort,
-            jamesServerWithProxySupportIp, imapWithProxySupportPort);
+            jamesServerWithProxySupportIp, imapWithProxySupportPort,
+            jamesServerWithProxySupportIp, pop3WithProxySupportPort);
         Path haProxyConfigFile = tempDir.resolve("haproxy.cfg");
         Files.write(haProxyConfigFile, haproxyConfigContent.getBytes());
 
@@ -300,5 +315,72 @@ class CrowdsecIntegrationTest {
             });
         }
 
+    }
+
+    @Nested
+    class POP3 {
+        @Test
+        void shouldRejectConnectionAfterThreeFailedPop3Authentications(GuiceJamesServer server) {
+            IntStream.range(0, 3)
+                .forEach(Throwing.intConsumer(any -> {
+                    pop3Client.connect(LOCALHOST_IP, server.getProbe(Pop3GuiceProbe.class).getPop3Port());
+                    pop3Client.sendCommand("user", BOB);
+                    pop3Client.sendCommand("pass", BAD_PASSWORD);
+                    pop3Client.sendCommand("noop");
+                    assertThat(pop3Client.getReplyString()).startsWith("-ERR");
+                }));
+
+            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThatThrownBy(() -> pop3Client.connect(LOCALHOST_IP, server.getProbe(Pop3GuiceProbe.class).getPop3Port()))
+                    .isInstanceOf(EOFException.class)
+                    .hasMessage("Connection closed without indication."));
+        }
+
+        @Test
+        void shouldRejectConnectionAfterThreeFailedPop3AuthenticationsViaProxy() {
+            IntStream.range(0, 3)
+                .forEach(Throwing.intConsumer(any -> {
+                    pop3Client.connect(LOCALHOST_IP, haProxyExtension.getProxiedPop3Port());
+                    pop3Client.sendCommand("user", BOB);
+                    pop3Client.sendCommand("pass", BAD_PASSWORD);
+                    pop3Client.sendCommand("noop");
+                    assertThat(pop3Client.getReplyString()).startsWith("-ERR");
+                }));
+
+            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThatThrownBy(() -> pop3Client.connect(LOCALHOST_IP, haProxyExtension.getProxiedPop3Port()))
+                    .isInstanceOf(EOFException.class)
+                    .hasMessage("Connection closed without indication."));
+        }
+
+        @Test
+        void shouldBanRealClientIpAndNotProxyIp() {
+            IntStream.range(0, 3)
+                .forEach(Throwing.intConsumer(any -> {
+                    pop3Client.connect(LOCALHOST_IP, haProxyExtension.getProxiedPop3Port());
+                    pop3Client.sendCommand("user", BOB);
+                    pop3Client.sendCommand("pass", BAD_PASSWORD);
+                    pop3Client.sendCommand("noop");
+                    assertThat(pop3Client.getReplyString()).startsWith("-ERR");
+                }));
+
+            CALMLY_AWAIT.atMost(Durations.TEN_SECONDS)
+                .untilAsserted(() -> assertThatThrownBy(() -> pop3Client.connect(LOCALHOST_IP, haProxyExtension.getProxiedPop3Port()))
+                    .isInstanceOf(EOFException.class)
+                    .hasMessage("Connection closed without indication."));
+
+            // THEN real client IP must be banned, not proxy IP
+            String realClientIp = haProxyExtension.getHaproxyContainer().getContainerInfo().getNetworkSettings()
+                .getGateway(); // client connect to HAProxy container via the docker bridge network's gateway IP
+            String haProxyIp = haProxyExtension.getHaproxyContainer().getContainerInfo().getNetworkSettings()
+                .getIpAddress();
+
+            List<CrowdsecDecision> decisions = crowdsecClient.getCrowdsecDecisions().block();
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(decisions).hasSize(1);
+                softly.assertThat(decisions.get(0).getValue()).isEqualTo(realClientIp);
+                softly.assertThat(decisions.get(0).getValue()).isNotEqualTo(haProxyIp);
+            });
+        }
     }
 }
