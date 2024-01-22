@@ -6,7 +6,7 @@ This server acts as a Mail Transfer Agent and do not embed the mailbox component
 
 == Requirements
 
-* Java 11 SDK
+* Java 21 SDK
 
 == Running
 
