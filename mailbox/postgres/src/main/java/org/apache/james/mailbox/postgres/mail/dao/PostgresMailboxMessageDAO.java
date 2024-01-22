@@ -232,9 +232,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<PostgresMessageId> deleteByMailboxId(PostgresMailboxId mailboxId) {
-        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.deleteFrom(TABLE_NAME)
+        return postgresExecutor.executeDeleteAndReturnList(dslContext -> dslContext.deleteFrom(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
-                .returning(MESSAGE_ID)))
+                .returning(MESSAGE_ID))
             .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
     }
 
