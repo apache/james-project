@@ -20,10 +20,8 @@
 package org.apache.james.crowdsec;
 
 import static org.apache.james.crowdsec.CrowdsecUtils.isBanned;
-import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_TIMEOUT;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
@@ -32,14 +30,8 @@ import org.apache.james.crowdsec.client.CrowdsecHttpClient;
 import org.apache.james.crowdsec.exception.CrowdsecException;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import reactor.core.publisher.Mono;
 
 public class CrowdsecImapConnectionCheck implements ConnectionCheck {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CrowdsecImapConnectionCheck.class);
-
     private final CrowdsecHttpClient client;
 
     @Inject
@@ -52,8 +44,6 @@ public class CrowdsecImapConnectionCheck implements ConnectionCheck {
         String ip = remoteAddress.getAddress().getHostAddress();
 
         return client.getCrowdsecDecisions()
-            .timeout(DEFAULT_TIMEOUT)
-            .onErrorResume(TimeoutException.class, e -> Mono.fromRunnable(() -> LOGGER.warn("Timeout while questioning to CrowdSec. May need to check the CrowdSec configuration.")))
             .filter(decisions -> decisions.stream().anyMatch(decision -> isBanned(decision, ip)))
             .handle((crowdsecDecisions, synchronousSink) -> synchronousSink.error(new CrowdsecException("Ip " + ip + " is not allowed to connect to IMAP server by Crowdsec")));
     }

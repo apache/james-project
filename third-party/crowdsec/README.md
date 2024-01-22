@@ -6,8 +6,10 @@ This module is for developing and delivering extensions to James for the [Crowds
 
 - The Crowdsec extension requires an extra configuration file `crowdsec.properties` to configure Crowdsec connection
   Configuration parameters:
-    - `crowdsecUrl` : URL defining the Crowdsec's bouncer. Eg: http://crowdsec:8080/v1
-    - `apiKey` : Api key for pass authentication when request to Crowdsec's bouncer.
+    - `crowdsecUrl` : String. Required. URL defining the Crowdsec's bouncer. Eg: http://crowdsec:8080/v1
+    - `apiKey` : String. Required. Api key for pass authentication when request to Crowdsec.
+    - `timeout` : Duration. Optional. Default to `500ms`. Timeout questioning to CrowdSec. 
+      E.g. `500ms`, `1 second`,...
 
 - Declare the `extensions.properties` for this module.
 
@@ -70,7 +72,6 @@ curl -XGET http://localhost:8080/v1/decisions -H "X-Api-Key: default_api_key" -H
 Response codes:
 - 200: Success
 - 403: Invalid apikey. Try with a different value for apikey.
-- 404: Crowdsec's url is not found. Maybe there is no bouncer in Crowdsec, check it and create a new one.
 
 Responses:
 - It will be null if there is no decision.
