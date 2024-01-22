@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
+import org.apache.james.protocols.api.ProxyInformation;
 import org.apache.james.protocols.api.Response;
 
 /**
@@ -41,8 +42,12 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
 
     public SMTPSessionImpl(ProtocolTransport transport, SMTPConfiguration config) {
         super(transport, config);
-        relayingAllowed = Optional.ofNullable(getRemoteAddress())
-            .flatMap(addres -> Optional.ofNullable(addres.getAddress()))
+        relayingAllowed = computeRelayingAllowed(config);
+    }
+
+    private Boolean computeRelayingAllowed(SMTPConfiguration config) {
+        return Optional.ofNullable(getRemoteAddress())
+            .flatMap(address -> Optional.ofNullable(address.getAddress()))
             .flatMap(address -> Optional.ofNullable(address.getHostAddress()))
             .map(config::isRelayingAllowed)
             .orElse(false);
@@ -51,6 +56,12 @@ public class SMTPSessionImpl extends ProtocolSessionImpl implements SMTPSession 
     @Override
     public boolean isRelayingAllowed() {
         return relayingAllowed;
+    }
+
+    @Override
+    public void setProxyInformation(ProxyInformation proxyInformation) {
+        super.setProxyInformation(proxyInformation);
+        relayingAllowed = computeRelayingAllowed((SMTPConfiguration) config);
     }
 
     @Override
