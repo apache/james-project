@@ -4,7 +4,7 @@ This server target single node James deployments. By default, the derby database
 
 == Requirements
 
- * Java 11 SDK
+ * Java 21 SDK
 
 == Running
 
