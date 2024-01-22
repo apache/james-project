@@ -19,10 +19,13 @@
 package org.apache.james.modules.protocols;
 
 import java.net.InetSocketAddress;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
 import org.apache.james.pop3server.netty.POP3ServerFactory;
+import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.utils.GuiceProbe;
 
 
@@ -41,5 +44,13 @@ public class Pop3GuiceProbe implements GuiceProbe {
                 .flatMap(server -> server.getListenAddresses().stream().findFirst())
                 .map(InetSocketAddress::getPort)
                 .orElseThrow(() -> new IllegalStateException("POP3 server not defined"));
+    }
+
+    public Optional<Integer> getPort(Predicate<? super AbstractConfigurableAsyncServer> filter) {
+        return pop3ServerFactory.getServers().stream()
+            .filter(filter)
+            .findFirst()
+            .flatMap(server -> server.getListenAddresses().stream().findFirst())
+            .map(InetSocketAddress::getPort);
     }
 }
