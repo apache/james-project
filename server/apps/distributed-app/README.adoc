@@ -2,7 +2,7 @@
 
 == Requirements
 
- * Java 11 SDK
+ * Java 21 SDK
 
 Firstly, create your own user network on Docker for the James environment:
 
