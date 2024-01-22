@@ -17,35 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.model;
+package org.apache.james.crowdsec;
 
-import java.io.IOException;
-import java.time.Duration;
+import org.apache.commons.net.util.SubnetUtils;
+import org.apache.james.crowdsec.model.CrowdsecDecision;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-
-public class CrowdsecDecisionDeserializer extends StdDeserializer<CrowdsecDecision> {
-    public CrowdsecDecisionDeserializer() {
-        this(null);
+public class CrowdsecUtils {
+    public static boolean isBanned(CrowdsecDecision decision, String ip) {
+        if (decision.getScope().equals("Ip") && ip.contains(decision.getValue())) {
+            return true;
+        }
+        return decision.getScope().equals("Range") && belongToNetwork(decision.getValue(), ip);
     }
 
-    protected CrowdsecDecisionDeserializer(Class<?> vc) {
-        super(vc);
-    }
+    private static boolean belongToNetwork(String value, String ip) {
+        SubnetUtils subnetUtils = new SubnetUtils(value);
+        subnetUtils.setInclusiveHostCount(true);
 
-    public CrowdsecDecision deserialize(JsonParser jp, DeserializationContext deserializationContext) throws IOException {
-        JsonNode node = jp.getCodec().readTree(jp);
-        return CrowdsecDecision.builder()
-            .duration(Duration.parse("PT" + node.get("duration").asText()))
-            .id(node.get("id").asLong())
-            .origin(node.get("origin").asText())
-            .scenario(node.get("scenario").asText())
-            .scope(node.get("scope").asText())
-            .type(node.get("type").asText())
-            .value(node.get("value").asText())
-            .build();
+        return subnetUtils.getInfo().isInRange(ip);
     }
 }

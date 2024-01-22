@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.model;
+package org.apache.james.crowdsec.model;
 
 import java.time.Duration;
 import java.util.Objects;

@@ -17,12 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.crowdsec;
 
 import java.time.Duration;
 import java.util.List;
 
-import org.apache.james.model.CrowdsecDecision;
+import org.apache.james.crowdsec.model.CrowdsecDecision;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
