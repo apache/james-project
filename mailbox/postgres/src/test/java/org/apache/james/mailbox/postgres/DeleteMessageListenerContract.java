@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.james.blob.api.BlobId;
@@ -43,8 +44,10 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public abstract class DeleteMessageListenerContract {
@@ -223,5 +226,21 @@ public abstract class DeleteMessageListenerContract {
             assertThat(Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), messageBodyBlobId)).blockOptional())
                 .isNotEmpty();
         });
+    }
+
+    @Test
+    void deleteMessageListenerShouldSucceedWhenDeleteMailboxHasALotOfMessages() throws Exception {
+        List<PostgresMessageId> messageIdList = Flux.range(0, 50)
+            .map(i -> Throwing.supplier(() -> inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsByteArray("eml/emailWithOnlyAttachment.eml")), session)).get())
+            .map(appendResult -> (PostgresMessageId) appendResult.getId().getMessageId())
+            .collectList()
+            .block();
+
+        mailboxManager.deleteMailbox(inbox, session);
+
+        assertThat(Flux.fromIterable(messageIdList)
+            .flatMap(msgId -> postgresMessageDAO.getBodyBlobId(msgId))
+            .collectList().block()).isEmpty();
     }
 }
