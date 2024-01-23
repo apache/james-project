@@ -19,6 +19,7 @@
 
 package org.apache.james;
 
+import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
@@ -27,6 +28,7 @@ import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.memory.change.MemoryEmailChangeRepository;
 import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
 import org.apache.james.jmap.memory.upload.InMemoryUploadUsageRepository;
+import org.apache.james.jmap.postgres.change.PostgresEmailChangeModule;
 import org.apache.james.jmap.postgres.change.PostgresEmailChangeRepository;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MessageIdManager;
@@ -42,12 +44,15 @@ import org.apache.james.vacation.memory.MemoryVacationRepository;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class PostgresJmapModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresEmailChangeModule.MODULE);
+
         bind(EmailChangeRepository.class).to(PostgresEmailChangeRepository.class);
         bind(PostgresEmailChangeRepository.class).in(Scopes.SINGLETON);
 
