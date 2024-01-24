@@ -19,20 +19,25 @@
 
 package org.apache.james.mailbox.postgres;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.mailbox.postgres.mail.PostgresAttachmentModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
-import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule;
-import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
+import java.util.Optional;
 
-public interface PostgresMailboxAggregateModule {
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-    PostgresModule MODULE = PostgresModule.aggregateModules(
-        PostgresMailboxModule.MODULE,
-        PostgresSubscriptionModule.MODULE,
-        PostgresMessageModule.MODULE,
-        PostgresMailboxAnnotationModule.MODULE,
-        PostgresAttachmentModule.MODULE,
-        PostgresThreadModule.MODULE);
+import org.apache.james.backends.postgres.utils.PostgresExecutor;
+import org.apache.james.core.Domain;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
+
+public class PostgresMailboxFactory {
+    private final PostgresExecutor.Factory executorFactory;
+
+    @Inject
+    @Singleton
+    public PostgresMailboxFactory(PostgresExecutor.Factory executorFactory) {
+        this.executorFactory = executorFactory;
+    }
+
+    public PostgresThreadDAO createThreadDAO(Optional<Domain> domain) {
+        return new PostgresThreadDAO(executorFactory.create(domain));
+    }
 }

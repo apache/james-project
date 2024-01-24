@@ -131,7 +131,9 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, executorFactory);
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(executorFactory);
         PostgresAttachmentDAO.Factory attachmentDAOFactory = new PostgresAttachmentDAO.Factory(executorFactory, blobIdFactory);
+        PostgresMailboxFactory postgresMailboxFactory = new PostgresMailboxFactory(executorFactory);
 
-        return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory, attachmentDAOFactory, ImmutableSet.of());
+        return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
+            attachmentDAOFactory, postgresMailboxFactory, ImmutableSet.of());
     }
 }

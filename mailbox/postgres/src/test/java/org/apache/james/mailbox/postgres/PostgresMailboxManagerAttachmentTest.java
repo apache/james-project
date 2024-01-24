@@ -101,9 +101,10 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(BLOB_ID_FACTORY, postgresExtension.getExecutorFactory());
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory());
         PostgresAttachmentDAO.Factory attachmentDAOFactory = new PostgresAttachmentDAO.Factory(postgresExtension.getExecutorFactory(), BLOB_ID_FACTORY);
+        PostgresMailboxFactory postgresMailboxFactory = new PostgresMailboxFactory(postgresExtension.getExecutorFactory());
 
         eventBus.register(new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
-            attachmentDAOFactory, ImmutableSet.of()));
+            attachmentDAOFactory, postgresMailboxFactory, ImmutableSet.of()));
 
         mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
