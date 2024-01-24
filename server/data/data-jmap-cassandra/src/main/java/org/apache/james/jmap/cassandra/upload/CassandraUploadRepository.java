@@ -46,9 +46,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraUploadRepository implements UploadRepository {
-
     public static final BucketName UPLOAD_BUCKET = BucketName.of("jmap-uploads");
-    public static final Duration EXPIRE_DURATION = Duration.ofDays(7);
     private final UploadDAO uploadDAO;
     private final BlobStore blobStore;
     private final Clock clock;
@@ -91,10 +89,11 @@ public class CassandraUploadRepository implements UploadRepository {
             .map(UploadDAO.UploadRepresentation::toUploadMetaData);
     }
 
-    public Mono<Void> purge() {
-        Instant sevenDaysAgo = clock.instant().minus(EXPIRE_DURATION);
+    @Override
+    public Mono<Void> deleteByUploadDateBefore(Duration expireDuration) {
+        Instant expirationTime = clock.instant().minus(expireDuration);
         return Flux.from(uploadDAO.all())
-            .filter(upload -> upload.getUploadDate().isBefore(sevenDaysAgo))
+            .filter(upload -> upload.getUploadDate().isBefore(expirationTime))
             .flatMap(upload -> Mono.from(blobStore.delete(UPLOAD_BUCKET, upload.getBlobId()))
                 .then(uploadDAO.delete(upload.getUser(), upload.getId())), DEFAULT_CONCURRENCY)
             .then();

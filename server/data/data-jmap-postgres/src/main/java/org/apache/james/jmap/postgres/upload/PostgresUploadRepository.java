@@ -19,10 +19,14 @@
 
 package org.apache.james.jmap.postgres.upload;
 
+import static org.apache.james.backends.postgres.PostgresCommons.INSTANT_TO_LOCAL_DATE_TIME;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.InputStream;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -88,6 +92,20 @@ public class PostgresUploadRepository implements UploadRepository {
     @Override
     public Flux<UploadMetaData> listUploads(Username user) {
         return uploadDAOFactory.create(user.getDomainPart()).list(user);
+    }
+
+    @Override
+    public Mono<Void> deleteByUploadDateBefore(Duration expireDuration) {
+        LocalDateTime expirationTime = INSTANT_TO_LOCAL_DATE_TIME.apply(clock.instant().minus(expireDuration));
+
+        return Flux.from(nonRLSUploadDAO.listByUploadDateBefore(expirationTime))
+            .flatMap(uploadPair -> {
+                Username username = uploadPair.getRight();
+                UploadMetaData upload = uploadPair.getLeft();
+                return Mono.from(blobStore.delete(UPLOAD_BUCKET, upload.blobId()))
+                    .then(nonRLSUploadDAO.delete(upload.uploadId(), username));
+            }, DEFAULT_CONCURRENCY)
+            .then();
     }
 
     private UploadId generateId() {

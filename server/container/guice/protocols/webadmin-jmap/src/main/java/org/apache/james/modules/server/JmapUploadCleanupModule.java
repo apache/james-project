@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.server;
 
-import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
+import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -46,8 +46,8 @@ public class JmapUploadCleanupModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<? extends Task, ? extends TaskDTO> uploadRepositoryCleanupTask(CassandraUploadRepository cassandraUploadRepository) {
-        return UploadCleanupTaskDTO.module(cassandraUploadRepository);
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> uploadRepositoryCleanupTask(UploadRepository uploadRepository) {
+        return UploadCleanupTaskDTO.module(uploadRepository);
     }
 
     @ProvidesIntoSet

@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.PostgresCommons;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.blob.api.BlobId;
@@ -97,6 +98,12 @@ public class PostgresUploadDAO {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(PostgresUploadTable.TABLE_NAME)
             .where(PostgresUploadTable.ID.eq(uploadId.getId()))
             .and(PostgresUploadTable.USER_NAME.eq(user.asString()))));
+    }
+
+    public Flux<Pair<UploadMetaData, Username>> listByUploadDateBefore(LocalDateTime before) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(PostgresUploadTable.TABLE_NAME)
+                .where(PostgresUploadTable.UPLOAD_DATE.lessThan(before))))
+            .map(record -> Pair.of(uploadMetaDataFromRow(record), Username.of(record.get(PostgresUploadTable.USER_NAME))));
     }
 
     private UploadMetaData uploadMetaDataFromRow(Record record) {

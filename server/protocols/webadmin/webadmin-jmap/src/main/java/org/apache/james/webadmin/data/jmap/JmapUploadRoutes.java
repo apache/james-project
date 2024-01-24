@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.jmap.cassandra.upload.CassandraUploadRepository;
+import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
@@ -39,12 +39,12 @@ import spark.Service;
 public class JmapUploadRoutes implements Routes {
     public static final String BASE_PATH = "/jmap/uploads";
 
-    private final CassandraUploadRepository uploadRepository;
+    private final UploadRepository uploadRepository;
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    public JmapUploadRoutes(CassandraUploadRepository uploadRepository, TaskManager taskManager, JsonTransformer jsonTransformer) {
+    public JmapUploadRoutes(UploadRepository uploadRepository, TaskManager taskManager, JsonTransformer jsonTransformer) {
         this.uploadRepository = uploadRepository;
         this.taskManager = taskManager;
         this.jsonTransformer = jsonTransformer;
