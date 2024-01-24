@@ -26,6 +26,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadRepositoryContract;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
@@ -33,15 +34,22 @@ import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
 
     private UploadRepository testee;
+    private UpdatableTickingClock clock;
 
     @BeforeEach
     void setUp() {
+        clock = new UpdatableTickingClock(Clock.systemUTC().instant());
         BlobStore blobStore = new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, new HashBlobId.Factory());
-        testee = new InMemoryUploadRepository(blobStore, Clock.systemUTC());
+        testee = new InMemoryUploadRepository(blobStore, clock);
     }
 
     @Override
     public UploadRepository testee() {
         return testee;
+    }
+
+    @Override
+    public UpdatableTickingClock clock() {
+        return clock;
     }
 }

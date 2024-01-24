@@ -29,6 +29,7 @@ import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadRepositoryContract;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
+import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -39,10 +40,10 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(UploadModule.MODULE);
     private CassandraUploadRepository testee;
-
+    private UpdatableTickingClock clock;
     @BeforeEach
     void setUp() {
-        Clock clock = Clock.systemUTC();
+        clock = new UpdatableTickingClock(Clock.systemUTC().instant());
         testee = new CassandraUploadRepository(new UploadDAO(cassandra.getCassandraCluster().getConf(),
             new HashBlobId.Factory()), new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
             clock);
@@ -69,5 +70,10 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @Override
     public void deleteShouldReturnFalseWhenRowDoesNotExist() {
         UploadRepositoryContract.super.deleteShouldReturnFalseWhenRowDoesNotExist();
+    }
+
+    @Override
+    public UpdatableTickingClock clock() {
+        return clock;
     }
 }

@@ -20,6 +20,7 @@
 package org.apache.james.jmap.api.upload;
 
 import java.io.InputStream;
+import java.time.Duration;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.Upload;
@@ -36,5 +37,7 @@ public interface UploadRepository {
     Publisher<Boolean> delete(UploadId id, Username user);
 
     Publisher<UploadMetaData> listUploads(Username user);
+
+    Publisher<Void> deleteByUploadDateBefore(Duration expireDuration);
 }
 
