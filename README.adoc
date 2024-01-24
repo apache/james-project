@@ -86,7 +86,12 @@ Instructions for the distributed server can be found link:server/apps/distribute
 ====
 We require link:https://maven.apache.org[maven] version 3.6.1 minimum to build the project.
 
-Simply run `mvn clean install` within this directory to compile the project.
+First, clone the repository locally:
+----
+    $ git clone git@github.com:apache/james-project.git
+----
+
+Then simply run `mvn clean install` within this directory to compile the project.
 
 Useful options includes:
 
