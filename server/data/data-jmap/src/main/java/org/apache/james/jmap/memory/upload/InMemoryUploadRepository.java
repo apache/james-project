@@ -22,6 +22,7 @@ package org.apache.james.jmap.memory.upload;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,6 +105,16 @@ public class InMemoryUploadRepository implements UploadRepository {
         return Flux.fromIterable(uploadStore.values())
             .filter(pair -> user.equals(pair.left))
             .map(pair -> pair.right);
+    }
+
+    @Override
+    public Publisher<Void> deleteByUploadDateBefore(Duration expireDuration) {
+        Instant expirationTime = clock.instant().minus(expireDuration);
+        return Flux.fromIterable(uploadStore.values())
+            .filter(pair -> pair.right.uploadDate().isBefore(expirationTime))
+            .flatMap(pair -> Mono.from(blobStore.delete(bucketName, pair.right.blobId()))
+                .then(Mono.fromRunnable(() -> uploadStore.remove(pair.right.uploadId()))))
+            .then();
     }
 
     private Mono<Upload> retrieveUpload(UploadMetaData uploadMetaData) {
