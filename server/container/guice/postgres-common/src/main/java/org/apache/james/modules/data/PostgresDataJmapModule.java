@@ -36,7 +36,7 @@ import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
-import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
+import org.apache.james.jmap.postgres.upload.PostgresUploadRepository;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -52,8 +52,7 @@ public class PostgresDataJmapModule extends AbstractModule {
         bind(MemoryAccessTokenRepository.class).in(Scopes.SINGLETON);
         bind(AccessTokenRepository.class).to(MemoryAccessTokenRepository.class);
 
-        bind(InMemoryUploadRepository.class).in(Scopes.SINGLETON);
-        bind(UploadRepository.class).to(InMemoryUploadRepository.class);
+        bind(UploadRepository.class).to(PostgresUploadRepository.class);
 
         bind(MemoryCustomIdentityDAO.class).in(Scopes.SINGLETON);
         bind(CustomIdentityDAO.class).to(MemoryCustomIdentityDAO.class);
