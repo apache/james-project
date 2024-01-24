@@ -27,9 +27,10 @@ import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.memory.change.MemoryEmailChangeRepository;
 import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
-import org.apache.james.jmap.memory.upload.InMemoryUploadUsageRepository;
+import org.apache.james.jmap.postgres.PostgresDataJMapAggregateModule;
 import org.apache.james.jmap.postgres.change.PostgresEmailChangeModule;
 import org.apache.james.jmap.postgres.change.PostgresEmailChangeRepository;
+import org.apache.james.jmap.postgres.upload.PostgresUploadUsageRepository;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.RightManager;
@@ -51,6 +52,8 @@ public class PostgresJmapModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresDataJMapAggregateModule.MODULE);
+
         Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresEmailChangeModule.MODULE);
 
         bind(EmailChangeRepository.class).to(PostgresEmailChangeRepository.class);
@@ -62,7 +65,7 @@ public class PostgresJmapModule extends AbstractModule {
         bind(Limit.class).annotatedWith(Names.named(MemoryEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
         bind(Limit.class).annotatedWith(Names.named(MemoryMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
 
-        bind(UploadUsageRepository.class).to(InMemoryUploadUsageRepository.class);
+        bind(UploadUsageRepository.class).to(PostgresUploadUsageRepository.class);
 
         bind(DefaultVacationService.class).in(Scopes.SINGLETON);
         bind(VacationService.class).to(DefaultVacationService.class);
