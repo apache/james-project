@@ -60,16 +60,19 @@ public interface PostgresUploadModule {
             .build();
 
         PostgresIndex USER_NAME_INDEX = PostgresIndex.name("uploads_user_name_index")
-            .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, USER_NAME));
         PostgresIndex ID_USERNAME_INDEX = PostgresIndex.name("uploads_id_user_name_index")
-            .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, ID, USER_NAME));
+        PostgresIndex UPLOAD_DATE_INDEX = PostgresIndex.name("uploads_upload_date_index")
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, UPLOAD_DATE));
 
     }
 
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(TABLE)
-        .addIndex(PostgresUploadTable.USER_NAME_INDEX, PostgresUploadTable.ID_USERNAME_INDEX)
+        .addIndex(PostgresUploadTable.USER_NAME_INDEX, PostgresUploadTable.ID_USERNAME_INDEX, PostgresUploadTable.UPLOAD_DATE_INDEX)
         .build();
 }
