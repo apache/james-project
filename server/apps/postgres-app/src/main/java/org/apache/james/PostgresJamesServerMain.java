@@ -59,6 +59,7 @@ import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.JmapTasksModule;
+import org.apache.james.modules.server.JmapUploadCleanupModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
@@ -90,7 +91,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new WebAdminReIndexingTaskSerializationModule(),
         new MailboxesExportRoutesModule(),
         new UserIdentityModule(),
-        new DLPRoutesModule());
+        new DLPRoutesModule(),
+        new JmapUploadCleanupModule());
 
     private static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
