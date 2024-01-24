@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.postgres;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
@@ -57,9 +58,18 @@ public class PostgresCommons {
     public static final Function<Date, LocalDateTime> DATE_TO_LOCAL_DATE_TIME = date -> Optional.ofNullable(date)
         .map(value -> LocalDateTime.ofInstant(value.toInstant(), ZoneOffset.UTC))
         .orElse(null);
+
+    public static final Function<Instant, LocalDateTime> INSTANT_TO_LOCAL_DATE_TIME = instant -> Optional.ofNullable(instant)
+        .map(value -> LocalDateTime.ofInstant(instant, ZoneOffset.UTC))
+        .orElse(null);
+
     public static final Function<LocalDateTime, Date> LOCAL_DATE_TIME_DATE_FUNCTION = localDateTime -> Optional.ofNullable(localDateTime)
         .map(value -> value.toInstant(ZoneOffset.UTC))
         .map(Date::from)
+        .orElse(null);
+
+    public static final Function<LocalDateTime, Instant> LOCAL_DATE_TIME_INSTANT_FUNCTION = localDateTime -> Optional.ofNullable(localDateTime)
+        .map(value -> value.toInstant(ZoneOffset.UTC))
         .orElse(null);
 
     public static final Function<Field<?>, Field<?>> UNNEST_FIELD = field -> DSL.function("unnest", field.getType().getComponentType(), field);

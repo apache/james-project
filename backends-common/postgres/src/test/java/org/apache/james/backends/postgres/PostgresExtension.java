@@ -66,6 +66,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private final PostgresFixture.Database selectedDatabase;
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor postgresExecutor;
+    private PostgresExecutor nonRLSPostgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
     private PostgresExecutor.Factory executorFactory;
 
@@ -127,15 +128,16 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .rowLevelSecurityEnabled(rlsEnabled)
             .build();
 
-        connectionFactory = new PostgresqlConnectionFactory(PostgresqlConnectionConfiguration.builder()
+        PostgresqlConnectionConfiguration.Builder connectionBaseBuilder = PostgresqlConnectionConfiguration.builder()
             .host(postgresConfiguration.getHost())
             .port(postgresConfiguration.getPort())
+            .database(postgresConfiguration.getDatabaseName())
+            .schema(postgresConfiguration.getDatabaseSchema());
+
+        connectionFactory = new PostgresqlConnectionFactory(connectionBaseBuilder
             .username(postgresConfiguration.getCredential().getUsername())
             .password(postgresConfiguration.getCredential().getPassword())
-            .database(postgresConfiguration.getDatabaseName())
-            .schema(postgresConfiguration.getDatabaseSchema())
             .build());
-
 
         if (rlsEnabled) {
             executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory));
@@ -146,6 +148,17 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         }
 
         postgresExecutor = executorFactory.create();
+        if (rlsEnabled) {
+            nonRLSPostgresExecutor = Mono.just(connectionBaseBuilder
+                    .username(postgresConfiguration.getNonRLSCredential().getUsername())
+                    .password(postgresConfiguration.getNonRLSCredential().getPassword())
+                    .build())
+                .flatMap(configuration -> new PostgresqlConnectionFactory(configuration).create().cache())
+                .map(connection -> new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connection)).create())
+                .block();
+        } else {
+            nonRLSPostgresExecutor = postgresExecutor;
+        }
     }
 
     @Override
@@ -167,7 +180,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         resetSchema();
     }
 
-    public void restartContainer() throws URISyntaxException {
+    public void restartContainer() {
         PG_CONTAINER.stop();
         PG_CONTAINER.start();
         initPostgresSession();
@@ -193,6 +206,10 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     public PostgresExecutor getPostgresExecutor() {
         return postgresExecutor;
+    }
+
+    public PostgresExecutor getNonRLSPostgresExecutor() {
+        return nonRLSPostgresExecutor;
     }
 
     public ConnectionFactory getConnectionFactory() {
