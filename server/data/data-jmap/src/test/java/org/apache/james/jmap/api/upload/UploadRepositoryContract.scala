@@ -21,6 +21,7 @@
 
  import java.io.InputStream
  import java.nio.charset.StandardCharsets
+ import java.time.{Clock, Duration}
  import java.util.UUID
 
  import org.apache.commons.io.IOUtils
@@ -29,6 +30,7 @@
  import org.apache.james.jmap.api.model.{Upload, UploadId, UploadMetaData, UploadNotFoundException}
  import org.apache.james.jmap.api.upload.UploadRepositoryContract.{CONTENT_TYPE, DATA_STRING, USER}
  import org.apache.james.mailbox.model.ContentType
+ import org.apache.james.utils.UpdatableTickingClock
  import org.assertj.core.api.Assertions.{assertThat, assertThatCode, assertThatThrownBy}
  import org.assertj.core.groups.Tuple.tuple
  import org.junit.jupiter.api.Test
@@ -48,6 +50,8 @@
    def randomUploadId(): UploadId = UploadId.from(UUID.randomUUID())
 
    def testee: UploadRepository
+
+   def clock: UpdatableTickingClock
 
    def data(): InputStream = IOUtils.toInputStream(DATA_STRING, StandardCharsets.UTF_8)
 
@@ -185,6 +189,20 @@
      val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
      SMono.fromPublisher(testee.delete(uploadId, Username.of("Alice"))).block()
      assertThat(SMono.fromPublisher(testee.retrieve(uploadId, USER)).block())
+       .isNotNull
+   }
+
+   @Test
+   def deleteByUploadDateBeforeShouldRemoveExpiredUploads(): Unit = {
+     val uploadId1: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+     clock.setInstant(clock.instant().plus(8, java.time.temporal.ChronoUnit.DAYS))
+     val uploadId2: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     SMono(testee.deleteByUploadDateBefore(Duration.ofDays(7))).block();
+
+     assertThatThrownBy(() => SMono.fromPublisher(testee.retrieve(uploadId1, USER)).block())
+       .isInstanceOf(classOf[UploadNotFoundException])
+     assertThat(SMono.fromPublisher(testee.retrieve(uploadId2, USER)).block())
        .isNotNull
    }
 
