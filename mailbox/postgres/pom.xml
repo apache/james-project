@@ -29,7 +29,9 @@
     <artifactId>apache-james-mailbox-postgres</artifactId>
     <name>Apache James :: Mailbox :: Postgres</name>
 
-    <properties/>
+    <properties>
+        <uuid-creator.version>5.3.7</uuid-creator.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -141,6 +143,11 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.f4b6a3</groupId>
+            <artifactId>uuid-creator</artifactId>
+            <version>${uuid-creator.version}</version>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>

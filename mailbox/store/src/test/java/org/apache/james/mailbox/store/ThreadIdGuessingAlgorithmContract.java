@@ -75,12 +75,12 @@ public abstract class ThreadIdGuessingAlgorithmContract {
     protected MessageId.Factory messageIdFactory;
     protected ThreadIdGuessingAlgorithm testee;
     protected MessageId newBasedMessageId;
+    protected MessageId otherBasedMessageId;
     protected MailboxSession mailboxSession;
     private MailboxManager mailboxManager;
     private MessageManager inbox;
     private MessageMapper messageMapper;
     private CombinationManagerTestSystem testingData;
-    private MessageId otherBasedMessageId;
     private Mailbox mailbox;
 
     protected abstract CombinationManagerTestSystem createTestingData();
@@ -279,8 +279,6 @@ public abstract class ThreadIdGuessingAlgorithmContract {
 
     @Test
     void givenNonMailInAThreadThenGetThreadShouldThrowThreadNotFoundException() {
-        Flux<MessageId> messageIds = testee.getMessageIdsInThread(ThreadId.fromBaseMessageId(newBasedMessageId), mailboxSession);
-
         assertThatThrownBy(() -> testee.getMessageIdsInThread(ThreadId.fromBaseMessageId(newBasedMessageId), mailboxSession).collectList().block())
             .getCause()
             .isInstanceOf(ThreadNotFoundException.class);

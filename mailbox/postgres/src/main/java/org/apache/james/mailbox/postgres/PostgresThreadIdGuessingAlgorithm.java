@@ -28,12 +28,9 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.ThreadNotFoundException;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
-import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
@@ -47,18 +44,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
-    private final MailboxManager mailboxManager;
-    private final PostgresMailboxFactory mailboxFactory;
+    private final PostgresThreadDAO.Factory threadDAOFactory;
 
     @Inject
-    public PostgresThreadIdGuessingAlgorithm(MailboxManager mailboxManager, PostgresMailboxFactory mailboxFactory) {
-        this.mailboxManager = mailboxManager;
-        this.mailboxFactory = mailboxFactory;
+    public PostgresThreadIdGuessingAlgorithm(PostgresThreadDAO.Factory threadDAOFactory) {
+        this.threadDAOFactory = threadDAOFactory;
     }
 
     @Override
-    public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
-        PostgresThreadDAO threadDAO = mailboxFactory.createThreadDAO(session.getUser().getDomainPart());
+    public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo,
+                                                Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
+        PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
 
         Set<Integer> hashMimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references)
             .stream()
@@ -74,23 +70,15 @@ public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgori
             .map(Pair::getRight)
             .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)))
             .flatMap(threadId -> threadDAO
-                .insertSome(session.getUser(), hashMimeMessageIds, messageId, threadId, hashBaseSubject)
+                .insertSome(session.getUser(), hashMimeMessageIds, PostgresMessageId.class.cast(messageId), threadId, hashBaseSubject)
                 .then(Mono.just(threadId)));
     }
 
     @Override
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
-        SearchQuery searchQuery = SearchQuery.builder()
-            .andCriteria(SearchQuery.threadId(threadId))
-            .sorts(new SearchQuery.Sort(SearchQuery.Sort.SortClause.Arrival, SearchQuery.Sort.Order.NATURAL))
-            .build();
-
-        MultimailboxesSearchQuery expression = MultimailboxesSearchQuery
-            .from(searchQuery)
-            .build();
-
-        return Flux.from(mailboxManager.search(expression, session, Integer.MAX_VALUE))
-            .switchIfEmpty(Mono.error(() -> new ThreadNotFoundException(threadId)));
+        PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
+        return threadDAO.findMessageIds(threadId, session.getUser())
+            .switchIfEmpty(Flux.error(new ThreadNotFoundException(threadId)));
     }
 
     private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {

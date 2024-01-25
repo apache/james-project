@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.postgres;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,6 +33,7 @@ import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
@@ -41,16 +45,21 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
+
+import reactor.core.publisher.Flux;
 
 public class PostgresThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     @RegisterExtension
     static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
     private PostgresMailboxManager mailboxManager;
-    private PostgresMailboxFactory mailboxFactory;
+    private PostgresThreadDAO.Factory threadDAOFactory;
 
     @Override
     protected CombinationManagerTestSystem createTestingData() {
@@ -63,8 +72,8 @@ public class PostgresThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgor
 
     @Override
     protected ThreadIdGuessingAlgorithm initThreadIdGuessingAlgorithm(CombinationManagerTestSystem testingData) {
-        mailboxFactory = new PostgresMailboxFactory(postgresExtension.getExecutorFactory());
-        return new PostgresThreadIdGuessingAlgorithm(mailboxManager, mailboxFactory);
+        threadDAOFactory = new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory());
+        return new PostgresThreadIdGuessingAlgorithm(threadDAOFactory);
     }
 
     @Override
@@ -84,8 +93,65 @@ public class PostgresThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgor
 
     @Override
     protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        PostgresThreadDAO threadDAO = mailboxFactory.createThreadDAO(username.getDomainPart());
-        threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject)).block();
+        PostgresThreadDAO threadDAO = threadDAOFactory.create(username.getDomainPart());
+        threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), PostgresMessageId.class.cast(messageId), threadId, hashSubject(baseSubject)).block();
+    }
+
+    @Test
+    void givenAMailInAThreadThenGetThreadShouldReturnAListWithOnlyOneMessageIdInThatThread() throws MailboxException {
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+
+        MessageId messageId = initNewBasedMessageId();
+        ThreadId threadId = ThreadId.fromBaseMessageId(newBasedMessageId);
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, messageId, threadId, Optional.of(new Subject("Test")));
+
+        Flux<MessageId> messageIds = testee.getMessageIdsInThread(threadId, mailboxSession);
+
+        assertThat(messageIds.collectList().block())
+            .containsOnly(messageId);
+    }
+
+    @Test
+    void givenTwoDistinctThreadsThenGetThreadShouldNotReturnUnrelatedMails() throws MailboxException {
+        Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+
+        MessageId messageId1 = initNewBasedMessageId();
+        MessageId messageId2 = initNewBasedMessageId();
+        MessageId messageId3 = initNewBasedMessageId();
+        ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
+        ThreadId threadId2 = ThreadId.fromBaseMessageId(otherBasedMessageId);
+
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, messageId1, threadId1, Optional.of(new Subject("Test")));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, messageId2, threadId1, Optional.of(new Subject("Test")));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, messageId3, threadId2, Optional.of(new Subject("Test")));
+
+        Flux<MessageId> messageIds = testee.getMessageIdsInThread(ThreadId.fromBaseMessageId(otherBasedMessageId), mailboxSession);
+
+        assertThat(messageIds.collectList().block())
+            .doesNotContain(messageId1, messageId2);
+    }
+
+    @Test
+    void givenThreeMailsInAThreadThenGetThreadShouldReturnAListWithThreeMessageIdsSortedByArrivalDate() {
+        Set<MimeMessageId> mimeMessageIds = ImmutableSet.of(new MimeMessageId("Message-ID"));
+
+        MessageId messageId1 = initNewBasedMessageId();
+        MessageId messageId2 = initNewBasedMessageId();
+        MessageId messageId3 = initNewBasedMessageId();
+        ThreadId threadId1 = ThreadId.fromBaseMessageId(newBasedMessageId);
+
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, messageId1, threadId1, Optional.of(new Subject("Test1")));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, messageId2, threadId1, Optional.of(new Subject("Test2")));
+        saveThreadData(mailboxSession.getUser(), mimeMessageIds, messageId3, threadId1, Optional.of(new Subject("Test3")));
+
+        Flux<MessageId> messageIds = testee.getMessageIdsInThread(ThreadId.fromBaseMessageId(newBasedMessageId), mailboxSession);
+
+        assertThat(messageIds.collectList().block())
+            .isEqualTo(ImmutableList.of(messageId1, messageId2, messageId3));
     }
 
     private Set<Integer> hashMimeMessagesIds(Set<MimeMessageId> mimeMessageIds) {

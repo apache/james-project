@@ -61,21 +61,21 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     private final PostgresMessageDAO.Factory messageDAOFactory;
     private final PostgresMailboxMessageDAO.Factory mailboxMessageDAOFactory;
     private final PostgresAttachmentDAO.Factory attachmentDAOFactory;
-    private final PostgresMailboxFactory mailboxFactory;
+    private final PostgresThreadDAO.Factory threadDAOFactory;
 
     @Inject
     public DeleteMessageListener(BlobStore blobStore,
                                  PostgresMailboxMessageDAO.Factory mailboxMessageDAOFactory,
                                  PostgresMessageDAO.Factory messageDAOFactory,
                                  PostgresAttachmentDAO.Factory attachmentDAOFactory,
-                                 PostgresMailboxFactory mailboxFactory,
+                                 PostgresThreadDAO.Factory threadDAOFactory,
                                  Set<DeletionCallback> deletionCallbackList) {
         this.messageDAOFactory = messageDAOFactory;
         this.mailboxMessageDAOFactory = mailboxMessageDAOFactory;
         this.blobStore = blobStore;
         this.deletionCallbackList = deletionCallbackList;
         this.attachmentDAOFactory = attachmentDAOFactory;
-        this.mailboxFactory = mailboxFactory;
+        this.threadDAOFactory = threadDAOFactory;
     }
 
     @Override
@@ -105,7 +105,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         PostgresMessageDAO postgresMessageDAO = messageDAOFactory.create(event.getUsername().getDomainPart());
         PostgresMailboxMessageDAO postgresMailboxMessageDAO = mailboxMessageDAOFactory.create(event.getUsername().getDomainPart());
         PostgresAttachmentDAO attachmentDAO = attachmentDAOFactory.create(event.getUsername().getDomainPart());
-        PostgresThreadDAO threadDAO = mailboxFactory.createThreadDAO(event.getUsername().getDomainPart());
+        PostgresThreadDAO threadDAO = threadDAOFactory.create(event.getUsername().getDomainPart());
 
         return postgresMailboxMessageDAO.deleteByMailboxId((PostgresMailboxId) event.getMailboxId())
             .flatMap(msgId -> handleMessageDeletion(postgresMessageDAO, postgresMailboxMessageDAO, attachmentDAO, threadDAO, msgId, event.getMailboxId(), event.getMailboxPath().getUser()),
@@ -117,7 +117,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
         PostgresMessageDAO postgresMessageDAO = messageDAOFactory.create(event.getUsername().getDomainPart());
         PostgresMailboxMessageDAO postgresMailboxMessageDAO = mailboxMessageDAOFactory.create(event.getUsername().getDomainPart());
         PostgresAttachmentDAO attachmentDAO = attachmentDAOFactory.create(event.getUsername().getDomainPart());
-        PostgresThreadDAO threadDAO = mailboxFactory.createThreadDAO(event.getUsername().getDomainPart());
+        PostgresThreadDAO threadDAO = threadDAOFactory.create(event.getUsername().getDomainPart());
 
         return Flux.fromIterable(event.getExpunged()
                 .values())
@@ -140,7 +140,7 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
                 .flatMap(executeDeletionCallbacks(mailboxId, owner))
                 .then(deleteBodyBlob(msgId, postgresMessageDAO))
                 .then(deleteAttachment(msgId, attachmentDAO))
-                .then(threadDAO.deleteSome(msgId))
+                .then(threadDAO.deleteSome(owner, msgId))
                 .then(postgresMessageDAO.deleteByMessageId(msgId)));
     }
 
