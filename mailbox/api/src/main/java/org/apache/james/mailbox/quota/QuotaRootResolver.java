@@ -21,7 +21,7 @@ package org.apache.james.mailbox.quota;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -36,13 +36,13 @@ public interface QuotaRootResolver extends QuotaRootDeserializer {
      * @param mailboxPath The name of the mailbox
      * @return QuotaRoot ruling this mailbox ( we uses user owning this mailbox name )
      */
-    QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
+    QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws OverQuotaException;
 
     Publisher<QuotaRoot> getQuotaRootReactive(MailboxPath mailboxPath);
 
-    QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException;
+    QuotaRoot getQuotaRoot(MailboxId mailboxId) throws OverQuotaException;
 
-    QuotaRoot getQuotaRoot(Mailbox mailbox) throws MailboxException;
+    QuotaRoot getQuotaRoot(Mailbox mailbox) throws OverQuotaException;
 
     Publisher<QuotaRoot> getQuotaRootReactive(Mailbox mailbox);
 

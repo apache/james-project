@@ -45,6 +45,7 @@ import org.apache.james.jmap.draft.model.InvocationRequest;
 import org.apache.james.jmap.draft.model.InvocationResponse;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,6 +103,7 @@ public class JMAPApiRoutes implements JMAPRoutes {
                 .contextWrite(jmapAuthContext(session)))
             .onErrorResume(BadRequestException.class, e -> handleBadRequest(response, LOGGER, e))
             .onErrorResume(UnauthorizedException.class, e -> handleAuthenticationFailure(response, LOGGER, e))
+            .onErrorResume(OverQuotaException.class, e -> handleBadRequest(response, LOGGER, e))
             .doOnEach(logOnError(e -> LOGGER.error("Unexpected error", e)))
             .onErrorResume(e -> response.status(INTERNAL_SERVER_ERROR).send())
             .contextWrite(jmapContext(request));

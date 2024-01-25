@@ -59,6 +59,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.NullableMessageSequenceNumber;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -98,6 +99,10 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                     processRequestReactive(acceptableMessage, session, responder)
                         .onErrorResume(DeniedAccessOnSharedMailboxException.class, e -> {
                             no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
+                            return Mono.empty();
+                        })
+                        .onErrorResume(OverQuotaException.class, e -> {
+                            no(acceptableMessage, responder, HumanReadableText.FAILURE_OVERQUOTA);
                             return Mono.empty();
                         })
                         .onErrorResume(e -> {

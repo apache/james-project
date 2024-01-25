@@ -22,7 +22,7 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.reactivestreams.Publisher;
@@ -57,7 +57,7 @@ public interface QuotaManager {
      *
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
      */
-    Quota<QuotaCountLimit, QuotaCountUsage> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException;
+    Quota<QuotaCountLimit, QuotaCountUsage> getMessageQuota(QuotaRoot quotaRoot) throws OverQuotaException;
 
 
     /**
@@ -66,9 +66,9 @@ public interface QuotaManager {
      *
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
      */
-    Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException;
+    Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) throws OverQuotaException;
 
-    Quotas getQuotas(QuotaRoot quotaRoot) throws MailboxException;
+    Quotas getQuotas(QuotaRoot quotaRoot) throws OverQuotaException;
 
     Publisher<Quotas> getQuotasReactive(QuotaRoot quotaRoot);
 }

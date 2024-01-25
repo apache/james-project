@@ -83,7 +83,12 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
             .onErrorResume(MessageRangeException.class, e -> {
                 taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
                 return ReactorUtils.logAsMono(() -> LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
-                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e));
+                        getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e));
+            })
+            .onErrorResume(OverQuotaException.class, e -> {
+                taggedBad(request, responder, HumanReadableText.FAILURE_OVERQUOTA);
+                return ReactorUtils.logAsMono(() -> LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
+                        getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e));
             })
             .onErrorResume(OverQuotaException.class, e -> {
                 no(request, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
@@ -109,7 +114,8 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                                 .orElseThrow(() -> new MessageRangeException(range.getFormattedString() + " is an invalid range")))
                             .sneakyThrow())
                         .filter(Objects::nonNull)
-                        .concatMap(range -> process(target.getId(), session.getSelected(), mailboxSession, range)
+                        .concatMap(range ->
+                                process(target.getId(), session.getSelected(), mailboxSession, range)
                             .map(IdRange::from))
                         .collect(ImmutableList.<IdRange>toImmutableList())
                         .map(IdRange::mergeRanges)
