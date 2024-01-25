@@ -128,3 +128,6 @@ C:
 C: Hello Joe, could we change that to 4:00pm tomorrow?
 C:
 S: A005 NO \[OVERQUOTA\] APPEND failed. Over quota.
+
+C: A008 COPY 1:1 INBOX
+S: A008 NO \[OVERQUOTA\] COPY failed. Over quota.
