@@ -61,22 +61,6 @@ $ sudo (which java) -Dworking.directory=. -Dlogback.configurationFile=conf/logba
 
 -----
 
-The [CLI](https://james.apache.org/server/manage-cli.html) can easily be used:
-
-
-[source]
-----
-docker exec CONTAINER-ID james-cli ListDomains
-----
-
-Note that you can create a domain via an environment variable. This domain will be created upon James start:
-
-[source]
-----
---environment DOMAIN=domain.tld
-----
-
-
 [source]
 
 == Send emails using telnet
