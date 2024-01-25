@@ -202,7 +202,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                     }
                 }), session);
         } catch (OverQuotaException e) {
-            LOGGER.error("Unable to create mailbox due to quota error", e);
+            LOGGER.error("Unable to import due to quota error", e);
         } catch (Exception e) {
             LOGGER.error("Unable to create mailbox", e);
         } finally {

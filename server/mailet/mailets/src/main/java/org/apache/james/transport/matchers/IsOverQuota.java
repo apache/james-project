@@ -28,7 +28,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.exception.OverQuotaException;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -83,7 +83,7 @@ public class IsOverQuota extends GenericMatcher {
                 }
             }
             return result;
-        } catch (OverQuotaException e) {
+        } catch (MailboxException e) {
             throw new MessagingException("Exception while checking quotas", e);
         } catch (UsersRepositoryException e) {
             throw new MessagingException("Exception while retrieving username", e);
