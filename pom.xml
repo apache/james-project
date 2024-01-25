@@ -655,7 +655,7 @@
         <tink.version>1.9.0</tink.version>
         <lettuce.core.version>6.3.0.RELEASE</lettuce.core.version>
 
-        <bouncycastle.version>1.70</bouncycastle.version>
+        <bouncycastle.version>1.77</bouncycastle.version>
 
         <scala.base>2.13</scala.base>
         <scala.version>${scala.base}.11</scala.version>
@@ -2736,17 +2736,17 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcmail-jdk15on</artifactId>
+                <artifactId>bcmail-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
+                <artifactId>bcpkix-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk15on</artifactId>
+                <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
 
