@@ -86,7 +86,7 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.sparkjava</groupId>
+            <groupId>com.intellisrc</groupId>
             <artifactId>spark-core</artifactId>
             <scope>test</scope>
         </dependency>
