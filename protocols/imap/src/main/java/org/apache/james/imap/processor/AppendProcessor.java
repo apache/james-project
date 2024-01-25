@@ -103,8 +103,6 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
             })
             .doOnEach(logOnError(OverQuotaException.class, e -> LOGGER.info("Append failed for mailbox {} because overquota", mailboxPath)))
             .onErrorResume(OverQuotaException.class, e -> {
-                // Indicates that the mailbox does not exist
-                // So TRY CREATE
                 no(request, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
                 return Mono.empty();
             })
