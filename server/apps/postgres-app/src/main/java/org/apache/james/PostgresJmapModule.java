@@ -26,11 +26,9 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
-import org.apache.james.jmap.memory.change.MemoryEmailChangeRepository;
-import org.apache.james.jmap.memory.change.MemoryMailboxChangeRepository;
 import org.apache.james.jmap.postgres.PostgresDataJMapAggregateModule;
-import org.apache.james.jmap.postgres.change.PostgresEmailChangeModule;
 import org.apache.james.jmap.postgres.change.PostgresEmailChangeRepository;
+import org.apache.james.jmap.postgres.change.PostgresMailboxChangeRepository;
 import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionRepository;
 import org.apache.james.jmap.postgres.upload.PostgresUploadUsageRepository;
 import org.apache.james.mailbox.AttachmentManager;
@@ -56,16 +54,14 @@ public class PostgresJmapModule extends AbstractModule {
     protected void configure() {
         Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresDataJMapAggregateModule.MODULE);
 
-        Multibinder.newSetBinder(binder(), PostgresModule.class).addBinding().toInstance(PostgresEmailChangeModule.MODULE);
-
         bind(EmailChangeRepository.class).to(PostgresEmailChangeRepository.class);
         bind(PostgresEmailChangeRepository.class).in(Scopes.SINGLETON);
 
-        bind(MailboxChangeRepository.class).to(MemoryMailboxChangeRepository.class);
-        bind(MemoryMailboxChangeRepository.class).in(Scopes.SINGLETON);
+        bind(MailboxChangeRepository.class).to(PostgresMailboxChangeRepository.class);
+        bind(PostgresMailboxChangeRepository.class).in(Scopes.SINGLETON);
 
-        bind(Limit.class).annotatedWith(Names.named(MemoryEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
-        bind(Limit.class).annotatedWith(Names.named(MemoryMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
+        bind(Limit.class).annotatedWith(Names.named(PostgresEmailChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
+        bind(Limit.class).annotatedWith(Names.named(PostgresMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
 
         bind(UploadUsageRepository.class).to(PostgresUploadUsageRepository.class);
 
