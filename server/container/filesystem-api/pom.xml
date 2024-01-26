@@ -39,7 +39,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.intellisrc</groupId>
+            <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>
             <scope>test</scope>
         </dependency>
