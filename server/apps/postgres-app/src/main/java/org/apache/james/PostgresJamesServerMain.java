@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.jmap.draft.JMAPListenerModule;
-import org.apache.james.jmap.memory.pushsubscription.MemoryPushSubscriptionModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
@@ -120,7 +119,6 @@ public class PostgresJamesServerMain implements JamesServerMain {
     public static final Module JMAP = Modules.combine(
         new PostgresJmapModule(),
         new PostgresDataJmapModule(),
-        new MemoryPushSubscriptionModule(),
         new JmapEventBusModule(),
         new JMAPServerModule(),
         new JmapTasksModule());
