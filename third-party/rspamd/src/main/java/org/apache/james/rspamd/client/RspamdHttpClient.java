@@ -161,6 +161,7 @@ public class RspamdHttpClient {
     private void transportInformationToHeaders(Mail mail, io.netty.handler.codec.http.HttpHeaders headers) {
         // IP: Defines IP from which this message is received.
         Optional.ofNullable(mail.getRemoteAddr()).ifPresent(ip -> headers.add("IP", ip));
+        Optional.ofNullable(mail.getRemoteHost()).ifPresent(host -> headers.add("Hostname", host));
 
         // HELO: Defines SMTP helo
         mail.getAttribute(Mail.SMTP_HELO)
