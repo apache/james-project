@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.james.mailrepository.api.MailKey;
@@ -64,7 +65,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import jakarta.servlet.http.HttpServletResponse;
 import spark.HaltException;
 import spark.Request;
 import spark.Service;
