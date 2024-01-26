@@ -22,6 +22,7 @@ package org.apache.james.jmap.postgres;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.jmap.postgres.change.PostgresEmailChangeModule;
 import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule;
+import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionModule;
 import org.apache.james.jmap.postgres.upload.PostgresUploadModule;
 
 public interface PostgresDataJMapAggregateModule {
@@ -29,5 +30,6 @@ public interface PostgresDataJMapAggregateModule {
     PostgresModule MODULE = PostgresModule.aggregateModules(
         PostgresUploadModule.MODULE,
         PostgresMessageFastViewProjectionModule.MODULE,
-        PostgresEmailChangeModule.MODULE);
+        PostgresEmailChangeModule.MODULE,
+        PostgresPushSubscriptionModule.MODULE);
 }
