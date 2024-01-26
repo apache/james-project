@@ -27,6 +27,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.webadmin.PublicRoutes;
 
@@ -37,8 +39,6 @@ import com.google.common.collect.ImmutableSet;
 import io.prometheus.client.SampleNameFilter;
 import io.prometheus.client.dropwizard.DropwizardExports;
 import io.prometheus.client.exporter.common.TextFormat;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import spark.Request;
 import spark.Response;
 import spark.Service;
