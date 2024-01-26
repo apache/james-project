@@ -168,7 +168,9 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
         }
         ChannelInboundHandlerAdapter override = behaviourOverrides.peekFirst();
         if (override != null) {
-            override.channelRead(ctx, msg);
+            try (Closeable closeable = mdc(ctx).build()) {
+                override.channelRead(ctx, msg);
+            }
             return;
         }
 
