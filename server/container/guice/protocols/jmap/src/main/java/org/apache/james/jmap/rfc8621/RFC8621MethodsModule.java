@@ -48,6 +48,7 @@ import org.apache.james.jmap.http.JWTAuthenticationStrategy;
 import org.apache.james.jmap.http.rfc8621.InjectionKeys;
 import org.apache.james.jmap.mail.DefaultNamespaceFactory;
 import org.apache.james.jmap.mail.NamespaceFactory;
+import org.apache.james.jmap.mail.SortOrderProvider;
 import org.apache.james.jmap.method.CoreEchoMethod;
 import org.apache.james.jmap.method.DelegateGetMethod;
 import org.apache.james.jmap.method.DelegateSetMethod;
@@ -128,6 +129,7 @@ public class RFC8621MethodsModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(NamespaceFactory.class).to(DefaultNamespaceFactory.class);
+        bind(SortOrderProvider.class).toInstance(SortOrderProvider.DEFAULT());
         bind(ZoneIdProvider.class).to(SystemZoneIdProvider.class);
 
         bind(EmailSubmissionSetMethod.class).in(Scopes.SINGLETON);

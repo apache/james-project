@@ -115,6 +115,14 @@ object MailboxName {
     }
 }
 
+object SortOrderProvider {
+  val DEFAULT: SortOrderProvider = role => SortOrder.getSortOrder(role)
+}
+
+trait SortOrderProvider {
+  def retrieveSortOrder(role: Role): SortOrder
+}
+
 case class Mailbox(id: MailboxId,
                    name: MailboxName,
                    parentId: Option[MailboxId],
