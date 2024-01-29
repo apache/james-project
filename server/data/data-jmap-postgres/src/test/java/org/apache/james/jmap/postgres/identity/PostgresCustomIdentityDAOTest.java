@@ -17,24 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.postgres;
+package org.apache.james.jmap.postgres.identity;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.jmap.postgres.change.PostgresEmailChangeModule;
-import org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule;
-import org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule;
-import org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule;
-import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule;
-import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionModule;
-import org.apache.james.jmap.postgres.upload.PostgresUploadModule;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.jmap.api.identity.CustomIdentityDAO;
+import org.apache.james.jmap.api.identity.CustomIdentityDAOContract;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public interface PostgresDataJMapAggregateModule {
-    PostgresModule MODULE = PostgresModule.aggregateModules(
-        PostgresUploadModule.MODULE,
-        PostgresMessageFastViewProjectionModule.MODULE,
-        PostgresEmailChangeModule.MODULE,
-        PostgresMailboxChangeModule.MODULE,
-        PostgresPushSubscriptionModule.MODULE,
-        PostgresFilteringProjectionModule.MODULE,
-        PostgresCustomIdentityModule.MODULE);
+public class PostgresCustomIdentityDAOTest implements CustomIdentityDAOContract {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withRowLevelSecurity(PostgresCustomIdentityModule.MODULE);
+
+    @Override
+    public CustomIdentityDAO testee() {
+        return new PostgresCustomIdentityDAO(postgresExtension.getExecutorFactory());
+    }
 }
