@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import javax.mail.Flags;
 
@@ -38,8 +39,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
@@ -104,6 +103,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
@@ -878,6 +878,26 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         @Override
         protected EventBus retrieveEventBus(CassandraMailboxManager mailboxManager) {
             return mailboxManager.getEventBus();
+        }
+
+        @Test
+        void shouldSupportListingWithFetchSize() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+
+            mailboxManager.createMailbox(inbox, session).get();
+            MessageManager inboxManager = mailboxManager.getMailbox(inbox, session);
+
+            MessageManager.AppendCommand appendCommand = MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("Test")
+                .setBody("01234567890\r\n".repeat(1024 * 1024), StandardCharsets.UTF_8));
+
+            IntStream.range(0, 64)
+                .forEach(Throwing.intConsumer(i -> inboxManager.appendMessage(appendCommand, session)));
+
+            // Would OOM if message streaming is badly implemented
+            Flux.from(inboxManager.getMessagesReactive(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
+                .blockLast();
         }
 
     }
