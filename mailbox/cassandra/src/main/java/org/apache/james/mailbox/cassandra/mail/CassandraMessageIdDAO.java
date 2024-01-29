@@ -78,6 +78,7 @@ import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.metadata.schema.ClusteringOrder;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -211,6 +212,7 @@ public class CassandraMessageIdDAO {
         return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
             .all()
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .orderBy(IMAP_UID, ClusteringOrder.ASC)
             .build());
     }
 
@@ -218,6 +220,7 @@ public class CassandraMessageIdDAO {
         return session.prepare(QueryBuilder.selectFrom(TABLE_NAME)
             .column(IMAP_UID)
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
+            .orderBy(IMAP_UID, ClusteringOrder.ASC)
             .build());
     }
 
@@ -226,6 +229,7 @@ public class CassandraMessageIdDAO {
             .all()
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)))
             .limit(bindMarker(LIMIT))
+            .orderBy(IMAP_UID, ClusteringOrder.ASC)
             .build());
     }
 
@@ -239,6 +243,7 @@ public class CassandraMessageIdDAO {
             .all()
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
                 column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID)))
+            .orderBy(IMAP_UID, ClusteringOrder.ASC)
             .build());
     }
 
@@ -248,6 +253,7 @@ public class CassandraMessageIdDAO {
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
                 column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID)))
             .limit(bindMarker(LIMIT))
+            .orderBy(IMAP_UID, ClusteringOrder.ASC)
             .build());
     }
 
@@ -257,6 +263,7 @@ public class CassandraMessageIdDAO {
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
                 column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
                 column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
+            .orderBy(IMAP_UID, ClusteringOrder.ASC)
             .build());
     }
 
@@ -266,6 +273,7 @@ public class CassandraMessageIdDAO {
             .where(column(MAILBOX_ID).isEqualTo(bindMarker(MAILBOX_ID)),
                 column(IMAP_UID).isGreaterThanOrEqualTo(bindMarker(IMAP_UID_GTE)),
                 column(IMAP_UID).isLessThanOrEqualTo(bindMarker(IMAP_UID_LTE)))
+            .orderBy(IMAP_UID, ClusteringOrder.ASC)
             .build());
     }
 

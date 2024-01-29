@@ -90,7 +90,8 @@ public class CassandraMailboxManagerProvider {
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
             cassandra,
             messageIdFactory,
-            cassandraConfiguration);
+            cassandraConfiguration,
+            mailboxManagerConfiguration.getBatchSizes());
 
         return provideMailboxManager(cassandra.getConf(), preDeletionHooks, mapperFactory,
             mailboxManagerConfiguration, messageIdFactory, threadIdGuessingAlgorithm, clock);
