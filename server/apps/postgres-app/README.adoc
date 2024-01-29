@@ -124,3 +124,11 @@ To run it, simply type:
 ....
 docker compose -f docker-compose-distributed.yml up -d
 ....
+
+== Administration Operations
+=== Clean up data
+
+To clean up some specific data, that will never be used again after a long time, you can execute the SQL queries `clean_up.sql`.
+The never used data are:
+- mailbox_change
+- email_change
