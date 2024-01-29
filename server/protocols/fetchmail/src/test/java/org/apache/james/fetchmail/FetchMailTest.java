@@ -42,15 +42,23 @@ class FetchMailTest {
         try (MockedConstruction<ParsedConfiguration> mockParsedConfiguration = Mockito.mockConstruction(ParsedConfiguration.class)) {
             UsersRepository fieldLocalUsers = mock(UsersRepository.class);
             when(fieldLocalUsers.countUsers()).thenReturn(4);
-            when(fieldLocalUsers.list()).thenReturn(List.of(Username.of("user23@domain.com")).iterator()).thenReturn(List.of(Username.of("user23@domain.com")).iterator());
+            when(fieldLocalUsers.list())
+                    .thenReturn(List.of(Username.of("user23@domain.com")).iterator())
+                    .thenReturn(List.of(Username.of("user23@domain.com")).iterator());
 
             FetchMail fetchMail = new FetchMail();
             fetchMail.setUsersRepository(fieldLocalUsers);
             fetchMail.configure(configuration());
 
             assertThat(mockParsedConfiguration.constructed().size()).isOne();
-            assertThat(fetchMail.getStaticAccounts()).hasSize(2).extracting(Account::getSequenceNumber, Account::getUser).containsExactlyInAnyOrder(tuple(0, "user0"), tuple(1, "user1"));
-            assertThat(fetchMail.getDynamicAccounts().values()).hasSize(2).extracting(DynamicAccount::getSequenceNumber, DynamicAccount::getUser).containsExactlyInAnyOrder(tuple(2, "user23@domain.com"), tuple(3, "user23@domain.com"));
+            assertThat(fetchMail.getStaticAccounts())
+                    .hasSize(2)
+                    .extracting(Account::getSequenceNumber, Account::getUser)
+                    .containsExactlyInAnyOrder(tuple(0, "user0"), tuple(1, "user1"));
+            assertThat(fetchMail.getDynamicAccounts().values())
+                    .hasSize(2)
+                    .extracting(DynamicAccount::getSequenceNumber, DynamicAccount::getUser)
+                    .containsExactlyInAnyOrder(tuple(2, "user23@domain.com"), tuple(3, "user23@domain.com"));
         }
     }
 
