@@ -28,7 +28,6 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -258,9 +257,9 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         Limit limit = Limit.from(limitAsInt);
+        int concurrency = batchSizes.forFetchType(ftype);
         return limit.applyOnFlux(messageIdDAO.retrieveMessages(mailboxId, messageRange, limit))
-            .flatMap(metadata -> toMailboxMessage(metadata, ftype), batchSizes.forFetchType(ftype))
-            .sort(Comparator.comparing(MailboxMessage::getUid));
+            .flatMapSequential(metadata -> toMailboxMessage(metadata, ftype), concurrency, concurrency);
     }
 
     private Mono<MailboxMessage> toMailboxMessage(CassandraMessageMetadata metadata, FetchType fetchType) {

@@ -35,14 +35,7 @@ public class TestCassandraMailboxSessionMapperFactory {
 
     public static CassandraMailboxSessionMapperFactory forTests(CassandraCluster cassandra,
                                                                 CassandraMessageId.Factory factory) {
-        return forTests(cassandra, factory, CassandraConfiguration.DEFAULT_CONFIGURATION);
-    }
-
-    public static CassandraMailboxSessionMapperFactory forTests(CassandraCluster cassandra,
-                                                                CassandraMessageId.Factory factory, CassandraConfiguration cassandraConfiguration) {
-
-        return GuiceUtils.testInjector(cassandra.getConf(), cassandra.getTypesProvider(), factory, cassandraConfiguration)
-            .getInstance(CassandraMailboxSessionMapperFactory.class);
+        return forTests(cassandra, factory, CassandraConfiguration.DEFAULT_CONFIGURATION, BatchSizes.defaultValues());
     }
 
     public static CassandraMailboxSessionMapperFactory forTests(CassandraCluster cassandra,
