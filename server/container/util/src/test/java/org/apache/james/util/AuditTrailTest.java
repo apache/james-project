@@ -109,7 +109,8 @@ class AuditTrailTest {
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("userAgent")).isEqualTo("Thunderbird");
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("protocol")).isEqualTo("IMAP");
                 softly.assertThat(loggingEvent.getMDCPropertyMap().get("action")).isEqualTo("login");
-                softly.assertThat(loggingEvent.getMDCPropertyMap().get("parameters")).contains("key1=value1", "key2=value2");
+                softly.assertThat(loggingEvent.getMDCPropertyMap().get("key1")).contains("value1");
+                softly.assertThat(loggingEvent.getMDCPropertyMap().get("key2")).contains("value2");
             }));
     }
 }

@@ -172,6 +172,7 @@ public class MailDispatcher {
                             .doOnSuccess(Throwing.consumer(success -> AuditTrail.entry()
                                 .protocol("mailetcontainer")
                                 .action("LocalDelivery")
+                                .username(recipient::asString)
                                 .parameters(Throwing.supplier(() -> ImmutableMap.of("mailId", mail.getName(),
                                     "mimeMessageId", Optional.ofNullable(mail.getMessage())
                                         .map(Throwing.function(MimeMessage::getMessageID))
