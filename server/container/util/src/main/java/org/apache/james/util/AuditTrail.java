@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,15 +107,16 @@ public class AuditTrail {
 
         public void log(String message) {
             if (LOGGER.isInfoEnabled()) {
-                MDCStructuredLogger.forLogger(LOGGER)
-                    .field("username", username.orElse(""))
-                    .field("remoteIP", remoteIP.orElse(""))
-                    .field("sessionId", sessionId.orElse(""))
-                    .field("userAgent", userAgent.orElse(""))
-                    .field("protocol", protocol.orElse(""))
-                    .field("action", action.orElse(""))
-                    .field("parameters", StringUtils.join(parameters))
-                    .log(logger -> logger.info(message));
+                MDCStructuredLogger mdcStructuredLogger = MDCStructuredLogger.forLogger(LOGGER);
+                username.ifPresent(value -> mdcStructuredLogger.field("username", value));
+                remoteIP.ifPresent(value -> mdcStructuredLogger.field("remoteIP", value));
+                sessionId.ifPresent(value -> mdcStructuredLogger.field("sessionId", value));
+                userAgent.ifPresent(value -> mdcStructuredLogger.field("userAgent", value));
+                protocol.ifPresent(value -> mdcStructuredLogger.field("protocol", value));
+                action.ifPresent(value -> mdcStructuredLogger.field("action", value));
+                parameters.forEach(mdcStructuredLogger::field);
+
+                mdcStructuredLogger.log(logger -> logger.info(message));
             }
         }
     }
