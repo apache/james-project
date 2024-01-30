@@ -31,6 +31,10 @@
     <packaging>jar</packaging>
     <name>Apache James :: Mailbox :: JPA</name>
 
+    <properties>
+        <target.jdk>11</target.jdk>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
