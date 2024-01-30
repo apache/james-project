@@ -32,6 +32,10 @@
 
     <name>Apache James :: Server :: Data :: JPA Persistence</name>
 
+    <properties>
+        <target.jdk>11</target.jdk>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
