@@ -141,12 +141,11 @@ public class PostgresMessageMapper implements MessageMapper {
 
         if (fetchType == FetchType.FULL) {
             return fetchMessagePublisher
-                .flatMap(messageBuilderAndRecord -> {
+                .flatMapSequential(messageBuilderAndRecord -> {
                     SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
                     return retrieveFullContent(messageBuilderAndRecord.getRight())
                         .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
                 }, ReactorUtils.DEFAULT_CONCURRENCY)
-                .sort(Comparator.comparing(MailboxMessage::getUid))
                 .map(message -> message);
         } else {
             return fetchMessagePublisher
