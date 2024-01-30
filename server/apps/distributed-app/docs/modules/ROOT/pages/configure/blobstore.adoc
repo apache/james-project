@@ -84,6 +84,22 @@ openssl rand -base64 64
 generate salt with : openssl rand -hex 16
 ....
 
+AES blob store supports the following system properties that could be configured in `jvm.properties`:
+
+....
+# Threshold from which we should buffer the blob to a file upon encrypting
+# Unit supported: K, M, G, default to no unit
+james.blob.aes.file.threshold.encrypt=100K
+
+# Threshold from which we should buffer the blob to a file upon decrypting
+# Unit supported: K, M, G, default to no unit
+james.blob.aes.file.threshold.decrypt=256K
+
+# Maximum size of a blob. Larger blobs will be rejected.
+# Unit supported: K, M, G, default to no unit
+james.blob.aes.blob.max.size=100M
+....
+
 === Cassandra BlobStore Cache
 
 A Cassandra cache can be enabled to reduce latency when reading small blobs frequently.

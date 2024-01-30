@@ -23,8 +23,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 import java.security.GeneralSecurityException;
 import java.util.Collection;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -32,19 +35,35 @@ import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
+import org.apache.james.util.Size;
 import org.reactivestreams.Publisher;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.CountingOutputStream;
 import com.google.common.io.FileBackedOutputStream;
 import com.google.crypto.tink.subtle.AesGcmHkdfStreaming;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class AESBlobStoreDAO implements BlobStoreDAO {
-    // For now, aligned with with MimeMessageInputStreamSource file threshold, detailed benchmarking might be conducted to challenge this choice
-    public static final int FILE_THRESHOLD_100_KB = 100 * 1024;
+    public static final int FILE_THRESHOLD_ENCRYPT = Optional.ofNullable(System.getenv("james.blob.aes.file.threshold.encrypt"))
+        .map(s -> Size.parse(s, Size.Unit.NoUnit))
+        .map(s -> (int) s.asBytes())
+        .orElse(100 * 1024);
+    public static final int MAXIMUM_BLOB_SIZE =  Optional.ofNullable(System.getenv("james.blob.aes.blob.max.size"))
+        .map(s -> Size.parse(s, Size.Unit.NoUnit))
+        .map(s -> (int) s.asBytes())
+        .orElse(100 * 1024 * 1024);
+    public static final int FILE_THRESHOLD_DECRYPT = Optional.ofNullable(System.getenv("james.blob.aes.file.threshold.decrypt"))
+        .map(s -> Size.parse(s, Size.Unit.NoUnit))
+        .map(s -> (int) s.asBytes())
+        .orElse(512 * 1024);
     private final BlobStoreDAO underlying;
     private final AesGcmHkdfStreaming streamingAead;
 
@@ -54,7 +73,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     }
 
     public FileBackedOutputStream encrypt(InputStream input) {
-        try (FileBackedOutputStream encryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_100_KB)) {
+        try (FileBackedOutputStream encryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_ENCRYPT)) {
             OutputStream outputStream = streamingAead.newEncryptingStream(encryptedContent, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
             input.transferTo(outputStream);
             outputStream.close();
@@ -67,10 +86,50 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     public InputStream decrypt(InputStream ciphertext) throws IOException {
         // We break symmetry and avoid allocating resources like files as we are not able, in higher level APIs (mailbox) to do resource cleanup.
         try {
-            return streamingAead.newDecryptingStream(ciphertext, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
+            return ByteStreams.limit(
+                streamingAead.newDecryptingStream(ciphertext, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA),
+                    MAXIMUM_BLOB_SIZE);
         } catch (GeneralSecurityException e) {
             throw new IOException("Incorrect crypto setup", e);
         }
+    }
+
+    public Mono<byte[]> decryptReactiveByteSource(ReactiveByteSource ciphertext, BlobId blobId) {
+        if (ciphertext.getSize() > MAXIMUM_BLOB_SIZE) {
+            throw new RuntimeException(blobId.asString() + " exceeded maximum blob size");
+        }
+
+        FileBackedOutputStream encryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_DECRYPT);
+        WritableByteChannel channel = Channels.newChannel(encryptedContent);
+
+        return Flux.from(ciphertext.getContent())
+            .doOnNext(Throwing.consumer(channel::write))
+            .then(Mono.fromCallable(() -> {
+                try {
+                    FileBackedOutputStream decryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_DECRYPT);
+                    try {
+                        CountingOutputStream countingOutputStream = new CountingOutputStream(decryptedContent);
+                        try (InputStream ciphertextStream = encryptedContent.asByteSource().openStream()) {
+                            decrypt(ciphertextStream).transferTo(countingOutputStream);
+                        }
+                        try (InputStream decryptedStream = decryptedContent.asByteSource().openStream()) {
+                            return IOUtils.toByteArray(decryptedStream, countingOutputStream.getCount());
+                        }
+                    } finally {
+                        decryptedContent.reset();
+                        decryptedContent.close();
+                    }
+                } catch (OutOfMemoryError error) {
+                    LoggerFactory.getLogger(AESBlobStoreDAO.class)
+                        .error("OOM reading {}. Blob size read so far {} bytes.", blobId.asString(), ciphertext.getSize());
+                    throw error;
+                }
+            }))
+            .doFinally(Throwing.consumer(any -> {
+                channel.close();
+                encryptedContent.reset();
+                encryptedContent.close();
+            }));
     }
 
     @Override
@@ -90,10 +149,9 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return Mono.from(underlying.readBytes(bucketName, blobId))
-            .map(ByteArrayInputStream::new)
-            .map(Throwing.function(this::decrypt))
-            .map(Throwing.function(IOUtils::toByteArray));
+        return Mono.from(underlying.readAsByteSource(bucketName, blobId))
+            .flatMap(reactiveByteSource -> decryptReactiveByteSource(reactiveByteSource, blobId))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
@@ -126,7 +184,8 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
 
         return Mono.using(content::openStream,
             in -> Mono.from(save(bucketName, blobId, in)),
-            Throwing.consumer(InputStream::close));
+            Throwing.consumer(InputStream::close))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
