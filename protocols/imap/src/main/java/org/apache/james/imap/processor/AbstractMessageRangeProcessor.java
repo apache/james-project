@@ -86,7 +86,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                     getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e));
             })
             .onErrorResume(OverQuotaException.class, e -> {
-                no(request, responder, HumanReadableText.FAILURE_OVERQUOTA);
+                no(request, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
                 return ReactorUtils.logAsMono(() -> LOGGER.info("{} failed from mailbox {} to {} due to quota restriction",
                     getOperationName(), session.getSelected().getMailboxId(), targetMailbox, e));
             })
