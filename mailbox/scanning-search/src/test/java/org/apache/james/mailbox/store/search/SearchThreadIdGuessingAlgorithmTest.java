@@ -77,7 +77,6 @@ public class SearchThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorit
     }
 
     @Override
-    protected Flux<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        return Flux.empty();
+    protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
     }
 }

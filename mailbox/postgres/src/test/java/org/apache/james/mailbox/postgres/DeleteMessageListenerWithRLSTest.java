@@ -41,6 +41,7 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
@@ -91,7 +92,7 @@ public class DeleteMessageListenerWithRLSTest extends DeleteMessageListenerContr
         mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
             eventBus, annotationManager,
-            storeRightManager, quotaComponents, index, new NaiveThreadIdGuessingAlgorithm(),
+            storeRightManager, quotaComponents, index, new PostgresThreadIdGuessingAlgorithm(new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory())),
             PreDeletionHooks.NO_PRE_DELETION_HOOK, new UpdatableTickingClock(Instant.now()));
     }
 
@@ -108,6 +109,11 @@ public class DeleteMessageListenerWithRLSTest extends DeleteMessageListenerContr
     @Override
     PostgresMailboxMessageDAO providePostgresMailboxMessageDAO() {
         return new PostgresMailboxMessageDAO(postgresExtension.getExecutorFactory().create(getUsername().getDomainPart()));
+    }
+
+    @Override
+    PostgresThreadDAO threadDAO() {
+        return new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory()).create(getUsername().getDomainPart());
     }
 
     @Override

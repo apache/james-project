@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import org.apache.james.mailbox.model.MessageId;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import com.google.common.base.MoreObjects;
 
 public class PostgresMessageId implements MessageId {
@@ -32,7 +33,7 @@ public class PostgresMessageId implements MessageId {
 
         @Override
         public PostgresMessageId generate() {
-            return of(UUID.randomUUID());
+            return of(UuidCreator.getTimeOrderedEpoch());
         }
 
         public static PostgresMessageId of(UUID uuid) {
