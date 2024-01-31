@@ -34,12 +34,14 @@ import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MDN_TYPE, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN, of}
 import org.apache.james.jmap.mail.PartId.PartIdValue
+import org.apache.james.jmap.mime4j.JamesBodyDescriptorBuilder
 import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageResult}
-import org.apache.james.mime4j.Charsets.DEFAULT_CHARSET
+import org.apache.james.mime4j.Charsets.ISO_8859_1
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, SingleBody, TextBody => Mime4JTextBody}
-import org.apache.james.mime4j.message.{DefaultMessageBuilder, DefaultMessageWriter}
+import org.apache.james.mime4j.field.LenientFieldParser
+import org.apache.james.mime4j.message.{BasicBodyFactory, DefaultMessageBuilder, DefaultMessageWriter}
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
@@ -80,6 +82,8 @@ object EmailBodyPart {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
+    defaultMessageBuilder.setBodyDescriptorBuilder(new JamesBodyDescriptorBuilder(null, LenientFieldParser.getParser, DecodeMonitor.SILENT))
+    defaultMessageBuilder.setBodyFactory(new BasicBodyFactory(Email.defaultCharset))
 
     val mime4JMessage = Try(defaultMessageBuilder.parseMessage(message.getFullContent.getInputStream))
     mime4JMessage.flatMap(of(properties, zoneId, blobId, _))
@@ -283,8 +287,9 @@ case class EmailBodyPart(partId: PartId,
 
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>
+      new Exception("" + textBody.getCharset).printStackTrace()
       for {
-        value <- Try(IOUtils.toString(textBody.getInputStream, Option(textBody.getCharset).getOrElse(DEFAULT_CHARSET)))
+        value <- Try(IOUtils.toString(textBody.getInputStream, Option(textBody.getCharset).getOrElse(ISO_8859_1)))
       } yield {
         Some(EmailBodyValue(value = value,
           isEncodingProblem = IsEncodingProblem(false),
