@@ -38,6 +38,7 @@ import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxAnnotationDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -131,7 +132,9 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
         PostgresMessageDAO.Factory postgresMessageDAOFactory = new PostgresMessageDAO.Factory(blobIdFactory, executorFactory);
         PostgresMailboxMessageDAO.Factory postgresMailboxMessageDAOFactory = new PostgresMailboxMessageDAO.Factory(executorFactory);
         PostgresAttachmentDAO.Factory attachmentDAOFactory = new PostgresAttachmentDAO.Factory(executorFactory, blobIdFactory);
+        PostgresThreadDAO.Factory threadDAOFactory = new PostgresThreadDAO.Factory(executorFactory);
 
-        return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory, attachmentDAOFactory, ImmutableSet.of());
+        return new DeleteMessageListener(blobStore, postgresMailboxMessageDAOFactory, postgresMessageDAOFactory,
+            attachmentDAOFactory, threadDAOFactory, ImmutableSet.of());
     }
 }
