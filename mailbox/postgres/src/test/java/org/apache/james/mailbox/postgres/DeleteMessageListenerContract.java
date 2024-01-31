@@ -23,8 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -39,13 +44,19 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
+import org.apache.james.mailbox.store.mail.model.MimeMessageId;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.util.ClassLoaderUtils;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -59,6 +70,7 @@ public abstract class DeleteMessageListenerContract {
     private PostgresMailboxManager mailboxManager;
     private PostgresMessageDAO postgresMessageDAO;
     private PostgresMailboxMessageDAO postgresMailboxMessageDAO;
+    private PostgresThreadDAO postgresThreadDAO;
 
     private PostgresAttachmentDAO attachmentDAO;
     private BlobStore blobStore;
@@ -68,6 +80,8 @@ public abstract class DeleteMessageListenerContract {
     abstract PostgresMessageDAO providePostgresMessageDAO();
 
     abstract PostgresMailboxMessageDAO providePostgresMailboxMessageDAO();
+
+    abstract PostgresThreadDAO threadDAO();
 
     abstract PostgresAttachmentDAO attachmentDAO();
 
@@ -87,6 +101,7 @@ public abstract class DeleteMessageListenerContract {
 
         postgresMessageDAO = providePostgresMessageDAO();
         postgresMailboxMessageDAO = providePostgresMailboxMessageDAO();
+        postgresThreadDAO = threadDAO();
         attachmentDAO = attachmentDAO();
         blobStore = blobStore();
     }
@@ -242,5 +257,65 @@ public abstract class DeleteMessageListenerContract {
         assertThat(Flux.fromIterable(messageIdList)
             .flatMap(msgId -> postgresMessageDAO.getBodyBlobId(msgId))
             .collectList().block()).isEmpty();
+    }
+
+    @Test
+    void deleteMailboxShouldCleanUpThreadData() throws Exception {
+        // append a message
+        MessageManager.AppendResult message = inboxManager.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+            .setSubject("Test")
+            .setMessageId("Message-ID")
+            .setField(new RawField("In-Reply-To", "someInReplyTo"))
+            .addField(new RawField("References", "references1"))
+            .addField(new RawField("References", "references2"))
+            .setBody("testmail", StandardCharsets.UTF_8)), session);
+
+        Set<Integer> hashMimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))))
+            .stream()
+            .map(mimeMessageId1 -> Hashing.murmur3_32_fixed().hashBytes(mimeMessageId1.getValue().getBytes()).asInt())
+            .collect(Collectors.toSet());
+
+        mailboxManager.deleteMailbox(inbox, session);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(threadDAO().findThreads(session.getUser(), hashMimeMessageIds).collectList().block())
+                .isEmpty();
+        });
+    }
+
+    @Test
+    void deleteMessageShouldCleanUpThreadData() throws Exception {
+        // append a message
+        MessageManager.AppendResult message = inboxManager.appendMessage(MessageManager.AppendCommand.from(Message.Builder.of()
+            .setSubject("Test")
+            .setMessageId("Message-ID")
+            .setField(new RawField("In-Reply-To", "someInReplyTo"))
+            .addField(new RawField("References", "references1"))
+            .addField(new RawField("References", "references2"))
+            .setBody("testmail", StandardCharsets.UTF_8)), session);
+
+        Set<Integer> hashMimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
+            Optional.of(new MimeMessageId("someInReplyTo")),
+            Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))))
+            .stream()
+            .map(mimeMessageId1 -> Hashing.murmur3_32_fixed().hashBytes(mimeMessageId1.getValue().getBytes()).asInt())
+            .collect(Collectors.toSet());
+
+        inboxManager.delete(ImmutableList.of(message.getId().getUid()), session);
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(threadDAO().findThreads(session.getUser(), hashMimeMessageIds).collectList().block())
+                .isEmpty();
+        });
+    }
+
+    private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
+        Set<MimeMessageId> mimeMessageIds = new HashSet<>();
+        mimeMessageId.ifPresent(mimeMessageIds::add);
+        inReplyTo.ifPresent(mimeMessageIds::add);
+        references.ifPresent(mimeMessageIds::addAll);
+        return mimeMessageIds;
     }
 }
