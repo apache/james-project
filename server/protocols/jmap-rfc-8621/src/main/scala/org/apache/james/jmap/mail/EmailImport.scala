@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mail
 
+import java.time.ZonedDateTime
+
 import org.apache.james.jmap.core.{AccountId, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.mailbox.model.MailboxId
@@ -28,10 +30,11 @@ case class EmailImportRequest(accountId: AccountId,
 
 case class EmailImport(blobId: BlobId,
                        mailboxIds: MailboxIds,
-                       keywords: Keywords,
-                       receivedAt: UTCDate) {
+                       keywords: Option[Keywords],
+                       receivedAt: Option[UTCDate]) {
   def validate: Either[IllegalArgumentException, ValidatedEmailImport] = mailboxIds match {
-    case MailboxIds(List(mailboxId)) => scala.Right(ValidatedEmailImport(blobId, mailboxId, keywords, receivedAt))
+    case MailboxIds(List(mailboxId)) => scala.Right(ValidatedEmailImport(blobId, mailboxId, keywords.getOrElse(Keywords(Set())),
+      receivedAt.getOrElse(UTCDate(ZonedDateTime.now()))))
     case _ => Left(new IllegalArgumentException("Email/import so far only supports a single mailboxId"))
   }
 }
