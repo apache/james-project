@@ -27,7 +27,7 @@ import org.junit.platform.suite.api.IncludeEngines;
 import org.junit.platform.suite.api.SelectClasspathResource;
 import org.junit.platform.suite.api.Suite;
 
-@Suite
+@Suite(failIfNoTests = false)
 @SelectClasspathResource("cucumber/DownloadEndpoint.feature")
 @IncludeEngines("cucumber")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "org.apache.james.jmap.draft.methods.integration,org.apache.james.jmap.memory.cucumber")
