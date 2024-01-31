@@ -73,7 +73,7 @@ public class DeleteUserDataRoutes implements Routes {
             .register(DELETE_USER_DATA, request -> {
                 Username username = Username.of(request.params(USER_PATH_PARAM));
 
-                Preconditions.checkArgument(usersRepository.contains(username), "'username' parameter should be an existing user");
+                Preconditions.checkArgument(request.queryParams("force") != null || usersRepository.contains(username), "'username' parameter should be an existing user");
 
                 Optional<StepName> fromStep = Optional.ofNullable(request.queryParams("fromStep")).map(StepName::new);
 

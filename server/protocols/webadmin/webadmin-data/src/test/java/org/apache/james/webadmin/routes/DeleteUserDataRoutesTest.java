@@ -184,6 +184,17 @@ class DeleteUserDataRoutesTest {
                 .body("message", Matchers.is("Invalid arguments supplied in the user request"))
                 .body("details", Matchers.is("'username' parameter should be an existing user"));
         }
+
+        @Test
+        void shouldAcceptUnknownUserWhenForce() {
+            given()
+                .queryParam("action", "deleteData")
+                .queryParam("force")
+            .when()
+                .post("/users/unknown@domain.tld")
+            .then()
+                .statusCode(HttpStatus.CREATED_201);
+        }
     }
 
     @Nested
