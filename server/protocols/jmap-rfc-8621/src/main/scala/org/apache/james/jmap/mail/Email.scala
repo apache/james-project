@@ -20,6 +20,7 @@
 package org.apache.james.jmap.mail
 
 import java.io.InputStream
+import java.nio.charset.StandardCharsets
 import java.nio.charset.StandardCharsets.US_ASCII
 import java.time.ZoneId
 import java.util.Date
@@ -43,14 +44,15 @@ import org.apache.james.jmap.mail.EmailHeaderName.{ADDRESSES_NAMES, DATE, MESSAG
 import org.apache.james.jmap.mail.FastViewWithAttachmentsMetadataReadLevel.supportedByFastViewWithAttachments
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.method.ZoneIdProvider
+import org.apache.james.jmap.mime4j.JamesBodyDescriptorBuilder
 import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, HEADERS_WITH_ATTACHMENTS_METADATA, MINIMAL}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult, ThreadId => JavaThreadId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.DecodeMonitor
 import org.apache.james.mime4j.dom.field.{AddressListField, DateTimeField, MailboxField, MailboxListField}
 import org.apache.james.mime4j.dom.{Header, Message}
-import org.apache.james.mime4j.field.AddressListFieldLenientImpl
-import org.apache.james.mime4j.message.DefaultMessageBuilder
+import org.apache.james.mime4j.field.{AddressListFieldLenientImpl, LenientFieldParser}
+import org.apache.james.mime4j.message.{BasicBodyFactory, DefaultMessageBuilder}
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawFieldParser}
 import org.apache.james.mime4j.util.MimeUtil
 import org.apache.james.util.AuditTrail
@@ -65,6 +67,10 @@ import scala.util.{Failure, Success, Try}
 
 object Email {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailView])
+
+  val defaultCharset = Option(System.getenv("james.jmap.default.charset"))
+    .map(value => java.nio.charset.Charset.forName(value))
+    .getOrElse(StandardCharsets.US_ASCII)
 
   val defaultProperties: Properties = Properties("id", "blobId", "threadId", "mailboxIds", "keywords", "size",
     "receivedAt", "messageId", "inReplyTo", "references", "sender", "from",
@@ -124,6 +130,8 @@ object Email {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
+    defaultMessageBuilder.setBodyDescriptorBuilder(new JamesBodyDescriptorBuilder(null, LenientFieldParser.getParser, DecodeMonitor.SILENT))
+    defaultMessageBuilder.setBodyFactory(new BasicBodyFactory(defaultCharset))
     val resultMessage = Try(defaultMessageBuilder.parseMessage(inputStream))
     resultMessage.fold(e => {
       Try(inputStream.close())
