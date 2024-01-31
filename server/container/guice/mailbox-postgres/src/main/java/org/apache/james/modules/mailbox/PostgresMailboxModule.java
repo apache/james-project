@@ -52,6 +52,7 @@ import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMailboxManager;
 import org.apache.james.mailbox.postgres.PostgresMailboxSessionMapperFactory;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.mailbox.postgres.PostgresThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentBlobReferenceSource;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageBlobReferenceSource;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
@@ -69,7 +70,6 @@ import org.apache.james.mailbox.store.event.MailboxSubscriptionListener;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
-import org.apache.james.mailbox.store.mail.NaiveThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.data.PostgresCommonModule;
@@ -103,7 +103,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(PostgresMessageId.Factory.class).in(Scopes.SINGLETON);
-        bind(NaiveThreadIdGuessingAlgorithm.class).in(Scopes.SINGLETON);
+        bind(PostgresThreadIdGuessingAlgorithm.class).in(Scopes.SINGLETON);
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
         bind(SessionProviderImpl.class).in(Scopes.SINGLETON);
         bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
@@ -114,7 +114,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(MailboxMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
         bind(MessageId.Factory.class).to(PostgresMessageId.Factory.class);
-        bind(ThreadIdGuessingAlgorithm.class).to(NaiveThreadIdGuessingAlgorithm.class);
+        bind(ThreadIdGuessingAlgorithm.class).to(PostgresThreadIdGuessingAlgorithm.class);
 
         bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(MailboxPathLocker.class).to(NoMailboxPathLocker.class);

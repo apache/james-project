@@ -23,6 +23,7 @@ import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentModule;
 import org.apache.james.mailbox.postgres.mail.PostgresMailboxModule;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadModule;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionModule;
 
 public interface PostgresMailboxAggregateModule {
@@ -32,5 +33,6 @@ public interface PostgresMailboxAggregateModule {
         PostgresSubscriptionModule.MODULE,
         PostgresMessageModule.MODULE,
         PostgresMailboxAnnotationModule.MODULE,
-        PostgresAttachmentModule.MODULE);
+        PostgresAttachmentModule.MODULE,
+        PostgresThreadModule.MODULE);
 }
