@@ -48,7 +48,9 @@ object ToKeyword {
 object KeywordsValidator {
   val THROW_ON_IMAP_NON_EXPOSED_KEYWORDS: KeywordsValidator = (keywords: Set[Keyword]) => {
     val exposedKeywords = keywords.filter(_.isExposedImapKeyword)
-    if (exposedKeywords.isEmpty || exposedKeywords.size != keywords.size) {
+    if (keywords.isEmpty) {
+      Success((): Unit)
+    } else if (exposedKeywords.isEmpty || exposedKeywords.size != keywords.size) {
       Failure(new IllegalArgumentException("Does not allow to update 'Deleted' or 'Recent' flag"))
     } else {
       Success((): Unit)

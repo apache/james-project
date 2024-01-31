@@ -269,6 +269,371 @@ trait EmailImportContract {
   }
 
   @Test
+  def importShouldSucceedWhenEmptyKeyword(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val receivedAt = ZonedDateTime.now().minusDays(1)
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
+    .when
+      .post(s"/upload/$ACCOUNT_ID")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val receivedAtString = UTCDate(receivedAt).asUTC.format(UTC_DATE_FORMAT)
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+              |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+              |  "methodCalls": [
+              |    ["Email/import",
+              |      {
+              |        "accountId": "$ACCOUNT_ID",
+              |        "emails": {
+              |           "C42": {
+              |             "blobId": "$blobId",
+              |             "mailboxIds": {
+              |               "${mailboxId.serialize()}": true
+              |             },
+              |             "keywords": {},
+              |             "receivedAt": "$receivedAtString"
+              |           }
+              |         }
+              |      },
+              |      "c1"],
+              |    ["Email/get",
+              |     {
+              |       "accountId": "$ACCOUNT_ID",
+              |       "ids": ["#C42"],
+              |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
+              |       "fetchHTMLBodyValues": true
+              |     },
+              |     "c2"]
+              |  ]
+              |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("C42")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState", "methodResponses[1][1].state")
+      .inPath("methodResponses")
+      .isEqualTo(
+      s"""    [
+         |        ["Email/import",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "created": {
+         |                    "C42": {
+         |                        "id": "$messageId",
+         |                        "blobId": "$messageId",
+         |                        "threadId": "$messageId",
+         |                        "size": 836
+         |                    }
+         |                }
+         |            }, "c1"],
+         |        ["Email/get",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "notFound": [],
+         |                "list": [
+         |                    {
+         |                        "id": "$messageId",
+         |                        "htmlBody": [
+         |                            {
+         |                                "charset": "utf-8",
+         |                                "size": 39,
+         |                                "partId": "2",
+         |                                "blobId": "${messageId}_2",
+         |                                "type": "text/html"
+         |                            }
+         |                        ],
+         |                        "size": 836,
+         |                        "keywords": {},
+         |                        "subject": "MultiAttachment",
+         |                        "mailboxIds": {
+         |                            "${mailboxId.serialize()}": true
+         |                        },
+         |                        "receivedAt": "$receivedAtString",
+         |                        "bodyValues": {
+         |                            "2": {
+         |                                "value": "<p>Send<br/>concerted from html</p>\\r\\n\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            }
+         |                        }
+         |                    }
+         |                ]
+         |            }, "c2"]
+         |    ]""".stripMargin)
+  }
+
+  @Test
+  def importShouldSucceedWhenNoKeyword(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val receivedAt = ZonedDateTime.now().minusDays(1)
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
+    .when
+      .post(s"/upload/$ACCOUNT_ID")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val receivedAtString = UTCDate(receivedAt).asUTC.format(UTC_DATE_FORMAT)
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+              |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+              |  "methodCalls": [
+              |    ["Email/import",
+              |      {
+              |        "accountId": "$ACCOUNT_ID",
+              |        "emails": {
+              |           "C42": {
+              |             "blobId": "$blobId",
+              |             "mailboxIds": {
+              |               "${mailboxId.serialize()}": true
+              |             },
+              |             "receivedAt": "$receivedAtString"
+              |           }
+              |         }
+              |      },
+              |      "c1"],
+              |    ["Email/get",
+              |     {
+              |       "accountId": "$ACCOUNT_ID",
+              |       "ids": ["#C42"],
+              |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
+              |       "fetchHTMLBodyValues": true
+              |     },
+              |     "c2"]
+              |  ]
+              |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("C42")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState", "methodResponses[1][1].state")
+      .inPath("methodResponses")
+      .isEqualTo(
+      s"""    [
+         |        ["Email/import",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "created": {
+         |                    "C42": {
+         |                        "id": "$messageId",
+         |                        "blobId": "$messageId",
+         |                        "threadId": "$messageId",
+         |                        "size": 836
+         |                    }
+         |                }
+         |            }, "c1"],
+         |        ["Email/get",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "notFound": [],
+         |                "list": [
+         |                    {
+         |                        "id": "$messageId",
+         |                        "htmlBody": [
+         |                            {
+         |                                "charset": "utf-8",
+         |                                "size": 39,
+         |                                "partId": "2",
+         |                                "blobId": "${messageId}_2",
+         |                                "type": "text/html"
+         |                            }
+         |                        ],
+         |                        "size": 836,
+         |                        "keywords": {},
+         |                        "subject": "MultiAttachment",
+         |                        "mailboxIds": {
+         |                            "${mailboxId.serialize()}": true
+         |                        },
+         |                        "receivedAt": "$receivedAtString",
+         |                        "bodyValues": {
+         |                            "2": {
+         |                                "value": "<p>Send<br/>concerted from html</p>\\r\\n\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            }
+         |                        }
+         |                    }
+         |                ]
+         |            }, "c2"]
+         |    ]""".stripMargin)
+  }
+
+  @Test
+  def importShouldSucceedWhenNoReceivedAt(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val receivedAt = ZonedDateTime.now().minusDays(1)
+
+    val uploadResponse: String = `given`
+      .basePath("")
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(ClassLoader.getSystemResourceAsStream("eml/alternative.eml"))
+    .when
+      .post(s"/upload/$ACCOUNT_ID")
+    .`then`
+      .statusCode(SC_CREATED)
+      .extract
+      .body
+      .asString
+
+    val blobId: String = Json.parse(uploadResponse).\("blobId").get.asInstanceOf[JsString].value
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+              |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+              |  "methodCalls": [
+              |    ["Email/import",
+              |      {
+              |        "accountId": "$ACCOUNT_ID",
+              |        "emails": {
+              |           "C42": {
+              |             "blobId": "$blobId",
+              |             "mailboxIds": {
+              |               "${mailboxId.serialize()}": true
+              |             }
+              |           }
+              |         }
+              |      },
+              |      "c1"],
+              |    ["Email/get",
+              |     {
+              |       "accountId": "$ACCOUNT_ID",
+              |       "ids": ["#C42"],
+              |       "properties": ["keywords", "mailboxIds", "receivedAt", "subject", "size", "bodyValues", "htmlBody"],
+              |       "fetchHTMLBodyValues": true
+              |     },
+              |     "c2"]
+              |  ]
+              |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    val responseAsJson = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("C42")
+
+    val messageId = responseAsJson
+      .\("id")
+      .get.asInstanceOf[JsString].value
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].oldState", "methodResponses[0][1].newState", "methodResponses[1][1].state")
+      .inPath("methodResponses")
+      .isEqualTo(
+      s"""    [
+         |        ["Email/import",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "created": {
+         |                    "C42": {
+         |                        "id": "$messageId",
+         |                        "blobId": "$messageId",
+         |                        "threadId": "$messageId",
+         |                        "size": 836
+         |                    }
+         |                }
+         |            }, "c1"],
+         |        ["Email/get",
+         |            {
+         |                "accountId": "$ACCOUNT_ID",
+         |                "notFound": [],
+         |                "list": [
+         |                    {
+         |                        "id": "$messageId",
+         |                        "htmlBody": [
+         |                            {
+         |                                "charset": "utf-8",
+         |                                "size": 39,
+         |                                "partId": "2",
+         |                                "blobId": "${messageId}_2",
+         |                                "type": "text/html"
+         |                            }
+         |                        ],
+         |                        "size": 836,
+         |                        "keywords": {},
+         |                        "subject": "MultiAttachment",
+         |                        "mailboxIds": {
+         |                            "${mailboxId.serialize()}": true
+         |                        },
+         |                        "receivedAt": "$${json-unit.ignore}",
+         |                        "bodyValues": {
+         |                            "2": {
+         |                                "value": "<p>Send<br/>concerted from html</p>\\r\\n\\r\\n",
+         |                                "isEncodingProblem": false,
+         |                                "isTruncated": false
+         |                            }
+         |                        }
+         |                    }
+         |                ]
+         |            }, "c2"]
+         |    ]""".stripMargin)
+  }
+
+  @Test
   def importShouldEnforceQuotas(server: GuiceJamesServer): Unit = {
     val quotaProbe = server.getProbe(classOf[QuotaProbesImpl])
     quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(0L))

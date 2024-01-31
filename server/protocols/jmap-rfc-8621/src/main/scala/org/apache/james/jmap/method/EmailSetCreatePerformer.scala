@@ -28,7 +28,7 @@ import javax.mail.Flags
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{JmapRfc8621Configuration, Properties, SetError, UTCDate}
+import org.apache.james.jmap.core.{Properties, SetError, UTCDate}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailSetRequest, ThreadId}
 import org.apache.james.jmap.method.EmailSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
@@ -82,8 +82,7 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
                                         blobResolvers: BlobResolvers,
                                         htmlTextExtractor: HtmlTextExtractor,
                                         mailboxManager: MailboxManager,
-                                        configuration: JMAPConfiguration,
-                                        configurationRfc8621: JmapRfc8621Configuration) {
+                                        configuration: JMAPConfiguration) {
 
   def create(request: EmailSetRequest, mailboxSession: MailboxSession): SMono[CreationResults] =
     SFlux.fromIterable(request.create.getOrElse(Map()))
