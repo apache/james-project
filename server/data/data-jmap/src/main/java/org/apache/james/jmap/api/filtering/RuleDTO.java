@@ -17,14 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.filtering;
+package org.apache.james.jmap.api.filtering;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.api.filtering.Rule;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

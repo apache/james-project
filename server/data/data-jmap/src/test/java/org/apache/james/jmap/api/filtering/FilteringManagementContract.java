@@ -57,7 +57,7 @@ public interface FilteringManagementContract {
     @Test
     default void listingRulesShouldThrowWhenNullUser() {
         Username username = null;
-        assertThatThrownBy(() -> instantiateFilteringManagement().listRulesForUser(username))
+        assertThatThrownBy(() -> Mono.from(instantiateFilteringManagement().listRulesForUser(username)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
