@@ -446,9 +446,9 @@
                         <image>eclipse-temurin:21.0.1_12-jre-jammy</image>
                     </from>
                     <to>
-                        <image>apache/james</image>
+                        <image>sami7786/distributed-james-test</image>
                         <tags>
-                            <tag>distributedMailetGroupJWT2</tag>
+                            <tag>MailetGroupJWT3</tag>
                         </tags>
                     </to>
                     <container>
