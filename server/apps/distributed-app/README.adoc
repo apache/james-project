@@ -14,8 +14,8 @@ Third party compulsory dependencies:
 == Features Added:
 
 * Restricted email sending to outside the org. e.g; <user>.<org>@<domain> can only send emails to other users with the same <org> and <domain>
-* Added Gmail style "+ addressing". If your email is <user>@<domain>, you can use <user>+++<abc>@<domain> anywhere and still get your emails.
-The server ignores any string following the "++" character until the "@" character.
+* Added Gmail style "+ addressing". If your email is <user>@<domain>, you can use <user>\+<abc>@<domain> anywhere and still get your emails.
+The server ignores any string following the "+" character until the "@" character.
 (more details: https://eit.ces.ncsu.edu/2023/02/gmail-plus-addressing-the-hidden-feature-that-can-help-you-get-more-out-of-your-inbox/)
 * Disabled all authentication methods except JWT Authentication (RS256). User creation no longer requires a password.
 * Added a webadmin route for deleting an entire group. Example cURL command:
