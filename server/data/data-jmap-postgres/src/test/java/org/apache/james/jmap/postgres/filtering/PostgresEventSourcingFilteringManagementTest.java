@@ -17,23 +17,22 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.postgres;
+package org.apache.james.jmap.postgres.filtering;
 
-import org.apache.james.backends.postgres.PostgresModule;
-import org.apache.james.jmap.postgres.change.PostgresEmailChangeModule;
-import org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule;
-import org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule;
-import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule;
-import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionModule;
-import org.apache.james.jmap.postgres.upload.PostgresUploadModule;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
+import org.apache.james.jmap.api.filtering.FilteringManagement;
+import org.apache.james.jmap.api.filtering.FilteringManagementContract;
+import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public interface PostgresDataJMapAggregateModule {
+public class PostgresEventSourcingFilteringManagementTest implements FilteringManagementContract {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresFilteringProjectionModule.MODULE);
 
-    PostgresModule MODULE = PostgresModule.aggregateModules(
-        PostgresUploadModule.MODULE,
-        PostgresMessageFastViewProjectionModule.MODULE,
-        PostgresEmailChangeModule.MODULE,
-        PostgresMailboxChangeModule.MODULE,
-        PostgresPushSubscriptionModule.MODULE,
-        PostgresFilteringProjectionModule.MODULE);
+    @Override
+    public FilteringManagement instantiateFilteringManagement() {
+        return new EventSourcingFilteringManagement(new InMemoryEventStore(),
+            new PostgresFilteringProjection(new PostgresFilteringProjectionDAO(postgresExtension.getPostgresExecutor())));
+    }
 }

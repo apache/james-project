@@ -36,6 +36,7 @@ import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.memory.identity.MemoryCustomIdentityDAO;
 import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
+import org.apache.james.jmap.postgres.filtering.PostgresFilteringProjection;
 import org.apache.james.jmap.postgres.upload.PostgresUploadRepository;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
@@ -59,7 +60,8 @@ public class PostgresDataJmapModule extends AbstractModule {
 
         bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
         bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);
-        bind(EventSourcingFilteringManagement.ReadProjection.class).to(EventSourcingFilteringManagement.NoReadProjection.class);
+        bind(PostgresFilteringProjection.class).in(Scopes.SINGLETON);
+        bind(EventSourcingFilteringManagement.ReadProjection.class).to(PostgresFilteringProjection.class);
 
         bind(DefaultTextExtractor.class).in(Scopes.SINGLETON);
 
