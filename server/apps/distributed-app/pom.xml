@@ -344,6 +344,7 @@
             <groupId>com.linagora</groupId>
             <artifactId>logback-elasticsearch-appender</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
@@ -371,6 +372,7 @@
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
         </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -399,6 +401,7 @@
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -452,9 +455,9 @@
                         <image>eclipse-temurin:21.0.1_12-jre-jammy</image>
                     </from>
                     <to>
-                        <image>apache/james</image>
+                        <image>sami7786/distributed-james-test</image>
                         <tags>
-                            <tag>distributedMailetGroupJWT2</tag>
+                            <tag>MailetGroupJWT3</tag>
                         </tags>
                     </to>
                     <container>
