@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -45,6 +46,9 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -54,12 +58,15 @@ import spark.Request;
 import spark.Response;
 import spark.Service;
 
+
 public class GroupsRoutes implements Routes {
 
     public static final String ROOT_PATH = "address/groups";
 
     private static final String GROUP_ADDRESS = "groupAddress";
     private static final String GROUP_ADDRESS_PATH = ROOT_PATH + SEPARATOR + ":" + GROUP_ADDRESS;
+
+    private static final String GROUP_MULTIPLE_PATH = "address/groups";
     private static final String USER_ADDRESS = "userAddress";
     private static final String USER_IN_GROUP_ADDRESS_PATH = GROUP_ADDRESS_PATH + SEPARATOR + ":" + USER_ADDRESS;
     private static final String GROUP_ADDRESS_TYPE = "group";
@@ -88,13 +95,16 @@ public class GroupsRoutes implements Routes {
         service.put(USER_IN_GROUP_ADDRESS_PATH, this::addToGroup);
         //service.delete(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
         service.delete(USER_IN_GROUP_ADDRESS_PATH, this::removeFromGroup);
+        service.delete(GROUP_MULTIPLE_PATH, this::removeMultipleGroup);
         service.delete(GROUP_ADDRESS_PATH, this::removeGroup);
     }
 
-    public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException {
-        System.out.println(request.toString());
+    public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
         return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
     }
+
+
+
 
     public HaltException addToGroup(Request request, Response response) {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
@@ -130,6 +140,48 @@ public class GroupsRoutes implements Routes {
                 .haltError();
         }
     }
+
+    public HaltException removeMultipleGroup(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
+        String jsonString = request.body();
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(jsonString);
+
+        // Accessing the "groups" array
+        JsonNode groups = jsonNode.get("groups");
+
+        // Iterate through the array and print each element
+        for (int i = 0; i < groups.size(); i++) {
+            String group = groups.get(i).asText();//todo
+            // Have to check is this group correct or not
+            MailAddress groupAddress;
+            try {
+                groupAddress = new MailAddress(group);
+            } catch (AddressException e) {
+                throw new RuntimeException(e);
+            }
+
+            Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
+                    .select(Mapping.Type.Group);
+
+            ensureNonEmptyMappings(mappings);
+
+            var list = mappings
+                    .asStream()
+                    .map(Mapping::asMailAddress)
+                    .flatMap(Optional::stream)
+                    .map(MailAddress::asString)
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
+
+            for (var userAddress : list) {
+                MappingSource source = MappingSource
+                        .fromUser(
+                                Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), groupAddress.getDomain()));
+                recipientRewriteTable.removeGroupMapping(source, userAddress.toString());
+            }
+        }
+        return halt(HttpStatus.NO_CONTENT_204);
+    }
+
 
     public HaltException removeGroup(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
