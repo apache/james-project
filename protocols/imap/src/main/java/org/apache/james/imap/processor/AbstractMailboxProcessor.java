@@ -103,8 +103,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                         })
                         .onErrorResume(OverQuotaException.class, e -> {
                             no(acceptableMessage, responder, HumanReadableText.FAILURE_OVERQUOTA, StatusResponse.ResponseCode.overQuota());
-                            LOGGER.info("Processing failed due to quota restriction");
-                            return Mono.empty();
+                            return ReactorUtils.logAsMono(() -> LOGGER.info("Processing failed due to quota restriction", e));
                         })
                         .onErrorResume(e -> {
                             no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
