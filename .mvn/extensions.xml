@@ -1,0 +1,22 @@
+<extensions>
+  <extension>
+    <groupId>com.gradle</groupId>
+    <!--
+      provides develocity related services such as
+      - build scans
+      - local and remote cache
+      build scans capture information see https://docs.gradle.com/enterprise/gradle-plugin/#captured_information
+    -->
+    <artifactId>gradle-enterprise-maven-extension</artifactId>
+    <version>1.20</version>
+  </extension>
+  <extension>
+    <groupId>com.gradle</groupId>
+    <!--
+      adds common env and build information as tags for build scans
+      see https://github.com/gradle/common-custom-user-data-gradle-plugin
+    -->
+    <artifactId>common-custom-user-data-maven-extension</artifactId>
+    <version>1.12.5</version>
+  </extension>
+</extensions>
