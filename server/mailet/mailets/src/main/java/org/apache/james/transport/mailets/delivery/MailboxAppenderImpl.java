@@ -36,6 +36,7 @@ import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -123,6 +124,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
             },
             session -> appendMessageToMailbox(mail, session, mailboxPath, flags),
             this::closeProcessing)
+            .onErrorMap(OverQuotaException.class, e -> new MessagingException("Could not append due to quota error", e))
             .onErrorMap(MailboxException.class, e -> new MessagingException("Unable to access mailbox.", e));
     }
 
