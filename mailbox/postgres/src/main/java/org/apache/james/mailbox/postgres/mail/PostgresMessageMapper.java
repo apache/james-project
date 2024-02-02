@@ -27,7 +27,6 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
