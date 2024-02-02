@@ -28,6 +28,7 @@ import javax.inject.Named;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.copier.MailboxCopier;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +75,9 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
         }
         try {
             copier.copyMailboxes(resolver.resolveMailboxManager(srcBean), resolver.resolveMailboxManager(dstBean));
+        } catch (OverQuotaException e) {
+            log.error("An over quota occured during the copy process", e);
+            throw new Exception(e.getMessage());
         } catch (MailboxManagerResolverException | MailboxException | IOException e) {
             log.error("An exception occured during the copy process", e);
             throw new Exception(e.getMessage());

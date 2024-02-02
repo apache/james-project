@@ -30,6 +30,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageMetadata;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -85,6 +86,10 @@ public class MailboxMergingTaskRunner {
             messageIdManager.setInMailboxesNoCheck(composedMessageId.getMessageId(), newMailboxId, session);
             context.incrementMovedCount();
             return Task.Result.COMPLETED;
+        } catch (OverQuotaException e) {
+            LOGGER.warn("Failed moving message {} due to quota error", composedMessageId.getMessageId(), e);
+            context.incrementFailedCount();
+            return Task.Result.PARTIAL;
         } catch (MailboxException e) {
             LOGGER.warn("Failed moving message {}", composedMessageId.getMessageId(), e);
             context.incrementFailedCount();

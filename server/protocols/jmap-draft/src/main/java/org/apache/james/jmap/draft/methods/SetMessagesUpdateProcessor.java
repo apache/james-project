@@ -260,6 +260,11 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                     MailboxId targetId = mailboxIdFactory.fromString(patch.getMailboxIds().get().iterator().next());
                     mailboxManager.moveMessages(range, mailboxId, targetId, mailboxSession);
                     return SetMessagesResponse.builder().updated(messageIds);
+                } catch (OverQuotaException e) {
+                    return messageIds.stream()
+                        .map(messageId -> handleMessageUpdateQuotaException(messageId, e))
+                        .reduce(SetMessagesResponse.Builder::mergeWith)
+                        .orElse(SetMessagesResponse.builder());
                 } catch (MailboxException e) {
                     return messageIds.stream()
                         .map(messageId -> handleMessageUpdateException(messageId, e))
@@ -303,11 +308,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                     .then(Mono.just(SetMessagesResponse.builder().updated(ImmutableList.of(messageId))))
                     .flatMap(builder -> sendMessageWhenOutboxInTargetMailboxIds(outboxes, messageId, updateMessagePatch, mailboxSession)
                         .map(builder::mergeWith))
-                    .onErrorResume(OverQuotaException.class, e -> Mono.just(SetMessagesResponse.builder().notUpdated(messageId,
-                        SetError.builder()
-                            .type(SetError.Type.MAX_QUOTA_REACHED)
-                            .description(e.getMessage())
-                            .build())))
+                    .onErrorResume(OverQuotaException.class, e -> Mono.just(handleMessageUpdateQuotaException(messageId, e)))
                     .onErrorResume(MailboxException.class, e -> Mono.just(handleMessageUpdateException(messageId, e)))
                     .onErrorResume(IOException.class, e -> Mono.just(handleMessageUpdateException(messageId, e)))
                     .onErrorResume(MessagingException.class, e -> Mono.just(handleMessageUpdateException(messageId, e)))
@@ -463,6 +464,16 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 .type(SetError.Type.ERROR)
                 .description("An error occurred when updating a message")
                 .build()));
+    }
+
+    private SetMessagesResponse.Builder handleMessageUpdateQuotaException(MessageId messageId,
+                                                                     Throwable e) {
+        LOGGER.error("A quota restriction error occurred when updating a message", e);
+        return SetMessagesResponse.builder().notUpdated(messageId,
+                SetError.builder()
+                        .type(SetError.Type.MAX_QUOTA_REACHED)
+                        .description(e.getMessage())
+                        .build());
     }
 
     private SetMessagesResponse.Builder handleInvalidRequest(MessageId messageId,
