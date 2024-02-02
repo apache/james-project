@@ -1,0 +1,60 @@
+<gradleEnterprise>
+  <server>
+    <url>https://ge.apache.org</url>
+    <allowUntrusted>false</allowUntrusted>
+    <!--
+    credentials provided by jenkins exposing GRADLE_ENTERPRISE_ACCESS_KEY
+    apache members can create their own on the server
+    -->
+  </server>
+  <!-- options are documented at https://docs.gradle.com/enterprise/maven-extension/#configuring_background_uploading -->
+  <!-- chosen values align with https://cwiki.apache.org/confluence/display/INFRA/Project+Onboarding+Instructions+for+Develocity -->
+  <buildScan>
+    <backgroundBuildScanUpload>#{isFalse(env['CI'])}</backgroundBuildScanUpload>
+    <publish>ALWAYS</publish>
+    <publishIfAuthenticated>true</publishIfAuthenticated>
+    <!-- Always publish build scans for CI, only if requested locally -->
+    <publish>#{env['CI'] == null ? 'ON_DEMAND' : 'ALWAYS'}</publish>
+    <capture>
+      <goalInputFiles>true</goalInputFiles> <!-- To be enabled locally when debugging goal caching or if we want to enable predictive test selection -->
+      <buildLogging>false</buildLogging> <!-- disabled by default for privacy and performance, to be discussed -->
+      <testLogging>false</testLogging> <!-- disabled by default for privacy and performance, to be discussed -->
+    </capture>
+    <links>
+      <link>
+        <name>Apache James github</name>
+        <url>https://github.com/apache/james-project/</url>
+      </link>
+      <link>
+        <name>Apache James project website</name>
+        <url>https://github.com/apache/james-project/</url>
+      </link>
+    </links>
+    <obfuscation>
+      <!-- Use Spring Expression Language. -->
+      <!-- <hostname>#{isTrue(env['CI']) ? hostname : 'Local agent'}</hostname> -->
+      <hostname>#{isTrue(env['CI']) ? 'jenkins' : 'Local agent'}</hostname>
+      <ipAddresses>#{{'0.0.0.0'}}</ipAddresses>
+    </obfuscation>
+  </buildScan>
+  <buildCache>
+    <local>
+      <!-- disabling build cache on CI as it seems to affect
+      MemoryLdapLocalPartLoginIntegrationTest and DistributedTaskManagerTest -->
+      <enabled>#{isFalse(env['CI'])}</enabled>
+      <cleanup>
+    <!-- materialize default settings -->
+        <retention>P7D</retention>
+        <interval>P1D</interval>
+      </cleanup>
+    </local>
+    <remote>
+      <storeEnabled>false</storeEnabled>
+      <!--
+      the next step is this
+      <storeEnabled>#{isTrue(env['CI'])</storeEnabled>
+      but it requires requesting a cache node to infra project
+      -->
+    </remote>
+  </buildCache>
+</gradleEnterprise>
