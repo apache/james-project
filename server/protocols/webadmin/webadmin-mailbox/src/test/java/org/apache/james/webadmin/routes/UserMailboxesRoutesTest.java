@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
 import static org.eclipse.jetty.http.HttpStatus.CREATED_201;
 import static org.eclipse.jetty.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
+import static org.eclipse.jetty.http.HttpStatus.METHOD_NOT_ALLOWED_405;
 import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
 import static org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204;
 import static org.eclipse.jetty.http.HttpStatus.OK_200;
@@ -466,8 +467,8 @@ class UserMailboxesRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName% contains one of the forbidden characters %*\r\n or starts with #");
+                .containsEntry("message", "Invalid arguments supplied in the user request")
+                .containsEntry("details", "URLDecoder: Incomplete trailing escape (%) pattern");
         }
 
         @Test
@@ -485,7 +486,7 @@ class UserMailboxesRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Attempt to create an invalid mailbox");
+                .containsEntry("message", "Invalid arguments supplied in the user request");
         }
 
         @Test
@@ -503,7 +504,7 @@ class UserMailboxesRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Attempt to create an invalid mailbox");
+                .containsEntry("message", "Invalid arguments supplied in the user request");
         }
 
         @Test
@@ -662,19 +663,19 @@ class UserMailboxesRoutesTest {
         }
 
         @Test
-        void putShouldReturnNotFoundWhenNoMailboxName() {
+        void putShouldReturnNotAllowedWhenNoMailboxName() {
             when()
                 .put()
             .then()
-                .statusCode(NOT_FOUND_404);
+                .statusCode(METHOD_NOT_ALLOWED_405);
         }
 
         @Test
-        void putShouldReturnNotFoundWhenJustSeparator() {
+        void putShouldReturnNotAllowedWhenJustSeparator() {
             when()
                 .put(SEPARATOR)
             .then()
-                .statusCode(NOT_FOUND_404);
+                .statusCode(METHOD_NOT_ALLOWED_405);
         }
 
         @Test
