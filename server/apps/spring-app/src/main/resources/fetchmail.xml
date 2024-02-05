@@ -44,7 +44,7 @@
 <!-- org.apache.james.fetchmail.taskName. The attribute's value is that of the -->
 <!-- fetch task's name parameter described below. -->
    
-<fetchmail enabled="true">
+<fetchmail enabled="false">
 
    <!-- The number of threads to use for the scheduled execution -->
    <threads>5</threads>
@@ -95,7 +95,6 @@
        <accounts>
            <alllocal userprefix="" usersuffix="@myaccount" password="password" recipientprefix="" recipientsuffix="@mydomain.com" ignorercpt-header="true"/>
            <account user="myglobalaccount" password="password" recipient="postmaster@localhost" ignorercpt-header="false"/>
-           <account user="myglobalaccount2" password="password" recipient="postmaster2@localhost" ignorercpt-header="false"/>
            <!-- Custom recipient header handling -->
            <!-- this example search an header named X-Envelope-To and use the recipient found in that header -->
            <!-- 

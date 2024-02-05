@@ -25,7 +25,6 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.api.UsersRepository;
@@ -39,10 +38,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class FetchMailTest {
-
 
     @Test
     void shouldAddAccountWithGoodDataFetchMail() throws Exception {
