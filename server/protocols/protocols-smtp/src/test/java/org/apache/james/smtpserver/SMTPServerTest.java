@@ -55,6 +55,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -273,7 +275,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("EHLO localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -351,7 +353,7 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("EHLO lcoalhost");
         smtpProtocol.setSender("mail@localhost");
         smtpProtocol.addRecipient("mail@localhost");
         // Create a 1K+ message
@@ -385,7 +387,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("EHLO localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -479,7 +481,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtp.helo(InetAddress.getLocalHost().toString());
+        smtp.helo("localhost");
         smtp.setSender("mail@localhost");
         smtp.addRecipient("mail@localhost");
         smtp.sendShortMessageData("Subject: test\r\n\r\n");
@@ -490,6 +492,80 @@ public class SMTPServerTest {
         assertThat(testSystem.queue.getLastMail().getMessage().getHeader("Received"))
             .as("spooled mail has Received header")
             .isNotNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"good", "adomain.com", "sub.domain.com",  "127.0.0.1",  "[127.0.0.1]"})
+    public void testValidHELO(String helo) throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        // no message there, yet
+        assertThat(testSystem.queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
+
+        smtp.helo(helo);
+
+        assertThat(smtp.getReplyString())
+            .startsWith("250");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"bad value", "localhost) (spoofed into received header", "localhost)", "127.0.0.1/24",
+        "sub..bad", "[]", ""})
+    public void testInvalidHELO(String helo) throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        // no message there, yet
+        assertThat(testSystem.queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
+
+        smtp.helo(helo);
+
+        assertThat(smtp.getReplyString())
+            .startsWith("501");
+    }
+
+
+    @ParameterizedTest
+    @ValueSource(strings = {"good", "127.0.0.1", "adomain.com", "sub.domain.com", "[abc.def]", "[124.54.67.43]"})
+    public void testValidEHLO(String helo) throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        // no message there, yet
+        assertThat(testSystem.queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
+
+        smtp.sendCommand("EHLO " + helo);
+
+        assertThat(smtp.getReplyString())
+            .startsWith("250");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"bad value", "localhost) (spoofed into received header", "localhost)", "127.0.0.1/24", "sub..bad", "[]"})
+    public void testInvalidEHLO(String helo) throws Exception {
+        init(smtpConfiguration);
+
+        SMTPClient smtp = newSMTPClient();
+
+        // no message there, yet
+        assertThat(testSystem.queue.getLastMail())
+            .as("no mail received by mail server")
+            .isNull();
+
+        smtp.sendCommand("EHLO " + helo);
+
+        assertThat(smtp.getReplyString())
+            .startsWith("501 5.5.2 Invalid domain name or ip supplied as HELO argument");
     }
 
     // FIXME
@@ -532,7 +608,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol.helo(InetAddress.getLocalHost().toString());
+        smtpProtocol.helo("localhost");
 
         smtpProtocol.setSender("mail@localhost");
 
@@ -571,8 +647,8 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol1.helo(InetAddress.getLocalHost().toString());
-        smtpProtocol2.helo(InetAddress.getLocalHost().toString());
+        smtpProtocol1.helo("localhost");
+        smtpProtocol2.helo("localhost");
 
         String sender1 = "mail_sender1@localhost";
         String recipient1 = "mail_recipient1@localhost";
@@ -614,7 +690,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol1.helo(InetAddress.getLocalHost().toString());
+        smtpProtocol1.helo("localhost");
 
         String sender1 = "mail_sender1@localhost";
         String recipient1 = "mail_recipient1@localhost";
@@ -778,7 +854,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol1.helo(InetAddress.getLocalHost().toString());
+        smtpProtocol1.helo("localhost");
 
         String sender1 = "mail_sender1@xfwrqqfgfe.de";
 
@@ -860,7 +936,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol1.helo(InetAddress.getLocalHost().toString());
+        smtpProtocol1.helo("localhost");
 
         String sender1 = "mail_sender1@xfwrqqfgfe.de";
         String sender2 = "mail_sender2@james.apache.org";
@@ -894,7 +970,7 @@ public class SMTPServerTest {
             .as("no mail received by mail server")
             .isNull();
 
-        smtpProtocol1.helo(InetAddress.getLocalHost().toString());
+        smtpProtocol1.helo("localhost");
 
         String sender1 = "mail_sender1@james.apache.org";
         String rcpt1 = "test@localhost";
@@ -1130,7 +1206,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -1212,7 +1288,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -1296,7 +1372,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -1338,7 +1414,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -1507,7 +1583,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("ehlo localhost");
 
         smtpProtocol.setSender("mail@sample.com");
 
@@ -1526,7 +1602,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("ehlo localhost");
 
         smtpProtocol.sendCommand("MAIL FROM:<mail@localhost> SIZE=1025", null);
         assertThat(smtpProtocol.getReplyCode())
@@ -1548,7 +1624,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("ehlo localhost");
 
         smtpProtocol.setSender("mail@localhost");
         smtpProtocol.addRecipient("mail@localhost");
@@ -1588,7 +1664,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
+        smtpProtocol.sendCommand("ehlo localhost");
 
         smtpProtocol.setSender("mail@localhost");
         smtpProtocol.addRecipient("mail@localhost");
@@ -1631,7 +1707,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
         String[] capabilityRes = smtpProtocol.getReplyStrings();
 
         List<String> capabilitieslist = new ArrayList<>();
@@ -1690,7 +1766,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
 
         String sender = USER_LOCALHOST;
 
@@ -1717,7 +1793,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
 
         smtpProtocol.sendCommand("mail from:", "test@localhost");
         assertThat(smtpProtocol.getReplyCode())
@@ -1733,7 +1809,7 @@ public class SMTPServerTest {
 
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
 
         smtpProtocol.sendCommand("mail from:", "<test@localhost>");
         assertThat(smtpProtocol.getReplyCode())
@@ -1755,7 +1831,7 @@ public class SMTPServerTest {
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
 
-        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        smtpProtocol.sendCommand("ehlo", "localhost");
 
         smtpProtocol.sendCommand("mail from:", "test@localhost");
         assertThat(smtpProtocol.getReplyCode())

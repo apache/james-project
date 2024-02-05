@@ -33,8 +33,12 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.net.InetAddresses;
+import com.google.common.net.InternetDomainName;
 
 /**
  * Handles HELO command
@@ -51,6 +55,7 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
             DSNStatus.getStatus(DSNStatus.PERMANENT,
                     DSNStatus.DELIVERY_INVALID_ARG)
                     + " Domain address required: " + COMMAND_NAME).immutable();
+    public static final Logger LOGGER = LoggerFactory.getLogger(HeloCmdHandler.class);
 
     @Inject
     public HeloCmdHandler(MetricFactory metricFactory) {
@@ -65,12 +70,32 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
     @Override
     protected Response doCoreCmd(SMTPSession session, String command,
                                  String parameters) {
+
+        if (!isValid(parameters)) {
+            LOGGER.error("Invalid EHLO argument received: {}. Must be a domain name or an IP address.", parameters);
+            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
+                DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Invalid domain name or ip supplied as HELO argument");
+        }
+
         session.setAttachment(SMTPSession.CURRENT_HELO_MODE, COMMAND_NAME, ProtocolSession.State.Connection);
         StringBuilder response = new StringBuilder();
         response.append(session.getConfiguration().getHelloName()).append(
                 " Hello ").append(parameters).append(" [").append(
                 session.getRemoteAddress().getAddress().getHostAddress()).append("])");
         return new SMTPResponse(SMTPRetCode.MAIL_OK, response);
+    }
+
+    private boolean isValid(String argument) {
+        String hostname = unquote(argument);
+        return InetAddresses.isUriInetAddress(hostname)
+            || InternetDomainName.isValid(hostname);
+    }
+
+    private String unquote(String argument) {
+        if (argument.startsWith("[") && argument.endsWith("]")) {
+            return argument.substring(1, argument.length() - 1);
+        }
+        return argument;
     }
 
     @Override

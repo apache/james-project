@@ -34,10 +34,14 @@ import org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.net.InetAddresses;
+import com.google.common.net.InternetDomainName;
 
 /**
  * Handles EHLO command
@@ -52,7 +56,8 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
     // see http://issues.apache.org/jira/browse/JAMES-419
     private static final List<String> ESMTP_FEATURES = ImmutableList.of("PIPELINING", "ENHANCEDSTATUSCODES", "8BITMIME");
     private static final Response DOMAIN_ADDRESS_REQUIRED = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Domain address required: " + COMMAND_NAME).immutable();
-    
+    private static final Logger LOGGER = LoggerFactory.getLogger(EhloCmdHandler.class);
+
     private List<EhloExtension> ehloExtensions;
 
     @Inject
@@ -71,6 +76,12 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
      *            the argument passed in with the command by the SMTP client
      */
     private Response doEHLO(SMTPSession session, String argument) {
+        if (!isValid(argument)) {
+            LOGGER.error("Invalid EHLO argument received: {}. Must be a domain name or an IP address.", argument);
+            return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,
+                DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Invalid domain name or ip supplied as HELO argument");
+        }
+
         SMTPResponse resp = new SMTPResponse(SMTPRetCode.MAIL_OK, new StringBuilder(session.getConfiguration().getHelloName()).append(" Hello ").append(argument)
                 .append(" [")
                 .append(session.getRemoteAddress().getAddress().getHostAddress()).append("])"));
@@ -79,11 +90,21 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
                 COMMAND_NAME, State.Connection);
 
         processExtensions(session, resp);
-
-
  
         return resp;
+    }
 
+    private boolean isValid(String argument) {
+        String hostname = unquote(argument);
+        return InetAddresses.isUriInetAddress(hostname)
+            || InternetDomainName.isValid(hostname);
+    }
+
+    private String unquote(String argument) {
+        if (argument.startsWith("[") && argument.endsWith("]")) {
+            return argument.substring(1, argument.length() - 1);
+        }
+        return argument;
     }
 
     @Override
