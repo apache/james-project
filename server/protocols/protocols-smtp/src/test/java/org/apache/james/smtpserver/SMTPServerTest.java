@@ -353,7 +353,7 @@ public class SMTPServerTest {
         SMTPClient smtpProtocol = new SMTPClient();
         InetSocketAddress bindedAddress = testSystem.getBindedAddress();
         smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
-        smtpProtocol.sendCommand("EHLO lcoalhost");
+        smtpProtocol.sendCommand("EHLO localhost");
         smtpProtocol.setSender("mail@localhost");
         smtpProtocol.addRecipient("mail@localhost");
         // Create a 1K+ message
@@ -495,7 +495,9 @@ public class SMTPServerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"good", "adomain.com", "sub.domain.com",  "127.0.0.1",  "[127.0.0.1]"})
+    @ValueSource(strings = {"good", "adomain.com", "sub.domain.com",  "127.0.0.1",  "[127.0.0.1]",
+        "fe80::1ff:fe23:4567:890a", "[fe80::1ff:fe23:4567:890a]",
+        "2001:db8:85a3:8d3:1319:8a2e:370:7348", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]"})
     public void testValidHELO(String helo) throws Exception {
         init(smtpConfiguration);
 
@@ -531,9 +533,10 @@ public class SMTPServerTest {
             .startsWith("501");
     }
 
-
     @ParameterizedTest
-    @ValueSource(strings = {"good", "127.0.0.1", "adomain.com", "sub.domain.com", "[abc.def]", "[124.54.67.43]"})
+    @ValueSource(strings = {"good", "127.0.0.1", "adomain.com", "sub.domain.com", "[abc.def]", "[124.54.67.43]",
+        "fe80::1ff:fe23:4567:890a", "[fe80::1ff:fe23:4567:890a]",
+        "2001:db8:85a3:8d3:1319:8a2e:370:7348", "[2001:db8:85a3:8d3:1319:8a2e:370:7348]"})
     public void testValidEHLO(String helo) throws Exception {
         init(smtpConfiguration);
 
