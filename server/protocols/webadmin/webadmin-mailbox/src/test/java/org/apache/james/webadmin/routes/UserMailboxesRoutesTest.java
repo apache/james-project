@@ -348,7 +348,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to create an invalid mailbox")
-                .containsEntry("details", "#private:username:#myMailboxName contains one of the forbidden characters %* or starts with #");
+                .containsEntry("details", "#private:username:#myMailboxName contains one of the forbidden characters %*\r\n or starts with #");
         }
 
         @Test
@@ -412,7 +412,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName* contains one of the forbidden characters %* or starts with #");
+                .containsEntry("details", "#private:username:myMailboxName* contains one of the forbidden characters %*\r\n or starts with #");
         }
 
         @Test
@@ -467,7 +467,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:myMailboxName% contains one of the forbidden characters %* or starts with #");
+                .containsEntry("details", "#private:username:myMailboxName% contains one of the forbidden characters %*\r\n or starts with #");
         }
 
         @Test
@@ -522,7 +522,7 @@ class UserMailboxesRoutesTest {
                 .containsEntry("statusCode", BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Attempt to test existence of an invalid mailbox")
-                .containsEntry("details", "#private:username:#myMailboxName contains one of the forbidden characters %* or starts with #");
+                .containsEntry("details", "#private:username:#myMailboxName contains one of the forbidden characters %*\r\n or starts with #");
         }
 
         @Test
