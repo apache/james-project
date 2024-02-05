@@ -115,6 +115,12 @@ public class PostgresExecutor {
                 .filter(preparedStatementConflictException()));
     }
 
+    public Mono<Optional<Record>> executeSingleRowOptional(Function<DSLContext, Publisher<Record>> queryFunction) {
+        return executeRow(queryFunction)
+            .map(Optional::ofNullable)
+            .switchIfEmpty(Mono.just(Optional.empty()));
+    }
+
     public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
