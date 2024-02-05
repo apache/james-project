@@ -173,11 +173,18 @@ public class Vacation {
         Vacation vacation = (Vacation) o;
 
         return Objects.equals(this.isEnabled, vacation.isEnabled) &&
-            Objects.equals(this.fromDate, vacation.fromDate) &&
-            Objects.equals(this.toDate, vacation.toDate) &&
+            compareZonedDateTimeAcrossTimeZone(this.fromDate, vacation.fromDate) &&
+            compareZonedDateTimeAcrossTimeZone(this.toDate, vacation.toDate) &&
             Objects.equals(this.textBody, vacation.textBody) &&
             Objects.equals(this.subject, vacation.subject) &&
             Objects.equals(this.htmlBody, vacation.htmlBody);
+    }
+
+    private boolean compareZonedDateTimeAcrossTimeZone(Optional<ZonedDateTime> thisZonedDateTimeOptional, Optional<ZonedDateTime> thatZonedDateTimeOptional) {
+        return thisZonedDateTimeOptional.map(thisZonedDateTime -> thatZonedDateTimeOptional
+                .map(thisZonedDateTime::isEqual)
+                .orElse(false))
+            .orElseGet(thatZonedDateTimeOptional::isEmpty);
     }
 
     @Override
