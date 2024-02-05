@@ -135,11 +135,9 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContentPublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt);
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = attachmentLoader.addAttachmentToMessage(fetchMessageWithoutFullContentPublisher, fetchType);
-
         if (fetchType == FetchType.FULL) {
-            return fetchMessagePublisher
+            return fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt)
+                .transform(pairs -> attachmentLoader.addAttachmentToMessage(pairs, fetchType))
                 .flatMapSequential(messageBuilderAndRecord -> {
                     SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
                     return retrieveFullContent(messageBuilderAndRecord.getRight())
@@ -147,7 +145,7 @@ public class PostgresMessageMapper implements MessageMapper {
                 }, ReactorUtils.DEFAULT_CONCURRENCY)
                 .map(message -> message);
         } else {
-            return fetchMessagePublisher
+            return fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt)
                 .map(messageBuilderAndBlobId -> messageBuilderAndBlobId.getLeft()
                     .build());
         }

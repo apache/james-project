@@ -42,7 +42,7 @@ public class AttachmentLoader {
 
 
     public Flux<Pair<SimpleMailboxMessage.Builder, Record>> addAttachmentToMessage(Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagePublisher, MessageMapper.FetchType fetchType) {
-        return findMessagePublisher.flatMap(pair -> {
+        return findMessagePublisher.flatMapSequential(pair -> {
             if (fetchType == MessageMapper.FetchType.FULL || fetchType == MessageMapper.FetchType.ATTACHMENTS_METADATA) {
                 return Mono.fromCallable(() -> pair.getRight().get(ATTACHMENT_METADATA))
                     .flatMapMany(Flux::fromIterable)
