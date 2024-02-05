@@ -34,6 +34,7 @@ import org.apache.james.modules.data.PostgresDataJmapModule;
 import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresDelegationStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
+import org.apache.james.modules.data.PostgresVacationModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
@@ -114,7 +115,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new TaskManagerModule(),
         new MemoryEventStoreModule(),
         new TikaMailboxModule(),
-        new PostgresDLPConfigurationStoreModule());
+        new PostgresDLPConfigurationStoreModule(),
+        new PostgresVacationModule());
 
     public static final Module JMAP = Modules.combine(
         new PostgresJmapModule(),
