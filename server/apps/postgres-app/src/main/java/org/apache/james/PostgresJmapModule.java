@@ -37,11 +37,6 @@ import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.vacation.api.NotificationRegistry;
-import org.apache.james.vacation.api.VacationRepository;
-import org.apache.james.vacation.api.VacationService;
-import org.apache.james.vacation.memory.MemoryNotificationRegistry;
-import org.apache.james.vacation.memory.MemoryVacationRepository;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -64,15 +59,6 @@ public class PostgresJmapModule extends AbstractModule {
         bind(Limit.class).annotatedWith(Names.named(PostgresMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(256));
 
         bind(UploadUsageRepository.class).to(PostgresUploadUsageRepository.class);
-
-        bind(DefaultVacationService.class).in(Scopes.SINGLETON);
-        bind(VacationService.class).to(DefaultVacationService.class);
-
-        bind(MemoryNotificationRegistry.class).in(Scopes.SINGLETON);
-        bind(NotificationRegistry.class).to(MemoryNotificationRegistry.class);
-
-        bind(MemoryVacationRepository.class).in(Scopes.SINGLETON);
-        bind(VacationRepository.class).to(MemoryVacationRepository.class);
 
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
