@@ -79,7 +79,7 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
     }
 
     /**
-     * The Received header is added in front of the received headers. So returns {@link Location#SUFFIX}
+     * The Received header is added in front of the received headers. So returns {@link Location#PREFIX}
      */
     protected Location getLocation() {
         return Location.PREFIX;
@@ -105,6 +105,14 @@ public class ReceivedDataLineFilter extends SeparatingDataLineFilter {
         Header header = new Header("Received", headerLineBuffer.toString());
         
         headerLineBuffer = new StringBuilder();
+
+        session.getSSLSession()
+            .map(sslSession -> String.format("(using %s with cipher %s)",
+                sslSession.getProtocol(),
+                Optional.ofNullable(sslSession.getCipherSuite())
+                    .orElse("")))
+                .ifPresent(header::add);
+
         headerLineBuffer.append("by ").append(session.getConfiguration().getHelloName()).append(" (").append(session.getConfiguration().getSoftwareName()).append(") with ").append(getServiceType(session, heloMode.orElse("NOT-DEFINED")));
         headerLineBuffer.append(" ID ").append(session.getSessionID());
 
