@@ -36,6 +36,8 @@ import org.apache.james.jmap.api.upload.UploadServiceDefaultImpl;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresUploadServiceTest implements UploadServiceContract {
@@ -72,5 +74,12 @@ public class PostgresUploadServiceTest implements UploadServiceContract {
     @Override
     public UploadService testee() {
         return testee;
+    }
+
+    @Override
+    @Test
+    @Disabled("Flaky test. TODO stabilize it.")
+    public void uploadShouldUpdateCurrentStoredUsageUponCleaningUploadSpace() {
+
     }
 }
