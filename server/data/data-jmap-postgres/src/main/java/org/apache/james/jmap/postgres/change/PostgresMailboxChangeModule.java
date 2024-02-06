@@ -62,7 +62,7 @@ public interface PostgresMailboxChangeModule {
             .build();
 
         PostgresIndex INDEX = PostgresIndex.name("index_mailbox_change_date")
-            .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, DATE));
     }
 
