@@ -60,7 +60,7 @@ public interface PostgresEmailChangeModule {
             .build();
 
         PostgresIndex INDEX = PostgresIndex.name("idx_email_change_date")
-            .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, DATE));
     }
 
