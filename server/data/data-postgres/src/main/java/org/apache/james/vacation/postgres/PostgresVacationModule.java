@@ -37,7 +37,8 @@ public interface PostgresVacationModule {
         Table<Record> TABLE_NAME = DSL.table("vacation_response");
 
         Field<String> ACCOUNT_ID = DSL.field("account_id", SQLDataType.VARCHAR.notNull());
-        Field<Boolean> IS_ENABLED = DSL.field("is_enabled", SQLDataType.BOOLEAN);
+        Field<Boolean> IS_ENABLED = DSL.field("is_enabled", SQLDataType.BOOLEAN.notNull()
+            .defaultValue(DSL.field("false", SQLDataType.BOOLEAN)));
         Field<LocalDateTime> FROM_DATE = DSL.field("from_date", PostgresCommons.DataTypes.TIMESTAMP);
         Field<LocalDateTime> TO_DATE = DSL.field("to_date", PostgresCommons.DataTypes.TIMESTAMP);
         Field<String> TEXT = DSL.field("text", SQLDataType.VARCHAR);
