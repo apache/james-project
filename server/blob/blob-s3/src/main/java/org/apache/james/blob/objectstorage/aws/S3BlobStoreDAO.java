@@ -215,7 +215,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return ReactorUtils.toInputStream(getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
@@ -226,7 +226,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
@@ -240,7 +240,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         Flux<ByteBuffer> flux;
     }
 
-    private Mono<FluxResponse> getObject(BucketName bucketName, BlobId blobId) {
+    private Mono<FluxResponse> getObject(ResolvedBucketName bucketName, BlobId blobId) {
         return Mono.fromFuture(() ->
             client.getObject(
                 builder -> builder.bucket(bucketName.asString()).key(blobId.asString()),
@@ -276,7 +276,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return Mono.fromFuture(() ->
                 client.getObject(
@@ -291,7 +291,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return Mono.fromFuture(() ->
                 client.putObject(
@@ -323,7 +323,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return Mono.fromCallable(content::size)
             .flatMap(contentLength ->
@@ -337,7 +337,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .then();
     }
 
-    private Mono<PutObjectResponse> save(BucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
+    private Mono<PutObjectResponse> save(ResolvedBucketName resolvedBucketName, BlobId blobId, InputStream stream, long contentLength) {
         int chunkSize = Math.min((int) contentLength, CHUNK_SIZE);
 
         return Mono.fromFuture(() -> client.putObject(builder -> builder
@@ -356,7 +356,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .subscribeOn(Schedulers.boundedElastic());
     }
 
-    private RetryBackoffSpec createBucketOnRetry(BucketName bucketName) {
+    private RetryBackoffSpec createBucketOnRetry(ResolvedBucketName bucketName) {
         return RetryBackoffSpec.backoff(MAX_RETRIES, FIRST_BACK_OFF)
             .maxAttempts(MAX_RETRIES)
             .doBeforeRetryAsync(retrySignal -> {
@@ -372,7 +372,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return Mono.fromFuture(() ->
                 client.deleteObject(delete -> delete.bucket(resolvedBucketName.asString()).key(blobId.asString())))
@@ -383,7 +383,9 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Publisher<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
-        return deleteObjects(bucketName,
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
+        return deleteObjects(resolvedBucketName,
             blobIds.stream()
                 .map(BlobId::asString)
                 .map(id -> ObjectIdentifier.builder().key(id).build())
@@ -393,12 +395,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
-        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+        ResolvedBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
         return deleteResolvedBucket(resolvedBucketName);
     }
 
-    private Mono<Void> deleteResolvedBucket(BucketName bucketName) {
+    private Mono<Void> deleteResolvedBucket(ResolvedBucketName bucketName) {
         return emptyBucket(bucketName)
             .onErrorResume(t -> Mono.just(bucketName))
             .flatMap(ignore -> Mono.fromFuture(() ->
@@ -408,7 +410,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .publishOn(Schedulers.parallel());
     }
 
-    private Mono<BucketName> emptyBucket(BucketName bucketName) {
+    private Mono<ResolvedBucketName> emptyBucket(ResolvedBucketName bucketName) {
         return Flux.from(client.listObjectsV2Paginator(builder -> builder.bucket(bucketName.asString())))
             .flatMap(response -> Flux.fromIterable(response.contents())
                 .window(EMPTY_BUCKET_BATCH_SIZE)
@@ -424,7 +426,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .collect(ImmutableList.toImmutableList());
     }
 
-    private Mono<DeleteObjectsResponse> deleteObjects(BucketName bucketName, List<ObjectIdentifier> identifiers) {
+    private Mono<DeleteObjectsResponse> deleteObjects(ResolvedBucketName bucketName, List<ObjectIdentifier> identifiers) {
         return Mono.fromFuture(() -> client.deleteObjects(builder ->
             builder.bucket(bucketName.asString()).delete(delete -> delete.objects(identifiers))));
     }
@@ -434,7 +436,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         return Mono.fromFuture(client::listBuckets)
             .publishOn(Schedulers.parallel())
             .flatMapIterable(ListBucketsResponse::buckets)
-                .flatMap(bucket -> deleteResolvedBucket(BucketName.of(bucket.name())), DEFAULT_CONCURRENCY)
+                .flatMap(bucket -> deleteResolvedBucket(ResolvedBucketName.of(bucket.name())), DEFAULT_CONCURRENCY)
             .then();
     }
 
@@ -443,7 +445,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         return Mono.fromFuture(client::listBuckets)
             .flatMapIterable(ListBucketsResponse::buckets)
             .map(Bucket::name)
-            .handle((bucket, sink) -> bucketNameResolver.unresolve(BucketName.of(bucket))
+            .handle((bucket, sink) -> bucketNameResolver.unresolve(ResolvedBucketName.of(bucket))
                 .ifPresent(sink::next));
     }
 
