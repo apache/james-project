@@ -23,6 +23,8 @@ import static org.apache.james.imapserver.netty.IMAPServer.AuthenticationConfigu
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
+import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -238,7 +240,13 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         try (Closeable closeable = mdc(ctx).build()) {
-            LOGGER.warn("Error while processing imap request", cause);
+            if (cause instanceof ClosedChannelException) {
+                LOGGER.info("Channel was closed");
+            } else if (cause instanceof SocketException) {
+                LOGGER.info("Socket exception encountered: {}", cause.getMessage());
+            } else {
+                LOGGER.warn("Error while processing imap request", cause);
+            }
 
             if (cause instanceof TooLongFrameException) {
 
