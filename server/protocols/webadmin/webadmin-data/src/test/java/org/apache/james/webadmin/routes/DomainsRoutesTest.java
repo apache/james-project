@@ -35,7 +35,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -284,11 +283,11 @@ class DomainsRoutesTest {
         }
 
         @Test
-        void putShouldReturnNotFoundWhenUsedWithEmptyDomain() {
+        void putShouldReturnNotAllowedWhenUsedWithEmptyDomain() {
             given()
                 .put(SEPARATOR)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405);
         }
 
         @Test
@@ -333,21 +332,11 @@ class DomainsRoutesTest {
         }
 
         @Test
-        void putWithDomainNameContainsSlashEncodedShouldDecodeAndReturnError() {
-            Map<String, Object> errors = when()
+        void putWithDomainNameContainsSlashEncodedShouldReturnNotAllowed() {
+            when()
                 .put(DOMAIN + "%2F" + DOMAIN)
             .then()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Invalid request for domain creation domain/domain");
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405);
         }
 
         @Test
@@ -355,7 +344,7 @@ class DomainsRoutesTest {
             when()
                 .put(DOMAIN + "/" + DOMAIN)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405);
         }
 
         @Test

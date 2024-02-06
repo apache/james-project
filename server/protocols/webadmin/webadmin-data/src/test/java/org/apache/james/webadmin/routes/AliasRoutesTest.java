@@ -561,19 +561,19 @@ class AliasRoutesTest {
         }
 
         @Test
-        void putUserDestinationInAliasWithSlashShouldReturnNotFound() {
+        void putUserDestinationInAliasWithSlashShouldReturnNotAllowed() {
             when()
                 .put(BOB_WITH_SLASH + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405);
         }
 
         @Test
-        void putAliasSourceWithSlashShouldReturnNotFound() {
+        void putAliasSourceWithSlashShouldReturnNotAllowed() {
             when()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS_WITH_SLASH)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405);
         }
 
         @Test
@@ -581,7 +581,7 @@ class AliasRoutesTest {
             when()
                 .put(BOB)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404);
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405);
         }
 
         @Test
