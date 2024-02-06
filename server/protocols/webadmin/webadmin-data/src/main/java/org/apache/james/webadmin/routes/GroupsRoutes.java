@@ -147,7 +147,7 @@ public class GroupsRoutes implements Routes {
 
         //checking is this group correct or not. If not through an exception
         for (int i = 0; i < groups.size(); i++) {
-            String group = groups.get(i).asText();//todo
+            String group = groups.get(i);//todo
             MailAddress groupAddress;
             try {
                 groupAddress = new MailAddress(group);
