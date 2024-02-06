@@ -272,11 +272,9 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         try (Closeable closeable = mdc(ctx).build()) {
-            if (cause instanceof ClosedChannelException) {
-                LOGGER.info("Channel was closed");
-            } else if (cause instanceof SocketException) {
+            if (cause instanceof SocketException) {
                 LOGGER.info("Socket exception encountered: {}", cause.getMessage());
-            } else {
+            } else if (!(cause instanceof ClosedChannelException)) {
                 LOGGER.warn("Error while processing imap request", cause);
             }
 
