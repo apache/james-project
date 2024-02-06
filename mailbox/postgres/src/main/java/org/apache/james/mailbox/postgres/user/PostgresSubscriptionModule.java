@@ -46,7 +46,7 @@ public interface PostgresSubscriptionModule {
         .supportsRowLevelSecurity()
         .build();
     PostgresIndex INDEX = PostgresIndex.name("subscription_user_index")
-        .createIndexStep((dsl, indexName) -> dsl.createIndex(indexName)
+        .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
             .on(TABLE_NAME, USER));
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(TABLE)
