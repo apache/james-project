@@ -266,11 +266,9 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     }
                     transport.writeResponse(Response.DISCONNECT, session);
                 }
-                if (cause instanceof ClosedChannelException) {
-                    LOGGER.info("Channel closed before we could send in flight messages to the users (ClosedChannelException): {}", cause.getMessage());
-                } else if (cause instanceof SocketException) {
+                if (cause instanceof SocketException) {
                     LOGGER.info("Socket exception encountered: {}", cause.getMessage());
-                } else {
+                } else if (!(cause instanceof ClosedChannelException)) {
                     LOGGER.error("Unable to process request", cause);
                 }
                 ctx.close();
