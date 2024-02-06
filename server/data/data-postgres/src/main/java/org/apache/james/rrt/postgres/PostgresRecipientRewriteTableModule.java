@@ -49,7 +49,7 @@ public interface PostgresRecipientRewriteTableModule {
             .build();
 
         PostgresIndex INDEX = PostgresIndex.name("idx_rrt_target_address")
-            .createIndexStep((dslContext, indexName) -> dslContext.createIndex(indexName)
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, TARGET_ADDRESS));
     }
 

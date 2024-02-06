@@ -29,7 +29,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
-import org.apache.james.backends.postgres.utils.PostgresUtils;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 
@@ -47,8 +46,9 @@ public class PostgresMailRepositoryUrlStore implements MailRepositoryUrlStore {
     @Override
     public void add(MailRepositoryUrl url) {
         postgresExecutor.executeVoid(context -> Mono.from(context.insertInto(TABLE_NAME, URL)
-            .values(url.asString())))
-            .onErrorResume(PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE, e -> Mono.empty())
+                .values(url.asString())
+                .onConflict(URL)
+                .doNothing()))
             .block();
     }
 
