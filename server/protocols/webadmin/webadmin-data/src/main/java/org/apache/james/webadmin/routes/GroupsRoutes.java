@@ -145,7 +145,7 @@ public class GroupsRoutes implements Routes {
 
         //checking is this group correct or not. If not through an exception
         for (int i = 0; i < groups.size(); i++) {
-            String group = groups.get(i).asText();//todo
+            String group = groups.get(i);//todo
             MailAddress groupAddress;
             try {
                 groupAddress = new MailAddress(group);
@@ -155,14 +155,7 @@ public class GroupsRoutes implements Routes {
             Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
                     .select(Mapping.Type.Group);
 
-            ensureNonEmptyMappings(mappings);
-
-            var list = mappings
-                    .asStream()
-                    .map(Mapping::asMailAddress)
-                    .flatMap(Optional::stream)
-                    .map(MailAddress::asString)
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
+            ensureNonEmptyMappings(mappings, group);
         }
         // Iterate through the array and print each element
         for (int i = 0; i < groups.size(); i++) {
@@ -178,7 +171,7 @@ public class GroupsRoutes implements Routes {
             Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
                     .select(Mapping.Type.Group);
 
-            ensureNonEmptyMappings(mappings);
+            ensureNonEmptyMappings(mappings, group);
 
             var list = mappings
                     .asStream()
@@ -203,7 +196,7 @@ public class GroupsRoutes implements Routes {
         Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
                 .select(Mapping.Type.Group);
 
-        ensureNonEmptyMappings(mappings);
+        ensureNonEmptyMappings(mappings, groupAddress.toString());
 
         var list = mappings
                 .asStream()
@@ -232,12 +225,11 @@ public class GroupsRoutes implements Routes {
     }
 
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTableException {
-        //System.out.println(request.toString());
         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
         Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
             .select(Mapping.Type.Group);
 
-        ensureNonEmptyMappings(mappings);
+        ensureNonEmptyMappings(mappings, groupAddress.toString());
 
         var list = mappings
                 .asStream()
@@ -258,12 +250,12 @@ public class GroupsRoutes implements Routes {
                 .collect(ImmutableSortedSet.toImmutableSortedSet(String::compareTo));
     }
 
-    private void ensureNonEmptyMappings(Mappings mappings) {
+    private void ensureNonEmptyMappings(Mappings mappings, String group) {
         if (mappings == null || mappings.isEmpty()) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("The group does not exist")
+                .message(group + " does not exist")
                 .haltError();
         }
     }
