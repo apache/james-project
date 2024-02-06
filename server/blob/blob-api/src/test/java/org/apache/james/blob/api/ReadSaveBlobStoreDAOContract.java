@@ -236,7 +236,7 @@ public interface ReadSaveBlobStoreDAOContract {
     @MethodSource("blobs")
     default void saveByteSourceShouldBeIdempotent(String description, byte[] bytes) {
         BlobStoreDAO store = testee();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ByteSource.wrap(bytes))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ByteSource.wrap(bytes))).block();
 
         byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();
@@ -248,7 +248,7 @@ public interface ReadSaveBlobStoreDAOContract {
     @MethodSource("blobs")
     default void saveInputStreamShouldBeIdempotent(String description, byte[] bytes) {
         BlobStoreDAO store = testee();
-        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, ByteSource.wrap(bytes))).block();
+        Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES)).block();
         Mono.from(store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, new ByteArrayInputStream(bytes))).block();
 
         byte[] read = Mono.from(store.readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)).block();

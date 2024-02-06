@@ -51,8 +51,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 @Testcontainers
 public class S3MinioTest implements BlobStoreDAOContract {
 
-    private static final String MINIO_IMAGE = "quay.io/minio/minio";
-    private static final String MINIO_TAG = "RELEASE.2024-01-29T03-56-32Z";
+    private static final String MINIO_IMAGE = "minio/minio";
+    private static final String MINIO_TAG = "RELEASE.2024-02-04T22-36-13Z";
     private static final String MINIO_IMAGE_FULL = MINIO_IMAGE + ":" + MINIO_TAG;
     private static final int MINIO_PORT = 9000;
     private static S3BlobStoreDAO testee;
