@@ -28,6 +28,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.internet.AddressException;
 
+
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
@@ -47,7 +48,7 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -74,6 +75,8 @@ public class GroupsRoutes implements Routes {
 
     private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     @VisibleForTesting
@@ -143,15 +146,11 @@ public class GroupsRoutes implements Routes {
 
     public HaltException removeMultipleGroup(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
         String jsonString = request.body();
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(jsonString);
-
-        // Accessing the "groups" array
-        JsonNode groups = jsonNode.get("groups");
+        List<String> groups = objectMapper.readValue(jsonString, new TypeReference<List<String>>() {});
 
         // Iterate through the array and print each element
         for (int i = 0; i < groups.size(); i++) {
-            String group = groups.get(i).asText();//todo
+            String group = groups.get(i);//todo
             // Have to check is this group correct or not
             MailAddress groupAddress;
             try {
