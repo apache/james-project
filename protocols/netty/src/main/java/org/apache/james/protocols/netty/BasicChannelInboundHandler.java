@@ -23,6 +23,7 @@ import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
 import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -267,6 +268,8 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                 }
                 if (cause instanceof ClosedChannelException) {
                     LOGGER.info("Channel closed before we could send in flight messages to the users (ClosedChannelException): {}", cause.getMessage());
+                } else if (cause instanceof SocketException) {
+                    LOGGER.info("Socket exception encountered: {}", cause.getMessage());
                 } else {
                     LOGGER.error("Unable to process request", cause);
                 }
