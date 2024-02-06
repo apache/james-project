@@ -148,6 +148,12 @@ class MailboxPathTest {
     }
 
     @Test
+    void shouldThrowWhenLineBreak() {
+        assertThatThrownBy(() -> MailboxPath.forUser(USER, "a\r\n [ALERT] that's bad").assertAcceptable('.'))
+            .isInstanceOf(MailboxNameException.class);
+    }
+
+    @Test
     void childShouldThrowWhenBlank() {
         MailboxPath path = MailboxPath.forUser(USER, "folder");
         assertThatThrownBy(() -> path.child(" ", '.'))
