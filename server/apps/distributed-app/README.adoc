@@ -24,7 +24,10 @@ $ curl --location --request DELETE 'http://ip:port/address/groups/myGroup'
 -----
 * Added a webadmin route for deleting multiple groups. Example cURL command:
 -----
-$ curl --location --request DELETE 'http://ip:port/address/groups'
+$ curl --location --request DELETE 'http://ip:port/address/groups' --data-raw '[
+    "myGroup1@mydomain",
+    "myGroup2@mydomain"
+]'
 -----
 
 
