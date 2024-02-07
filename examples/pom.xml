@@ -32,6 +32,18 @@
   <packaging>pom</packaging>
   <name>Apache James :: Examples</name>
 
+<<<<<<< HEAD
+=======
+  <properties>
+    <james.groupId>org.apache.james</james.groupId>
+    <james.baseVersion>${project.version}</james.baseVersion>
+    <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
+    <maven.compiler.target>1.11</maven.compiler.target>
+    <maven.compiler.source>1.11</maven.compiler.source>
+    <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
+  </properties>
+
+>>>>>>> 2ec58019a2 ([scout] adds missing jacoco version)
   <modules>
     <module>custom-james-assembly</module>
     <module>custom-listeners</module>
@@ -57,6 +69,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
         <executions>
           <execution>
             <id>jacoco-report</id>
