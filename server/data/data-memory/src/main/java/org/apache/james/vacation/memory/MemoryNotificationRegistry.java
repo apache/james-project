@@ -84,7 +84,7 @@ public class MemoryNotificationRegistry implements NotificationRegistry {
     }
 
     private boolean isStrictlyBefore(ZonedDateTime currentTime, ZonedDateTime registrationEnd) {
-        return ! currentTime.isAfter(registrationEnd);
+        return currentTime.isBefore(registrationEnd);
     }
 
     @Override
