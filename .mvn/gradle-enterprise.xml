@@ -11,14 +11,13 @@
   <!-- chosen values align with https://cwiki.apache.org/confluence/display/INFRA/Project+Onboarding+Instructions+for+Develocity -->
   <buildScan>
     <backgroundBuildScanUpload>#{isFalse(env['CI'])}</backgroundBuildScanUpload>
-    <publish>ALWAYS</publish>
     <publishIfAuthenticated>true</publishIfAuthenticated>
-    <!-- Always publish build scans for CI, only if requested locally -->
+    <!-- Always publish build scans for CI, only if requested locally differs from onboarding instructions -->
     <publish>#{env['CI'] == null ? 'ON_DEMAND' : 'ALWAYS'}</publish>
     <capture>
-      <goalInputFiles>true</goalInputFiles> <!-- To be enabled locally when debugging goal caching or if we want to enable predictive test selection -->
-      <buildLogging>false</buildLogging> <!-- disabled by default for privacy and performance, to be discussed -->
-      <testLogging>false</testLogging> <!-- disabled by default for privacy and performance, to be discussed -->
+      <goalInputFiles>true</goalInputFiles>
+      <buildLogging>true</buildLogging>
+      <testLogging>true</testLogging>
     </capture>
     <links>
       <link>
