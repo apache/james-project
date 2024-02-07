@@ -64,7 +64,6 @@
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
                     <archive>
-                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                         <manifestEntries>
                             <Specification-Title>Apache James MPT</Specification-Title>
                             <Specification-Version>${project.version}</Specification-Version>
@@ -73,6 +72,9 @@
                             <Implementation-Version>${project.version}</Implementation-Version>
                             <Implementation-Vendor>The Apache Software Foundation</Implementation-Vendor>
                             <Implementation-Vendor-Id>org.apache</Implementation-Vendor-Id>
+                            <Implementation-Url>${project.url}</Implementation-Url>
+                            <Embed-Dependency>*;scope=runtime</Embed-Dependency>
+                            <Export-Package>org.apache.james.mpt;version="${project.version}"</Export-Package>
                             <url>${project.url}</url>
                         </manifestEntries>
                     </archive>
@@ -85,27 +87,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin </artifactId>
-                <version>${felix.plugin.version}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Export-Package>org.apache.james.mpt</Export-Package>
-                        <Embed-Dependency>*;scope=runtime</Embed-Dependency>
-                    </instructions>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>bundle-manifest</id>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                        <phase>process-classes</phase>
-                    </execution>
-                </executions>
-            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
