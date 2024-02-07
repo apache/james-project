@@ -26,7 +26,7 @@ import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.VacationDeleteUserTaskStep;
 import org.apache.james.vacation.api.VacationRepository;
 import org.apache.james.vacation.api.VacationService;
-import org.apache.james.vacation.memory.MemoryNotificationRegistry;
+import org.apache.james.vacation.postgres.PostgresNotificationRegistry;
 import org.apache.james.vacation.postgres.PostgresVacationRepository;
 
 import com.google.inject.AbstractModule;
@@ -43,8 +43,8 @@ public class PostgresVacationModule extends AbstractModule {
         bind(PostgresVacationRepository.class).in(Scopes.SINGLETON);
         bind(VacationRepository.class).to(PostgresVacationRepository.class);
 
-        bind(MemoryNotificationRegistry.class).in(Scopes.SINGLETON);
-        bind(NotificationRegistry.class).to(MemoryNotificationRegistry.class);
+        bind(PostgresNotificationRegistry.class).in(Scopes.SINGLETON);
+        bind(NotificationRegistry.class).to(PostgresNotificationRegistry.class);
 
         Multibinder<PostgresModule> postgresVacationModules = Multibinder.newSetBinder(binder(), PostgresModule.class);
         postgresVacationModules.addBinding().toInstance(org.apache.james.vacation.postgres.PostgresVacationModule.MODULE);
