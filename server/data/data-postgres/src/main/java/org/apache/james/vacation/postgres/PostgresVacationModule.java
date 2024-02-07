@@ -19,11 +19,10 @@
 
 package org.apache.james.vacation.postgres;
 
-import static org.apache.james.vacation.postgres.PostgresVacationModule.PostgresVacationResponseTable.TABLE;
-
 import java.time.LocalDateTime;
 
 import org.apache.james.backends.postgres.PostgresCommons;
+import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
@@ -59,7 +58,34 @@ public interface PostgresVacationModule {
             .build();
     }
 
+    interface PostgresVacationNotificationRegistryTable {
+        Table<Record> TABLE_NAME = DSL.table("vacation_notification_registry");
+
+        Field<String> ACCOUNT_ID = DSL.field("account_id", SQLDataType.VARCHAR.notNull());
+        Field<String> RECIPIENT_ID = DSL.field("recipient_id", SQLDataType.VARCHAR.notNull());
+        Field<LocalDateTime> EXPIRY_DATE = DSL.field("expiry_date", PostgresCommons.DataTypes.TIMESTAMP);
+
+        PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
+            .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
+                .column(ACCOUNT_ID)
+                .column(RECIPIENT_ID)
+                .column(EXPIRY_DATE)
+                .constraint(DSL.primaryKey(ACCOUNT_ID, RECIPIENT_ID))))
+            .supportsRowLevelSecurity()
+            .build();
+
+        PostgresIndex ACCOUNT_ID_INDEX = PostgresIndex.name("vacation_notification_registry_accountId_index")
+            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, ACCOUNT_ID));
+
+        PostgresIndex FULL_COMPOSITE_INDEX = PostgresIndex.name("vacation_notification_registry_accountId_recipientId_expiryDate_index")
+            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, ACCOUNT_ID, RECIPIENT_ID, EXPIRY_DATE));
+    }
+
     PostgresModule MODULE = PostgresModule.builder()
-        .addTable(TABLE)
+        .addTable(PostgresVacationResponseTable.TABLE)
+        .addTable(PostgresVacationNotificationRegistryTable.TABLE)
+        .addIndex(PostgresVacationNotificationRegistryTable.ACCOUNT_ID_INDEX, PostgresVacationNotificationRegistryTable.FULL_COMPOSITE_INDEX)
         .build();
 }
