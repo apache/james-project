@@ -33,13 +33,13 @@ import org.apache.james.modules.data.PostgresDLPConfigurationStoreModule;
 import org.apache.james.modules.data.PostgresDataJmapModule;
 import org.apache.james.modules.data.PostgresDataModule;
 import org.apache.james.modules.data.PostgresDelegationStoreModule;
+import org.apache.james.modules.data.PostgresEventStoreModule;
 import org.apache.james.modules.data.PostgresUsersRepositoryModule;
 import org.apache.james.modules.data.PostgresVacationModule;
 import org.apache.james.modules.data.SievePostgresRepositoryModules;
 import org.apache.james.modules.event.JMAPEventBusModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.events.PostgresDeadLetterModule;
-import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.PostgresDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
@@ -113,7 +113,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new MailboxModule(),
         new SievePostgresRepositoryModules(),
         new TaskManagerModule(),
-        new MemoryEventStoreModule(),
+        new PostgresEventStoreModule(),
         new TikaMailboxModule(),
         new PostgresDLPConfigurationStoreModule(),
         new PostgresVacationModule());
