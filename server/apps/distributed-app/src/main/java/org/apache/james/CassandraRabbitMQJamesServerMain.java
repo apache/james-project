@@ -23,7 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
-import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
+import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.draft.JMAPListenerModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;

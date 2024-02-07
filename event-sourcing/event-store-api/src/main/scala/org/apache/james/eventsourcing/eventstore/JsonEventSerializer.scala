@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.eventsourcing.eventstore.cassandra
+package org.apache.james.eventsourcing.eventstore
 
 import java.io.IOException
 import java.util
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.google.common.collect.ImmutableSet
 import jakarta.inject.{Inject, Named}
 import org.apache.james.eventsourcing.Event
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.{EventDTO, EventDTOModule}
+import org.apache.james.eventsourcing.eventstore.dto.{EventDTO, EventDTOModule}
 import org.apache.james.json.{DTO, DTOModule, JsonGenericSerializer}
 
 import scala.annotation.varargs

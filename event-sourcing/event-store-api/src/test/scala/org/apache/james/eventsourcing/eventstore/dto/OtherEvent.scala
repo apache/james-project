@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,24 +15,14 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
-package org.apache.james.eventsourcing.eventstore.cassandra.dto
+ * ***************************************************************/
+package org.apache.james.eventsourcing.eventstore.dto
 
-import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
-import org.apache.james.eventsourcing.{EventId, TestAggregateId}
+import org.apache.james.eventsourcing.{Event, EventId, TestAggregateId}
 
-case class OtherTestEventDTO @JsonCreator()(
-                                             @JsonProperty("type") `type`: String,
-                                             @JsonProperty("data") data: Long,
-                                             @JsonProperty("eventId") eventId: Int,
-                                             @JsonProperty("aggregate") aggregate: Int) extends EventDTO {
-  override def getType: String = `type`
-  def getData: Long = data
-  def getEventId: Long = eventId
+final case class OtherEvent(override val eventId: EventId, aggregateId: TestAggregateId, payload: Long) extends Event {
 
-  def getAggregate: Int = aggregate
+  override def getAggregateId = aggregateId
 
-  @JsonIgnore
-  def toEvent: OtherEvent = OtherEvent(EventId.fromSerialized(eventId), TestAggregateId(aggregate), data)
-
+  def getPayload = payload
 }

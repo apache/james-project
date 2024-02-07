@@ -19,7 +19,7 @@
 package org.apache.james.eventsourcing.eventstore.cassandra
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension
-import org.apache.james.eventsourcing.eventstore.EventStore
+import org.apache.james.eventsourcing.eventstore.{EventStore, JsonEventSerializer}
 import org.junit.jupiter.api.extension.{AfterAllCallback, AfterEachCallback, BeforeAllCallback, BeforeEachCallback, ExtensionContext, ParameterContext, ParameterResolutionException, ParameterResolver}
 
 class CassandraEventStoreExtension(var cassandra: CassandraClusterExtension, val eventSerializer: JsonEventSerializer)
