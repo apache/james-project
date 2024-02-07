@@ -19,8 +19,8 @@
 package org.apache.james.modules.blobstore.validation;
 
 import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.lifecycle.api.StartUpCheck;
 
 import com.google.inject.AbstractModule;

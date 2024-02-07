@@ -22,7 +22,7 @@ package org.apache.james.modules.blobstore.validation;
 import java.util.Objects;
 
 import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
