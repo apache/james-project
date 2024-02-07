@@ -38,6 +38,7 @@
         <module>event-store-cassandra</module>
         <module>event-store-jpa</module>
         <module>event-store-memory</module>
+        <module>event-store-postgres</module>
     </modules>
 
 </project>
