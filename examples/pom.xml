@@ -38,6 +38,7 @@
     <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
     <maven.compiler.target>1.11</maven.compiler.target>
     <maven.compiler.source>1.11</maven.compiler.source>
+    <jacoco-maven-plugin.version>0.8.9</jacoco-maven-plugin.version>
   </properties>
 
   <modules>
@@ -57,6 +58,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
         <executions>
           <execution>
             <id>jacoco-report</id>
