@@ -3216,8 +3216,17 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.1.1</version>
+                    <version>3.6.3</version>
                     <configuration>
+                        <!-- The javadoc plugin only runs in the javadoc modules. But with the default configuration it tries
+                              to run a new maven instance in every dependency, in order to generate the apidocs there as well.
+                              I haven't found a way to control the forked instances to disable the build scans and this comes up in many projects
+                              as slowing the build.
+                              {@link https://maven.apache.org/plugins-archives/maven-javadoc-plugin-3.1.1/javadoc-mojo.html#detectOfflineLinks}
+                              {@link https://github.com/apache/bookkeeper/issues/1514}
+                              {@link https://issues.redhat.com/browse/ISPN-8629}
+                        -->
+                        <detectOfflineLinks>false</detectOfflineLinks>
                         <linksource>true</linksource>
                         <maxmemory>1g</maxmemory>
                         <minmemory>256m</minmemory>
