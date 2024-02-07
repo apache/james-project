@@ -32,7 +32,7 @@ trait EventStoreContract {
 
   @Test
   def getEventsOfAggregateShouldThrowOnNullAggregateId(testee: EventStore) : Unit =
-    assertThatThrownBy(() => testee.getEventsOfAggregate(null))
+    assertThatThrownBy(() => SMono(testee.getEventsOfAggregate(null)).block())
       .isInstanceOf(classOf[NullPointerException])
 
   @Test

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,20 +15,24 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
-package org.apache.james.eventsourcing.eventstore.cassandra.dto
+ * ***************************************************************/
+package org.apache.james.eventsourcing.eventstore.dto
 
-import org.apache.james.eventsourcing.Event
-import org.apache.james.json.DTOModule
+import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO
+import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
 
-object EventDTOModule {
-  def forEvent[EventTypeT <: Event](eventType: Class[EventTypeT]) = new DTOModule.Builder[EventTypeT](eventType)
-}
+final case class TestEventDTO @JsonCreator() ( @JsonProperty("type") `type`: String,
+                                    @JsonProperty("data") data: String,
+                                    @JsonProperty("eventId") eventId: Int,
+                                    @JsonProperty("aggregate") aggregate: Int) extends EventDTO {
+  override val getType: String = `type`
 
-case class EventDTOModule[T <: Event, U <: EventDTO](converter: DTOModule.DTOConverter[T, U],
-                                                     toDomainObjectConverter: DTOModule.DomainObjectConverter[T, U],
-                                                     domainObjectType: Class[T],
-                                                     dtoType: Class[U],
-                                                     typeName: String) extends DTOModule[T, U](converter, toDomainObjectConverter, domainObjectType, dtoType, typeName) {
-  override def toDTO(domainObject: T) : U = super.toDTO(domainObject)
+  def getData: String = data
+
+  def getEventId: Long = eventId
+
+  def getAggregate: Int = aggregate
+
+  @JsonIgnore def toEvent: TestEvent = TestEvent(EventId.fromSerialized(eventId), TestAggregateId(aggregate), data)
 }

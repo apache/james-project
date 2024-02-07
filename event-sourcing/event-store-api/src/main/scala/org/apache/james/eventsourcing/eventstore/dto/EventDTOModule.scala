@@ -16,8 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.eventsourcing.eventstore.cassandra.dto
+package org.apache.james.eventsourcing.eventstore.dto
 
-import org.apache.james.json.DTO
+import org.apache.james.eventsourcing.Event
+import org.apache.james.json.DTOModule
 
-trait EventDTO extends DTO
+object EventDTOModule {
+  def forEvent[EventTypeT <: Event](eventType: Class[EventTypeT]) = new DTOModule.Builder[EventTypeT](eventType)
+}
+
+case class EventDTOModule[T <: Event, U <: EventDTO](converter: DTOModule.DTOConverter[T, U],
+                                                     toDomainObjectConverter: DTOModule.DomainObjectConverter[T, U],
+                                                     domainObjectType: Class[T],
+                                                     dtoType: Class[U],
+                                                     typeName: String) extends DTOModule[T, U](converter, toDomainObjectConverter, domainObjectType, dtoType, typeName) {
+  override def toDTO(domainObject: T) : U = super.toDTO(domainObject)
+}

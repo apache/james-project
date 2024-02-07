@@ -21,7 +21,7 @@ package org.apache.james.dlp.eventsourcing.cassandra;
 
 import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsAdded;
 import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsRemoved;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 
 public interface DLPConfigurationModules {
 

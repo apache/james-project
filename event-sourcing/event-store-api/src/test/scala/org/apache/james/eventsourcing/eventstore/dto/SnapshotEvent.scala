@@ -16,22 +16,15 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  * ***************************************************************/
-package org.apache.james.eventsourcing.eventstore.cassandra.dto
+package org.apache.james.eventsourcing.eventstore.dto
 
-import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
-import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
+import org.apache.james.eventsourcing.{Event, EventId, TestAggregateId}
 
-final case class SnapshotEventDTO @JsonCreator()(@JsonProperty("type") `type`: String,
-                                                 @JsonProperty("data") data: String,
-                                                 @JsonProperty("eventId") eventId: Int,
-                                                 @JsonProperty("aggregate") aggregate: Int) extends EventDTO {
-  override def getType: String = `type`
+final case class SnapshotEvent(override val eventId: EventId, aggregateId: TestAggregateId, payload: String) extends Event {
 
-  def getData: String = data
+  override def getAggregateId = aggregateId
 
-  def getEventId: Long = eventId
+  def getPayload = payload
 
-  def getAggregate: Int = aggregate
-
-  @JsonIgnore def toEvent: SnapshotEvent = SnapshotEvent(EventId.fromSerialized(eventId), TestAggregateId(aggregate), data)
+  override val isASnapshot = true
 }

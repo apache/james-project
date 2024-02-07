@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.cassandra
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.SnapshotEvent
+import org.apache.james.eventsourcing.eventstore.dto.SnapshotEvent
 import org.apache.james.eventsourcing.{EventId, TestEvent}
 import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreContract, History}
 import org.assertj.core.api.Assertions.assertThat

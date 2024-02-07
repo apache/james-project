@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.blobstore.validation;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 
 public interface StorageStrategyModule {
 

@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.eventsourcing.eventstore.cassandra.dto
+package org.apache.james.eventsourcing.eventstore.dto
 
 import org.apache.james.eventsourcing.TestEvent
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule
 
 object TestEventDTOModules {
   val TEST_TYPE: EventDTOModule[TestEvent, TestEventDTO] = EventDTOModule.forEvent(classOf[TestEvent])

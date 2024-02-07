@@ -22,7 +22,7 @@ package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 import java.util.Objects;
 
 import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

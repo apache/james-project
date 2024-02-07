@@ -19,7 +19,8 @@
 package org.apache.james.eventsourcing.eventstore.cassandra
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.{OtherEvent, TestEventDTOModules}
+import org.apache.james.eventsourcing.eventstore.JsonEventSerializer
+import org.apache.james.eventsourcing.eventstore.dto.{OtherEvent, TestEventDTOModules}
 import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.junit.jupiter.api.Test
