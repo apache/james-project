@@ -4035,9 +4035,15 @@
                                 </execution>
                             </executions>
                         </plugin>
-
                         <plugin>
-                            <groupId>pl.project13.maven</groupId>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <configuration>
+                                <rerunFailingTestsCount>2</rerunFailingTestsCount>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                        <groupId>pl.project13.maven</groupId>
                             <artifactId>git-commit-id-plugin</artifactId>
                             <executions>
                                 <execution>
