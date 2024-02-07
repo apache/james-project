@@ -132,3 +132,4 @@ To clean up some specific data, that will never be used again after a long time,
 The never used data are:
 - mailbox_change
 - email_change
+- vacation_notification_registry
