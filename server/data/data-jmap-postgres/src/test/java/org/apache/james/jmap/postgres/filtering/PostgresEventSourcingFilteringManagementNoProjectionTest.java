@@ -20,7 +20,7 @@
 package org.apache.james.jmap.postgres.filtering;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStore;
 import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreDAO;
@@ -31,16 +31,16 @@ import org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class PostgresEventSourcingFilteringManagementTest implements FilteringManagementContract {
+public class PostgresEventSourcingFilteringManagementNoProjectionTest implements FilteringManagementContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresFilteringProjectionModule.MODULE,
-        PostgresEventStoreModule.MODULE));
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresEventStoreModule.MODULE);
 
     @Override
     public FilteringManagement instantiateFilteringManagement() {
-        return new EventSourcingFilteringManagement(new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getPostgresExecutor(),
+        EventStore eventStore = new PostgresEventStore(new PostgresEventStoreDAO(postgresExtension.getPostgresExecutor(),
             JsonEventSerializer.forModules(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED,
-                FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT).withoutNestedType())),
-            new PostgresFilteringProjection(new PostgresFilteringProjectionDAO(postgresExtension.getPostgresExecutor())));
+                FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT).withoutNestedType()));
+        return new EventSourcingFilteringManagement(eventStore,
+            new EventSourcingFilteringManagement.NoReadProjection(eventStore));
     }
 }
