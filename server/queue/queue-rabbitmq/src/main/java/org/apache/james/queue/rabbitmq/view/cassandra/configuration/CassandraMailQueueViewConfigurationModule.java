@@ -19,7 +19,7 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 
 public interface CassandraMailQueueViewConfigurationModule {
 

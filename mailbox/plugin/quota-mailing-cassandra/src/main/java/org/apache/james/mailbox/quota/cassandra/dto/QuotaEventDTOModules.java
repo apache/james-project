@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.quota.cassandra.dto;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 
 public interface QuotaEventDTOModules {
