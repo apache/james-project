@@ -87,7 +87,7 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
+                <artifactId>maven-bundle-plugin </artifactId>
                 <version>${felix.plugin.version}</version>
                 <extensions>true</extensions>
                 <configuration>
