@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,9 +15,24 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
-package org.apache.james.eventsourcing.eventstore.cassandra;
+ * ***************************************************************/
+package org.apache.james.eventsourcing.eventstore.dto
 
-public interface EventNestedTypes {
-    String EVENT_NESTED_TYPES_INJECTION_NAME = "EventNestedTypes";
+import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO
+import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
+
+final case class SnapshotEventDTO @JsonCreator()(@JsonProperty("type") `type`: String,
+                                                 @JsonProperty("data") data: String,
+                                                 @JsonProperty("eventId") eventId: Int,
+                                                 @JsonProperty("aggregate") aggregate: Int) extends EventDTO {
+  override def getType: String = `type`
+
+  def getData: String = data
+
+  def getEventId: Long = eventId
+
+  def getAggregate: Int = aggregate
+
+  @JsonIgnore def toEvent: SnapshotEvent = SnapshotEvent(EventId.fromSerialized(eventId), TestAggregateId(aggregate), data)
 }
