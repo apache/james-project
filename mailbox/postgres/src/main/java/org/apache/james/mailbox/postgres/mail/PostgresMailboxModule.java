@@ -23,6 +23,7 @@ import static org.jooq.impl.SQLDataType.BIGINT;
 
 import java.util.UUID;
 
+import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
@@ -60,9 +61,13 @@ public interface PostgresMailboxModule {
                 .constraint(DSL.unique(MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE))))
             .supportsRowLevelSecurity()
             .build();
+        PostgresIndex MAILBOX_USERNAME_NAMESPACE_INDEX = PostgresIndex.name("mailbox_username_namespace_index")
+            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, USER_NAME, MAILBOX_NAMESPACE));
     }
 
     PostgresModule MODULE = PostgresModule.builder()
         .addTable(PostgresMailboxTable.TABLE)
+        .addIndex(PostgresMailboxTable.MAILBOX_USERNAME_NAMESPACE_INDEX)
         .build();
 }
