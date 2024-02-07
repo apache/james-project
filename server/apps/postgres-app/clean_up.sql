@@ -17,5 +17,10 @@ $$
         DELETE
         FROM email_change
         WHERE date < current_timestamp - interval '1 day' * days_to_keep;
+
+        -- Delete outdated vacation notifications (older than the current UTC timestamp)
+        DELETE
+        FROM vacation_notification_registry
+        WHERE expiry_date < CURRENT_TIMESTAMP AT TIME ZONE 'UTC';
     END
 $$;
