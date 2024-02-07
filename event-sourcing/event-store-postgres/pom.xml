@@ -18,26 +18,24 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server-guice</artifactId>
+        <artifactId>event-sourcing</artifactId>
         <version>3.9.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-postgres-common-guice</artifactId>
-    <packaging>jar</packaging>
+    <artifactId>event-sourcing-event-store-postgres</artifactId>
 
-    <name>Apache James :: Server :: Postgres - guice common</name>
-
-    <properties>
-        <jpa.includes>empty</jpa.includes>
-    </properties>
+    <name>Apache James :: Event sourcing :: Event Store :: Postgres</name>
+    <description>Postgres implementation for James Event Store</description>
 
     <dependencies>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-backends-postgres</artifactId>
+        </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-backends-postgres</artifactId>
@@ -46,29 +44,29 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>dead-letter-postgres</artifactId>
+            <artifactId>event-sourcing-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>event-sourcing-event-store-postgres</artifactId>
-            <version>${project.version}</version>
+            <artifactId>event-sourcing-event-store-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-file</artifactId>
+            <artifactId>event-sourcing-event-store-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-jmap-postgres</artifactId>
-            <version>${project.version}</version>
+            <artifactId>event-sourcing-pojo</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-postgres</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
+            <artifactId>james-json</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -77,22 +75,28 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-distributed</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailbox-adapter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>testing-base</artifactId>
+            <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit-assertj</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.postgresql</groupId>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
