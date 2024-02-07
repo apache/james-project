@@ -98,6 +98,6 @@ public interface NotificationRegistryContract {
 
         notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.of(ZONED_DATE_TIME)).block();
 
-        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isFalse();
     }
 }
