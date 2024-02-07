@@ -30,13 +30,15 @@ import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO_2;
-import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT;
-import static org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
+import static org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT;
+import static org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.jmap.api.filtering.FilteringIncrementalRuleChangeDTO;
+import org.apache.james.jmap.api.filtering.FilteringRuleSetDefinedDTO;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.apache.james.jmap.api.filtering.impl.IncrementalRuleChange;

@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.json.DTOModule;
 
 public interface ACLModule {

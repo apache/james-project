@@ -17,9 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.filtering;
+package org.apache.james.jmap.api.filtering;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.jmap.api.filtering.impl.IncrementalRuleChange;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 

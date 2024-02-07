@@ -17,14 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.filtering;
+package org.apache.james.jmap.api.filtering;
 
 import java.util.Objects;
 
 import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
-import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.james.jmap.api.filtering.RuleDTO;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.apache.james.jmap.api.filtering.impl.IncrementalRuleChange;
 
