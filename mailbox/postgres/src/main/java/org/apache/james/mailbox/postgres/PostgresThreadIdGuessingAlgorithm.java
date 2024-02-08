@@ -19,12 +19,13 @@
 
 package org.apache.james.mailbox.postgres;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.RightManager;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 
@@ -33,29 +34,23 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
-    private final PostgresThreadDAO.Factory threadDAOFactory;
     private final PostgresMailboxMessageDAO.Factory mailboxMessageDAO;
+    private final RightManager rightManager;
 
     @Inject
-    public PostgresThreadIdGuessingAlgorithm(PostgresThreadDAO.Factory threadDAOFactory, PostgresMailboxMessageDAO.Factory mailboxMessageDAO) {
-        this.threadDAOFactory = threadDAOFactory;
+    public PostgresThreadIdGuessingAlgorithm(PostgresMailboxMessageDAO.Factory mailboxMessageDAO, RightManager rightManager) {
+        this.rightManager = rightManager;
         this.mailboxMessageDAO = mailboxMessageDAO;
     }
 
     @Override
     public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, ThreadInformation threadInformation, MailboxSession session) {
-        PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
-
-        ThreadInformation.Hashed hashed = threadInformation.hash();
-
-        return threadDAO.findThreads(session.getUser(), hashed.getHashMimeMessageIds())
-            .filter(pair -> pair.getLeft().equals(hashed.getHashBaseSubject()))
-            .next()
-            .map(Pair::getRight)
-            .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)))
-            .flatMap(threadId -> threadDAO
-                .insertSome(session.getUser(), PostgresMessageId.class.cast(messageId), threadId, hashed)
-                .then(Mono.just(threadId)));
+        return mailboxMessageDAO.create(session.getUser().getDomainPart())
+            .retrieveByMimeMessageId(threadInformation.hash())
+            .filterWhen(triple -> Mono.from(rightManager.myRights(triple.getMiddle(), session))
+                .map(rights -> rights.contains(MailboxACL.Right.Lookup)))
+            .map(Triple::getLeft)
+            .next();
     }
 
     @Override

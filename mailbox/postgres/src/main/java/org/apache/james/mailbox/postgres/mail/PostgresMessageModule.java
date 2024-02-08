@@ -66,6 +66,8 @@ public interface PostgresMessageModule {
         Field<AttachmentsDTO> ATTACHMENT_METADATA = DSL.field("attachment_metadata",
             SQLDataType.JSONB
                 .asConvertedDataType(new AttachmentsDTO.AttachmentsDTOBinding()));
+        Field<Integer> HASH_MIME_MESSAGE_ID = DSL.field("hash_mime_message_id", SQLDataType.INTEGER.notNull());
+        Field<Integer> HASH_BASE_SUBJECT = DSL.field("hash_base_subject", SQLDataType.INTEGER);
 
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
@@ -89,6 +91,8 @@ public interface PostgresMessageModule {
                 .column(CONTENT_TYPE_PARAMETERS)
                 .column(CONTENT_DISPOSITION_PARAMETERS)
                 .column(ATTACHMENT_METADATA)
+                .column(HASH_BASE_SUBJECT)
+                .column(HASH_MIME_MESSAGE_ID)
                 .constraint(DSL.primaryKey(MESSAGE_ID))
                 .comment("Holds the metadata of a mail")))
             .supportsRowLevelSecurity()

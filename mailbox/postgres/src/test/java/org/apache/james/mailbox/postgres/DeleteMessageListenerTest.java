@@ -37,7 +37,6 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
-import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
@@ -85,8 +84,8 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
         mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
             eventBus, annotationManager,
-            storeRightManager, quotaComponents, index, new PostgresThreadIdGuessingAlgorithm(new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory()),
-                new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory())),
+            storeRightManager, quotaComponents, index, new PostgresThreadIdGuessingAlgorithm(
+                new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory()), mailboxManager),
             PreDeletionHooks.NO_PRE_DELETION_HOOK, new UpdatableTickingClock(Instant.now()));
     }
 
@@ -103,11 +102,6 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
     @Override
     PostgresMailboxMessageDAO providePostgresMailboxMessageDAO() {
         return new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor());
-    }
-
-    @Override
-    PostgresThreadDAO threadDAO() {
-        return new PostgresThreadDAO(postgresExtension.getPostgresExecutor());
     }
 
     @Override

@@ -24,6 +24,8 @@ import static org.apache.james.backends.postgres.PostgresCommons.DATE_TO_LOCAL_D
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
 import static org.apache.james.backends.postgres.PostgresCommons.UNNEST_FIELD;
 import static org.apache.james.backends.postgres.PostgresCommons.tableField;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HASH_BASE_SUBJECT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HASH_MIME_MESSAGE_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.SIZE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageToMailboxTable.IS_ANSWERED;
@@ -60,6 +62,7 @@ import javax.inject.Singleton;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.MessageUid;
@@ -73,6 +76,7 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -97,6 +101,7 @@ import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple3;
 
 public class PostgresMailboxMessageDAO {
 
@@ -217,6 +222,17 @@ public class PostgresMailboxMessageDAO {
                 .from(TABLE_NAME)
                 .where(THREAD_ID.eq(baseMessageId.asUuid()))))
             .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
+    }
+
+    public Flux<Triple<ThreadId, PostgresMailboxId, Optional<Integer>>> retrieveByMimeMessageId(ThreadInformation.Hashed hashed) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(THREAD_ID, MAILBOX_ID, HASH_BASE_SUBJECT)
+                    .from(TABLE_NAME)
+                    .where(HASH_MIME_MESSAGE_ID.in(hashed.getHashMimeMessageIds()))))
+                .map(record -> Triple.of(
+                    ThreadId.fromBaseMessageId(PostgresMessageId.Factory.of(record.get(THREAD_ID))),
+                    PostgresMailboxId.of(record.get(MAILBOX_ID)),
+                    Optional.ofNullable(record.get(HASH_BASE_SUBJECT))))
+            .filter(triple -> triple.getRight().equals(hashed.getHashBaseSubject()));
     }
 
     public Mono<MessageMetaData> deleteByMailboxIdAndMessageUid(PostgresMailboxId mailboxId, MessageUid messageUid) {

@@ -56,6 +56,24 @@ public class ThreadInformation {
         }
     }
 
+    public static class Thumbprint {
+        private final Optional<Integer> hashBaseSubject;
+        private final Optional<Integer> hashMimeMessageId;
+
+        public Thumbprint(Optional<Integer> hashBaseSubject, Optional<Integer> hashMimeMessageId) {
+            this.hashBaseSubject = hashBaseSubject;
+            this.hashMimeMessageId = hashMimeMessageId;
+        }
+
+        public Optional<Integer> getHashBaseSubject() {
+            return hashBaseSubject;
+        }
+
+        public Optional<Integer> getHashMimeMessageId() {
+            return hashMimeMessageId;
+        }
+    }
+
     public static ThreadInformation of(HeaderImpl headers) {
         Optional<MimeMessageId> mimeMessageId = MimeMessageHeadersUtil.parseMimeMessageId(headers);
         Optional<MimeMessageId> inReplyTo = MimeMessageHeadersUtil.parseInReplyTo(headers);
@@ -70,6 +88,10 @@ public class ThreadInformation {
         defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
 
         return of((HeaderImpl) defaultMessageBuilder.parseHeader(inputStream));
+    }
+
+    private static int hash(String value) {
+        return Hashing.murmur3_32_fixed().hashBytes(value.getBytes()).asInt();
     }
 
     private final Optional<MimeMessageId> mimeMessageId;
@@ -87,13 +109,19 @@ public class ThreadInformation {
     public Hashed hash() {
         Set<Integer> hashMimeMessageIds = buildMimeMessageIdSet()
             .stream()
-            .map(mimeMessageId1 -> Hashing.murmur3_32_fixed().hashBytes(mimeMessageId1.getValue().getBytes()).asInt())
+            .map(mimeMessageId1 -> hash(mimeMessageId1.getValue()))
             .collect(Collectors.toSet());
 
         Optional<Integer> hashBaseSubject = subject.map(value -> new Subject(SearchUtil.getBaseSubject(value.getValue())))
-            .map(subject1 -> Hashing.murmur3_32_fixed().hashBytes(subject1.getValue().getBytes()).asInt());
+            .map(subject1 -> hash(subject1.getValue()));
 
         return new Hashed(hashMimeMessageIds, hashBaseSubject);
+    }
+
+    public Thumbprint thumbprint() {
+        Optional<Integer> hashBaseSubject = subject.map(value -> new Subject(SearchUtil.getBaseSubject(value.getValue())))
+            .map(subject1 -> hash(subject1.getValue()));
+        return new Thumbprint(hashBaseSubject, mimeMessageId.map(MimeMessageId::getValue).map(ThreadInformation::hash));
     }
 
     private Set<MimeMessageId> buildMimeMessageIdSet() {
