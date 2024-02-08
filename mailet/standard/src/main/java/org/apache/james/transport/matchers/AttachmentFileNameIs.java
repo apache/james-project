@@ -36,12 +36,14 @@ import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
-import org.apache.mailet.Experimental;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * <P>Checks if at least one attachment has a file name which matches any
@@ -57,7 +59,6 @@ import org.slf4j.LoggerFactory;
  * @version CVS $Revision$ $Date$
  * @since 2.2.0
  */
-@Experimental
 public class AttachmentFileNameIs extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttachmentFileNameIs.class);
     
@@ -84,13 +85,15 @@ public class AttachmentFileNameIs extends GenericMatcher {
     /**
      * Controls certain log messages.
      */
-    protected boolean isDebug = false;
+    @VisibleForTesting
+    boolean isDebug = false;
 
     /** contains ParsedMask instances, setup by init */
     private Mask[] masks = null;
     
     /** True if unzip is requested. */
-    protected boolean unzipIsRequested;
+    @VisibleForTesting
+    boolean unzipIsRequested;
     
 
     @Override
@@ -129,7 +132,6 @@ public class AttachmentFileNameIs extends GenericMatcher {
 
     /** 
      * Either every recipient is matching or neither of them.
-     * @param mail
      * @throws MessagingException if no matching attachment is found and at least one exception was thrown
      */
     @Override
@@ -245,7 +247,6 @@ public class AttachmentFileNameIs extends GenericMatcher {
      *@param part
      */
     protected boolean matchFoundInZip(Part part) throws MessagingException, IOException {
-
         try (ZipInputStream zis = new ZipInputStream(part.getInputStream())) {
             while (true) {
                 ZipEntry zipEntry = zis.getNextEntry();
@@ -266,11 +267,10 @@ public class AttachmentFileNameIs extends GenericMatcher {
 
     /**
      * Transforms <I>fileName<I> in a trimmed lowercase string usable for matching agains the masks.
-     *
-     * @param fileName
+     * Also decode encoded words.
      */
     protected String cleanFileName(String fileName) {
-        return fileName.toLowerCase(Locale.US).trim();
+        return DecoderUtil.decodeEncodedWords(fileName.toLowerCase(Locale.US).trim(), DecodeMonitor.SILENT);
     }
 }
 
