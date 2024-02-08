@@ -85,7 +85,8 @@ public class DeleteMessageListenerTest extends DeleteMessageListenerContract {
         mailboxManager = new PostgresMailboxManager(mapperFactory, sessionProvider,
             messageParser, new PostgresMessageId.Factory(),
             eventBus, annotationManager,
-            storeRightManager, quotaComponents, index, new PostgresThreadIdGuessingAlgorithm(new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory())),
+            storeRightManager, quotaComponents, index, new PostgresThreadIdGuessingAlgorithm(new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory()),
+                new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor())),
             PreDeletionHooks.NO_PRE_DELETION_HOOK, new UpdatableTickingClock(Instant.now()));
     }
 

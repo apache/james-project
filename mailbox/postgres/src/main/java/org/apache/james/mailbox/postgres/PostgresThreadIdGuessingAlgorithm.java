@@ -21,9 +21,9 @@ package org.apache.james.mailbox.postgres;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.ThreadNotFoundException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
@@ -34,10 +34,12 @@ import reactor.core.publisher.Mono;
 
 public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
     private final PostgresThreadDAO.Factory threadDAOFactory;
+    private final PostgresMailboxMessageDAO mailboxMessageDAO;
 
     @Inject
-    public PostgresThreadIdGuessingAlgorithm(PostgresThreadDAO.Factory threadDAOFactory) {
+    public PostgresThreadIdGuessingAlgorithm(PostgresThreadDAO.Factory threadDAOFactory, PostgresMailboxMessageDAO mailboxMessageDAO) {
         this.threadDAOFactory = threadDAOFactory;
+        this.mailboxMessageDAO = mailboxMessageDAO;
     }
 
     @Override
@@ -58,8 +60,6 @@ public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgori
 
     @Override
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
-        PostgresThreadDAO threadDAO = threadDAOFactory.create(session.getUser().getDomainPart());
-        return threadDAO.findMessageIds(threadId, session.getUser())
-            .switchIfEmpty(Flux.error(new ThreadNotFoundException(threadId)));
+        return mailboxMessageDAO.retrieveThread(threadId);
     }
 }

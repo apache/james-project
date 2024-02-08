@@ -66,8 +66,10 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable;
@@ -206,6 +208,15 @@ public class PostgresMailboxMessageDAO {
                 .and(MESSAGE_UID.lessOrEqual(range.getUidTo().asLong()))
                 .orderBy(DEFAULT_SORT_ORDER_BY)))
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
+    }
+
+    public Flux<MessageId> retrieveThread(ThreadId threadId) {
+        PostgresMessageId baseMessageId = (PostgresMessageId) threadId.getBaseMessageId();
+
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(MESSAGE_ID)
+                .from(TABLE_NAME)
+                .where(THREAD_ID.eq(baseMessageId.asUuid()))))
+            .map(record -> PostgresMessageId.Factory.of(record.get(MESSAGE_ID)));
     }
 
     public Mono<MessageMetaData> deleteByMailboxIdAndMessageUid(PostgresMailboxId mailboxId, MessageUid messageUid) {

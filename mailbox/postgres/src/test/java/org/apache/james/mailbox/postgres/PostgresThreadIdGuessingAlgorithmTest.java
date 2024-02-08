@@ -36,6 +36,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
@@ -74,7 +75,7 @@ public class PostgresThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgor
     @Override
     protected ThreadIdGuessingAlgorithm initThreadIdGuessingAlgorithm(CombinationManagerTestSystem testingData) {
         threadDAOFactory = new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory());
-        return new PostgresThreadIdGuessingAlgorithm(threadDAOFactory);
+        return new PostgresThreadIdGuessingAlgorithm(threadDAOFactory, new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor()));
     }
 
     @Override

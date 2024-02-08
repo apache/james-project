@@ -174,6 +174,10 @@ public interface PostgresMessageModule {
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, MAILBOX_ID, IS_DELETED, MESSAGE_UID.asc()));
 
+        PostgresIndex BY_THREAD_ID = PostgresIndex.name("by_thread_id")
+            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, MAILBOX_ID, IS_DELETED, MESSAGE_UID.asc()));
+
     }
 
     PostgresModule MODULE = PostgresModule.builder()
@@ -184,6 +188,7 @@ public interface PostgresMessageModule {
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_SEEN_MESSAGE_UID_INDEX)
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_RECENT_MESSAGE_UID_INDEX)
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_DELETE_MESSAGE_UID_INDEX)
+        .addIndex(MessageToMailboxTable.BY_THREAD_ID)
         .build();
 
 }
