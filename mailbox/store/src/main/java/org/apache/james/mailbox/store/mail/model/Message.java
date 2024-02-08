@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
@@ -147,4 +148,5 @@ public interface Message {
      */
     List<MessageAttachmentMetadata> getAttachments();
 
+    ThreadInformation threadInformation();
 }

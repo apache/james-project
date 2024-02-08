@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +31,9 @@ import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.mail.utils.MimeMessageHeadersUtil;
 import org.apache.james.mailbox.store.search.SearchUtil;
+import org.apache.james.mime4j.message.DefaultMessageBuilder;
 import org.apache.james.mime4j.message.HeaderImpl;
+import org.apache.james.mime4j.stream.MimeConfig;
 
 import com.google.common.hash.Hashing;
 
@@ -59,6 +63,13 @@ public class ThreadInformation {
         Optional<Subject> subject = MimeMessageHeadersUtil.parseSubject(headers);
 
         return new ThreadInformation(mimeMessageId, inReplyTo, references, subject);
+    }
+
+    public static ThreadInformation parse(InputStream inputStream) throws IOException {
+        DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
+        defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
+
+        return of((HeaderImpl) defaultMessageBuilder.parseHeader(inputStream));
     }
 
     private final Optional<MimeMessageId> mimeMessageId;

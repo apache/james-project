@@ -56,6 +56,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
@@ -575,5 +576,14 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     private AttachmentId generateFixedAttachmentId(int position) {
         return AttachmentId.from(getMailboxId().serialize() + "-" + getUid().asLong() + "-" + position);
+    }
+
+    @Override
+    public ThreadInformation threadInformation() {
+        try {
+            return ThreadInformation.parse(getHeaderContent());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

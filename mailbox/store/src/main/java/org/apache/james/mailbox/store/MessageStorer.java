@@ -103,7 +103,9 @@ public interface MessageStorer {
                             ThreadId threadId = pair.getT2();
                             Date saveDate = Date.from(clock.instant());
 
-                            MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
+                            MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet,
+                                content, flags, propertyBuilder, attachments, threadInformation);
+
                             return Mono.from(messageMapper.addReactive(mailbox, message))
                                 .map(metadata -> Pair.of(metadata, Optional.of(attachments)));
                         }).sneakyThrow()));
@@ -169,7 +171,10 @@ public interface MessageStorer {
                     .flatMap(Throwing.function((ThreadId threadId) -> {
                         Date saveDate = Date.from(clock.instant());
 
-                        MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of());
+                        MailboxMessage message = messageFactory.createMessage(messageId, threadId, mailbox, internalDate, saveDate,
+                            size, bodyStartOctet, content, flags, propertyBuilder, ImmutableList.of(), threadInformation);
+
+
                         return Mono.from(messageMapper.addReactive(mailbox, message))
                             .map(metadata -> Pair.of(metadata, Optional.empty()));
                     })));

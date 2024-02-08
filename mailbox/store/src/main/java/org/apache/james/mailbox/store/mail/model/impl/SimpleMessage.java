@@ -23,12 +23,14 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.reactivestreams.Publisher;
 
@@ -44,8 +46,10 @@ public class SimpleMessage implements Message {
     private final Long textualLineCount;
     private final Properties properties;
     private final List<MessageAttachmentMetadata> attachments;
+    private final Optional<ThreadInformation> threadInformation;
 
-    public SimpleMessage(MessageId messageId, Content content, long size, Date internalDate, int bodyStartOctet, Long textualLineCount, Properties properties, List<MessageAttachmentMetadata> attachments) {
+    public SimpleMessage(MessageId messageId, Content content, long size, Date internalDate, int bodyStartOctet, Long textualLineCount, Properties properties, List<MessageAttachmentMetadata> attachments,
+                         Optional<ThreadInformation> threadInformation) {
         this.messageId = messageId;
         this.content = content;
         this.bodyStartOctet = bodyStartOctet;
@@ -54,6 +58,7 @@ public class SimpleMessage implements Message {
         this.textualLineCount = textualLineCount;
         this.properties = properties;
         this.attachments = attachments;
+        this.threadInformation = threadInformation;
     }
 
     @Override
@@ -142,5 +147,16 @@ public class SimpleMessage implements Message {
     @Override
     public Publisher<ByteBuffer> getFullContentReactive() {
         return content.reactiveBytes();
+    }
+
+    @Override
+    public ThreadInformation threadInformation() {
+        return threadInformation.orElseGet(() -> {
+            try {
+                return ThreadInformation.parse(getHeaderContent());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
