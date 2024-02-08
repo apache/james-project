@@ -19,12 +19,6 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -37,10 +31,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
-import org.apache.james.mailbox.store.mail.model.MimeMessageId;
-import org.apache.james.mailbox.store.mail.model.Subject;
-import org.apache.james.mailbox.store.search.SearchUtil;
 
 import com.google.common.hash.Hashing;
 
@@ -60,23 +52,16 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
     }
 
     @Override
-    public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
-        Set<Integer> hashMimeMessageIds = buildMimeMessageIdSet(mimeMessageId, inReplyTo, references)
-            .stream()
-            .map(mimeMessageId1 -> Hashing.murmur3_32_fixed().hashBytes(mimeMessageId1.getValue().getBytes()).asInt())
-            .collect(Collectors.toSet());
-
-        Optional<Integer> hashBaseSubject = subject.map(value -> new Subject(SearchUtil.getBaseSubject(value.getValue())))
-            .map(subject1 -> Hashing.murmur3_32_fixed().hashBytes(subject1.getValue().getBytes()).asInt());
-
-        return Flux.from(threadDAO.selectSome(session.getUser(), hashMimeMessageIds))
-            .filter(pair -> pair.getLeft().equals(hashBaseSubject))
+    public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, ThreadInformation threadInformation, MailboxSession session) {
+        ThreadInformation.Hashed hashed = threadInformation.hash();
+        return Flux.from(threadDAO.selectSome(session.getUser(), hashed.getHashMimeMessageIds()))
+            .filter(pair -> pair.getLeft().equals(hashed.getHashBaseSubject()))
             .next()
             .map(Pair::getRight)
             .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)))
             .flatMap(threadId -> threadDAO
-                .insertSome(session.getUser(), hashMimeMessageIds, messageId, threadId, hashBaseSubject)
-                .then(threadLookupDAO.insert(messageId, session.getUser(), hashMimeMessageIds))
+                .insertSome(session.getUser(), hashed.getHashMimeMessageIds(), messageId, threadId, hashed.getHashBaseSubject())
+                .then(threadLookupDAO.insert(messageId, session.getUser(), hashed.getHashMimeMessageIds()))
                 .then(Mono.just(threadId)));
     }
 
@@ -93,13 +78,5 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
 
         return Flux.from(mailboxManager.search(expression, session, Integer.MAX_VALUE))
             .switchIfEmpty(Mono.error(() -> new ThreadNotFoundException(threadId)));
-    }
-
-    private Set<MimeMessageId> buildMimeMessageIdSet(Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references) {
-        Set<MimeMessageId> mimeMessageIds = new HashSet<>();
-        mimeMessageId.ifPresent(mimeMessageIds::add);
-        inReplyTo.ifPresent(mimeMessageIds::add);
-        references.ifPresent(mimeMessageIds::addAll);
-        return mimeMessageIds;
     }
 }

@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.apache.james.mailbox.store.search.SearchUtil;
@@ -56,8 +57,11 @@ public class SearchThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorith
     }
 
     @Override
-    public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> mimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session) {
-        MultimailboxesSearchQuery expression = buildSearchQuery(mimeMessageId, inReplyTo, references, subject);
+    public Mono<ThreadId> guessThreadIdReactive(MessageId messageId, ThreadInformation threadInformation, MailboxSession session) {
+        MultimailboxesSearchQuery expression = buildSearchQuery(threadInformation.getMimeMessageId(),
+            threadInformation.getInReplyTo(),
+            threadInformation.getReferences(),
+            threadInformation.getSubject());
 
         return Flux.from(mailboxManager.search(expression, session, 1))
             .collectList()

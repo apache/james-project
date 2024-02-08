@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
@@ -102,11 +103,13 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
 
     @Test
     void guessThreadIdShouldSaveDataToThreadLookupTable() {
-        testee.guessThreadIdReactive(newBasedMessageId,
+        ThreadInformation threadInformation = new ThreadInformation(
             Optional.of(new MimeMessageId("Message-ID1")),
             Optional.of(new MimeMessageId("someInReplyTo")),
             Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))),
-            Optional.of(new Subject("test")), mailboxSession).block();
+            Optional.of(new Subject("test")));
+
+        testee.guessThreadIdReactive(newBasedMessageId, threadInformation, mailboxSession).block();
 
         Username username = mailboxSession.getUser();
         Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID1")),
