@@ -32,6 +32,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraThreadModule;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,7 +94,8 @@ public class CassandraThreadDAOTest {
     @Test
     void insertShouldSucceed() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+        ThreadInformation.Hashed hashed = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)),hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed)
             .collectList().block();
 
         assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1))).collectList().block())
@@ -103,7 +105,8 @@ public class CassandraThreadDAOTest {
     @Test
     void insertNullBaseSubjectShouldBeAllowed() {
         Optional<Subject> message1BaseSubject = Optional.empty();
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+        ThreadInformation.Hashed hashed = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed)
             .collectList().block();
 
         assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1))).collectList().block())
@@ -113,7 +116,8 @@ public class CassandraThreadDAOTest {
     @Test
     void insertEmptyBaseSubjectShouldBeAllowed() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject(""));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+        ThreadInformation.Hashed hashed = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed)
             .collectList().block();
 
         assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1))).collectList().block())
@@ -131,9 +135,12 @@ public class CassandraThreadDAOTest {
         Optional<Subject> messageBaseSubject = Optional.of(new Subject("subject"));
 
         // given message1 and message2 belongs to same thread, related to each other by mimeMessageId2, mimeMessageId3
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2, mimeMessageId3)), messageId1, threadId1, hashSubject(messageBaseSubject))
+        ThreadInformation.Hashed hashed1 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2, mimeMessageId3)), hashSubject(messageBaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed1)
             .collectList().block();
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2, mimeMessageId3, mimeMessageId4)), messageId2, threadId1, hashSubject(messageBaseSubject))
+
+        ThreadInformation.Hashed hashed2 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2, mimeMessageId3, mimeMessageId4)), hashSubject(messageBaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed2)
             .collectList().block();
 
         // select with new message having mimeMessageId2 and mimeMessageId3
@@ -145,12 +152,14 @@ public class CassandraThreadDAOTest {
     void selectShouldReturnOnlyRelatedMessageDataOfAUser() {
         // insert message1 data of ALICE
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+        ThreadInformation.Hashed hashed1 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed1)
             .collectList().block();
 
         // insert message2 data of BOB
         Optional<Subject> message2BaseSubject = Optional.of(new Subject("subject2"));
-        testee.insertSome(BOB, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)), messageId2, threadId2, hashSubject(message2BaseSubject)).collectList().block();
+        ThreadInformation.Hashed hashed2 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)), hashSubject(message2BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed2).collectList().block();
 
         // select some data of BOB
         assertThat(testee.selectSome(BOB, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)))
@@ -162,12 +171,14 @@ public class CassandraThreadDAOTest {
     void selectShouldReturnOnlyRelatedMessageDataOfAThread() {
         // insert message1 data of ALICE which in thread1
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), messageId1, threadId1, hashSubject(message1BaseSubject))
+        ThreadInformation.Hashed hashed1 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1)), hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed1)
             .collectList().block();
 
         // insert message2 data of ALICE which in thread2
         Optional<Subject> message2BaseSubject = Optional.of(new Subject("subject2"));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)), messageId2, threadId2, hashSubject(message2BaseSubject))
+        ThreadInformation.Hashed hashed2 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId2)), hashSubject(message2BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed2)
             .collectList().block();
 
         // select some data related to thread2
@@ -178,7 +189,8 @@ public class CassandraThreadDAOTest {
     @Test
     void selectWithUnrelatedMimeMessageIDsShouldReturnEmpty() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), messageId1, threadId1, hashSubject(message1BaseSubject))
+        ThreadInformation.Hashed hashed1 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed1)
             .collectList().block();
 
         assertThat(testee.selectSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId3, mimeMessageId4, mimeMessageId5))).collectList().block())
@@ -188,7 +200,9 @@ public class CassandraThreadDAOTest {
     @Test
     void deletedEntriesShouldNotBeReturned() {
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), messageId1, threadId1, hashSubject(message1BaseSubject))
+
+        ThreadInformation.Hashed hashed1 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed1)
             .collectList().block();
 
         testee.deleteSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)));
@@ -201,7 +215,9 @@ public class CassandraThreadDAOTest {
     void deleteWithUnrelatedMimeMessageIDsShouldDeleteNothing() {
         // insert message1 data
         Optional<Subject> message1BaseSubject = Optional.of(new Subject("subject"));
-        testee.insertSome(ALICE, hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), messageId1, threadId1, hashSubject(message1BaseSubject))
+
+        ThreadInformation.Hashed hashed1 = new ThreadInformation.Hashed(hashMimeMessagesIds(ImmutableSet.of(mimeMessageId1, mimeMessageId2)), hashSubject(message1BaseSubject));
+        testee.insertSome(ALICE, messageId1, threadId1, hashed1)
             .collectList().block();
 
         // delete with unrelated mimemessageIds

@@ -52,7 +52,7 @@ public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgori
             .map(Pair::getRight)
             .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)))
             .flatMap(threadId -> threadDAO
-                .insertSome(session.getUser(), hashed.getHashMimeMessageIds(), PostgresMessageId.class.cast(messageId), threadId, hashed.getHashBaseSubject())
+                .insertSome(session.getUser(), PostgresMessageId.class.cast(messageId), threadId, hashed)
                 .then(Mono.just(threadId)));
     }
 

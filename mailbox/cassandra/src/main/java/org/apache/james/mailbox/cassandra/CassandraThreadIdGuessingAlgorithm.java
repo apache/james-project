@@ -60,7 +60,7 @@ public class CassandraThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgor
             .map(Pair::getRight)
             .switchIfEmpty(Mono.just(ThreadId.fromBaseMessageId(messageId)))
             .flatMap(threadId -> threadDAO
-                .insertSome(session.getUser(), hashed.getHashMimeMessageIds(), messageId, threadId, hashed.getHashBaseSubject())
+                .insertSome(session.getUser(), messageId, threadId, hashed)
                 .then(threadLookupDAO.insert(messageId, session.getUser(), hashed.getHashMimeMessageIds()))
                 .then(Mono.just(threadId)));
     }

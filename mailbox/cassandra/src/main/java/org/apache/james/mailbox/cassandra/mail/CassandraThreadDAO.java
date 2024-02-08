@@ -43,6 +43,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.ThreadInformation;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -81,14 +82,14 @@ public class CassandraThreadDAO {
             .build());
     }
 
-    public Flux<Void> insertSome(Username username, Set<Integer> hashMimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Integer> hashBaseSubject) {
-        return Flux.fromIterable(hashMimeMessageIds)
+    public Flux<Void> insertSome(Username username, MessageId messageId, ThreadId threadId, ThreadInformation.Hashed hashed) {
+        return Flux.fromIterable(hashed.getHashMimeMessageIds())
             .flatMap(mimeMessageId -> executor.executeVoid(insertOne.bind()
                 .set(USERNAME, username.asString(), TypeCodecs.TEXT)
                 .set(MIME_MESSAGE_ID, mimeMessageId, TypeCodecs.INT)
                 .set(MESSAGE_ID, ((CassandraMessageId) messageId).get(), TypeCodecs.TIMEUUID)
                 .set(THREAD_ID, ((CassandraMessageId) threadId.getBaseMessageId()).get(), TypeCodecs.TIMEUUID)
-                .set(BASE_SUBJECT, hashBaseSubject.orElse(null), TypeCodecs.INT)), DEFAULT_CONCURRENCY);
+                .set(BASE_SUBJECT, hashed.getHashBaseSubject().orElse(null), TypeCodecs.INT)), DEFAULT_CONCURRENCY);
     }
 
     public Flux<Pair<Optional<Integer>, ThreadId>> selectSome(Username username, Set<Integer> hashMimeMessageIds) {

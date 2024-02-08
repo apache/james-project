@@ -39,6 +39,7 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
@@ -94,7 +95,8 @@ public class PostgresThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgor
     @Override
     protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
         PostgresThreadDAO threadDAO = threadDAOFactory.create(username.getDomainPart());
-        threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), PostgresMessageId.class.cast(messageId), threadId, hashSubject(baseSubject)).block();
+        ThreadInformation.Hashed hashed = new ThreadInformation.Hashed(hashMimeMessagesIds(mimeMessageIds), hashSubject(baseSubject));
+        threadDAO.insertSome(username, PostgresMessageId.class.cast(messageId), threadId, hashed).block();
     }
 
     @Test

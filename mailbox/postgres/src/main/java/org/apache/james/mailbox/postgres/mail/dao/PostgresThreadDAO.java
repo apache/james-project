@@ -42,6 +42,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.jooq.Record;
 
 import com.google.common.collect.ImmutableList;
@@ -71,14 +72,14 @@ public class PostgresThreadDAO {
         this.postgresExecutor = postgresExecutor;
     }
 
-    public Mono<Void> insertSome(Username username, Set<Integer> hashMimeMessageIds, PostgresMessageId messageId, ThreadId threadId, Optional<Integer> hashBaseSubject) {
+    public Mono<Void> insertSome(Username username, PostgresMessageId messageId, ThreadId threadId, ThreadInformation.Hashed hashed) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.batch(
-            hashMimeMessageIds.stream().map(hashMimeMessageId -> dslContext.insertInto(TABLE_NAME)
+            hashed.getHashMimeMessageIds().stream().map(hashMimeMessageId -> dslContext.insertInto(TABLE_NAME)
                 .set(USERNAME, username.asString())
                 .set(HASH_MIME_MESSAGE_ID, hashMimeMessageId)
                 .set(MESSAGE_ID, messageId.asUuid())
                 .set(THREAD_ID, ((PostgresMessageId) threadId.getBaseMessageId()).asUuid())
-                .set(HASH_BASE_SUBJECT, hashBaseSubject.orElse(null)))
+                .set(HASH_BASE_SUBJECT, hashed.getHashBaseSubject().orElse(null)))
                 .collect(ImmutableList.toImmutableList()))));
     }
 

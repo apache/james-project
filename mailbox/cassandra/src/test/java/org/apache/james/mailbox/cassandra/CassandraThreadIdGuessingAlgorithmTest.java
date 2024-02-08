@@ -96,7 +96,8 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
 
     @Override
     protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject))
+        ThreadInformation.Hashed hashed = new ThreadInformation.Hashed(hashMimeMessagesIds(mimeMessageIds), hashSubject(baseSubject));
+        threadDAO.insertSome(username, messageId, threadId, hashed)
             .then()
             .block();
     }
