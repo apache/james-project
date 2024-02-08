@@ -40,13 +40,26 @@ public interface MessageFactory<T extends MailboxMessage> {
                     Content content, Flags flags, PropertyBuilder propertyBuilder,
                     List<MessageAttachmentMetadata> attachments) throws MailboxException;
 
+    default T createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet,
+                    Content content, Flags flags, PropertyBuilder propertyBuilder,
+                    List<MessageAttachmentMetadata> attachments, ThreadInformation threadInformation) throws MailboxException {
+        return createMessage(messageId, threadId, mailbox, internalDate, saveDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
+    }
+
     class StoreMessageFactory implements MessageFactory<SimpleMailboxMessage> {
         @Override
         public SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size,
                                                   int bodyStartOctet, Content content, Flags flags,
                                                   PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
             return new SimpleMailboxMessage(messageId, threadId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder.build(),
-                mailbox.getMailboxId(), attachments, Optional.of(saveDate));
+                mailbox.getMailboxId(), attachments, Optional.of(saveDate), Optional.empty());
+        }
+
+        @Override
+        public SimpleMailboxMessage createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet, Content content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments, ThreadInformation threadInformation) throws MailboxException {
+
+            return new SimpleMailboxMessage(messageId, threadId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder.build(),
+                mailbox.getMailboxId(), attachments, Optional.of(saveDate), Optional.of(threadInformation));
         }
     }
 }

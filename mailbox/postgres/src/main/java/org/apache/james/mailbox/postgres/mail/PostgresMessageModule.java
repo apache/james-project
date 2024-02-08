@@ -66,6 +66,8 @@ public interface PostgresMessageModule {
         Field<AttachmentsDTO> ATTACHMENT_METADATA = DSL.field("attachment_metadata",
             SQLDataType.JSONB
                 .asConvertedDataType(new AttachmentsDTO.AttachmentsDTOBinding()));
+        Field<Integer> HASH_MIME_MESSAGE_ID = DSL.field("hash_mime_message_id", SQLDataType.INTEGER.notNull());
+        Field<Integer> HASH_BASE_SUBJECT = DSL.field("hash_base_subject", SQLDataType.INTEGER);
 
 
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
@@ -89,6 +91,8 @@ public interface PostgresMessageModule {
                 .column(CONTENT_TYPE_PARAMETERS)
                 .column(CONTENT_DISPOSITION_PARAMETERS)
                 .column(ATTACHMENT_METADATA)
+                .column(HASH_BASE_SUBJECT)
+                .column(HASH_MIME_MESSAGE_ID)
                 .constraint(DSL.primaryKey(MESSAGE_ID))
                 .comment("Holds the metadata of a mail")))
             .supportsRowLevelSecurity()
@@ -174,6 +178,10 @@ public interface PostgresMessageModule {
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, MAILBOX_ID, IS_DELETED, MESSAGE_UID.asc()));
 
+        PostgresIndex BY_THREAD_ID = PostgresIndex.name("by_thread_id")
+            .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, MAILBOX_ID, IS_DELETED, MESSAGE_UID.asc()));
+
     }
 
     PostgresModule MODULE = PostgresModule.builder()
@@ -184,6 +192,7 @@ public interface PostgresMessageModule {
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_SEEN_MESSAGE_UID_INDEX)
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_RECENT_MESSAGE_UID_INDEX)
         .addIndex(MessageToMailboxTable.MAILBOX_ID_IS_DELETE_MESSAGE_UID_INDEX)
+        .addIndex(MessageToMailboxTable.BY_THREAD_ID)
         .build();
 
 }

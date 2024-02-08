@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.ThreadIdGuessingAlgorithmContract;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.ThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
@@ -51,8 +52,6 @@ import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import reactor.core.publisher.Flux;
 
 public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgorithmContract {
     private CassandraMailboxManager mailboxManager;
@@ -95,18 +94,21 @@ public class CassandraThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgo
 
     @Override
     protected void saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
-        threadDAO.insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject))
+        ThreadInformation.Hashed hashed = new ThreadInformation.Hashed(hashMimeMessagesIds(mimeMessageIds), hashSubject(baseSubject));
+        threadDAO.insertSome(username, messageId, threadId, hashed)
             .then()
             .block();
     }
 
     @Test
     void guessThreadIdShouldSaveDataToThreadLookupTable() {
-        testee.guessThreadIdReactive(newBasedMessageId,
+        ThreadInformation threadInformation = new ThreadInformation(
             Optional.of(new MimeMessageId("Message-ID1")),
             Optional.of(new MimeMessageId("someInReplyTo")),
             Optional.of(List.of(new MimeMessageId("someReferences"), new MimeMessageId("Message-ID1"))),
-            Optional.of(new Subject("test")), mailboxSession).block();
+            Optional.of(new Subject("test")));
+
+        testee.guessThreadIdReactive(newBasedMessageId, threadInformation, mailboxSession).block();
 
         Username username = mailboxSession.getUser();
         Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID1")),

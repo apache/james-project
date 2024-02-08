@@ -38,8 +38,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
-import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.BlobTables;
@@ -86,6 +84,7 @@ import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MimeMessageId;
 import org.apache.james.mailbox.store.mail.model.Subject;
@@ -843,8 +842,9 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         }
 
         private Mono<Void> saveThreadData(Username username, Set<MimeMessageId> mimeMessageIds, MessageId messageId, ThreadId threadId, Optional<Subject> baseSubject) {
+            ThreadInformation.Hashed hashed = new ThreadInformation.Hashed(hashMimeMessagesIds(mimeMessageIds), hashSubject(baseSubject));
             return threadDAO(cassandra.getCassandraCluster())
-                .insertSome(username, hashMimeMessagesIds(mimeMessageIds), messageId, threadId, hashSubject(baseSubject))
+                .insertSome(username, messageId, threadId, hashed)
                 .then(threadLookupDAO(cassandra.getCassandraCluster())
                     .insert(messageId, username, hashMimeMessagesIds(mimeMessageIds)));
         }

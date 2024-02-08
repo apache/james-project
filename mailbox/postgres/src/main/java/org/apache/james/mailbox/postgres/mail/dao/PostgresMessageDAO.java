@@ -33,6 +33,8 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_MD5;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TRANSFER_ENCODING;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.CONTENT_TYPE_PARAMETERS;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HASH_BASE_SUBJECT;
+import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HASH_MIME_MESSAGE_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.INTERNAL_DATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.MESSAGE_ID;
@@ -59,6 +61,7 @@ import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.MessageRepresentation;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageModule;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.jooq.Record;
 import org.jooq.postgres.extensions.types.Hstore;
@@ -96,6 +99,8 @@ public class PostgresMessageDAO {
     }
 
     public Mono<Void> insert(MailboxMessage message, String bodyBlobId) {
+        ThreadInformation.Thumbprint thumbprint = message.threadInformation().thumbprint();
+
         return Mono.fromCallable(() -> IOUtils.toByteArray(message.getHeaderContent(), message.getHeaderOctets()))
             .subscribeOn(Schedulers.boundedElastic())
             .flatMap(headerContentAsByte -> postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
@@ -116,6 +121,9 @@ public class PostgresMessageDAO {
                 .set(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
                 .set(CONTENT_TYPE_PARAMETERS, Hstore.hstore(message.getProperties().getContentTypeParameters()))
                 .set(CONTENT_DISPOSITION_PARAMETERS, Hstore.hstore(message.getProperties().getContentDispositionParameters()))
+                .set(ATTACHMENT_METADATA, AttachmentsDTO.from(message.getAttachments()))
+                .set(HASH_BASE_SUBJECT, thumbprint.getHashBaseSubject().orElse(null))
+                .set(HASH_MIME_MESSAGE_ID, thumbprint.getHashMimeMessageId().orElse(null))
                 .set(ATTACHMENT_METADATA, AttachmentsDTO.from(message.getAttachments()))
                 .set(HEADER_CONTENT, headerContentAsByte))));
     }

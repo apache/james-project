@@ -28,6 +28,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 
 public abstract class DelegatingMailboxMessage implements MailboxMessage {
@@ -125,5 +126,10 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     @Override
     public List<MessageAttachmentMetadata> getAttachments() {
         return message.getAttachments();
+    }
+
+    @Override
+    public ThreadInformation threadInformation() {
+        return message.threadInformation();
     }
 }

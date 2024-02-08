@@ -40,6 +40,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
+import org.apache.james.mailbox.store.ThreadInformation;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -220,19 +221,26 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(MessageId messageId, ThreadId threadId, Date internalDate, long size, int bodyStartOctet,
                                 Content content, Flags flags,
-                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
+                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate,
+                                Optional<ThreadInformation> threadInformation) {
         super(new SimpleMessage(
                 messageId,
                 content, size, internalDate,
                 bodyStartOctet,
                 properties.getTextualLineCount(),
                 properties,
-                attachments));
+                attachments, threadInformation));
 
         setFlags(flags);
         this.mailboxId = mailboxId;
         this.threadId = threadId;
         this.saveDate = saveDate;
+    }
+
+    public SimpleMailboxMessage(MessageId messageId, ThreadId threadId, Date internalDate, long size, int bodyStartOctet,
+                                Content content, Flags flags,
+                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
+        this(messageId, threadId, internalDate, size, bodyStartOctet, content, flags, properties, mailboxId, attachments, saveDate, Optional.empty());
     }
 
     @VisibleForTesting
@@ -241,7 +249,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
                                 Properties properties, MailboxId mailboxId) {
         this(messageId, threadId, internalDate, size, bodyStartOctet,
                 content, flags,
-                properties, mailboxId, ImmutableList.of(), EMPTY_SAVE_DATE);
+                properties, mailboxId, ImmutableList.of(), EMPTY_SAVE_DATE, Optional.empty());
     }
 
     @Override

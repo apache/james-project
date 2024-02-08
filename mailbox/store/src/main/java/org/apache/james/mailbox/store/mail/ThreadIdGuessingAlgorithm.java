@@ -19,20 +19,16 @@
 
 package org.apache.james.mailbox.store.mail;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
-import org.apache.james.mailbox.store.mail.model.MimeMessageId;
-import org.apache.james.mailbox.store.mail.model.Subject;
+import org.apache.james.mailbox.store.ThreadInformation;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface ThreadIdGuessingAlgorithm {
-    Mono<ThreadId> guessThreadIdReactive(MessageId messageId, Optional<MimeMessageId> thisMimeMessageId, Optional<MimeMessageId> inReplyTo, Optional<List<MimeMessageId>> references, Optional<Subject> subject, MailboxSession session);
+    Mono<ThreadId> guessThreadIdReactive(MessageId messageId, ThreadInformation threadInformation, MailboxSession session);
 
     Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session);
 }

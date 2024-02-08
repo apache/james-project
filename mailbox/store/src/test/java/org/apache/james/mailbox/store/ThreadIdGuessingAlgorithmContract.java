@@ -112,7 +112,9 @@ public abstract class ThreadIdGuessingAlgorithmContract {
 
     @Test
     void givenNonMailWhenAddAMailThenGuessingThreadIdShouldBasedOnGeneratedMessageId() {
-        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, Optional.of(new MimeMessageId("abc")), Optional.empty(), Optional.empty(), Optional.of(new Subject("test")), mailboxSession).block();
+        ThreadInformation threadInformation = new ThreadInformation(Optional.of(new MimeMessageId("abc")), Optional.empty(), Optional.empty(), Optional.of(new Subject("test")));
+
+        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, threadInformation, mailboxSession).block();
 
         assertThat(threadId.getBaseMessageId()).isEqualTo(newBasedMessageId);
     }
@@ -153,10 +155,11 @@ public abstract class ThreadIdGuessingAlgorithmContract {
         Set<MimeMessageId> mimeMessageIds = buildMimeMessageIdSet(Optional.of(new MimeMessageId("Message-ID")),
             Optional.of(new MimeMessageId("someInReplyTo")),
             Optional.of(List.of(new MimeMessageId("references1"), new MimeMessageId("references2"))));
+        ThreadInformation threadInformation = new ThreadInformation(mimeMessageId, inReplyTo, references, subject);
         saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
 
         // add new related mails
-        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
+        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, threadInformation, mailboxSession).block();
 
         // guessing threadId should return same threadId with old mail
         assertThat(threadId).isEqualTo(message.getThreadId());
@@ -189,7 +192,8 @@ public abstract class ThreadIdGuessingAlgorithmContract {
         saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
 
         // add mails related to old message by subject but have non same identical Message-ID
-        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
+        ThreadInformation threadInformation = new ThreadInformation(mimeMessageId, inReplyTo, references, subject);
+        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, threadInformation, mailboxSession).block();
 
         // guessing threadId should based on generated MessageId
         assertThat(threadId.getBaseMessageId()).isEqualTo(newBasedMessageId);
@@ -222,7 +226,8 @@ public abstract class ThreadIdGuessingAlgorithmContract {
         saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
 
         // add mails related to old message by having identical Message-ID but non related subject
-        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
+        ThreadInformation threadInformation = new ThreadInformation(mimeMessageId, inReplyTo, references, subject);
+        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, threadInformation, mailboxSession).block();
 
         // guess ThreadId should based on generated MessageId
         assertThat(threadId.getBaseMessageId()).isEqualTo(newBasedMessageId);
@@ -255,7 +260,8 @@ public abstract class ThreadIdGuessingAlgorithmContract {
         saveThreadData(mailboxSession.getUser(), mimeMessageIds, message.getId().getMessageId(), message.getThreadId(), Optional.of(new Subject("Test")));
 
         // add mails non related to old message by both subject and identical Message-ID
-        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, mimeMessageId, inReplyTo, references, subject, mailboxSession).block();
+        ThreadInformation threadInformation = new ThreadInformation(mimeMessageId, inReplyTo, references, subject);
+        ThreadId threadId = testee.guessThreadIdReactive(newBasedMessageId, threadInformation, mailboxSession).block();
 
         // guess ThreadId should based on generatedMessageId
         assertThat(threadId.getBaseMessageId()).isEqualTo(newBasedMessageId);
