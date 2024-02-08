@@ -75,7 +75,7 @@ public class PostgresThreadIdGuessingAlgorithmTest extends ThreadIdGuessingAlgor
     @Override
     protected ThreadIdGuessingAlgorithm initThreadIdGuessingAlgorithm(CombinationManagerTestSystem testingData) {
         threadDAOFactory = new PostgresThreadDAO.Factory(postgresExtension.getExecutorFactory());
-        return new PostgresThreadIdGuessingAlgorithm(threadDAOFactory, new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor()));
+        return new PostgresThreadIdGuessingAlgorithm(threadDAOFactory, new PostgresMailboxMessageDAO.Factory(postgresExtension.getExecutorFactory()));
     }
 
     @Override

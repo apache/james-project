@@ -34,10 +34,10 @@ import reactor.core.publisher.Mono;
 
 public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgorithm {
     private final PostgresThreadDAO.Factory threadDAOFactory;
-    private final PostgresMailboxMessageDAO mailboxMessageDAO;
+    private final PostgresMailboxMessageDAO.Factory mailboxMessageDAO;
 
     @Inject
-    public PostgresThreadIdGuessingAlgorithm(PostgresThreadDAO.Factory threadDAOFactory, PostgresMailboxMessageDAO mailboxMessageDAO) {
+    public PostgresThreadIdGuessingAlgorithm(PostgresThreadDAO.Factory threadDAOFactory, PostgresMailboxMessageDAO.Factory mailboxMessageDAO) {
         this.threadDAOFactory = threadDAOFactory;
         this.mailboxMessageDAO = mailboxMessageDAO;
     }
@@ -60,6 +60,7 @@ public class PostgresThreadIdGuessingAlgorithm implements ThreadIdGuessingAlgori
 
     @Override
     public Flux<MessageId> getMessageIdsInThread(ThreadId threadId, MailboxSession session) {
-        return mailboxMessageDAO.retrieveThread(threadId);
+        return mailboxMessageDAO.create(session.getUser().getDomainPart())
+            .retrieveThread(threadId);
     }
 }
