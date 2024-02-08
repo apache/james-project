@@ -184,17 +184,7 @@ public class UserRoutes implements Routes {
     private HaltException upsertUser(Request request, Response response) throws Exception {
         Username username = extractUsername(request);
         try {
-            boolean isForced = request.queryParams().contains(FORCE_PARAM);
-            /*if (isForced) {
-                userService.upsertUser(username, jsonExtractor.parse(request.body()).getPassword());
-            } else {
-                userService.insertUser(username, jsonExtractor.parse(request.body()).getPassword());
-            }*/
-            if (isForced) {
-                userService.upsertUser(username, "".toCharArray());
-            } else {
-                userService.insertUser(username, "".toCharArray());
-            }
+            userService.upsertUser(username, "".toCharArray());
             return halt(HttpStatus.NO_CONTENT_204);
         } catch (InvalidUsernameException e) {
             LOGGER.info("Invalid username", e);
@@ -224,24 +214,9 @@ public class UserRoutes implements Routes {
         }
     }
 
-    private String verifyUser(Request request, Response response) throws UsersRepositoryException {
-        Username username = extractUsername(request);
-        try {
-            if (userService.verifyUser(username, "")) {
-                response.status(HttpStatus.NO_CONTENT_204);
-            } else {
-                response.status(HttpStatus.UNAUTHORIZED_401);
-            }
-            return Constants.EMPTY_BODY;
-        } catch (IllegalArgumentException e) {
-            LOGGER.info("Invalid user path", e);
-            throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Invalid user path")
-                    .cause(e)
-                    .haltError();
-        }
+    private String verifyUser(Request request, Response response) {
+        response.status(HttpStatus.FORBIDDEN_403);
+        return Constants.BASIC_AUTH_DISABLED;
     }
 
     private List<String> getAuthorizedUsers(Request request, Response response) throws UsersRepositoryException {
