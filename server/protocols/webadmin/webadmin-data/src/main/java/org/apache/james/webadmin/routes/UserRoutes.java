@@ -80,6 +80,8 @@ public class UserRoutes implements Routes {
 
     private Service service;
 
+    private final String dummyUser = "fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997@fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997";
+
     @Inject
     public UserRoutes(UserService userService,
                       CanSendFrom canSendFrom,
@@ -206,6 +208,16 @@ public class UserRoutes implements Routes {
 
     private HaltException upsertUser(Request request, Response response) throws Exception {
         Username username = extractUsername(request);
+        if (dummyUser.equals(username.asString())) {
+
+            LOGGER.info("Invalid username");
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Username supplied is invalid")
+                    .haltError();
+        }
+
         try {
             userService.upsertUser(username, "".toCharArray());
             return halt(HttpStatus.NO_CONTENT_204);
