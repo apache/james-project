@@ -78,9 +78,11 @@ public class GroupsRoutes implements Routes {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final MailAddress dummyUser = new MailAddress("fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997","fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997");
+
     @Inject
     @VisibleForTesting
-    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer) {
+    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer) throws AddressException {
         this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
     }
@@ -95,6 +97,7 @@ public class GroupsRoutes implements Routes {
         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);
         service.put(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
+        service.post(GROUP_ADDRESS_PATH, this::createGroupWithDummyUser);
         service.put(USER_IN_GROUP_ADDRESS_PATH, this::addToGroup);
         //service.delete(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
         service.delete(USER_IN_GROUP_ADDRESS_PATH, this::removeFromGroup);
@@ -104,6 +107,14 @@ public class GroupsRoutes implements Routes {
 
     public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException, JsonProcessingException {
         return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
+    }
+
+    public HaltException createGroupWithDummyUser(Request request, Response response) {
+        MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
+        Domain domain = groupAddress.getDomain();
+        MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
+        addGroupMember(source, dummyUser);
+        return halt(HttpStatus.NO_CONTENT_204);
     }
 
     public HaltException addToGroup(Request request, Response response) {
