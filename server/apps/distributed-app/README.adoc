@@ -18,6 +18,7 @@ Third party compulsory dependencies:
 The server ignores any string following the "+" character until the "@" character.
 (more details: https://eit.ces.ncsu.edu/2023/02/gmail-plus-addressing-the-hidden-feature-that-can-help-you-get-more-out-of-your-inbox/)
 * Disabled all authentication methods except JWT Authentication (RS256). User creation no longer requires a password.
+Generating a JWT key pair: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docs/modules/ROOT/pages/configure/jmap.adoc#generating-a-jwt-key-pair
 * Added a webadmin route for deleting an entire group. Example cURL command:
 -----
 $ curl --location --request DELETE 'http://ip:port/address/groups/myGroup'
