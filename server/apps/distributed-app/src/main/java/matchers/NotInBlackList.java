@@ -61,6 +61,7 @@ public class NotInBlackList extends GenericMatcher {
         //System.out.printf("invalid email");
         return Boolean.TRUE;
     }
+
     public String giveOrg(String localpart) {
         int startIndex = 0;
 
