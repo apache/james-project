@@ -52,7 +52,7 @@ public class UsernameChangeRoutes implements Routes {
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
 
-    private final String dummyUser = "fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997@fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997";
+    private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
 
     @Inject
     UsernameChangeRoutes(UsersRepository usersRepository, UsernameChangeService service, TaskManager taskManager, JsonTransformer jsonTransformer) {
