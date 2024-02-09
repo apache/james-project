@@ -21,7 +21,7 @@ The server ignores any string following the "+" character until the "@" characte
 Generating a JWT key pair: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docs/modules/ROOT/pages/configure/jmap.adoc#generating-a-jwt-key-pair
 * Added a webadmin route for deleting an entire group. Example cURL command:
 -----
-$ curl --location --request DELETE 'http://ip:port/address/groups/myGroup'
+$ curl --location --request DELETE 'http://ip:port/address/groups/myGroup@mydomain'
 -----
 * Added a webadmin route for deleting multiple groups. Example cURL command:
 -----
@@ -29,6 +29,10 @@ $ curl --location --request DELETE 'http://ip:port/address/groups' --data-raw '[
     "myGroup1@mydomain",
     "myGroup2@mydomain"
 ]'
+-----
+* Added a webadmin route for creating an empty group. Example cURL command:
+-----
+$ curl --location --request POST 'http://ip:port/address/groups/myGroup@mydomain'
 -----
 
 
