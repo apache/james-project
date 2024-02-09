@@ -67,7 +67,7 @@ class SMTPProxyProtocolTest {
 
         String proxyMessage = String.format("PROXY %s %s %s %d %d\r\n", protocol, source, destination, 65535, 65535);
         server.write(ByteBuffer.wrap((proxyMessage).getBytes(StandardCharsets.UTF_8)));
-        server.write(ByteBuffer.wrap(("EHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("EHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);
         server.write(ByteBuffer.wrap(("MAIL FROM: <user@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);

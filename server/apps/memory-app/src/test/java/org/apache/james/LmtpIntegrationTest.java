@@ -63,7 +63,7 @@ public class LmtpIntegrationTest {
         server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(LmtpGuiceProbe.class).getLmtpPort()));
         readBytes(server);
 
-        server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);
         server.write(ByteBuffer.wrap(("MAIL FROM: <user@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);
@@ -91,7 +91,7 @@ public class LmtpIntegrationTest {
         server.connect(new InetSocketAddress(LOCALHOST_IP, guiceJamesServer.getProbe(LmtpGuiceProbe.class).getLmtpPort()));
         readBytes(server);
 
-        server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+        server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);
         server.write(ByteBuffer.wrap(("MAIL FROM: <user@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
         readBytes(server);

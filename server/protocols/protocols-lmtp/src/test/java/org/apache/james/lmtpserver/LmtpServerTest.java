@@ -190,7 +190,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -215,7 +215,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -255,7 +255,7 @@ class LmtpServerTest {
             SocketChannel server = SocketChannel.open();
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + "> RET=HDRS ENVID=QQ314159\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -288,7 +288,7 @@ class LmtpServerTest {
             SocketChannel server = SocketChannel.open();
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
 
             assertThat(new String(readBytes(server), StandardCharsets.UTF_8)).contains("250 DSN\r\n");
         }
@@ -312,7 +312,7 @@ class LmtpServerTest {
             SocketChannel server = SocketChannel.open();
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + "> RET=HDRS ENVID=QQ314159\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -355,7 +355,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -381,7 +381,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -433,7 +433,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -475,7 +475,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -514,7 +514,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("LHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("LHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
             server.write(ByteBuffer.wrap(("MAIL FROM: <bob@" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
             readBytes(server);
@@ -542,7 +542,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("EHLO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("EHLO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             assertThat(new String(readBytes(server), StandardCharsets.UTF_8))
                 .contains("500 Unable to process request: the command is unknown");
         }
@@ -553,7 +553,7 @@ class LmtpServerTest {
             server.connect(new InetSocketAddress(LOCALHOST_IP, getLmtpPort(lmtpServerFactory)));
             readBytes(server);
 
-            server.write(ByteBuffer.wrap(("HELO <" + DOMAIN + ">\r\n").getBytes(StandardCharsets.UTF_8)));
+            server.write(ByteBuffer.wrap(("HELO " + DOMAIN + "\r\n").getBytes(StandardCharsets.UTF_8)));
             assertThat(new String(readBytes(server), StandardCharsets.UTF_8))
                 .contains("500 Unable to process request: the command is unknown");
         }
