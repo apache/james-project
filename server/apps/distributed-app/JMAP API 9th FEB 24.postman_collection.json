@@ -1,0 +1,1453 @@
+{
+	"info": {
+		"_postman_id": "18b618f1-4454-4de2-acce-3f00a90d36db",
+		"name": "JMAP API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30479464"
+	},
+	"item": [
+		{
+			"name": "Add mydomain",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/domains/mydomain",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"domains",
+						"mydomain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add testuser.org@mydomain",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/users/testuser.org@mydomain",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"users",
+						"testuser.org@mydomain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add testuser1.org@mydomain Copy",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/users/testuser1.org@mydomain",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"users",
+						"testuser1.org@mydomain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Domains",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/domains",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"domains"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Users",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/users",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List groups",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/address/groups",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"address",
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add user to group",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/address/groups/group8.org@mydomain/testuser4.org@mydomain",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"address",
+						"groups",
+						"group8.org@mydomain",
+						"testuser4.org@mydomain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete user from a group",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{port}}/address/groups/group2.org@mydomain/testuser.org@mydomain",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"address",
+						"groups",
+						"group2.org@mydomain",
+						"testuser.org@mydomain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete multiple groups",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    \"group4.org@mydomain\",\n    \"group5.org@mydomain\",\n    \"group6.org@mydomain\",\n    \"group7.org@mydomain\",\n    \"group8.org@mydomain\"\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{port}}/address/groups",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"address",
+						"groups"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "username change",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{port}}/users/testuser.org@mydomain/rename/testuser1.org@mydomain?action=rename",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"users",
+						"testuser.org@mydomain",
+						"rename",
+						"testuser1.org@mydomain"
+					],
+					"query": [
+						{
+							"key": "action",
+							"value": "rename"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List members of a group",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{host}}:{{port}}/address/groups/group3.org@mydomain",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"address",
+						"groups",
+						"group3.org@mydomain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "session",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap/session",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap",
+						"session"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Core/echo",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Core/echo\", {\n      \"hello\": true,\n      \"high\": 5\n    }, \"b3ff\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PushSubscription/set my response",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"PushSubscription/set\", {\n            \"update\": {\n                \"3b1249a4-e800-4dba-97e1-6ba60be1ce9b\": {\n                     \"verificationCode\":\"6e579a03-7e15-4af1-925e-04494312248a\"\n                    }\n            }\n        }, \"0\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap/session",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap",
+						"session"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "set push subscription",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"PushSubscription/set\", {\n            \"create\": {\n                \"asdfasd\": {\n                    \"deviceClientId\": \"a8d8xczx9-ssffea-910\",\n                    \"url\": \"http://localhost:3333/pushListener\",\n                    \"types\": [\"Mailbox\", \"Email\", \"EmailDelivery\"]\n                    }\n            }\n        }, \"0\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "view push subscriptions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"PushSubscription/get\", {\n      \"ids\": null\n    }, \"asdas\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Mailbox/query",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n      \"filter\": {\"role\": \"inbox\"}\n    }, \"mbQuery\" ],\n\n    [ \"Mailbox/query\", {\n        \"#accountId\" : {\n            \"name\": \"Mailbox/query\",\n            \"resultOf\": \"mbQuery\",\n            \"path\": \"/accountId\"\n        },\n\n        \"filter\": {\n            \"after\": \"2023-01-01T00:00:00Z\"\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ]\n    }, \"1\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Mailbox/get See all mailboxes",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/get\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\"//,\n      //\"ids\": [\"2f94c250-8919-11ee-849d-9fa9bb19403d\"]\n    }, \"b3ff\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "View mailbox changes since last session",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/changes\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n      \"sinceState\": \"fe0c4be1-8ea9-11ee-849d-9fa9bb19403d\"\n      //\"filter\": {\"role\": \"Inbox\"}\n    }, \"0\" ],\n\n    [\"Mailbox/get\", {\n        \"#accountId\": {\n            \"name\": \"Mailbox/changes\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n        \"#ids\" : {\n            \"name\": \"Mailbox/changes\",\n            \"path\": \"updated/*\",\n            \"resultOf\": \"0\"\n        }\n    }, \"1\"]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Show mails (old)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n      \"filter\": {\"role\": \"inbox\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"accountId\" : \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n                \n                {\"#inMailbox\": {\n                \"name\": \"Mailbox/query\",\n                \"resultOf\": \"mbQuery\",\n                \"path\": \"ids/0\"\n                }}//,\n\n                //{\"notKeyword\": \"$seen\"}\n            ]\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ],\n        \"collapseThreads\": true,\n        \"calculateTotal\": true,\n        \"position\": 0,\n        \"limit\": 10\n    }, \"0\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n        //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n\n        \"properties\": [ \"threadId\" ]\n    }, \"1\" ],\n\n    [ \"Thread/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/get\",\n            \"path\": \"/list/*/threadId\",\n            \"resultOf\": \"1\"\n        }\n    }, \"2\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n        //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Thread/get\",\n            \"path\": \"/list/*/emailIds\",\n            \"resultOf\": \"2\"\n        }\n\n        //\"properties\": [ \"from\", \"to\", \"receivedAt\", \"subject\", \"preview\", \"inReplyTo\", \"messageId\" ]\n    }, \"3\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Show unseen threads containing a specific user",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n      \"filter\": {\"role\": \"inbox\"}\n    }, \"mbQuery\" ],\n    \n    [ \"Email/query\", {\n        \"accountId\" : \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n\n                {\"#inMailbox\": {\n                \"name\": \"Mailbox/query\",\n                \"resultOf\": \"mbQuery\",\n                \"path\": \"ids/0\"\n                }},\n                \n                {\"from\": \"sami@james.appscode.ninja\"}\n                //{\"text\": \"searchText\"}//,\n                //{\"notKeyword\": \"$seen\"}\n            ]\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ],\n        \"collapseThreads\": true,\n        \"calculateTotal\": true,\n        \"position\": 0,\n        \"limit\": 10\n    }, \"0\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n        //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n\n        \"properties\": [ \"threadId\" ]\n    }, \"1\" ],\n\n    [ \"Thread/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/get\",\n            \"path\": \"/list/*/threadId\",\n            \"resultOf\": \"1\"\n        }\n    }, \"2\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n        //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Thread/get\",\n            \"path\": \"/list/*/emailIds\",\n            \"resultOf\": \"2\"\n        },\n        \"properties\": [\"from\"]\n\n       // \"properties\": [ \"from\", \"to\", \"receivedAt\", \"subject\", \"preview\", \"messageId\", \"references\" ]\n    }, \"3\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Show email (simple)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Mailbox/query\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n      \"filter\": {\"role\": \"inbox\"}\n    }, \"mbQuery\" ],\n    \n    [ \"Email/query\", {\n        \"accountId\" : \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n\n                {\"#inMailbox\": {\n                    \"name\": \"Mailbox/query\",\n                    \"resultOf\": \"mbQuery\",\n                    \"path\": \"ids/0\"\n                }},\n\n                //{\"from\": \"sami@james.appscode.ninja\"}\n                //{\"text\": \"searchText\"}//,\n                {\"notKeyword\": \"$seen\"}\n            ]\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ],\n        \"collapseThreads\": true,\n        \"calculateTotal\": true,\n        \"position\": 0,\n        \"limit\": 10\n    }, \"0\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n        //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n       \"properties\": [\"from\"],\n        //\"properties\": [ \"from\", \"to\", \"receivedAt\", \"subject\", \"bodyValues\", \"messageId\" ],\n        \"fetchAllBodyValues\": true\n    }, \"1\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Fetch email body",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n\n    [ \"Mailbox/query\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",//sami\n      //\"accountId\": \"7165989a44d7b25d65e1b2f97794b49118e5c19b42a91ed75db2c28534cf4a22\",//testuser\n      \"filter\": {\"role\": \"inbox\"}\n    }, \"mbQuery\" ],\n\n    [ \"Email/query\", {\n        \"#accountId\": {\n            \"name\": \"Mailbox/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"mbQuery\"\n        },\n        \"filter\": {\n            \"operator\": \"AND\",\n            \"conditions\": [\n                \n                {\"#inMailbox\": {\n                \"name\": \"Mailbox/query\",\n                \"resultOf\": \"mbQuery\",\n                \"path\": \"ids/0\"\n                }}//,\n\n                //{\"notKeyword\": \"$seen\"}\n            ]\n        },\n        \"sort\": [\n            { \"property\": \"receivedAt\", \"isAscending\": false }\n        ],\n        \"position\": 0,\n        \"limit\": 5\n    }, \"0\" ],\n\n    [ \"Email/get\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/accountId\",\n            \"resultOf\": \"0\"\n        },\n       // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n        \"#ids\": {\n            \"name\": \"Email/query\",\n            \"path\": \"/ids\",\n            \"resultOf\": \"0\"\n        },\n       // \"ids\": [\"cef5fcd0-940c-11ee-88f8-d7f9baa0a757\"],\n        //\"properties\": [ \"from\", \"to\", \"receivedAt\", \"subject\", \"bodyValues\", \"type\" ],\n        \"fetchAllBodyValues\": true,\n        \"fetchHTMLBodyValues\": true\n    }, \"1\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send mail over webadmin",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{webadminJWT}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "From: sir3.org@mydomain\nTo: testuser.org+dxdsdfa@mydomain\nMIME-Version: 1.0\nContent-Type: multipart/mixed;\n        boundary=\"XXXXboundary text\"\n\nThis is a multipart message in MIME format.\n\n--XXXXboundary text\nContent-Type: text/plain\n\nSample Body\n\n--XXXXboundary text\nContent-Type: text/plain;\nContent-Disposition: attachment;\n        filename=\"test.txt\"\n\nthis is the attachment text\n\n--XXXXboundary text--",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{port}}/mail-transfer-service",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"mail-transfer-service"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Email",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n\n    [ \"Email/set\", \n        { \n           \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n     \n            \"create\": {\n                \"draft\": {\n                    \"from\": [{\"email\": \"testuser.org@mydomain\"}],\n                    \"to\": [{\"email\": \"testuser.o2rg+asjnjad@mydomain\"}],\n                    \"subject\": \"THIS IS THE SUBJECT\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"d8714230-b5c5-11ee-9f23-63439c30cca3\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"asdfgh\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}]\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n            //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            },\n\n            //move from draft to sent mailbox\n            \"onSuccessUpdateEmail\": {\n                \"#sendIt\":{\n                    \"mailboxIds/d8714230-b5c5-11ee-9f23-63439c30cca3\": null,\n                    \"mailboxIds/d86c8740-b5c5-11ee-9f23-63439c30cca3\": true,\n                    \"keywords/$seen\": true,\n                    \"keywords/$draft\": null\n                }\n            }\n        },\n        \"1\"\n    ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Email SIMPLE",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n\n    [ \"Email/set\", \n        { \n           \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n     \n            \"create\": {\n                \"draft\": {\n                    \"from\": [{\"email\": \"testuser.org@mydomain\"}],\n                    \"to\": [{\"email\": \"testuser.org@mydomain\"}],\n                    \"subject\": \"jwttest\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"caee8ac0-c653-11ee-8289-0b59569cd6b6\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"asdfgh\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}]\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n            //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            }\n\n        },\n        \"1\"\n    ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Email (Attachment text test)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n    [ \"Email/set\", \n        { \n            \"accountId\": \"7165989a44d7b25d65e1b2f97794b49118e5c19b42a91ed75db2c28534cf4a22\",\n            \"create\": {\n                \"draft\": {\n                    \"attachments\":[{\n                        \"blobId\": \"uploads-543f5ac0-8f5e-11ee-849d-9fa9bb19403d\",\n                        \"type\": \"text/plain\",\n                        \"size\": 14,\n                        \"partId\": 3,\n                        \"name\": \"toUpload3.txt\",\n                        \"disposition\": \"attachment\"\n                    }],\n                    \"hasAttachment\": true,\n                    \"from\": [{\"email\": \"sami@james.appscode.ninja\"}],\n                    \"to\": [{\"email\": \"testuser@mydomain\"}],\n                    \"subject\": \"THIS IS THE SUBJECT\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"2f9e8650-8919-11ee-849d-9fa9bb19403d\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"THIS IS THE BODY\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}]\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n            //\"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            },\n\n            //move from draft to sent mailbox\n            \"onSuccessUpdateEmail\": {\n                \"#sendIt\":{\n                    \"mailboxIds/2f9e8650-8919-11ee-849d-9fa9bb19403d\": null,\n                    \"mailboxIds/2f9a8eb0-8919-11ee-849d-9fa9bb19403d\": true,\n                    \"keywords/$seen\": true,\n                    \"keywords/$draft\": null\n                }\n            }\n        },\n        \"1\"\n    ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reply to thread",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n    [ \"Email/set\", \n        { \n            \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n            \"create\": {\n                \"draft\": {        \n                    \"inReplyTo\": [\n                            \"067297df-cffe-474a-a0c4-4f136550070c@mydomain\"\n                        ],\n                    \"references\": [\n                            \"067297df-cffe-474a-a0c4-4f136550070c@mydomain\"\n                     ],     \n                    \"from\": [{\"email\": \"testuser.org@mydomain\"}],\n                    \"to\": [{\"email\": \"testuser.org@mydomain\"}],\n                    \"subject\": \"Re: sdfgsdfg\",\n                    \"keywords\": {\"$draft\": true},\n                    \"mailboxIds\": {\"3c122440-abbb-11ee-8dc7-5d9a8fe25dcd\": true},\n                    \"bodyValues\": {\"body\": {\"value\": \"THIS IS THE BODY 2\", \"charset\": \"utf-8\"}},\n                    \"textBody\": [{\"partId\": \"body\", \"type\": \"text/plain\"}]\n                }\n            }\n        }, \n    \"0\"\n    ],\n\n    [\n        \"EmailSubmission/set\",\n        {\n            \"#accountId\": {\n                \"name\": \"Email/set\",\n                \"path\": \"/accountId\",\n                \"resultOf\": \"0\"\n            },\n           // \"accountId\": \"a30abf05d7a677591fa49342598ff16741409c465b2cee29c97f5517506c27e5\",\n            \"create\": {\n                \"sendIt\": {\n                    \"emailId\": \"#draft\"\n                    //\"identityId\": \"79646383-8b23-38d9-8cae-a2214844dd93\"\n                }\n            },\n\n            //move from draft to sent mailbox\n            \"onSuccessUpdateEmail\": {\n                \"#sendIt\":{\n                    \"mailboxIds/3c0ccd10-abbb-11ee-8dc7-5d9a8fe25dcd\": true,\n                    \"mailboxIds/3c122440-abbb-11ee-8dc7-5d9a8fe25dcd\": null,\n                    \"keywords/$seen\": true,\n                    \"keywords/$draft\": null\n                }\n            }\n        },\n        \"1\"\n    ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload test 2",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "image/jpg; charset=utf-8"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlci5vcmdAbXlkb21haW4iLCJpYXQiOjE2MTYyMzkwMjIsImV4cCI6MTk0NjIzOTAyMn0.SO2fTuxB6qQNZqkhwWAndyqXDpyZMrHZFNdgG5ka7j8dW0G9JqU-rx04wqL-R2T51QCVYnlLBM62AVEltK-85ck10nFHEEFwQSD85v5PpI_qzeTz4NRFDxek-5N2gYdK0XQ6NzMvlSwxyUM2TkNZCupIto9H3MDeuDSs0p6Xmwk3iaGKJcIorIUbImf8xzwfB39ytpOw1j6ggAGjczZH8Ykz2PnHQQX2TU8R_dGbn6euYOqnTiZDWggfbxaS1joJ3PatN0Q-jxfuQGwTdZWeSN-Ocvr55MitQvMKJQaoRMVAOFCPXuhCkMq1szKRaBbhnL1nFjmHBpMJC5VpSeDgKOa-govmuTrnRMDV15n5KeeSWEeE2Km9ibOqzZktlR5EU-lU16h-a0u5ydPfax4HcUnNnVcKFqjSGyMFyBQOOxQWKrSJdHNaA7ZP07QQjwdSRQFbJHsUBdH22oBfTnT891yMmWW1iFLHZuV2sMivUGnH-EBO29HHVzAXUlOzErqDaVnovMvdPN6_Vi80LpdSWikYbe2zXUV4csBAc6bC1NweP9omNidBk9Vgo-3q2mHw-H6mfFnTONUipbtbV8ifI2MKQ-ZS0ciNomOcNgyYu5mc-ebDFpZU9xx-_nakCOscUm0tHN224MxKNIx-9E7XrS0PlSOauNYqi4AVKP9svW0"
+					}
+				],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": "/home/sami/cat.jpg"
+					}
+				},
+				"url": {
+					"raw": "http://localhost/upload/153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"upload",
+						"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload (easier with curl)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlci5vcmdAbXlkb21haW4iLCJpYXQiOjE2MTYyMzkwMjIsImV4cCI6MTk0NjIzOTAyMn0.SO2fTuxB6qQNZqkhwWAndyqXDpyZMrHZFNdgG5ka7j8dW0G9JqU-rx04wqL-R2T51QCVYnlLBM62AVEltK-85ck10nFHEEFwQSD85v5PpI_qzeTz4NRFDxek-5N2gYdK0XQ6NzMvlSwxyUM2TkNZCupIto9H3MDeuDSs0p6Xmwk3iaGKJcIorIUbImf8xzwfB39ytpOw1j6ggAGjczZH8Ykz2PnHQQX2TU8R_dGbn6euYOqnTiZDWggfbxaS1joJ3PatN0Q-jxfuQGwTdZWeSN-Ocvr55MitQvMKJQaoRMVAOFCPXuhCkMq1szKRaBbhnL1nFjmHBpMJC5VpSeDgKOa-govmuTrnRMDV15n5KeeSWEeE2Km9ibOqzZktlR5EU-lU16h-a0u5ydPfax4HcUnNnVcKFqjSGyMFyBQOOxQWKrSJdHNaA7ZP07QQjwdSRQFbJHsUBdH22oBfTnT891yMmWW1iFLHZuV2sMivUGnH-EBO29HHVzAXUlOzErqDaVnovMvdPN6_Vi80LpdSWikYbe2zXUV4csBAc6bC1NweP9omNidBk9Vgo-3q2mHw-H6mfFnTONUipbtbV8ifI2MKQ-ZS0ciNomOcNgyYu5mc-ebDFpZU9xx-_nakCOscUm0tHN224MxKNIx-9E7XrS0PlSOauNYqi4AVKP9svW0",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"Core/echo\", {\n      \"hello\": true,\n      \"high\": 5\n    }, \"b3ff\" ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost/upload/153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"upload",
+						"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Download (easier with curl) sami",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlci5vcmdAbXlkb21haW4iLCJpYXQiOjE2MTYyMzkwMjIsImV4cCI6MTk0NjIzOTAyMn0.SO2fTuxB6qQNZqkhwWAndyqXDpyZMrHZFNdgG5ka7j8dW0G9JqU-rx04wqL-R2T51QCVYnlLBM62AVEltK-85ck10nFHEEFwQSD85v5PpI_qzeTz4NRFDxek-5N2gYdK0XQ6NzMvlSwxyUM2TkNZCupIto9H3MDeuDSs0p6Xmwk3iaGKJcIorIUbImf8xzwfB39ytpOw1j6ggAGjczZH8Ykz2PnHQQX2TU8R_dGbn6euYOqnTiZDWggfbxaS1joJ3PatN0Q-jxfuQGwTdZWeSN-Ocvr55MitQvMKJQaoRMVAOFCPXuhCkMq1szKRaBbhnL1nFjmHBpMJC5VpSeDgKOa-govmuTrnRMDV15n5KeeSWEeE2Km9ibOqzZktlR5EU-lU16h-a0u5ydPfax4HcUnNnVcKFqjSGyMFyBQOOxQWKrSJdHNaA7ZP07QQjwdSRQFbJHsUBdH22oBfTnT891yMmWW1iFLHZuV2sMivUGnH-EBO29HHVzAXUlOzErqDaVnovMvdPN6_Vi80LpdSWikYbe2zXUV4csBAc6bC1NweP9omNidBk9Vgo-3q2mHw-H6mfFnTONUipbtbV8ifI2MKQ-ZS0ciNomOcNgyYu5mc-ebDFpZU9xx-_nakCOscUm0tHN224MxKNIx-9E7XrS0PlSOauNYqi4AVKP9svW0",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"url": {
+					"raw": "http://localhost/download/153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80/uploads-4c2ef740-b115-11ee-8311-9b9e3b5ba63c?type%3Dimage%2Fpng%26name%3Dcat.png",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"download",
+						"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80",
+						"uploads-4c2ef740-b115-11ee-8311-9b9e3b5ba63c"
+					],
+					"query": [
+						{
+							"key": "type%3Dimage%2Fpng%26name%3Dcat.png",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Download (easier with curl) testuser",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "testuser.org@mydomain",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"url": {
+					"raw": "http://localhost/download/7165989a44d7b25d65e1b2f97794b49118e5c19b42a91ed75db2c28534cf4a22/b50c5eb0-8f4b-11ee-849d-9fa9bb19403d_4?type=text%2Fplain&name=toUpload2.txt",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"download",
+						"7165989a44d7b25d65e1b2f97794b49118e5c19b42a91ed75db2c28534cf4a22",
+						"b50c5eb0-8f4b-11ee-849d-9fa9bb19403d_4"
+					],
+					"query": [
+						{
+							"key": "type",
+							"value": "text%2Fplain"
+						},
+						{
+							"key": "name",
+							"value": "toUpload2.txt"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Identity",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "testuser.org@mydomain",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\",\"urn:ietf:params:jmap:submission\"],\n  \"methodCalls\": [\n    [ \"Identity/get\", {\n      \"accountId\": \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\",\n      \"ids\":null\n    }, \"1\"]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:80/jmap",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Destroy All Emails",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n\n    [ \"Email/query\", {\n        \"accountId\" : \"153fb2708466f9285df604835d5a0308f8562bf00b6be9171d4eb29549560b80\"\n    }, \"1\" ],\n\n    [ \"Email/set\", {\n        \"#accountId\": {\n            \"name\": \"Email/query\",\n            \"resultOf\": \"1\",\n            \"path\": \"accountId\"\n        },\n\n        \"#destroy\": {\n            \"name\": \"Email/query\",\n            \"resultOf\": \"1\",\n            \"path\": \"ids\"\n        }\n    }, \"2\"]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Destroy All PushSubscriptions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{testuser.org@mydomain}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json; charset=utf-8"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"using\": [ \"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"],\n  \"methodCalls\": [\n    [ \"PushSubscription/get\", {\n      \"ids\": null\n    }, \"asdas\" ],\n\n    [ \"PushSubscription/set\", {\n        \"#destroy\": {\n            \"name\": \"PushSubscription/get\",\n            \"path\": \"list/*/id\",\n            \"resultOf\": \"asdas\"\n        }\n    }, \"0\"\n\n    ]\n  ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{host}}:{{jmapPort}}/jmap",
+					"protocol": "http",
+					"host": [
+						"{{host}}"
+					],
+					"port": "{{jmapPort}}",
+					"path": [
+						"jmap"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "host",
+			"value": "james.appscode.ninja"
+		},
+		{
+			"key": "port",
+			"value": "8000"
+		},
+		{
+			"key": "webadminJWT",
+			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImFkbWluIjp0cnVlLCJleHAiOjE5NDYyMzkwMjJ9.Jxb11mtCETJwWtTJlH7wB9tD1H9_SY0ZI8TU4kZ1e4j_hMn1eh-6W2mHOnKqe0X4eDMpQLF1PbpoQzXmu5z-xkBgomisv7yHPEzkxDOlTc8eSuArduixPH3-_CoXazjr-NNO4lhO4yc5_Fu9VT-W1VbpOTtJUmPEuVwAe_UJwDezUkTNWGjWJb7xM-AWwtx_TvccsGVu0ojTV8wgNt_y_KRaYXVqIZhVoQ_8qFXZ9K8skv1Sb1UHoKm3NU0Qbzz3xyZqnh0_boH0zB33OZFZeBgjhiebzvSaIKi8UTLCqKeYnYprChFd452W2TLV3sKMucLjOhhe8qZbLuQPDwoPVxNezLyipZb7MnkxU_V0l-A-KxWQviynK92-JHQFPc789znlMGyKnbvUeMcAOrcP9BhNpIF0W2iM5Nb6Fse2PmUHotVHY6PcpaLhd8tEJQKlzol68Kqtc8uKAb_RH8TWxX8_anP37EAsxwdcX5ZmTlM454Obzd8WotTBmunlQCeYno_rtxFddaeKs71v8QHD4zaCRWEZ5ZPZpIKiFREK8QBkOdv6q9-v0HhoVyxYMoP7Np_cvDtMiicNcGm4HMiFsQv5F8KTX12rMB1G-ko8LY7r0oli_3DQfaU7VSc8_OETb93UgPiEFpYkgy9fVuinpO7LJRCaSVtU6l4gcoKPdjY",
+			"type": "string"
+		},
+		{
+			"key": "testuser.org@mydomain",
+			"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0dXNlci5vcmdAbXlkb21haW4iLCJpYXQiOjE2MTYyMzkwMjIsImV4cCI6MTk0NjIzOTAyMn0.SO2fTuxB6qQNZqkhwWAndyqXDpyZMrHZFNdgG5ka7j8dW0G9JqU-rx04wqL-R2T51QCVYnlLBM62AVEltK-85ck10nFHEEFwQSD85v5PpI_qzeTz4NRFDxek-5N2gYdK0XQ6NzMvlSwxyUM2TkNZCupIto9H3MDeuDSs0p6Xmwk3iaGKJcIorIUbImf8xzwfB39ytpOw1j6ggAGjczZH8Ykz2PnHQQX2TU8R_dGbn6euYOqnTiZDWggfbxaS1joJ3PatN0Q-jxfuQGwTdZWeSN-Ocvr55MitQvMKJQaoRMVAOFCPXuhCkMq1szKRaBbhnL1nFjmHBpMJC5VpSeDgKOa-govmuTrnRMDV15n5KeeSWEeE2Km9ibOqzZktlR5EU-lU16h-a0u5ydPfax4HcUnNnVcKFqjSGyMFyBQOOxQWKrSJdHNaA7ZP07QQjwdSRQFbJHsUBdH22oBfTnT891yMmWW1iFLHZuV2sMivUGnH-EBO29HHVzAXUlOzErqDaVnovMvdPN6_Vi80LpdSWikYbe2zXUV4csBAc6bC1NweP9omNidBk9Vgo-3q2mHw-H6mfFnTONUipbtbV8ifI2MKQ-ZS0ciNomOcNgyYu5mc-ebDFpZU9xx-_nakCOscUm0tHN224MxKNIx-9E7XrS0PlSOauNYqi4AVKP9svW0"
+		},
+		{
+			"key": "jmapPort",
+			"value": "80",
+			"type": "string"
+		}
+	]
+}
