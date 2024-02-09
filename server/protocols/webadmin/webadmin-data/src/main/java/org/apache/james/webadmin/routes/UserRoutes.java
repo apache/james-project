@@ -186,7 +186,6 @@ public class UserRoutes implements Routes {
     private HaltException upsertUser(Request request, Response response) throws Exception {
         Username username = extractUsername(request);
         if (dummyUser.equals(username.asString())) {
-
             LOGGER.info("Invalid username");
             throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
