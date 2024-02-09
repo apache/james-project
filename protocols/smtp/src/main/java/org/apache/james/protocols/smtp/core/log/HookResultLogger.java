@@ -42,9 +42,11 @@ public class HookResultLogger implements HookResultHook {
             || result.isDisconnected();
 
         if (requiresInfoLogging) {
-            LOGGER.info("{}: result= ({} {})", hook.getClass().getName(),
+            LOGGER.info("{}: result= ({} {}) {} {}", hook.getClass().getName(),
                 result.getAction(),
-                result.getConnectionStatus());
+                result.getConnectionStatus(),
+                hResult.getSmtpRetCode(),
+                hResult.getSmtpDescription());
         } else {
             LOGGER.debug("{}: result= ({} {})", hook.getClass().getName(),
                 result.getAction(),
