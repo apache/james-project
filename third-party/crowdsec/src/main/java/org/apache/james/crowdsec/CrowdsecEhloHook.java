@@ -19,37 +19,33 @@
 
 package org.apache.james.crowdsec;
 
-import static org.apache.james.crowdsec.CrowdsecUtils.isBanned;
-
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
-import org.apache.james.crowdsec.client.CrowdsecHttpClient;
 import org.apache.james.crowdsec.model.CrowdsecDecision;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
 
 public class CrowdsecEhloHook implements HeloHook {
-    private final CrowdsecHttpClient crowdsecHttpClient;
+    private final CrowdsecService crowdsecService;
 
     @Inject
     public CrowdsecEhloHook(CrowdsecClientConfiguration configuration) {
-        this.crowdsecHttpClient = new CrowdsecHttpClient(configuration);
+        this.crowdsecService = new CrowdsecService(configuration);
     }
 
     @Override
     public HookResult doHelo(SMTPSession session, String helo) {
-        String ip = session.getRemoteAddress().getAddress().getHostAddress();
-        return crowdsecHttpClient.getCrowdsecDecisions()
-            .map(decisions -> apply(decisions, ip)).block();
+        return crowdsecService.findBanDecisions(session.getRemoteAddress())
+            .map(this::apply)
+                .block();
     }
 
-    private HookResult apply(List<CrowdsecDecision> decisions, String ip) {
+    private HookResult apply(List<CrowdsecDecision> decisions) {
         return decisions.stream()
-            .filter(decision -> isBanned(decision, ip))
             .findFirst()
             .map(banned -> HookResult.DENY)
             .orElse(HookResult.DECLINED);
