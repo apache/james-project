@@ -87,6 +87,9 @@ public class RabbitMQConnectionFactory {
                 setupSslConfiguration(connectionFactory);
             }
 
+            // CF https://github.com/rabbitmq/rabbitmq-java-client/issues/708 causes class cast exceptions
+            connectionFactory.setChannelShouldCheckRpcResponseType(true);
+
             return connectionFactory;
         } catch (Exception e) {
             throw new RuntimeException(e);
