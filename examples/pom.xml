@@ -28,7 +28,7 @@
 
   <groupId>org.apache.james.examples</groupId>
   <artifactId>examples</artifactId>
-  <version>3.8.2-SNAPSHOT</version>
+  <version>3.8.1</version>
   <packaging>pom</packaging>
   <name>Apache James :: Examples</name>
 
@@ -77,6 +77,6 @@
   </build>
 
   <scm>
-    <tag>james-project-3.8.0</tag>
+    <tag>james-project-3.8.1</tag>
   </scm>
 </project>
