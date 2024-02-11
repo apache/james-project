@@ -78,6 +78,6 @@ class CrowdsecEhloHookTest {
     }
 
     private static void banIP(String type, String value) throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "add", type, value);
+        crowdsecExtension.banIP(type, value);
     }
 }
