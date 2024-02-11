@@ -34,7 +34,6 @@ import com.rabbitmq.client.Channel;
 import reactor.core.publisher.Mono;
 
 public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
-    public static final ComponentName COMPONENT_NAME = new ComponentName("EventbusConsumersHealthCheck");
     public static final String COMPONENT = "EventbusConsumers";
 
     private final RabbitMQEventBus eventBus;
@@ -57,7 +56,6 @@ public class RabbitEventBusConsumerHealthCheck implements HealthCheck {
     public Mono<Result> check() {
         return connectionPool.getResilientConnection()
             .map(Throwing.function(connection -> {
-
                 try (Channel channel = connection.createChannel()) {
                     return check(channel);
                 }
