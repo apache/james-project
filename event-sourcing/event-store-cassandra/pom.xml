@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>event-sourcing</artifactId>
-        <version>3.7.5</version>
+        <version>3.7.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>event-sourcing-event-store-cassandra</artifactId>
