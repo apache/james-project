@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>apache-james-mpt-smtp</artifactId>
-        <version>3.7.5</version>
+        <version>3.7.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>apache-james-mpt-smtp-core</artifactId>

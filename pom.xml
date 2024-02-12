@@ -32,7 +32,7 @@
 
     <groupId>org.apache.james</groupId>
     <artifactId>james-project</artifactId>
-    <version>3.7.5</version>
+    <version>3.7.5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Apache James Project</name>
@@ -546,7 +546,7 @@
     <scm>
         <connection>scm:git:http://git-wip-us.apache.org/repos/asf/james-project.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/apache/james-project.git</developerConnection>
-        <tag>james-project-3.7.5</tag>
+        <tag>HEAD</tag>
         <url>http://git-wip-us.apache.org/repos/asf/james-project.git</url>
     </scm>
 

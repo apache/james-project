@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>jmap-rfc-8621-integration-tests</artifactId>
-        <version>3.7.5</version>
+        <version>3.7.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>distributed-jmap-rfc-8621-integration-tests</artifactId>
