@@ -353,7 +353,7 @@ class AttachmentFileNameIsTest {
     }
 
     @Test
-    void shouldBeCaseIncentive() throws Exception {
+    void shouldBeCaseInsensitive() throws Exception {
         Mail mail =  FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
