@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.james</groupId>
         <artifactId>james-server</artifactId>
-        <version>3.7.6-SNAPSHOT</version>
+        <version>3.7.5</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
