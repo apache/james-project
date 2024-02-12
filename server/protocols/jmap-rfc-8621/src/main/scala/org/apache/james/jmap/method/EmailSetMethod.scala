@@ -49,9 +49,9 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailSetRequest): SMono[InvocationWithContext] = {
     for {
       oldState <- retrieveState(capabilities, mailboxSession)
-      destroyResults <- deletePerformer.destroy(request, mailboxSession)
-      updateResults <- updatePerformer.update(request, mailboxSession)
       created <- createPerformer.create(request, mailboxSession)
+      updateResults <- updatePerformer.update(request, mailboxSession)
+      destroyResults <- deletePerformer.destroy(request, mailboxSession)
       newState <- retrieveState(capabilities, mailboxSession)
     } yield InvocationWithContext(
       invocation = Invocation(

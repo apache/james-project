@@ -52,6 +52,7 @@ import org.apache.james.mailbox.model.{ComposedMessageId, MailboxACL, MailboxCon
 import org.apache.james.mailbox.probe.MailboxProbe
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl, QuotaProbesImpl}
+import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
@@ -434,6 +435,62 @@ trait EmailSetMethodContract {
     assertThatJson(response)
       .inPath("methodResponses[1][1].list.[0].messageId")
       .isEqualTo("[\"${json-unit.ignore}\"]")
+  }
+
+  @Test
+  def shouldCombineCreateAndUpdateInASingleMethodCall(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+    val messageId = server.getProbe(classOf[MailboxProbeImpl]).appendMessage(BOB.asString(), bobPath,
+        AppendCommand.from(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/multipart_complex.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "destroy": ["${messageId.serialize()}"],
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "keywords":{},
+         |          "attachments": [
+         |            {
+         |              "blobId": "${messageId.serialize()}_5",
+         |              "type":"text/plain",
+         |              "charset":"UTF-8",
+         |              "disposition": "attachment"
+         |            }
+         |          ],
+         |          "to": [{"email": "rcpt1@apache.org"}, {"email": "rcpt2@apache.org"}],
+         |          "from": [{"email": "${BOB.asString}"}]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].destroyed[0]")
+      .isPresent
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].created.aaaaaa")
+      .isPresent
   }
 
   @Test
