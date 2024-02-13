@@ -59,8 +59,10 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.util.Attribute;
+import javax.net.ssl.SSLHandshakeException;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -274,6 +276,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         try (Closeable closeable = mdc(ctx).build()) {
             if (cause instanceof SocketException) {
                 LOGGER.info("Socket exception encountered: {}", cause.getMessage());
+            } else if (isSslHandshkeException(cause)) {
+                LOGGER.info("SSH handshake rejected {}", cause.getMessage());
             } else if (!(cause instanceof ClosedChannelException)) {
                 LOGGER.warn("Error while processing imap request", cause);
             }
@@ -305,6 +309,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 manageUnknownError(ctx);
             }
         }
+    }
+
+    private boolean isSslHandshkeException(Throwable cause) {
+        return cause instanceof DecoderException &&
+            cause.getCause() instanceof SSLHandshakeException;
     }
 
     private void manageRejectedException(ChannelHandlerContext ctx, ReactiveThrottler.RejectedException cause) throws IOException {

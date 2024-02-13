@@ -51,10 +51,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.AttributeKey;
+import javax.net.ssl.SSLHandshakeException;
 
 /**
  * {@link ChannelInboundHandlerAdapter} which is used by the SMTPServer and other line based protocols
@@ -270,12 +272,19 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                 }
                 if (cause instanceof SocketException) {
                     LOGGER.info("Socket exception encountered: {}", cause.getMessage());
+                } else if (isSslHandshkeException(cause)) {
+                    LOGGER.info("SSH handshake rejected {}", cause.getMessage());
                 } else if (!(cause instanceof ClosedChannelException)) {
                     LOGGER.error("Unable to process request", cause);
                 }
                 ctx.close();
             }
         }
+    }
+
+    private boolean isSslHandshkeException(Throwable cause) {
+        return cause instanceof DecoderException &&
+            cause.getCause() instanceof SSLHandshakeException;
     }
 
     @Override
