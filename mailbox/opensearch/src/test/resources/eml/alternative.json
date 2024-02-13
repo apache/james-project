@@ -1,0 +1,48 @@
+{
+  "attachments":[
+    {
+      "mediaType":"text",
+      "subtype":"plain",
+      "fileName":null,
+      "fileExtension":null,
+      "contentDisposition":"attachment",
+      "textContent":"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCkGW2JysiJGhPewA9tkmQEBnDV4ZCIe//vdZ2WDrnvb6VKC7iZWc81iSVdLW1RDANYxsq17GPjzU8YVvOlFAIJMVNoDIhnAkX9OUQBiwXi8yGgqK4dtFb1s2AG3kBlMPQI8NJ2JKOfy1nuVrnlKhT9BVzX2nbJ3NjOOfY1BRDh6YqYukdnz0TOi5FJuaBS46PzlwygHkGsypKTs6caT60Qv9wyaZvn2zsuFcL/z62gwhfrdaljAuPdWpDe4mHEQf1p6IsQ07OoIpNdGCKKdtYBUSrKsMti2YKPfiK0vXe5/z0EbDVTckPkcspCg0aVne0vxUlDkvSjpWkbBFta99zBc9YI/DN+o/FkN6QSuuySom46djfiR7jK3LFbJRHZzoAnSoi6oFTt1mKZ3sjn8nvVPmOWzIXv4NmNGQ1dqkWXWqKrB9HeFbBtOYP3hI1CI/iXMmTuJGopuSRiS5mPeyRAezTkdPo/gcRUcsnIaUmDjYTXpE757bNKYSGlRlKqklHJsboxGS+CZW0IKgYy7FrfQgQF17oiJV3RICUGqOk3R6VvNbXe/efe/HOn1wIYQ/jTdscHBjdH3aE2f8cwUKR35KV6RuHN/aZbzLbVBqPC/Q70wsLBYhWoCkWQ0ITRlFWcwnswU196yFZEGJka9CDhvPuEAWCKZqQOx22thaeRBQ== benwa@horizon\n"
+    }
+  ],
+  "bcc":[],
+  "htmlBody":null,
+  "textBody":"ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCkGW2JysiJGhPewA9tkmQEBnDV4ZCIe//vdZ2WDrnvb6VKC7iZWc81iSVdLW1RDANYxsq17GPjzU8YVvOlFAIJMVNoDIhnAkX9OUQBiwXi8yGgqK4dtFb1s2AG3kBlMPQI8NJ2JKOfy1nuVrnlKhT9BVzX2nbJ3NjOOfY1BRDh6YqYukdnz0TOi5FJuaBS46PzlwygHkGsypKTs6caT60Qv9wyaZvn2zsuFcL/z62gwhfrdaljAuPdWpDe4mHEQf1p6IsQ07OoIpNdGCKKdtYBUSrKsMti2YKPfiK0vXe5/z0EbDVTckPkcspCg0aVne0vxUlDkvSjpWkbBFta99zBc9YI/DN+o/FkN6QSuuySom46djfiR7jK3LFbJRHZzoAnSoi6oFTt1mKZ3sjn8nvVPmOWzIXv4NmNGQ1dqkWXWqKrB9HeFbBtOYP3hI1CI/iXMmTuJGopuSRiS5mPeyRAezTkdPo/gcRUcsnIaUmDjYTXpE757bNKYSGlRlKqklHJsboxGS+CZW0IKgYy7FrfQgQF17oiJV3RICUGqOk3R6VvNbXe/efe/HOn1wIYQ/jTdscHBjdH3aE2f8cwUKR35KV6RuHN/aZbzLbVBqPC/Q70wsLBYhWoCkWQ0ITRlFWcwnswU196yFZEGJka9CDhvPuEAWCKZqQOx22thaeRBQ== benwa@horizon\n",
+  "cc":[],
+  "date":"2015-06-07T00:00:00+0200",
+  "from":[{"name":"Benoit TELLIER","address":"btellier@linagora.com","domain":"linagora"}],
+  "hasAttachment":false,
+  "headers":[
+    {"name":"mime-version","value":"1.0"},
+    {"name":"subject","value":"Test"},
+    {"name":"from","value":"Benoit TELLIER <btellier@linagora.com>"},
+    {"name":"to","value":"Benoit TELLIER <btellier@linagora.com>"},
+    {"name":"date","value":"Tue, 13 Feb 2024 23:01:18 +0000"},
+    {"name":"message-id","value":"<Mime4j.17d.c7b7d059b303c215.18da4b4076b@linagora.com>"},
+    {"name":"content-type","value":"multipart/mixed; boundary=\"-=Part.17f.732e3d28e1c76db4.18da4b40791.62ef5e3fa995057d=-\""}
+  ],
+  "mailboxId":"18",
+  "mediaType":"plain",
+  "messageId":"184",
+  "threadId":"184",
+  "modSeq":42,
+  "sentDate":"2024-02-13T23:01:18+0000",
+  "saveDate":null,
+  "size":25,
+  "subject":["Test"],
+  "subtype":"text",
+  "to":[{"name":"Benoit TELLIER","address":"btellier@linagora.com","domain":"linagora"}],
+  "uid":25,
+  "userFlags":[],
+  "mimeMessageID":"<Mime4j.17d.c7b7d059b303c215.18da4b4076b@linagora.com>",
+  "isAnswered":false,
+  "isDeleted":false,
+  "isDraft":false,
+  "isFlagged":false,
+  "isRecent":false,
+  "isUnread":true
+}

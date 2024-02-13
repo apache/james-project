@@ -114,6 +114,52 @@ class MessageToOpenSearchJsonTest {
     }
 
     @Test
+    void alternative() throws IOException {
+        MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
+        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
+                date,
+                SIZE,
+                BODY_START_OCTET,
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative.eml"))),
+                new Flags(),
+                propertyBuilder.build(),
+                MAILBOX_ID);
+        spamMail.setUid(UID);
+        spamMail.setModSeq(MOD_SEQ);
+
+        assertThatJson(messageToOpenSearchJson.convertToJson(spamMail).block())
+            .when(IGNORING_ARRAY_ORDER)
+            .whenIgnoringPaths("headers")
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/alternative.json"));
+    }
+
+    @Test
+    void alternativeSimple() throws IOException {
+        MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES);
+        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
+                THREAD_ID,
+                date,
+                SIZE,
+                BODY_START_OCTET,
+                new ByteContent(IOUtils.toByteArray(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/alternative_simple.eml"))),
+                new Flags(),
+                propertyBuilder.build(),
+                MAILBOX_ID);
+        spamMail.setUid(UID);
+        spamMail.setModSeq(MOD_SEQ);
+
+        assertThatJson(messageToOpenSearchJson.convertToJson(spamMail).block())
+            .when(IGNORING_ARRAY_ORDER)
+            .whenIgnoringPaths("headers")
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/alternative_simple.json"));
+    }
+
+    @Test
     void badContentDescriptionShouldStillBeIndexed() throws IOException {
         MessageToOpenSearchJson messageToOpenSearchJson = new MessageToOpenSearchJson(
             new DefaultTextExtractor(),

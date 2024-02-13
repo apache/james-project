@@ -1,0 +1,45 @@
+MIME-Version: 1.0
+Subject: Test
+From: Benoit TELLIER <btellier@linagora.com>
+To: Benoit TELLIER <btellier@linagora.com>
+Date: Tue, 13 Feb 2024 23:01:18 +0000
+Message-ID: <Mime4j.17d.c7b7d059b303c215.18da4b4076b@linagora.com>
+Content-Type: multipart/mixed;
+ boundary="-=Part.17f.732e3d28e1c76db4.18da4b40791.62ef5e3fa995057d=-"
+
+---=Part.17f.732e3d28e1c76db4.18da4b40791.62ef5e3fa995057d=-
+Content-Type: multipart/alternative;
+ boundary="-=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=-"
+
+---=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=-
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Test
+
+---=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=-
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div>Test<br><br></div>
+
+---=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=---
+
+---=Part.17f.732e3d28e1c76db4.18da4b40791.62ef5e3fa995057d=-
+Content-Type: text/plain; name="=?US-ASCII?Q?id=5Frsa.txt?="
+Content-Disposition: attachment
+Content-Transfer-Encoding: base64
+
+c3NoLXJzYSBBQUFBQjNOemFDMXljMkVBQUFBREFRQUJBQUFDQVFDa0dXMkp5c2lKR2hQZXdBOXRr
+bVFFQm5EVjRaQ0llLy92ZFoyV0RybnZiNlZLQzdpWldjODFpU1ZkTFcxUkRBTll4c3ExN0dQanpV
+OFlWdk9sRkFJSk1WTm9ESWhuQWtYOU9VUUJpd1hpOHlHZ3FLNGR0RmIxczJBRzNrQmxNUFFJOE5K
+MkpLT2Z5MW51VnJubEtoVDlCVnpYMm5iSjNOak9PZlkxQlJEaDZZcVl1a2RuejBUT2k1Rkp1YUJT
+NDZQemx3eWdIa0dzeXBLVHM2Y2FUNjBRdjl3eWFadm4yenN1RmNML3o2Mmd3aGZyZGFsakF1UGRX
+cERlNG1IRVFmMXA2SXNRMDdPb0lwTmRHQ0tLZHRZQlVTcktzTXRpMllLUGZpSzB2WGU1L3owRWJE
+VlRja1BrY3NwQ2cwYVZuZTB2eFVsRGt2U2pwV2tiQkZ0YTk5ekJjOVlJL0ROK28vRmtONlFTdXV5
+U29tNDZkamZpUjdqSzNMRmJKUkhaem9BblNvaTZvRlR0MW1LWjNzam44bnZWUG1PV3pJWHY0Tm1O
+R1ExZHFrV1hXcUtyQjlIZUZiQnRPWVAzaEkxQ0kvaVhNbVR1SkdvcHVTUmlTNW1QZXlSQWV6VGtk
+UG8vZ2NSVWNzbklhVW1EallUWHBFNzU3Yk5LWVNHbFJsS3FrbEhKc2JveEdTK0NaVzBJS2dZeTdG
+cmZRZ1FGMTdvaUpWM1JJQ1VHcU9rM1I2VnZOYlhlL2VmZS9IT24xd0lZUS9qVGRzY0hCamRIM2FF
+MmY4Y3dVS1IzNUtWNlJ1SE4vYVpiekxiVkJxUEMvUTcwd3NMQlloV29Da1dRMElUUmxGV2N3bnN3
+VTE5NnlGWkVHSmthOUNEaHZQdUVBV0NLWnFRT3gyMnRoYWVSQlE9PSBiZW53YUBob3Jpem9uCg==

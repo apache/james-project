@@ -1,0 +1,22 @@
+MIME-Version: 1.0
+Subject: Test
+From: Benoit TELLIER <btellier@linagora.com>
+To: Benoit TELLIER <btellier@linagora.com>
+Date: Tue, 13 Feb 2024 23:01:18 +0000
+Message-ID: <Mime4j.17d.c7b7d059b303c215.18da4b4076b@linagora.com>
+Content-Type: multipart/alternative;
+ boundary="-=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=-"
+
+---=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=-
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Test
+
+---=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=-
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div>Test<br><br></div>
+
+---=Part.17e.48ac92d73c356567.18da4b40791.360a293e2f389efe=---
