@@ -103,6 +103,8 @@ public interface Mail extends Serializable, Cloneable {
 
     AttributeName SMTP_AUTH_USER = AttributeName.of("org.apache.james.SMTPAuthUser");
     AttributeName SMTP_HELO = AttributeName.of("org.apache.james.HELO");
+    AttributeName SSL_PROTOCOL = AttributeName.of("org.apache.james.ssl.protocol");
+    AttributeName SSL_CIPHER = AttributeName.of("org.apache.james.ssl.cipher");
     AttributeName SMTP_SESSION_ID = AttributeName.of("org.apache.james.SMTPSessionID");
     AttributeName MAILET_ERROR = AttributeName.of("org.apache.james.MailetError");
     Attribute SENT_BY_MAILET_ATTRIBUTE = Attribute.convertToAttribute("org.apache.james.SentByMailet", true);
