@@ -312,8 +312,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     }
 
     private boolean isSslHandshkeException(Throwable cause) {
-        return cause instanceof DecoderException &&
-            cause.getCause() instanceof SSLHandshakeException;
+        return cause instanceof DecoderException
+            && cause.getCause() instanceof SSLHandshakeException;
     }
 
     private void manageRejectedException(ChannelHandlerContext ctx, ReactiveThrottler.RejectedException cause) throws IOException {

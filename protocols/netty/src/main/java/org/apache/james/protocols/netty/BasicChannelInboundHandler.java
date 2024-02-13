@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import javax.net.ssl.SSLHandshakeException;
+
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -56,7 +58,6 @@ import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
 import io.netty.util.AttributeKey;
-import javax.net.ssl.SSLHandshakeException;
 
 /**
  * {@link ChannelInboundHandlerAdapter} which is used by the SMTPServer and other line based protocols
