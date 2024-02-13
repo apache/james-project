@@ -184,6 +184,18 @@ public class RspamdHttpClient {
             .filter(String.class::isInstance)
             .map(String.class::cast)
             .ifPresent(user -> headers.add("User", user));
+
+        // SSL details
+        mail.getAttribute(Mail.SSL_PROTOCOL)
+            .map(attr -> attr.getValue().value())
+            .filter(String.class::isInstance)
+            .map(String.class::cast)
+            .ifPresent(tlsVersion -> headers.add("TLS-Version", tlsVersion));
+        mail.getAttribute(Mail.SSL_CIPHER)
+            .map(attr -> attr.getValue().value())
+            .filter(String.class::isInstance)
+            .map(String.class::cast)
+            .ifPresent(cipher -> headers.add("TLS-Cipher", cipher));
     }
 
     private HttpClient buildReactorNettyHttpClient(RspamdClientConfiguration configuration) {
