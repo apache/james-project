@@ -85,8 +85,8 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
             maybeTrustOptions.ifPresentOrElse(Throwing.<TrustStoreTrustOptions<? extends CertPathTrustManagerParameters>>consumer(trustOptions ->
             sslFactoryBuilder.withTrustMaterial(
                     fileSystem.getFile(sslConfig.getTruststore()).toPath(),
-                    sslConfig.getSecret().toCharArray(),
-                    sslConfig.getKeystoreType(),
+                    sslConfig.getTruststoreSecret(),
+                    sslConfig.getTruststoreType(),
                     trustOptions)).sneakyThrow(),
                 Throwing.runnable(() -> sslFactoryBuilder.withTrustMaterial(
                         fileSystem.getFile(sslConfig.getTruststore()).toPath(),
