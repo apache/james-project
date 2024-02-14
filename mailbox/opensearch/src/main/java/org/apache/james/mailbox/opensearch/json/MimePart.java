@@ -312,10 +312,13 @@ public class MimePart {
     }
 
     private Stream<MimePart> textAttachments() {
+        return allAttachments().filter(this::isTextMediaType);
+    }
+
+    private Stream<MimePart> allAttachments() {
         return Stream.concat(
-                    Stream.of(this),
-                    attachments.stream())
-                .filter(this::isTextMediaType);
+            Stream.of(this),
+            attachments.stream().flatMap(MimePart::allAttachments));
     }
 
     private boolean isTextMediaType(MimePart mimePart) {
