@@ -174,6 +174,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         configuration.getWriteTimeout().ifPresent(result::writeTimeout);
         configuration.getReadTimeout().ifPresent(result::readTimeout);
         configuration.getConnectionTimeout().ifPresent(result::connectionTimeout);
+        result.useNonBlockingDnsResolver(true);
         return result;
     }
 
