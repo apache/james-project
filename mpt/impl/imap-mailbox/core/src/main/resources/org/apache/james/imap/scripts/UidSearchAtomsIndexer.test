@@ -1948,7 +1948,7 @@ S: \* 19 EXISTS
 S: \* 19 RECENT
 S: A82 OK (\[.+\] )?APPEND completed\.
 
-C: A801 APPEND testmailbox {900+}
+C: A801 APPEND testmailbox {929+}
 C: From: Timothy Tayler <timothy@example.org>
 C: To: Samual Smith <samual@example.org>
 C: Date: Wed, 20 Jul 2016 15:30:00 +0000 (GMT)
@@ -1963,7 +1963,7 @@ C: --------------E8CB67F44E1EBC80F62E6ACF
 C: Content-Type: text/plain; charset=utf-8; format=flowed
 C: Content-Transfer-Encoding: 7bit
 C: 
-C: Text
+C: This is html mail, with a banana.
 C: 
 C: --------------E8CB67F44E1EBC80F62E6ACF
 C: Content-Type: text/html; charset=utf-8
@@ -1984,7 +1984,7 @@ S: \* 20 EXISTS
 S: \* 20 RECENT
 S: A801 OK (\[.+\] )?APPEND completed\.
 
-C: A802 APPEND testmailbox {886+}
+C: A802 APPEND testmailbox {915+}
 C: From: Timothy Tayler <timothy@example.org>
 C: To: Samual Smith <samual@example.org>
 C: Date: Wed, 20 Jul 2016 15:30:00 +0000 (GMT)
@@ -1999,7 +1999,7 @@ C: --------------E8CB67F44E1EBC80F62E6ACF
 C: Content-Type: text/plain; charset=utf-8; format=flowed
 C: Content-Transfer-Encoding: 7bit
 C: 
-C: Text
+C: This is html mail, with a banana.
 C: 
 C: --------------E8CB67F44E1EBC80F62E6ACF
 C: Content-Type: text/html; charset=utf-8

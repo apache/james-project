@@ -121,7 +121,7 @@
   "sentDate":"2015-06-04T07:36:08+0000",
   "attachments":[],
   "textBody": "The text/plain part is not matching the html one.\r\n",
-  "htmlBody": "<html>\r\n  <head>\r\n\r\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n  </head>\r\n  <body bgcolor=\"#FFFFFF\" text=\"#000000\">\r\n    <i>This is a mail with <b>beautifull</b> html content which contains a banana.</i><br>\r\n  </body>\r\n</html>\r\n",
+  "htmlBody": null,
   "isDeleted":true,
   "isDraft":false,
   "isAnswered":false,
