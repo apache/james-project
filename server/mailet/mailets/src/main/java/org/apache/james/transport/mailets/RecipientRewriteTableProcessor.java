@@ -278,7 +278,12 @@ public class RecipientRewriteTableProcessor {
         void apply(Mail mail) throws Exception;
     }
 
-    public void processForwards(Mail mail) {
+    public void processForwards(Mail mail) throws MessagingException {
+        if (Optional.ofNullable(mail.getMessage().getHeader("Auto-Submitted")).map(ImmutableList::copyOf).orElse(ImmutableList.of())
+            .stream()
+            .anyMatch(value -> value.startsWith("auto-replied"))) {
+            return;
+        }
         if (rewriteSenderUponForward) {
             mail.getRecipients()
                 .stream()
