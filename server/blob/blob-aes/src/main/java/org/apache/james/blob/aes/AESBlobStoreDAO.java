@@ -41,6 +41,7 @@ import com.google.common.io.FileBackedOutputStream;
 import com.google.crypto.tink.subtle.AesGcmHkdfStreaming;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class AESBlobStoreDAO implements BlobStoreDAO {
     // For now, aligned with with MimeMessageInputStreamSource file threshold, detailed benchmarking might be conducted to challenge this choice
@@ -115,6 +116,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
                 () -> encrypt(inputStream),
                 fileBackedOutputStream -> Mono.from(underlying.save(bucketName, blobId, fileBackedOutputStream.asByteSource())),
                 Throwing.consumer(FileBackedOutputStream::reset))
+            .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));
     }
 
