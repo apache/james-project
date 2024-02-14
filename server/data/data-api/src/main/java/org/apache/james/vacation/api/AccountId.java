@@ -40,7 +40,7 @@ public class AccountId {
     private final String identifier;
 
     private AccountId(String identifier) {
-        this.identifier = identifier;
+        this.identifier = identifier.toLowerCase();
     }
 
     public String getIdentifier() {

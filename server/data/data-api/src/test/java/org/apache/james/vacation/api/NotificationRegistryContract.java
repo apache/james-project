@@ -100,4 +100,31 @@ public interface NotificationRegistryContract {
 
         assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
     }
+
+    @Test
+    default void isRegisteredShouldIgnoreCase() {
+        notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.empty()).block();
+
+        AccountId upperCaseAccount = AccountId.fromString(ACCOUNT_ID.getIdentifier().toUpperCase());
+        assertThat(notificationRegistry().isRegistered(upperCaseAccount, recipientId()).block()).isTrue();
+    }
+
+    @Test
+    default void registerShouldIgnoreCase() {
+        AccountId upperCaseAccount = AccountId.fromString(ACCOUNT_ID.getIdentifier().toUpperCase());
+        notificationRegistry().register(upperCaseAccount, recipientId(), Optional.empty()).block();
+
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
+    }
+
+    @Test
+    default void flushShouldIgnoreCase() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.empty()).block();
+
+        AccountId upperCaseAccount = AccountId.fromString(ACCOUNT_ID.getIdentifier().toUpperCase());
+        notificationRegistry().flush(upperCaseAccount).block();
+
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isFalse();
+    }
 }
