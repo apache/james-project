@@ -337,4 +337,27 @@ public interface VacationRepositoryContract {
             .isInstanceOf(NullPointerException.class);
     }
 
+    @Test
+    default void retrieveVacationShouldIgnoreCase() {
+        vacationRepository().modifyVacation(ACCOUNT_ID,
+                VacationPatch.builderFrom(VACATION)
+                    .build())
+            .block();
+
+        AccountId upperCaseAccount = AccountId.fromString(ACCOUNT_ID.getIdentifier().toUpperCase());
+        Vacation vacation = vacationRepository().retrieveVacation(upperCaseAccount).block();
+        assertThat(vacation).isNotNull();
+    }
+
+    @Test
+    default void modifiyVacationShouldIgnoreCase() {
+        AccountId upperCaseAccount = AccountId.fromString(ACCOUNT_ID.getIdentifier().toUpperCase());
+        vacationRepository().modifyVacation(upperCaseAccount,
+                VacationPatch.builderFrom(VACATION)
+                    .build())
+            .block();
+
+        Vacation vacation = vacationRepository().retrieveVacation(ACCOUNT_ID).block();
+        assertThat(vacation).isNotNull();
+    }
 }
