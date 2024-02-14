@@ -297,8 +297,11 @@ public class MimePart {
 
     @JsonIgnore
     public Optional<String> locateFirstHtmlBody() {
-        return firstBody(textAttachments()
+        if (locateFirstTextBody().isEmpty()) {
+            return firstBody(textAttachments()
                 .filter(this::isHtmlSubType));
+        }
+        return Optional.empty();
     }
 
     private Optional<String> firstBody(Stream<MimePart> mimeParts) {

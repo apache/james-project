@@ -1,7 +1,7 @@
 {
  "attachments":[],
  "bcc":[],
- "htmlBody":"<div>Test<br><br></div>\r\n",
+ "htmlBody": null,
  "textBody":"Test\r\n",
  "cc":[],
  "date":"2015-06-07T00:00:00+0200",
