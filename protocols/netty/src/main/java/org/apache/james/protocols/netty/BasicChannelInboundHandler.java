@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import javax.net.ssl.SSLHandshakeException;
+
 import org.apache.james.protocols.api.CommandDetectionSession;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -51,6 +53,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
@@ -270,12 +273,19 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                 }
                 if (cause instanceof SocketException) {
                     LOGGER.info("Socket exception encountered: {}", cause.getMessage());
+                } else if (isSslHandshkeException(cause)) {
+                    LOGGER.info("SSH handshake rejected {}", cause.getMessage());
                 } else if (!(cause instanceof ClosedChannelException)) {
                     LOGGER.error("Unable to process request", cause);
                 }
                 ctx.close();
             }
         }
+    }
+
+    private boolean isSslHandshkeException(Throwable cause) {
+        return cause instanceof DecoderException &&
+            cause.getCause() instanceof SSLHandshakeException;
     }
 
     @Override
