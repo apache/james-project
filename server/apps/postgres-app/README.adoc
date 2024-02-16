@@ -133,3 +133,25 @@ The never used data are:
 - mailbox_change
 - email_change
 - vacation_notification_registry
+
+## Development
+
+### How to track the stats of the statement execution
+
+Using the [`pg_stat_statements` extension](https://www.postgresql.org/docs/current/pgstatstatements.html), you can track the stats of the statement execution. To install it, you can execute the following SQL query:
+
+```sql
+create extension if not exists pg_stat_statements;
+alter system set shared_preload_libraries='pg_stat_statements';
+
+-- restart postgres
+-- optional
+alter system set pg_stat_statements.max = 100000;
+alter system set pg_stat_statements.track = 'all';
+```
+
+Then you can query the stats of the statement execution by executing the following SQL query:
+
+```sql
+select query, mean_exec_time, total_exec_time, calls from pg_stat_statements order by total_exec_time desc;
+```
