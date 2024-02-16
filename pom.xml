@@ -3269,6 +3269,16 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-remote-resources-plugin</artifactId>
                     <version>1.6.0</version>
+                    <executions>
+                        <execution>
+                            <!--
+                            Disable remote resources processing by default.
+                            It is enabled selectively in the projects that need it
+                            -->
+                            <id>process-resource-bundles</id>
+                            <phase>none</phase>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -3931,7 +3941,7 @@
                             <artifactId>maven-remote-resources-plugin</artifactId>
                             <executions>
                                 <execution>
-                                    <id>process-resource-bundles</id>
+                                    <id>process</id>
                                     <phase>none</phase>
                                 </execution>
                             </executions>
