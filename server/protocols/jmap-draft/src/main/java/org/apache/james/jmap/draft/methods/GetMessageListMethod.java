@@ -35,7 +35,7 @@ import javax.inject.Named;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.api.projections.EmailQueryView;
+import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.jmap.draft.model.Filter;
 import org.apache.james.jmap.draft.model.FilterCondition;
 import org.apache.james.jmap.draft.model.GetMessageListRequest;
@@ -78,7 +78,7 @@ public class GetMessageListMethod implements Method {
     private final long maximumLimit;
     private final GetMessagesMethod getMessagesMethod;
     private final Factory mailboxIdFactory;
-    private final EmailQueryView emailQueryView;
+    private final EmailQueryViewManager emailQueryViewManager;
     private final JMAPConfiguration configuration;
     private final MetricFactory metricFactory;
 
@@ -87,7 +87,7 @@ public class GetMessageListMethod implements Method {
                                  @Named(MAXIMUM_LIMIT) long maximumLimit,
                                  GetMessagesMethod getMessagesMethod,
                                  Factory mailboxIdFactory,
-                                 EmailQueryView emailQueryView,
+                                 EmailQueryViewManager emailQueryViewManager,
                                  JMAPConfiguration configuration,
                                  MetricFactory metricFactory) {
 
@@ -95,7 +95,7 @@ public class GetMessageListMethod implements Method {
         this.maximumLimit = maximumLimit;
         this.getMessagesMethod = getMessagesMethod;
         this.mailboxIdFactory = mailboxIdFactory;
-        this.emailQueryView = emailQueryView;
+        this.emailQueryViewManager = emailQueryViewManager;
         this.configuration = configuration;
         this.metricFactory = metricFactory;
     }
@@ -179,7 +179,7 @@ public class GetMessageListMethod implements Method {
             Limit aLimit = Limit.from(Math.toIntExact(limit));
 
             return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-                .then(emailQueryView.listMailboxContentSortedBySentAt(mailboxId, aLimit)
+                .then(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(mailboxId, aLimit)
                     .skip(position)
                     .take(limit)
                     .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
@@ -195,7 +195,7 @@ public class GetMessageListMethod implements Method {
             Limit aLimit = Limit.from(Math.toIntExact(limit));
 
             return Mono.from(mailboxManager.getMailboxReactive(mailboxId, mailboxSession))
-                .then(emailQueryView.listMailboxContentSinceAfterSortedBySentAt(mailboxId, after, aLimit)
+                .then(emailQueryViewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSinceAfterSortedBySentAt(mailboxId, after, aLimit)
                     .skip(position)
                     .take(limit)
                     .reduce(GetMessageListResponse.builder(), GetMessageListResponse.Builder::messageId)
