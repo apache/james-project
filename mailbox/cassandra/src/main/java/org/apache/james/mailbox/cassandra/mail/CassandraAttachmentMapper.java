@@ -120,7 +120,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Mono<List<MessageAttachmentMetadata>> storeAttachmentsReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
         return Flux.fromIterable(attachments)
-            .concatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
+            .flatMapSequential(attachment -> storeAttachmentAsync(attachment, ownerMessageId), 4)
             .collectList();
     }
 
