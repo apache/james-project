@@ -86,12 +86,12 @@ public class LegacyJavaEncryptionFactory implements Encryption.Factory {
             sslFactoryBuilder.withTrustMaterial(
                     fileSystem.getFile(sslConfig.getTruststore()).toPath(),
                     sslConfig.getTruststoreSecret(),
-                    sslConfig.getKeystoreType(),
+                    sslConfig.getTruststoreType(),
                     trustOptions)).sneakyThrow(),
                 Throwing.runnable(() -> sslFactoryBuilder.withTrustMaterial(
                         fileSystem.getFile(sslConfig.getTruststore()).toPath(),
                         sslConfig.getTruststoreSecret(),
-                        sslConfig.getKeystoreType())));
+                        sslConfig.getTruststoreType())));
         }
 
         SSLContext context = sslFactoryBuilder.build().getSslContext();
