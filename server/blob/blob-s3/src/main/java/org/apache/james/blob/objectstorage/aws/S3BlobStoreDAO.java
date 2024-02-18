@@ -334,6 +334,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .retryWhen(createBucketOnRetry(resolvedBucketName))
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
             .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+            .retryWhen(configuration.uploadRetrySpec())
             .then();
     }
 

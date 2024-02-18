@@ -160,6 +160,16 @@ S3 endpoint SSL certificates.
 | optional: Object read in memory will be rejected if they exceed the size limit exposed here. Size, exemple `100M`.
 Supported units: K, M, G, defaults to B if no unit is specified. If unspecified, big object won't be prevented
 from being loaded in memory. This settings complements protocol limits.
+
+| objectstorage.s3.upload.retry.maxAttempts
+| optional: Integer. Default is zero. This property specifies the maximum number of retry attempts allowed for failed upload operations.
+
+| objectstorage.s3.upload.retry.backoffDurationMillis
+| optional: Long (Milliseconds). Default is 10 (miliseconds).
+Only takes effect when the "objectstorage.s3.upload.retry.maxAttempts" property is declared.
+This property determines the duration (in milliseconds) to wait between retry attempts for failed upload operations.
+This delay is known as backoff. The jitter factor is 0.5
+
 |===
 
 ==== Buckets Configuration
