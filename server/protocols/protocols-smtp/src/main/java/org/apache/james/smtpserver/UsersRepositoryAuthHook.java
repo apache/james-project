@@ -91,7 +91,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
     }
 
     private HookResult doAuthWithDelegation(SMTPSession session, Username authenticatedUser, Username associatedUser) {
-                try {
+        try {
             if (Authorizator.AuthorizationState.ALLOWED.equals(authorizator.user(authenticatedUser).canLoginAs(associatedUser))) {
                 return saslSuccess(session, associatedUser);
             }
@@ -103,17 +103,17 @@ public class UsersRepositoryAuthHook implements AuthHook {
 
     private HookResult saslSuccess(SMTPSession session, Username username) {
         try {
-                    users.assertValid(username);
-                    session.setUsername(username);
-                    session.setRelayingAllowed(true);
-                    return HookResult.builder()
-                        .hookReturnCode(HookReturnCode.ok())
-                        .smtpDescription("Authentication successful.")
-                        .build();
-                } catch (UsersRepositoryException e) {
-                    LOGGER.warn("Invalid username", e);
-                    return HookResult.DECLINED;
-                }
+            users.assertValid(username);
+            session.setUsername(username);
+            session.setRelayingAllowed(true);
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.ok())
+                .smtpDescription("Authentication successful.")
+                .build();
+        } catch (UsersRepositoryException e) {
+            LOGGER.warn("Invalid username", e);
+            return HookResult.DECLINED;
+        }
     }
 
     private Optional<Username> validateToken(OidcSASLConfiguration oidcSASLConfiguration, String token) {
@@ -134,7 +134,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
                 oidcSASLConfiguration.getUserInfoEndpoint().orElseThrow()))
             .blockOptional()
             .map(Username::of);
-}
+    }
 
     private static Optional<Username> validTokenWithIntrospection(OidcSASLConfiguration oidcSASLConfiguration, String token) {
         return Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(token,

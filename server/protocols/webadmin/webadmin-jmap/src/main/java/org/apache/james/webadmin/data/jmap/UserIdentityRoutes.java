@@ -29,7 +29,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
+
+import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.identity.IdentityNotFoundException;
