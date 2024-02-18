@@ -385,11 +385,10 @@ public class PostgresMailboxMessageDAO {
             .map(RECORD_TO_MESSAGE_UID_FUNCTION);
     }
 
-    public Mono<Long> countByMessageId(PostgresMessageId messageId) {
-        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.selectCount()
-                .from(TABLE_NAME)
-                .where(MESSAGE_ID.eq(messageId.asUuid()))))
-            .map(record -> record.get(0, Long.class));
+    public Mono<Boolean> existsByMessageId(PostgresMessageId messageId) {
+        return postgresExecutor.executeExists(dslContext -> dslContext.selectOne()
+            .from(TABLE_NAME)
+            .where(MESSAGE_ID.eq(messageId.asUuid())));
     }
 
     public Flux<ComposedMessageIdWithMetaData> findMessagesMetadata(PostgresMailboxId mailboxId, MessageRange range) {
