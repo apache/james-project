@@ -121,10 +121,11 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, FetchType fetchType) {
+        int concurrency = batchSizes.forFetchType(fetchType);
         return Flux.fromIterable(messageIds)
             .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty(), chooseReadConsistency()),
-                batchSizes.forFetchType(fetchType))
-            .flatMap(metadata -> toMailboxMessage(metadata, fetchType), batchSizes.forFetchType(fetchType))
+                concurrency, concurrency)
+            .flatMap(metadata -> toMailboxMessage(metadata, fetchType), concurrency, concurrency)
             .groupBy(MailboxMessage::getMailboxId)
             .flatMap(this::keepMessageIfMailboxExists, ReactorUtils.DEFAULT_CONCURRENCY);
     }
