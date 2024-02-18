@@ -116,7 +116,12 @@ public class PostgresUsersDAO implements UsersDAO {
 
     @Override
     public boolean contains(Username name) {
-        return getUserByName(name).isPresent();
+        return containsReactive(name).block();
+    }
+
+    @Override
+    public Mono<Boolean> containsReactive(Username name) {
+        return postgresExecutor.executeExists(dsl -> dsl.selectOne().from(TABLE_NAME).where(USERNAME.eq(name.asString())));
     }
 
     @Override
