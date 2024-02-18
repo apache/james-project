@@ -89,6 +89,8 @@ import com.google.common.collect.Sets;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 public class StoreMessageIdManager implements MessageIdManager {
 
@@ -180,7 +182,15 @@ public class StoreMessageIdManager implements MessageIdManager {
             .groupBy(MailboxMessage::getMailboxId)
             .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
             .flatMap(Function.identity(), DEFAULT_CONCURRENCY)
+            .publishOn(forFetchType(fetchType))
             .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
+    }
+
+    private Scheduler forFetchType(MessageMapper.FetchType fetchType) {
+        if (fetchType == MessageMapper.FetchType.FULL) {
+            return Schedulers.parallel();
+        }
+        return Schedulers.immediate();
     }
 
     @Override
