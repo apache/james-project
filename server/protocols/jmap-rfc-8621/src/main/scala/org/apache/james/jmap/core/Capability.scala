@@ -251,6 +251,9 @@ object JmapUploadQuotaLimit {
 case class JmapUploadQuotaLimit(value: UnsignedInt) {
   def asLong(): Long = value.value
 }
+case class JmapEmailGetFullMaxSize(value: UnsignedInt) {
+  def asLong(): Long = value.value
+}
 
 case class JmapUploadQuotaReadRepairProbability(value: Float)
 case class MayCreateTopLevelMailbox(value: Boolean) extends AnyVal
