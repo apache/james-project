@@ -19,8 +19,8 @@
 package org.apache.james.jmap.method
 
 import java.time.ZoneId
-
 import eu.timepit.refined.auto._
+
 import javax.inject.Inject
 import org.apache.james.jmap.api.change.{EmailChangeRepository, State => JavaState}
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
@@ -29,7 +29,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.EmailGetSerializer
-import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, UnparsedEmailId}
+import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, FullReadLevel, MetadataReadLevel, ReadLevel, UnparsedEmailId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
@@ -153,14 +153,26 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     }
 
   private def retrieveEmails(ids: Seq[MessageId], mailboxSession: MailboxSession, request: EmailGetRequest): SFlux[EmailGetResults] = {
-    val foundResultsMono: SMono[Map[MessageId, EmailView]] =
-      readerFactory.selectReader(request)
-        .read(ids, request, mailboxSession)
-        .collectMap(_.metadata.id)
+    val readLevel: ReadLevel = request.properties
+      .getOrElse(Email.defaultProperties)
+      .value
+      .map(ReadLevel.of)
+      .reduceOption(ReadLevel.combine)
+      .getOrElse(MetadataReadLevel)
 
-    foundResultsMono.flatMapIterable(foundResults => ids
-      .map(id => foundResults.get(id)
-        .map(EmailGetResults.found)
-        .getOrElse(EmailGetResults.notFound(id))))
+    // TODO make this configurable
+    if (readLevel.equals(FullReadLevel) && ids.size > 5) {
+      SFlux.error(new RuntimeException(s"Too many items in an email read at level FULL. Got ${ids.size} items instead of maximum 5."))
+    } else {
+      val foundResultsMono: SMono[Map[MessageId, EmailView]] =
+        readerFactory.selectReader(request)
+          .read(ids, request, mailboxSession)
+          .collectMap(_.metadata.id)
+
+      foundResultsMono.flatMapIterable(foundResults => ids
+        .map(id => foundResults.get(id)
+          .map(EmailGetResults.found)
+          .getOrElse(EmailGetResults.notFound(id))))
+    }
   }
 }
