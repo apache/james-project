@@ -61,6 +61,7 @@ import com.google.common.io.FileBackedOutputStream;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -333,6 +334,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .retryWhen(createBucketOnRetry(resolvedBucketName))
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
             .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
+            // TODO make this configurable
+            .retryWhen(Retry.backoff(5, Duration.ofMillis(10)).jitter(0.5))
             .publishOn(Schedulers.parallel())
             .then();
     }
