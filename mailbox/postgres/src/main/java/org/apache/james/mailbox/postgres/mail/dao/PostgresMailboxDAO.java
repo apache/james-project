@@ -30,7 +30,6 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.Postg
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.USER_NAME;
 import static org.jooq.impl.DSL.coalesce;
-import static org.jooq.impl.DSL.count;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -199,13 +198,10 @@ public class PostgresMailboxDAO {
     public Mono<Boolean> hasChildren(Mailbox mailbox, char delimiter) {
         String name = mailbox.getName() + delimiter + SQL_WILDCARD_CHAR;
 
-        return postgresExecutor.executeRows(dsl -> Flux.from(dsl.select(count()).from(TABLE_NAME)
-                .where(MAILBOX_NAME.like(name)
-                    .and(USER_NAME.eq(mailbox.getUser().asString()))
-                    .and(MAILBOX_NAMESPACE.eq(mailbox.getNamespace())))))
-            .map(record -> record.get(0, Integer.class))
-            .filter(count -> count > 0)
-            .hasElements();
+        return postgresExecutor.executeExists(dsl -> dsl.selectOne().from(TABLE_NAME)
+            .where(MAILBOX_NAME.like(name)
+                .and(USER_NAME.eq(mailbox.getUser().asString()))
+                .and(MAILBOX_NAMESPACE.eq(mailbox.getNamespace()))));
     }
 
     public Flux<PostgresMailbox> getAll() {
