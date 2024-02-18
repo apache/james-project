@@ -94,11 +94,10 @@ public class PostgresSieveScriptDAO {
     }
 
     public Mono<Boolean> scriptExists(Username username, ScriptName scriptName) {
-        return postgresExecutor.executeCount(dslContext -> Mono.from(dslContext.selectCount()
+        return postgresExecutor.executeExists(dslContext -> dslContext.selectOne()
             .from(TABLE_NAME)
-                .where(USERNAME.eq(username.asString()),
-                    SCRIPT_NAME.eq(scriptName.getValue()))))
-            .map(count -> count > 0);
+            .where(USERNAME.eq(username.asString()),
+                SCRIPT_NAME.eq(scriptName.getValue())));
     }
 
     public Flux<PostgresSieveScript> getScripts(Username username) {
