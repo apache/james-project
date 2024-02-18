@@ -124,15 +124,15 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     @Override
     public Mono<Void> deselect() {
         this.state = ImapSessionState.AUTHENTICATED;
-        this.selectedMailbox.set(null);
         return closeMailbox();
     }
 
     @Override
     public Mono<Void> selected(SelectedMailbox mailbox) {
         this.state = ImapSessionState.SELECTED;
-        return closeMailbox()
-            .then(Mono.fromRunnable(() -> selectedMailbox.set(mailbox)));
+        return Mono.fromCallable(() -> Optional.ofNullable(selectedMailbox.getAndSet(mailbox)))
+            .flatMap(maybeMailbox -> maybeMailbox.map(SelectedMailbox::deselect)
+                .orElse(Mono.empty()));
     }
 
     @Override
@@ -156,11 +156,15 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     }
 
     private Mono<Void> closeMailbox() {
-        if (selectedMailbox.get() != null) {
-            return selectedMailbox.get().deselect()
-                .then(Mono.fromRunnable(() -> selectedMailbox.set(null)));
-        }
-        return Mono.empty();
+        return closeMailbox(selectedMailbox.getAndSet(null));
+    }
+
+    private Mono<Void> closeMailbox(SelectedMailbox value) {
+        return Optional.ofNullable(value)
+            .map(s -> s.deselect()
+                .then(Mono.fromRunnable(() -> selectedMailbox.set(null))))
+            .orElse(Mono.empty())
+            .then();
     }
 
     @Override
