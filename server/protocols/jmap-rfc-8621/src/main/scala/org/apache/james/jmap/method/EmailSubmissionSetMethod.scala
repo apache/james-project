@@ -27,11 +27,11 @@ import cats.implicits.toTraverseOps
 import com.google.common.collect.ImmutableMap
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
-import javax.annotation.PreDestroy
-import javax.inject.Inject
 import jakarta.mail.Address
 import jakarta.mail.Message.RecipientType
 import jakarta.mail.internet.{InternetAddress, MimeMessage}
+import javax.annotation.PreDestroy
+import javax.inject.Inject
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}

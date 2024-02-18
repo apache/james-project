@@ -22,9 +22,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import jakarta.mail.Flags;
-import jakarta.mail.MessagingException;
 
+import jakarta.mail.Flags;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;

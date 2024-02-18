@@ -27,7 +27,8 @@ import java.time.Duration;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
+
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

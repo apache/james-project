@@ -21,7 +21,8 @@ package org.apache.james.transport.mailets;
 
 import java.util.Collection;
 
-import jakarta.inject.Inject;
+import javax.inject.Inject;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 

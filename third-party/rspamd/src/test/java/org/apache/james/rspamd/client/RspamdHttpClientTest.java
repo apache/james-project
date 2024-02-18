@@ -30,7 +30,7 @@ import static org.hamcrest.core.Is.is;
 import java.io.InputStream;
 import java.util.Optional;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Username;
 import org.apache.james.junit.categories.Unstable;

@@ -22,10 +22,11 @@ package org.apache.james.transport.mailets;
 import java.io.IOException;
 
 import javax.inject.Inject;
-import javax.mail.BodyPart;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.internet.MimeMessage;
+
+import jakarta.mail.BodyPart;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
