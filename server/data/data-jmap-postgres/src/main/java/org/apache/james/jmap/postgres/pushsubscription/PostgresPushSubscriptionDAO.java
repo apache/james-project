@@ -136,12 +136,10 @@ public class PostgresPushSubscriptionDAO {
     }
 
     public Mono<Boolean> existDeviceClientId(Username username, String deviceClientId) {
-        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.select(PushSubscriptionTable.DEVICE_CLIENT_ID)
-                .from(PushSubscriptionTable.TABLE_NAME)
-                .where(PushSubscriptionTable.USER.eq(username.asString()))
-                .and(PushSubscriptionTable.DEVICE_CLIENT_ID.eq(deviceClientId))
-                .limit(1)))
-            .hasElement();
+        return postgresExecutor.executeExists(dslContext -> dslContext.selectOne()
+            .from(PushSubscriptionTable.TABLE_NAME)
+            .where(PushSubscriptionTable.USER.eq(username.asString()))
+            .and(PushSubscriptionTable.DEVICE_CLIENT_ID.eq(deviceClientId)));
     }
 
     private PushSubscription recordAsPushSubscription(Record record) {

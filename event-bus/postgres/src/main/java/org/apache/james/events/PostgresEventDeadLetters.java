@@ -111,10 +111,8 @@ public class PostgresEventDeadLetters implements EventDeadLetters {
 
     @Override
     public Mono<Boolean> containEvents() {
-        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext
-            .select(INSERTION_ID)
+        return postgresExecutor.executeExists(dslContext -> dslContext.selectOne()
             .from(TABLE_NAME)
-            .limit(1)))
-            .hasElement();
+            .where());
     }
 }

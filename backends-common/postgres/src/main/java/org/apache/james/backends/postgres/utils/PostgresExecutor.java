@@ -19,6 +19,9 @@
 
 package org.apache.james.backends.postgres.utils;
 
+import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.field;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Function;
@@ -32,6 +35,7 @@ import org.jooq.DeleteResultStep;
 import org.jooq.Record;
 import org.jooq.Record1;
 import org.jooq.SQLDialect;
+import org.jooq.SelectConditionStep;
 import org.jooq.conf.Settings;
 import org.jooq.conf.StatementType;
 import org.jooq.impl.DSL;
@@ -127,6 +131,11 @@ public class PostgresExecutor {
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()))
             .map(Record1::value1);
+    }
+
+    public Mono<Boolean> executeExists(Function<DSLContext, SelectConditionStep<?>> queryFunction) {
+        return executeRow(dslContext -> Mono.from(dslContext.select(field(exists(queryFunction.apply(dslContext))))))
+            .map(record -> record.get(0, Boolean.class));
     }
 
     public Mono<Long> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {

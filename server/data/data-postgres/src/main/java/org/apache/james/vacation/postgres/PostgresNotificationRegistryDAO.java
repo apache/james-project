@@ -57,12 +57,11 @@ public class PostgresNotificationRegistryDAO {
     public Mono<Boolean> isRegistered(AccountId accountId, RecipientId recipientId) {
         LocalDateTime currentUTCTime = zonedDateTimeProvider.get().withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
 
-        return postgresExecutor.executeRow(dsl -> Mono.from(dsl.select(ACCOUNT_ID)
+        return postgresExecutor.executeExists(dsl -> dsl.selectOne()
             .from(TABLE_NAME)
             .where(ACCOUNT_ID.eq(accountId.getIdentifier()),
                 RECIPIENT_ID.eq(recipientId.getAsString()),
-                EXPIRY_DATE.ge(currentUTCTime).or(EXPIRY_DATE.isNull()))))
-            .hasElement();
+                EXPIRY_DATE.ge(currentUTCTime).or(EXPIRY_DATE.isNull())));
     }
 
     public Mono<Void> flush(AccountId accountId) {

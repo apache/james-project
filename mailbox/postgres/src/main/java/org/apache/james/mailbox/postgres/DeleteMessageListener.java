@@ -38,6 +38,7 @@ import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresThreadDAO;
+import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
@@ -157,10 +158,8 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
     }
 
     private Mono<Boolean> isUnreferenced(PostgresMessageId id, PostgresMailboxMessageDAO postgresMailboxMessageDAO) {
-        return postgresMailboxMessageDAO.countByMessageId(id)
-            .filter(count -> count == 0)
-            .map(count -> true)
-            .defaultIfEmpty(false);
+        return postgresMailboxMessageDAO.existsByMessageId(id)
+            .map(FunctionalUtils.negate());
     }
 
     private Mono<Void> deleteAttachment(PostgresMessageId messageId, PostgresAttachmentDAO attachmentDAO) {
