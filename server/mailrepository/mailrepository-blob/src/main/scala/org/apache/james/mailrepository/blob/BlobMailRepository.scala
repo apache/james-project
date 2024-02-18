@@ -24,8 +24,8 @@ import java.util.Date
 import java.util.stream.Stream
 
 import com.google.common.collect.ImmutableMap
-import javax.mail.MessagingException
-import javax.mail.internet.MimeMessage
+import jakarta.mail.MessagingException
+import jakarta.mail.internet.MimeMessage
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED

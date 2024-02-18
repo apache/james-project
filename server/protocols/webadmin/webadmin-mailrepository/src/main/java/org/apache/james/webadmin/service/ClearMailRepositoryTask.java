@@ -25,8 +25,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import jakarta.mail.MessagingException;
-
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;

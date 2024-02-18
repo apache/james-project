@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.search;
 
-import static javax.mail.Flags.Flag.SEEN;
+import static jakarta.mail.Flags.Flag.SEEN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;

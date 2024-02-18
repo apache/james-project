@@ -24,7 +24,8 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.inject.Inject;
+import javax.inject.Inject;
+
 import jakarta.mail.Flags;
 
 import org.apache.james.imap.api.ImapConfiguration;
@@ -96,8 +97,8 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
             .flatMap(mailbox -> appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder, mailboxPath))
             .doOnEach(logOnError(MailboxNotFoundException.class, e -> LOGGER.debug("Append failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxNotFoundException.class, e -> {
-            // Indicates that the mailbox does not exist
-            // So TRY CREATE
+                // Indicates that the mailbox does not exist
+                // So TRY CREATE
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
                 return Mono.empty();
             })
@@ -108,40 +109,40 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> imp
             })
             .doOnEach(logOnError(MailboxException.class, e -> LOGGER.error("Append failed for mailbox {}", mailboxPath, e)))
             .onErrorResume(MailboxException.class, e -> {
-            // Some other issue
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+                // Some other issue
+                no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
                 return Mono.empty();
             });
-        }
+    }
 
     private Mono<Void> appendToMailbox(Content message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
-            final MailboxSession mailboxSession = session.getMailboxSession();
-            final SelectedMailbox selectedMailbox = session.getSelected();
-            final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getMailboxId().equals(mailbox.getId());
+        final MailboxSession mailboxSession = session.getMailboxSession();
+        final SelectedMailbox selectedMailbox = session.getSelected();
+        final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getMailboxId().equals(mailbox.getId());
 
         return Mono.from(mailbox.appendMessageReactive(
-                MessageManager.AppendCommand.builder()
-                    .withInternalDate(datetime)
-                    .withFlags(flagsToBeSet)
-                    .isRecent(!isSelectedMailbox)
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(datetime)
+                .withFlags(flagsToBeSet)
+                .isRecent(!isSelectedMailbox)
                 .build(message), mailboxSession))
             .map(MessageManager.AppendResult::getId)
             .map(Throwing.<ComposedMessageId, ComposedMessageId>function(messageId -> {
-            if (isSelectedMailbox) {
-                selectedMailbox.addRecent(messageId.getUid());
-            }
+                    if (isSelectedMailbox) {
+                        selectedMailbox.addRecent(messageId.getUid());
+                    }
                     return messageId;
                 }).sneakyThrow())
             .flatMap(messageId -> unsolicitedResponses(session, responder, false).thenReturn(messageId))
             .doOnNext(Throwing.consumer(messageId -> {
-            // get folder UIDVALIDITY
-            UidValidity uidValidity = mailbox
-                .getMailboxEntity()
-                .getUidValidity();
-            okComplete(request, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
+                // get folder UIDVALIDITY
+                UidValidity uidValidity = mailbox
+                    .getMailboxEntity()
+                    .getUidValidity();
+                okComplete(request, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
             }))
             .then();
-        }
+    }
 
     @Override
     protected MDCBuilder mdc(AppendRequest request) {

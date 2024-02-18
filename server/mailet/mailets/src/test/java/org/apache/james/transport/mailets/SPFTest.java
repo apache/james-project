@@ -24,7 +24,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import static org.apache.james.transport.mailets.SPF.RESULT_ATTRIBUTE;
 import static org.assertj.core.api.Assertions.assertThat;

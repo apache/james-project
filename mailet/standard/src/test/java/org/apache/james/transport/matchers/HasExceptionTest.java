@@ -89,7 +89,7 @@ class HasExceptionTest {
 
     @Test
     void matchShouldReturnEmptyWhenSuperclassOfSpecifiedExceptionHasOccurred() throws MessagingException {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new MessagingException())));
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(new MessagingException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")
@@ -149,7 +149,7 @@ class HasExceptionTest {
     
     @Test
     void initShouldRaiseMessagingExceptionWhenClassNameIsNotFullyQualified() {
-        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofSerializable(new MessagingException())));
+        mockedMail.setAttribute(new Attribute(Mail.MAILET_ERROR, AttributeValue.ofUnserializable(new MessagingException())));
 
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
                 .matcherName("HasException")

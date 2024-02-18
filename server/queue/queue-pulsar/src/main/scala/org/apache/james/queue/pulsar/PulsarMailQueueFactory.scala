@@ -24,9 +24,9 @@ import java.util.Optional
 import java.util.concurrent.atomic.AtomicReference
 
 import akka.actor.ActorSystem
+import jakarta.mail.internet.MimeMessage
 import javax.annotation.PreDestroy
 import javax.inject.Inject
-import javax.mail.internet.MimeMessage
 import org.apache.james.backends.pulsar.{PulsarClients, PulsarConfiguration}
 import org.apache.james.blob.api.{BlobId, Store}
 import org.apache.james.blob.mail.MimeMessagePartsId

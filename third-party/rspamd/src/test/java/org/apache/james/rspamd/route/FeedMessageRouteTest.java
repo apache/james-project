@@ -50,7 +50,7 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.json.DTOConverter;
