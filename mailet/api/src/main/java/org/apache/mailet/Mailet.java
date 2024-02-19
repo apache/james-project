@@ -139,6 +139,6 @@ public interface Mailet {
      */
     default Collection<ProcessingState> requiredProcessingState() {
         return ImmutableList.of();
-}
+    }
 
 }
