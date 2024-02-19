@@ -90,16 +90,18 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     private MessageAttachmentMetadata storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
         AttachmentId attachmentId = AttachmentId.random();
         try {
-            byte[] bytes = IOUtils.toByteArray(parsedAttachment.getContent().openStream());
-            attachmentsById.put(attachmentId, AttachmentMetadata.builder()
-                .attachmentId(attachmentId)
-                .messageId(ownerMessageId)
-                .type(parsedAttachment.getContentType())
-                .size(bytes.length)
-                .build());
-            attachmentsRawContentById.put(attachmentId, bytes);
-            messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
-            return parsedAttachment.asMessageAttachment(attachmentId, bytes.length, ownerMessageId);
+            try (InputStream stream = parsedAttachment.getContent().openStream()) {
+                byte[] bytes = IOUtils.toByteArray(stream);
+                attachmentsById.put(attachmentId, AttachmentMetadata.builder()
+                    .attachmentId(attachmentId)
+                    .messageId(ownerMessageId)
+                    .type(parsedAttachment.getContentType())
+                    .size(bytes.length)
+                    .build());
+                attachmentsRawContentById.put(attachmentId, bytes);
+                messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
+                return parsedAttachment.asMessageAttachment(attachmentId, bytes.length, ownerMessageId);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
