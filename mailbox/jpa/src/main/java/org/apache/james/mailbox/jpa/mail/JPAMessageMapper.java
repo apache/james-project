@@ -107,7 +107,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 return query.getResultStream().map(result -> MessageUid.of((Long) result));
             } catch (PersistenceException e) {
                 throw new MailboxException("Search of recent messages failed in mailbox " + mailbox, e);
-    }
+            }
         }).flatMapMany(Flux::fromStream)
             .subscribeOn(Schedulers.boundedElastic());
     }
@@ -305,10 +305,10 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         JPAId originalMailboxId = (JPAId) original.getMailboxId();
         JPAMailbox originalMailbox = getEntityManager().find(JPAMailbox.class, originalMailboxId.getRawId());
-        
+
         MessageMetaData messageMetaData = copy(mailbox, original);
         delete(originalMailbox.toMailbox(), original);
-        
+
         return messageMetaData;
     }
 
@@ -401,7 +401,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
                 if (message.getAttachments().isEmpty()) {
                     getEntityManager().persist(persistData);
-            } else {
+                } else {
                     List<JPAAttachment> attachments = getAttachments(message);
                     if (attachments.isEmpty()) {
                         persistData.setAttachments(message.getAttachments().stream()

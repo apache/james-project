@@ -259,7 +259,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             idsAsRanges.add(new IdRange(lowBound, highBound));
             lowBound = id;
             highBound = id;
-    }
+        }
         if (lowBound != -1 && highBound != -1) {
             idsAsRanges.add(new IdRange(lowBound, highBound));
         }

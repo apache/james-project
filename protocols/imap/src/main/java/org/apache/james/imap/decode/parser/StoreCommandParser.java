@@ -43,7 +43,7 @@ import org.apache.james.mailbox.MessageManager;
 public class StoreCommandParser extends AbstractUidCommandParser {
 
     private static final String UNCHANGEDSINCE = "UNCHANGEDSINCE";
-    
+
     @Inject
     public StoreCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.STORE_COMMAND, statusResponseFactory);
