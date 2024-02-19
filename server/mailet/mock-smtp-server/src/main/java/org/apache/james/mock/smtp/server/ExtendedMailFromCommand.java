@@ -25,9 +25,9 @@ import java.util.Locale;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.subethamail.smtp.DropConnectionException;
 import org.subethamail.smtp.RejectException;
-import org.subethamail.smtp.server.BaseCommand;
+import org.subethamail.smtp.internal.server.BaseCommand;
+import org.subethamail.smtp.internal.util.EmailUtils;
 import org.subethamail.smtp.server.Session;
-import org.subethamail.smtp.util.EmailUtils;
 
 import com.google.common.base.CharMatcher;
 
@@ -40,7 +40,7 @@ public class ExtendedMailFromCommand extends BaseCommand {
     }
 
     public void execute(String commandString, Session sess) throws IOException, DropConnectionException {
-        if (sess.getHasMailFrom()) {
+        if (sess.isMailTransactionInProgress()) {
             sess.sendResponse("503 Sender already specified.");
         } else {
             if (commandString.trim().equals("MAIL FROM:")) {
@@ -55,7 +55,7 @@ public class ExtendedMailFromCommand extends BaseCommand {
             }
 
             String emailAddress = EmailUtils.extractEmailAddress(args, 5);
-            if (EmailUtils.isValidEmailAddress(emailAddress)) {
+            if (EmailUtils.isValidEmailAddress(emailAddress, true)) {
                 int size = 0;
                 String largs = args.toLowerCase(Locale.ENGLISH);
                 int sizec = largs.indexOf(" size=");
@@ -76,7 +76,6 @@ public class ExtendedMailFromCommand extends BaseCommand {
                     MockMessageHandler messageHandler = (MockMessageHandler) sess.getMessageHandler();
                     messageHandler.from(emailAddress, Mail.Parameter.fromArgLine(args));
                     sess.setDeclaredMessageSize(size);
-                    sess.setHasMailFrom(true);
                     sess.sendResponse("250 Ok");
                 } catch (DropConnectionException dropConnectionException) {
                     throw dropConnectionException;

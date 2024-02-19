@@ -25,9 +25,9 @@ import java.util.Locale;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.subethamail.smtp.DropConnectionException;
 import org.subethamail.smtp.RejectException;
-import org.subethamail.smtp.server.BaseCommand;
+import org.subethamail.smtp.internal.server.BaseCommand;
+import org.subethamail.smtp.internal.util.EmailUtils;
 import org.subethamail.smtp.server.Session;
-import org.subethamail.smtp.util.EmailUtils;
 
 public class ExtendedRcptToCommand extends BaseCommand {
     public ExtendedRcptToCommand() {
@@ -35,7 +35,7 @@ public class ExtendedRcptToCommand extends BaseCommand {
     }
 
     public void execute(String commandString, Session sess) throws IOException, DropConnectionException {
-        if (!sess.getHasMailFrom()) {
+        if (!sess.isMailTransactionInProgress()) {
             sess.sendResponse("503 Error: need MAIL command");
         } else if (sess.getServer().getMaxRecipients() >= 0 && sess.getRecipientCount() >= sess.getServer().getMaxRecipients()) {
             sess.sendResponse("452 Error: too many recipients");
