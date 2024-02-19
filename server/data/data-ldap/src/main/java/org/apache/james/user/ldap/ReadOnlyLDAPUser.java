@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.DN;
-import com.unboundid.ldap.sdk.LDAPBindException;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
+import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.ResultCode;
 
 /**
@@ -129,7 +129,7 @@ public class ReadOnlyLDAPUser implements User {
         try {
             BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
             return bindResult.getResultCode() == ResultCode.SUCCESS;
-        } catch (LDAPBindException e) {
+        } catch (LDAPException e) {
             LOGGER.info("Error binding LDAP for {}: {}", userName.asString(), e.getMessage());
             return false;
         } catch (Exception e) {
