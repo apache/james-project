@@ -107,7 +107,7 @@ public class SPF extends GenericMailet {
             createSPF(new DNSServiceXBillImpl());
         } else {
             createSPF(spfDnsService);
-    }
+        }
 
         Collection<String> ignoredNetworks = Splitter.on(',')
             .trimResults()
@@ -155,4 +155,4 @@ public class SPF extends GenericMailet {
             }
         }
     }
-        }
+}

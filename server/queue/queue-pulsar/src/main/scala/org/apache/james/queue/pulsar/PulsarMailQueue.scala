@@ -86,13 +86,13 @@ private[pulsar] object schemas {
 class PulsarMailQueue(
                        config: PulsarMailQueueConfiguration,
                        pulsar: PulsarClients,
-  blobIdFactory: BlobId.Factory,
-  mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
-  mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
-  metricFactory: MetricFactory,
-  gaugeRegistry: GaugeRegistry,
-  system: ActorSystem
-) extends MailQueue with ManageableMailQueue {
+                       blobIdFactory: BlobId.Factory,
+                       mimeMessageStore: Store[MimeMessage, MimeMessagePartsId],
+                       mailQueueItemDecoratorFactory: MailQueueItemDecoratorFactory,
+                       metricFactory: MetricFactory,
+                       gaugeRegistry: GaugeRegistry,
+                       system: ActorSystem
+                     ) extends MailQueue with ManageableMailQueue {
 
   import schemas._
   import serializers._
@@ -208,7 +208,7 @@ class PulsarMailQueue(
   private val filterScheduledStage: ActorRef = system.actorOf(FilterStage.props)
   private val requeueMessage = Flow.apply[CommittableMessage[String]]
     .via(filteringFlow(filterScheduledStage))
-    .flatMapConcat{case (_,_,message) => Source.future(requeue.offer(ProducerMessage(message.message.value)).map(_ => message))}
+    .flatMapConcat { case (_, _, message) => Source.future(requeue.offer(ProducerMessage(message.message.value)).map(_ => message)) }
     .flatMapConcat(message => Source.future(message.ack(cumulative = false)))
     .toMat(Sink.ignore)(Keep.none)
 
@@ -240,7 +240,7 @@ class PulsarMailQueue(
       .toMat(Sink.asPublisher[MailQueue.MailQueueItem](true).withAttributes(Attributes.inputBuffer(initial = 1, max = 1)))(Keep.both)
   }
 
-  private def filteringFlow(filterActor:ActorRef) = {
+  private def filteringFlow(filterActor: ActorRef) = {
     implicit val timeout: Timeout = Timeout(1, TimeUnit.SECONDS)
     Flow.apply[CommittableMessage[String]].map(message =>
       (Json.fromJson[MailMetadata](Json.parse(message.message.value)).get,
@@ -250,14 +250,14 @@ class PulsarMailQueue(
         case (None, Some(partsId), committableMessage) =>
           Source.lazyFuture(() => committableMessage.ack())
             .flatMapConcat(_ =>
-          deleteMimeMessage(partsId)
-            .flatMapConcat(_ => Source.empty)
+              deleteMimeMessage(partsId)
+                .flatMapConcat(_ => Source.empty)
             )
         case (Some(metadata), _, committableMessage) =>
           val partsId = metadata.partsId
           Source
             .fromPublisher(readMimeMessage(partsId))
-            .collect{ case Some(message) => message }
+            .collect { case Some(message) => message }
             .map(message => (readMail(metadata, message), partsId, committableMessage))
         case _ => throw new NotImplementedError()
       }
@@ -281,8 +281,8 @@ class PulsarMailQueue(
         Await.ready(message.nack(), awaitTimeout)
       case CompletionStatus.REJECT =>
         Await.ready(message.nack(), awaitTimeout)
-      }
     }
+  }
 
   def registerDequeueSubscription(): Unit = consumer().close()
 
@@ -322,7 +322,7 @@ class PulsarMailQueue(
    *
    * @see [[FilterStage]]
    */
-  private def filtersCommandFlow(topic:Topic, filterSubscription: Subscription, filteringStage: ActorRef) = {
+  private def filtersCommandFlow(topic: Topic, filterSubscription: Subscription, filteringStage: ActorRef) = {
     val logInvalidFilterPayload = Flow.apply[JsResult[Filter]]
       .collectType[JsError]
       .map(error => "unable to parse filter" + Json.prettyPrint(JsError.toJson(error)))
@@ -544,7 +544,7 @@ class PulsarMailQueue(
    * @param producer
    * @param filter
    */
-  private def publishFilter(producer:Producer[String])(filter:Filter): Unit ={
+  private def publishFilter(producer: Producer[String])(filter: Filter): Unit = {
     import Filter._
     // Optimizes for the local/single instance case, the duplicated filter
     // received through pulsar will be eliminated by the filter stage as
@@ -583,7 +583,7 @@ class PulsarMailQueue(
           .bodyBlobId(blobIdFactory.from(metadata.bodyBlobId))
           .build()
         Source.fromPublisher(readMimeMessage(partsId))
-          .collect{ case Some(message) => message }
+          .collect { case Some(message) => message }
           .map(message => readMail(metadata, message))
       })
 

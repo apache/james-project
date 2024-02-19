@@ -149,6 +149,6 @@ public class ClearMailRepositoryTask implements Task {
                 .reduce(0L, Long::sum);
         } catch (MailRepositoryStore.MailRepositoryStoreException e) {
             throw new RuntimeException(e);
+        }
     }
-}
 }
