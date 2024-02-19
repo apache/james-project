@@ -22,10 +22,9 @@ package org.apache.james.mock.smtp.server;
 import java.io.IOException;
 import java.util.List;
 
-import org.subethamail.smtp.AuthenticationHandlerFactory;
-import org.subethamail.smtp.server.BaseCommand;
+import org.subethamail.smtp.internal.server.BaseCommand;
+import org.subethamail.smtp.internal.util.TextUtils;
 import org.subethamail.smtp.server.Session;
-import org.subethamail.smtp.util.TextUtils;
 
 public class ExtendedEhloCommand extends BaseCommand {
     private final SMTPBehaviorRepository behaviorRepository;
@@ -36,11 +35,11 @@ public class ExtendedEhloCommand extends BaseCommand {
     }
 
     public void execute(String commandString, Session sess) throws IOException {
-        String[] args = this.getArgs(commandString);
+        String[] args = BaseCommand.getArgs(commandString);
         if (args.length < 2) {
             sess.sendResponse("501 Syntax: EHLO hostname");
         } else {
-            sess.resetMessageState();
+            sess.resetMailTransaction();
             sess.setHelo(args[1]);
             StringBuilder response = new StringBuilder();
             response.append("250-");
@@ -56,14 +55,13 @@ public class ExtendedEhloCommand extends BaseCommand {
                 response.append("\r\n250-STARTTLS");
             }
 
-            AuthenticationHandlerFactory authFact = sess.getServer().getAuthenticationHandlerFactory();
-            if (authFact != null) {
+            sess.getServer().getAuthenticationHandlerFactory().ifPresent(authFact -> {
                 List<String> supportedMechanisms = authFact.getAuthenticationMechanisms();
                 if (!supportedMechanisms.isEmpty()) {
                     response.append("\r\n250-AUTH ");
                     response.append(TextUtils.joinTogether(supportedMechanisms, " "));
                 }
-            }
+            });
 
             behaviorRepository.getSMTPExtensions()
                 .forEach(smtpExtension -> response.append("\r\n250-").append(smtpExtension.asString()));

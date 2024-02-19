@@ -150,13 +150,14 @@ public class MockMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void data(InputStream data) throws RejectException {
+    public String data(InputStream data) throws RejectException {
         String dataString = readData(data);
         Optional<Behavior<String>> dataBehavior = firstMatchedBehavior(SMTPCommand.DATA, dataString);
 
         dataBehavior
             .orElseGet(() -> mailBuilder::message)
             .behave(dataString);
+        return null;
     }
 
     private <T> Optional<Behavior<T>> firstMatchedBehavior(SMTPCommand data, String dataLine) {
@@ -177,7 +178,7 @@ public class MockMessageHandler implements MessageHandler {
         LOGGER.info("Storing mail with envelope {}", mail.getEnvelope());
     }
 
-    private String readData(InputStream data) {
+    private String readData(InputStream data) throws RejectException {
         try {
             return IOUtils.toString(data, StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -186,7 +187,7 @@ public class MockMessageHandler implements MessageHandler {
         }
     }
 
-    private MailAddress parse(String mailAddress) {
+    private MailAddress parse(String mailAddress) throws RejectException {
         if (mailAddress.isEmpty()) {
             return MailAddress.nullSender();
         }

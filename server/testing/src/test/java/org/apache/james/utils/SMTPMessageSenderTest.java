@@ -45,11 +45,11 @@ class SMTPMessageSenderTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        testingSMTPServer = new Wiser(RANDOM_PORT);
+        testingSMTPServer = Wiser.port(RANDOM_PORT);
         testingSMTPServer.start();
 
         testee = new SMTPMessageSender(Domain.LOCALHOST.asString())
-            .connect(LOCALHOST, Port.of(testingSMTPServer.getServer().getPort()));
+            .connect(LOCALHOST, Port.of(testingSMTPServer.getServer().getPortAllocated()));
     }
 
     @AfterEach
