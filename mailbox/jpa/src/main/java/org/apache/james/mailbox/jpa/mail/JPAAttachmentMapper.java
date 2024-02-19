@@ -106,11 +106,13 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
 
     private MessageAttachmentMetadata storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
         try {
-            byte[] bytes = IOUtils.toByteArray(parsedAttachment.getContent().openStream());
-            JPAAttachment persistedAttachment = new JPAAttachment(parsedAttachment.asMessageAttachment(AttachmentId.random(), ownerMessageId), bytes);
-            getEntityManager().persist(persistedAttachment);
-            AttachmentId attachmentId = AttachmentId.from(persistedAttachment.getAttachmentId());
-            return parsedAttachment.asMessageAttachment(attachmentId, bytes.length, ownerMessageId);
+            try (InputStream stream = parsedAttachment.getContent().openStream()) {
+                byte[] bytes = IOUtils.toByteArray(stream);
+                JPAAttachment persistedAttachment = new JPAAttachment(parsedAttachment.asMessageAttachment(AttachmentId.random(), ownerMessageId), bytes);
+                getEntityManager().persist(persistedAttachment);
+                AttachmentId attachmentId = AttachmentId.from(persistedAttachment.getAttachmentId());
+                return parsedAttachment.asMessageAttachment(attachmentId, bytes.length, ownerMessageId);
+            }
         } catch (IOException e) {
             throw new MailboxException("Failed to store attachment for message " + ownerMessageId, e);
         }

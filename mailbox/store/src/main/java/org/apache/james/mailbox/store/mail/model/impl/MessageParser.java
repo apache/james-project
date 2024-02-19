@@ -105,6 +105,7 @@ public class MessageParser {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
         defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
+        defaultMessageBuilder.setBodyFactory(new FileBufferedBodyFactory());
         Message message = defaultMessageBuilder.parseMessage(fullContent);
         return new ParsingResult(retrieveAttachments(message), message::dispose);
     }
