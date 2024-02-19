@@ -19,6 +19,11 @@
 
 package org.apache.james.jmap.postgres.projections;
 
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MAILBOX_ID_INDEX;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MAILBOX_ID_RECEIVED_AT_INDEX;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.MAILBOX_ID_SENT_AT_INDEX;
+import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule.PostgresEmailQueryViewTable.TABLE;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -54,13 +59,23 @@ public interface PostgresEmailQueryViewModule {
             .supportsRowLevelSecurity()
             .build();
 
-        PostgresIndex INDEX = PostgresIndex.name("email_query_view_mailbox_id_index")
+        PostgresIndex MAILBOX_ID_INDEX = PostgresIndex.name("email_query_view_mailbox_id_index")
             .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, MAILBOX_ID));
+
+        PostgresIndex MAILBOX_ID_RECEIVED_AT_INDEX = PostgresIndex.name("email_query_view_mailbox_id__received_at_index")
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, MAILBOX_ID, RECEIVED_AT));
+
+        PostgresIndex MAILBOX_ID_SENT_AT_INDEX = PostgresIndex.name("email_query_view_mailbox_id_sent_at_index")
+            .createIndexStep((dslContext, indexName) -> dslContext.createIndexIfNotExists(indexName)
+                .on(TABLE_NAME, MAILBOX_ID, SENT_AT));
     }
 
     PostgresModule MODULE = PostgresModule.builder()
-        .addTable(PostgresEmailQueryViewTable.TABLE)
-        .addIndex(PostgresEmailQueryViewTable.INDEX)
+        .addTable(TABLE)
+        .addIndex(MAILBOX_ID_INDEX)
+        .addIndex(MAILBOX_ID_RECEIVED_AT_INDEX)
+        .addIndex(MAILBOX_ID_SENT_AT_INDEX)
         .build();
 }

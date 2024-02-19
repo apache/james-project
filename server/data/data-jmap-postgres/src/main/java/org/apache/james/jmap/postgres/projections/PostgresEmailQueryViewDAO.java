@@ -138,8 +138,6 @@ public class PostgresEmailQueryViewDAO {
             .set(SENT_AT, sentAt.toOffsetDateTime())
             .set(RECEIVED_AT, receivedAt.toOffsetDateTime())
             .onConflictOnConstraint(PK_CONSTRAINT_NAME)
-            .doUpdate()
-            .set(SENT_AT, sentAt.toOffsetDateTime())
-            .set(RECEIVED_AT, receivedAt.toOffsetDateTime())));
+            .doNothing()));
     }
 }
