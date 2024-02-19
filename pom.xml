@@ -2138,6 +2138,17 @@
                 <version>3.1.6</version>
             </dependency>
             <dependency>
+                <groupId>com.github.davidmoten</groupId>
+                <artifactId>subethasmtp</artifactId>
+                <version>7.0.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.eclipse.angus</groupId>
+                        <artifactId>angus-mail</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>com.github.dpaukov</groupId>
                 <artifactId>combinatoricslib3</artifactId>
                 <version>3.3.3</version>
@@ -2919,11 +2930,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-web</artifactId>
                 <version>${spring.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.subethamail</groupId>
-                <artifactId>subethasmtp</artifactId>
-                <version>3.1.7</version>
             </dependency>
             <dependency>
                 <groupId>org.testcontainers</groupId>
