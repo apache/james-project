@@ -178,7 +178,7 @@ public class RecipientRewriteTableProcessor {
             mappingTypes = types;
         } else {
             mappingTypes = EnumSet.allOf(Mapping.Type.class);
-    }
+        }
     }
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {

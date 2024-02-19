@@ -64,4 +64,4 @@ public class ActionDispatcher {
         MAIL_ACTIONS.get(anAction.getClass())
                 .execute(anAction, aMail, context);
     }
-    }
+}

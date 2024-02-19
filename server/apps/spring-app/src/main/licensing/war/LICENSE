@@ -332,8 +332,8 @@ Within the WEB-INF/lib directory
             WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
                             
         from The Legion of the Bouncy Castle  http://www.bouncycastle.org/ 
-            bcjmail-jdk15on-1.70.jar
-            bcprov-jdk15on-1.70.jar
+            bcjmail-jdk18on-1.77.jar
+            bcprov-jdk18on-1.77.jar
 
     licensed under the COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0 http://www.opensource.org/licenses/CDDL-1.0  (as follows)
  
