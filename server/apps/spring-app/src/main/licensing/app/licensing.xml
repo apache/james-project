@@ -1397,8 +1397,8 @@ All rights reserved.
             Copyright (c) 2000 - 2011 The Legion Of The Bouncy Castle (http://www.bouncycastle.org)
             </copyright-notice>
             <by-organisation id='TheLegionoftheBouncyCastle'>
-                <resource name='bcjmail-jdk15on-1.70.jar'/>
-                <resource name='bcprov-jdk15on-1.70.jar'/>
+                <resource name='bcjmail-jdk18on-1.77.jar'/>
+                <resource name='bcprov-jdk18on-1.77.jar'/>
             </by-organisation>
         </with-license>
         <with-license id='BSD2Clause'>

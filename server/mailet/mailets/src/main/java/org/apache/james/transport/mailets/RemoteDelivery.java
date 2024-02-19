@@ -250,8 +250,8 @@ public class RemoteDelivery extends GenericMailet {
         if (configuration.isDebug()) {
             LOGGER.debug("Sending mail to {} via {}", mail.getRecipients(), configuration.getGatewayServer());
         }
-            queue.enQueue(mail);
-        }
+        queue.enQueue(mail);
+    }
 
     private void serviceNoGateway(Mail mail) throws MailQueueException {
         String mailName = mail.getName();
@@ -268,8 +268,8 @@ public class RemoteDelivery extends GenericMailet {
         mail.setRecipients(entry.getValue());
         mail.setName(originalName + NAME_JUNCTION + entry.getKey().name());
 
-            queue.enQueue(mail);
-        }
+        queue.enQueue(mail);
+    }
 
     private Map<Domain, Collection<MailAddress>> groupByServer(Collection<MailAddress> recipients) {
         // Must first organize the recipients into distinct servers (name made case insensitive)
@@ -303,5 +303,5 @@ public class RemoteDelivery extends GenericMailet {
                 configuration.getOnSuccess().stream())
             .flatMap(x -> x)
             .collect(ImmutableList.toImmutableList());
-}
+    }
 }

@@ -135,7 +135,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
 
     private MessageManager.AppendCommand.Builder appendCommand(Optional<Flags> flags) {
         MessageManager.AppendCommand.Builder builder = MessageManager.AppendCommand.builder()
-                    .recent()
+            .recent()
             .delivery();
         return flags.map(builder::withFlags)
             .orElse(builder);
@@ -179,7 +179,7 @@ public class MailboxAppenderImpl implements MailboxAppender {
     }
 
     private void closeProcessing(MailboxSession session) {
-            mailboxManager.endProcessingRequest(session);
-        }
+        mailboxManager.endProcessingRequest(session);
+    }
 
 }
