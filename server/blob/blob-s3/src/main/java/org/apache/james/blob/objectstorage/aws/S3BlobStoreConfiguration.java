@@ -29,6 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
 import reactor.util.retry.Retry;
+import software.amazon.awssdk.core.exception.SdkException;
 
 public class S3BlobStoreConfiguration {
 
@@ -135,8 +136,9 @@ public class S3BlobStoreConfiguration {
     }
 
     public static int DEFAULT_HTTP_CONCURRENCY = 100;
-    public static final Retry DEFAULT_UPLOAD_RETRY_SPEC = Retry.max(0);
-
+    public static final Duration UPLOAD_RETRY_BACKOFF_DURATION_DEFAULT = Duration.ofMillis(10);
+    public static final Double UPLOAD_RETRY_BACKOFF_JETTY_DEFAULT = 0.5;
+    public static final Retry DEFAULT_UPLOAD_RETRY_SPEC = Retry.backoff(0, UPLOAD_RETRY_BACKOFF_DURATION_DEFAULT).filter(SdkException.class::isInstance);
     private final Region region;
     private final AwsS3AuthConfiguration specificAuthConfiguration;
     private final Optional<BucketName> namespace;
