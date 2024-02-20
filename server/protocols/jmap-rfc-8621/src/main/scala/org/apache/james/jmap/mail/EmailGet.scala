@@ -45,6 +45,13 @@ object EmailGetRequest {
   type MaxBodyValueBytes = Int Refined NonNegative
 
   val ZERO: MaxBodyValueBytes = 0
+
+  def readLevel(request: EmailGetRequest): ReadLevel = request.properties
+    .getOrElse(Email.defaultProperties)
+    .value
+    .map(ReadLevel.of)
+    .reduceOption(ReadLevel.combine)
+    .getOrElse(MetadataReadLevel)
 }
 
 object SpecificHeaderRequest {

@@ -97,7 +97,9 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
 
   private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
     Email.validateProperties(request.properties)
-      .flatMap(properties => Email.validateBodyProperties(request.bodyProperties).map((properties, _)))
+      .flatMap(properties => Email.validateBodyProperties(request.bodyProperties)
+        .flatMap(validatedBodyProperties => Email.validateIdsSize(request, configuration.jmapEmailGetFullMaxSize.asLong(), validatedBodyProperties))
+        .map((properties, _)))
       .fold(
         e => SMono.error(e), {
           case (properties, bodyProperties) => getEmails(capabilities, request, mailboxSession)
@@ -154,16 +156,6 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
     }
 
   private def retrieveEmails(ids: Seq[MessageId], mailboxSession: MailboxSession, request: EmailGetRequest): SFlux[EmailGetResults] = {
-    val readLevel: ReadLevel = request.properties
-      .getOrElse(Email.defaultProperties)
-      .value
-      .map(ReadLevel.of)
-      .reduceOption(ReadLevel.combine)
-      .getOrElse(MetadataReadLevel)
-
-    if (readLevel.equals(FullReadLevel) && ids.size > configuration.jmapEmailGetFullMaxSize.asLong()) {
-      SFlux.error(new RuntimeException(s"Too many items in an email read at level FULL. Got ${ids.size} items instead of maximum ${configuration.jmapEmailGetFullMaxSize.asLong()}."))
-    } else {
       val foundResultsMono: SMono[Map[MessageId, EmailView]] =
         readerFactory.selectReader(request)
           .read(ids, request, mailboxSession)
@@ -173,6 +165,5 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
         .map(id => foundResults.get(id)
           .map(EmailGetResults.found)
           .getOrElse(EmailGetResults.notFound(id))))
-    }
   }
 }
