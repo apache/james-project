@@ -24,10 +24,11 @@ import org.apache.james.user.api.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.DN;
+import com.unboundid.ldap.sdk.LDAPBindException;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
-import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.ResultCode;
 
 /**
@@ -126,10 +127,15 @@ public class ReadOnlyLDAPUser implements User {
      */
     @Override
     public boolean verifyPassword(String password) {
+        if (Strings.isNullOrEmpty(password)) {
+            LOGGER.info("Error. Password is empty for {}", userName.asString());
+            return false;
+        }
+
         try {
             BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
             return bindResult.getResultCode() == ResultCode.SUCCESS;
-        } catch (LDAPException e) {
+        } catch (LDAPBindException e) {
             LOGGER.info("Error binding LDAP for {}: {}", userName.asString(), e.getMessage());
             return false;
         } catch (Exception e) {
