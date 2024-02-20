@@ -333,8 +333,8 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
                     stream -> Mono.fromRunnable(Throwing.runnable(stream::close))))
             .retryWhen(createBucketOnRetry(resolvedBucketName))
             .onErrorMap(IOException.class, e -> new ObjectStoreIOException("Error saving blob", e))
-            .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
             .retryWhen(configuration.uploadRetrySpec())
+            .onErrorMap(SdkClientException.class, e -> new ObjectStoreIOException("Error saving blob", e))
             .then();
     }
 
