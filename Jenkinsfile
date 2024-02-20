@@ -46,6 +46,7 @@ pipeline {
                 'server/container/guice/postgres-common,' +
                 'server/container/guice/mailbox-postgres,' +
                 'server/apps/postgres-app,' +
+                'server/protocols/jmap-rfc-8621-integration-tests/postgres-jmap-rfc-8621-integration-tests,' +
                 'server/protocols/webadmin-integration-test/postgres-webadmin-integration-test,' +
                 'mpt/impl/imap-mailbox/postgres,' +
                 'event-bus/postgres,' +

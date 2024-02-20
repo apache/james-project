@@ -502,73 +502,75 @@ trait QuotaGetMethodContract {
         .build))
       .getMessageId.serialize()
 
-    val response = `given`
-      .body(
-        s"""{
-           |  "using": [
-           |    "urn:ietf:params:jmap:core",
-           |    "urn:ietf:params:jmap:quota"],
-           |  "methodCalls": [[
-           |    "Quota/get",
-           |    {
-           |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-           |      "ids": null
-           |    },
-           |    "c1"]]
-           |}""".stripMargin)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    awaitAtMostTenSeconds.untilAsserted(() => {
+      val response = `given`
+        .body(
+          s"""{
+             |  "using": [
+             |    "urn:ietf:params:jmap:core",
+             |    "urn:ietf:params:jmap:quota"],
+             |  "methodCalls": [[
+             |    "Quota/get",
+             |    {
+             |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |      "ids": null
+             |    },
+             |    "c1"]]
+             |}""".stripMargin)
+        .when
+        .post
+        .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
-    assertThatJson(response)
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
-      .isEqualTo(
-      s"""{
-         |    "sessionState": "${SESSION_STATE.value}",
-         |    "methodResponses": [
-         |        [
-         |            "Quota/get",
-         |            {
-         |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-         |                "notFound": [ ],
-         |                "state": "3c51d50a-d766-38b7-9fa4-c9ff12de87a4",
-         |                "list": [
-         |                    {
-         |                        "used": 1,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
-         |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
-         |                        "types": [
-         |                            "Mail"
-         |                        ],
-         |                        "hardLimit": 100,
-         |                        "warnLimit": 90,
-         |                        "resourceType": "count",
-         |                        "scope": "account"
-         |                    },
-         |                    {
-         |                        "used": 85,
-         |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
-         |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
-         |                        "types": [
-         |                            "Mail"
-         |                        ],
-         |                        "hardLimit": 900,
-         |                        "warnLimit": 810,
-         |                        "resourceType": "octets",
-         |                        "scope": "account"
-         |                    }
-         |                ]
-         |            },
-         |            "c1"
-         |        ]
-         |    ]
-         |}
-         |""".stripMargin)
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |        [
+             |            "Quota/get",
+             |            {
+             |                "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+             |                "notFound": [ ],
+             |                "state": "3c51d50a-d766-38b7-9fa4-c9ff12de87a4",
+             |                "list": [
+             |                    {
+             |                        "used": 1,
+             |                        "name": "#private&bob@domain.tld@domain.tld:account:count:Mail",
+             |                        "id": "08417be420b6dd6fa77d48fb2438e0d19108cd29424844bb109b52d356fab528",
+             |                        "types": [
+             |                            "Mail"
+             |                        ],
+             |                        "hardLimit": 100,
+             |                        "warnLimit": 90,
+             |                        "resourceType": "count",
+             |                        "scope": "account"
+             |                    },
+             |                    {
+             |                        "used": 85,
+             |                        "name": "#private&bob@domain.tld@domain.tld:account:octets:Mail",
+             |                        "id": "eab6ce8ac5d9730a959e614854410cf39df98ff3760a623b8e540f36f5184947",
+             |                        "types": [
+             |                            "Mail"
+             |                        ],
+             |                        "hardLimit": 900,
+             |                        "warnLimit": 810,
+             |                        "resourceType": "octets",
+             |                        "scope": "account"
+             |                    }
+             |                ]
+             |            },
+             |            "c1"
+             |        ]
+             |    ]
+             |}
+             |""".stripMargin)
+    })
   }
 
 
