@@ -134,6 +134,15 @@ The never used data are:
 - email_change
 - vacation_notification_registry
 
+=== Optimizing R2DBC Performance
+
+==== Enhancing with reactor.bufferSize.small adjustment
+
+Adjusting `reactor.bufferSize.small` JVM argument helps prevent R2DBC errors due to request queue limits.
+The error "Cannot exchange messages because the request queue limit is exceeded".
+
+It's acceptable to configure this argument in the jvm.properties file.
+
 ## Development
 
 ### How to track the stats of the statement execution
