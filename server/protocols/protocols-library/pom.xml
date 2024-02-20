@@ -47,7 +47,7 @@
             <artifactId>james-server-util</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>

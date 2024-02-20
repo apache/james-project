@@ -100,6 +100,7 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.james.utils.TestIMAPClient;
 import org.assertj.core.api.SoftAssertions;
 import org.awaitility.Awaitility;
+import org.eclipse.angus.mail.imap.IMAPFolder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -114,7 +115,6 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.sun.mail.imap.IMAPFolder;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
