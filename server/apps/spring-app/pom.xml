@@ -84,7 +84,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -95,7 +95,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -106,7 +106,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -121,7 +121,7 @@
                     <artifactId>hadoop-core</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -141,7 +141,7 @@
             <artifactId>james-server-core</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -151,7 +151,7 @@
             <artifactId>james-server-data-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -163,7 +163,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
@@ -200,7 +200,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
@@ -230,7 +230,7 @@
             <artifactId>james-server-dnsservice-library</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -241,7 +241,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
@@ -270,7 +270,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -281,7 +281,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -291,7 +291,7 @@
             <artifactId>james-server-mailetcontainer-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -302,7 +302,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
@@ -317,7 +317,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -350,7 +350,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
@@ -376,7 +376,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
@@ -392,7 +392,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
                 <exclusion>
@@ -407,7 +407,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -417,7 +417,7 @@
             <artifactId>james-server-queue-api</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -428,7 +428,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -438,7 +438,7 @@
             <artifactId>james-server-spring</artifactId>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>
@@ -453,7 +453,7 @@
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>
-                    <groupId>com.sun.mail</groupId>
+                    <groupId>org.eclipse.angus</groupId>
                     <artifactId>jakarta.mail</artifactId>
                 </exclusion>
             </exclusions>

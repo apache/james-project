@@ -20,34 +20,34 @@
 <supplementalDataModels>
   <supplement>
     <project>
-      <groupId>com.sun.mail</groupId>
+      <groupId>org.eclipse.angus</groupId>
       <artifactId>jakarta.mail</artifactId>
-      <name>Java Mail API</name>
+      <name>Angus Mail</name>
       <organization>
-        <name>Jakarta</name>
-        <url>https://eclipse-ee4j.github.io/mail/</url>
+        <name>Eclipse Angus</name>
+        <url>https://eclipse-ee4j.github.io/angus-mail/</url>
       </organization>
       <licenses>
         <license>
-          <name>Jakarta Mail License</name>
-          <url>https://eclipse-ee4j.github.io/mail/JakartaMail-License</url>
+          <name>Angus Mail License</name>
+          <url>https://eclipse-ee4j.github.io/angus-mail/AngusMail-License</url>
         </license>
       </licenses>
     </project>
   </supplement>
   <supplement>
     <project>
-      <groupId>com.sun.activation</groupId>
-      <artifactId>jakarta.activation</artifactId>
-      <name>JavaBeans Activation Framework (JAF)</name>
+      <groupId>org.eclipse.angus</groupId>
+      <artifactId>angus-activation</artifactId>
+      <name>Angus Activation</name>
       <organization>
-        <name>Jakarta</name>
-        <url>https://eclipse-ee4j.github.io/mail/</url>
+        <name>Eclipse Angus</name>
+        <url>https://eclipse-ee4j.github.io/angus-activation/</url>
       </organization>
       <licenses>
         <license>
-          <name>Jakarta Mail License</name>
-          <url>https://eclipse-ee4j.github.io/mail/JakartaMail-License</url>
+          <name>Angus Mail License</name>
+          <url>https://eclipse-ee4j.github.io/angus-mail/AngusMail-License</url>
         </license>
       </licenses>
     </project>

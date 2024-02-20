@@ -159,10 +159,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>jakarta.mail</artifactId>
-        </dependency>
-        <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <scope>test</scope>
@@ -187,6 +183,10 @@
         <dependency>
             <groupId>org.apache.james.jspf</groupId>
             <artifactId>apache-jspf-resolver</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>jakarta.mail</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
