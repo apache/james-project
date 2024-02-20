@@ -43,6 +43,7 @@ public interface NettyConstants {
     AttributeKey<ImapSession> IMAP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");
     AttributeKey<Linearalizer> LINEARALIZER_ATTRIBUTE_KEY = AttributeKey.valueOf("Linearalizer");
     AttributeKey<Disposable> REQUEST_IN_FLIGHT_ATTRIBUTE_KEY = AttributeKey.valueOf("requestInFlight");
+    AttributeKey<Runnable> BACKPRESSURE_CALLBACK = AttributeKey.valueOf("BACKPRESSURE_CALLBACK");
     AttributeKey<Map<String, Object>> FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY  = AttributeKey.valueOf("FrameDecoderMap");
 
 }
