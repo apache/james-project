@@ -23,6 +23,7 @@ import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 import javax.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
+import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
 import org.apache.james.adapter.mailbox.MailboxUserDeletionTaskStep;
 import org.apache.james.adapter.mailbox.MailboxUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.QuotaUsernameChangeTaskStep;
@@ -122,7 +123,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(MailboxManager.class).to(PostgresMailboxManager.class);
         bind(StoreMailboxManager.class).to(PostgresMailboxManager.class);
         bind(SessionProvider.class).to(SessionProviderImpl.class);
-        bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
+        bind(Authorizator.class).to(DelegationStoreAuthorizator.class);
         bind(MailboxId.Factory.class).to(PostgresMailboxId.Factory.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
         bind(MessageIdManager.class).to(StoreMessageIdManager.class);

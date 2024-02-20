@@ -29,6 +29,7 @@ import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.postgres.PostgresDataJMapAggregateModule;
 import org.apache.james.jmap.postgres.change.PostgresEmailChangeRepository;
 import org.apache.james.jmap.postgres.change.PostgresMailboxChangeRepository;
+import org.apache.james.jmap.postgres.change.PostgresStateFactory;
 import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionRepository;
 import org.apache.james.jmap.postgres.upload.PostgresUploadUsageRepository;
 import org.apache.james.mailbox.AttachmentManager;
@@ -67,7 +68,7 @@ public class PostgresJmapModule extends AbstractModule {
         bind(RightManager.class).to(StoreRightManager.class);
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
 
-        bind(State.Factory.class).toInstance(State.Factory.DEFAULT);
+        bind(State.Factory.class).to(PostgresStateFactory.class);
 
         bind(PushSubscriptionRepository.class).to(PostgresPushSubscriptionRepository.class);
     }
