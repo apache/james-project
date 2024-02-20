@@ -66,7 +66,7 @@ to authenticate the user using the AUTH command.
 * *heloName* (optional) - a String containing the name used in the SMTP HELO and EHLO commands. Default is the default domain,
 which is typically *localhost*.
 * *mail.** (optional) - Any property beginning with *mail.* described in the Javadoc for package
-<a href="https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html">*com.sun.mail.smtp*</a>
+<a href="https://eclipse-ee4j.github.io/angus-mail/docs/api/org.eclipse.angus.mail/org/eclipse/angus/mail/smtp/package-summary.html">*org.eclipse.angus.mail.smtp*</a>
 can be set with a parameter of the corresponding name. For example the parameter
 *<mail.smtp.ssl.enable>true</mail.smtp.ssl.enable>* is equivalent to the Java code
 *props.put("mail.smtp.ssl.enable", "true");*. Properties set by this facility override settings made
@@ -92,5 +92,5 @@ You can also use other javax properties for StartTLS, but their property prefix 
 James enables server identity verification by default. In certain rare edge cases you might disable it via the *verifyServerIdentity* parameter,
 or use the *mail.smtps.ssl.checkserveridentity* and *mail.smtp.ssl.checkserveridentity* javax properties for fine control.
 
-Read https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html[*com.sun.mail.smtp*]
+Read https://eclipse-ee4j.github.io/angus-mail/docs/api/org.eclipse.angus.mail/org/eclipse/angus/mail/smtp/package-summary.html[*org.eclipse.angus.mail.smtp*]
 for full information.

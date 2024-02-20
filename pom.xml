@@ -608,8 +608,9 @@
         <spring.version>4.3.25.RELEASE</spring.version>
         <activmq-artemis.version>2.29.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.3</apache-jspf-resolver.version>
-        <jakarta-mail.version>2.0.1</jakarta-mail.version>
-        <jakarta-activation.version>2.0.1</jakarta-activation.version>
+        <angus-mail.version>2.0.2</angus-mail.version>
+        <angus-activation.version>2.0.1</angus-activation.version>
+        <jakarta.activation-api.version>2.1.2</jakarta.activation-api.version>
         <slf4j.version>2.0.7</slf4j.version>
 
         <dnsjava.version>3.5.2</dnsjava.version>
@@ -1003,7 +1004,7 @@
                 <classifier>tests</classifier>
                 <exclusions>
                     <exclusion>
-                        <groupId>com.sun.mail</groupId>
+                        <groupId>org.eclipse.angus</groupId>
                         <artifactId>jakarta.mail</artifactId>
                     </exclusion>
                 </exclusions>
@@ -1014,7 +1015,7 @@
                 <version>${project.version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>com.sun.mail</groupId>
+                        <groupId>org.eclipse.angus</groupId>
                         <artifactId>jakarta.mail</artifactId>
                     </exclusion>
                 </exclusions>
@@ -1026,7 +1027,7 @@
                 <classifier>tests</classifier>
                 <exclusions>
                     <exclusion>
-                        <groupId>com.sun.mail</groupId>
+                        <groupId>org.eclipse.angus</groupId>
                         <artifactId>jakarta.mail</artifactId>
                     </exclusion>
                 </exclusions>
@@ -2141,12 +2142,6 @@
                 <groupId>com.github.davidmoten</groupId>
                 <artifactId>subethasmtp</artifactId>
                 <version>7.0.1</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.angus</groupId>
-                        <artifactId>angus-mail</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.github.dpaukov</groupId>
@@ -2241,22 +2236,6 @@
                 <groupId>com.sparkjava</groupId>
                 <artifactId>spark-core</artifactId>
                 <version>2.9.4</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sun.activation</groupId>
-                <artifactId>jakarta.activation</artifactId>
-                <version>${jakarta-activation.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sun.mail</groupId>
-                <artifactId>jakarta.mail</artifactId>
-                <version>${jakarta-mail.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.sun.activation</groupId>
-                        <artifactId>jakarta.activation</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
@@ -2489,6 +2468,11 @@
                 <groupId>io.vavr</groupId>
                 <artifactId>vavr</artifactId>
                 <version>0.10.4</version>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <version>${jakarta.activation-api.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
@@ -2746,7 +2730,16 @@
                 <artifactId>bcprov-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.eclipse.angus</groupId>
+                <artifactId>angus-activation</artifactId>
+                <version>${angus-activation.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.angus</groupId>
+                <artifactId>jakarta.mail</artifactId>
+                <version>${angus-mail.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>java-hamcrest</artifactId>
@@ -2802,6 +2795,10 @@
                 <artifactId>mockserver-netty</artifactId>
                 <version>5.15.0</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>com.sun.activation</groupId>
+                        <artifactId>jakarta.activation</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>io.netty</groupId>
                         <artifactId>*</artifactId>
