@@ -54,21 +54,17 @@ public class Bouncer {
     }
 
     public void bounce(Mail mail, Exception ex) {
-        if (!mail.hasSender()) {
-            LOGGER.debug("Null Sender: no bounce will be generated for {}", mail.getName());
-        } else {
-            configuration.getBounceProcessor().ifPresentOrElse(
-                bounceProcessor -> {
-                    computeErrorCode(ex).ifPresent(mail::setAttribute);
-                    mail.setAttribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(getErrorMsg(ex))));
-                    try {
-                        mailetContext.sendMail(mail, bounceProcessor.getValue());
-                    } catch (MessagingException e) {
-                        LOGGER.warn("Exception re-inserting failed mail: ", e);
-                    }
-                },
-                () -> bounceWithMailetContext(mail, ex));
-        }
+        configuration.getBounceProcessor().ifPresentOrElse(
+            bounceProcessor -> {
+                computeErrorCode(ex).ifPresent(mail::setAttribute);
+                mail.setAttribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(getErrorMsg(ex))));
+                try {
+                    mailetContext.sendMail(mail, bounceProcessor.getValue());
+                } catch (MessagingException e) {
+                    LOGGER.warn("Exception re-inserting failed mail: ", e);
+                }
+            },
+            () -> bounceWithMailetContext(mail, ex));
     }
 
     private Optional<Attribute> computeErrorCode(Exception ex) {
@@ -81,13 +77,17 @@ public class Bouncer {
     }
 
     private void bounceWithMailetContext(Mail mail, Exception ex) {
-        LOGGER.debug("Sending failure message {}", mail.getName());
-        try {
-            mailetContext.bounce(mail, explanationText(mail, ex));
-        } catch (MessagingException me) {
-            LOGGER.warn("Encountered unexpected messaging exception while bouncing message", me);
-        } catch (Exception e) {
-            LOGGER.warn("Encountered unexpected exception while bouncing message", e);
+        if (!mail.hasSender()) {
+            LOGGER.debug("Null Sender: no bounce will be generated for {}", mail.getName());
+        } else {
+            LOGGER.debug("Sending failure message {}", mail.getName());
+            try {
+                mailetContext.bounce(mail, explanationText(mail, ex));
+            } catch (MessagingException me) {
+                LOGGER.warn("Encountered unexpected messaging exception while bouncing message", me);
+            } catch (Exception e) {
+                LOGGER.warn("Encountered unexpected exception while bouncing message", e);
+            }
         }
     }
 

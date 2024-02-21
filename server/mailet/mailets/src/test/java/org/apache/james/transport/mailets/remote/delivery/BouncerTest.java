@@ -330,7 +330,7 @@ class BouncerTest {
     }
 
     @Test
-    void bounceShouldNotBounceWhenNoSenderWhenProcessorSpecified() throws Exception {
+    void bounceShouldWorkWhenProcessorSpecifiedAndNoSender() throws Exception {
         RemoteDeliveryConfiguration configuration = new RemoteDeliveryConfiguration(
             FakeMailetConfig.builder()
                 .setProperty(RemoteDeliveryConfiguration.HELO_NAME, HELLO_NAME)
@@ -341,9 +341,15 @@ class BouncerTest {
 
         Mail mail = FakeMail.builder().name("name").state(Mail.DEFAULT)
             .build();
-        testee.bounce(mail, new MessagingException("message"));
+        String errorMessage = "message";
+        testee.bounce(mail, new MessagingException(errorMessage));
 
-        assertThat(mailetContext.getSentMails()).isEmpty();
+        FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
+            .attribute(new Attribute(DELIVERY_ERROR, AttributeValue.of(errorMessage)))
+            .state(BOUNCE_PROCESSOR)
+            .fromMailet()
+            .build();
+        assertThat(mailetContext.getSentMails()).containsOnly(expected);
         assertThat(mailetContext.getBouncedMails()).isEmpty();
     }
 
