@@ -41,7 +41,7 @@ object DelegateSetDeletePerformer {
   case class DelegateDeletionFailure(unparsedDelegateId: UnparsedDelegateId, exception: Throwable) extends DelegateDeletionResult {
     def asSetError: SetError = exception match {
       case e: IllegalArgumentException =>
-        LOGGER.info("Illegal arguments while updating a delegation", exception)
+        LOGGER.info("Illegal arguments while deleting a delegation", exception)
         SetError.invalidArguments(SetErrorDescription(s"${unparsedDelegateId.id} is not a DelegationId: ${e.getMessage}"))
       case _ =>
         LOGGER.error("Failed to delete a delegation", exception)
