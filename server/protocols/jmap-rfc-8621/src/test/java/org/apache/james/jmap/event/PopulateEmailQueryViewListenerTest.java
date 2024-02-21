@@ -39,6 +39,8 @@ import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.delivery.InVmEventDelivery;
+import org.apache.james.jmap.api.projections.DefaultEmailQueryViewManager;
+import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.jmap.memory.projections.MemoryEmailQueryView;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -82,7 +84,7 @@ public class PopulateEmailQueryViewListenerTest {
     PopulateEmailQueryViewListener listener;
     MessageIdManager messageIdManager;
     SessionProviderImpl sessionProvider;
-    private MemoryEmailQueryView view;
+    private EmailQueryViewManager viewManager;
     private MailboxId inboxId;
 
     @BeforeEach
@@ -112,8 +114,8 @@ public class PopulateEmailQueryViewListenerTest {
         authenticator.addUser(BOB, "12345");
         sessionProvider = new SessionProviderImpl(authenticator, FakeAuthorizator.defaultReject());
 
-        view = new MemoryEmailQueryView();
-        listener = new PopulateEmailQueryViewListener(messageIdManager, view, sessionProvider);
+        viewManager = new DefaultEmailQueryViewManager(new MemoryEmailQueryView());
+        listener = new PopulateEmailQueryViewListener(messageIdManager, viewManager, sessionProvider);
 
         resources.getEventBus().register(listener);
 
@@ -141,7 +143,7 @@ public class PopulateEmailQueryViewListenerTest {
                 .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
             mailboxSession).getId();
 
-        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .containsOnly(composedId.getMessageId());
     }
 
@@ -154,13 +156,13 @@ public class PopulateEmailQueryViewListenerTest {
                 .build(emptyMessage(Date.from(ZonedDateTime.parse("2014-10-30T14:12:00Z").toInstant()))),
             mailboxSession).getId();
 
-        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
     @Test
     void appendingAOutdatedMessageInOutBoxShouldNotAddItToTheView() throws Exception {
-        MemoryEmailQueryView emailQueryView = new MemoryEmailQueryView();
+        EmailQueryViewManager emailQueryView = new DefaultEmailQueryViewManager(new MemoryEmailQueryView());
         PopulateEmailQueryViewListener queryViewListener = new PopulateEmailQueryViewListener(messageIdManager, emailQueryView, sessionProvider);
         MailboxPath outboxPath = MailboxPath.forUser(BOB, "Outbox");
         MailboxId outboxId = mailboxManager.createMailbox(outboxPath, mailboxSession).orElseThrow();
@@ -193,7 +195,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         Mono.from(queryViewListener.reactiveEvent(addedOutDatedEvent)).block();
 
-        assertThat(emailQueryView.listMailboxContentSortedBySentAt(outboxId, Limit.limit(12)).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(outboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -209,7 +211,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.setFlags(new Flags(), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
 
-        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .containsOnly(composedId.getMessageId());
     }
 
@@ -223,7 +225,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.setFlags(new Flags(DELETED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), mailboxSession);
 
-        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -237,7 +239,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         mailboxManager.deleteMailbox(inboxId, mailboxSession);
 
-        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
@@ -251,7 +253,7 @@ public class PopulateEmailQueryViewListenerTest {
 
         inboxMessageManager.delete(ImmutableList.of(composedMessageId.getUid()), mailboxSession);
 
-        assertThat(view.listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
+        assertThat(viewManager.getEmailQueryView(mailboxSession.getUser()).listMailboxContentSortedBySentAt(inboxId, Limit.limit(12)).collectList().block())
             .isEmpty();
     }
 
