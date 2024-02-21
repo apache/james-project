@@ -221,7 +221,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
                     try {
                         parseImapMessage(ctx, null, attachment, Pair.of(reader, size), readerIndex)
-                            .ifPresent(ctx::fireChannelRead);
+                            .ifPresent(message -> {
+                                ctx.fireChannelRead(message);
+                                // Remove ongoing subscription: now on lifecycle of the message will be managed by ImapChannelUpstreamHandler.
+                                // Not doing this causes IDLEd IMAP connections to clear IMAP append literal while they are processed.
+                                attachment.remove(SUBSCRIPTION);
+                            });
                     } catch (DecodingException e) {
                         ctx.fireExceptionCaught(e);
                     }
@@ -237,6 +242,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
                     });
             attachment.put(SUBSCRIPTION, (Disposable) () -> {
+                // Clear the file if the connection is reset while buffering the litteral.
                 subscribe.dispose();
                 fileChunkConsumer.discard();
             });
