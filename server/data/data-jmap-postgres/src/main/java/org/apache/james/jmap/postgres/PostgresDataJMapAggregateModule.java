@@ -24,6 +24,7 @@ import org.apache.james.jmap.postgres.change.PostgresEmailChangeModule;
 import org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule;
 import org.apache.james.jmap.postgres.filtering.PostgresFilteringProjectionModule;
 import org.apache.james.jmap.postgres.identity.PostgresCustomIdentityModule;
+import org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewModule;
 import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule;
 import org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionModule;
 import org.apache.james.jmap.postgres.upload.PostgresUploadModule;
@@ -36,5 +37,6 @@ public interface PostgresDataJMapAggregateModule {
         PostgresMailboxChangeModule.MODULE,
         PostgresPushSubscriptionModule.MODULE,
         PostgresFilteringProjectionModule.MODULE,
-        PostgresCustomIdentityModule.MODULE);
+        PostgresCustomIdentityModule.MODULE,
+        PostgresEmailQueryViewModule.MODULE);
 }
