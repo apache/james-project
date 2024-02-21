@@ -174,7 +174,6 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     @Override
     public Flux<MessageResult> getMessagesReactive(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
-        // Here
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
