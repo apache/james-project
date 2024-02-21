@@ -30,10 +30,11 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener.ReactiveGroupEventListener;
 import org.apache.james.events.Group;
-import org.apache.james.jmap.api.projections.EmailQueryView;
+import org.apache.james.jmap.api.projections.EmailQueryViewManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.Role;
@@ -72,13 +73,13 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
     private static final int CONCURRENCY = 5;
 
     private final MessageIdManager messageIdManager;
-    private final EmailQueryView view;
+    private final EmailQueryViewManager viewManager;
     private final SessionProvider sessionProvider;
 
     @Inject
-    public PopulateEmailQueryViewListener(MessageIdManager messageIdManager, EmailQueryView view, SessionProvider sessionProvider) {
+    public PopulateEmailQueryViewListener(MessageIdManager messageIdManager, EmailQueryViewManager viewManager, SessionProvider sessionProvider) {
         this.messageIdManager = messageIdManager;
-        this.view = view;
+        this.viewManager = viewManager;
         this.sessionProvider = sessionProvider;
     }
 
@@ -113,13 +114,13 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
     }
 
     private Publisher<Void> handleMailboxDeletion(MailboxDeletion mailboxDeletion) {
-        return view.delete(mailboxDeletion.getMailboxId());
+        return viewManager.getEmailQueryView(mailboxDeletion.getUsername()).delete(mailboxDeletion.getMailboxId());
     }
 
     private Publisher<Void> handleExpunged(Expunged expunged) {
         return Flux.fromStream(expunged.getUids().stream()
             .map(uid -> expunged.getMetaData(uid).getMessageId()))
-            .concatMap(messageId -> view.delete(expunged.getMailboxId(), messageId))
+            .concatMap(messageId -> viewManager.getEmailQueryView(expunged.getUsername()).delete(expunged.getMailboxId(), messageId))
             .then();
     }
 
@@ -131,7 +132,7 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
             .filter(updatedFlags -> updatedFlags.isModifiedToSet(DELETED))
             .map(UpdatedFlags::getMessageId)
             .handle(publishIfPresent())
-            .concatMap(messageId -> view.delete(flagsUpdated.getMailboxId(), messageId))
+            .concatMap(messageId -> viewManager.getEmailQueryView(flagsUpdated.getUsername()).delete(flagsUpdated.getMailboxId(), messageId))
             .then();
 
         Mono<Void> addMessagesNoLongerMarkedAsDeleted = Flux.fromIterable(flagsUpdated.getUpdatedFlags())
@@ -141,7 +142,7 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
             .concatMap(messageId ->
                 Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
                     .next())
-            .concatMap(message -> handleAdded(flagsUpdated.getMailboxId(), message))
+            .concatMap(message -> handleAdded(flagsUpdated.getMailboxId(), message, flagsUpdated.getUsername()))
             .then();
 
         return removeMessagesMarkedAsDeleted
@@ -163,7 +164,7 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
         Mono<Void> doHandleAdded = Flux.from(messageIdManager.getMessagesReactive(ImmutableList.of(messageId), FetchGroup.HEADERS, session))
             .next()
             .filter(message -> !message.getFlags().contains(DELETED))
-            .flatMap(messageResult -> handleAdded(added.getMailboxId(), messageResult));
+            .flatMap(messageResult -> handleAdded(added.getMailboxId(), messageResult, added.getUsername()));
         if (Role.from(added.getMailboxPath().getName()).equals(Optional.of(Role.OUTBOX))) {
             return checkMessageStillInOriginMailbox(messageId, session, mailboxId)
                 .filter(FunctionalUtils.identityPredicate())
@@ -178,13 +179,13 @@ public class PopulateEmailQueryViewListener implements ReactiveGroupEventListene
             .hasElements();
     }
 
-    public Mono<Void> handleAdded(MailboxId mailboxId, MessageResult messageResult) {
+    public Mono<Void> handleAdded(MailboxId mailboxId, MessageResult messageResult, Username username) {
         ZonedDateTime receivedAt = ZonedDateTime.ofInstant(messageResult.getInternalDate().toInstant(), ZoneOffset.UTC);
 
         return Mono.fromCallable(() -> parseMessage(messageResult))
             .map(header -> date(header).orElse(messageResult.getInternalDate()))
             .map(date -> ZonedDateTime.ofInstant(date.toInstant(), ZoneOffset.UTC))
-            .flatMap(sentAt -> view.save(mailboxId, sentAt, receivedAt, messageResult.getMessageId()))
+            .flatMap(sentAt -> viewManager.getEmailQueryView(username).save(mailboxId, sentAt, receivedAt, messageResult.getMessageId()))
             .then();
     }
 
