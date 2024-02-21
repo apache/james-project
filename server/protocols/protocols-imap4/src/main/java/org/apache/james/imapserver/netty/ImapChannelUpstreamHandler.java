@@ -405,9 +405,6 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     }
                     if (signal.isOnComplete() || signal.isOnError()) {
                         afterIDLEUponProcessing(ctx);
-                        if (message instanceof Closeable) {
-                            ((Closeable) message).close();
-                        }
                     }
                     if (signal.hasError()) {
                         ctx.fireExceptionCaught(signal.getThrowable());
@@ -419,6 +416,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 .contextWrite(ReactorUtils.context("imap", mdc(session))), message)
             // Manage throttling errors
             .doOnError(ctx::fireExceptionCaught)
+            .doFinally(Throwing.consumer(any -> {
+                if (message instanceof Closeable) {
+                    ((Closeable) message).close();
+                }
+            }))
             .subscribe();
         disposableAttribute.set(disposable);
     }
