@@ -12,21 +12,33 @@ import org.apache.james.jmap.json.{PushSerializer, PushSubscriptionSerializer}
 import org.apache.james.jmap.method.PushSubscriptionSetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.jmap.pushsubscription.{PushRequest, PushTTL, WebPushClient}
 import org.apache.james.mailbox.MailboxSession
+import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, JsPath, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object PushSubscriptionSetCreatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[PushSubscriptionSetCreatePerformer])
   trait CreationResult
 
   case class CreationSuccess(clientId: PushSubscriptionCreationId, response: PushSubscriptionCreationResponse) extends CreationResult
 
   case class CreationFailure(clientId: PushSubscriptionCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
-      case e: PushSubscriptionCreationParseException => e.setError
-      case e: ExpireTimeInvalidException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("expires")))
-      case e: DeviceClientIdInvalidException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+      case e: PushSubscriptionCreationParseException =>
+        LOGGER.info("Failure to parse PushSubscription/set create", e)
+        e.setError
+      case e: ExpireTimeInvalidException =>
+        LOGGER.info("Invalid time expiracy for push subscription: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("expires")))
+      case e: DeviceClientIdInvalidException =>
+        LOGGER.info("Invalid deviceId for push subscription: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in PushSubscription/set create", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e =>
+        LOGGER.error("Failed to create push subscription", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 

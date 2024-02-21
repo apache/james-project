@@ -40,11 +40,14 @@ import org.apache.james.mailbox.{MailboxManager, MailboxSession}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.util.ReactorUtils
 import org.apache.james.util.html.HtmlTextExtractor
+import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.OptionConverters._
 
 object EmailSetCreatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[EmailSetCreatePerformer])
+
   case class CreationResults(results: Seq[CreationResult]) {
     def created: Option[Map[EmailCreationId, EmailCreationResponse]] =
       Option(results.flatMap{
@@ -66,12 +69,24 @@ object EmailSetCreatePerformer {
   case class CreationSuccess(clientId: EmailCreationId, response: EmailCreationResponse) extends CreationResult
   case class CreationFailure(clientId: EmailCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
-      case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
-      case e: BlobNotFoundException => SetError.invalidArguments(SetErrorDescription(s"Attachment not found: ${e.blobId.value}"), Some(Properties("attachments")))
-      case e: SizeExceededException => SetError.tooLarge(SetErrorDescription(e.getMessage))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case e: OverQuotaException => SetError.overQuota(SetErrorDescription(e.getMessage))
-      case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+      case e: MailboxNotFoundException =>
+        LOGGER.info(s"Mailbox ${e.getMessage}")
+        SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
+      case e: BlobNotFoundException =>
+        LOGGER.info(s"Attachment not found: ${e.blobId.value}")
+        SetError.invalidArguments(SetErrorDescription(s"Attachment not found: ${e.blobId.value}"), Some(Properties("attachments")))
+      case e: SizeExceededException =>
+        LOGGER.info("Attempt to create too big of a message")
+        SetError.tooLarge(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in Email/set create", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: OverQuotaException =>
+        LOGGER.info("Email/set failed because overquota")
+        SetError.overQuota(SetErrorDescription(e.getMessage))
+      case _ =>
+        LOGGER.error("Email/set failed to create a message", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 }

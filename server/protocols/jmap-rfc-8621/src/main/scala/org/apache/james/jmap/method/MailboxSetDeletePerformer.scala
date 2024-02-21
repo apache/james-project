@@ -27,20 +27,34 @@ import org.apache.james.jmap.method.MailboxSetDeletePerformer.{MailboxDeletionFa
 import org.apache.james.mailbox.exception.MailboxNotFoundException
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
+import org.slf4j.LoggerFactory
 import reactor.core.publisher.SynchronousSink
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object MailboxSetDeletePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[MailboxSetDeletePerformer])
   sealed trait MailboxDeletionResult
   case class MailboxDeletionSuccess(mailboxId: MailboxId) extends MailboxDeletionResult
   case class MailboxDeletionFailure(mailboxId: UnparsedMailboxId, exception: Throwable) extends MailboxDeletionResult {
     def asMailboxSetError: SetError = exception match {
-      case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
-      case e: MailboxHasMailException => MailboxSetError.mailboxHasEmail(SetErrorDescription(s"${e.mailboxId.serialize} is not empty"))
-      case e: MailboxHasChildException => MailboxSetError.mailboxHasChild(SetErrorDescription(s"${e.mailboxId.serialize} has child mailboxes"))
-      case e: SystemMailboxChangeException => SetError.invalidArguments(SetErrorDescription("System mailboxes cannot be destroyed"))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"${mailboxId.id} is not a mailboxId: ${e.getMessage}"))
-      case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
+      case e: MailboxNotFoundException =>
+        LOGGER.info("Attempt to delete a non existing mailbox: {}", e.getMessage)
+        SetError.notFound(SetErrorDescription(e.getMessage))
+      case e: MailboxHasMailException =>
+        LOGGER.info("Attempt to delete a mailbox with mails")
+        MailboxSetError.mailboxHasEmail(SetErrorDescription(s"${e.mailboxId.serialize} is not empty"))
+      case e: MailboxHasChildException =>
+        LOGGER.info("Attempt to delete a mailbox with children")
+        MailboxSetError.mailboxHasChild(SetErrorDescription(s"${e.mailboxId.serialize} has child mailboxes"))
+      case e: SystemMailboxChangeException =>
+        LOGGER.info("Attempt to delete a system folder")
+        SetError.invalidArguments(SetErrorDescription("System mailboxes cannot be destroyed"))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in Mailbox/set delete", e)
+        SetError.invalidArguments(SetErrorDescription(s"${mailboxId.id} is not a mailboxId: ${e.getMessage}"))
+      case e =>
+        LOGGER.error("Failed to delete mailbox", e)
+        SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
   case class MailboxDeletionResults(results: Seq[MailboxDeletionResult]) {

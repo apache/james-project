@@ -20,6 +20,7 @@
 package org.apache.james.jmap.method
 
 import eu.timepit.refined.auto._
+
 import javax.inject.{Inject, Named}
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
@@ -38,6 +39,7 @@ import org.apache.james.jmap.vacation.{VacationResponseSetError, VacationRespons
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.vacation.api.{VacationPatch, VacationService, AccountId => VacationAccountId}
+import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -66,13 +68,18 @@ case class VacationResponseUpdateFailure(id: String, exception: Throwable) exten
   override def notUpdated: Map[String, VacationResponseSetError] = Map(id -> asSetError(exception))
 
   def asSetError(exception: Throwable): VacationResponseSetError = exception match {
-      case e: IllegalArgumentException => VacationResponseSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)))
-      case e: Throwable => VacationResponseSetError.serverFail(Some(SetErrorDescription(e.getMessage)))
+      case e: IllegalArgumentException =>
+        VacationResponseSetMethod.LOGGER.info("Illegal argument in vacation update", e)
+        VacationResponseSetError.invalidArgument(Some(SetErrorDescription(e.getMessage)))
+      case e: Throwable =>
+        VacationResponseSetMethod.LOGGER.error("Failed to update vacation", e)
+        VacationResponseSetError.serverFail(Some(SetErrorDescription(e.getMessage)))
     }
 }
 
 object VacationResponseSetMethod {
   val VACATION_RESPONSE_PATCH_OBJECT_KEY = "singleton"
+  val LOGGER = LoggerFactory.getLogger(classOf[VacationResponseSetMethod])
 }
 
 class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: EventBus,

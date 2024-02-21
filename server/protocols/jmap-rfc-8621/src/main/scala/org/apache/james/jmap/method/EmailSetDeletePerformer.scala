@@ -29,12 +29,14 @@ import org.apache.james.jmap.method.EmailSetDeletePerformer.{DestroyFailure, Des
 import org.apache.james.mailbox.model.{DeleteResult, MessageId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
 import org.apache.james.util.AuditTrail
+import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.SMono
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object EmailSetDeletePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[EmailSetDeletePerformer])
   case class DestroyResults(results: Seq[DestroyResult]) {
     def destroyed: Option[DestroyIds] =
       Option(results.flatMap{
@@ -65,9 +67,15 @@ object EmailSetDeletePerformer {
   case class DestroySuccess(messageId: MessageId) extends DestroyResult
   case class DestroyFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) extends DestroyResult {
     def asMessageSetError: SetError = e match {
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"$unparsedMessageId is not a messageId: ${e.getMessage}"))
-      case e: MessageNotFoundException => SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
-      case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal arguments while deleting email", e)
+        SetError.invalidArguments(SetErrorDescription(s"$unparsedMessageId is not a messageId: ${e.getMessage}"))
+      case e: MessageNotFoundException =>
+        LOGGER.info(s"Could not delete ${e.messageId.serialize()} as it was not found", e)
+        SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
+      case _ =>
+        LOGGER.error("Failed to delete email", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 }

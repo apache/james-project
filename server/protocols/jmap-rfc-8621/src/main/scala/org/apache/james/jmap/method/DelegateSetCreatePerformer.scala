@@ -31,10 +31,12 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.exception.UserDoesNotExistException
 import org.apache.james.user.api.{DelegationStore, UsersRepository}
 import org.apache.james.util.AuditTrail
+import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object DelegateSetCreatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[DelegateSetCreatePerformer])
   case class CreationResults(results: Seq[CreationResult]) {
     def created: Option[Map[DelegateCreationId, DelegateCreationResponse]] =
       Option(results.flatMap {
@@ -57,10 +59,18 @@ object DelegateSetCreatePerformer {
 
   case class CreationFailure(delegateCreationId: DelegateCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
-      case e: DelegateSetParseException => e.setError
-      case e: UserDoesNotExistException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+      case e: DelegateSetParseException =>
+        LOGGER.info("Error parsing a delegation request", e)
+        e.setError
+      case e: UserDoesNotExistException =>
+        LOGGER.info("Failed to create a delegation as the target user does not exist", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal arguments while creating a delegation", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case _ =>
+        LOGGER.error("Failed to create a delegation", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 }

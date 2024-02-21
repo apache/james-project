@@ -82,21 +82,35 @@ object EmailSubmissionSetMethod {
                              messageId: MessageId) extends CreationResult
   case class CreationFailure(emailSubmissionCreationId: EmailSubmissionCreationId, exception: Throwable) extends CreationResult {
     def asSetError: SetError = exception match {
-      case e: EmailSubmissionCreationParseException => e.setError
-      case _: NoRecipientException => SetError(EmailSubmissionSetMethod.noRecipients,
-        SetErrorDescription("Attempt to send a mail with no recipients"), None)
-      case e: ForbiddenMailFromException => SetError(EmailSubmissionSetMethod.forbiddenMailFrom,
-        SetErrorDescription(s"Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: ${e.from}"), None)
-      case e: ForbiddenFromException => SetError(EmailSubmissionSetMethod.forbiddenFrom,
-        SetErrorDescription(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}"),
-        Some(Properties("envelope.mailFrom")))
-      case _: MessageNotFoundException => SetError(SetError.invalidArgumentValue,
-        SetErrorDescription("The email to be sent cannot be found"),
-        Some(Properties("emailId")))
-      case e: DateTimeParseException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: EmailSubmissionCreationParseException =>
+        LOGGER.info("Failed to parse EMailSubmission/set create", e)
+        e.setError
+      case _: NoRecipientException =>
+        LOGGER.info("Attempt to send a mail with no recipients")
+        SetError(EmailSubmissionSetMethod.noRecipients,
+          SetErrorDescription("Attempt to send a mail with no recipients"), None)
+      case e: ForbiddenMailFromException =>
+        LOGGER.warn(s"Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: ${e.from}")
+        SetError(EmailSubmissionSetMethod.forbiddenMailFrom,
+          SetErrorDescription(s"Attempt to send a mail whose MimeMessage From and Sender fields not allowed for connected user: ${e.from}"), None)
+      case e: ForbiddenFromException =>
+        LOGGER.warn(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}")
+        SetError(EmailSubmissionSetMethod.forbiddenFrom,
+          SetErrorDescription(s"Attempt to send a mail whose envelope From not allowed for connected user: ${e.from}"),
+          Some(Properties("envelope.mailFrom")))
+      case _: MessageNotFoundException =>
+        LOGGER.info(" EmailSubmission/set failed as the underlying email could not be found")
+        SetError(SetError.invalidArgumentValue,
+          SetErrorDescription("The email to be sent cannot be found"),
+          Some(Properties("emailId")))
+      case e: DateTimeParseException =>
+        LOGGER.info("Failed to parse date time", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in EmailSubmission/set", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
       case e: Exception =>
-        e.printStackTrace()
+        LOGGER.error("Failed to send an email with EmailSubmission/set", e)
         SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
@@ -108,7 +122,6 @@ object EmailSubmissionSetMethod {
       }
       .toMap
       .map(creation => (creation._1, creation._2))
-
 
     def retrieveErrors: Map[EmailSubmissionCreationId, SetError] = created
       .flatMap {
