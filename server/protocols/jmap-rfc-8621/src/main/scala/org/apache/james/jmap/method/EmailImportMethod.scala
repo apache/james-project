@@ -129,21 +129,21 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
       .flatMap {
         case creationId -> emailImport => resolveBlob(mailboxSession, creationId, emailImport)
       }
-      .map {
+      .flatMap {
         case Right(emailImport) => importEmail(mailboxSession, emailImport)
-        case Left(e) => e
+        case Left(e) => SMono.just(e)
       }.collectSeq()
       .map(ImportResults)
 
-  private def importEmail(mailboxSession: MailboxSession, emailImport: ImportWithBlob): ImportResult = {
+  private def importEmail(mailboxSession: MailboxSession, emailImport: ImportWithBlob): SMono[ImportResult] = {
     val either = for {
       validatedRequest <- emailImport.request.validate
-      message <- asMessage(emailImport.blob)
+      message <- SMono.fromTry(asMessage(emailImport.blob))
       response <- append(validatedRequest, message, mailboxSession)
     } yield response
 
-    either.fold(e => ImportFailure(emailImport.id, e),
-      response => ImportSuccess(emailImport.id, response))
+    either.map(r => ImportSuccess(emailImport.id, r))
+      .onErrorResume(e => SMono.just(ImportFailure(emailImport.id, e)))
   }
 
   private def resolveBlob(mailboxSession: MailboxSession, creationId: EmailCreationId, emailImport: EmailImport): SMono[Either[ImportFailure, ImportWithBlob]] =
@@ -151,25 +151,23 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
       .map(blob => Right[ImportFailure, ImportWithBlob](ImportWithBlob(creationId, emailImport, blob)))
       .onErrorResume(e => SMono.just(Left[ImportFailure, ImportWithBlob](ImportFailure(creationId, e))))
 
-  private def asMessage(blob: Blob): Either[Throwable, Message] = {
+  private def asMessage(blob: Blob): Try[Message] = {
     val defaultMessageBuilder = new DefaultMessageBuilder
     defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
     defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
 
     Using(blob.content) {content => defaultMessageBuilder.parseMessage(content)}
-      .toEither
   }
 
-  private def append(emailImport: ValidatedEmailImport, message: Message, mailboxSession: MailboxSession): Either[Throwable, EmailCreationResponse] =
-    Try(mailboxManager.getMailbox(emailImport.mailboxId, mailboxSession)
-      .appendMessage(AppendCommand.builder()
+  private def append(emailImport: ValidatedEmailImport, message: Message, mailboxSession: MailboxSession): SMono[EmailCreationResponse] =
+    SMono(mailboxManager.getMailboxReactive(emailImport.mailboxId, mailboxSession))
+      .flatMap(mailbox => SMono(mailbox.appendMessageReactive(AppendCommand.builder()
         .recent()
         .withFlags(emailImport.keywords.asFlags)
         .withInternalDate(Date.from(emailImport.receivedAt.asUTC.toInstant))
         .build(message),
-        mailboxSession))
+        mailboxSession)))
       .map(asEmailCreationResponse)
-      .toEither
 
   private def asEmailCreationResponse(appendResult: MessageManager.AppendResult): EmailCreationResponse = {
     val blobId: Option[BlobId] = BlobId.of(appendResult.getId.getMessageId).toOption
