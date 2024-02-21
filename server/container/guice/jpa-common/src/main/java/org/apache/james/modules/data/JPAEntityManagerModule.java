@@ -67,14 +67,11 @@ public class JPAEntityManagerModule extends AbstractModule {
         properties.putAll(jpaConfiguration.getCustomOpenjpaProperties());
 
         jpaConfiguration.isMultithreaded()
-            .ifPresent(isMultiThread ->
-                properties.put(JPAConfiguration.JPA_MULTITHREADED, jpaConfiguration.isMultithreaded().toString())
-            );
-
+                .map(Object::toString)
+                .ifPresent(value -> properties.put(JPAConfiguration.JPA_MULTITHREADED, value));
         jpaConfiguration.isAttachmentStorageEnabled()
-            .ifPresent(isMultiThread ->
-                properties.put(JPAConfiguration.ATTACHMENT_STORAGE, jpaConfiguration.isAttachmentStorageEnabled().toString())
-            );
+                .map(Object::toString)
+                .ifPresent(value -> properties.put(JPAConfiguration.ATTACHMENT_STORAGE, value));
 
         return Persistence.createEntityManagerFactory("Global", properties);
     }
