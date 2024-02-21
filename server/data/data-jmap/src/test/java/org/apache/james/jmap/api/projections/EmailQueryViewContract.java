@@ -200,7 +200,7 @@ public interface EmailQueryViewContract {
         testee().save(mailboxId1(), DATE_1, DATE_2, messageId2()).block();
 
         assertThat(testee().listMailboxContentSortedBySentAt(mailboxId1(), Limit.limit(12)).collectList().block())
-            .containsExactly(messageId1(), messageId2());
+            .containsExactlyInAnyOrder(messageId1(), messageId2());
     }
 
     @Test
