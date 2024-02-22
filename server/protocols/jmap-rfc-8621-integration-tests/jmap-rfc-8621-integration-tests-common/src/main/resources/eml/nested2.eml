@@ -1,0 +1,77 @@
+Content-Type: multipart/mixed; boundary="------------6a0Tq7Y8z9M0dIG10PnZ7l7E"
+Message-ID: <b3493b24-116a-4d6b-a61c-1a3b09e44619@linagora.com>
+Date: Wed, 21 Feb 2024 22:58:55 +0100
+MIME-Version: 1.0
+References: <Mime4j.8f3.69abfdd624c15c44.18dcdad3859@linagora.com>
+Subject: Fwd: Will be nested
+To: btellier@linagora.com
+From: "btellier@linagora.com" <btellier@linagora.com>
+In-Reply-To: <Mime4j.8f3.69abfdd624c15c44.18dcdad3859@linagora.com>
+X-Forwarded-Message-Id: <Mime4j.8f3.69abfdd624c15c44.18dcdad3859@linagora.com>
+
+This is a multi-part message in MIME format.
+--------------6a0Tq7Y8z9M0dIG10PnZ7l7E
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+--------------6a0Tq7Y8z9M0dIG10PnZ7l7E
+Content-Type: message/rfc822; name="Will be nested.eml"
+Content-Disposition: attachment; filename="Will be nested.eml"
+Content-Transfer-Encoding: 7bit
+
+MIME-Version: 1.0
+Subject: Will be nested
+From: Benoit TELLIER <bxxxx@linagora.com>
+To: =?ISO-8859-1?Q?Beno=EEt_TELLIER?= <bxxxx@linagora.com>
+Reply-To: btellier@linagora.com
+Date: Wed, 21 Feb 2024 21:58:17 +0000
+Message-ID: <Mime4j.8f3.69abfdd624c15c44.18dcdad3859@linagora.com>
+Content-Type: multipart/mixed;
+ boundary="-=Part.8f5.4ee8b8343a133e4f.18dcdad38b0.f1b9fcef27eb8231=-"
+
+---=Part.8f5.4ee8b8343a133e4f.18dcdad38b0.f1b9fcef27eb8231=-
+Content-Type: multipart/alternative;
+ boundary="-=Part.8f4.9ab3439f1c0c1361.18dcdad38b0.b6d054e4dd1744c7=-"
+
+---=Part.8f4.9ab3439f1c0c1361.18dcdad38b0.b6d054e4dd1744c7=-
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Nested body
+
+--=C2=A0
+
+Best regards,
+
+Benoit TELLIER
+
+---=Part.8f4.9ab3439f1c0c1361.18dcdad38b0.b6d054e4dd1744c7=-
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div>Nested body<br><br></div><div class=3D"tmail-signature" style=3D"displ=
+ay: block;"><span class=3D"tmail_signature_prefix">--&nbsp;</span><br><br>B=
+est regards,<br><br><b>Benoit TELLIER</b><br><br>General manager of <a href=
+=3D"https://linagora=2Evn">Linagora VIETNAM</a>=2E<br>Product owner for <a =
+href=3D"https://github=2Ecom/linagora/tmail-flutter">Team-Mail</a> product=
+=2E<br>Chairman of the <a href=3D"https://james=2Eapache=2Eorg/">Apache Jam=
+es project</a>=2E<br><br>Mail: <a href=3D"mailto:btellier@linagora=2Ecom">b=
+tellier@linagora=2Ecom</a><br>Tel: (0033) 6 77 26 04 58 (WhatsApp, Signal)<=
+br><br><br></div>
+---=Part.8f4.9ab3439f1c0c1361.18dcdad38b0.b6d054e4dd1744c7=---
+
+---=Part.8f5.4ee8b8343a133e4f.18dcdad38b0.f1b9fcef27eb8231=-
+Content-Type: application/octet-stream;
+ name="=?US-ASCII?Q?signal-desktop-keyring.gpg?="
+Content-Disposition: attachment
+Content-Transfer-Encoding: base64
+
+mQINBFjlSicBEACgho//0EzxuvuCn01LwFqGAgwPKcSSl4L+AWws5/YbsZZvmTBkggIiVOCIMh+d
+3cmGu5W3ydaeUbWbFGNsxO44EB5YBZcuLa5EzRKbNPVaOXKXmhp+w0mEbkoKbF+3mz3lifwBnzcB
+pukyJDgcJSq8cXfq5JsDPR1KAL6ph/kwKeiDNg+8oFgqfboukK56yPTYc9iM8hkTFdx9L6JCJaZG
+XME/ru6EZofUFxeVdev5+9ztYJBBZCGMug5Xp3Gxh/9JUWi6F1+9qAyzN+O606NOXLwcmq5KZL0g
+
+---=Part.8f5.4ee8b8343a133e4f.18dcdad38b0.f1b9fcef27eb8231=---
+
+--------------6a0Tq7Y8z9M0dIG10PnZ7l7E--

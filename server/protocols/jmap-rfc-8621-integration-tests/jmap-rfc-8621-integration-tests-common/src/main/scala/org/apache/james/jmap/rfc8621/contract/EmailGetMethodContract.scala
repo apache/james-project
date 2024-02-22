@@ -3255,6 +3255,67 @@ trait EmailGetMethodContract {
   }
 
   @Test
+  def shouldSupportAttachedMessageWithComplexMultipart(server: GuiceJamesServer): Unit = {
+    val path = MailboxPath.inbox(BOB)
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
+    val messageId: MessageId = server.getProbe(classOf[MailboxProbeImpl])
+      .appendMessage(BOB.asString, path, AppendCommand.from(
+          ClassLoaderUtils.getSystemResourceAsSharedStream("eml/nested2.eml")))
+      .getMessageId
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": ["${messageId.serialize}"],
+         |      "properties":["bodyStructure"],
+         |      "bodyProperties":["partId", "blobId", "subParts","size", "type"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .whenIgnoringPaths("methodResponses[0][1].state")
+      .inPath("methodResponses[0][1].list[0].bodyStructure")
+      .isEqualTo(
+      s"""{
+         |  "subParts": [
+         |      {
+         |        "size": 0,
+         |        "partId": "2",
+         |        "blobId": "${messageId.serialize()}_2",
+         |        "type": "text/plain"
+         |      },
+         |      {
+         |        "size": 2093,
+         |        "partId": "3",
+         |        "blobId": "${messageId.serialize()}_3",
+         |        "type": "message/rfc822"
+         |      }
+         |    ],
+         |    "size": 2513,
+         |    "partId": "1",
+         |    "type": "multipart/mixed"
+         |  }""".stripMargin)
+  }
+
+  @Test
   def mailboxIdsPropertiesShouldBeReturned(server: GuiceJamesServer): Unit = {
     val path = MailboxPath.inbox(BOB)
     val mailboxId: MailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(path)
@@ -3866,7 +3927,7 @@ trait EmailGetMethodContract {
          |                                    "value": "$contentType"
          |                                }
          |                            ],
-         |                            "size": 2287,
+         |                            "size": 1880,
          |                            "type": "multipart/mixed",
          |                            "charset": "us-ascii",
          |                            "subParts": [

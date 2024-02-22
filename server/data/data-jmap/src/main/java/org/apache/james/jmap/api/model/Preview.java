@@ -29,6 +29,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.jmap.mime4j.AvoidBinaryBodyBufferingBodyFactory;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
@@ -81,6 +82,7 @@ public class Preview {
         private Message parse(InputStream inputStream) throws IOException {
             DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
             defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
+            defaultMessageBuilder.setBodyFactory(new AvoidBinaryBodyBufferingBodyFactory());
             return defaultMessageBuilder.parseMessage(inputStream);
         }
     }
