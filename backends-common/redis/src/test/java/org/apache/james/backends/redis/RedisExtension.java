@@ -44,7 +44,7 @@ public class RedisExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeEach(ExtensionContext extensionContext) {
         DOCKER_REDIS_SINGLETON.flushAll();
     }
 
@@ -53,14 +53,18 @@ public class RedisExtension implements GuiceModuleTestExtension {
         return new AbstractModule() {
             @Provides
             @Singleton
-            public  RedisConfiguration provideConfig() {
-                return RedisConfiguration.from(dockerRedis().redisURI().toString(), false);
+            public RedisConfiguration provideConfig() {
+                return redisConfiguration();
             }
         };
     }
 
     public DockerRedis dockerRedis() {
         return DOCKER_REDIS_SINGLETON;
+    }
+
+    public RedisConfiguration redisConfiguration() {
+        return RedisConfiguration.from(dockerRedis().redisURI().toString(), false);
     }
 
     @Override
