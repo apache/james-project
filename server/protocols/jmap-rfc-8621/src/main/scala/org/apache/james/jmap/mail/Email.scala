@@ -118,6 +118,13 @@ object Email {
         }
     }
 
+  def validateIdsSize(request: EmailGetRequest, maxSize: Long, chain: Properties): Either[Exception, Properties] =
+    if (EmailGetRequest.readLevel(request).equals(FullReadLevel) && request.ids.exists(_.value.size > maxSize)) {
+      Left(RequestTooLargeException(s"Too many items in an email read at level FULL. Got ${request.ids.get.value.size} items instead of maximum ${maxSize}."))
+    } else {
+      scala.Right(chain)
+    }
+
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =
     refined.refineV[IdConstraint](messageId.serialize()) match {
       case Left(e) => Failure(new IllegalArgumentException(e))
@@ -443,15 +450,8 @@ class EmailViewReaderFactory @Inject() (metadataReader: EmailMetadataViewReader,
                                         fastViewReader: EmailFastViewReader,
                                         fastViewWithAttachmentsMetadataReader: EmailFastViewWithAttachmentsMetadataReader,
                                         fullReader: EmailFullViewReader) {
-  def selectReader(request: EmailGetRequest): EmailViewReader[EmailView] = {
-    val readLevel: ReadLevel = request.properties
-      .getOrElse(Email.defaultProperties)
-      .value
-      .map(ReadLevel.of)
-      .reduceOption(ReadLevel.combine)
-      .getOrElse(MetadataReadLevel)
-
-    readLevel match {
+  def selectReader(request: EmailGetRequest): EmailViewReader[EmailView] =
+    EmailGetRequest.readLevel(request) match {
       case MetadataReadLevel => metadataReader
       case HeaderReadLevel => headerReader
       case FastViewReadLevel => fastViewReader
@@ -463,7 +463,6 @@ class EmailViewReaderFactory @Inject() (metadataReader: EmailMetadataViewReader,
         }
       case FullReadLevel => fullReader
     }
-  }
 }
 
 sealed trait EmailViewReader[+EmailView] {
