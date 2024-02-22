@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.redis;
 
+import static java.lang.Boolean.TRUE;
+
 import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
@@ -33,8 +35,6 @@ import com.github.fge.lambdas.Throwing;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
-
-import static java.lang.Boolean.TRUE;
 
 public class DockerRedis {
     private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("redis").withTag("7.0.12");
@@ -97,6 +97,10 @@ public class DockerRedis {
     public RedisCommands<String, String> createClient() {
         return RedisClient.create(redisURI().toString())
             .connect().sync();
+    }
+
+    public RedisClient createRawRedisClient() {
+        return RedisClient.create(redisURI().toString());
     }
 
     public void flushAll() {
