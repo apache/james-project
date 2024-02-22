@@ -45,7 +45,7 @@ object IdentitySetUpdatePerformer {
         LOGGER.info("Error parsing Identity/set update", e)
         e.setError
       case e: IdentityNotFoundException =>
-        LOGGER.info("Identity not found in Identity/set update {}", e.getCause.getMessage)
+        LOGGER.info("Identity not found in Identity/set update {}", e.getMessage)
         SetError.notFound(SetErrorDescription(e.getMessage))
       case e: InvalidPropertyException =>
         LOGGER.info("Invalid property in Identity/set update {}", e.getCause.getMessage)
