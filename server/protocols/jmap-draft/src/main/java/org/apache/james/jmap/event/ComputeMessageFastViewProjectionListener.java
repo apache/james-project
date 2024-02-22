@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class ComputeMessageFastViewProjectionListener implements EventListener.ReactiveGroupEventListener {
     public static class ComputeMessageFastViewProjectionListenerGroup extends Group {
@@ -103,7 +104,8 @@ public class ComputeMessageFastViewProjectionListener implements EventListener.R
         return Flux.from(messageIdManager.getMessagesReactive(addedEvent.getMessageIds(), FetchGroup.FULL_CONTENT, session))
             .flatMap(Throwing.function(messageResult -> Mono.fromCallable(
                 () -> Pair.of(messageResult.getMessageId(),
-                    computeFastViewPrecomputedProperties(messageResult)))), DEFAULT_CONCURRENCY)
+                    computeFastViewPrecomputedProperties(messageResult)))
+                .subscribeOn(Schedulers.parallel())), DEFAULT_CONCURRENCY)
             .flatMap(message -> messageFastViewProjection.store(message.getKey(), message.getValue()), DEFAULT_CONCURRENCY)
             .then();
     }

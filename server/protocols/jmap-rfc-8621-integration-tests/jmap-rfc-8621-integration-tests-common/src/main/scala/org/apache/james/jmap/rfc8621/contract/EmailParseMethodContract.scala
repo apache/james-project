@@ -327,7 +327,7 @@ trait EmailParseMethodContract {
            |                            }
            |                        ],
            |                        "subject": "test subject",
-           |                        "size": 807,
+           |                        "size": 797,
            |                        "blobId": "${messageId.serialize()}_3",
            |                        "preview": "test body",
            |                        "messageId": [

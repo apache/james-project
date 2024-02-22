@@ -23,7 +23,6 @@ import java.io.OutputStream
 import java.time.ZoneId
 
 import cats.implicits._
-import com.google.common.io.CountingOutputStream
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
@@ -34,14 +33,14 @@ import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MDN_TYPE, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN, of}
 import org.apache.james.jmap.mail.PartId.PartIdValue
-import org.apache.james.jmap.mime4j.JamesBodyDescriptorBuilder
+import org.apache.james.jmap.mime4j.{ JamesBodyDescriptorBuilder, SizeUtils}
 import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageResult}
 import org.apache.james.mime4j.Charsets.ISO_8859_1
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
-import org.apache.james.mime4j.dom.{Entity, Message, Multipart, SingleBody, TextBody => Mime4JTextBody}
+import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
 import org.apache.james.mime4j.field.LenientFieldParser
-import org.apache.james.mime4j.message.{BasicBodyFactory, DefaultMessageBuilder, DefaultMessageWriter}
+import org.apache.james.mime4j.message.{BasicBodyFactory, DefaultMessageBuilder}
 import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
@@ -181,15 +180,7 @@ object EmailBodyPart {
     .headOption
     .map(_.getBody)
 
-  private def size(entity: Entity): Try[Size] =
-    entity.getBody match {
-      case body: SingleBody => refineSize(body.size())
-      case body =>
-        val countingOutputStream: CountingOutputStream = new CountingOutputStream(OutputStream.nullOutputStream())
-        val writer = new DefaultMessageWriter
-        writer.writeBody(body, countingOutputStream)
-        refineSize(countingOutputStream.getCount)
-    }
+  private def size(entity: Entity): Try[Size] = refineSize(SizeUtils.sizeOf(entity))
 
   private def refineSize(l: Long): Try[Size] = refineV[NonNegative](l) match {
     case scala.Right(size) => Success(size)
@@ -287,7 +278,6 @@ case class EmailBodyPart(partId: PartId,
 
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>
-      new Exception("" + textBody.getCharset).printStackTrace()
       for {
         value <- Try(IOUtils.toString(textBody.getInputStream, Option(textBody.getCharset).getOrElse(ISO_8859_1)))
       } yield {
