@@ -55,6 +55,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private final ReactorRabbitMQChannelPool channelPool;
     private final RabbitMQConfiguration configuration;
     private final MetricFactory metricFactory;
+    private final RedisEventBusClientFactory redisEventBusClientFactory;
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
@@ -67,7 +68,8 @@ public class RabbitMQEventBus implements EventBus, Startable {
                             RetryBackoffConfiguration retryBackoff,
                             RoutingKeyConverter routingKeyConverter,
                             EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
-                            EventBusId eventBusId, RabbitMQConfiguration configuration) {
+                            EventBusId eventBusId, RabbitMQConfiguration configuration,
+                            RedisEventBusClientFactory redisEventBusClientFactory) {
         this.namingStrategy = namingStrategy;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
@@ -80,6 +82,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
         this.eventDeadLetters = eventDeadLetters;
         this.configuration = configuration;
         this.metricFactory = metricFactory;
+        this.redisEventBusClientFactory = redisEventBusClientFactory;
         this.isRunning = false;
         this.isStopping = false;
     }
@@ -88,9 +91,10 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, retryBackoff, configuration, metricFactory);
+            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, routingKeyConverter,
+                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, eventBusId, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration, redisEventBusClientFactory);
 
             eventDispatcher.start();
             keyRegistrationHandler.start();
@@ -108,11 +112,12 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, retryBackoff, configuration, metricFactory);
+            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, routingKeyConverter,
+                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, eventBusId, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration, redisEventBusClientFactory);
 
-            keyRegistrationHandler.declareQueue();
+            keyRegistrationHandler.declarePubSubChannel();
 
             eventDispatcher.start();
             isRunning = true;

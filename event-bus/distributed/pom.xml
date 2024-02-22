@@ -95,6 +95,11 @@
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>eu.timepit</groupId>
+            <artifactId>refined_${scala.base}</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>
@@ -118,4 +123,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

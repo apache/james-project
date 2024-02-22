@@ -63,6 +63,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
+import org.apache.james.backends.redis.RedisExtension;
 import org.apache.james.events.EventBusTestFixture.EventListenerCountingSuccessfulExecution;
 import org.apache.james.events.EventBusTestFixture.GroupA;
 import org.apache.james.events.EventBusTestFixture.TestEventSerializer;
@@ -103,6 +104,9 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ()
         .isolationPolicy(RabbitMQExtension.IsolationPolicy.WEAK);
+
+    @RegisterExtension
+    static RedisExtension redisExtension = new RedisExtension();
 
     private RabbitMQEventBus eventBus;
     private RabbitMQEventBus eventBus2;
@@ -162,7 +166,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         return new RabbitMQEventBus(namingStrategy, sender, receiverProvider, eventSerializer,
             EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
             memoryEventDeadLetters, new RecordingMetricFactory(),
-            rabbitMQExtension.getRabbitChannelPool(), EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
+            rabbitMQExtension.getRabbitChannelPool(), EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration(),
+            new RedisEventBusClientFactory(redisExtension.redisConfiguration()));
     }
 
     @Override

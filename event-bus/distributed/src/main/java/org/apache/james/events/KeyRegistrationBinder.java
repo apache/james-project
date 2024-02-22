@@ -19,14 +19,29 @@
 
 package org.apache.james.events;
 
-class RegistrationQueueName {
-    private final String queueName;
+import io.lettuce.core.api.reactive.RedisStringReactiveCommands;
+import reactor.core.publisher.Mono;
 
-    RegistrationQueueName(String queueName) {
-        this.queueName = queueName;
+class KeyRegistrationBinder {
+    private final RedisStringReactiveCommands<String, String> redisStringReactiveCommands;
+    private final RegistrationChannelName registrationChannel;
+
+    KeyRegistrationBinder(RedisStringReactiveCommands<String, String> redisStringReactiveCommands, RegistrationChannelName registrationChannel) {
+        this.redisStringReactiveCommands = redisStringReactiveCommands;
+        this.registrationChannel = registrationChannel;
     }
 
-    String asString() {
-        return queueName;
+    Mono<Void> bind(RegistrationKey key) {
+        // store registrationKey -> channel mapping in Redis
+        RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
+        return redisStringReactiveCommands.set(routingKey.asString(), registrationChannel.asString())
+            .then();
+    }
+
+    Mono<Void> unbind(RegistrationKey key) {
+        // delete the registrationKey -> channel mapping in Redis
+        RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
+        return redisStringReactiveCommands.getdel(routingKey.asString())
+            .then();
     }
 }

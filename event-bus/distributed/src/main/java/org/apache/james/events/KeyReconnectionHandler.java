@@ -58,7 +58,7 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
             try (Channel channel = connection.createChannel()) {
                 QueueArguments.Builder builder = configuration.workQueueArgumentsBuilder(!ALLOW_QUORUM);
                 configuration.getQueueTTL().ifPresent(builder::queueTTL);
-                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE, builder.build());
+                channel.queueDeclare(namingStrategy.channelName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE, builder.build());
             } catch (Exception e) {
                 LOGGER.error("Error recovering connection", e);
             }

@@ -33,8 +33,8 @@ public class NamingStrategy {
         this.eventBusName = eventBusName;
     }
 
-    public RegistrationQueueName queueName(EventBusId eventBusId) {
-        return new RegistrationQueueName(eventBusName.value() + "-eventbus-" + eventBusId.asString());
+    public RegistrationChannelName channelName(EventBusId eventBusId) {
+        return new RegistrationChannelName(eventBusName.value() + "-eventbus-" + eventBusId.asString());
     }
 
     public QueueSpecification deadLetterQueue() {

@@ -19,36 +19,14 @@
 
 package org.apache.james.events;
 
-import reactor.core.publisher.Mono;
-import reactor.rabbitmq.BindingSpecification;
-import reactor.rabbitmq.Sender;
+class RegistrationChannelName {
+    private final String queueName;
 
-class RegistrationBinder {
-    private final NamingStrategy namingStrategy;
-    private final Sender sender;
-    private final RegistrationQueueName registrationQueue;
-
-    RegistrationBinder(NamingStrategy namingStrategy, Sender sender, RegistrationQueueName registrationQueue) {
-        this.namingStrategy = namingStrategy;
-        this.sender = sender;
-        this.registrationQueue = registrationQueue;
+    RegistrationChannelName(String queueName) {
+        this.queueName = queueName;
     }
 
-    Mono<Void> bind(RegistrationKey key) {
-        return sender.bind(bindingSpecification(key))
-            .then();
-    }
-
-    Mono<Void> unbind(RegistrationKey key) {
-        return sender.unbind(bindingSpecification(key))
-            .then();
-    }
-
-    private BindingSpecification bindingSpecification(RegistrationKey key) {
-        RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
-        return BindingSpecification.binding()
-            .exchange(namingStrategy.exchange())
-            .queue(registrationQueue.asString())
-            .routingKey(routingKey.asString());
+    String asString() {
+        return queueName;
     }
 }
