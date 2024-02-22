@@ -55,6 +55,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.util.DurationParser;
+import org.apache.james.util.ReactorUtils;
 import org.apache.mailet.MailetContext;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -246,8 +247,10 @@ public class MailReceptionCheck implements HealthCheck {
                 AwaitReceptionListener listener = new AwaitReceptionListener(mailbox, content, session);
                 return Mono.usingWhen(
                     Mono.from(eventBus.register(listener, new MailboxIdRegistrationKey(mailbox.getId()))),
-                    registration -> sendMail(username, content)
-                        .flatMap(any -> checkReceived(listener)),
+                    registration -> listener.results()
+                        .doOnSubscribe(any -> sendMail(username, content).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER).subscribe())
+                        .map(any -> Result.healthy(componentName()))
+                        .next(),
                     Registration::unregister);
             })
             .timeout(configuration.getTimeout(), Mono.error(() -> new RuntimeException("HealthCheck email was not received after " + configuration.getTimeout().toMillis() + "ms")))
