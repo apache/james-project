@@ -27,6 +27,10 @@ import org.apache.james.blob.api.BucketName;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Predicate;
+
+import reactor.util.retry.Retry;
+import software.amazon.awssdk.core.exception.SdkException;
 
 public class S3BlobStoreConfiguration {
 
@@ -58,6 +62,7 @@ public class S3BlobStoreConfiguration {
             private Optional<Duration> connectionTimeout;
             private Optional<Long> inMemoryReadLimit;
             private Region region;
+            private Optional<Retry> uploadRetrySpec;
 
             public ReadyToBuild(AwsS3AuthConfiguration specificAuthConfiguration, Region region) {
                 this.specificAuthConfiguration = specificAuthConfiguration;
@@ -69,6 +74,7 @@ public class S3BlobStoreConfiguration {
                 this.writeTimeout = Optional.empty();
                 this.connectionTimeout = Optional.empty();
                 this.inMemoryReadLimit = Optional.empty();
+                this.uploadRetrySpec = Optional.empty();
             }
 
             public ReadyToBuild defaultBucketName(Optional<BucketName> defaultBucketName) {
@@ -116,21 +122,33 @@ public class S3BlobStoreConfiguration {
                 return this;
             }
 
+            public ReadyToBuild uploadRetrySpec(Optional<Retry> uploadRetrySpec) {
+                this.uploadRetrySpec = uploadRetrySpec;
+                return this;
+            }
+
             public S3BlobStoreConfiguration build() {
-                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY), inMemoryReadLimit, readTimeout, writeTimeout, connectionTimeout);
+                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region,
+                    specificAuthConfiguration, httpConcurrency.orElse(DEFAULT_HTTP_CONCURRENCY),
+                    inMemoryReadLimit, readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec.orElse(DEFAULT_UPLOAD_RETRY_SPEC));
             }
         }
 
     }
 
     public static int DEFAULT_HTTP_CONCURRENCY = 100;
-
+    public static final Duration UPLOAD_RETRY_BACKOFF_DURATION_DEFAULT = Duration.ofMillis(10);
+    public static final Double UPLOAD_RETRY_BACKOFF_JETTY_DEFAULT = 0.5;
+    public static final Predicate<Throwable> UPLOAD_RETRY_EXCEPTION_PREDICATE = SdkException.class::isInstance;
+    public static final Retry DEFAULT_UPLOAD_RETRY_SPEC = Retry.backoff(0, UPLOAD_RETRY_BACKOFF_DURATION_DEFAULT).filter(UPLOAD_RETRY_EXCEPTION_PREDICATE);
     private final Region region;
     private final AwsS3AuthConfiguration specificAuthConfiguration;
     private final Optional<BucketName> namespace;
     private final Optional<String> bucketPrefix;
     private final int httpConcurrency;
     private final Optional<Long> inMemoryReadLimit;
+    private final Retry uploadRetrySpec;
+
     private Optional<Duration> readTimeout;
     private Optional<Duration> writeTimeout;
     private Optional<Duration> connectionTimeout;
@@ -144,7 +162,8 @@ public class S3BlobStoreConfiguration {
                              Optional<Long> inMemoryReadLimit,
                              Optional<Duration> readTimeout,
                              Optional<Duration> writeTimeout,
-                             Optional<Duration> connectionTimeout) {
+                             Optional<Duration> connectionTimeout,
+                             Retry uploadRetrySpec) {
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.region = region;
@@ -154,6 +173,7 @@ public class S3BlobStoreConfiguration {
         this.readTimeout = readTimeout;
         this.writeTimeout = writeTimeout;
         this.connectionTimeout = connectionTimeout;
+        this.uploadRetrySpec = uploadRetrySpec;
     }
 
     public Optional<Long> getInMemoryReadLimit() {
@@ -192,6 +212,10 @@ public class S3BlobStoreConfiguration {
         return connectionTimeout;
     }
 
+    public Retry uploadRetrySpec() {
+        return uploadRetrySpec;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof S3BlobStoreConfiguration) {
@@ -205,6 +229,7 @@ public class S3BlobStoreConfiguration {
                 && Objects.equals(this.readTimeout, that.readTimeout)
                 && Objects.equals(this.writeTimeout, that.writeTimeout)
                 && Objects.equals(this.connectionTimeout, that.connectionTimeout)
+                && Objects.equals(this.uploadRetrySpec, that.uploadRetrySpec)
                 && Objects.equals(this.specificAuthConfiguration, that.specificAuthConfiguration);
         }
         return false;
@@ -213,7 +238,7 @@ public class S3BlobStoreConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(namespace, bucketPrefix, httpConcurrency, specificAuthConfiguration,
-            readTimeout, writeTimeout, connectionTimeout);
+            readTimeout, writeTimeout, connectionTimeout, uploadRetrySpec);
     }
 
     @Override
@@ -228,6 +253,7 @@ public class S3BlobStoreConfiguration {
             .add("readTimeout", readTimeout)
             .add("writeTimeout", writeTimeout)
             .add("connectionTimeout", connectionTimeout)
+            .add("uploadRetrySpec", uploadRetrySpec)
             .toString();
     }
 }

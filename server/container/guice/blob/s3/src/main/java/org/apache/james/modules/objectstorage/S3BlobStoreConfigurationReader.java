@@ -19,6 +19,9 @@
 
 package org.apache.james.modules.objectstorage;
 
+import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_BACKOFF_DURATION_DEFAULT;
+import static org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration.UPLOAD_RETRY_BACKOFF_JETTY_DEFAULT;
+
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -32,6 +35,9 @@ import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
 import org.apache.james.util.DurationParser;
 import org.apache.james.util.Size;
 
+import reactor.util.retry.Retry;
+import software.amazon.awssdk.core.exception.SdkException;
+
 public class S3BlobStoreConfigurationReader {
 
     private static final String OBJECTSTORAGE_NAMESPACE = "objectstorage.namespace";
@@ -42,6 +48,8 @@ public class S3BlobStoreConfigurationReader {
     private static final String OBJECTSTORAGE_S3_WRITE_TIMEOUT = "objectstorage.s3.write.timeout";
     private static final String OBJECTSTORAGE_S3_CONNECTION_TIMEOUT = "objectstorage.s3.connection.timeout";
     private static final String OBJECTSTORAGE_S3_IN_MEMORY_READ_LIMIT = "objectstorage.s3.in.read.limit";
+    private static final String OBJECTSTORAGE_S3_UPLOAD_RETRY_MAX_ATTEMPTS = "objectstorage.s3.upload.retry.maxAttempts";
+    private static final String OBJECTSTORAGE_S3_UPLOAD_RETRY_BACKOFF_DURATION_MILLIS = "objectstorage.s3.upload.retry.backoffDurationMillis";
 
     public static S3BlobStoreConfiguration from(Configuration configuration) throws ConfigurationException {
         Optional<Integer> httpConcurrency = Optional.ofNullable(configuration.getInteger(OBJECTSTORAGE_S3_HTTP_CONCURRENCY, null));
@@ -60,6 +68,13 @@ public class S3BlobStoreConfigurationReader {
             .map(Size::parse)
             .map(Size::asBytes);
 
+        Optional<Retry> uploadRetrySpec = Optional.ofNullable(configuration.getInteger(OBJECTSTORAGE_S3_UPLOAD_RETRY_MAX_ATTEMPTS, null))
+            .map(maxAttempt -> Retry.backoff(maxAttempt, Optional.ofNullable(configuration.getLong(OBJECTSTORAGE_S3_UPLOAD_RETRY_BACKOFF_DURATION_MILLIS, null))
+                    .map(Duration::ofMillis)
+                    .orElse(UPLOAD_RETRY_BACKOFF_DURATION_DEFAULT))
+                .jitter(UPLOAD_RETRY_BACKOFF_JETTY_DEFAULT)
+                .filter(SdkException.class::isInstance));
+
         return S3BlobStoreConfiguration.builder()
             .authConfiguration(AwsS3ConfigurationReader.from(configuration))
             .region(region)
@@ -70,6 +85,7 @@ public class S3BlobStoreConfigurationReader {
             .readTimeout(readTimeout)
             .writeTimeout(writeTimeout)
             .connectionTimeout(connectionTimeout)
+            .uploadRetrySpec(uploadRetrySpec)
             .build();
     }
 
