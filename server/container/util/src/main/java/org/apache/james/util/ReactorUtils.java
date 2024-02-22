@@ -50,6 +50,7 @@ public class ReactorUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorUtils.class);
     public static final String MDC_KEY_PREFIX = "MDC-";
     public static final int DEFAULT_CONCURRENCY = 16;
+    public static final int LOW_CONCURRENCY = 4;
     private static final int DEFAULT_BOUNDED_ELASTIC_SIZE = Optional.ofNullable(System.getProperty("james.schedulers.defaultBoundedElasticSize"))
         .map(Integer::parseInt)
         .orElseGet(() -> 10 * Runtime.getRuntime().availableProcessors());
