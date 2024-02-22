@@ -102,6 +102,9 @@ systems with filters already defined would result in those filters to be not rea
 | disabled.capabilities
 | Optional, defaults to empty. Coma separated list of JMAP capabilities to reject.
 This allows to prevent users from using some specific JMAP extensions.
+
+| email.get.full.max.size
+| Optional, default value is 5. The max number of items for EmailGet full reads.
 |===
 
 == Wire tapping

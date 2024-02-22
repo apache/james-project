@@ -56,6 +56,7 @@ import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.{BeforeEach, Test}
+import play.api.libs.json.Json
 
 object EmailGetMethodContract {
   private def createTestMessage: Message = Message.Builder
@@ -7978,6 +7979,120 @@ trait EmailGetMethodContract {
       s"""{
          |	"type": "accountNotFound"
          |}""".stripMargin)
+  }
+
+  @Test
+  def shouldFailWhenReadFullLevelAndIdsSizeTooLarge(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    val messagesList = List.range(0, 100)
+      .map(_ => {
+        server.getProbe(classOf[MailboxProbeImpl])
+          .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+          .getMessageId
+          .serialize()
+      }).toArray
+
+    val messageIdsJson: String = Json.stringify(Json.arr(messagesList)).replace("[[", "[").replace("]]", "]");
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": $messageIdsJson,
+         |      "properties": ["id", "size", "bodyStructure", "textBody", "htmlBody", "bodyValues"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [[
+           |    "error",
+           |    {
+           |          "type": "requestTooLarge",
+           |          "description": "Too many items in an email read at level FULL. Got 100 items instead of maximum 5."
+           |    },
+           |    "c1"]]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def getEmailShouldSucceedWhenNotReadFullLevelAndExceedIdsSize(server: GuiceJamesServer): Unit = {
+    val message: Message = Message.Builder
+      .of
+      .setSubject("test")
+      .setBody("testmail", StandardCharsets.UTF_8)
+      .build
+    server.getProbe(classOf[MailboxProbeImpl]).createMailbox(MailboxPath.inbox(BOB))
+
+    val messagesList = List.range(0, 100)
+      .map(_ => {
+        server.getProbe(classOf[MailboxProbeImpl])
+          .appendMessage(BOB.asString, MailboxPath.inbox(BOB), AppendCommand.from(message))
+          .getMessageId
+          .serialize()
+      }).toArray
+
+    val messageIdsJson: String = Json.stringify(Json.arr(messagesList)).replace("[[", "[").replace("]]", "]");
+
+    val request =
+      s"""{
+         |  "using": [
+         |    "urn:ietf:params:jmap:core",
+         |    "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [[
+         |    "Email/get",
+         |    {
+         |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+         |      "ids": $messageIdsJson,
+         |      "properties": ["id", "size"]
+         |    },
+         |    "c1"]]
+         |}""".stripMargin
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(
+        s"""{
+           |  "sessionState": "${SESSION_STATE.value}",
+           |  "methodResponses": [[
+           |    "Email/get", "$${json-unit.ignore}",
+           |    "c1"]]
+           |}""".stripMargin)
   }
 
   private def waitForNextState(server: GuiceJamesServer, accountId: AccountId, initialState: State): State = {
