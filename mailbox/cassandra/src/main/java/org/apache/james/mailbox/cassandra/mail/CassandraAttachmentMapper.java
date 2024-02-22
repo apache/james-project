@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
+import static org.apache.james.util.ReactorUtils.LOW_CONCURRENCY;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -120,7 +121,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public Mono<List<MessageAttachmentMetadata>> storeAttachmentsReactive(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) {
         return Flux.fromIterable(attachments)
-            .concatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
+            .flatMapSequential(attachment -> storeAttachmentAsync(attachment, ownerMessageId), LOW_CONCURRENCY)
             .collectList();
     }
 
