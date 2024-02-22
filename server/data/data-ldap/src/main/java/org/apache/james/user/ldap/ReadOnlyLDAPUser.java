@@ -24,6 +24,7 @@ import org.apache.james.user.api.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.unboundid.ldap.sdk.BindResult;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.LDAPBindException;
@@ -126,6 +127,11 @@ public class ReadOnlyLDAPUser implements User {
      */
     @Override
     public boolean verifyPassword(String password) {
+        if (Strings.isNullOrEmpty(password)) {
+            LOGGER.info("Error. Password is empty for {}", userName.asString());
+            return false;
+        }
+
         try {
             BindResult bindResult = connectionPool.bindAndRevertAuthentication(userDN.toString(), password);
             return bindResult.getResultCode() == ResultCode.SUCCESS;
