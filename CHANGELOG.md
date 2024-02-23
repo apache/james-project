@@ -5,10 +5,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [unreleased]
 
-No changes yet.
-
-### Fixes
-
 ### Security
 
 - [FIX] JMX password auto-detection
@@ -66,6 +62,10 @@ No changes yet.
  - JAMES-3911 JPA: Prevent concurrent operations on the same EntityManager
 
 ## [Unreleased 3.8.x]
+
+No changes yet.
+
+## [3.8.1] - 2024-02-23
 
 ### Security
 
@@ -372,6 +372,10 @@ Multiple performance enhancements for Distributed server mailbox, IMAP, SMTP and
  - JAMES-2080 Allow turning off header indexing in OpenSearch (#1516)
 
 ## [Unreleased 3.7.x]
+
+No changes yet.
+
+## [3.7.5] - 2024-02-23
 
 ### Security
 
