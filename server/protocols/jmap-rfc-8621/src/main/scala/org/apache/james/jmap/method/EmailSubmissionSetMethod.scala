@@ -258,6 +258,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         .switchIfEmpty(SMono.error(MessageNotFoundException(request.emailId)))
       submissionId = EmailSubmissionId.generate
       message <- SMono.fromTry(toMimeMessage(submissionId.value, message))
+      _ <- validateMimeMessages(message)
       envelope <- SMono.fromTry(resolveEnvelope(message, request.envelope))
       _ <- validate(mailboxSession)(message, envelope)
       _ <- SMono.fromTry(validateFromParameters(envelope.mailFrom.parameters))
@@ -335,6 +336,24 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       Success(delay)
     } else {
       Failure(new IllegalArgumentException("Invalid delayed time!"))
+    }
+
+  def validateMimeMessages(mimeMessage: MimeMessage) : SMono[MimeMessage] = validateMailAddressHeaderMimeMessage(mimeMessage)
+  private def validateMailAddressHeaderMimeMessage(mimeMessage: MimeMessage): SMono[MimeMessage] =
+    SFlux.fromIterable(Map("to" -> Option(mimeMessage.getRecipients(RecipientType.TO)).toList.flatten,
+        "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
+        "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
+        "from" -> Option(mimeMessage.getFrom).toList.flatten,
+        "sender" -> List(mimeMessage.getSender),
+        "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
+      .doOnNext { case (headerName, addresses) => (headerName, addresses.foreach(address => validateMailAddress(headerName, address))) }
+      .`then`()
+      .`then`(SMono.just(mimeMessage))
+
+  private def validateMailAddress(headName: String, address: Address): MailAddress =
+    Try(new MailAddress(address.toString)) match {
+      case Success(mailAddress) => mailAddress
+      case Failure(_) => throw new IllegalArgumentException(s"Invalid mail address: $address in $headName header")
     }
 
   def validateRcptTo(recipients: List[EmailSubmissionAddress]): SMono[List[EmailSubmissionAddress]] =

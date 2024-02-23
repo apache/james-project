@@ -41,7 +41,7 @@ class EmailSetSerializerTest extends AnyWordSpec with Matchers {
             |        "1": true
             |    },
             |    "keywords": {
-            |        "$draft": false,
+            |        "$draft": true,
             |        "$seen": true
             |    },
             |    "subject": "draft 1",

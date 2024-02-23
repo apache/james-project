@@ -25,7 +25,6 @@ import cats.implicits._
 import com.google.common.net.MediaType
 import com.google.common.net.MediaType.{HTML_UTF_8, PLAIN_TEXT_UTF_8}
 import eu.timepit.refined
-import org.apache.commons.text.StringEscapeUtils
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName}
@@ -39,7 +38,7 @@ import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.codec.{DecodeMonitor, EncoderUtil}
-import org.apache.james.mime4j.dom.address.{Mailbox => Mime4jMailbox}
+import org.apache.james.mime4j.dom.address.{AddressList, MailboxList, Mailbox => Mime4jMailbox}
 import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message}
 import org.apache.james.mime4j.field.{ContentIdFieldImpl, Fields}
@@ -117,16 +116,35 @@ case class Attachment(blobId: BlobId,
 }
 
 case class UncheckedEmail(value: String) extends AnyVal
+
+object UncheckedEmailAddress {
+  def from(addressList: AddressList): List[UncheckedEmailAddress] = Option(addressList)
+    .map(addressList => from(addressList.flatten()))
+    .getOrElse(List())
+
+  def from(addressList: MailboxList): List[UncheckedEmailAddress] =
+    addressList.asScala
+      .toList
+      .map(mailbox => UncheckedEmailAddress(
+        name = Option(mailbox.getName).map(EmailerName.from),
+        email = UncheckedEmail(mailbox.getAddress)))
+}
 case class UncheckedEmailAddress(name: Option[EmailerName], email: UncheckedEmail) {
-  val asMime4JMailbox: Mime4jMailbox =
+  def asMime4JMailbox: Mime4jMailbox = {
+    val parts = email.value.split('@')
+    val domainPart: String = parts match {
+      case Array(_, domain) => domain
+      case _ => ""
+    }
     Some(email.value.split('@'))
       .map(parts => new Mime4jMailbox(
         name.map(_.value).orNull,
         parts.head,
-        parts.lastOption.orNull))
+        domainPart))
       .get
+  }
 
-  val validate: Either[IllegalArgumentException, EmailAddress] =
+  def validate: Either[IllegalArgumentException, EmailAddress] =
     Try(new MailAddress(email.value))
       .map(email => EmailAddress(name, email))
       .toEither match {
@@ -138,7 +156,7 @@ case class UncheckedEmailAddress(name: Option[EmailerName], email: UncheckedEmai
 case class UncheckedAddressesHeaderValue(value: List[UncheckedEmailAddress]) {
   def asMime4JMailboxList: Option[List[Mime4jMailbox]] = Some(value.map(_.asMime4JMailbox)).filter(_.nonEmpty)
 
-  val validate: Either[IllegalArgumentException, AddressesHeaderValue] = value.map(_.validate)
+  def validate: Either[IllegalArgumentException, AddressesHeaderValue] = value.map(_.validate)
     .sequence
     .map(l => AddressesHeaderValue(l))
 }
@@ -351,10 +369,12 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
   }
 
   def validateRequest: Either[IllegalArgumentException, EmailCreationRequest] = validateEmailAddressHeader
+
   def validateEmailAddressHeader: Either[IllegalArgumentException, EmailCreationRequest] = keywords match {
     case Some(k) if k.keywords.contains(KEYWORD_DRAFT) => scala.Right(this)
     case _ => doValidateEmailAddressHeader()
   }
+
   private def doValidateEmailAddressHeader(): Either[IllegalArgumentException, EmailCreationRequest] = {
     val addressesHeaderInvalid: Map[String, IllegalArgumentException] = Map("from" -> from, "to" -> to, "cc" -> cc, "bcc" -> bcc, "sender" -> sender, "replyTo" -> replyTo)
       .map {
