@@ -69,6 +69,8 @@ No changes yet.
 
 ### Security
 
+- **CVE-2023-51747**: SMTP smuggling in Apache James
+- **CVE-2023-51518**: Privilege escalation via JMX pre-authentication deserialisation
 - [FIX] JMX password auto-detection
 - [FIX] Enforce CRLF as part of SMTP DATA transaction (#1876)
 - [FIX] Set up JMX auth for Spring
@@ -379,6 +381,8 @@ No changes yet.
 
 ### Security
 
+- **CVE-2023-51747**: SMTP smuggling in Apache James
+- **CVE-2023-51518**: Privilege escalation via JMX pre-authentication deserialisation
 - [FIX] JMX password auto-detection
 - [FIX] Enforce CRLF as part of SMTP DATA transaction (#1876)
 - [FIX] Set up JMX auth for Spring
