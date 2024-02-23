@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.opensearch.json;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -46,15 +47,13 @@ public class MimePartParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(MimePartParser.class);
     private static final LenientFieldParser FIELD_PARSER = new LenientFieldParser();
 
-    private final Message message;
     private final TextExtractor textExtractor;
     private final MimeTokenStream stream;
     private final Deque<MimePartContainerBuilder> builderStack;
     private MimePart.ParsedMimePart result;
     private MimePartContainerBuilder currentlyBuildMimePart;
 
-    public MimePartParser(Message message, TextExtractor textExtractor) {
-        this.message = message;
+    public MimePartParser(TextExtractor textExtractor) {
         this.textExtractor = textExtractor;
         this.builderStack = new LinkedList<>();
         this.currentlyBuildMimePart = new RootMimePartContainerBuilder();
@@ -63,8 +62,8 @@ public class MimePartParser {
             new DefaultBodyDescriptorBuilder(null, FIELD_PARSER, DecodeMonitor.SILENT));
     }
 
-    public MimePart.ParsedMimePart parse() throws IOException, MimeException {
-        stream.parse(message.getFullContent());
+    public MimePart.ParsedMimePart parse(InputStream inputStream) throws IOException, MimeException {
+        stream.parse(inputStream);
         for (EntityState state = stream.getState(); state != EntityState.T_END_OF_STREAM; state = stream.next()) {
             processMimePart(stream, state);
         }

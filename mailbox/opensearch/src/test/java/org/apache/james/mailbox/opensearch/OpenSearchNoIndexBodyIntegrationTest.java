@@ -124,7 +124,7 @@ public class OpenSearchNoIndexBodyIntegrationTest {
                 ImmutableSet.of(),
                 new OpenSearchIndexer(client, writeAliasName),
                 new OpenSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE, readAliasName, routingKeyFactory),
-                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES),
+                new MessageToOpenSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES, IndexHeaders.YES, IndexBody.NO),
                 preInstanciationStage.getSessionProvider(), routingKeyFactory, messageIdFactory,
                 OpenSearchMailboxConfiguration.builder().indexBody(IndexBody.NO).build(), new RecordingMetricFactory()))
             .noPreDeletionHooks()
@@ -165,7 +165,7 @@ public class OpenSearchNoIndexBodyIntegrationTest {
 
         awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 1L);
 
-        SearchQuery searchQuery = SearchQuery.of(SearchQuery.bodyContains("Hello"));
+        SearchQuery searchQuery = SearchQuery.of(SearchQuery.all());
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery).collectList().block())
             .containsExactly(composedMessageId.getUid());

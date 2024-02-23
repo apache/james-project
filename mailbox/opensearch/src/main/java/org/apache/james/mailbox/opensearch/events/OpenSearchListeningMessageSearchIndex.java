@@ -299,14 +299,14 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     private Mono<Void> processAddedEvent(MailboxSession session, MailboxEvents.Added addedEvent, MailboxId mailboxId) {
         return factory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
-            .flatMap(mailbox -> processAdded(session, mailbox, addedEvent));
+            .flatMap(mailbox -> handleAdded(session, mailbox, addedEvent, chooseFetchType()));
     }
 
-    private Mono<Void> processAdded(MailboxSession session, Mailbox mailbox, MailboxEvents.Added addedEvent) {
-        if (IndexBody.YES.equals(indexBody)) {
-            return handleAdded(session, mailbox, addedEvent, FetchType.FULL);
+    private FetchType chooseFetchType() {
+        if (indexBody == IndexBody.YES) {
+            return FetchType.FULL;
         }
-        return handleAdded(session, mailbox, addedEvent, FetchType.HEADERS);
+        return FetchType.HEADERS;
     }
 
     @Override
