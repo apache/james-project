@@ -34,12 +34,14 @@ import org.apache.james.mailbox.model.search.{MailboxQuery, PrefixedWildcard}
 import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageManager, Role, SubscriptionManager}
 import org.apache.james.util.{AuditTrail, ReactorUtils}
+import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 
 object MailboxSetUpdatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[MailboxSetUpdatePerformer])
 
   sealed trait MailboxUpdateResult
   case class MailboxUpdateSuccess(mailboxId: MailboxId) extends MailboxUpdateResult
@@ -49,19 +51,45 @@ object MailboxSetUpdatePerformer {
       .getOrElse(acceptableProperties))
 
     def asMailboxSetError: SetError = exception match {
-      case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
-      case e: MailboxNameException => SetError.invalidArguments(SetErrorDescription(e.getMessage), filter(Properties("name", "parentId")))
-      case e: MailboxExistsException => SetError.invalidArguments(SetErrorDescription(e.getMessage), filter(Properties("name", "parentId")))
-      case e: UnsupportedPropertyUpdatedException => SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(e.property)))
-      case e: InvalidUpdateException => SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
-      case e: ServerSetPropertyException => SetError.invalidArguments(SetErrorDescription("Can not modify server-set properties"), Some(Properties(e.property)))
-      case e: InvalidPropertyException => SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
-      case e: InvalidPatchException => SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
-      case e: SystemMailboxChangeException => SetError.invalidArguments(SetErrorDescription("Invalid change to a system mailbox"), filter(Properties("name", "parentId")))
-      case e: LoopInMailboxGraphException => SetError.invalidArguments(SetErrorDescription("A mailbox parentId property can not be set to itself or one of its child"), Some(Properties("parentId")))
-      case e: InsufficientRightsException => SetError.invalidArguments(SetErrorDescription("Invalid change to a delegated mailbox"))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
-      case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
+      case e: MailboxNotFoundException =>
+        LOGGER.info("Can't update mailbox: Mailbox not found: {}", e.getMessage)
+        SetError.notFound(SetErrorDescription(e.getMessage))
+      case e: MailboxNameException =>
+        LOGGER.info("Invalid mailbox name: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), filter(Properties("name", "parentId")))
+      case e: MailboxExistsException =>
+        LOGGER.info("Mailbox already exists: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), filter(Properties("name", "parentId")))
+      case e: UnsupportedPropertyUpdatedException =>
+        LOGGER.info("Unsupported properties in Mailbox/set update: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(e.property)))
+      case e: InvalidUpdateException =>
+        LOGGER.info("Invalid update in Mailbox/set update: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
+      case e: ServerSetPropertyException =>
+        LOGGER.info("Unsupported server-set properties in Mailbox/set update: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription("Can not modify server-set properties"), Some(Properties(e.property)))
+      case e: InvalidPropertyException =>
+        LOGGER.info("Invalid properties in Mailbox/set update: {}", e.getMessage)
+        SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
+      case e: InvalidPatchException =>
+        LOGGER.info("Unsupported patch in Mailbox/set update: {}", e.getMessage)
+        SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
+      case e: SystemMailboxChangeException =>
+        LOGGER.info("Attempt to update a system mailbox was rejected: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription("Invalid change to a system mailbox"), filter(Properties("name", "parentId")))
+      case e: LoopInMailboxGraphException =>
+        LOGGER.info("Attempt to create a loop in mailbox graph was rejected: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription("A mailbox parentId property can not be set to itself or one of its child"), Some(Properties("parentId")))
+      case e: InsufficientRightsException =>
+        LOGGER.info("Attempt to create a mailbox while having insufficient rights was rejected: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription("Invalid change to a delegated mailbox"))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in Mailbox/set update", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
+      case e =>
+        LOGGER.error("Failed to update mailbox", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
   case class MailboxUpdateResults(results: Seq[MailboxUpdateResult]) {

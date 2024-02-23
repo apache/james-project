@@ -44,11 +44,14 @@ import org.apache.james.mime4j.message.DefaultMessageBuilder
 import org.apache.james.mime4j.stream.MimeConfig
 import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
+import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.util.{Try, Using}
 
 object EmailImportMethod {
+  private val LOGGER = LoggerFactory.getLogger(classOf[EmailImportMethod])
+
   case class ImportWithBlob(id: EmailCreationId, request: EmailImport, blob: Blob)
   case class ImportResults(results: Seq[ImportResult]) {
     def created: Option[Map[EmailCreationId, EmailCreationResponse]] =
@@ -71,11 +74,21 @@ object EmailImportMethod {
   case class ImportSuccess(clientId: EmailCreationId, response: EmailCreationResponse) extends ImportResult
   case class ImportFailure(clientId: EmailCreationId, e: Throwable) extends ImportResult {
     def asMessageSetError: SetError = e match {
-      case e: BlobNotFoundException => SetError.notFound(SetErrorDescription(s"Blob ${e.blobId} could not be found"))
-      case e: MailboxNotFoundException => SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case e: OverQuotaException => SetError.overQuota(SetErrorDescription(e.getMessage))
-      case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+      case e: BlobNotFoundException =>
+        LOGGER.info(s"Could not import email as ${e.blobId} is not found")
+        SetError.notFound(SetErrorDescription(s"Blob ${e.blobId} could not be found"))
+      case e: MailboxNotFoundException =>
+        LOGGER.info(s"Could not import email as Mailbox ${e.getMessage} is not found")
+        SetError.notFound(SetErrorDescription("Mailbox " + e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal arguments while importing email", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case e: OverQuotaException =>
+        LOGGER.info(s"Could not import email as the user is overquota", e)
+        SetError.overQuota(SetErrorDescription(e.getMessage))
+      case _ =>
+        LOGGER.error("Failed to import email", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 }

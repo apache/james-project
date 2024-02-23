@@ -27,26 +27,39 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.mail.{EmailSet, EmailSetRequest, MailboxIds, UnparsedMessageId, ValidatedEmailSetUpdate}
+import org.apache.james.jmap.method.EmailSetCreatePerformer.LOGGER
 import org.apache.james.jmap.method.EmailSetUpdatePerformer.{EmailUpdateFailure, EmailUpdateResult, EmailUpdateResults, EmailUpdateSuccess}
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode
 import org.apache.james.mailbox.exception.{MailboxNotFoundException, OverQuotaException}
 import org.apache.james.mailbox.model.{ComposedMessageIdWithMetaData, MailboxId, MessageId, MessageRange}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, MessageIdManager, MessageManager}
+import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 
 object EmailSetUpdatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[EmailSetUpdatePerformer])
   trait EmailUpdateResult
   case class EmailUpdateSuccess(messageId: MessageId) extends EmailUpdateResult
   case class EmailUpdateFailure(unparsedMessageId: UnparsedMessageId, e: Throwable) extends EmailUpdateResult {
     def asMessageSetError: SetError = e match {
-      case e: IllegalArgumentException => SetError.invalidPatch(SetErrorDescription(s"Message update is invalid: ${e.getMessage}"))
-      case _: MailboxNotFoundException => SetError.notFound(SetErrorDescription(s"Mailbox not found"))
-      case e: MessageNotFoundException => SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
-      case e: OverQuotaException => SetError.overQuota(SetErrorDescription(e.getMessage))
-      case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in Email/set update", e)
+        SetError.invalidPatch(SetErrorDescription(s"Message update is invalid: ${e.getMessage}"))
+      case e: MailboxNotFoundException =>
+        LOGGER.info("Mailbox not found in Email/set update", e)
+        SetError.notFound(SetErrorDescription(s"Mailbox not found"))
+      case e: MessageNotFoundException =>
+        LOGGER.info(s"Message not found in Email/set update: ${e.messageId.serialize()}")
+        SetError.notFound(SetErrorDescription(s"Cannot find message with messageId: ${e.messageId.serialize()}"))
+      case e: OverQuotaException =>
+        LOGGER.info(s"Overquota in email set update")
+        SetError.overQuota(SetErrorDescription(e.getMessage))
+      case _ =>
+        LOGGER.error("Failed to update email", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
   case class EmailUpdateResults(results: Seq[EmailUpdateResult]) {
