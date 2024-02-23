@@ -32,7 +32,6 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
-import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RabbitMQJmapEventBusDeadLetterQueueHealthCheck;
@@ -76,11 +75,6 @@ public class JMAPEventBusModule extends AbstractModule {
     @ProvidesIntoSet
     SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(@Named(InjectionKeys.JMAP) RabbitMQEventBus eventBus) {
         return new EventBusReconnectionHandler(eventBus);
-    }
-
-    @ProvidesIntoSet
-    SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(@Named(InjectionKeys.JMAP) EventBusId eventBusId, RabbitMQConfiguration configuration) {
-        return new KeyReconnectionHandler(JMAP_NAMING_STRATEGY, eventBusId, configuration);
     }
 
     @ProvidesIntoSet
