@@ -35,8 +35,8 @@ public class OpenSearchMailboxConfiguration {
         private Optional<WriteAliasName> writeAliasMailboxName;
         private Optional<IndexAttachments> indexAttachment;
         private Optional<IndexHeaders> indexHeaders;
-
         private Optional<Boolean> optimiseMoves;
+        private Optional<IndexBody> indexBody;
 
         Builder() {
             indexMailboxName = Optional.empty();
@@ -45,6 +45,7 @@ public class OpenSearchMailboxConfiguration {
             indexAttachment = Optional.empty();
             indexHeaders = Optional.empty();
             optimiseMoves = Optional.empty();
+            indexBody = Optional.empty();
         }
 
         public Builder indexMailboxName(Optional<IndexName> indexMailboxName) {
@@ -77,6 +78,11 @@ public class OpenSearchMailboxConfiguration {
             return this;
         }
 
+        public Builder indexBody(IndexBody indexBody) {
+            this.indexBody = Optional.ofNullable(indexBody);
+            return this;
+        }
+
         public OpenSearchMailboxConfiguration build() {
             return new OpenSearchMailboxConfiguration(
                 indexMailboxName.orElse(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX),
@@ -84,7 +90,8 @@ public class OpenSearchMailboxConfiguration {
                 writeAliasMailboxName.orElse(MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 indexAttachment.orElse(IndexAttachments.YES),
                 indexHeaders.orElse(IndexHeaders.YES),
-                optimiseMoves.orElse(DEFAULT_OPTIMIZE_MOVES));
+                optimiseMoves.orElse(DEFAULT_OPTIMIZE_MOVES),
+                indexBody.orElse(IndexBody.YES));
         }
     }
 
@@ -101,9 +108,11 @@ public class OpenSearchMailboxConfiguration {
     private static final String OPENSEARCH_INDEX_ATTACHMENTS = "opensearch.indexAttachments";
     private static final String OPENSEARCH_INDEX_HEADERS = "opensearch.indexHeaders";
     private static final String OPENSEARCH_MESSAGE_INDEX_OPTIMIZE_MOVE = "opensearch.message.index.optimize.move";
+    private static final String OPENSEARCH_INDEX_BODY = "opensearch.indexBody";
     private static final boolean DEFAULT_INDEX_ATTACHMENTS = true;
     private static final boolean DEFAULT_INDEX_HEADERS = true;
     public static final boolean DEFAULT_OPTIMIZE_MOVES = false;
+    public static final boolean DEFAULT_INDEX_BODY = true;
     public static final OpenSearchMailboxConfiguration DEFAULT_CONFIGURATION = builder().build();
 
     public static OpenSearchMailboxConfiguration fromProperties(Configuration configuration) {
@@ -114,6 +123,7 @@ public class OpenSearchMailboxConfiguration {
             .indexAttachment(provideIndexAttachments(configuration))
             .indexHeaders(provideIndexHeaders(configuration))
             .optimiseMoves(configuration.getBoolean(OPENSEARCH_MESSAGE_INDEX_OPTIMIZE_MOVE, null))
+            .indexBody(provideIndexBody(configuration))
             .build();
     }
 
@@ -151,25 +161,32 @@ public class OpenSearchMailboxConfiguration {
         }
         return IndexHeaders.NO;
     }
-    
+
+    private static IndexBody provideIndexBody(Configuration configuration) {
+        if (configuration.getBoolean(OPENSEARCH_INDEX_BODY, DEFAULT_INDEX_BODY)) {
+            return IndexBody.YES;
+        }
+        return IndexBody.NO;
+    }
 
     private final IndexName indexMailboxName;
     private final ReadAliasName readAliasMailboxName;
     private final WriteAliasName writeAliasMailboxName;
     private final IndexAttachments indexAttachment;
     private final IndexHeaders indexHeaders;
-
     private final boolean optimiseMoves;
+    private final IndexBody indexBody;
 
     private OpenSearchMailboxConfiguration(IndexName indexMailboxName, ReadAliasName readAliasMailboxName,
                                            WriteAliasName writeAliasMailboxName, IndexAttachments indexAttachment,
-                                           IndexHeaders indexHeaders, boolean optimiseMoves) {
+                                           IndexHeaders indexHeaders, boolean optimiseMoves, IndexBody indexBody) {
         this.indexMailboxName = indexMailboxName;
         this.readAliasMailboxName = readAliasMailboxName;
         this.writeAliasMailboxName = writeAliasMailboxName;
         this.indexAttachment = indexAttachment;
         this.indexHeaders = indexHeaders;
         this.optimiseMoves = optimiseMoves;
+        this.indexBody = indexBody;
     }
 
     public IndexName getIndexMailboxName() {
@@ -196,6 +213,10 @@ public class OpenSearchMailboxConfiguration {
         return optimiseMoves;
     }
 
+    public IndexBody getIndexBody() {
+        return indexBody;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof OpenSearchMailboxConfiguration) {
@@ -206,13 +227,15 @@ public class OpenSearchMailboxConfiguration {
                 && Objects.equals(this.indexMailboxName, that.indexMailboxName)
                 && Objects.equals(this.readAliasMailboxName, that.readAliasMailboxName)
                 && Objects.equals(this.optimiseMoves, that.optimiseMoves)
-                && Objects.equals(this.writeAliasMailboxName, that.writeAliasMailboxName);
+                && Objects.equals(this.writeAliasMailboxName, that.writeAliasMailboxName)
+                && Objects.equals(this.indexBody, that.indexBody);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(indexMailboxName, readAliasMailboxName, writeAliasMailboxName, indexAttachment, indexHeaders, writeAliasMailboxName, optimiseMoves);
+        return Objects.hash(indexMailboxName, readAliasMailboxName, writeAliasMailboxName, indexAttachment, indexHeaders,
+            writeAliasMailboxName, optimiseMoves, indexBody);
     }
 }

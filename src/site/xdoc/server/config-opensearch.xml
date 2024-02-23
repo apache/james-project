@@ -122,6 +122,8 @@
           <dd>When set to true, James will attempt to reindex from the indexed message when moved.
               If the message is not found, it will fall back to the old behavior (The message will be indexed from the blobStore source).
               Default to false.</dd>
+          <dt><strong>opensearch.indexBody</strong></dt>
+          <dd>Indicates if you wish to index body or not (default: true).</dd>
           <dt><strong>opensearch.index.quota.ratio.name</strong></dt>
           <dd>Specify the OpenSearch alias name used for quotas</dd>
           <dt><strong>opensearch.alias.read.quota.ratio.name</strong></dt>

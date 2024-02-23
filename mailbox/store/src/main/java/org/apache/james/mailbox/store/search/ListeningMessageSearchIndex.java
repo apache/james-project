@@ -123,16 +123,20 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     protected Mono<Void> handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
+        return handleAdded(session, mailbox, added, FetchType.FULL);
+    }
+
+    protected Mono<Void> handleAdded(MailboxSession session, Mailbox mailbox, Added added, FetchType fetchType) {
         return Flux.fromIterable(MessageRange.toRanges(added.getUids()))
-            .concatMap(range -> retrieveMailboxMessages(session, mailbox, range))
+            .concatMap(range -> retrieveMailboxMessages(session, mailbox, range, fetchType))
             .publishOn(Schedulers.parallel())
             .concatMap(mailboxMessage -> add(session, mailbox, mailboxMessage))
             .then();
     }
 
-    private Flux<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
+    private Flux<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range, FetchType fetchType) {
         return factory.getMessageMapper(session)
-            .findInMailboxReactive(mailbox, range, FetchType.HEADERS, UNLIMITED);
+            .findInMailboxReactive(mailbox, range, fetchType, UNLIMITED);
     }
 
     protected abstract Flux<MessageUid> doSearch(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException;
