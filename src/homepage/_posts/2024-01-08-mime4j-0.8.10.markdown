@@ -11,6 +11,8 @@ Early adopters can [download it][download], any issue can be reported on our iss
 
 The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
 
+This release fixes `CVE-2024-21742: Mime4J DOM header injection`.
+
 The Apache James PMC would like to thanks all contributors who made this release possible!
 
 [CHANGELOG]: https://github.com/apache/james-mime4j/blob/master/CHANGELOG.md
