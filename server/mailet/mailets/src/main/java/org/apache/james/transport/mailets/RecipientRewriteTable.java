@@ -50,10 +50,13 @@ import com.google.common.collect.ImmutableList;
  * </code>
  * </pre>
  *
- * The <b>rewriteSenderUponForward</b> option (fault to true) can be used to prevent senders to be rewritten upon forwards in the transport enveloppe
+ * The <b>rewriteSenderUponForward</b> option (default to true) can be used to prevent senders to be rewritten upon forwards in the transport enveloppe
  * (JAMES 3.8.0 default behaviour). <b>WARNING</b>: Please note that not rewriting the sender will cause issues forwarding emails
  * from external senders to external addresses as the DKIM and SPF records will not be matching the ones of the sending
  * domain.
+ *
+ * The <b>forwardAutoSubmittedEmails</b> option (default to false) can be used to prevent forwarding bounces as such a scenario
+ * can lead to an infinite loop if the forward recipient bounces the email.
  */
 public class RecipientRewriteTable extends GenericMailet {
     public static final String ERROR_PROCESSOR = "errorProcessor";
@@ -63,6 +66,7 @@ public class RecipientRewriteTable extends GenericMailet {
     private RecipientRewriteTableProcessor processor;
     private ProcessingState errorProcessor;
     private boolean rewriteSenderUponForward = true;
+    private boolean forwardAutoSubmittedEmails = false;
 
     @Inject
     public RecipientRewriteTable(org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore, DomainList domainList) {
@@ -74,8 +78,9 @@ public class RecipientRewriteTable extends GenericMailet {
     public void init() throws MessagingException {
         errorProcessor = new ProcessingState(getInitParameter(ERROR_PROCESSOR, Mail.ERROR));
         rewriteSenderUponForward = getBooleanParameter("rewriteSenderUponForward", true);
+        forwardAutoSubmittedEmails = getBooleanParameter("forwardAutoSubmittedEmails", false);
         processor = new RecipientRewriteTableProcessor(virtualTableStore, domainList, getMailetContext(), errorProcessor,
-            rewriteSenderUponForward);
+            rewriteSenderUponForward, forwardAutoSubmittedEmails);
     }
 
 

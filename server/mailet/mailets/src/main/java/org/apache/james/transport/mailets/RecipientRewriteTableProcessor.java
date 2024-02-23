@@ -71,6 +71,7 @@ import com.google.common.collect.Sets;
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
     private static final boolean REWRITE_SENDER_UPON_FORWARD = true;
+    private static final boolean FORWARD_AUTOMATED_EMAILS = true;
 
     private static class Decision {
         private final MailAddress originalAddress;
@@ -162,16 +163,19 @@ public class RecipientRewriteTableProcessor {
     private final Supplier<Domain> defaultDomainSupplier;
     private final ProcessingState errorProcessor;
     private final boolean rewriteSenderUponForward;
+    private final boolean forwardAutoSubmittedEmails;
     private final EnumSet<Mapping.Type> mappingTypes;
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList,
-                                          MailetContext mailetContext, ProcessingState errorProcessor, boolean rewriteSenderUponForward) {
+                                          MailetContext mailetContext, ProcessingState errorProcessor, boolean rewriteSenderUponForward,
+                                          boolean forwardAutoSubmittedEmails) {
         this.virtualTableStore = virtualTableStore;
         this.mailetContext = mailetContext;
         this.defaultDomainSupplier = MemoizedSupplier.of(
             Throwing.supplier(() -> getDefaultDomain(domainList)).sneakyThrow());
         this.errorProcessor = errorProcessor;
         this.rewriteSenderUponForward = rewriteSenderUponForward;
+        this.forwardAutoSubmittedEmails = forwardAutoSubmittedEmails;
         if (rewriteSenderUponForward) {
             EnumSet<Mapping.Type> types = EnumSet.allOf(Mapping.Type.class);
             types.remove(Mapping.Type.Forward);
@@ -182,7 +186,8 @@ public class RecipientRewriteTableProcessor {
     }
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
-        this(virtualTableStore, domainList, mailetContext, new ProcessingState(Mail.ERROR), !REWRITE_SENDER_UPON_FORWARD);
+        this(virtualTableStore, domainList, mailetContext, new ProcessingState(Mail.ERROR), !REWRITE_SENDER_UPON_FORWARD,
+            false);
     }
 
     private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
@@ -279,9 +284,7 @@ public class RecipientRewriteTableProcessor {
     }
 
     public void processForwards(Mail mail) throws MessagingException {
-        if (Optional.ofNullable(mail.getMessage().getHeader("Auto-Submitted")).map(ImmutableList::copyOf).orElse(ImmutableList.of())
-            .stream()
-            .anyMatch(value -> value.startsWith("auto-replied"))) {
+        if (!forwardAutoSubmittedEmails && isAutoSubmitted(mail)) {
             return;
         }
         if (rewriteSenderUponForward) {
@@ -290,6 +293,12 @@ public class RecipientRewriteTableProcessor {
                 .flatMap(Throwing.function(mailAddress -> processForward(mail, mailAddress)))
                 .forEach(Throwing.consumer(decision -> decision.apply(mail)));
         }
+    }
+
+    private static boolean isAutoSubmitted(Mail mail) throws MessagingException {
+        return Optional.ofNullable(mail.getMessage().getHeader("Auto-Submitted")).map(ImmutableList::copyOf).orElse(ImmutableList.of())
+            .stream()
+            .anyMatch(value -> value.startsWith("auto-replied"));
     }
 
     private Stream<ForwardDecision> processForward(Mail mail, MailAddress recipient) throws RecipientRewriteTableException {
