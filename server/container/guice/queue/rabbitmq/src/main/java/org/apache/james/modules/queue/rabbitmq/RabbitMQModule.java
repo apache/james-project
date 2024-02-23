@@ -31,6 +31,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQHealthCheck;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.backends.redis.RedisConfiguration;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
@@ -88,6 +89,13 @@ public class RabbitMQModule extends AbstractModule {
     @Singleton
     private RabbitMQConfiguration getMailQueueConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) org.apache.commons.configuration2.Configuration configuration) {
         return RabbitMQConfiguration.from(configuration);
+    }
+
+    // should be in a dedicated guice module for Redis
+    @Provides
+    @Singleton
+    private RedisConfiguration redisConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, FileNotFoundException {
+        return RedisConfiguration.from(propertiesProvider.getConfiguration("redis"));
     }
 
     @Provides
