@@ -125,6 +125,7 @@ object UncheckedEmailAddress {
   def from(addressList: MailboxList): List[UncheckedEmailAddress] =
     addressList.asScala
       .toList
+      .filter(address => !address.getAddress.equals(">"))  // Temporary fix for https://github.com/linagora/james-project/issues/5086
       .map(mailbox => UncheckedEmailAddress(
         name = Option(mailbox.getName).map(EmailerName.from),
         email = UncheckedEmail(mailbox.getAddress)))

@@ -7507,7 +7507,6 @@ trait EmailSetMethodContract {
 
   }
 
-  @Disabled("Bug of james-mime4j when pasing mimeMessages https://github.com/linagora/james-project/issues/5086")
   @Test
   def emailGetShouldReturnUncheckedMailAddressValueWhenDraftEmail(server: GuiceJamesServer): Unit = {
     val bobDraftsPath = MailboxPath.forUser(BOB, DefaultMailboxes.DRAFTS)
