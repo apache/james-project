@@ -30,10 +30,12 @@ import org.apache.james.jmap.mail.{IdentityCreationId, IdentityCreationResponse,
 import org.apache.james.jmap.method.IdentitySetCreatePerformer.{CreationFailure, CreationResult, CreationResults, CreationSuccess}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.util.ReactorUtils
+import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object IdentitySetCreatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[IdentitySetCreatePerformer])
   case class CreationResults(results: Seq[CreationResult]) {
     def created: Option[Map[IdentityCreationId, IdentityCreationResponse]] =
       Option(results.flatMap {
@@ -57,10 +59,18 @@ object IdentitySetCreatePerformer {
 
   case class CreationFailure(clientId: IdentityCreationId, e: Throwable) extends CreationResult {
     def asMessageSetError: SetError = e match {
-      case e: IdentitySetParseException => e.setError
-      case e: ForbiddenSendFromException => SetError.forbiddenFrom(SetErrorDescription(e.getMessage))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage))
-      case _ => SetError.serverFail(SetErrorDescription(e.getMessage))
+      case e: IdentitySetParseException =>
+        LOGGER.info("Failure to parse Identity/set create", e)
+        e.setError
+      case e: ForbiddenSendFromException =>
+        LOGGER.warn(s"Attempt to send an identity whose From field not allowed for connected user: ${e.mailAddress}")
+        SetError.forbiddenFrom(SetErrorDescription(e.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in Identity/set create", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage))
+      case _ =>
+        LOGGER.error("Failed to create identity", e)
+        SetError.serverFail(SetErrorDescription(e.getMessage))
     }
   }
 }

@@ -29,21 +29,33 @@ import org.apache.james.jmap.mail.{IdentitySet, IdentitySetParseException, Ident
 import org.apache.james.jmap.method.IdentitySetUpdatePerformer.IdentityUpdate.{knownProperties, serverSetProperty}
 import org.apache.james.jmap.method.IdentitySetUpdatePerformer.{IdentitySetUpdateResults, UpdateFailure, UpdateResult, UpdateSuccess}
 import org.apache.james.mailbox.MailboxSession
+import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsObject, JsValue}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object IdentitySetUpdatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[IdentitySetUpdatePerformer])
   sealed trait UpdateResult
 
   case class UpdateSuccess(id: IdentityId) extends UpdateResult
 
   case class UpdateFailure(id: UnparsedIdentityId, exception: Throwable) extends UpdateResult {
     def asSetError: SetError = exception match {
-      case e: IdentitySetParseException => e.setError
-      case e: IdentityNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
-      case e: InvalidPropertyException => SetError.invalidPatch(SetErrorDescription(e.getCause.getMessage))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
-      case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
+      case e: IdentitySetParseException =>
+        LOGGER.info("Error parsing Identity/set update", e)
+        e.setError
+      case e: IdentityNotFoundException =>
+        LOGGER.info("Identity not found in Identity/set update {}", e.getMessage)
+        SetError.notFound(SetErrorDescription(e.getMessage))
+      case e: InvalidPropertyException =>
+        LOGGER.info("Invalid property in Identity/set update {}", e.getCause.getMessage)
+        SetError.invalidPatch(SetErrorDescription(e.getCause.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in Identity/set update", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
+      case e =>
+        LOGGER.error("Failed to delete identity", e)
+        SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
 

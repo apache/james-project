@@ -30,24 +30,42 @@ import org.apache.james.jmap.core.{Properties, PushSubscriptionPatchObject, Push
 import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, UnsupportedPropertyUpdatedException}
 import org.apache.james.jmap.method.PushSubscriptionSetUpdatePerformer.{PushSubscriptionUpdateFailure, PushSubscriptionUpdateResult, PushSubscriptionUpdateResults, PushSubscriptionUpdateSuccess, WrongVerificationCodeException}
 import org.apache.james.mailbox.MailboxSession
+import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
 
 object PushSubscriptionSetUpdatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[PushSubscriptionUpdatePerformer])
   case class WrongVerificationCodeException() extends RuntimeException()
   sealed trait PushSubscriptionUpdateResult
   case class PushSubscriptionUpdateSuccess(id: PushSubscriptionId, serverExpires: Option[UTCDate] = None) extends PushSubscriptionUpdateResult
   case class PushSubscriptionUpdateFailure(id: UnparsedPushSubscriptionId, exception: Throwable) extends PushSubscriptionUpdateResult {
     def asSetError: SetError = exception match {
-      case _: WrongVerificationCodeException => SetError.invalidProperties(SetErrorDescription("Wrong verification code"), Some(Properties("verificationCode")))
-      case e: UnsupportedPropertyUpdatedException => SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(e.property)))
-      case e: InvalidPropertyException => SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
-      case e: InvalidUpdateException => SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
-      case e: PushSubscriptionNotFoundException => SetError.notFound(SetErrorDescription(e.getMessage))
-      case e: ExpireTimeInvalidException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("expires")))
-      case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
+      case _: WrongVerificationCodeException =>
+        LOGGER.info("Invalid verification code")
+        SetError.invalidProperties(SetErrorDescription("Wrong verification code"), Some(Properties("verificationCode")))
+      case e: UnsupportedPropertyUpdatedException =>
+        LOGGER.info("Invalid property in PushSubscription/set update", e)
+        SetError.invalidArguments(SetErrorDescription(s"${e.property} property do not exist thus cannot be updated"), Some(Properties(e.property)))
+      case e: InvalidPropertyException =>
+        LOGGER.info("Invalid property in PushSubscription/set update", e)
+        SetError.invalidPatch(SetErrorDescription(s"${e.cause}"))
+      case e: InvalidUpdateException =>
+        LOGGER.info("Invalid update in PushSubscription/set update", e)
+        SetError.invalidArguments(SetErrorDescription(s"${e.cause}"), Some(Properties(e.property)))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in PushSubscription/set update", e)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), None)
+      case e: PushSubscriptionNotFoundException =>
+        LOGGER.info("Attempt to update a non existing push subscription", e)
+        SetError.notFound(SetErrorDescription(e.getMessage))
+      case e: ExpireTimeInvalidException =>
+        LOGGER.info("Invalid time expiracy for push subscription: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("expires")))
+      case _ =>
+        LOGGER.error("Failed to delete push subscription", exception)
+        SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
   case class PushSubscriptionUpdateResults(results: Seq[PushSubscriptionUpdateResult]) {

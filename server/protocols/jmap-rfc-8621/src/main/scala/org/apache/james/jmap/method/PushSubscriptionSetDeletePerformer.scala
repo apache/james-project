@@ -26,15 +26,21 @@ import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.core.{PushSubscriptionSetRequest, SetError, UnparsedPushSubscriptionId}
 import org.apache.james.jmap.method.PushSubscriptionSetDeletePerformer.{PushSubscriptionDeletionFailure, PushSubscriptionDeletionResult, PushSubscriptionDeletionResults, PushSubscriptionDeletionSuccess}
 import org.apache.james.mailbox.MailboxSession
+import org.slf4j.LoggerFactory
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 object PushSubscriptionSetDeletePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[PushSubscriptionSetDeletePerformer])
   sealed trait PushSubscriptionDeletionResult
   case class PushSubscriptionDeletionSuccess(PushSubscriptionId: PushSubscriptionId) extends PushSubscriptionDeletionResult
   case class PushSubscriptionDeletionFailure(PushSubscriptionId: UnparsedPushSubscriptionId, exception: Throwable) extends PushSubscriptionDeletionResult {
     def asPushSubscriptionSetError: SetError = exception match {
-      case e: IllegalArgumentException => SetError.invalidArguments(SetErrorDescription(s"${PushSubscriptionId.id} is not a PushSubscriptionId: ${e.getMessage}"))
-      case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
+      case e: IllegalArgumentException =>
+        LOGGER.info("Illegal argument in PushSubscription/set delete", e)
+        SetError.invalidArguments(SetErrorDescription(s"${PushSubscriptionId.id} is not a PushSubscriptionId: ${e.getMessage}"))
+      case e =>
+        LOGGER.error("Failed to delete Push subscription", e)
+        SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
   case class PushSubscriptionDeletionResults(results: Seq[PushSubscriptionDeletionResult]) {

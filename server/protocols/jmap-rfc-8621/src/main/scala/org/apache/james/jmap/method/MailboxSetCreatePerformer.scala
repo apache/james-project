@@ -33,24 +33,38 @@ import org.apache.james.mailbox.model.{MailboxId, MailboxPath}
 import org.apache.james.mailbox.{MailboxManager, MailboxSession, SubscriptionManager}
 import org.apache.james.metrics.api.MetricFactory
 import org.apache.james.util.ReactorUtils
+import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsError, JsObject, JsPath, JsSuccess, Json, JsonValidationError}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.util.Try
 
 object MailboxSetCreatePerformer {
+  private val LOGGER = LoggerFactory.getLogger(classOf[EmailSetCreatePerformer])
   sealed trait MailboxCreationResult {
     def mailboxCreationId: MailboxCreationId
   }
   case class MailboxCreationSuccess(mailboxCreationId: MailboxCreationId, mailboxCreationResponse: MailboxCreationResponse) extends MailboxCreationResult
   case class MailboxCreationFailure(mailboxCreationId: MailboxCreationId, exception: Exception) extends MailboxCreationResult {
     def asMailboxSetError: SetError = exception match {
-      case e: MailboxNotFoundException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("parentId")))
-      case e: MailboxExistsException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("name")))
-      case e: MailboxNameException => SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("name")))
-      case e: MailboxCreationParseException => e.setError
-      case _: InsufficientRightsException => SetError.forbidden(SetErrorDescription("Insufficient rights"), Some(Properties("parentId")))
-      case _ => SetError.serverFail(SetErrorDescription(exception.getMessage))
+      case e: MailboxNotFoundException =>
+        LOGGER.info("Can't create mailbox: Mailbox not found: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("parentId")))
+      case e: MailboxExistsException =>
+        LOGGER.info("Mailbox already exists: {}", e.getMailboxName)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("name")))
+      case e: MailboxNameException =>
+        LOGGER.info("Invalid mailbox name: {}", e.getMessage)
+        SetError.invalidArguments(SetErrorDescription(e.getMessage), Some(Properties("name")))
+      case e: MailboxCreationParseException =>
+        LOGGER.info("Failed to parse mailbox creation request", e)
+        e.setError
+      case e: InsufficientRightsException =>
+        LOGGER.info("Insufficient rights to create a mailbox", e)
+        SetError.forbidden(SetErrorDescription("Insufficient rights"), Some(Properties("parentId")))
+      case e =>
+        LOGGER.error("Failed to create mailbox", e)
+        SetError.serverFail(SetErrorDescription(exception.getMessage))
     }
   }
   case class MailboxCreationResults(created: Seq[MailboxCreationResult]) {

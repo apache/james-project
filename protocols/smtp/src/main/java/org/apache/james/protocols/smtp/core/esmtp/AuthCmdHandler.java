@@ -366,7 +366,7 @@ public class AuthCmdHandler
         }
 
         res = AUTH_FAILED;
-        LOGGER.error("DELEGATE failed from {}@{}", username, session.getRemoteAddress().getAddress().getHostAddress());
+        LOGGER.info("DELEGATE failed from {}@{}", username, session.getRemoteAddress().getAddress().getHostAddress());
         return res;
     }
 
