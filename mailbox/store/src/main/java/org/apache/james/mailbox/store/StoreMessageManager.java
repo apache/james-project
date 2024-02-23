@@ -121,6 +121,7 @@ import com.google.common.collect.ImmutableSortedMap;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 /**
@@ -769,9 +770,18 @@ public class StoreMessageManager implements MessageManager {
 
     @Override
     public Publisher<MessageResult> getMessagesReactive(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+        FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
         return Flux.from(mapperFactory.getMessageMapper(mailboxSession)
-            .findInMailboxReactive(mailbox, set, FetchGroupConverter.getFetchType(fetchGroup), -1))
+            .findInMailboxReactive(mailbox, set, fetchType, -1))
+            .publishOn(forFetchType(fetchType))
             .map(Throwing.<MailboxMessage, MessageResult>function(message -> ResultUtils.loadMessageResult(message, fetchGroup)).sneakyThrow());
+    }
+
+    private Scheduler forFetchType(MessageMapper.FetchType fetchType) {
+        if (fetchType == MessageMapper.FetchType.FULL) {
+            return Schedulers.parallel();
+        }
+        return Schedulers.immediate();
     }
 
     @Override
