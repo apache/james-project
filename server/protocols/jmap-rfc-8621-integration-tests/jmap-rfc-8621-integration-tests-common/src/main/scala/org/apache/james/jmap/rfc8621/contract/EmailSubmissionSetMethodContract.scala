@@ -1989,4 +1989,126 @@ trait EmailSubmissionSetMethodContract {
         .hasSize(1)
     }
   }
+
+  @Test
+  def onSuccessUpdateEmailShouldNotInvokedWhenEmailSubmissionNotCreated(): Unit = {
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${randomMessageId.serialize}",
+         |           "extra": true,
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |           }
+         |         }
+         |    },
+         |    "onSuccessUpdateEmail": {
+         |         "#k1490": {
+         |           "keywords": {"$$sent":true}
+         |         }
+         |       }
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                   |  "sessionState": "${SESSION_STATE.value}",
+                   |  "methodResponses": [
+                   |    [
+                   |      "EmailSubmission/set",
+                   |      {
+                   |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                   |        "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                   |        "notCreated": {
+                   |          "k1490": {
+                   |            "type": "invalidArguments",
+                   |            "description": "Some unknown properties were specified",
+                   |            "properties": [
+                   |              "extra"
+                   |            ]
+                   |          }
+                   |        }
+                   |      },
+                   |      "c1"
+                   |    ]
+                   |  ]
+                   |}""".stripMargin)
+  }
+
+  @Test
+  def onSuccessDestroyEmailShouldNotInvokedWhenEmailSubmissionNotCreated(): Unit = {
+    val requestBob =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:ietf:params:jmap:submission"],
+         |  "methodCalls": [
+         |     ["EmailSubmission/set", {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "create": {
+         |         "k1490": {
+         |           "emailId": "${randomMessageId.serialize}",
+         |           "extra": true,
+         |           "envelope": {
+         |             "mailFrom": {"email": "${BOB.asString}"},
+         |             "rcptTo": [{"email": "${ANDRE.asString}"}]
+         |           }
+         |         }
+         |    },
+         |    "onSuccessDestroyEmail": ["#k1490"]
+         |  }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(requestBob)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .isEqualTo(s"""{
+                    |  "sessionState": "${SESSION_STATE.value}",
+                    |  "methodResponses": [
+                    |    [
+                    |      "EmailSubmission/set",
+                    |      {
+                    |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                    |        "newState": "2c9f1b12-b35a-43e6-9af2-0106fb53a943",
+                    |        "notCreated": {
+                    |          "k1490": {
+                    |            "type": "invalidArguments",
+                    |            "description": "Some unknown properties were specified",
+                    |            "properties": [
+                    |              "extra"
+                    |            ]
+                    |          }
+                    |        }
+                    |      },
+                    |      "c1"
+                    |    ]
+                    |  ]
+                    |}""".stripMargin)
+  }
 }
