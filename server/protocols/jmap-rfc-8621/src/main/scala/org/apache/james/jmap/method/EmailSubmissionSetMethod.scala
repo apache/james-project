@@ -130,28 +130,26 @@ object EmailSubmissionSetMethod {
       }
       .toMap
 
-    def resolveMessageId(creationId: EmailSubmissionCreationId): Either[IllegalArgumentException, MessageId] = {
+    def resolveMessageId(creationId: EmailSubmissionCreationId): Either[IllegalArgumentException, Option[MessageId]] = {
       if (creationId.id.startsWith("#")) {
         val realId = creationId.id.substring(1)
         val validatedId: Either[String, Id] = refineV[IdConstraint](realId)
-        validatedId
+
+       validatedId
           .left.map(s => new IllegalArgumentException(s))
-          .flatMap(id => retrieveMessageId(EmailSubmissionCreationId(id))
+          .flatMap(id => retrieveCreationResult(EmailSubmissionCreationId(id))
             .map(scala.Right(_))
-            .getOrElse(Left(new IllegalArgumentException(s"$creationId cannot be referenced in current method call"))))
+            .getOrElse(Left(new IllegalArgumentException(s"${creationId.id} cannot be referenced in current method call"))))
+          .map {
+            case (success: CreationSuccess) => Some(success.messageId)
+            case (_: CreationFailure) => None
+          }
       } else {
-        Left(new IllegalArgumentException(s"$creationId cannot be retrieved as storage for EmailSubmission is not yet implemented"))
+        Left(new IllegalArgumentException(s"${creationId.id} cannot be retrieved as storage for EmailSubmission is not yet implemented"))
       }
     }
-
-    private def retrieveMessageId(creationId: EmailSubmissionCreationId): Option[MessageId] =
-      created.flatMap {
-        case success: CreationSuccess => Some(success)
-        case _: CreationFailure => None
-      }.filter(_.emailSubmissionCreationId.equals(creationId))
-        .map(_.messageId)
-        .toList
-        .headOption
+    private def retrieveCreationResult(creationId: EmailSubmissionCreationId): Option[CreationResult] =
+      created.find(_.emailSubmissionCreationId.equals(creationId))
   }
 }
 

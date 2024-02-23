@@ -47,35 +47,39 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessUpdateEmail: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessDestroyEmail: Option[List[EmailSubmissionCreationId]]) extends WithAccountId {
-  def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, MessageId]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
+  def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
     for {
       update <- resolveOnSuccessUpdateEmail(messageIdResolver)
       destroy <- resolveOnSuccessDestroyEmail(messageIdResolver)
     } yield {
-      if (update.isEmpty && destroy.isEmpty) {
-        None
-      } else {
+      if (update.exists(_.nonEmpty) || destroy.exists(_.nonEmpty)) {
         Some(EmailSetRequest(
           accountId = accountId,
           create = None,
           update = update,
           destroy = destroy.map(DestroyIds(_))))
+      } else {
+        None
       }
     }
 
-  def resolveOnSuccessUpdateEmail(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, MessageId]): Either[IllegalArgumentException, Option[Map[UnparsedMessageId, JsObject]]]=
+  def resolveOnSuccessUpdateEmail(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[Map[UnparsedMessageId, JsObject]]]=
     onSuccessUpdateEmail.map(map => map.toList
-      .map {
-        case (creationId, json) => messageIdResolver.apply(creationId).map(messageId => (EmailSet.asUnparsed(messageId), json))
-      }
-      .sequence
-      .map(list => list.toMap))
+        .map {
+          case (creationId, json) => messageIdResolver.apply(creationId).map(msgIdOption => (msgIdOption, json))
+        }
+        .filter(e => e.isLeft || e.toOption.get._1.isDefined)
+        .map(e => e.map { case (msgIdOption, json) => (EmailSet.asUnparsed(msgIdOption.get), json) })
+        .sequence
+        .map(list => list.toMap))
       .sequence
 
-  def resolveOnSuccessDestroyEmail(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, MessageId]): Either[IllegalArgumentException, Option[List[UnparsedMessageId]]]=
+  def resolveOnSuccessDestroyEmail(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[List[UnparsedMessageId]]]=
     onSuccessDestroyEmail.map(list => list
-      .map(creationId => messageIdResolver.apply(creationId).map(messageId => EmailSet.asUnparsed(messageId)))
-      .sequence)
+        .map(creationId => messageIdResolver.apply(creationId))
+        .filter(e => e.isLeft || e.toOption.get.isDefined)
+        .map(e => e.map { case (msgIdOption) => EmailSet.asUnparsed(msgIdOption.get) })
+        .sequence)
       .sequence
 
   def validate: Either[IllegalArgumentException, EmailSubmissionSetRequest] = {
