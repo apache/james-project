@@ -287,7 +287,6 @@ case class EmailBodyPart(partId: PartId,
 
   def bodyContent: Try[Option[EmailBodyValue]] = entity.getBody match {
     case textBody: Mime4JTextBody =>
-      new Exception("" + textBody.getCharset).printStackTrace()
       for {
         value <- Try(IOUtils.toString(textBody.getInputStream, Option(textBody.getCharset).getOrElse(ISO_8859_1)))
       } yield {
