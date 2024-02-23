@@ -15,6 +15,11 @@ The Apache James PMC would like to thanks all contributors who made this release
 
 This release comprise minor bug fixes enhancing Apache James stability.
 
+This release fixes the following security issues:
+
+ - **CVE-2023-51747**: SMTP smuggling in Apache James
+ - **CVE-2023-51518**: Privilege escalation via JMX pre-authentication deserialisation
+
 ## Release changelog
 
 The full changes included in this release can be seen in the [CHANGELOG][CHANGELOG].
