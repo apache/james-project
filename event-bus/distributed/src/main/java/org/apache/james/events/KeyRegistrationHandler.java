@@ -22,9 +22,9 @@ package org.apache.james.events;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.MDCStructuredLogger;
@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
+import io.lettuce.core.api.reactive.RedisSetReactiveCommands;
 import io.lettuce.core.pubsub.api.reactive.ChannelMessage;
 import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands;
 import reactor.core.Disposable;
@@ -58,14 +59,15 @@ class KeyRegistrationHandler {
     private final RetryBackoffConfiguration retryBackoff;
     private Optional<Disposable> receiverSubscriber;
     private final MetricFactory metricFactory;
-    private final RedisPubSubReactiveCommands<String, String> redisPubSubReactiveCommands;
+    private final RedisPubSubReactiveCommands<String, String> redisSubscriber;
     private Scheduler scheduler;
     private Disposable newSubscription;
 
     KeyRegistrationHandler(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer,
                            RoutingKeyConverter routingKeyConverter, LocalListenerRegistry localListenerRegistry,
                            ListenerExecutor listenerExecutor, RetryBackoffConfiguration retryBackoff, MetricFactory metricFactory,
-                           RedisEventBusClientFactory redisEventBusClientFactory) {
+                           RedisEventBusClientFactory redisEventBusClientFactory,
+                           RedisSetReactiveCommands<String, String> redisSetReactiveCommands) {
         this.eventBusId = eventBusId;
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
@@ -74,9 +76,9 @@ class KeyRegistrationHandler {
         this.retryBackoff = retryBackoff;
         this.metricFactory = metricFactory;
         this.registrationChannel = namingStrategy.channelName(eventBusId);
-        this.registrationBinder = new KeyRegistrationBinder(redisEventBusClientFactory.createRedisStringsCommand(), registrationChannel);
+        this.registrationBinder = new KeyRegistrationBinder(redisSetReactiveCommands, registrationChannel);
         this.receiverSubscriber = Optional.empty();
-        this.redisPubSubReactiveCommands = redisEventBusClientFactory.createRedisPubSubCommand();
+        this.redisSubscriber = redisEventBusClientFactory.createRedisPubSubCommand();
     }
 
     void start() {
@@ -84,8 +86,8 @@ class KeyRegistrationHandler {
 
         declarePubSubChannel();
 
-        newSubscription = Mono.from(redisPubSubReactiveCommands.subscribe(registrationChannel.asString()))
-            .thenMany(redisPubSubReactiveCommands.observeChannels())
+        newSubscription = Mono.from(redisSubscriber.subscribe(registrationChannel.asString()))
+            .thenMany(redisSubscriber.observeChannels())
                 .flatMap(this::handleChannelMessage, EventBus.EXECUTION_RATE)
             .subscribeOn(scheduler)
             .subscribe();
@@ -107,7 +109,7 @@ class KeyRegistrationHandler {
 
     void stop() {
         // delete the Pub/Sub channel: Redis Channels are ephemeral and automatically expire when they have no more subscribers.
-        redisPubSubReactiveCommands.unsubscribe(registrationChannel.asString())
+        redisSubscriber.unsubscribe(registrationChannel.asString())
             .block();
         receiverSubscriber.filter(Predicate.not(Disposable::isDisposed))
                 .ifPresent(Disposable::dispose);
@@ -146,14 +148,14 @@ class KeyRegistrationHandler {
             return Mono.empty();
         }
 
-        // Redis Pub/Sub does not support headers for message. Therefore, likely todo we need to embed the eventBusId into the message. May need to rework the EventSerializer...
-        // Or store the messages headers in Redis. Maybe would be easier to avoid rework EventSerializer as of POC.
-        // While Headers is not added to message yet. Assume we have a dummy EventBusId for now...
-        String serializedEventBusId = UUID.randomUUID().toString();
+        // Redis Pub/Sub does not support headers for message. Therefore, likely we need to embed the eventBusId into the message.
+        // Or store the messages headers in Redis: not viable because an EventId can be mapped to many routing key.
+        String[] parts = StringUtils.split(channelMessage.getMessage(), EventDispatcher.REDIS_CHANNEL_MESSAGE_DELIMITER);
+
+        String serializedEventBusId = parts[1];
         EventBusId eventBusId = EventBusId.of(serializedEventBusId);
 
-        // todo registration key likely need to be stored in the message / Redis as well
-        String routingKey = "dummy";
+        String routingKey = parts[2];
         RegistrationKey registrationKey = routingKeyConverter.toRegistrationKey(routingKey);
 
         List<EventListener.ReactiveEventListener> listenersToCall = localListenerRegistry.getLocalListeners(registrationKey)
@@ -165,7 +167,8 @@ class KeyRegistrationHandler {
             return Mono.empty();
         }
 
-        Event event = toEvent(channelMessage);
+        String eventAsJson = parts[0];
+        Event event = toEvent(eventAsJson);
 
         return Flux.fromIterable(listenersToCall)
             .flatMap(listener -> executeListener(listener, event, registrationKey), EventBus.EXECUTION_RATE)
@@ -188,8 +191,8 @@ class KeyRegistrationHandler {
             listener.getExecutionMode().equals(EventListener.ExecutionMode.SYNCHRONOUS);
     }
 
-    private Event toEvent(ChannelMessage<String, String> channelMessage) {
-        return eventSerializer.asEvent(channelMessage.getMessage());
+    private Event toEvent(String eventAsJson) {
+        return eventSerializer.asEvent(eventAsJson);
     }
 
     private StructuredLogger structuredLogger(Event event, RegistrationKey key) {

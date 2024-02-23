@@ -17,11 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.events;
+package org.apache.james.events
 
 import java.util
 
-import io.lettuce.core.api.reactive.RedisStringReactiveCommands
+import io.lettuce.core.api.reactive.RedisSetReactiveCommands
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands
 import io.lettuce.core.{AbstractRedisClient, RedisClient, RedisURI}
@@ -31,7 +31,7 @@ import org.apache.james.backends.redis.RedisConfiguration
 import scala.jdk.CollectionConverters._
 
 class RedisEventBusClientFactory @Inject()(redisConfiguration: RedisConfiguration) {
-  private def createRawRedisClient(): AbstractRedisClient =
+  val rawRedisClient: AbstractRedisClient =
     if (redisConfiguration.isCluster) {
       val redisUris: util.List[RedisURI] = redisConfiguration.redisURI.value.asJava
       RedisClusterClient.create(redisUris)
@@ -41,19 +41,19 @@ class RedisEventBusClientFactory @Inject()(redisConfiguration: RedisConfiguratio
 
   def createRedisPubSubCommand(): RedisPubSubReactiveCommands[String, String] =
     if (redisConfiguration.isCluster) {
-      createRawRedisClient().asInstanceOf[RedisClusterClient]
+      rawRedisClient.asInstanceOf[RedisClusterClient]
         .connectPubSub().reactive()
     } else {
-      createRawRedisClient().asInstanceOf[RedisClient]
+      rawRedisClient.asInstanceOf[RedisClient]
         .connectPubSub().reactive()
     }
 
-  def createRedisStringsCommand(): RedisStringReactiveCommands[String, String] =
+  def createRedisSetCommand(): RedisSetReactiveCommands[String, String] =
     if (redisConfiguration.isCluster) {
-      createRawRedisClient().asInstanceOf[RedisClusterClient]
+      rawRedisClient.asInstanceOf[RedisClusterClient]
         .connect().reactive()
     } else {
-      createRawRedisClient().asInstanceOf[RedisClient]
+      rawRedisClient.asInstanceOf[RedisClient]
         .connect().reactive()
     }
 }

@@ -35,6 +35,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import io.lettuce.core.api.reactive.RedisSetReactiveCommands;
+import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands;
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.Sender;
 
@@ -56,6 +58,8 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private final RabbitMQConfiguration configuration;
     private final MetricFactory metricFactory;
     private final RedisEventBusClientFactory redisEventBusClientFactory;
+    private final RedisSetReactiveCommands<String, String> redisSetReactiveCommands;
+    private final RedisPubSubReactiveCommands<String, String> redisPublisher;
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
@@ -83,6 +87,8 @@ public class RabbitMQEventBus implements EventBus, Startable {
         this.configuration = configuration;
         this.metricFactory = metricFactory;
         this.redisEventBusClientFactory = redisEventBusClientFactory;
+        this.redisSetReactiveCommands = redisEventBusClientFactory.createRedisSetCommand();
+        this.redisPublisher = redisEventBusClientFactory.createRedisPubSubCommand();
         this.isRunning = false;
         this.isStopping = false;
     }
@@ -92,9 +98,10 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, routingKeyConverter,
-                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory);
+                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory, redisSetReactiveCommands);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, eventBusId, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration, redisEventBusClientFactory);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration,
+                redisPublisher, redisSetReactiveCommands);
 
             eventDispatcher.start();
             keyRegistrationHandler.start();
@@ -113,9 +120,10 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, routingKeyConverter,
-                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory);
+                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory, redisSetReactiveCommands);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, eventBusId, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration, redisEventBusClientFactory);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration,
+                redisPublisher, redisSetReactiveCommands);
 
             keyRegistrationHandler.declarePubSubChannel();
 

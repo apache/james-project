@@ -19,29 +19,30 @@
 
 package org.apache.james.events;
 
-import io.lettuce.core.api.reactive.RedisStringReactiveCommands;
+import io.lettuce.core.api.reactive.RedisSetReactiveCommands;
 import reactor.core.publisher.Mono;
 
 class KeyRegistrationBinder {
-    private final RedisStringReactiveCommands<String, String> redisStringReactiveCommands;
+    private final RedisSetReactiveCommands<String, String> redisSetReactiveCommands;
     private final RegistrationChannelName registrationChannel;
 
-    KeyRegistrationBinder(RedisStringReactiveCommands<String, String> redisStringReactiveCommands, RegistrationChannelName registrationChannel) {
-        this.redisStringReactiveCommands = redisStringReactiveCommands;
+    KeyRegistrationBinder(RedisSetReactiveCommands<String, String> redisSetReactiveCommands,
+                          RegistrationChannelName registrationChannel) {
+        this.redisSetReactiveCommands = redisSetReactiveCommands;
         this.registrationChannel = registrationChannel;
     }
 
     Mono<Void> bind(RegistrationKey key) {
-        // store registrationKey -> channel mapping in Redis
+        // Use Redis Set to store 1 registrationKey -> n channel(s) mapping in Redis
         RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
-        return redisStringReactiveCommands.set(routingKey.asString(), registrationChannel.asString())
+        return redisSetReactiveCommands.sadd(routingKey.asString(), registrationChannel.asString())
             .then();
     }
 
     Mono<Void> unbind(RegistrationKey key) {
         // delete the registrationKey -> channel mapping in Redis
         RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
-        return redisStringReactiveCommands.getdel(routingKey.asString())
+        return redisSetReactiveCommands.srem(routingKey.asString(), registrationChannel.asString())
             .then();
     }
 }
