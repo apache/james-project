@@ -52,7 +52,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class AESBlobStoreDAO implements BlobStoreDAO {
-    public static final int FILE_THRESHOLD_ENCRYPT = Optional.ofNullable(System.getenv("james.blob.aes.file.threshold.encrypt"))
+    public static final int FILE_THRESHOLD_ENCRYPT = Optional.ofNullable(System.getProperty("james.blob.aes.file.threshold.encrypt"))
         .map(s -> Size.parse(s, Size.Unit.NoUnit))
         .map(s -> (int) s.asBytes())
         .orElse(100 * 1024);
