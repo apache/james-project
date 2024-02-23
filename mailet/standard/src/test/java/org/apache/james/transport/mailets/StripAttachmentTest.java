@@ -68,6 +68,7 @@ class StripAttachmentTest {
     private static Class<Map<String, AttributeValue<?>>> MAP_STRING_BYTES_CLASS = (Class<Map<String, AttributeValue<?>>>) (Object) Map.class;
 
     private static final String EXPECTED_ATTACHMENT_CONTENT = "#¤ãàé";
+    private static final String EXPECTED_ATTACHMENT_CONTENT_2 = "Content 2";
     private static final Optional<String> ABSENT_MIME_TYPE = Optional.empty();
     private static final String CONTENT_TRANSFER_ENCODING_VALUE = "8bit";
 
@@ -93,7 +94,7 @@ class StripAttachmentTest {
     };
 
     @Test
-    void serviceShouldNotModifyMailWhenNotMultipart(TemporaryFolder temporaryFolder) throws MessagingException, IOException {
+    void serviceShouldNotModifyMailWhenNotMultipart(TemporaryFolder temporaryFolder) throws Exception, IOException {
         Mailet mailet = initMailet(temporaryFolder);
         MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("test")
@@ -116,7 +117,7 @@ class StripAttachmentTest {
     }
     
     @Test
-    void serviceShouldSaveAttachmentInAFolderWhenPatternMatch(TemporaryFolder temporaryFolder) throws MessagingException {
+    void serviceShouldSaveAttachmentInAFolderWhenPatternMatch(TemporaryFolder temporaryFolder) throws Exception {
         Mailet mailet = initMailet(temporaryFolder);
 
         String expectedAttachmentContent = EXPECTED_ATTACHMENT_CONTENT;
@@ -143,7 +144,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void serviceShouldRemoveWhenMimeTypeMatches() throws MessagingException {
+    void serviceShouldRemoveWhenMimeTypeMatches() throws Exception {
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("mimeType", "text/calendar")
@@ -182,7 +183,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void serviceShouldSaveAttachmentInAFolderWhenNotPatternDoesntMatch(TemporaryFolder temporaryFolder) throws MessagingException {
+    void serviceShouldSaveAttachmentInAFolderWhenNotPatternDoesntMatch(TemporaryFolder temporaryFolder) throws Exception {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -226,7 +227,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void serviceShouldDecodeFilenameAndSaveAttachmentInAFolderWhenPatternMatchAndDecodeFilenameTrue(TemporaryFolder temporaryFolder) throws MessagingException {
+    void serviceShouldDecodeFilenameAndSaveAttachmentInAFolderWhenPatternMatchAndDecodeFilenameTrue(TemporaryFolder temporaryFolder) throws Exception {
         Mailet mailet = initMailet(temporaryFolder);
 
         String expectedAttachmentContent = EXPECTED_ATTACHMENT_CONTENT;
@@ -258,17 +259,17 @@ class StripAttachmentTest {
     }
 
     @Test
-    void serviceShouldSaveFilenameAttachmentAndFileContentInCustomAttribute(TemporaryFolder temporaryFolder) throws MessagingException, IOException {
+    void serviceShouldSaveFilenameAttachmentAndFileContentInCustomAttribute(TemporaryFolder temporaryFolder) throws Exception {
         StripAttachment mailet = new StripAttachment();
 
         String customAttribute = "my.custom.attribute";
         FakeMailetConfig mci = FakeMailetConfig.builder()
-                .mailetName("Test")
-                .setProperty("remove", "matched")
-                .setProperty("directory", temporaryFolder.getFolderPath())
-                .setProperty("pattern", ".*\\.tmp")
-                .setProperty("attribute", customAttribute)
-                .build();
+            .mailetName("Test")
+            .setProperty("remove", "matched")
+            .setProperty("directory", temporaryFolder.getFolderPath())
+            .setProperty("pattern", ".*\\.tmp")
+            .setProperty("attribute", customAttribute)
+            .build();
         mailet.init(mci);
 
         String expectedKey = "10.tmp";
@@ -286,20 +287,61 @@ class StripAttachmentTest {
         Optional<Map<String, AttributeValue<?>>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
         ConsumerChainer<Map<String, AttributeValue<?>>> assertValue = Throwing.consumer(saved -> {
             assertThat(saved)
-                    .hasSize(1)
-                    .containsKeys(expectedKey);
+                .hasSize(1)
+                .containsKeys(expectedKey);
 
             MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) saved.get(expectedKey).getValue()));
             String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
             assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
         });
         assertThat(savedValue)
-                .isPresent()
-                .hasValueSatisfying(assertValue.sneakyThrow());
+            .isPresent()
+            .hasValueSatisfying(assertValue.sneakyThrow());
     }
 
     @Test
-    void serviceShouldDecodeHeaderFilenames() throws MessagingException, IOException {
+    void serviceShouldHandleAttachmentWithDuplicatedNames(TemporaryFolder temporaryFolder) throws Exception {
+        StripAttachment mailet = new StripAttachment();
+
+        String customAttribute = "my.custom.attribute";
+        FakeMailetConfig mci = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "matched")
+            .setProperty("directory", temporaryFolder.getFolderPath())
+            .setProperty("pattern", ".*\\.tmp")
+            .setProperty("attribute", customAttribute)
+            .build();
+        mailet.init(mci);
+
+        String expectedKey = "10.tmp";
+        MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
+            .setMultipartWithBodyParts(
+                MimeMessageBuilder.bodyPartBuilder()
+                    .data("simple text"),
+                createAttachmentBodyPart(EXPECTED_ATTACHMENT_CONTENT, expectedKey, TEXT_HEADERS),
+                createAttachmentBodyPart(EXPECTED_ATTACHMENT_CONTENT_2, expectedKey, TEXT_HEADERS));
+
+        Mail mail = FakeMail.fromMessage(message);
+
+        mailet.service(mail);
+
+        Optional<Map<String, AttributeValue<?>>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
+        ConsumerChainer<Map<String, AttributeValue<?>>> assertValue = Throwing.consumer(saved -> {
+            assertThat(saved)
+                .hasSize(1)
+                .containsKeys(expectedKey);
+
+            MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) saved.get(expectedKey).getValue()));
+            String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
+            assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
+        });
+        assertThat(savedValue)
+            .isPresent()
+            .hasValueSatisfying(assertValue.sneakyThrow());
+    }
+
+    @Test
+    void serviceShouldDecodeHeaderFilenames() throws Exception, IOException {
         StripAttachment mailet = new StripAttachment();
 
         String customAttribute = "my.custom.attribute";
@@ -364,7 +406,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void initShouldWorkWhenPatternIsDefinedAndValid() throws MessagingException {
+    void initShouldWorkWhenPatternIsDefinedAndValid() throws Exception {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -376,7 +418,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void initShouldWorkWhenNotPatternIsDefinedAndValid() throws MessagingException {
+    void initShouldWorkWhenNotPatternIsDefinedAndValid() throws Exception {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -388,7 +430,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void initShouldWorkWhenMimeTypeIsDefined() throws MessagingException {
+    void initShouldWorkWhenMimeTypeIsDefined() throws Exception {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -443,7 +485,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void initShouldSetRemoveParameterWhenEqualsMatched() throws MessagingException {
+    void initShouldSetRemoveParameterWhenEqualsMatched() throws Exception {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -457,7 +499,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void initShouldSetRemoveParameterWhenEqualsAll() throws MessagingException {
+    void initShouldSetRemoveParameterWhenEqualsAll() throws Exception {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -471,7 +513,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void initShouldSetRemoveParameterWhenEqualsNo() throws MessagingException {
+    void initShouldSetRemoveParameterWhenEqualsNo() throws Exception {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -485,7 +527,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void initShouldSetRemoveParameterDefaultValueWhenNotGiven() throws MessagingException {
+    void initShouldSetRemoveParameterDefaultValueWhenNotGiven() throws Exception {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -498,7 +540,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void serviceShouldThrowWhenUnretrievableMessage(TemporaryFolder temporaryFolder) throws MessagingException {
+    void serviceShouldThrowWhenUnretrievableMessage(TemporaryFolder temporaryFolder) throws Exception {
         Mailet mailet = initMailet(temporaryFolder);
         
         Mail mail = mock(Mail.class);
@@ -511,7 +553,7 @@ class StripAttachmentTest {
     }
 
     @Test
-    void serviceShouldThrowWhenUnretrievableContentTypeMessage(TemporaryFolder temporaryFolder) throws MessagingException {
+    void serviceShouldThrowWhenUnretrievableContentTypeMessage(TemporaryFolder temporaryFolder) throws Exception {
         Mailet mailet = initMailet(temporaryFolder);
 
         MimeMessage message = mock(MimeMessage.class);
@@ -829,7 +871,7 @@ class StripAttachmentTest {
         assertThat(filename).endsWith(".bin");
     }
     
-    private Mailet initMailet(TemporaryFolder temporaryFolder) throws MessagingException {
+    private Mailet initMailet(TemporaryFolder temporaryFolder) throws Exception {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()

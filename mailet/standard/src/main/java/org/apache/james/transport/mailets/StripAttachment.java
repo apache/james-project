@@ -355,17 +355,26 @@ public class StripAttachment extends GenericMailet {
     }
 
     private void addPartContent(BodyPart bodyPart, Mail mail, String fileName, AttributeName attributeName) throws IOException, MessagingException {
-        ImmutableMap.Builder<String, AttributeValue<?>> fileNamesToPartContent = AttributeUtils
-            .getValueAndCastFromMail(mail, attributeName, MAP_STRING_BYTES_CLASS)
-            .map(ImmutableMap.<String, AttributeValue<?>>builder()::putAll)
-            .orElse(ImmutableMap.builder());
+        ImmutableMap<String, AttributeValue<?>> result = AttributeUtils.getValueAndCastFromMail(mail, attributeName, MAP_STRING_BYTES_CLASS)
+            .map(Throwing.function(previous -> {
+                ImmutableMap.Builder<String, AttributeValue<?>> builder = ImmutableMap.<String, AttributeValue<?>>builder()
+                    .putAll(previous);
+                if (!previous.containsKey(fileName)) {
+                    builder.put(fileName, AttributeValue.of(writeAsBytes(bodyPart)));
+                } else {
+                    LOGGER.info("Duplicated file name {} for {}", fileName, mail.getName());
+                }
+                return builder.build();
+            }))
+            .orElse(ImmutableMap.of(fileName, AttributeValue.of(writeAsBytes(bodyPart))));
 
+        mail.setAttribute(new Attribute(attributeName, AttributeValue.of(result)));
+    }
+
+    private static byte[] writeAsBytes(BodyPart bodyPart) throws IOException, MessagingException {
         UnsynchronizedByteArrayOutputStream byteArrayOutputStream = new UnsynchronizedByteArrayOutputStream();
         bodyPart.writeTo(byteArrayOutputStream);
-        fileNamesToPartContent.put(fileName, AttributeValue.of(byteArrayOutputStream.toByteArray()));
-
-        Map<String, AttributeValue<?>> build = fileNamesToPartContent.build();
-        mail.setAttribute(new Attribute(attributeName, AttributeValue.of(build)));
+        return byteArrayOutputStream.toByteArray();
     }
 
     private void storeFileNameAsAttribute(Mail mail, AttributeValue<String> fileName, boolean hasToBeStored) {
