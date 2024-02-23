@@ -84,6 +84,55 @@ class RedisPlaygroundTest {
     }
 
     @Nested
+    class SetsTest {
+        @Test
+        void addMembersToASet(DockerRedis redis) {
+            RedisCommands<String, String> client = redis.createClient();
+            String key = "KEY1";
+            String value1 = "Value1";
+            String value2 = "Value2";
+            client.sadd(key, value1, value2);
+
+            assertThat(client.smembers(key)).containsExactlyInAnyOrder(value1, value2);
+        }
+
+        @Test
+        void getANonExistingSetShouldReturnEmpty(DockerRedis redis) {
+            RedisCommands<String, String> client = redis.createClient();
+            String nonExistingKey = "KEY1";
+
+            assertThat(client.smembers(nonExistingKey)).isEmpty();
+        }
+
+        @Test
+        void deleteAnElementOutOfSet(DockerRedis redis) {
+            RedisCommands<String, String> client = redis.createClient();
+            String key = "KEY1";
+            String value1 = "Value1";
+            String value2 = "Value2";
+            client.sadd(key, value1, value2);
+
+            client.srem(key, value1);
+
+            assertThat(client.smembers(key)).containsOnly(value2);
+        }
+
+        @Test
+        void deleteAllElementsOutOfSetShouldMakeTheSetEmpty(DockerRedis redis) {
+            RedisCommands<String, String> client = redis.createClient();
+            String key = "KEY1";
+            String value1 = "Value1";
+            String value2 = "Value2";
+            client.sadd(key, value1, value2);
+
+            client.srem(key, value1);
+            client.srem(key, value2);
+
+            assertThat(client.smembers(key)).isEmpty();
+        }
+    }
+
+    @Nested
     class RedisStreams {
         @Test
         void consumerGroupTest(DockerRedis redis) {
