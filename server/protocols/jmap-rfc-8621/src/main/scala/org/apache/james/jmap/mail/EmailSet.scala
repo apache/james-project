@@ -25,17 +25,21 @@ import cats.implicits._
 import com.google.common.net.MediaType
 import com.google.common.net.MediaType.{HTML_UTF_8, PLAIN_TEXT_UTF_8}
 import eu.timepit.refined
+import org.apache.commons.text.StringEscapeUtils
+import org.apache.james.core.MailAddress
 import org.apache.james.jmap.api.model.Size.Size
+import org.apache.james.jmap.api.model.{EmailAddress, EmailerName}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{AccountId, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.Disposition.INLINE
+import org.apache.james.jmap.mail.EmailCreationRequest.KEYWORD_DRAFT
 import org.apache.james.jmap.method.WithAccountId
 import org.apache.james.jmap.routes.{Blob, BlobResolvers}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{Cid, MessageId}
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.codec.{DecodeMonitor, EncoderUtil}
-import org.apache.james.mime4j.dom.address.Mailbox
+import org.apache.james.mime4j.dom.address.{Mailbox => Mime4jMailbox}
 import org.apache.james.mime4j.dom.field.{ContentIdField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message}
 import org.apache.james.mime4j.field.{ContentIdFieldImpl, Fields}
@@ -112,16 +116,46 @@ case class Attachment(blobId: BlobId,
   def isInline: Boolean = disposition.contains(INLINE)
 }
 
+case class UncheckedEmail(value: String) extends AnyVal
+case class UncheckedEmailAddress(name: Option[EmailerName], email: UncheckedEmail) {
+  val asMime4JMailbox: Mime4jMailbox =
+    Some(email.value.split('@'))
+      .map(parts => new Mime4jMailbox(
+        name.map(_.value).orNull,
+        parts.head,
+        parts.lastOption.orNull))
+      .get
+
+  val validate: Either[IllegalArgumentException, EmailAddress] =
+    Try(new MailAddress(email.value))
+      .map(email => EmailAddress(name, email))
+      .toEither match {
+      case scala.Right(value) => scala.Right(value)
+      case Left(e) => Left(new IllegalArgumentException(s"Invalid email address `${email.value}`", e))
+    }
+}
+
+case class UncheckedAddressesHeaderValue(value: List[UncheckedEmailAddress]) {
+  def asMime4JMailboxList: Option[List[Mime4jMailbox]] = Some(value.map(_.asMime4JMailbox)).filter(_.nonEmpty)
+
+  val validate: Either[IllegalArgumentException, AddressesHeaderValue] = value.map(_.validate)
+    .sequence
+    .map(l => AddressesHeaderValue(l))
+}
+
+object EmailCreationRequest {
+  val KEYWORD_DRAFT: Keyword = org.apache.james.jmap.mail.Keyword("$draft")
+}
 case class EmailCreationRequest(mailboxIds: MailboxIds,
                                 messageId: Option[MessageIdsHeaderValue],
                                 references: Option[MessageIdsHeaderValue],
                                 inReplyTo: Option[MessageIdsHeaderValue],
-                                from: Option[AddressesHeaderValue],
-                                to: Option[AddressesHeaderValue],
-                                cc: Option[AddressesHeaderValue],
-                                bcc: Option[AddressesHeaderValue],
-                                sender: Option[AddressesHeaderValue],
-                                replyTo: Option[AddressesHeaderValue],
+                                from: Option[UncheckedAddressesHeaderValue],
+                                to: Option[UncheckedAddressesHeaderValue],
+                                cc: Option[UncheckedAddressesHeaderValue],
+                                bcc: Option[UncheckedAddressesHeaderValue],
+                                sender: Option[UncheckedAddressesHeaderValue],
+                                replyTo: Option[UncheckedAddressesHeaderValue],
                                 subject: Option[Subject],
                                 sentAt: Option[UTCDate],
                                 keywords: Option[Keywords],
@@ -142,7 +176,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
           references.flatMap(_.asString).map(new RawField("References", _)).foreach(builder.setField)
           inReplyTo.flatMap(_.asString).map(new RawField("In-Reply-To", _)).foreach(builder.setField)
           subject.foreach(value => builder.setSubject(value.value))
-          val maybeFrom: Option[List[Mailbox]] = from.flatMap(_.asMime4JMailboxList)
+          val maybeFrom: Option[List[Mime4jMailbox]] = from.flatMap(_.asMime4JMailboxList)
           maybeFrom.map(_.asJava).foreach(builder.setFrom)
           to.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setTo)
           cc.flatMap(_.asMime4JMailboxList).map(_.asJava).foreach(builder.setCc)
@@ -167,7 +201,7 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
             })
       }
 
-  private def generateUniqueMessageId(fromAddress: Option[List[Mailbox]]): String = 
+  private def generateUniqueMessageId(fromAddress: Option[List[Mime4jMailbox]]): String =
     MimeUtil.createUniqueMessageId(fromAddress.flatMap(_.headOption).map(_.getDomain).orNull)
 
   private def createAlternativeBody(htmlBody: Option[ClientBodyPart], textBody: Option[ClientBodyPart], htmlTextExtractor: HtmlTextExtractor) = {
@@ -314,6 +348,24 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
     case Some(text :: Nil) => retrieveCorrespondingBody(text.partId)
       .getOrElse(Left(new IllegalArgumentException("Expecting bodyValues to contain the part specified in textBody")))
     case _ => Left(new IllegalArgumentException("Expecting textBody to contains only 1 part"))
+  }
+
+  def validateRequest: Either[IllegalArgumentException, EmailCreationRequest] = validateEmailAddressHeader
+  def validateEmailAddressHeader: Either[IllegalArgumentException, EmailCreationRequest] = keywords match {
+    case Some(k) if k.keywords.contains(KEYWORD_DRAFT) => scala.Right(this)
+    case _ => doValidateEmailAddressHeader()
+  }
+  private def doValidateEmailAddressHeader(): Either[IllegalArgumentException, EmailCreationRequest] = {
+    val addressesHeaderInvalid: Map[String, IllegalArgumentException] = Map("from" -> from, "to" -> to, "cc" -> cc, "bcc" -> bcc, "sender" -> sender, "replyTo" -> replyTo)
+      .map {
+        case (name, maybeAddresses) => (name, maybeAddresses.map(_.validate))
+      }.collect { case (name, Some(addresses)) => (name, addresses) }
+      .collect { case (name, scala.Left(exception)) => (name, exception) }
+
+    addressesHeaderInvalid match {
+      case invalid if invalid.nonEmpty => Left(new IllegalArgumentException(s"/${addressesHeaderInvalid.map { case (name, exception) => s"$name: ${exception.getMessage}" }.mkString(", ")}"))
+      case _ => scala.Right(this)
+    }
   }
 
   private def retrieveCorrespondingBody(partId: ClientPartId): Option[Either[IllegalArgumentException, Some[ClientBodyPart]]] =

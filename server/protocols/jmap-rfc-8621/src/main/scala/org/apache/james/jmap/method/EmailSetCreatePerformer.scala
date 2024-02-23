@@ -89,7 +89,9 @@ class EmailSetCreatePerformer @Inject()(serializer: EmailSetSerializer,
       .concatMap {
         case (clientId, json) => serializer.deserializeCreationRequest(json)
           .fold(e => SMono.just[CreationResult](CreationFailure(clientId, new IllegalArgumentException(e.toString))),
-            creationRequest => create(clientId, creationRequest, mailboxSession))
+            creationRequest => creationRequest.validateRequest
+              .fold(e => SMono.just[CreationResult](CreationFailure(clientId, e)),
+                _ => create(clientId, creationRequest, mailboxSession)))
       }.collectSeq()
       .map(CreationResults)
 

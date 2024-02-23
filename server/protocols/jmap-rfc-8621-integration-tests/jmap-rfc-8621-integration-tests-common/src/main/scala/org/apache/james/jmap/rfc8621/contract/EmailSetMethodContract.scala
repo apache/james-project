@@ -7455,6 +7455,105 @@ trait EmailSetMethodContract {
           |}""".stripMargin)
   }
 
+  @Test
+  def emailSetShouldSucceedWhenInvalidToMailAddressAndHaveDraftKeyword(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "keywords":{ "$$draft": true },
+         |          "to": [{"email": "invalid1"}],
+         |          "from": [{"email": "${BOB.asString}"}]
+         |        }
+         |      }
+         |    }, "c1"],
+         |    ["Email/get",
+         |     {
+         |       "accountId": "$ACCOUNT_ID",
+         |       "ids": ["#aaaaaa"],
+         |       "properties": ["sentAt", "messageId"]
+         |     },
+         |     "c2"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list.[0].sentAt")
+      .isEqualTo("\"${json-unit.ignore}\"")
+    assertThatJson(response)
+      .inPath("methodResponses[1][1].list.[0].messageId")
+      .isEqualTo("[\"${json-unit.ignore}\"]")
+
+  }
+
+  @Test
+  def emailSetShouldFailWhenInvalidToEmailAddressAndHaveNotDraftKeyword(server: GuiceJamesServer): Unit = {
+    val bobPath = MailboxPath.inbox(BOB)
+    val mailboxId = server.getProbe(classOf[MailboxProbeImpl]).createMailbox(bobPath)
+
+    val request =
+      s"""{
+         |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+         |  "methodCalls": [
+         |    ["Email/set", {
+         |      "accountId": "$ACCOUNT_ID",
+         |      "create": {
+         |        "aaaaaa":{
+         |          "mailboxIds": {
+         |             "${mailboxId.serialize}": true
+         |          },
+         |          "keywords":{ },
+         |          "to": [{"email": "invalid1"}],
+         |          "from": [{"email": "${BOB.asString}"}]
+         |        }
+         |      }
+         |    }, "c1"]]
+         |}""".stripMargin
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(request)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].notCreated")
+      .isEqualTo(
+        """{
+          |    "aaaaaa": {
+          |        "type": "invalidArguments",
+          |        "description": "/to: Invalid email address `invalid1`"
+          |    }
+          |}""".stripMargin)
+  }
+
   private def buildTestMessage = {
     Message.Builder
       .of
