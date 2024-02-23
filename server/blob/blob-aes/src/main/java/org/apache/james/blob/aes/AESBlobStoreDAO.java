@@ -60,7 +60,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         .map(s -> Size.parse(s, Size.Unit.NoUnit))
         .map(s -> (int) s.asBytes())
         .orElse(100 * 1024 * 1024);
-    public static final int FILE_THRESHOLD_DECRYPT = Optional.ofNullable(System.getenv("james.blob.aes.file.threshold.decrypt"))
+    public static final int FILE_THRESHOLD_DECRYPT = Optional.ofNullable(System.getProperty("james.blob.aes.file.threshold.decrypt"))
         .map(s -> Size.parse(s, Size.Unit.NoUnit))
         .map(s -> (int) s.asBytes())
         .orElse(512 * 1024);
