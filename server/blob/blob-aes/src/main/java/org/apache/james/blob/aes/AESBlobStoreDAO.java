@@ -56,7 +56,7 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         .map(s -> Size.parse(s, Size.Unit.NoUnit))
         .map(s -> (int) s.asBytes())
         .orElse(100 * 1024);
-    public static final int MAXIMUM_BLOB_SIZE =  Optional.ofNullable(System.getenv("james.blob.aes.blob.max.size"))
+    public static final int MAXIMUM_BLOB_SIZE =  Optional.ofNullable(System.getProperty("james.blob.aes.blob.max.size"))
         .map(s -> Size.parse(s, Size.Unit.NoUnit))
         .map(s -> (int) s.asBytes())
         .orElse(100 * 1024 * 1024);
