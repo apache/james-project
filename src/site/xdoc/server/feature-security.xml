@@ -61,6 +61,38 @@
             <a href="https://apache.org/security/committers.html#vulnerability-handling">vulnerability handling</a>.
         </subsection>
 
+        <subsection name="CVE-2024-21742: Mime4J DOM header injection">
+            <p> Apache JAMES MIME4J prior to version 0.8.10 allow attackers able to specify the value of a header field to craft other header fields.</p>
+
+            <p><b>Severity</b>: Moderate</p>
+
+            <p><b>Mitigation</b>: Release 0.8.10 rejects the use of LF inside a header field thus preventing the issue.
+
+                Upgrading to Apache James MIME4J 0.8.10 is thus advised.</p>
+        </subsection>
+        <subsection name="CVE-2023-51747: SMTP smuggling in Apache James">
+            <p> Apache James distribution prior to release 3.7.5 and release 3.8.1 is subject to SMTP smuggling, when used in combination
+                of antother vulnerable server and can result in SPF bypass, leading to email forgery.</p>
+
+            <p><b>Severity</b>: High</p>
+
+            <p><b>Mitigation</b>:
+                Release 3.7.5 and 3.8.1 interpret strictly the CRLF delimiter and thus prevent the issue.<br/>
+
+                Upgrading to Apache James 3.7.5 or 3.8.1 is thus advised.</p>
+        </subsection>
+        <subsection name="CVE-2023-51518: Privilege escalation via JMX pre-authentication deserialisation">
+            <p> Apache James distribution prior to release 3.7.5 and 3.8.1 allow privilege escalation via JMX pre-authentication deserialisation.
+                An attacker would need to identify a deserialization glitch before triggering an exploit.</p>
+
+            <p><b>Severity</b>: Moderate</p>
+
+            <p><b>Mitigation</b>:We recommend turning off JMX whenever possible.<br/>
+
+                Release 3.7.5 and 3.8.1 disable deserialization on unauthencited channels.<br/>
+
+                Upgrading to Apache James 3.7.5 on 3.8.1 is thus advised.</p>
+        </subsection>
         <subsection name="CVE-2023-26269: Privilege escalation through unauthenticated JMX">
             <p> Apache James distribution prior to release 3.7.4 allows privilege escalation through the use of JMX.</p>
 
