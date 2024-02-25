@@ -34,7 +34,9 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexBody;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
+import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -54,8 +56,13 @@ public class MessageToOpenSearchJson {
     private final ZoneId zoneId;
     private final IndexAttachments indexAttachments;
     private final IndexHeaders indexHeaders;
+    private final IndexBody indexBody;
 
     public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments, IndexHeaders indexHeaders) {
+        this(textExtractor, zoneId, indexAttachments, indexHeaders, IndexBody.YES);
+    }
+
+    public MessageToOpenSearchJson(TextExtractor textExtractor, ZoneId zoneId, IndexAttachments indexAttachments, IndexHeaders indexHeaders, IndexBody indexBody) {
         this.textExtractor = textExtractor;
         this.zoneId = zoneId;
         this.indexAttachments = indexAttachments;
@@ -63,11 +70,12 @@ public class MessageToOpenSearchJson {
         this.mapper = new ObjectMapper();
         this.mapper.registerModule(new GuavaModule());
         this.mapper.registerModule(new Jdk8Module());
+        this.indexBody = indexBody;
     }
 
     @Inject
-    public MessageToOpenSearchJson(TextExtractor textExtractor, IndexAttachments indexAttachments, IndexHeaders indexHeaders) {
-        this(textExtractor, ZoneId.systemDefault(), indexAttachments, indexHeaders);
+    public MessageToOpenSearchJson(TextExtractor textExtractor, OpenSearchMailboxConfiguration configuration) {
+        this(textExtractor, ZoneId.systemDefault(), configuration.getIndexAttachment(), configuration.getIndexHeaders(), configuration.getIndexBody());
     }
 
     public Mono<String> convertToJson(MailboxMessage message) {
@@ -79,6 +87,7 @@ public class MessageToOpenSearchJson {
             .zoneId(zoneId)
             .indexAttachments(indexAttachments)
             .indexHeaders(indexHeaders)
+            .indexBody(indexBody)
             .build()
             .map(Throwing.function(mapper::writeValueAsString));
     }
@@ -90,6 +99,7 @@ public class MessageToOpenSearchJson {
             .zoneId(zoneId)
             .indexAttachments(IndexAttachments.NO)
             .indexHeaders(indexHeaders)
+            .indexBody(indexBody)
             .build()
             .map(Throwing.function(mapper::writeValueAsString));
     }

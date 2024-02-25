@@ -96,6 +96,9 @@ turning off headers indexing result in non-strict compliance with the IMAP / JMA
 | When set to true, James will attempt to reindex from the indexed message when moved.
 If the message is not found, it will fall back to the old behavior (The message will be indexed from the blobStore source)
 Default to false.
+
+| opensearch.indexBody
+| Indicates if you wish to index body or not (default: true). This can be used to decrease the performance cost associated with indexing.
 |===
 
 === Quota search
