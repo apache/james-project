@@ -21,6 +21,7 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
+import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.PostgresJamesConfiguration;
@@ -47,7 +48,7 @@ public class PostgresMailboxChangesMethodTest implements MailboxChangesMethodCon
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.scanning())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .usersRepository(DEFAULT)
             .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
             .blobStore(BlobStoreConfiguration.builder()
@@ -58,6 +59,7 @@ public class PostgresMailboxChangesMethodTest implements MailboxChangesMethodCon
             .build())
         .extension(PostgresExtension.empty())
         .extension(new RabbitMQExtension())
+        .extension(new DockerOpenSearchExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(binder -> binder.bind(Limit.class).annotatedWith(Names.named(PostgresMailboxChangeRepository.LIMIT_NAME)).toInstance(Limit.of(5)))

@@ -19,10 +19,27 @@
 
 package org.apache.james.jmap.rfc8621.postgres;
 
+import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-@Disabled
-// TODO Need to fix
 public class PostgresEmailQueryMethodTest extends PostgresBase implements EmailQueryMethodContract {
+    @Override
+    @Test
+    @Disabled("Flaky test. TODO stabilize it.")
+    public void listMailsShouldBeSortedWhenUsingTo(GuiceJamesServer server) {
+    }
+
+    @Override
+    @Test
+    @Disabled("Flaky test. TODO stabilize it.")
+    public void listMailsShouldBeSortedWhenUsingFrom(GuiceJamesServer server) {
+    }
+
+    @Override
+    @Test
+    @Disabled("Flaky test. TODO stabilize it.")
+    public void inMailboxOtherThanShouldBeRejectedWhenInOperator(GuiceJamesServer server) {
+    }
 }
