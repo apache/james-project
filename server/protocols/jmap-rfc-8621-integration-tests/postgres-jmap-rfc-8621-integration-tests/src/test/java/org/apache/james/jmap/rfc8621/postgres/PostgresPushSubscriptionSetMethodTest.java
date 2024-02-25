@@ -64,18 +64,4 @@ public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSe
 
     @RegisterExtension
     static PushServerExtension pushServerExtension = new PushServerExtension();
-
-    @Override
-    @Test
-    @Disabled
-    // TODO Need to fix
-    public void getShouldReturnAllRecords(GuiceJamesServer server) {
-    }
-
-    @Override
-    @Test
-    @Disabled
-    // TODO Need to fix
-    public void getByIdShouldReturnRecords(GuiceJamesServer server) {
-    }
 }
