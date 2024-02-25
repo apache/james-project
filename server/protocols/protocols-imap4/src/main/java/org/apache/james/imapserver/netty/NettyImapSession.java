@@ -317,4 +317,14 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     public void schedule(Runnable runnable, Duration waitDelay) {
         channel.eventLoop().schedule(runnable, waitDelay.toMillis(), TimeUnit.MILLISECONDS);
     }
+
+    @Override
+    public boolean backpressureNeeded(Runnable restoreBackpressure) {
+        boolean writable = channel.isWritable();
+        if (!writable) {
+            channel.attr(BACKPRESSURE_CALLBACK).set(restoreBackpressure);
+            return true;
+        }
+        return false;
+    }
 }

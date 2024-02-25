@@ -103,6 +103,19 @@ public interface ImapSession extends CommandDetectionSession {
     Mono<Void> logout();
 
     /**
+     * Allows implementation to apply back pressure on heavy senders.
+     *
+     * Return true if the sender needs to be throttled.
+     * Return false if backpressure do not need to be applied.
+     * @param restoreBackpressure will be called to restore backpressure to its current state when backpressure
+     *                            is no longer needed.
+     */
+    default boolean backpressureNeeded(Runnable restoreBackpressure) {
+        // Naive implementation: never backpressure
+        return false;
+    }
+
+    /**
      * Gets the current client state.
      * 
      * @return Returns the current state of this session.

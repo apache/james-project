@@ -218,7 +218,14 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             response.flush();
             super.channelActive(ctx);
         }
+    }
 
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) {
+        if (ctx.channel().isWritable()) {
+            Optional.ofNullable(ctx.channel().attr(BACKPRESSURE_CALLBACK).get())
+                .ifPresent(Runnable::run);
+        }
     }
 
     private void performConnectionCheck(InetSocketAddress clientIp) {
