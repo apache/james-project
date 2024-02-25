@@ -59,6 +59,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.opensearch.IndexBody;
 import org.apache.james.mailbox.opensearch.MailboxOpenSearchConstants;
 import org.apache.james.mailbox.opensearch.OpenSearchMailboxConfiguration;
 import org.apache.james.mailbox.opensearch.json.MessageToOpenSearchJson;
@@ -228,6 +229,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     
     private final Metric reIndexNotFoundMetric;
     private final IndexingStrategy indexingStrategy;
+    private final IndexBody indexBody;
 
     @Inject
     public OpenSearchListeningMessageSearchIndex(MailboxSessionMapperFactory factory,
@@ -249,6 +251,7 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
         } else {
             this.indexingStrategy = new NaiveIndexingStrategy();
         }
+        this.indexBody = configuration.getIndexBody();
         this.reIndexNotFoundMetric = metricFactory.generate("opensearch_reindex_not_found");
 
         LOGGER.info("OpenSearchMessageSearchIndex activated with index strategy: {}", indexingStrategy.getClass().getSimpleName());
@@ -297,7 +300,14 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     private Mono<Void> processAddedEvent(MailboxSession session, MailboxEvents.Added addedEvent, MailboxId mailboxId) {
         return factory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
-            .flatMap(mailbox -> handleAdded(session, mailbox, addedEvent));
+            .flatMap(mailbox -> handleAdded(session, mailbox, addedEvent, chooseFetchType()));
+    }
+
+    private FetchType chooseFetchType() {
+        if (indexBody == IndexBody.YES) {
+            return FetchType.FULL;
+        }
+        return FetchType.HEADERS;
     }
 
     @Override

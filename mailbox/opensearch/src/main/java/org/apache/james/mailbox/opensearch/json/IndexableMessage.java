@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.opensearch.json;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
+import org.apache.james.mailbox.opensearch.IndexBody;
 import org.apache.james.mailbox.opensearch.IndexHeaders;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.SearchUtil;
@@ -58,6 +60,7 @@ public class IndexableMessage {
 
         private IndexAttachments indexAttachments;
         private IndexHeaders indexHeaders;
+        private IndexBody indexBody = IndexBody.YES;
         private MailboxMessage message;
         private TextExtractor textExtractor;
         private ZoneId zoneId;
@@ -94,6 +97,11 @@ public class IndexableMessage {
             return this;
         }
 
+        public Builder indexBody(IndexBody indexBody) {
+            this.indexBody = indexBody;
+            return this;
+        }
+
         public Builder message(MailboxMessage message) {
             this.message = message;
             return this;
@@ -108,7 +116,7 @@ public class IndexableMessage {
             String messageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
             String threadId = SearchUtil.getSerializedThreadIdIfSupportedByUnderlyingStorageOrNull(message);
 
-            return new MimePartParser(message, textExtractor).parse()
+            return new MimePartParser(textExtractor).parse(contentStream())
                 .asMimePart(textExtractor)
                 .map(parsingResult -> {
 
@@ -178,6 +186,13 @@ public class IndexableMessage {
                         userFlags,
                         mimeMessageID);
                 });
+        }
+
+        private InputStream contentStream() throws IOException {
+            if (indexBody == IndexBody.YES) {
+                return message.getFullContent();
+            }
+            return message.getHeaderContent();
         }
 
         private List<HeaderCollection.Header> filterHeadersIfNeeded(List<HeaderCollection.Header> headers) {

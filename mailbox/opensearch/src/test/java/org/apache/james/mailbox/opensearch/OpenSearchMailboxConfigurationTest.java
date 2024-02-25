@@ -31,7 +31,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class OpenSearchMailboxConfigurationTest {
     @Test
-    void elasticSearchMailboxConfigurationShouldRespectBeanContract() {
+    void openSearchMailboxConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(OpenSearchMailboxConfiguration.class)
             .verify();
     }
@@ -43,9 +43,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.index.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexMailboxName())
+        assertThat(openSearchConfiguration.getIndexMailboxName())
             .isEqualTo(new IndexName(name));
     }
 
@@ -57,9 +57,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.index.mailbox.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexMailboxName())
+        assertThat(openSearchConfiguration.getIndexMailboxName())
             .isEqualTo(new IndexName(name));
     }
 
@@ -70,9 +70,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.index.mailbox.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexMailboxName())
+        assertThat(openSearchConfiguration.getIndexMailboxName())
             .isEqualTo(new IndexName(name));
     }
 
@@ -81,9 +81,9 @@ class OpenSearchMailboxConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexMailboxName())
+        assertThat(openSearchConfiguration.getIndexMailboxName())
             .isEqualTo(MailboxOpenSearchConstants.DEFAULT_MAILBOX_INDEX);
     }
 
@@ -94,9 +94,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.alias.read.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
+        assertThat(openSearchConfiguration.getReadAliasMailboxName())
             .isEqualTo(new ReadAliasName(name));
     }
 
@@ -107,9 +107,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.alias.read.mailbox.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
+        assertThat(openSearchConfiguration.getReadAliasMailboxName())
             .isEqualTo(new ReadAliasName(name));
     }
 
@@ -121,9 +121,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.alias.read.name", "other");
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
+        assertThat(openSearchConfiguration.getReadAliasMailboxName())
             .isEqualTo(new ReadAliasName(name));
     }
 
@@ -132,9 +132,9 @@ class OpenSearchMailboxConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
+        assertThat(openSearchConfiguration.getReadAliasMailboxName())
             .isEqualTo(MailboxOpenSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
     }
 
@@ -145,9 +145,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.alias.write.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
+        assertThat(openSearchConfiguration.getWriteAliasMailboxName())
             .isEqualTo(new WriteAliasName(name));
     }
 
@@ -158,9 +158,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.alias.write.mailbox.name", name);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
+        assertThat(openSearchConfiguration.getWriteAliasMailboxName())
             .isEqualTo(new WriteAliasName(name));
     }
 
@@ -172,9 +172,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.alias.write.name", "other");
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
+        assertThat(openSearchConfiguration.getWriteAliasMailboxName())
             .isEqualTo(new WriteAliasName(name));
     }
 
@@ -183,9 +183,9 @@ class OpenSearchMailboxConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
+        assertThat(openSearchConfiguration.getWriteAliasMailboxName())
             .isEqualTo(MailboxOpenSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
     }
 
@@ -195,9 +195,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.indexAttachments", true);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexAttachment())
+        assertThat(openSearchConfiguration.getIndexAttachment())
             .isEqualTo(IndexAttachments.YES);
     }
 
@@ -207,9 +207,9 @@ class OpenSearchMailboxConfigurationTest {
         configuration.addProperty("opensearch.indexAttachments", false);
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexAttachment())
+        assertThat(openSearchConfiguration.getIndexAttachment())
             .isEqualTo(IndexAttachments.NO);
     }
 
@@ -218,10 +218,45 @@ class OpenSearchMailboxConfigurationTest {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("opensearch.hosts", "127.0.0.1");
 
-        OpenSearchMailboxConfiguration elasticSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexAttachment())
+        assertThat(openSearchConfiguration.getIndexAttachment())
             .isEqualTo(IndexAttachments.YES);
+    }
+
+    @Test
+    void getIndexBodyShouldReturnConfiguredValueWhenTrue() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("opensearch.indexBody", true);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
+
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+
+        assertThat(openSearchConfiguration.getIndexBody())
+            .isEqualTo(IndexBody.YES);
+    }
+
+    @Test
+    void getIndexBodyShouldReturnConfiguredValueWhenFalse() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("opensearch.indexBody", false);
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
+
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+
+        assertThat(openSearchConfiguration.getIndexBody())
+            .isEqualTo(IndexBody.NO);
+    }
+
+    @Test
+    void getIndexBodyShouldReturnDefaultValueWhenMissing() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("opensearch.hosts", "127.0.0.1");
+
+        OpenSearchMailboxConfiguration openSearchConfiguration = OpenSearchMailboxConfiguration.fromProperties(configuration);
+
+        assertThat(openSearchConfiguration.getIndexBody())
+            .isEqualTo(IndexBody.YES);
     }
 
 }
