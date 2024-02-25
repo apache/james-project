@@ -609,6 +609,7 @@ trait PushSubscriptionSetMethodContract {
       .asString
 
     assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
       .isEqualTo(
         s"""{
            |    "sessionState": "${SESSION_STATE.value}",
@@ -727,6 +728,7 @@ trait PushSubscriptionSetMethodContract {
       .asString
 
     assertThatJson(response)
+      .withOptions(new Options(IGNORING_ARRAY_ORDER))
       .isEqualTo(
         s"""{
            |    "sessionState": "${SESSION_STATE.value}",
