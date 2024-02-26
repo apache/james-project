@@ -311,6 +311,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         private void finalizeDataTransfer() {
             try {
+                outputStream.flush();
                 outputStream.close();
             } catch (IOException ignored) {
                 //ignore exception during close
