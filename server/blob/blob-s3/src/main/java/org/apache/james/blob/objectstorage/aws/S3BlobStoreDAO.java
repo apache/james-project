@@ -235,6 +235,16 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .map(res -> ReactorUtils.toInputStream(res.flux));
     }
 
+    @Override
+    public Publisher<ReactiveByteSource> readAsByteSource(BucketName bucketName, BlobId blobId) {
+        BucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
+
+        return getObject(resolvedBucketName, blobId)
+            .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
+            .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
+            .map(res -> new ReactiveByteSource(res.sdkResponse.contentLength(), res.flux));
+    }
+
     private static class FluxResponse {
         final CompletableFuture<FluxResponse> supportingCompletableFuture = new CompletableFuture<>();
         GetObjectResponse sdkResponse;
