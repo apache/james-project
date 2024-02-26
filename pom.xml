@@ -3640,6 +3640,7 @@
                 <artifactId>git-commit-id-plugin</artifactId>
                 <configuration>
                     <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+                    <injectAllReactorProjects>true</injectAllReactorProjects>
                     <prefix>git</prefix>
                     <verbose>false</verbose>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
