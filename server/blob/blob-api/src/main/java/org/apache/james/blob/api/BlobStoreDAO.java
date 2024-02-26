@@ -20,6 +20,7 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
@@ -27,7 +28,27 @@ import org.reactivestreams.Publisher;
 
 import com.google.common.io.ByteSource;
 
+import reactor.core.publisher.Mono;
+
 public interface BlobStoreDAO {
+    class ReactiveByteSource {
+        private final long size;
+        private final Publisher<ByteBuffer> content;
+
+        public ReactiveByteSource(long size, Publisher<ByteBuffer> content) {
+            this.size = size;
+            this.content = content;
+        }
+
+        public long getSize() {
+            return size;
+        }
+
+        public Publisher<ByteBuffer> getContent() {
+            return content;
+        }
+    }
+
 
     /**
      * Reads a Blob based on its BucketName and its BlobId.
@@ -36,6 +57,11 @@ public interface BlobStoreDAO {
      * @throws ObjectStoreIOException when an unexpected IO error occurs
      */
     InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
+
+    default Publisher<ReactiveByteSource> readAsByteSource(BucketName bucketName, BlobId blobId) {
+        return Mono.from(readBytes(bucketName, blobId))
+            .map(bytes -> new ReactiveByteSource(bytes.length, Mono.just(ByteBuffer.wrap(bytes))));
+    }
 
     Publisher<InputStream> readReactive(BucketName bucketName, BlobId blobId);
 
