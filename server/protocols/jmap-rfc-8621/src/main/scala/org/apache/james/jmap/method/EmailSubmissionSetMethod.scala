@@ -344,7 +344,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         "cc" -> Option(mimeMessage.getRecipients(RecipientType.CC)).toList.flatten,
         "bcc" -> Option(mimeMessage.getRecipients(RecipientType.BCC)).toList.flatten,
         "from" -> Option(mimeMessage.getFrom).toList.flatten,
-        "sender" -> List(mimeMessage.getSender),
+        "sender" -> Option(mimeMessage.getSender).toList,
         "replyTo" -> Option(mimeMessage.getReplyTo).toList.flatten))
       .doOnNext { case (headerName, addresses) => (headerName, addresses.foreach(address => validateMailAddress(headerName, address))) }
       .`then`()
