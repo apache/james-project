@@ -150,7 +150,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     @Override
     public Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
-        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-register", keyRegistrationHandler.register(listener, key)));
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("redis-register", keyRegistrationHandler.register(listener, key)));
     }
 
     @Override
@@ -163,7 +163,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> key) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         if (!event.isNoop()) {
-            return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-dispatch", eventDispatcher.dispatch(event, key)));
+            return Mono.from(metricFactory.decoratePublisherWithTimerMetric("redis-dispatch", eventDispatcher.dispatch(event, key)));
         }
         return Mono.empty();
     }
