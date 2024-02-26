@@ -205,14 +205,14 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     }
 
     private void uploadToAFile(ChannelHandlerContext ctx, ByteBuf in, Map<String, Object> attachment, int size, int readerIndex) throws IOException {
-        Sinks.Many<byte[]> sink;
+        Pair<Sinks.Many<byte[]>, AtomicInteger> sink;
 
         // check if we have created a temporary file already or if
         // we need to create a new one
         if (attachment.containsKey(SINK)) {
-            sink = (Sinks.Many<byte[]>) attachment.get(SINK);
+            sink = (Pair<Sinks.Many<byte[]>, AtomicInteger>) attachment.get(SINK);
         } else {
-            sink = Sinks.many().unicast().onBackpressureBuffer();
+            sink = Pair.of(Sinks.many().unicast().onBackpressureBuffer(), new AtomicInteger(0));
             attachment.put(SINK, sink);
 
             FileChunkConsumer fileChunkConsumer = new FileChunkConsumer(size,
@@ -231,7 +231,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                         ctx.fireExceptionCaught(e);
                     }
                 });
-            Disposable subscribe = sink.asFlux()
+            Disposable subscribe = sink.getLeft().asFlux()
                 .publishOn(Schedulers.boundedElastic())
                 .subscribe(fileChunkConsumer,
                     e -> {
@@ -250,7 +250,10 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         int readableBytes = in.readableBytes();
         byte[] bytes = new byte[readableBytes];
         in.readBytes(bytes);
-        sink.emitNext(bytes, FAIL_FAST);
+        sink.getLeft().emitNext(bytes, FAIL_FAST);
+        if (sink.getRight().addAndGet(readableBytes) >= size) {
+            sink.getLeft().tryEmitComplete();
+        }
     }
 
     static class FileChunkConsumer implements Consumer<byte[]> {
