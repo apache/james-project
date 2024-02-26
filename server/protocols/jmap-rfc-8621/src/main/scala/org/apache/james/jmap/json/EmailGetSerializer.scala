@@ -81,6 +81,8 @@ object EmailGetSerializer {
   private implicit val locationWrites: Writes[Location] = Json.valueWrites[Location]
   private implicit val emailerNameWrites: Writes[EmailerName] = Json.valueWrites[EmailerName]
   private implicit val emailAddressWrites: Writes[EmailAddress] = Json.writes[EmailAddress]
+  private implicit val uncheckedEmailWrites: Writes[UncheckedEmail] = Json.valueWrites[UncheckedEmail]
+  private implicit val uncheckedEmailAddressWrites: Writes[UncheckedEmailAddress] = Json.writes[UncheckedEmailAddress]
   private implicit val headerMessageIdWrites: Writes[HeaderMessageId] = Json.valueWrites[HeaderMessageId]
   private implicit val isEncodingProblemWrites: Writes[IsEncodingProblem] = Json.valueWrites[IsEncodingProblem]
   private implicit val isTruncatedWrites: Writes[IsTruncated] = Json.valueWrites[IsTruncated]
@@ -91,6 +93,7 @@ object EmailGetSerializer {
   private implicit val rawHeaderWrites: Writes[RawHeaderValue] = Json.valueWrites[RawHeaderValue]
   private implicit val textHeaderWrites: Writes[TextHeaderValue] = Json.valueWrites[TextHeaderValue]
   private implicit val addressesHeaderWrites: Writes[AddressesHeaderValue] = Json.valueWrites[AddressesHeaderValue]
+  private implicit val uncheckedAddressesHeaderValueWrites: Writes[UncheckedAddressesHeaderValue] = Json.valueWrites[UncheckedAddressesHeaderValue]
   private implicit val GroupNameWrites: Writes[GroupName] = Json.valueWrites[GroupName]
   private implicit val emailAddressGroupWrites: Writes[EmailAddressGroup] = (o: EmailAddressGroup) =>
     Json.obj(

@@ -29,7 +29,7 @@ import org.apache.james.jmap.api.model.{EmailAddress, EmailerName}
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.KeywordsFactory.STRICT_KEYWORDS_FACTORY
-import org.apache.james.jmap.mail.{AddressesHeaderValue, AllHeaderValues, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientEmailBodyValueWithoutHeaders, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedMessageId}
+import org.apache.james.jmap.mail.{AddressesHeaderValue, AllHeaderValues, AsAddresses, AsDate, AsGroupedAddresses, AsMessageIds, AsRaw, AsText, AsURLs, Attachment, BlobId, Charset, ClientBody, ClientCid, ClientEmailBodyValue, ClientEmailBodyValueWithoutHeaders, ClientPartId, DateHeaderValue, DestroyIds, Disposition, EmailAddressGroup, EmailCreationId, EmailCreationRequest, EmailCreationResponse, EmailHeader, EmailHeaderName, EmailHeaderValue, EmailImport, EmailImportRequest, EmailImportResponse, EmailSetRequest, EmailSetResponse, EmailSetUpdate, GroupName, GroupedAddressesHeaderValue, HeaderMessageId, HeaderURL, IsEncodingProblem, IsTruncated, Keyword, Keywords, Language, Languages, Location, MailboxIds, MessageIdsHeaderValue, Name, ParseOption, RawHeaderValue, SpecificHeaderRequest, Subject, TextHeaderValue, ThreadId, Type, URLsHeaderValue, UnparsedMessageId, UncheckedAddressesHeaderValue, UncheckedEmail, UncheckedEmailAddress}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}
 import play.api.libs.json.{Format, JsArray, JsBoolean, JsError, JsNull, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes}
 
@@ -241,8 +241,12 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
 
   private implicit val subjectReads: Reads[Subject] = Json.valueReads[Subject]
   private implicit val emailerNameReads: Reads[EmailerName] = Json.valueReads[EmailerName]
+  private implicit val unvalidatedEmailReads: Reads[UncheckedEmail] = Json.valueReads[UncheckedEmail]
+
   private implicit val headerMessageIdReads: Reads[HeaderMessageId] = Json.valueReads[HeaderMessageId]
   private implicit val emailAddressReads: Reads[EmailAddress] = Json.reads[EmailAddress]
+  private implicit val unvalidatedEmailAddressReads: Reads[UncheckedEmailAddress] = Json.reads[UncheckedEmailAddress]
+  private implicit val unvalidatedAddressesHeaderValueReads: Reads[UncheckedAddressesHeaderValue] = Json.valueReads[UncheckedAddressesHeaderValue]
   private implicit val addressesHeaderValueReads: Reads[AddressesHeaderValue] = Json.valueReads[AddressesHeaderValue]
   private implicit val messageIdsHeaderValueReads: Reads[MessageIdsHeaderValue] = {
     case JsArray(value) => value.map(headerMessageIdReads.reads)
@@ -308,12 +312,12 @@ class EmailSetSerializer @Inject()(messageIdFactory: MessageId.Factory, mailboxI
                                                 messageId: Option[MessageIdsHeaderValue],
                                                 references: Option[MessageIdsHeaderValue],
                                                 inReplyTo: Option[MessageIdsHeaderValue],
-                                                from: Option[AddressesHeaderValue],
-                                                to: Option[AddressesHeaderValue],
-                                                cc: Option[AddressesHeaderValue],
-                                                bcc: Option[AddressesHeaderValue],
-                                                sender: Option[AddressesHeaderValue],
-                                                replyTo: Option[AddressesHeaderValue],
+                                                from: Option[UncheckedAddressesHeaderValue],
+                                                to: Option[UncheckedAddressesHeaderValue],
+                                                cc: Option[UncheckedAddressesHeaderValue],
+                                                bcc: Option[UncheckedAddressesHeaderValue],
+                                                sender: Option[UncheckedAddressesHeaderValue],
+                                                replyTo: Option[UncheckedAddressesHeaderValue],
                                                 subject: Option[Subject],
                                                 sentAt: Option[UTCDate],
                                                 keywords: Option[Keywords],

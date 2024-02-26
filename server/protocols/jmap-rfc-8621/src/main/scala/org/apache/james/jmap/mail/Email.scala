@@ -363,14 +363,14 @@ object EmailHeaders {
           .map(_.flatten))
         .filter(_.nonEmpty))
 
-  private def extractAddresses(mime4JMessage: Message, fieldName: String): Option[AddressesHeaderValue] =
+  private def extractAddresses(mime4JMessage: Message, fieldName: String): Option[UncheckedAddressesHeaderValue] =
     extractLastField(mime4JMessage, fieldName)
       .flatMap {
-        case f: AddressListField => Some(AddressesHeaderValue(EmailAddress.from(f.getAddressList)))
-        case f: MailboxListField => Some(AddressesHeaderValue(EmailAddress.from(f.getMailboxList)))
+        case f: AddressListField => Some(UncheckedAddressesHeaderValue(UncheckedEmailAddress.from(f.getAddressList)))
+        case f: MailboxListField => Some(UncheckedAddressesHeaderValue(UncheckedEmailAddress.from(f.getMailboxList)))
         case f: MailboxField =>
           val asMailboxListField = AddressListFieldLenientImpl.PARSER.parse(RawFieldParser.DEFAULT.parseField(f.getRaw), DecodeMonitor.SILENT)
-          Some(AddressesHeaderValue(EmailAddress.from(asMailboxListField.getAddressList)))
+          Some(UncheckedAddressesHeaderValue(UncheckedEmailAddress.from(asMailboxListField.getAddressList)))
         case _ => None
       }
       .filter(_.value.nonEmpty)
@@ -392,12 +392,12 @@ case class EmailHeaders(headers: List[EmailHeader],
                         messageId: MessageIdsHeaderValue,
                         inReplyTo: MessageIdsHeaderValue,
                         references: MessageIdsHeaderValue,
-                        to: Option[AddressesHeaderValue],
-                        cc: Option[AddressesHeaderValue],
-                        bcc: Option[AddressesHeaderValue],
-                        from: Option[AddressesHeaderValue],
-                        sender: Option[AddressesHeaderValue],
-                        replyTo: Option[AddressesHeaderValue],
+                        to: Option[UncheckedAddressesHeaderValue],
+                        cc: Option[UncheckedAddressesHeaderValue],
+                        bcc: Option[UncheckedAddressesHeaderValue],
+                        from: Option[UncheckedAddressesHeaderValue],
+                        sender: Option[UncheckedAddressesHeaderValue],
+                        replyTo: Option[UncheckedAddressesHeaderValue],
                         subject: Option[Subject],
                         sentAt: Option[UTCDate])
 
