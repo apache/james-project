@@ -3497,9 +3497,9 @@
                     </configuration>
                 </plugin>
                 <plugin>
-                    <groupId>io.github.git-commit-id</groupId>
-                    <artifactId>git-commit-id-maven-plugin</artifactId>
-                    <version>7.0.0</version>
+                    <groupId>pl.project13.maven</groupId>
+                    <artifactId>git-commit-id-plugin</artifactId>
+                    <version>4.9.10</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -3636,30 +3636,29 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>io.github.git-commit-id</groupId>
-                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
                 <configuration>
                     <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
-                    <injectAllReactorProjects>true</injectAllReactorProjects>
+                    <prefix>git</prefix>
+                    <verbose>false</verbose>
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
                     <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
-                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
                     <format>json</format>
-                    <gitDescribe>
-                        <skip>false</skip>
-                        <always>true</always>
-                        <dirty>-dirty</dirty>
-                    </gitDescribe>
                     <includeOnlyProperties>
                         <includeOnlyProperty>git.commit.id</includeOnlyProperty>
                         <includeOnlyProperty>git.commit.id.describe</includeOnlyProperty>
                         <includeOnlyProperty>git.commit.message.short</includeOnlyProperty>
                         <includeOnlyProperty>git.dirty</includeOnlyProperty>
                     </includeOnlyProperties>
-                    <prefix>git</prefix>
                     <skip>false</skip>
                     <useNativeGit>true</useNativeGit>
-                    <verbose>false</verbose>
+                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                    <gitDescribe>
+                        <skip>false</skip>
+                        <always>true</always>
+                        <dirty>-dirty</dirty>
+                    </gitDescribe>
                 </configuration>
                 <executions>
                     <execution>
