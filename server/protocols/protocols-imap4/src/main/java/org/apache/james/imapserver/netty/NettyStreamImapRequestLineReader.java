@@ -24,8 +24,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.message.Literal;
@@ -57,7 +57,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
 
         @Override
         public void close() {
-            Mono.fromRunnable(Throwing.runnable(() -> Files.delete(file.toPath())))
+            Mono.fromRunnable(Throwing.runnable(() -> FileUtils.deleteQuietly(file)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
         }
