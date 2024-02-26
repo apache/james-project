@@ -51,13 +51,23 @@ public class CassandraNotificationRegistry implements NotificationRegistry {
 
     @Override
     public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<ZonedDateTime> expiryDate) {
-        Optional<Integer> waitDelay = expiryDate.map(expiry -> Ints.checkedCast(zonedDateTimeProvider.get().until(expiry, ChronoUnit.SECONDS)));
+        Optional<Integer> waitDelay = evaluateWaitDelay(expiryDate);
         if (isValid(waitDelay)) {
             return cassandraNotificationRegistryDAO.register(accountId, recipientId, waitDelay);
         } else {
             LOGGER.warn("Invalid wait delay for {} {} : {}", accountId, recipientId, waitDelay);
             return Mono.empty();
         }
+    }
+
+    private Optional<Integer> evaluateWaitDelay(Optional<ZonedDateTime> expiryDate) {
+        return expiryDate.map(expiry -> zonedDateTimeProvider.get().until(expiry, ChronoUnit.SECONDS))
+            .flatMap(longValue -> {
+                if (longValue >= Integer.MAX_VALUE || longValue <= Integer.MIN_VALUE) {
+                    return Optional.empty();
+                }
+                return Optional.of(Ints.checkedCast(longValue));
+            });
     }
 
     @Override
