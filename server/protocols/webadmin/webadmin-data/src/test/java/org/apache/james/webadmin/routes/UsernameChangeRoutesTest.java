@@ -204,6 +204,32 @@ class UsernameChangeRoutesTest {
                 .statusCode(HttpStatus.CREATED_201)
                 .body("taskId", Matchers.is(notNullValue()));
         }
+
+        @Test
+        void shouldPerformMigrationWhenUnknownSourceUserAndForce() {
+            String taskId = with()
+                .queryParam("action", "rename")
+                .queryParam("force")
+                .post("/users/unknown@domain.tld/rename/" + NEW_USER.asString())
+                .jsonPath()
+                .get("taskId");
+
+            given()
+                .basePath(TasksRoutes.BASE)
+            .when()
+                .get(taskId + "/await")
+            .then()
+                .body("type", is("UsernameChangeTask"))
+                .body("status", is("completed"))
+                .body("additionalInformation.type", is("UsernameChangeTask"))
+                .body("additionalInformation.oldUser", is("unknown@domain.tld"))
+                .body("additionalInformation.newUser", is("jessy.smith@domain.tld"))
+                .body("additionalInformation.status.A", is("DONE"))
+                .body("additionalInformation.status.B", is("DONE"));
+
+            assertThat(behaviour1.get()).isTrue();
+            assertThat(behaviour2.get()).isTrue();
+        }
     }
 
     @Nested
