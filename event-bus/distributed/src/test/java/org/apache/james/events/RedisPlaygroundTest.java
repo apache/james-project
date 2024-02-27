@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.lettuce.core.Consumer;
+import io.lettuce.core.ScanArgs;
+import io.lettuce.core.ScanCursor;
 import io.lettuce.core.StreamMessage;
 import io.lettuce.core.XGroupCreateArgs;
 import io.lettuce.core.XReadArgs;
@@ -129,6 +132,36 @@ class RedisPlaygroundTest {
             client.srem(key, value2);
 
             assertThat(client.smembers(key)).isEmpty();
+        }
+
+
+        @Test
+        void cleanMappingsToInactiveChannels(DockerRedis redis) {
+            RedisCommands<String, String> client = redis.createClient();
+            String nonRelatedKey = "nonRelatedKey";
+            String routingKey1 = "redis-eventbus-routingKey1";
+            List<String> activeChannels = List.of("activeChannel1", "activeChannel2");
+            client.sadd(nonRelatedKey, "whateverValue");
+            client.sadd(routingKey1, "activeChannel1", "inactiveChannel");
+
+            // before clean up
+            assertThat(client.smembers(routingKey1)).contains("inactiveChannel");
+
+            // clean up
+            ScanArgs scanEventBusKeys = ScanArgs.Builder.matches("redis-eventbus-*");
+            List<String> eventBusKeys = client.scan(ScanCursor.INITIAL, scanEventBusKeys)
+                .getKeys();
+
+            eventBusKeys.forEach(key -> {
+                client.smembers(key).forEach(channel -> {
+                    if (!activeChannels.contains(channel)) {
+                        client.srem(key, channel);
+                    }
+                });
+            });
+
+            // after clean up mapping to inactive channels
+            assertThat(client.smembers(routingKey1)).doesNotContain("inactiveChannel");
         }
     }
 
