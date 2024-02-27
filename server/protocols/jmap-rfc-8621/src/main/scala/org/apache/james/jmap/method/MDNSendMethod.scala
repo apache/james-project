@@ -31,7 +31,7 @@ import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.MDN._
 import org.apache.james.jmap.mail.MDNSend.MDN_ALREADY_SENT_FLAG
 import org.apache.james.jmap.mail._
-import org.apache.james.jmap.method.EmailSubmissionSetMethod.LOGGER
+import org.apache.james.jmap.method.EmailSubmissionSetMethod.{LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
 import org.apache.james.lifecycle.api.{LifecycleUtil, Startable}
 import org.apache.james.mailbox.model.{FetchGroup, MessageResult}
@@ -48,6 +48,7 @@ import org.apache.james.queue.api.MailQueueFactory.SPOOL
 import org.apache.james.queue.api.{MailQueue, MailQueueFactory}
 import org.apache.james.server.core.MailImpl
 import org.apache.james.util.ReactorUtils
+import org.apache.mailet.{Attribute, AttributeValue}
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import reactor.core.scala.publisher.{SFlux, SMono}
 
@@ -148,7 +149,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       mdnRelatedMessageResult <- retrieveRelatedMessageResult(session, requestEntry)
       mdnRelatedMessageResultAlready <- validateMDNNotAlreadySent(mdnRelatedMessageResult)
       messageRelated = parseAsMessage(mdnRelatedMessageResultAlready)
-      mailAndResponseAndId <- buildMailAndResponse(identity, session.getUser.asString(), requestEntry, messageRelated)
+      mailAndResponseAndId <- buildMailAndResponse(identity, session.getUser.asString(), requestEntry, messageRelated, session)
       _ <- Try(enqueue(mailAndResponseAndId._1)).toEither
     } yield {
       MDNSendCreateSuccess(
@@ -178,19 +179,19 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       scala.Right(relatedMessageResult)
     }
 
-  private def buildMailAndResponse(identity: Identity, sender: String, requestEntry: MDNSendCreateRequest, originalMessage: Message): Either[Throwable, (MailImpl, MDNSendCreateResponse)] =
+  private def buildMailAndResponse(identity: Identity, sender: String, requestEntry: MDNSendCreateRequest, originalMessage: Message, mailboxSession: MailboxSession): Either[Throwable, (MailImpl, MDNSendCreateResponse)] =
     for {
       mailRecipient <- getMailRecipient(originalMessage)
       mdnFinalRecipient <- getMDNFinalRecipient(requestEntry, identity)
       mdnOriginalRecipient = OriginalRecipient.builder().originalRecipient(Text.fromRawText(sender)).build()
       mdn = buildMDN(requestEntry, originalMessage, mdnFinalRecipient, mdnOriginalRecipient)
       subject = buildMessageSubject(requestEntry, originalMessage)
-      (mailImpl, mimeMessage) = buildMailAndMimeMessage(sender, mailRecipient, subject, mdn)
+      (mailImpl, mimeMessage) = buildMailAndMimeMessage(sender, mailRecipient, subject, mdn, mailboxSession)
     } yield {
       (mailImpl, buildMDNSendCreateResponse(requestEntry, mdn, mimeMessage))
     }
 
-  private def buildMailAndMimeMessage(sender: String, recipient: String, subject: String, mdn: MDN): (MailImpl, MimeMessage) = {
+  private def buildMailAndMimeMessage(sender: String, recipient: String, subject: String, mdn: MDN, mailboxSession: MailboxSession): (MailImpl, MimeMessage) = {
     val mimeMessage: MimeMessage = mdn.asMimeMessage()
     mimeMessage.setFrom(sender)
     mimeMessage.setRecipients(jakarta.mail.Message.RecipientType.TO, recipient)
@@ -202,6 +203,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
       .sender(sender)
       .addRecipient(recipient)
       .mimeMessage(mimeMessage)
+      .addAttribute(new Attribute(MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(mailboxSession.getUser.asString())))
       .build()
     mailImpl -> mimeMessage
   }
