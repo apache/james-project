@@ -22,9 +22,8 @@ package org.apache.james.modules.mailbox;
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.KeyspaceFactory;
+import org.apache.james.backends.cassandra.init.ResilientClusterProvider;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
-import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.backends.cassandra.init.configuration.KeyspaceConfiguration;
 
@@ -72,12 +71,8 @@ public class CassandraCacheSessionModule extends AbstractModule {
         private final CqlSession cluster;
 
         @Inject
-        private InitializedCacheCluster(CqlSession cluster, ClusterConfiguration clusterConfiguration, KeyspacesConfiguration keyspacesConfiguration) {
-            this.cluster = cluster;
-
-            if (clusterConfiguration.shouldCreateKeyspace()) {
-                KeyspaceFactory.createKeyspace(keyspacesConfiguration.cacheKeyspaceConfiguration(), cluster).block();
-            }
+        private InitializedCacheCluster(ResilientClusterProvider sessionProvider, KeyspacesConfiguration keyspacesConfiguration) {
+            this.cluster = sessionProvider.get(keyspacesConfiguration.cacheKeyspaceConfiguration());
         }
     }
 }
