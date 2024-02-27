@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
 
@@ -190,6 +191,18 @@ class UsernameChangeRoutesTest {
                 .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", Matchers.is("Invalid arguments supplied in the user request"))
                 .body("details", Matchers.is("'oldUser' parameter should be an existing user"));
+        }
+
+        @Test
+        void shouldAcceptUnknownSourceUserUserWhenForce() {
+            given()
+                .queryParam("action", "rename")
+                .queryParam("force")
+            .when()
+                .post("/users/unknown@domain.tld/rename/" + NEW_USER.asString())
+            .then()
+                .statusCode(HttpStatus.CREATED_201)
+                .body("taskId", Matchers.is(notNullValue()));
         }
     }
 

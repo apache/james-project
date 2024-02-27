@@ -42,6 +42,7 @@ import spark.Service;
 public class UsernameChangeRoutes implements Routes {
     private static final String OLD_USER_PARAM = "oldUser";
     private static final String NEW_USER_PARAM = "newUser";
+    private static final String FORCE_PARAM = "force";
     private static final String ROOT_PATH = "/users/:" + OLD_USER_PARAM + "/rename/:" + NEW_USER_PARAM;
     private static final TaskRegistrationKey RENAME = TaskRegistrationKey.of("rename");
 
@@ -73,7 +74,7 @@ public class UsernameChangeRoutes implements Routes {
             Username oldUser = Username.of(request.params(OLD_USER_PARAM));
             Username newUser = Username.of(request.params(NEW_USER_PARAM));
 
-            Preconditions.checkArgument(usersRepository.contains(oldUser), "'oldUser' parameter should be an existing user");
+            Preconditions.checkArgument(request.queryParams(FORCE_PARAM) != null || usersRepository.contains(oldUser), "'oldUser' parameter should be an existing user");
             Preconditions.checkArgument(usersRepository.contains(newUser), "'newUser' parameter should be an existing user");
 
             Optional<StepName> fromStep = Optional.ofNullable(request.queryParams("fromStep")).map(StepName::new);
