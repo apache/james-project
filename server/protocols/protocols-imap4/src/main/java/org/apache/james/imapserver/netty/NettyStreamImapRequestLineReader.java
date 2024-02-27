@@ -19,13 +19,11 @@
 package org.apache.james.imapserver.netty;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.message.Literal;
@@ -44,10 +42,10 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         private final long offset;
         private final int size;
         private final boolean extraCRLF;
-        private final File file;
+        private final ImapRequestFrameDecoder.FileHolder file;
         private final AbstractNettyImapRequestLineReader reader;
 
-        private FileLiteral(long offset, int size, boolean extraCRLF, File file, AbstractNettyImapRequestLineReader reader) {
+        private FileLiteral(long offset, int size, boolean extraCRLF, ImapRequestFrameDecoder.FileHolder file, AbstractNettyImapRequestLineReader reader) {
             this.offset = offset;
             this.size = size;
             this.extraCRLF = extraCRLF;
@@ -57,19 +55,19 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
 
         @Override
         public void close() {
-            Mono.fromRunnable(Throwing.runnable(() -> FileUtils.deleteQuietly(file)))
+            Mono.fromRunnable(Throwing.runnable(() -> file.dispose()))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
         }
 
         @Override
         public long size() {
-            return Math.min(file.length() - offset, size);
+            return Math.min(file.getFile().length() - offset, size);
         }
 
         @Override
         public InputStream getInputStream() throws IOException {
-            FileInputStream fileInputStream = new FileInputStream(file);
+            FileInputStream fileInputStream = new FileInputStream(file.getFile());
             fileInputStream.skip(offset);
             InputStream limitedStream = ByteStreams.limit(fileInputStream, size);
             if (extraCRLF) {
@@ -80,14 +78,14 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
         }
     }
 
-    private final File backingFile;
+    private final ImapRequestFrameDecoder.FileHolder backingFile;
     private final CountingInputStream in;
 
-    public NettyStreamImapRequestLineReader(Channel channel, File file, boolean retry) {
+    public NettyStreamImapRequestLineReader(Channel channel, ImapRequestFrameDecoder.FileHolder file, boolean retry) {
         super(channel, retry);
         this.backingFile = file;
         try {
-            this.in = new CountingInputStream(new FileInputStream(file));
+            this.in = new CountingInputStream(new FileInputStream(file.getFile()));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
