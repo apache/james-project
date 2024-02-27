@@ -44,6 +44,8 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.junit.TemporaryFolderExtension.TemporaryFolder;
 import org.apache.james.transport.mailets.StripAttachment.OutputFileName;
+import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
 import org.apache.mailet.AttributeValue;
@@ -334,6 +336,41 @@ class StripAttachmentTest {
             MimeBodyPart savedBodyPart = new MimeBodyPart(new ByteArrayInputStream((byte[]) saved.get(expectedKey).getValue()));
             String content = IOUtils.toString(savedBodyPart.getInputStream(), StandardCharsets.UTF_8);
             assertThat(content).isEqualTo(EXPECTED_ATTACHMENT_CONTENT);
+        });
+        assertThat(savedValue)
+            .isPresent()
+            .hasValueSatisfying(assertValue.sneakyThrow());
+    }
+
+    @Test
+    void serviceShouldHandleFilenameWithSpace(TemporaryFolder temporaryFolder) throws Exception {
+        StripAttachment mailet = new StripAttachment();
+
+        String customAttribute = "my.custom.attribute";
+        FakeMailetConfig mci = FakeMailetConfig.builder()
+            .mailetName("Test")
+            .setProperty("remove", "matched")
+            .setProperty("directory", temporaryFolder.getFolderPath())
+            .setProperty("pattern", ".*\\.pdf")
+            .setProperty("attribute", customAttribute)
+            .build();
+        mailet.init(mci);
+
+        String expectedKey = "Vietnam Airline.pdf";
+        MimeMessage message = MimeMessageUtil.mimeMessageFromStream(ClassLoaderUtils.getSystemResourceAsSharedStream("mime/space.eml"));
+
+        Mail mail = FakeMail.builder()
+            .name("from-message-builder")
+            .mimeMessage(message)
+            .build();
+
+        mailet.service(mail);
+
+        Optional<Map<String, AttributeValue<?>>> savedValue = AttributeUtils.getValueAndCastFromMail(mail, AttributeName.of(customAttribute), MAP_STRING_BYTES_CLASS);
+        ConsumerChainer<Map<String, AttributeValue<?>>> assertValue = Throwing.consumer(saved -> {
+            assertThat(saved)
+                .hasSize(1)
+                .containsKeys(expectedKey);
         });
         assertThat(savedValue)
             .isPresent()
