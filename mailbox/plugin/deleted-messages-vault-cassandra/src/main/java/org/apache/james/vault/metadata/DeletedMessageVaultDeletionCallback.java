@@ -26,7 +26,6 @@ import java.io.SequenceInputStream;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 
@@ -107,14 +106,6 @@ public class DeletedMessageVaultDeletionCallback implements DeleteMessageListene
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-
-    private ZonedDateTime retrieveDeliveryDate(Optional<Message> mimeMessage, org.apache.james.mailbox.store.mail.model.Message message) {
-        return mimeMessage.map(Message::getDate)
-            .map(Date::toInstant)
-            .map(instant -> ZonedDateTime.ofInstant(instant, ZoneOffset.UTC))
-            .orElse(ZonedDateTime.ofInstant(message.getInternalDate().toInstant(), ZoneOffset.UTC));
     }
 
     private MaybeSender retrieveSender(Optional<Message> mimeMessage) {
