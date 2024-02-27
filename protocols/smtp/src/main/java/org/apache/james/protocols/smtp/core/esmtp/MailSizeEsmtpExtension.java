@@ -179,8 +179,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         Optional<Boolean> failed = session.getAttachment(MESG_FAILED, State.Transaction);
         if (failed.orElse(false)) {
             LOGGER.info("Rejected message from {} from {} exceeding system maximum message size of {}",
-                session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender()).asPrettyString()
-                , session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
+                session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender()).asPrettyString(),
+                session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
             return QUOTA_EXCEEDED;
         } else {
             return HookResult.DECLINED;
