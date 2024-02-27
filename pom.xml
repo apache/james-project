@@ -3636,41 +3636,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>io.github.git-commit-id</groupId>
-                <artifactId>git-commit-id-maven-plugin</artifactId>
-                <configuration>
-                    <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
-                    <injectAllReactorProjects>true</injectAllReactorProjects>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
-                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
-                    <format>json</format>
-                    <gitDescribe>
-                        <skip>false</skip>
-                        <always>true</always>
-                        <dirty>-dirty</dirty>
-                    </gitDescribe>
-                    <includeOnlyProperties>
-                        <includeOnlyProperty>git.commit.id</includeOnlyProperty>
-                        <includeOnlyProperty>git.commit.id.describe</includeOnlyProperty>
-                        <includeOnlyProperty>git.commit.message.short</includeOnlyProperty>
-                        <includeOnlyProperty>git.dirty</includeOnlyProperty>
-                    </includeOnlyProperties>
-                    <prefix>git</prefix>
-                    <skip>false</skip>
-                    <useNativeGit>true</useNativeGit>
-                    <verbose>false</verbose>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>get-the-git-infos</id>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
                 <executions>
@@ -4023,6 +3988,43 @@
                         </plugin>
                     </plugins>
                 </pluginManagement>
+                <plugins>
+                    <plugin>
+                        <groupId>io.github.git-commit-id</groupId>
+                        <artifactId>git-commit-id-maven-plugin</artifactId>
+                        <configuration>
+                            <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+                            <injectAllReactorProjects>true</injectAllReactorProjects>
+                            <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                            <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                            <failOnNoGitDirectory>false</failOnNoGitDirectory>
+                            <format>json</format>
+                            <gitDescribe>
+                                <skip>false</skip>
+                                <always>true</always>
+                                <dirty>-dirty</dirty>
+                            </gitDescribe>
+                            <includeOnlyProperties>
+                                <includeOnlyProperty>git.commit.id</includeOnlyProperty>
+                                <includeOnlyProperty>git.commit.id.describe</includeOnlyProperty>
+                                <includeOnlyProperty>git.commit.message.short</includeOnlyProperty>
+                                <includeOnlyProperty>git.dirty</includeOnlyProperty>
+                            </includeOnlyProperties>
+                            <prefix>git</prefix>
+                            <skip>false</skip>
+                            <useNativeGit>true</useNativeGit>
+                            <verbose>false</verbose>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>get-the-git-infos</id>
+                                <goals>
+                                    <goal>revision</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
             </build>
         </profile>
     </profiles>
