@@ -44,6 +44,7 @@ import spark.Service;
 public class UsernameChangeRoutes implements Routes {
     private static final String OLD_USER_PARAM = "oldUser";
     private static final String NEW_USER_PARAM = "newUser";
+    private static final String FORCE_PARAM = "force";
     private static final String ROOT_PATH = "/users/:" + OLD_USER_PARAM + "/rename/:" + NEW_USER_PARAM;
     private static final TaskRegistrationKey RENAME = TaskRegistrationKey.of("rename");
 

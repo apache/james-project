@@ -527,7 +527,7 @@ Implemented migration steps are:
 Response codes:
 
 * 201: Success. Corresponding task id is returned.
-* 400: Error in the request. Details can be found in the reported error.
+* 400: Error in the request. Details can be found in the reported error. If you encounter the error "'oldUser' parameter should be an existing user," please note that this validation can be bypassed by specifying the `force` query parameter.
 
 The `fromStep` query parameter allows skipping previous steps, allowing to resume the username change from a failed step.
 
