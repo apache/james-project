@@ -150,12 +150,12 @@ class KeyRegistrationHandler {
 
         // Redis Pub/Sub does not support headers for message. Therefore, likely we need to embed the eventBusId into the message.
         // Or store the messages headers in Redis: not viable because an EventId can be mapped to many routing key.
-        String[] parts = StringUtils.split(channelMessage.getMessage(), EventDispatcher.REDIS_CHANNEL_MESSAGE_DELIMITER);
+        String[] parts = StringUtils.split(channelMessage.getMessage(), EventDispatcher.REDIS_CHANNEL_MESSAGE_DELIMITER, 3);
 
-        String serializedEventBusId = parts[1];
+        String serializedEventBusId = parts[0];
         EventBusId eventBusId = EventBusId.of(serializedEventBusId);
 
-        String routingKey = parts[2];
+        String routingKey = parts[1];
         RegistrationKey registrationKey = routingKeyConverter.toRegistrationKey(routingKey);
 
         List<EventListener.ReactiveEventListener> listenersToCall = localListenerRegistry.getLocalListeners(registrationKey)
@@ -167,7 +167,7 @@ class KeyRegistrationHandler {
             return Mono.empty();
         }
 
-        String eventAsJson = parts[0];
+        String eventAsJson = parts[2];
         Event event = toEvent(eventAsJson);
 
         return Flux.fromIterable(listenersToCall)
