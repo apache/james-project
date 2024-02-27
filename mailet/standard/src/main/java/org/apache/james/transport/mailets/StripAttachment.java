@@ -50,6 +50,11 @@ import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.javax.MultipartUtil;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.james.mime4j.dom.field.ContentDispositionField;
+import org.apache.james.mime4j.field.ContentDispositionFieldLenientImpl;
+import org.apache.james.mime4j.field.ContentTypeFieldLenientImpl;
+import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.stream.RawField;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeUtils;
@@ -385,7 +390,18 @@ public class StripAttachment extends GenericMailet {
 
     @VisibleForTesting String getFilename(BodyPart bodyPart) {
         try {
-            String fileName = bodyPart.getFileName();
+            String fileName = Optional.ofNullable(bodyPart.getHeader("Content-Disposition"))
+                .map(h -> h[0])
+                .map(h -> new RawField("Content-Disposition", h))
+                .map(h -> ContentDispositionFieldLenientImpl.PARSER.parse(h, DecodeMonitor.SILENT))
+                .map(ContentDispositionField::getFilename)
+                .or(Throwing.supplier(() -> Optional.ofNullable(bodyPart.getHeader("Content-Type"))
+                    .map(h -> h[0])
+                    .map(h -> new RawField("Content-Type", h))
+                    .map(h -> ContentTypeFieldLenientImpl.PARSER.parse(h, DecodeMonitor.SILENT))
+                    .map(Field::getName)).sneakyThrow())
+                .orElse(null);
+
             if (fileName != null) {
                 return renameWithConfigurationPattern(decodeFilename(fileName));
             }
@@ -467,7 +483,7 @@ public class StripAttachment extends GenericMailet {
     }
 
     private File outputFile(Part part, Optional<String> fileName) throws MessagingException, IOException {
-        Optional<String> maybePartFileName = Optional.ofNullable(part.getFileName());
+        Optional<String> maybePartFileName = fileName.or(Throwing.supplier(() -> Optional.ofNullable(part.getFileName())).sneakyThrow());
         return createTempFile(fileName.orElse(maybePartFileName.orElse(null)));
     }
 
