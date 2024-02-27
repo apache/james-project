@@ -117,8 +117,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         long maxMessageSize = session.getConfiguration().getMaxMessageSize();
         if ((maxMessageSize > 0) && (size > maxMessageSize)) {
             // Let the client know that the size limit has been hit.
-            LOGGER.error("Rejected message from {} to {} of size {} exceeding system maximum message size of {} based on SIZE option.",
-                tempSender,
+            LOGGER.info("Rejected message from {} to {} of size {} exceeding system maximum message size of {} based on SIZE option.",
+                tempSender.asPrettyString(),
                 session.getRemoteAddress().getAddress().getHostAddress(),
                 size,
                 maxMessageSize);
@@ -178,7 +178,9 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
         Optional<Boolean> failed = session.getAttachment(MESG_FAILED, State.Transaction);
         if (failed.orElse(false)) {
-            LOGGER.error("Rejected message from {} from {} exceeding system maximum message size of {}", session.getAttachment(SMTPSession.SENDER, State.Transaction), session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
+            LOGGER.info("Rejected message from {} from {} exceeding system maximum message size of {}",
+                session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender()).asPrettyString()
+                , session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
             return QUOTA_EXCEEDED;
         } else {
             return HookResult.DECLINED;
