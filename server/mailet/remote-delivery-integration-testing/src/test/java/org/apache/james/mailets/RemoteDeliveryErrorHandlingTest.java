@@ -249,22 +249,36 @@ class RemoteDeliveryErrorHandlingTest {
                 .isEqualTo(1));
 
         // When we retry and temporary problem is not solved
-        given()
+        Object taskId = given()
             .spec(webAdminApi)
             .param("action", "reprocess")
             .param("queue", MailQueueFactory.SPOOL.asString())
             .param("processor", TRANSPORT_PROCESSOR)
-            .patch("/mailRepositories/" + REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.getPath().urlEncoded() + "/mails");
+            .patch("/mailRepositories/" + REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.getPath().urlEncoded() + "/mails")
+            .body()
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .spec(webAdminApi)
+            .get("/tests/" + taskId + "/await");
+
         awaitAtMostOneMinute
             .untilAsserted(() -> assertThat(jamesServer.getProbe(MailRepositoryProbeImpl.class)
                 .getRepositoryMailCount(REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY))
                 .isEqualTo(1));
-        given()
+        Object taskId2 = given()
             .spec(webAdminApi)
             .param("action", "reprocess")
             .param("queue", MailQueueFactory.SPOOL.asString())
             .param("processor", TRANSPORT_PROCESSOR)
-            .patch("/mailRepositories/" + REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.getPath().urlEncoded() + "/mails");
+            .patch("/mailRepositories/" + REMOTE_DELIVERY_TEMPORARY_ERROR_REPOSITORY.getPath().urlEncoded() + "/mails")
+            .body()
+            .jsonPath()
+            .get("taskId");
+        given()
+            .spec(webAdminApi)
+            .get("/tests/" + taskId2 + "/await");
 
         // Then mail should be stored in permanent error repository
         awaitAtMostOneMinute
