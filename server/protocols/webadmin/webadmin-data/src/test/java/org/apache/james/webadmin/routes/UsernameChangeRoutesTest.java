@@ -194,7 +194,7 @@ class UsernameChangeRoutesTest {
         }
 
         @Test
-        void shouldAcceptUnknownSourceUserUserWhenForce() {
+        void shouldAcceptUnknownSourceUserWhenForce() {
             given()
                 .queryParam("action", "rename")
                 .queryParam("force")
