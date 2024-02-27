@@ -1,0 +1,24 @@
+Content-Type: multipart/mixed; boundary="------------gwA6NAbT8Pk0FYCy0yoPh61m"
+Message-ID: <1745dbd6-f23b-44d0-be4c-9b9472c50348@linagora.com>
+Date: Tue, 27 Feb 2024 07:38:14 +0100
+MIME-Version: 1.0
+To: BT TEST <xxx@linagora.com>
+From: "xxx@linagora.com" <xxx@linagora.com>
+Subject: Space
+
+This is a multi-part message in MIME format.
+--------------gwA6NAbT8Pk0FYCy0yoPh61m
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+space in attachment filename
+
+--------------gwA6NAbT8Pk0FYCy0yoPh61m
+Content-Type: application/pdf
+Content-Disposition: attachment; filename=Vietnam Airline.pdf
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjUKJbXtrvsKMyAwIG9iago8PCAvTGVuZ3RoIDQgMCBSCiAgIC9GaWx0ZXIgL0Zs
+YXRlRGVjb2RlCj4+CnN0cmVhbQp4nN1aS6/buhHe61foD1ghh28g0OIC3XTVAgfooujC9jm+
+
+--------------gwA6NAbT8Pk0FYCy0yoPh61m--
