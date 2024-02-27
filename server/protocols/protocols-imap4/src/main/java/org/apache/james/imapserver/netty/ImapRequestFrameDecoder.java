@@ -334,13 +334,15 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
     public void disableFraming(ChannelHandlerContext ctx) {
         if (framingEnabled.getAndSet(false)) {
-            ctx.channel().pipeline().remove(FRAMER);
+            ctx.channel().pipeline().replace(FRAMER, FRAMER, new ChannelInboundHandlerAdapter() {
+
+            });
         }
     }
 
     public void enableFraming(ChannelHandlerContext ctx) {
         if (!framingEnabled.getAndSet(true)) {
-            ctx.channel().pipeline().addBefore(REQUEST_DECODER, FRAMER,
+            ctx.channel().pipeline().replace(FRAMER, FRAMER,
                 new SwitchableLineBasedFrameDecoder(ctx.channel().pipeline(), maxFrameLength, false));
         }
     }
