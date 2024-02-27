@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
@@ -43,6 +44,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
+import org.apache.james.lifecycle.api.Disposable.LeakAware;
 import org.apache.james.protocols.netty.LineHandlerAware;
 
 import com.github.fge.lambdas.Throwing;
@@ -230,10 +232,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                             // Not doing this causes IDLEd IMAP connections to clear IMAP append literal while they are processed.
                             attachment.remove(SUBSCRIPTION);
                             parseImapMessage(ctx, null, attachment, Pair.of(reader, size), readerIndex)
-                                .ifPresent(message -> {
-
-                                    ctx.fireChannelRead(message);
-                                });
+                                .ifPresent(ctx::fireChannelRead);
                         } catch (DecodingException e) {
                             ctx.fireExceptionCaught(e);
                         }
@@ -253,18 +252,53 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         }
     }
 
+    public static class FileHolderInner extends LeakAware.Resource {
+        public static FileHolderInner create() throws IOException {
+            return new FileHolderInner(Files.createTempFile("imap-literal", ".tmp").toFile());
+        }
+
+        private final File file;
+
+        private FileHolderInner(File file) {
+            super(() -> FileUtils.deleteQuietly(file));
+            this.file = file;
+        }
+
+        public File getFile() {
+            return file;
+        }
+    }
+
+    public static class FileHolder extends LeakAware<FileHolderInner> {
+        public static FileHolder create() throws IOException {
+            return new FileHolder(FileHolderInner.create());
+        }
+
+        private final FileHolderInner file;
+
+        private FileHolder(FileHolderInner file) {
+            super(file);
+            this.file = file;
+        }
+
+        public File getFile() {
+            return file.file;
+        }
+
+    }
+
     static class FileChunkConsumer implements Consumer<byte[]> {
         private final int size;
         private final AtomicInteger written = new AtomicInteger(0);
         private final AtomicBoolean initialized = new AtomicBoolean(false);
         private OutputStream outputStream;
-        private File file;
+        private FileHolder file;
 
         FileChunkConsumer(int size) {
             this.size = size;
         }
 
-        public File getFile() {
+        public FileHolder getFile() {
             return file;
         }
 
@@ -279,8 +313,8 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
         private void initialize() {
             try {
-                file = Files.createTempFile("imap-literal", ".tmp").toFile();
-                outputStream = new FileOutputStream(file, true);
+                file = FileHolder.create();
+                outputStream = new FileOutputStream(file.getFile(), true);
                 initialized.set(true);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -318,7 +352,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                     outputStream.close();
                 }
                 if (file != null) {
-                    Files.delete(file.toPath());
+                    file.dispose();
                 }
             })).subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
