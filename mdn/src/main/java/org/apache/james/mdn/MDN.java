@@ -87,7 +87,6 @@ public class MDN {
         public MDN build() {
             Preconditions.checkState(report != null);
             Preconditions.checkState(humanReadableText != null);
-            Preconditions.checkState(!humanReadableText.trim().isEmpty());
 
             return new MDN(humanReadableText, report, message);
         }
@@ -130,15 +129,17 @@ public class MDN {
             throw new MDNParseBodyPartInvalidException("MDN Message must contain at least two parts");
         }
         try {
-            var humanReadableTextEntity = bodyParts.get(0);
-            return extractHumanReadableText(humanReadableTextEntity)
-                .flatMap(humanReadableText -> extractMDNReport(bodyParts.get(1))
-                    .map(report -> MDN.builder()
+            return extractMDNReport(bodyParts)
+                .map(Throwing.function(report -> {
+                    String humanReadableText = extractHumanReadableText(bodyParts)
+                        .orElse("");
+                    return MDN.builder()
                         .humanReadableText(humanReadableText)
                         .report(report)
                         .message(extractOriginalMessage(bodyParts))
-                        .build()))
-                .orElseThrow(() -> new MDNParseException("MDN can not extract. Body part is invalid"));
+                        .build();
+                }))
+                .orElseThrow(() -> new MDNParseException("MDN can not extract. Report body part is invalid"));
         } catch (MDNParseException e) {
             throw e;
         } catch (Exception e) {
@@ -156,29 +157,37 @@ public class MDN {
             .map(Message.class::cast);
     }
 
-    public static Optional<String> extractHumanReadableText(Entity humanReadableTextEntity) throws IOException {
-        if (humanReadableTextEntity.getMimeType().equals("text/plain")) {
-            try (InputStream inputStream = ((SingleBody) humanReadableTextEntity.getBody()).getInputStream()) {
-                return Optional.of(IOUtils.toString(inputStream, humanReadableTextEntity.getCharset()));
-            }
-        }
-        return Optional.empty();
+    public static Optional<String> extractHumanReadableText(List<Entity> entities) throws IOException {
+        return entities.stream()
+            .filter(entity -> entity.getMimeType().equals("text/plain"))
+            .findAny()
+            .map(Throwing.<Entity, String>function(entity -> {
+                try (InputStream inputStream = ((SingleBody) entity.getBody()).getInputStream()) {
+                    return IOUtils.toString(inputStream, entity.getCharset());
+                }
+            }).sneakyThrow());
     }
 
-    public static Optional<MDNReport> extractMDNReport(Entity reportEntity) {
-        if (!reportEntity.getMimeType().startsWith(DISPOSITION_CONTENT_TYPE)) {
-            return Optional.empty();
-        }
-        try (InputStream inputStream = ((SingleBody) reportEntity.getBody()).getInputStream()) {
-            Try<MDNReport> result = MDNReportParser.parse(inputStream, reportEntity.getCharset());
-            if (result.isSuccess()) {
-                return Optional.of(result.get());
-            } else {
-                return Optional.empty();
-            }
-        } catch (IOException e) {
-            return Optional.empty();
-        }
+    public static Optional<MDNReport> extractMDNReport(List<Entity> entities) {
+        return entities.stream()
+            .filter(entity -> entity.getMimeType().startsWith(DISPOSITION_CONTENT_TYPE))
+            .findAny()
+            .flatMap(entity -> {
+                try (InputStream inputStream = ((SingleBody) entity.getBody()).getInputStream()) {
+                    Try<MDNReport> result = MDNReportParser.parse(inputStream, entity.getCharset());
+                    if (result.isSuccess()) {
+                        return Optional.of(result.get());
+                    } else {
+                        return Optional.empty();
+                    }
+                } catch (IOException e) {
+                    return Optional.empty();
+                }
+            });
+    }
+
+    public boolean isReport(Entity entity) {
+        return entity.getMimeType().startsWith(DISPOSITION_CONTENT_TYPE);
     }
 
     private final String humanReadableText;
