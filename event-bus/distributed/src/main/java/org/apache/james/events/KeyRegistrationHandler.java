@@ -89,6 +89,7 @@ class KeyRegistrationHandler {
         newSubscription = Mono.from(redisSubscriber.subscribe(registrationChannel.asString()))
             .thenMany(redisSubscriber.observeChannels())
                 .flatMap(this::handleChannelMessage, EventBus.EXECUTION_RATE)
+            .doOnError(throwable -> LOGGER.error(throwable.getMessage()))
             .subscribeOn(scheduler)
             .subscribe();
 
@@ -127,6 +128,7 @@ class KeyRegistrationHandler {
             .thenReturn(new KeyRegistration(() -> {
                 if (registration.unregister().lastListenerRemoved()) {
                     return Mono.from(metricFactory.decoratePublisherWithTimerMetric("redis-unregister", registrationBinder.unbind(key)
+                        .doOnError(throwable -> LOGGER.error(throwable.getMessage()))
                         .timeout(TOPOLOGY_CHANGES_TIMEOUT)
                         .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()))));
                 }
@@ -137,6 +139,7 @@ class KeyRegistrationHandler {
     private Mono<Void> registerIfNeeded(RegistrationKey key, LocalListenerRegistry.LocalRegistration registration) {
         if (registration.isFirstListener()) {
             return registrationBinder.bind(key)
+                .doOnError(throwable -> LOGGER.error(throwable.getMessage()))
                 .timeout(TOPOLOGY_CHANGES_TIMEOUT)
                 .retryWhen(Retry.backoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff()).jitter(retryBackoff.getJitterFactor()).scheduler(Schedulers.boundedElastic()));
         }
@@ -144,6 +147,7 @@ class KeyRegistrationHandler {
     }
 
     private Mono<Void> handleChannelMessage(ChannelMessage<String, String> channelMessage) {
+        LOGGER.info("Processing message body {} from Redis channel {}", channelMessage.getMessage(), channelMessage.getChannel());
         if (channelMessage.getMessage() == null) {
             return Mono.empty();
         }
