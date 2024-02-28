@@ -801,7 +801,6 @@ class MIMEMessageConverterTest {
             String expectedMimeType = "image/png";
             String text = "123456";
             String name = "ديناصور.png";
-            String expectedName = EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
             AttachmentId blodId = AttachmentId.from("blodId");
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
@@ -829,7 +828,7 @@ class MIMEMessageConverterTest {
                 .hasSize(1)
                 .extracting(entity -> (Multipart) entity.getBody())
                 .flatExtracting(Multipart::getBodyParts)
-                .anySatisfy(part -> assertThat(getNameParameterValue(part)).isEqualTo(expectedName));
+                .anySatisfy(part -> assertThat(getNameParameterValue(part)).isEqualTo(name));
         }
 
 
