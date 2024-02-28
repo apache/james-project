@@ -25,7 +25,6 @@ import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.backends.rabbitmq.QueueArguments.NO_ARGUMENTS;
 import static org.apache.james.events.RabbitMQEventBus.EVENT_BUS_ID;
 
 import java.time.Duration;
@@ -101,7 +100,8 @@ public class EventDispatcher {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(NO_ARGUMENTS)),
+                .arguments(configuration.workQueueArgumentsBuilder()
+                    .build())),
             sender.bind(BindingSpecification.binding()
                 .exchange(namingStrategy.deadLetterExchange())
                 .queue(namingStrategy.deadLetterQueue().getName())
