@@ -30,6 +30,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.dom.BinaryBody;
@@ -41,6 +42,7 @@ import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.message.BodyFactory;
 import org.apache.james.mime4j.util.ByteArrayOutputStreamRecycler;
 import org.apache.james.mime4j.util.ContentUtil;
+import org.apache.james.util.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +56,12 @@ public class FileBufferedBodyFactory implements BodyFactory, Disposable {
 
     public static final BasicBodyFactory INSTANCE = new BasicBodyFactory();
     public static final Logger LOGGER = LoggerFactory.getLogger(FileBufferedBodyFactory.class);
+    public static final int FILE_THRESHOLD = Optional.ofNullable(System.getProperty("james.mime4j.buffered.body.factory.file.threshold"))
+        .map(s -> Size.parse(s, Size.Unit.NoUnit))
+        .map(s -> (int) s.asBytes())
+        .orElse(100 * 1024);
+
+
 
     private final Charset defaultCharset;
     private final ArrayList<Disposable> disposables = new ArrayList<>();
@@ -151,7 +159,7 @@ public class FileBufferedBodyFactory implements BodyFactory, Disposable {
     }
 
     public BinaryBody binaryBody(final InputStream is) throws IOException {
-        try (FileBackedOutputStream out = new FileBackedOutputStream(100 * 1024)) {
+        try (FileBackedOutputStream out = new FileBackedOutputStream(FILE_THRESHOLD)) {
             disposables.add(() -> {
                 try {
                     out.reset();
