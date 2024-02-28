@@ -20,7 +20,6 @@
 package org.apache.james.modules.mailbox;
 
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
-import static org.apache.james.backends.rabbitmq.Constants.ALLOW_QUORUM;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
@@ -198,14 +197,14 @@ public class DistributedDeletedMessageVaultDeletionCallback implements DeleteMes
                     .durable(DURABLE)
                     .exclusive(!EXCLUSIVE)
                     .autoDelete(!AUTO_DELETE)
-                    .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(!ALLOW_QUORUM)
+                    .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder()
                         .deadLetter(DEAD_LETTER)
                         .build())),
                 sender.declareQueue(QueueSpecification.queue(QUEUE)
                     .durable(DURABLE)
                     .exclusive(!EXCLUSIVE)
                     .autoDelete(!AUTO_DELETE)
-                    .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(!ALLOW_QUORUM)
+                    .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder()
                         .deadLetter(DEAD_LETTER)
                         .build())),
                 sender.bind(BindingSpecification.binding()
