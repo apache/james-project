@@ -20,6 +20,7 @@
 package org.apache.james.mdn;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
@@ -149,21 +150,21 @@ class MDNTest {
     }
 
     @Test
-    void buildShouldThrowOnEmptyHumanReadableText() {
-        assertThatThrownBy(() -> MDN.builder()
+    void buildShouldNotThrowOnEmptyHumanReadableText() {
+        assertThatCode(() -> MDN.builder()
                 .humanReadableText("")
                 .report(MINIMAL_REPORT)
                 .build())
-            .isInstanceOf(IllegalStateException.class);
+            .doesNotThrowAnyException();
     }
 
     @Test
-    void buildShouldThrowOnFoldingWhiteHumanReadableText() {
-        assertThatThrownBy(() -> MDN.builder()
+    void buildShouldNotThrowOnFoldingWhiteHumanReadableText() {
+        assertThatCode(() -> MDN.builder()
                 .humanReadableText("  ")
                 .report(MINIMAL_REPORT)
                 .build())
-            .isInstanceOf(IllegalStateException.class);
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -262,7 +263,7 @@ class MDNTest {
             .build();
         assertThatThrownBy(() -> MDN.parse(message))
             .isInstanceOf(MDN.MDNParseException.class)
-            .hasMessage("MDN can not extract. Body part is invalid");
+            .hasMessage("MDN can not extract. Report body part is invalid");
     }
 
     @Test
@@ -281,7 +282,7 @@ class MDNTest {
             .build();
         assertThatThrownBy(() -> MDN.parse(message))
             .isInstanceOf(MDN.MDNParseException.class)
-            .hasMessage("MDN can not extract. Body part is invalid");
+            .hasMessage("MDN can not extract. Report body part is invalid");
     }
 
     @Test
@@ -351,6 +352,77 @@ class MDNTest {
         MDN mdnExpect = MDN.builder()
             .report(mdnReportExpect)
             .humanReadableText("first")
+            .build();
+        assertThat(mdnActual).isEqualTo(mdnExpect);
+    }
+
+    @Test
+    public void parseShouldSuccessWithValidMDNWithTextHTMLExplanation() throws Exception {
+        BodyPart mdnBodyPart = BodyPartBuilder
+            .create()
+            .setBody(SingleBodyBuilder.create()
+                .setText("Reporting-UA: UA_name; UA_product\r\n" +
+                        "MDN-Gateway: rfc822; apache.org\r\n" +
+                        "Original-Recipient: rfc822; originalRecipient\r\n" +
+                        "Final-Recipient: rfc822; final_recipient\r\n" +
+                        "Original-Message-ID: <original@message.id>\r\n" +
+                        "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed\r\n" +
+                        "Error: Message1\r\n" +
+                        "Error: Message2\r\n" +
+                        "X-OPENPAAS-IP: 177.177.177.77\r\n" +
+                        "X-OPENPAAS-PORT: 8000\r\n" +
+                        "".replace(System.lineSeparator(), "\r\n").strip())
+                .buildText())
+            .setContentType("message/disposition-notification")
+            .build();
+
+        Message message = Message.Builder.of()
+            .setBody(MultipartBuilder.create("report")
+                .addBinaryPart("first".getBytes(StandardCharsets.UTF_8), "text/html")
+                .addBodyPart(mdnBodyPart)
+                .build())
+            .build();
+        MDN mdnActual = MDN.parse(message);
+        MDNReport mdnReportExpect = MDNReport.builder()
+            .reportingUserAgentField(ReportingUserAgent.builder()
+                .userAgentName("UA_name")
+                .userAgentProduct("UA_product")
+                .build())
+            .gatewayField(Gateway.builder()
+                .nameType(AddressType.RFC_822)
+                .name(Text.fromRawText("apache.org"))
+                .build())
+            .originalRecipientField(OriginalRecipient.builder()
+                .originalRecipient(Text.fromRawText("originalRecipient"))
+                .addressType(AddressType.RFC_822)
+                .build())
+            .finalRecipientField(FinalRecipient.builder()
+                .finalRecipient(Text.fromRawText("final_recipient"))
+                .addressType(AddressType.RFC_822)
+                .build())
+            .originalMessageIdField("<original@message.id>")
+            .dispositionField(Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Processed)
+                .addModifier(DispositionModifier.Error)
+                .addModifier(DispositionModifier.Failed)
+                .build())
+            .addErrorField("Message1")
+            .addErrorField("Message2")
+            .withExtensionField(ExtensionField.builder()
+                .fieldName("X-OPENPAAS-IP")
+                .rawValue(" 177.177.177.77")
+                .build())
+            .withExtensionField(ExtensionField.builder()
+                .fieldName("X-OPENPAAS-PORT")
+                .rawValue(" 8000")
+                .build())
+            .build();
+
+        MDN mdnExpect = MDN.builder()
+            .report(mdnReportExpect)
+            .humanReadableText("")
             .build();
         assertThat(mdnActual).isEqualTo(mdnExpect);
     }
