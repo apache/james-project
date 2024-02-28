@@ -187,7 +187,7 @@ public class RecipientRewriteTableProcessor {
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
         this(virtualTableStore, domainList, mailetContext, new ProcessingState(Mail.ERROR), !REWRITE_SENDER_UPON_FORWARD,
-            false);
+            !FORWARD_AUTOMATED_EMAILS);
     }
 
     private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
