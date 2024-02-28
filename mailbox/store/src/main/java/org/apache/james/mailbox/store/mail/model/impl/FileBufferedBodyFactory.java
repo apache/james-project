@@ -29,9 +29,11 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.ArrayList;
 
 import org.apache.james.mime4j.Charsets;
 import org.apache.james.mime4j.dom.BinaryBody;
+import org.apache.james.mime4j.dom.Disposable;
 import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.dom.TextBody;
 import org.apache.james.mime4j.io.InputStreams;
@@ -39,6 +41,8 @@ import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.message.BodyFactory;
 import org.apache.james.mime4j.util.ByteArrayOutputStreamRecycler;
 import org.apache.james.mime4j.util.ContentUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.CountingOutputStream;
 import com.google.common.io.FileBackedOutputStream;
@@ -46,11 +50,13 @@ import com.google.common.io.FileBackedOutputStream;
 /**
  * Factory for creating message bodies.
  */
-public class FileBufferedBodyFactory implements BodyFactory {
+public class FileBufferedBodyFactory implements BodyFactory, Disposable {
 
     public static final BasicBodyFactory INSTANCE = new BasicBodyFactory();
+    public static final Logger LOGGER = LoggerFactory.getLogger(FileBufferedBodyFactory.class);
 
     private final Charset defaultCharset;
+    private final ArrayList<Disposable> disposables = new ArrayList<>();
 
     public FileBufferedBodyFactory() {
         this(true);
@@ -146,6 +152,13 @@ public class FileBufferedBodyFactory implements BodyFactory {
 
     public BinaryBody binaryBody(final InputStream is) throws IOException {
         try (FileBackedOutputStream out = new FileBackedOutputStream(100 * 1024)) {
+            disposables.add(() -> {
+                try {
+                    out.reset();
+                } catch (IOException e) {
+                    LOGGER.error("Cannot delete {}", out, e);
+                }
+            });
             CountingOutputStream countingOutputStream = new CountingOutputStream(out);
             is.transferTo(countingOutputStream);
             return new BinaryBody3(out, countingOutputStream.getCount());
@@ -411,4 +424,8 @@ public class FileBufferedBodyFactory implements BodyFactory {
 
     }
 
+    @Override
+    public void dispose() {
+        disposables.forEach(Disposable::dispose);
+    }
 }
