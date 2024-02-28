@@ -72,14 +72,18 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         this.streamingAead = PBKDF2StreamingAeadFactory.newAesGcmHkdfStreaming(cryptoConfig);
     }
 
-    public FileBackedOutputStream encrypt(InputStream input) {
-        try (FileBackedOutputStream encryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_ENCRYPT)) {
+    public FileBackedOutputStream encrypt(InputStream input) throws IOException {
+        FileBackedOutputStream encryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_ENCRYPT);
+        try {
             OutputStream outputStream = streamingAead.newEncryptingStream(encryptedContent, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
             input.transferTo(outputStream);
             outputStream.close();
             return encryptedContent;
-        } catch (GeneralSecurityException | IOException e) {
+        } catch (Exception e) {
+            encryptedContent.reset();
             throw new RuntimeException("Unable to build payload for object storage, failed to encrypt", e);
+        } finally {
+            encryptedContent.close();
         }
     }
 
