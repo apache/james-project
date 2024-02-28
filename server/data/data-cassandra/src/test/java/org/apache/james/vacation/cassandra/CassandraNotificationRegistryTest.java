@@ -19,6 +19,11 @@
 
 package org.apache.james.vacation.cassandra;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.when;
+
+import java.util.Optional;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.MailAddress;
@@ -26,6 +31,7 @@ import org.apache.james.vacation.api.NotificationRegistry;
 import org.apache.james.vacation.api.NotificationRegistryContract;
 import org.apache.james.vacation.api.RecipientId;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraNotificationRegistryTest implements NotificationRegistryContract {
@@ -49,4 +55,13 @@ class CassandraNotificationRegistryTest implements NotificationRegistryContract 
     public RecipientId recipientId() {
         return recipientId;
     }
+
+    @Test
+    void registerShouldNotFailedWhenExpiredIsTooFar() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+
+        assertThatCode(() -> notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.of(ZONED_DATE_TIME_PLUS_8_SECONDS)).block())
+            .doesNotThrowAnyException();
+    }
+
 }
