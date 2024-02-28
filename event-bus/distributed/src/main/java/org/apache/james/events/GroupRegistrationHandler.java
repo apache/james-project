@@ -19,7 +19,6 @@
 
 package org.apache.james.events;
 
-import static org.apache.james.backends.rabbitmq.Constants.ALLOW_QUORUM;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
@@ -110,7 +109,7 @@ class GroupRegistrationHandler {
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
-                .arguments(configuration.workQueueArgumentsBuilder(!ALLOW_QUORUM)
+                .arguments(configuration.workQueueArgumentsBuilder()
                     .deadLetter(namingStrategy.deadLetterExchange())
                     .build()),
             BindingSpecification.binding()

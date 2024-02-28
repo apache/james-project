@@ -20,7 +20,6 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
-import static org.apache.james.backends.rabbitmq.Constants.ALLOW_QUORUM;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
@@ -126,7 +125,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
         Mono<AMQP.Queue.DeclareOk> declareQueue = sender
             .declare(QueueSpecification.queue(QUEUE_NAME)
                 .durable(true)
-                .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder(ALLOW_QUORUM)
+                .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder()
                     .singleActiveConsumer()
                     .consumerTimeout(rabbitMQConfiguration.getTaskQueueConsumerTimeout().toMillis())
                     .build()))
@@ -197,7 +196,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     private void listenToCancelRequests() {
         sender.declareExchange(ExchangeSpecification.exchange(CANCEL_REQUESTS_EXCHANGE_NAME)).block();
-        QueueArguments.Builder builder = QueueArguments.builder();
+        QueueArguments.Builder builder = rabbitMQConfiguration.workQueueArgumentsBuilder();
         rabbitMQConfiguration.getQueueTTL().ifPresent(builder::queueTTL);
         QueueSpecification specification = QueueSpecification.queue(cancelRequestQueueName.asString())
             .durable(!DURABLE)
