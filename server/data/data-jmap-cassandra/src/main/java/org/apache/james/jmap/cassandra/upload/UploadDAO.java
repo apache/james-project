@@ -202,10 +202,11 @@ public class UploadDAO {
             .map(rowToUploadRepresentation());
     }
 
-    public Mono<Void> delete(Username username, UploadId uploadId) {
+    public Mono<Boolean> delete(Username username, UploadId uploadId) {
         return executor.executeVoid(delete.bind()
             .setString(USER, username.asString())
-            .setUuid(ID, uploadId.getId()));
+            .setUuid(ID, uploadId.getId()))
+            .thenReturn(true);
     }
 
     public Flux<UploadRepresentation> all() {
