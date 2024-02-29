@@ -34,6 +34,7 @@ import org.apache.james.jmap.api.model.Upload;
 import org.apache.james.jmap.api.model.UploadId;
 import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.mailbox.model.ContentType;
+import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
@@ -101,9 +102,10 @@ public class UploadServiceDefaultImpl implements UploadService {
         return upload -> {
             if (cleanedSpace.get() < minimumSpaceToClean) {
                 return Mono.from(uploadRepository.delete(upload.uploadId(), username))
-                    .then(Mono.from(uploadUsageRepository.decreaseSpace(username, QuotaSizeUsage.size(upload.sizeAsLong()))))
-                    .then(Mono.fromCallable(() -> cleanedSpace.addAndGet(upload.sizeAsLong())))
-                    .then(Mono.empty());
+                    .filter(FunctionalUtils.identityPredicate())
+                    .flatMap(deleted -> Mono.from(uploadUsageRepository.decreaseSpace(username, QuotaSizeUsage.size(upload.sizeAsLong())))
+                        .then(Mono.fromCallable(() -> cleanedSpace.addAndGet(upload.sizeAsLong())))
+                        .then(Mono.empty()));
             } else {
                 return Mono.fromCallable(() -> upload);
             }
