@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.Predicate;
 
+import com.google.common.collect.ImmutableSet;
 import jakarta.mail.Flags;
 import jakarta.mail.Flags.Flag;
 
@@ -537,7 +538,7 @@ public abstract class AbstractCombinationManagerTest {
             .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
             .getId().getMessageId();
 
-        Mono.from(messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session))
+        Mono.from(messageIdManager.delete(ImmutableSet.of(messageId1, messageId2), session))
             .subscribeOn(Schedulers.newSingle("test"))
             .block();
 

@@ -62,6 +62,7 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -172,9 +173,9 @@ class DeletedMessageVaultHookTest {
         MailboxId aliceMailbox = mailboxManager.createMailbox(MAILBOX_ALICE_ONE, aliceSession).get();
         MessageManager messageManager = mailboxManager.getMailbox(aliceMailbox, aliceSession);
 
-        ImmutableList<MessageId> ids = IntStream.range(0, 1000)
+        ImmutableSet<MessageId> ids = IntStream.range(0, 1000)
             .mapToObj(Throwing.intFunction(i -> appendMessage(messageManager).getMessageId()))
-            .collect(ImmutableList.toImmutableList());
+            .collect(ImmutableSet.toImmutableSet());
 
         assertThatCode(() -> Mono.from(messageIdManager.delete(ids, aliceSession)).subscribeOn(Schedulers.newSingle("test")).block())
             .doesNotThrowAnyException();

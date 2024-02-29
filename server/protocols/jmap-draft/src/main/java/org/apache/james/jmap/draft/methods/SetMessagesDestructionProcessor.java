@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
@@ -68,7 +69,7 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
         if (toBeDestroyed.isEmpty()) {
             return Mono.just(SetMessagesResponse.builder().build());
         }
-        return Mono.from(messageIdManager.delete(toBeDestroyed, mailboxSession))
+        return Mono.from(messageIdManager.delete(ImmutableSet.copyOf(toBeDestroyed), mailboxSession))
             .map(deleteResult -> SetMessagesResponse.builder()
                 .destroyed(ImmutableList.copyOf(deleteResult.getDestroyed()))
                 .notDestroyed(deleteResult.getNotFound().stream()
