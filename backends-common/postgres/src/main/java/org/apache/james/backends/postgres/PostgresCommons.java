@@ -21,6 +21,7 @@ package org.apache.james.backends.postgres;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -48,6 +49,8 @@ public class PostgresCommons {
         // timestamp(6)
         DataType<LocalDateTime> TIMESTAMP = SQLDataType.LOCALDATETIME(6);
 
+        DataType<OffsetDateTime> TIMESTAMP_WITH_TIMEZONE = SQLDataType.TIMESTAMPWITHTIMEZONE(6);
+
         // text[]
         DataType<String[]> STRING_ARRAY = SQLDataType.VARCHAR.getArrayDataType();
     }
@@ -72,6 +75,10 @@ public class PostgresCommons {
 
     public static final Function<LocalDateTime, ZonedDateTime> LOCAL_DATE_TIME_ZONED_DATE_TIME_FUNCTION = localDateTime -> Optional.ofNullable(localDateTime)
         .map(value -> value.atZone(ZoneId.of("UTC")))
+        .orElse(null);
+
+    public static final Function<OffsetDateTime, ZonedDateTime> OFFSET_DATE_TIME_ZONED_DATE_TIME_FUNCTION = offsetDateTime -> Optional.ofNullable(offsetDateTime)
+        .map(value -> value.atZoneSameInstant(ZoneId.of("UTC")))
         .orElse(null);
 
     public static final Function<LocalDateTime, Instant> LOCAL_DATE_TIME_INSTANT_FUNCTION = localDateTime -> Optional.ofNullable(localDateTime)
