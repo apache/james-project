@@ -188,4 +188,17 @@
        .isNotNull
    }
 
+   @Test
+   def deleteShouldReturnTrueWhenRowExists(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     assertThat(SMono.fromPublisher(testee.delete(uploadId, USER)).block()).isTrue
+   }
+
+   @Test
+   def deleteShouldReturnFalseWhenRowDoesNotExist(): Unit = {
+     val uploadIdOfAlice: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, Username.of("Alice"))).block().uploadId
+     assertThat(SMono.fromPublisher(testee.delete(uploadIdOfAlice, Username.of("Bob"))).block()).isFalse
+   }
+
  }

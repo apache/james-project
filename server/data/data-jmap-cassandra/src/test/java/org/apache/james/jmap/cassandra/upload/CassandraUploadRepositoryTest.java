@@ -30,6 +30,7 @@ import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadRepositoryContract;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
@@ -57,4 +58,16 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
         return testee;
     }
 
+
+    @Disabled("Delete method always return true (to avoid LWT)")
+    @Override
+    public void deleteShouldReturnTrueWhenRowExists() {
+        UploadRepositoryContract.super.deleteShouldReturnTrueWhenRowExists();
+    }
+
+    @Disabled("Delete method always return true (to avoid LWT)")
+    @Override
+    public void deleteShouldReturnFalseWhenRowDoesNotExist() {
+        UploadRepositoryContract.super.deleteShouldReturnFalseWhenRowDoesNotExist();
+    }
 }
