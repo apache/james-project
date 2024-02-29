@@ -60,9 +60,10 @@ public class CassandraUploadUsageRepository implements UploadUsageRepository {
     }
 
     @Override
-    public Mono<Void> resetSpace(Username username, QuotaSizeUsage usage) {
+    public Mono<Void> resetSpace(Username username, QuotaSizeUsage newUsage) {
         return getSpaceUsage(username)
             .switchIfEmpty(Mono.just(QuotaSizeUsage.ZERO))
-            .flatMap(quotaSizeUsage -> decreaseSpace(username, QuotaSizeUsage.size(quotaSizeUsage.asLong() - usage.asLong())));
+            .filter(quotaSizeUsage -> quotaSizeUsage.asLong() != newUsage.asLong())
+            .flatMap(quotaSizeUsage -> decreaseSpace(username, QuotaSizeUsage.size(quotaSizeUsage.asLong() - newUsage.asLong())));
     }
 }
