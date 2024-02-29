@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.postgres.pushsubscription;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.apache.james.backends.postgres.PostgresCommons;
@@ -40,7 +40,7 @@ public interface PostgresPushSubscriptionModule {
         Field<String> DEVICE_CLIENT_ID = DSL.field("device_client_id", SQLDataType.VARCHAR.notNull());
 
         Field<UUID> ID = DSL.field("id", SQLDataType.UUID.notNull());
-        Field<LocalDateTime> EXPIRES = DSL.field("expires", PostgresCommons.DataTypes.TIMESTAMP);
+        Field<OffsetDateTime> EXPIRES = DSL.field("expires", PostgresCommons.DataTypes.TIMESTAMP_WITH_TIMEZONE);
         Field<String[]> TYPES = DSL.field("types", PostgresCommons.DataTypes.STRING_ARRAY.notNull());
 
         Field<String> URL = DSL.field("url", SQLDataType.VARCHAR.notNull());

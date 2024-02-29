@@ -450,5 +450,24 @@ trait PushSubscriptionRepositoryContract {
       .isInstanceOf(classOf[InvalidPushSubscriptionKeys])
   }
 
+  @Test
+  def updateShouldUpdateCorrectOffsetDateTime(): Unit = {
+    val validRequest = PushSubscriptionCreationRequest(
+      deviceClientId = DeviceClientId("1"),
+      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      types = Seq(CustomTypeName1))
+
+    val pushSubscriptionId = SMono.fromPublisher(testee.save(ALICE, validRequest)).block().id
+
+    val ZONE_ID: ZoneId = ZoneId.of("Europe/Paris")
+    val CLOCK: Clock = Clock.fixed(Instant.parse("2021-10-25T07:05:39.160Z"), ZONE_ID)
+
+    val zonedDateTime: ZonedDateTime = ZonedDateTime.now(CLOCK)
+    SMono.fromPublisher(testee.updateExpireTime(ALICE, pushSubscriptionId, zonedDateTime)).block()
+
+    val updatedSubscription = SFlux.fromPublisher(testee.get(ALICE, Set(pushSubscriptionId).asJava)).blockFirst().get
+    assertThat(updatedSubscription.expires.value).isEqualTo(zonedDateTime)
+  }
+
 }
 
