@@ -93,11 +93,14 @@ public class InMemoryUploadRepository implements UploadRepository {
     }
 
     @Override
-    public Publisher<Void> delete(UploadId id, Username user) {
+    public Publisher<Boolean> delete(UploadId id, Username user) {
         return Mono.justOrEmpty(uploadStore.get(id))
             .filter(pair -> user.equals(pair.left))
-            .doOnNext(pair -> uploadStore.remove(id))
-            .then();
+            .map(pair -> {
+                uploadStore.remove(id);
+                return true;
+            })
+            .defaultIfEmpty(false);
     }
 
     @Override

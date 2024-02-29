@@ -31,6 +31,7 @@ import org.apache.james.jmap.api.upload.UploadRepositoryContract;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
@@ -61,5 +62,17 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     @Override
     public UpdatableTickingClock clock() {
         return clock;
+    }
+
+    @Disabled("Delete method always return true (to avoid LWT)")
+    @Override
+    public void deleteShouldReturnTrueWhenRowExists() {
+        UploadRepositoryContract.super.deleteShouldReturnTrueWhenRowExists();
+    }
+
+    @Disabled("Delete method always return true (to avoid LWT)")
+    @Override
+    public void deleteShouldReturnFalseWhenRowDoesNotExist() {
+        UploadRepositoryContract.super.deleteShouldReturnFalseWhenRowDoesNotExist();
     }
 }

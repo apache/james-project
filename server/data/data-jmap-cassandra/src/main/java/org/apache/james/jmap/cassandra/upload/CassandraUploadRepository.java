@@ -79,7 +79,7 @@ public class CassandraUploadRepository implements UploadRepository {
     }
 
     @Override
-    public Mono<Void> delete(UploadId id, Username user) {
+    public Mono<Boolean> delete(UploadId id, Username user) {
         return uploadDAO.delete(user, id);
     }
 
