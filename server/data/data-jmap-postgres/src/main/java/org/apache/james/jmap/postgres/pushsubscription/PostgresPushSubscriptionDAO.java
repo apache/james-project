@@ -20,9 +20,8 @@
 package org.apache.james.jmap.postgres.pushsubscription;
 
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
-import static org.apache.james.backends.postgres.PostgresCommons.LOCAL_DATE_TIME_ZONED_DATE_TIME_FUNCTION;
+import static org.apache.james.backends.postgres.PostgresCommons.OFFSET_DATE_TIME_ZONED_DATE_TIME_FUNCTION;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,7 +64,7 @@ public class PostgresPushSubscriptionDAO {
             .set(PushSubscriptionTable.USER, username.asString())
             .set(PushSubscriptionTable.DEVICE_CLIENT_ID, pushSubscription.deviceClientId())
             .set(PushSubscriptionTable.ID, pushSubscription.id().value())
-            .set(PushSubscriptionTable.EXPIRES, pushSubscription.expires().value().toLocalDateTime())
+            .set(PushSubscriptionTable.EXPIRES, pushSubscription.expires().value().toOffsetDateTime())
             .set(PushSubscriptionTable.TYPES, CollectionConverters.asJava(pushSubscription.types())
                 .stream().map(TypeName::asString).toArray(String[]::new))
             .set(PushSubscriptionTable.URL, pushSubscription.url().value().toString())
@@ -128,11 +127,11 @@ public class PostgresPushSubscriptionDAO {
     public Mono<ZonedDateTime> updateExpireTime(Username username, PushSubscriptionId id, ZonedDateTime newExpire) {
         Preconditions.checkNotNull(newExpire, "newExpire should not be null");
         return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.update(PushSubscriptionTable.TABLE_NAME)
-                .set(PushSubscriptionTable.EXPIRES, newExpire.toLocalDateTime())
+                .set(PushSubscriptionTable.EXPIRES, newExpire.toOffsetDateTime())
                 .where(PushSubscriptionTable.USER.eq(username.asString()))
                 .and(PushSubscriptionTable.ID.eq(id.value()))
                 .returning(PushSubscriptionTable.EXPIRES)))
-            .map(record -> LOCAL_DATE_TIME_ZONED_DATE_TIME_FUNCTION.apply(record.get(PushSubscriptionTable.EXPIRES)));
+            .map(record -> OFFSET_DATE_TIME_ZONED_DATE_TIME_FUNCTION.apply(record.get(PushSubscriptionTable.EXPIRES)));
     }
 
     public Mono<Boolean> existDeviceClientId(Username username, String deviceClientId) {
@@ -152,8 +151,8 @@ public class PostgresPushSubscriptionDAO {
                         .map(secret -> new PushSubscriptionKeys(key, secret)))),
                 record.get(PushSubscriptionTable.VERIFICATION_CODE),
                 record.get(PushSubscriptionTable.VALIDATED),
-                Optional.ofNullable(record.get(PushSubscriptionTable.EXPIRES, LocalDateTime.class))
-                    .map(LOCAL_DATE_TIME_ZONED_DATE_TIME_FUNCTION)
+                Optional.ofNullable(record.get(PushSubscriptionTable.EXPIRES))
+                    .map(OFFSET_DATE_TIME_ZONED_DATE_TIME_FUNCTION)
                     .map(PushSubscriptionExpiredTime::new).get(),
                 CollectionConverters.asScala(extractTypes(record)).toSeq());
         } catch (Exception e) {
