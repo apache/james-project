@@ -76,4 +76,16 @@ class CassandraUploadRepositoryTest implements UploadRepositoryContract {
     public UpdatableTickingClock clock() {
         return clock;
     }
+
+    @Disabled("Delete method always return true (to avoid LWT)")
+    @Override
+    public void deleteShouldReturnTrueWhenRowExists() {
+        UploadRepositoryContract.super.deleteShouldReturnTrueWhenRowExists();
+    }
+
+    @Disabled("Delete method always return true (to avoid LWT)")
+    @Override
+    public void deleteShouldReturnFalseWhenRowDoesNotExist() {
+        UploadRepositoryContract.super.deleteShouldReturnFalseWhenRowDoesNotExist();
+    }
 }
