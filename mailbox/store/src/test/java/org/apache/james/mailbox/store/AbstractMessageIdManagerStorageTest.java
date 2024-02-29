@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import com.google.common.collect.ImmutableSet;
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
@@ -50,10 +51,12 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import reactor.core.publisher.Mono;
 
 public abstract class AbstractMessageIdManagerStorageTest {
     public static final Flags FLAGS = new Flags();
@@ -110,6 +113,15 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         assertThat(messageIdManager.delete(messageId, bobSession))
             .isEqualTo(DeleteResult.notFound(messageId));
+    }
+
+    @Disabled("Fails for cassandra app")
+    @Test
+    void deleteMessageShouldSupportDuplicatedEntries() throws MailboxException {
+        MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
+
+        assertThat(Mono.from(messageIdManager.delete(ImmutableList.of(messageId, messageId), aliceSession)).block())
+            .isEqualTo(DeleteResult.destroyed(messageId));
     }
 
     @Test
