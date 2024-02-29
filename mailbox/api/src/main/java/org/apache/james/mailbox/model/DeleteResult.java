@@ -109,4 +109,5 @@ public class DeleteResult {
     public final int hashCode() {
         return Objects.hash(destroyed, notFound);
     }
+
 }

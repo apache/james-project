@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -69,7 +70,7 @@ public interface MessageIdManager {
 
     Publisher<DeleteResult> deleteReactive(List<MessageId> messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession);
 
-    Publisher<DeleteResult> delete(List<MessageId> messageId, MailboxSession mailboxSession);
+    Publisher<DeleteResult> delete(Set<MessageId> messageId, MailboxSession mailboxSession);
 
     void setInMailboxes(MessageId messageId, Collection<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
@@ -80,7 +81,7 @@ public interface MessageIdManager {
     }
 
     default DeleteResult delete(MessageId messageId, MailboxSession mailboxSession) {
-        return Mono.from(delete(ImmutableList.of(messageId), mailboxSession))
+        return Mono.from(delete(ImmutableSet.of(messageId), mailboxSession))
             .block();
     }
 

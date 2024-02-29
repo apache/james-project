@@ -245,7 +245,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public Mono<DeleteResult> delete(List<MessageId> messageIds, MailboxSession mailboxSession) {
+    public Mono<DeleteResult> delete(Set<MessageId> messageIds, MailboxSession mailboxSession) {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         return messageIdMapper.findReactive(messageIds, MessageMapper.FetchType.METADATA)
@@ -259,7 +259,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                 .flatMap(allowedMailboxIds -> deleteInAllowedMailboxes(messageIds, mailboxSession, messageIdMapper, messageList, allowedMailboxIds)));
     }
 
-    private Mono<DeleteResult> deleteInAllowedMailboxes(List<MessageId> messageIds, MailboxSession mailboxSession, MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, ImmutableSet<MailboxId> allowedMailboxIds) {
+    private Mono<DeleteResult> deleteInAllowedMailboxes(Set<MessageId> messageIds, MailboxSession mailboxSession, MessageIdMapper messageIdMapper, List<MailboxMessage> messageList, ImmutableSet<MailboxId> allowedMailboxIds) {
         List<MailboxMessage> accessibleMessages = messageList.stream()
             .filter(message -> allowedMailboxIds.contains(message.getMailboxId()))
             .collect(ImmutableList.toImmutableList());
