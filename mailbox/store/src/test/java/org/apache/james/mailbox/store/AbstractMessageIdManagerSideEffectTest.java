@@ -174,7 +174,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageMetaData simpleMessageMetaData2 = messageResult2.messageMetaData();
 
         eventBus.register(eventCollector);
-        Mono.from(messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session))
+        Mono.from(messageIdManager.delete(ImmutableSet.of(messageId1, messageId2), session))
             .subscribeOn(Schedulers.newSingle("test"))
             .block();
 

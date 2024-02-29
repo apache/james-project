@@ -96,7 +96,7 @@ class EmailSetDeletePerformer @Inject()(messageIdManager: MessageIdManager,
         case _ => None
       }
 
-      SMono(messageIdManager.delete(messageIds.toList.asJava, mailboxSession))
+      SMono(messageIdManager.delete(messageIds.toSet.asJava, mailboxSession))
         .doOnSuccess(auditTrail(_, mailboxSession))
         .map(DestroyResult.from)
         .onErrorResume(e => SMono.just(messageIds.map(id => DestroyFailure(EmailSet.asUnparsed(id), e))))
