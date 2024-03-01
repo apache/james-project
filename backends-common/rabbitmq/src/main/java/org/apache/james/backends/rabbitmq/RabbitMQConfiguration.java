@@ -795,7 +795,7 @@ public class RabbitMQConfiguration {
     }
 
     public Optional<Long> getQueueTTL() {
-        return queueTTL;
+        return Optional.empty(); //TODO make it clean
     }
 
     public boolean isEventBusPublishConfirmEnabled() {

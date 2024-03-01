@@ -128,7 +128,7 @@ class KeyRegistrationHandler {
             QueueSpecification.queue(registrationQueue.asString())
                 .durable(configuration.isEventBusNotificationDurabilityEnabled())
                 .exclusive(!EXCLUSIVE)
-                .autoDelete(AUTO_DELETE)
+                .autoDelete(!AUTO_DELETE)
                 .arguments(builder.build()))
             .timeout(TOPOLOGY_CHANGES_TIMEOUT)
             .map(AMQP.Queue.DeclareOk::getQueue)

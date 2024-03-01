@@ -200,7 +200,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
         rabbitMQConfiguration.getQueueTTL().ifPresent(builder::queueTTL);
         QueueSpecification specification = QueueSpecification.queue(cancelRequestQueueName.asString())
             .durable(!DURABLE)
-            .autoDelete(AUTO_DELETE)
+            .autoDelete(!AUTO_DELETE)
             .arguments(builder.build());
         sender.declare(specification).block();
         sender.bind(BindingSpecification.binding(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, cancelRequestQueueName.asString())).block();
