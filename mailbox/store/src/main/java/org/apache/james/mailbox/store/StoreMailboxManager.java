@@ -415,20 +415,20 @@ public class StoreMailboxManager implements MailboxManager {
     private Mono<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath, CreateOption createOption) {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         return Mono.from(locker.executeReactiveWithLockReactive(mailboxPath,
-            mapper.executeReactive(mapper.create(mailboxPath, UidValidity.generate())
-                .flatMap(mailbox ->
-                    // notify listeners
-                    eventBus.dispatch(EventFactory.mailboxAdded()
+                mapper.executeReactive(Mono.from(mapper.create(mailboxPath, UidValidity.generate()))), MailboxPathLocker.LockType.Write))
+            .flatMap(mailbox ->
+                // notify listeners
+                eventBus.dispatch(EventFactory.mailboxAdded()
                             .randomEventId()
                             .mailboxSession(mailboxSession)
                             .mailbox(mailbox)
                             .build(),
                         new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-                        .thenReturn(mailbox.getMailboxId()))
-                .onErrorResume(MailboxExistsException.class, e -> {
-                    LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
-                    return Mono.empty();
-                })), MailboxPathLocker.LockType.Write))
+                    .thenReturn(mailbox.getMailboxId()))
+            .onErrorResume(MailboxExistsException.class, e -> {
+                LOGGER.info("{} mailbox was created concurrently", mailboxPath.asString());
+                return Mono.empty();
+            })
             .flatMap(any -> createSubscriptionIfNeeded(mailboxPath, createOption, mailboxSession).thenReturn(any));
     }
 
