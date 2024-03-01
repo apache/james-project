@@ -216,7 +216,6 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
             for (String name : names) {
                 final String value = params.get(name);
                 if (value == null) {
-                    LOGGER.warn("Disposition parameter name has no value.");
                     LOGGER.debug("Disposition parameter {} has no matching value", name);
                 } else {
                     composer.quote(name);
