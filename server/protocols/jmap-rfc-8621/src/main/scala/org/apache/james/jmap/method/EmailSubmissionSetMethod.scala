@@ -362,10 +362,15 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
       .`then`(SMono.just(mimeMessage))
 
   private def validateMailAddress(headName: String, address: Address): MailAddress =
-    Try(new MailAddress(address.toString)) match {
+    Try(new MailAddress(asString(address))) match {
       case Success(mailAddress) => mailAddress
       case Failure(_) => throw new IllegalArgumentException(s"Invalid mail address: $address in $headName header")
     }
+
+  private def asString(address: Address): String = address match {
+    case a: InternetAddress => a.getAddress
+    case _ => address.toString
+  }
 
   def validateRcptTo(recipients: List[EmailSubmissionAddress]): SMono[List[EmailSubmissionAddress]] =
     SFlux.fromIterable(recipients)
