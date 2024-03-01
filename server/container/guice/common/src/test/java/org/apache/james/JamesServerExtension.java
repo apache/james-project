@@ -56,11 +56,22 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
 
     public enum Lifecycle {
         // Restarts the server for each class, including nested classes
-        PER_CLASS(JamesServerExtension::start, (extension, context) -> { }, (extension, context) -> { }, JamesServerExtension::stop),
+        PER_CLASS(
+            (extension, context) -> {
+                extension.setup(context);
+                extension.start(context);
+            },
+            (extension, context) -> { },
+            (extension, context) -> { },
+            (extension, context) -> {
+                extension.stop(context);
+                extension.tearDown(context);
+            }),
         // Restarts the server for the enclosing class, it will ignore nested classes
         PER_ENCLOSING_CLASS(
             (extension, context) -> {
                 if (!isNested(context)) {
+                    extension.setup(context);
                     extension.start(context);
                 }
             },
@@ -69,10 +80,15 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
             (extension, context) -> {
                 if (!isNested(context)) {
                     extension.stop(context);
+                    extension.tearDown(context);
                 }
             }),
         // Restarts the server for each test (default)
-        PER_TEST((extension, context) -> { }, JamesServerExtension::start, JamesServerExtension::stop, (extension, context) -> { });
+        PER_TEST(
+            JamesServerExtension::setup,
+            JamesServerExtension::start,
+            JamesServerExtension::stop,
+            JamesServerExtension::tearDown);
 
         private static boolean isNested(ExtensionContext context) {
             return context.getTestClass()
@@ -121,13 +137,30 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
-        registrableExtension.beforeAll(extensionContext);
         lifecycle.beforeAll.accept(this, extensionContext);
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         lifecycle.beforeEach.accept(this, extensionContext);
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
+        lifecycle.afterEach.accept(this, extensionContext);
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+        lifecycle.afterAll.accept(this, extensionContext);
+    }
+
+    private void setup(ExtensionContext extensionContext) throws Exception {
+        registrableExtension.beforeAll(extensionContext);
+    }
+
+    private void tearDown(ExtensionContext extensionContext) throws Exception {
+        registrableExtension.afterAll(extensionContext);
     }
 
     private void start(ExtensionContext extensionContext) throws Exception {
@@ -150,21 +183,10 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
         }
     }
 
-    @Override
-    public void afterEach(ExtensionContext extensionContext) throws Exception {
-        lifecycle.afterEach.accept(this, extensionContext);
-    }
-
     private void stop(ExtensionContext extensionContext) throws Exception {
         guiceJamesServer.stop();
         registrableExtension.afterEach(extensionContext);
         folderRegistrableExtension.afterEach(extensionContext);
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
-        lifecycle.afterAll.accept(this, extensionContext);
-        registrableExtension.afterAll(extensionContext);
     }
 
     @Override

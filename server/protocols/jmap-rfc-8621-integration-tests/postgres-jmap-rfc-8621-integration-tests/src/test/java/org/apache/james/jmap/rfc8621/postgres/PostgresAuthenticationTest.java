@@ -31,11 +31,8 @@ import org.apache.james.jmap.rfc8621.contract.AuthenticationContract;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@Disabled
-// TODO Need to fix
 public class PostgresAuthenticationTest implements AuthenticationContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
