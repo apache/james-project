@@ -599,7 +599,7 @@
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
         <activemq.version>5.18.3</activemq.version>
-        <apache-mime4j.version>0.8.10</apache-mime4j.version>
+        <apache-mime4j.version>0.8.11-SNAPSHOT</apache-mime4j.version>
         <apache.openjpa.version>3.2.0</apache.openjpa.version>
         <derby.version>10.14.2.0</derby.version>
         <log4j2.version>2.20.0</log4j2.version>
