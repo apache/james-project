@@ -462,13 +462,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
 
     private Void handleAddition(Added added) {
         sizeChanged.set(true);
-        SelectedMailbox sm = session.getSelected();
-        for (MessageUid uid : added.getUids()) {
-            uidMsnConverter.addUid(uid);
-            if (sm != null) {
-                sm.addRecent(uid);
-            }
-        }
+        uidMsnConverter.addAll(added.getUids());
+        recentUids.addAll(added.getUids());
         return VOID;
     }
 
