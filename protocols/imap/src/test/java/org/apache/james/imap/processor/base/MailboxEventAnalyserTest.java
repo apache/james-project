@@ -31,14 +31,12 @@ import java.util.Optional;
 
 import jakarta.mail.Flags;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.InVMEventBus;
 import org.apache.james.events.MemoryEventDeadLetters;
 import org.apache.james.events.delivery.InVmEventDelivery;
-import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -55,7 +53,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.model.UidValidity;
@@ -89,37 +86,6 @@ class MailboxEventAnalyserTest {
         .oldFlags(new Flags())
         .newFlags(new Flags())
         .build();
-
-    public static class SingleMessageResultIterator implements MessageResultIterator {
-        private final MessageResult messageResult;
-        private boolean done;
-
-        public SingleMessageResultIterator(MessageResult messageResult) {
-            this.messageResult = messageResult;
-            done = false;
-        }
-
-        @Override
-        public void remove() {
-            throw new NotImplementedException("Not implemented");
-        }
-
-        @Override
-        public MessageResult next() {
-            done = true;
-            return messageResult;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return !done;
-        }
-
-        @Override
-        public MailboxException getException() {
-            throw new NotImplementedException("Not implemented");
-        }
-    }
 
     private static final MessageUid MESSAGE_UID = MessageUid.of(1);
     private static final Username USER = Username.of("user");
