@@ -36,6 +36,36 @@ import reactor.core.publisher.Mono;
 public class PostgresTableManager implements Startable {
     public static final int INITIALIZATION_PRIORITY = 1;
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresTableManager.class);
+    private static final String UPDATE_INDEX_FUNCTION_NAME = "add_column_to_table_indexes";
+    private static final String UPDATE_INDEX_FUNCTION = "CREATE OR REPLACE FUNCTION add_column_to_table_indexes(table_name text, new_column_name text)\n" +
+                                            "RETURNS VOID AS\n" +
+                                            "$$\n" +
+                                            "DECLARE\n" +
+                                            "    index_record record;\n" +
+                                            "    index_definition text;\n" +
+                                            "    column_list_string text;\n" +
+                                            "    column_list text[];\n" +
+                                            "BEGIN\n" +
+                                            "    FOR index_record IN \n" +
+                                            "        SELECT indexname\n" +
+                                            "            FROM pg_indexes\n" +
+                                            "            WHERE tablename = table_name\n" +
+                                            "    LOOP\n" +
+                                            "        SELECT pg_get_indexdef(indexrelid)\n" +
+                                            "            INTO index_definition\n" +
+                                            "            FROM pg_index\n" +
+                                            "            WHERE indexrelid = index_record.indexname::regclass;\n" +
+                                            "        column_list_string := substring(index_definition FROM '\\((.*)\\)');\n" +
+                                            "        column_list := string_to_array(column_list_string, ', ');\n" +
+                                            "        IF NOT column_list @> ARRAY[new_column_name] then\n" +
+                                            "            index_definition := regexp_replace(index_definition, '\\)$', ', ' || new_column_name || ')');\n" +
+                                            "            EXECUTE 'DROP INDEX IF EXISTS ' || index_record.indexname;\n" +
+                                            "            EXECUTE index_definition;\n" +
+                                            "        END IF;\n" +
+                                            "    END LOOP;\n" +
+                                            "END;\n" +
+                                            "$$\n" +
+                                            "LANGUAGE plpgsql;";
     private final PostgresExecutor postgresExecutor;
     private final PostgresModule module;
     private final boolean rowLevelSecurityEnabled;
@@ -91,6 +121,7 @@ public class PostgresTableManager implements Startable {
 
     private Mono<Void> alterTableIfNeeded(PostgresTable table) {
         return executeAdditionalAlterQueries(table)
+            .then(createFunctionUpdateIndex())
             .then(enableRLSIfNeeded(table));
     }
 
@@ -110,10 +141,18 @@ public class PostgresTableManager implements Startable {
                 }))
             .then();
     }
+    private Mono<Void> createFunctionUpdateIndex() {
+        return postgresExecutor.connection()
+            .flatMapMany(connection -> connection.createStatement(UPDATE_INDEX_FUNCTION)
+                .execute())
+            .flatMap(Result::getRowsUpdated)
+            .then();
+    }
 
     private Mono<Void> enableRLSIfNeeded(PostgresTable table) {
         if (rowLevelSecurityEnabled && table.supportsRowLevelSecurity()) {
-            return alterTableEnableRLS(table);
+            return alterTableEnableRLS(table)
+                .then(alterIndex(table.getName()));
         }
         return Mono.empty();
     }
@@ -135,6 +174,14 @@ public class PostgresTableManager implements Startable {
             "        execute 'alter table " + tableName + " enable row level security; alter table " + tableName + " force row level security; create policy " + policyName + " on " + tableName + " using (domain = current_setting(''app.current_domain'')::text)';\n" +
             "    end if;\n" +
             "end $$;";
+    }
+
+    private Mono<Void> alterIndex(String tableName) {
+        return postgresExecutor.connection()
+            .flatMapMany(connection -> connection.createStatement("select * from " + UPDATE_INDEX_FUNCTION_NAME + "('" + tableName + "', 'domain');")
+                .execute())
+            .flatMap(Result::getRowsUpdated)
+            .then();
     }
 
     public Mono<Void> truncate() {
