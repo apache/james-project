@@ -385,9 +385,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     public Publisher<Void> reactiveEvent(Event event) {
         return Mono.fromRunnable(() -> synchronizedEvent(event))
             .subscribeOn(Schedulers.boundedElastic())
-            .then(Optional.ofNullable(idleEventListener.get())
-                .map(listener -> Mono.from(listener.reactiveEvent(event)))
-                .orElse(Mono.empty()));
+            .then(Mono.fromCallable(idleEventListener::get)
+                .flatMap(listener -> Mono.from(listener.reactiveEvent(event))));
     }
 
     private synchronized void synchronizedEvent(Event event) {
