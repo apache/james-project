@@ -53,7 +53,7 @@ class MemoryCustomIdentityDAO extends CustomIdentityDAO {
 
   override def upsert(user: Username, patch: Identity): SMono[Unit] = SMono.fromCallable[Unit](() => table.put(user, patch.id, patch))
 
-  override def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] = SFlux.fromIterable(ids)
+  override def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] = SFlux.fromIterable(ids)
     .doOnNext(id => table.remove(username, id))
     .`then`()
 

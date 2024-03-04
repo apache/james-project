@@ -103,7 +103,7 @@ case class CassandraCustomIdentityDAO @Inject()(session: CqlSession,
   override def upsert(user: Username, patch: Identity): SMono[Unit] =
     insert(user, patch).`then`()
 
-  override def delete(username: Username, ids: Seq[IdentityId]): SMono[Unit] =
+  override def delete(username: Username, ids: Set[IdentityId]): SMono[Unit] =
     SFlux.fromIterable(ids)
       .flatMap(id => executor.executeVoid(deleteOneStatement.bind()
         .setString(USER, username.asString())
