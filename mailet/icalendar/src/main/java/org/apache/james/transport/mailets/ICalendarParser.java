@@ -142,13 +142,17 @@ public class ICalendarParser extends GenericMailet {
             ByteArrayInputStream inputStream = new ByteArrayInputStream(icsContent);
             return Stream.of(Pair.of(key, builder.build(inputStream)));
         } catch (IOException e) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Error while reading input: " + new String(icsContent, StandardCharsets.UTF_8), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Error while reading calendar input: " + new String(icsContent, StandardCharsets.UTF_8), e);
+            } else {
+                LOGGER.info("Error while reading calendar input", e);
             }
             return Stream.of();
         } catch (ParserException e) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Error while parsing ICal object: " + new String(icsContent, StandardCharsets.UTF_8), e);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Error while parsing ICal object: " + new String(icsContent, StandardCharsets.UTF_8), e);
+            } else {
+                LOGGER.info("Error while parsing ICal object", e);
             }
             return Stream.of();
         }
