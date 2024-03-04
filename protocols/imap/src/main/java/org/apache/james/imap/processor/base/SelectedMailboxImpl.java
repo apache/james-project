@@ -444,24 +444,14 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
             }
         }
 
-        SelectedMailbox sm = session.getSelected();
-        if (sm != null) {
-            // We need to add the UID of the message to the recent
-            // list if we receive an flag update which contains a
-            // \RECENT flag
-            // See IMAP-287
-            List<UpdatedFlags> uflags = updated.getUpdatedFlags();
-            for (UpdatedFlags u : uflags) {
-                Iterator<Flag> flags = u.modifiedSystemFlags().iterator();
-
-                while (flags.hasNext()) {
-                    if (Flag.RECENT.equals(flags.next())) {
-                        MailboxId id = sm.getMailboxId();
-                        if (id != null && id.equals(updated.getMailboxId())) {
-                            sm.addRecent(u.getUid());
-                        }
-                    }
-                }
+        // We need to add the UID of the message to the recent
+        // list if we receive an flag update which contains a
+        // \RECENT flag
+        // See IMAP-287
+        List<UpdatedFlags> uflags = updated.getUpdatedFlags();
+        for (UpdatedFlags u : uflags) {
+            if (u.modifiedSystemFlags().contains(Flag.RECENT)) {
+                recentUids.add(u.getUid());
             }
         }
         long stamp = applicableFlagsLock.writeLock();
