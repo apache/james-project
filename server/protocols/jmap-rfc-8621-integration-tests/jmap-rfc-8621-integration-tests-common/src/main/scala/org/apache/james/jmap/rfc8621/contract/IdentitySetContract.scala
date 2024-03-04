@@ -1963,7 +1963,7 @@ trait IdentitySetContract {
            |                        ],
            |                        "textSignature": "Difference text signature",
            |                        "htmlSignature": "<p>Difference html signature</p>",
-           |                        "mayDelete": true
+           |                        "mayDelete": false
            |                    }
            |                ]
            |            },
