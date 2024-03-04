@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor.base;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,11 +50,11 @@ public class UidMsnConverter {
         this.uidsAsInts = new IntArrayList();
     }
 
-    public synchronized void addAll(List<MessageUid> addedUids) {
+    public synchronized void addAll(Collection<MessageUid> addedUids) {
         addAllUnSynchronized(addedUids);
     }
 
-    private void addAllUnSynchronized(List<MessageUid> addedUids) {
+    private void addAllUnSynchronized(Collection<MessageUid> addedUids) {
         if (usesInts) {
             if (uidsAsInts.isEmpty()) {
                 // Avoids intermediary tree structure
@@ -71,7 +72,7 @@ public class UidMsnConverter {
         }
     }
 
-    private void addAllToNonEmptyLongStructure(List<MessageUid> addedUids) {
+    private void addAllToNonEmptyLongStructure(Collection<MessageUid> addedUids) {
         LongAVLTreeSet tmp = new LongAVLTreeSet(uids);
         for (MessageUid uid : addedUids) {
             tmp.add(uid.asLong());
@@ -80,7 +81,7 @@ public class UidMsnConverter {
         uids.addAll(tmp);
     }
 
-    private void addAllToEmptyLongStructure(List<MessageUid> addedUids) {
+    private void addAllToEmptyLongStructure(Collection<MessageUid> addedUids) {
         uids.ensureCapacity(addedUids.size());
         for (MessageUid uid : addedUids) {
             uids.add(uid.asLong());
@@ -88,7 +89,7 @@ public class UidMsnConverter {
         uids.sort(LongComparators.NATURAL_COMPARATOR);
     }
 
-    private void addAllToNonEmptyIntStructure(List<MessageUid> addedUids) {
+    private void addAllToNonEmptyIntStructure(Collection<MessageUid> addedUids) {
         IntAVLTreeSet tmp = new IntAVLTreeSet(uidsAsInts);
         for (MessageUid uid : addedUids) {
             if (uid.asLong() > INTEGER_MAX_VALUE) {
@@ -102,7 +103,7 @@ public class UidMsnConverter {
         uidsAsInts.addAll(tmp);
     }
 
-    private void addAllToEmptyIntStructure(List<MessageUid> addedUids) {
+    private void addAllToEmptyIntStructure(Collection<MessageUid> addedUids) {
         uidsAsInts.ensureCapacity(addedUids.size());
         for (MessageUid uid : addedUids) {
             if (uid.asLong() > INTEGER_MAX_VALUE) {
