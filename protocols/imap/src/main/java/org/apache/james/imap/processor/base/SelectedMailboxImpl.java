@@ -218,7 +218,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     @Override
-    public synchronized  boolean removeRecent(MessageUid uid) {
+    public synchronized boolean removeRecent(MessageUid uid) {
         final boolean result = recentUids.remove(uid);
         if (result) {
             recentUidRemoved.set(true);
