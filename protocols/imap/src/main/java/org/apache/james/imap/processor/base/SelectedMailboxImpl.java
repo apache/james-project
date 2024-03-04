@@ -255,7 +255,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     private void checkExpungedRecents() {
-        for (MessageUid uid : expungedUids()) {
+        for (MessageUid uid : expungedUids) {
             removeRecent(uid);
         }
     }
