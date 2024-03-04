@@ -75,6 +75,6 @@ class IdentitySetDeletePerformer @Inject()(identityRepository: IdentityRepositor
   private def delete(unparsedId: UnparsedIdentityId, mailboxSession: MailboxSession): SMono[IdentityDeletionResult] =
     unparsedId.validate
       .fold(e => SMono.error(e),
-        id => SMono.fromPublisher(identityRepository.delete(mailboxSession.getUser, Seq(id)))
+        id => SMono.fromPublisher(identityRepository.delete(mailboxSession.getUser, Set(id)))
           .`then`(SMono.just[IdentityDeletionResult](IdentityDeletionSuccess(id))))
 }
