@@ -66,7 +66,7 @@ object DelegateSetDeletePerformer {
 
 class DelegateSetDeletePerformer @Inject()(delegationStore: DelegationStore) {
   def delete(request: DelegateSetRequest, mailboxSession: MailboxSession): SMono[DelegateDeletionResults] =
-    SFlux.fromIterable(request.destroy.getOrElse(Seq()))
+    SFlux.fromIterable(request.destroy.getOrElse(Seq()).toSet)
       .flatMap(unparsedId => delete(unparsedId, mailboxSession.getUser)
         .onErrorRecover(e => DelegateDeletionFailure(unparsedId, e)),
         maxConcurrency = ReactorUtils.DEFAULT_CONCURRENCY)

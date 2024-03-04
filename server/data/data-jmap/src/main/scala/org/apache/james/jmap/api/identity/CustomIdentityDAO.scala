@@ -146,7 +146,7 @@ trait CustomIdentityDAO {
 
   def upsert(user: Username, patch: Identity): SMono[Unit]
 
-  def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit]
+  def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit]
 
   def delete(username: Username): Publisher[Unit]
 }
@@ -233,9 +233,9 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       .`then`()
   }
 
-  def delete(username: Username, ids: Seq[IdentityId]): Publisher[Unit] =
+  def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] =
     SMono.just(ids)
-      .handle[Seq[IdentityId]]{
+      .handle[Set[IdentityId]]{
         case (ids, sink) => if (identityFactory.isServerSetIdentity(username, ids.head)) {
           sink.error(IdentityForbiddenDeleteException(ids.head))
         } else {

@@ -118,7 +118,7 @@ trait CustomIdentityDAOContract {
     val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
       .block()
 
-    SMono(testee().delete(bob, Seq(identity.id))).block()
+    SMono(testee().delete(bob, Set(identity.id))).block()
 
     assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
       .isEmpty()
@@ -162,8 +162,8 @@ trait CustomIdentityDAOContract {
     val identity: Identity = SMono(testee().save(bob, CREATION_REQUEST))
       .block()
 
-    SMono(testee().delete(bob, Seq(identity.id))).block()
-    SMono(testee().delete(bob, Seq(identity.id))).block()
+    SMono(testee().delete(bob, Set(identity.id))).block()
+    SMono(testee().delete(bob, Set(identity.id))).block()
 
     assertThat(SFlux(testee().list(bob)).asJava().collectList().block())
       .isEmpty()
