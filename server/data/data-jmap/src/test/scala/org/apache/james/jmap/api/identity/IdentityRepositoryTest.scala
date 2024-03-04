@@ -112,7 +112,7 @@ class IdentityRepositoryTest {
     when(identityFactory.listIdentities(BOB)).thenReturn(List(differentIdentityWithSameId))
 
     assertThat(SFlux.fromPublisher(testee.list(BOB)).collectSeq().block().asJava)
-      .containsExactlyInAnyOrder(customIdentity)
+      .containsExactlyInAnyOrder(customIdentity.copy(mayDelete = MayDeleteIdentity(false)))
   }
 
   @Test
@@ -191,7 +191,7 @@ class IdentityRepositoryTest {
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2 (updated)")), new MailAddress("boss-updated-2@domain.tld")))),
         textSignature = TextSignature("text 2 signature"),
         htmlSignature = HtmlSignature("html 2 signature"),
-        mayDelete = MayDeleteIdentity(true)))
+        mayDelete = MayDeleteIdentity(false)))
   }
 
   @Test
@@ -213,7 +213,7 @@ class IdentityRepositoryTest {
         bcc = Some(List(EmailAddress(Some(EmailerName("My Boss 2 (updated)")), new MailAddress("boss-updated-2@domain.tld")))),
         textSignature = TextSignature("text 2 signature"),
         htmlSignature = HtmlSignature("html 2 signature"),
-        mayDelete = MayDeleteIdentity(true)))
+        mayDelete = MayDeleteIdentity(false)))
   }
 
   @Test
