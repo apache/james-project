@@ -127,7 +127,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private final MailboxId mailboxId;
     private final EventBus eventBus;
     private final ImapSession session;
-    private final MailboxSession.SessionId sessionId;
     private final MailboxSession mailboxSession;
     private final UidMsnConverter uidMsnConverter;
     private final Set<MessageUid> recentUids = new TreeSet<>();
@@ -144,7 +143,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) {
         this.eventBus = eventBus;
         this.session = session;
-        this.sessionId = session.getMailboxSession().getSessionId();
         this.mailboxManager = mailboxManager;
         this.messageManager = messageManager;
         this.mailboxSession = session.getMailboxSession();
@@ -432,10 +430,14 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     }
 
     private Void handleMailboxDeletion(MailboxDeletion mailboxDeletion) {
-        if (mailboxDeletion.getSessionId() != sessionId) {
+        if (isFromOtherSession(mailboxDeletion)) {
             isDeletedByOtherSession.set(true);
         }
         return VOID;
+    }
+
+    private boolean isFromOtherSession(MailboxEvent mailboxDeletion) {
+        return mailboxDeletion.getSessionId() != mailboxSession.getSessionId();
     }
 
     private Void handleMailboxExpunge(MessageEvent messageEvent) {
@@ -445,7 +447,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
 
     private Void handleFlagsUpdates(FlagsUpdated updated) {
         List<UpdatedFlags> uFlags = updated.getUpdatedFlags();
-        if (sessionId != updated.getSessionId() || !silentFlagChanges.get()) {
+        if (isFromOtherSession(updated) || !silentFlagChanges.get()) {
 
             for (UpdatedFlags u : uFlags) {
                 if (interestingFlags(u)) {
