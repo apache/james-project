@@ -306,22 +306,10 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
         }
         return result;
     }
-
-    
     
     @Override
     public synchronized void resetExpungedUids() {
         expungedUids.clear();
-    }
-
-    /**
-     * Are flag changes from current session ignored?
-     * 
-     * @return true if any flag changes from current session will be ignored,
-     *         false otherwise
-     */
-    public final boolean isSilentFlagChanges() {
-        return silentFlagChanges.get();
     }
 
     /**
