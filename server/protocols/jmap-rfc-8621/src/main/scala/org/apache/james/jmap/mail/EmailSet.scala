@@ -335,22 +335,22 @@ case class EmailCreationRequest(mailboxIds: MailboxIds,
 
   private def contentTypeField(attachment: Attachment, blob: Blob): ContentTypeField = {
     val typeAsField: ContentTypeField = blob.contentType.asMime4J
-    if (attachment.name.isDefined) {
-      Fields.contentType(typeAsField.getMimeType,
-        Map.newBuilder[String, String]
-          .addAll(parametersWithoutName(typeAsField))
-          .addOne("name", EncoderUtil.encodeEncodedWord(attachment.name.get.value, Usage.TEXT_TOKEN))
-          .result
-          .asJava)
-    } else {
-      typeAsField
-    }
+    val parameterBuilder = Map.newBuilder[String, String]
+      .addAll(parametersWithoutNameAndCharset(typeAsField))
+
+    attachment.name.foreach(name => parameterBuilder.addOne("name", EncoderUtil.encodeEncodedWord(name.value, Usage.TEXT_TOKEN)))
+    attachment.charset.map(c => c.value).orElse(Option(typeAsField.getCharset))
+      .foreach(charset => parameterBuilder.addOne("charset", charset))
+
+    Fields.contentType(typeAsField.getMimeType,
+      parameterBuilder.result.asJava)
   }
 
-  private def parametersWithoutName(typeAsField: ContentTypeField): Map[String, String] =
+  private def parametersWithoutNameAndCharset(typeAsField: ContentTypeField): Map[String, String] =
     typeAsField.getParameters
       .asScala
-      .filter(!_._1.equals("name"))
+      .filter(!_._1.equalsIgnoreCase("name"))
+      .filter(!_._1.equalsIgnoreCase("charset"))
       .toMap
 
   def validateHtmlBody: Either[IllegalArgumentException, Option[ClientBodyPart]] = htmlBody match {
