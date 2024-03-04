@@ -42,7 +42,6 @@ import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Registration;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
@@ -126,7 +125,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private final MessageManager messageManager;
     private final MailboxId mailboxId;
     private final EventBus eventBus;
-    private final ImapSession session;
     private final MailboxSession mailboxSession;
     private final UidMsnConverter uidMsnConverter;
     private final Set<MessageUid> recentUids = new TreeSet<>();
@@ -140,12 +138,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, EventListener.React
     private final AtomicBoolean silentFlagChanges = new AtomicBoolean(false);
     private ApplicableFlags applicableFlags = ApplicableFlags.from(new Flags());
 
-    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MessageManager messageManager) {
+    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, MailboxSession session, MessageManager messageManager) {
         this.eventBus = eventBus;
-        this.session = session;
         this.mailboxManager = mailboxManager;
         this.messageManager = messageManager;
-        this.mailboxSession = session.getMailboxSession();
+        this.mailboxSession = session;
         this.uidMsnConverter = new UidMsnConverter();
         this.mailboxId = messageManager.getId();
     }

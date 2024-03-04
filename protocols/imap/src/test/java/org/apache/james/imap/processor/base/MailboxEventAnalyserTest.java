@@ -142,10 +142,7 @@ class MailboxEventAnalyserTest {
 
     @BeforeEach
     void setUp() throws MailboxException {
-        FakeImapSession imapSession = new FakeImapSession();
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION, new MemoryEventDeadLetters());
-        imapSession.setMailboxSession(MAILBOX_SESSION);
-        imapSession.authenticated();
 
         MailboxManager mailboxManager = mock(MailboxManager.class);
         MessageManager messageManager = mock(MessageManager.class);
@@ -167,7 +164,7 @@ class MailboxEventAnalyserTest {
         when(messageManager.getMessagesReactive(any(), any(), any()))
             .thenReturn(Flux.just(messageResult));
 
-        testee = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, messageManager);
+        testee = new SelectedMailboxImpl(mailboxManager, eventBus, MAILBOX_SESSION, messageManager);
         testee.finishInit().block();
     }
 
