@@ -420,7 +420,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                 responder.respond(getStatusResponseFactory()
                     .untaggedOk(HumanReadableText.QRESYNC_CLOSED, ResponseCode.closed()));
             }
-            SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(getMailboxManager(), eventBus, session, mailbox);
+            SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(getMailboxManager(), eventBus, session.getMailboxSession(), mailbox);
 
             return session.selected(selectedMailbox)
                 .then(selectedMailbox.finishInit())
