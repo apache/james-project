@@ -64,13 +64,6 @@ public class AvoidBinaryBodyBufferingBodyFactory implements BodyFactory {
     }
 
     /**
-     * @return the defaultCharset
-     */
-    public Charset getDefaultCharset() {
-        return defaultCharset;
-    }
-
-    /**
      * <p>
      * Select the Charset for the given <code>mimeCharset</code> string.
      * </p>
@@ -91,11 +84,7 @@ public class AvoidBinaryBodyBufferingBodyFactory implements BodyFactory {
         if (mimeCharset != null) {
             try {
                 return Charset.forName(mimeCharset);
-            } catch (UnsupportedCharsetException ex) {
-                if (defaultCharset == null) {
-                    throw new UnsupportedEncodingException(mimeCharset);
-                }
-            } catch (IllegalCharsetNameException ex) {
+            } catch (UnsupportedCharsetException | IllegalCharsetNameException ex) {
                 if (defaultCharset == null) {
                     throw new UnsupportedEncodingException(mimeCharset);
                 }
@@ -136,21 +125,10 @@ public class AvoidBinaryBodyBufferingBodyFactory implements BodyFactory {
         return textBody(text, Charsets.DEFAULT_CHARSET);
     }
 
-    public BinaryBody binaryBody(final String content, final Charset charset) {
-        if (content == null) {
-            throw new IllegalArgumentException("Content may not be null");
-        }
-        return new BinaryBody2(content, charset);
-    }
-
     public BinaryBody binaryBody(final InputStream is) throws IOException {
         CountingOutputStream out = new CountingOutputStream(OutputStream.nullOutputStream());
         is.transferTo(out);
         return new FakeBinaryBody(out.getCount());
-    }
-
-    public BinaryBody binaryBody(final byte[] buf) {
-        return new BinaryBody1(buf);
     }
 
     static class StringBody1 extends TextBody {
@@ -183,10 +161,6 @@ public class AvoidBinaryBodyBufferingBodyFactory implements BodyFactory {
         public InputStream getInputStream() throws IOException {
             return InputStreams.create(this.content,
                     this.charset != null ? this.charset : Charsets.DEFAULT_CHARSET);
-        }
-
-        @Override
-        public void dispose() {
         }
 
         @Override
@@ -235,10 +209,6 @@ public class AvoidBinaryBodyBufferingBodyFactory implements BodyFactory {
         @Override
         public long size() {
             return content.length;
-        }
-
-        @Override
-        public void dispose() {
         }
 
         @Override
@@ -297,69 +267,6 @@ public class AvoidBinaryBodyBufferingBodyFactory implements BodyFactory {
         @Override
         public SingleBody copy() {
             return new StringBody3(this.content, this.charset);
-        }
-
-    }
-
-    static class BinaryBody2 extends BinaryBody {
-
-        private final String content;
-        private final Charset charset;
-
-        BinaryBody2(final String content, final Charset charset) {
-            super();
-            this.content = content;
-            this.charset = charset;
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            return InputStreams.create(this.content,
-                this.charset != null ? this.charset : Charsets.DEFAULT_CHARSET);
-        }
-
-        @Override
-        public void dispose() {
-        }
-
-        @Override
-        public SingleBody copy() {
-            return new BinaryBody2(this.content, this.charset);
-        }
-
-    }
-
-    static class BinaryBody1 extends BinaryBody {
-
-        private final byte[] content;
-
-        BinaryBody1(final byte[] content) {
-            super();
-            this.content = content;
-        }
-
-        @Override
-        public InputStream getInputStream() throws IOException {
-            return InputStreams.create(this.content);
-        }
-
-        @Override
-        public void writeTo(OutputStream out) throws IOException {
-            out.write(content);
-        }
-
-        @Override
-        public long size() {
-            return content.length;
-        }
-
-        @Override
-        public void dispose() {
-        }
-
-        @Override
-        public SingleBody copy() {
-            return new BinaryBody1(this.content);
         }
 
     }
