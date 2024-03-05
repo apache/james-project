@@ -102,6 +102,10 @@ public interface ImapSession extends CommandDetectionSession {
      */
     Mono<Void> logout();
 
+    default void cancelOngoingProcessing() {
+
+    }
+
     /**
      * Allows implementation to apply back pressure on heavy senders.
      *
