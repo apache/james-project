@@ -60,7 +60,7 @@ public class ImapIdleStateHandler extends IdleStateHandler implements NettyConst
             LOGGER.info("Logout client {} ({}) because it idled for too long...",
                 address.getHostName(),
                 address.getAddress().getHostAddress());
-
+            session.cancelOngoingProcessing();
             // logout the client
             session.logout()
                 // close the channel
