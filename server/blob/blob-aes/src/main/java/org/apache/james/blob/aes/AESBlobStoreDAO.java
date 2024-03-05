@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BucketName;
@@ -72,13 +73,13 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         this.streamingAead = PBKDF2StreamingAeadFactory.newAesGcmHkdfStreaming(cryptoConfig);
     }
 
-    public FileBackedOutputStream encrypt(InputStream input) throws IOException {
+    private Pair<FileBackedOutputStream, Long> encrypt(InputStream input) throws IOException {
         FileBackedOutputStream encryptedContent = new FileBackedOutputStream(FILE_THRESHOLD_ENCRYPT);
-        try {
-            OutputStream outputStream = streamingAead.newEncryptingStream(encryptedContent, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
+        try (CountingOutputStream countingOutputStream = new CountingOutputStream(encryptedContent)) {
+            OutputStream outputStream = streamingAead.newEncryptingStream(countingOutputStream, PBKDF2StreamingAeadFactory.EMPTY_ASSOCIATED_DATA);
             input.transferTo(outputStream);
             outputStream.close();
-            return encryptedContent;
+            return Pair.of(encryptedContent, countingOutputStream.getCount());
         } catch (Exception e) {
             encryptedContent.reset();
             throw new RuntimeException("Unable to build payload for object storage, failed to encrypt", e);
@@ -175,10 +176,29 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
 
         return Mono.using(
                 () -> encrypt(inputStream),
-                fileBackedOutputStream -> Mono.from(underlying.save(bucketName, blobId, fileBackedOutputStream.asByteSource())),
-                Throwing.consumer(FileBackedOutputStream::reset))
+                pair -> Mono.from(underlying.save(bucketName, blobId, byteSourceWithSize(pair.getLeft().asByteSource(), pair.getRight()))),
+                Throwing.consumer(pair -> pair.getLeft().reset()))
             .subscribeOn(Schedulers.boundedElastic())
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving bytearray", e));
+    }
+
+    private ByteSource byteSourceWithSize(ByteSource byteSource, long size) {
+        return new ByteSource() {
+            @Override
+            public InputStream openStream() throws IOException {
+                return byteSource.openStream();
+            }
+
+            @Override
+            public com.google.common.base.Optional<Long> sizeIfKnown() {
+                return com.google.common.base.Optional.of(size);
+            }
+
+            @Override
+            public long size() {
+                return size;
+            }
+        };
     }
 
     @Override
