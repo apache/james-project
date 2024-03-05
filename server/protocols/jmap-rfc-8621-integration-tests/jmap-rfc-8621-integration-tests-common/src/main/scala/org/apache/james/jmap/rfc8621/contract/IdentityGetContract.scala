@@ -33,8 +33,8 @@ import net.javacrumbs.jsonunit.core.internal.Options
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.{MailAddress, Username}
-import org.apache.james.jmap.api.identity.{IdentityCreationRequest, IdentityRepository}
-import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityName, TextSignature}
+import org.apache.james.jmap.api.identity.{IdentityCreationRequest, IdentityHtmlSignatureUpdate, IdentityRepository, IdentityUpdateRequest}
+import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, TextSignature}
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.http.UserCredential
@@ -54,6 +54,7 @@ class IdentityProbeModule extends AbstractModule{
 
 class IdentityProbe @Inject()(identityRepository: IdentityRepository) extends GuiceProbe {
   def save(user: Username, creationRequest: IdentityCreationRequest): Publisher[Identity] = identityRepository.save(user, creationRequest)
+  def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): SMono[Unit] = SMono(identityRepository.update(user, identityId, identityUpdateRequest))
 }
 
 trait IdentityGetContract {
@@ -644,6 +645,70 @@ trait IdentityGetContract {
            |			"c1"
            |		]
            |	]
+           |}""".stripMargin)
+  }
+
+  @Test
+  def mayDeleteShouldReturnFalseWhenUpdateServerSetIdentity(server: GuiceJamesServer): Unit = {
+    val serverSetIdentityId: String =  `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body( s"""{
+                |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+                |  "methodCalls": [[
+                |    "Identity/get",
+                |    {
+                |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                |      "ids": null
+                |    },
+                |    "c1"]]
+                |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract()
+      .body()
+      .jsonPath()
+      .get("methodResponses[0][1].list[0].id")
+
+    // When admin update the server set identity
+    server.getProbe(classOf[IdentityProbe])
+      .update(BOB, IdentityId(UUID.fromString(serverSetIdentityId)), IdentityUpdateRequest(htmlSignature = Some(IdentityHtmlSignatureUpdate(HtmlSignature("html signature")))))
+      .block()
+
+    // Then mayDelete always return false
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body( s"""{
+                |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:submission"],
+                |  "methodCalls": [[
+                |    "Identity/get",
+                |    {
+                |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+                |      "ids": [ "$serverSetIdentityId" ]
+                |    },
+                |    "c1"]]
+                |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""{
+           |    "name": "",
+           |    "email": "bob@domain.tld",
+           |    "htmlSignature": "html signature",
+           |    "id": "$serverSetIdentityId",
+           |    "textSignature": "",
+           |    "mayDelete": false
            |}""".stripMargin)
   }
 }
