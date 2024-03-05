@@ -34,6 +34,8 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.scheduler.Schedulers;
+
 /**
  * {@link ImapDecoder} implementation which parse the data via lookup the right
  * {@link ImapCommandParser} via an {@link ImapCommandParserFactory}. The
@@ -78,7 +80,7 @@ public class DefaultImapDecoder implements ImapDecoder {
             String commandName = request.atom();
             return decodeCommandNamed(request, tag, commandName, session);
         } catch (DecodingException e) {
-            LOGGER.debug("Error during initial request parsing", e);
+            LOGGER.info("Error during initial request parsing", e);
             return unknownCommand(tag, session);
         }
     }
