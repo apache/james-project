@@ -263,8 +263,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
             LOGGER.info("Connection closed for {}", address.getAddress().getHostAddress());
 
-            Disposable disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY).getAndSet(null);
-
+            Optional.ofNullable(imapSession).ifPresent(ImapSession::cancelOngoingProcessing);
             Optional.ofNullable(imapSession)
                 .map(ImapSession::logout)
                 .orElse(Mono.empty())
@@ -275,7 +274,6 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                 .subscribe(any -> {
 
                 }, ctx::fireExceptionCaught);
-            Optional.ofNullable(disposableAttribute).ifPresent(Disposable::dispose);
         }
     }
 
