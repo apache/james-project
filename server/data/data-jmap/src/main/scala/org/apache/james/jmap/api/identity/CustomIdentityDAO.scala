@@ -259,13 +259,13 @@ object IdentityWithOrigin {
   case class CustomIdentityOrigin(inputIdentity: Identity) extends IdentityWithOrigin {
     override def identity: Identity = inputIdentity
 
-    override def merge(other: IdentityWithOrigin): IdentityWithOrigin = this
+    override def merge(other: IdentityWithOrigin): IdentityWithOrigin = CustomIdentityOrigin(identity.copy(mayDelete = MayDeleteIdentity(false)))
   }
 
   case class ServerSetIdentityOrigin(inputIdentity: Identity) extends IdentityWithOrigin {
     override def identity: Identity = inputIdentity
 
-    override def merge(other: IdentityWithOrigin): IdentityWithOrigin = other
+    override def merge(other: IdentityWithOrigin): IdentityWithOrigin = CustomIdentityOrigin(other.identity.copy(mayDelete = MayDeleteIdentity(false)))
   }
 
   def fromCustom(identity: Identity): IdentityWithOrigin = CustomIdentityOrigin(identity)
