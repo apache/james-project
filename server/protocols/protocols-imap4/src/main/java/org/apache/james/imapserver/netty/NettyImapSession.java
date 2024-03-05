@@ -49,6 +49,7 @@ import io.netty.handler.codec.compression.ZlibDecoder;
 import io.netty.handler.codec.compression.ZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.ssl.SslHandler;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 public class NettyImapSession implements ImapSession, NettyConstants {
@@ -114,6 +115,12 @@ public class NettyImapSession implements ImapSession, NettyConstants {
     public Mono<Void> logout() {
         return closeMailbox()
             .then(Mono.fromRunnable(() -> state = ImapSessionState.LOGOUT));
+    }
+
+    @Override
+    public void cancelOngoingProcessing() {
+        Disposable disposableAttribute = channel.attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY).getAndSet(null);
+        Optional.ofNullable(disposableAttribute).ifPresent(Disposable::dispose);
     }
 
     @Override
