@@ -22,6 +22,7 @@ package org.apache.james.jmap.json
 import eu.timepit.refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
+import org.apache.james.core.MailAddress
 import org.apache.james.jmap.api.identity.{IdentityBccUpdate, IdentityCreationRequest, IdentityHtmlSignatureUpdate, IdentityNameUpdate, IdentityReplyToUpdate, IdentitySortOrderUpdate, IdentityTextSignatureUpdate, IdentityUpdateRequest}
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
@@ -30,7 +31,8 @@ import org.apache.james.jmap.core.{CapabilityIdentifier, Properties, SetError, U
 import org.apache.james.jmap.mail.Mailbox.idProperty
 import org.apache.james.jmap.mail._
 import org.apache.james.jmap.method.IdentitySetUpdatePerformer.IdentitySetUpdateResponse
-import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{Format, JsArray, JsError, JsObject, JsPath, JsResult, JsString, JsSuccess, JsValue, Json, OWrites, Reads, Writes, __}
 
 object IdentitySerializer {
   private implicit val emailerNameReads: Format[EmailerName] = Json.valueFormat[EmailerName]
@@ -94,7 +96,18 @@ object IdentitySerializer {
   private implicit val identityHtmlSignatureUpdateReads: Reads[IdentityHtmlSignatureUpdate] = Json.valueReads[IdentityHtmlSignatureUpdate]
 
   private implicit val identitySetRequestReads: Reads[IdentitySetRequest] = Json.reads[IdentitySetRequest]
-  private implicit val identityCreationRequest: Reads[IdentityCreationRequest] = Json.reads[IdentityCreationRequest]
+  private implicit val identityCreationRequest: Reads[IdentityCreationRequest] = {
+    (
+      (JsPath \ "name").readNullable[IdentityName] and
+        (JsPath \ "email").read[MailAddress] and
+        (JsPath \ "replyTo").readNullable[List[EmailAddress]] and
+        (JsPath \ "bcc").readNullable[List[EmailAddress]] and
+        (JsPath \ "sortOrder").readNullable[Int] and
+        (JsPath \ "textSignature").readNullable[TextSignature] and
+        (JsPath \ "htmlSignature").readNullable[HtmlSignature]
+      )(IdentityCreationRequest.from _)
+  }
+
   private implicit val identityUpdateRequest: Reads[IdentityUpdateRequest]= Json.reads[IdentityUpdateRequest]
 
   def serialize(response: IdentityGetResponse, properties: Properties, capabilities: Set[CapabilityIdentifier]): JsObject = Json.toJsObject(response)
