@@ -93,7 +93,7 @@ public class MessageContentExtractor {
     }
 
     private Optional<String> asString(TextBody textBody) throws IOException {
-        return Optional.ofNullable(IOUtils.toString(textBody.getInputStream(),
+        return Optional.ofNullable(new String(IOUtils.toByteArray(textBody.getInputStream(), textBody.size()),
             Optional.ofNullable(textBody.getCharset())
                 .orElse(org.apache.james.mime4j.Charsets.DEFAULT_CHARSET)));
     }
