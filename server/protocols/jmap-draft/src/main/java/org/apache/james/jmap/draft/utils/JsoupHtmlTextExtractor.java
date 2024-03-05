@@ -19,9 +19,9 @@
 
 package org.apache.james.jmap.draft.utils;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -114,9 +114,9 @@ public class JsoupHtmlTextExtractor implements HtmlTextExtractor {
     }
 
     Stream<HTMLNode> flatten(Node base) {
-        Deque<HTMLNode> in = new ConcurrentLinkedDeque<>();
+        Deque<HTMLNode> in = new ArrayDeque<>();
         in.addFirst(new HTMLNode(base, JsoupHtmlTextExtractor.INITIAL_LIST_NESTED_LEVEL));
-        Deque<HTMLNode> out = new ConcurrentLinkedDeque<>();
+        Deque<HTMLNode> out = new ArrayDeque<>();
 
         while (!in.isEmpty()) {
             HTMLNode node = in.removeFirst();
