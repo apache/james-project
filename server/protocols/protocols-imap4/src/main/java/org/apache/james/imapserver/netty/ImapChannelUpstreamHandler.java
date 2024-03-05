@@ -338,10 +338,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
     private void manageUnknownError(ChannelHandlerContext ctx) {
         // logout on error not sure if that is the best way to handle it
-        final ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-
-        Optional.ofNullable(ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY).getAndSet(null))
-            .ifPresent(Disposable::dispose);
+        ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+        Optional.ofNullable(imapSession).ifPresent(ImapSession::cancelOngoingProcessing);
 
         Optional.ofNullable(imapSession)
             .map(ImapSession::logout)
