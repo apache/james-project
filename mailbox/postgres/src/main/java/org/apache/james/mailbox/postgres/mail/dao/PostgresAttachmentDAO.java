@@ -84,6 +84,9 @@ public class PostgresAttachmentDAO {
     }
 
     public Flux<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
+        if (attachmentIds.isEmpty()) {
+            return Flux.empty();
+        }
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(PostgresAttachmentTable.TABLE_NAME)
                 .where(PostgresAttachmentTable.ID.in(attachmentIds.stream().map(AttachmentId::getId).collect(ImmutableList.toImmutableList())))))
             .map(row -> AttachmentMetadata.builder()
