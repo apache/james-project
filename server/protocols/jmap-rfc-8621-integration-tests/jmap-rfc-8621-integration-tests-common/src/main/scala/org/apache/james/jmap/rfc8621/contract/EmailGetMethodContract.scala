@@ -3831,7 +3831,7 @@ trait EmailGetMethodContract {
          |    "charset": "UTF-8",
          |    "size": 8,
          |    "partId": "1",
-         |    "blobId": "1_1",
+         |    "blobId": "${messageId.serialize}_1",
          |    "type": "text/plain"
          |  }
          |}""".stripMargin)
