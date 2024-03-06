@@ -21,7 +21,6 @@ package org.apache.james.mailbox.postgres.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.ATTACHMENT_METADATA;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
 
@@ -29,9 +28,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import javax.mail.Flags;
@@ -45,14 +44,11 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
@@ -74,7 +70,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteSource;
 
@@ -105,10 +100,10 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
     private final PostgresMessageDAO messageDAO;
     private final PostgresMailboxMessageDAO mailboxMessageDAO;
     private final PostgresModSeqProvider modSeqProvider;
-    private final PostgresAttachmentMapper attachmentMapper;
     private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final Clock clock;
+    private final AttachmentLoader attachmentLoader;
 
     public PostgresMessageIdMapper(PostgresMailboxDAO mailboxDAO,
                                    PostgresMessageDAO messageDAO,
@@ -122,10 +117,10 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
         this.messageDAO = messageDAO;
         this.mailboxMessageDAO = mailboxMessageDAO;
         this.modSeqProvider = modSeqProvider;
-        this.attachmentMapper = attachmentMapper;
         this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.clock = clock;
+        this.attachmentLoader = new AttachmentLoader(attachmentMapper);;
     }
 
     @Override
@@ -142,42 +137,23 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
 
     @Override
     public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
-        return mailboxMessageDAO.findMessagesByMessageIds(messageIds.stream().map(PostgresMessageId.class::cast).collect(ImmutableList.toImmutableList()), fetchType)
-            .flatMap(messageBuilderAndRecord -> {
-                SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
-                Record record = messageBuilderAndRecord.getRight();
-                if (fetchType == MessageMapper.FetchType.FULL) {
-                    return retrieveFullMessage(messageBuilder, record);
-                }
-                return Mono.just(messageBuilder.build());
-            }, ReactorUtils.DEFAULT_CONCURRENCY);
-    }
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContentPublisher = mailboxMessageDAO.findMessagesByMessageIds(messageIds.stream().map(PostgresMessageId.class::cast).collect(ImmutableList.toImmutableList()), fetchType);
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = attachmentLoader.addAttachmentToMessage(fetchMessageWithoutFullContentPublisher, fetchType);
 
-    private Mono<SimpleMailboxMessage> retrieveFullMessage(SimpleMailboxMessage.Builder messageBuilder, Record record) {
-        return retrieveFullContent(record).flatMap(headerAndBodyContent -> getAttachments(toMap(record.get(ATTACHMENT_METADATA)))
-            .map(messageAttachmentMetadataList -> messageBuilder.content(headerAndBodyContent).addAttachments(messageAttachmentMetadataList).build()));
-    }
-
-    private Map<AttachmentId, MessageRepresentation.AttachmentRepresentation> toMap(List<MessageRepresentation.AttachmentRepresentation> attachmentRepresentations) {
-        return attachmentRepresentations.stream().collect(ImmutableMap.toImmutableMap(MessageRepresentation.AttachmentRepresentation::getAttachmentId, obj -> obj));
-    }
-
-    private Mono<List<MessageAttachmentMetadata>> getAttachments(Map<AttachmentId, MessageRepresentation.AttachmentRepresentation> mapAttachmentIdToAttachmentRepresentation) {
-        return attachmentMapper.getAttachmentsReactive(mapAttachmentIdToAttachmentRepresentation.values()
-                .stream()
-                .map(MessageRepresentation.AttachmentRepresentation::getAttachmentId)
-                .collect(ImmutableList.toImmutableList()))
-            .map(attachmentMetadata -> constructMessageAttachment(attachmentMetadata, mapAttachmentIdToAttachmentRepresentation.get(attachmentMetadata.getAttachmentId())))
-            .collectList();
-    }
-
-    private MessageAttachmentMetadata constructMessageAttachment(AttachmentMetadata attachment, MessageRepresentation.AttachmentRepresentation messageAttachmentRepresentation) {
-        return MessageAttachmentMetadata.builder()
-            .attachment(attachment)
-            .name(messageAttachmentRepresentation.getName().orElse(null))
-            .cid(messageAttachmentRepresentation.getCid())
-            .isInline(messageAttachmentRepresentation.isInline())
-            .build();
+        if (fetchType == MessageMapper.FetchType.FULL) {
+            return fetchMessagePublisher
+                .flatMap(messageBuilderAndRecord -> {
+                    SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
+                    return retrieveFullContent(messageBuilderAndRecord.getRight())
+                        .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
+                }, ReactorUtils.DEFAULT_CONCURRENCY)
+                .sort(Comparator.comparing(MailboxMessage::getUid))
+                .map(message -> message);
+        } else {
+            return fetchMessagePublisher
+                .map(messageBuilderAndBlobId -> messageBuilderAndBlobId.getLeft()
+                    .build());
+        }
     }
 
     @Override
