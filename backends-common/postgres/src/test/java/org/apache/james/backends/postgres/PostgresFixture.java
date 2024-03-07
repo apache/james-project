@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.postgres;
 
+import static java.util.Collections.singletonMap;
 import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAULT_DATABASE;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
@@ -94,5 +95,6 @@ public interface PostgresFixture {
         .withDatabaseName(DEFAULT_DATABASE.dbName())
         .withUsername(DEFAULT_DATABASE.dbUser())
         .withPassword(DEFAULT_DATABASE.dbPassword())
-        .withCreateContainerCmdModifier(cmd -> cmd.withName("james-postgres-test-" + UUID.randomUUID()));
+        .withCreateContainerCmdModifier(cmd -> cmd.withName("james-postgres-test-" + UUID.randomUUID()))
+        .withTmpFs(singletonMap("/var/lib/postgresql/data", "rw"));
 }
