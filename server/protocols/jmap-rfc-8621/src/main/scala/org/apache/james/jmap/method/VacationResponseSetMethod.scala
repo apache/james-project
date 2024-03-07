@@ -30,7 +30,7 @@ import org.apache.james.jmap.change.{AccountIdRegistrationKey, StateChangeEvent,
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Invocation, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.VacationSerializer
 import org.apache.james.jmap.method.VacationResponseSetMethod.VACATION_RESPONSE_PATCH_OBJECT_KEY
 import org.apache.james.jmap.routes.SessionSupplier
@@ -83,6 +83,7 @@ object VacationResponseSetMethod {
 
 class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: EventBus,
                                           vacationService: VacationService,
+                                          val configuration: JmapRfc8621Configuration,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier,
                                           val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[VacationResponseSetRequest] {
@@ -94,8 +95,9 @@ class VacationResponseSetMethod @Inject()(@Named(InjectionKeys.JMAP) eventBus: E
       .flatMap(updateResults => dispatchVacationResponseChangeEvent(mailboxSession.getUser, updateResults)
         .`then`(SMono.just(InvocationWithContext(createResponse(invocation.invocation, request, updateResults), invocation.processingContext))))
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseSetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, VacationResponseSetRequest] =
     VacationSerializer.deserializeVacationResponseSetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   private def dispatchVacationResponseChangeEvent(username: Username, updateResults: VacationResponseUpdateResults): SMono[Void] = {
     def noVacationResponseChange: Boolean = updateResults.updateSuccess.isEmpty

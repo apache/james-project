@@ -24,7 +24,7 @@ import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_VACATION_RESPONSE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
-import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, Properties, SessionTranslator}
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, JmapRfc8621Configuration, Properties, SessionTranslator}
 import org.apache.james.jmap.json.VacationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.jmap.vacation.VacationResponse.UNPARSED_SINGLETON
@@ -56,6 +56,7 @@ case class VacationResponseGetResult(vacationResponses: Set[VacationResponse], n
 }
 
 class VacationResponseGetMethod @Inject()(vacationService: VacationService,
+                                          val configuration: JmapRfc8621Configuration,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier,
                                           val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[VacationResponseGetRequest] {
@@ -83,6 +84,7 @@ class VacationResponseGetMethod @Inject()(vacationService: VacationService,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseGetRequest] =
     VacationSerializer.deserializeVacationResponseGetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
   private def getVacationResponse(vacationResponseGetRequest: VacationResponseGetRequest,
                                   mailboxSession: MailboxSession): SFlux[VacationResponseGetResult] =
     vacationResponseGetRequest.ids match {

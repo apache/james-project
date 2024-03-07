@@ -24,7 +24,7 @@ import javax.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ErrorCode, Invocation, Properties, SessionTranslator}
+import org.apache.james.jmap.core.{ErrorCode, Invocation, JmapRfc8621Configuration, Properties, SessionTranslator}
 import org.apache.james.jmap.delegation.{Delegate, DelegatedAccountGet, DelegatedAccountGetRequest, DelegatedAccountGetResult, DelegationId, ForbiddenAccountManagementException}
 import org.apache.james.jmap.json.DelegationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
@@ -38,6 +38,7 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.jdk.OptionConverters._
 
 class DelegatedAccountGetMethod @Inject()(val metricFactory: MetricFactory,
+                                          val configuration: JmapRfc8621Configuration,
                                           val sessionSupplier: SessionSupplier,
                                           val sessionTranslator: SessionTranslator,
                                           val delegationStore: DelegationStore) extends MethodRequiringAccountId[DelegatedAccountGetRequest] {
@@ -47,6 +48,7 @@ class DelegatedAccountGetMethod @Inject()(val metricFactory: MetricFactory,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, DelegatedAccountGetRequest] =
     DelegationSerializer.deserializeDelegatedAccountGetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegatedAccountGetRequest): Publisher[InvocationWithContext] = {
     val requestedProperties: Properties = request.properties.getOrElse(DelegatedAccountGet.allProperties)

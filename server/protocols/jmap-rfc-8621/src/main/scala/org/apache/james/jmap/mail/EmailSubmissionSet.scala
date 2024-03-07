@@ -28,8 +28,8 @@ import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Properties.toProperties
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Id, SetError, UTCDate, UuidState}
-import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, WithAccountId}
+import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, SetError, UTCDate, UuidState}
+import org.apache.james.jmap.method.{EmailSubmissionCreationParseException, ValidableRequest, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.JsObject
 
@@ -46,7 +46,7 @@ case class EmailSubmissionCreationId(id: Id)
 case class EmailSubmissionSetRequest(accountId: AccountId,
                                      create: Option[Map[EmailSubmissionCreationId, JsObject]],
                                      onSuccessUpdateEmail: Option[Map[EmailSubmissionCreationId, JsObject]],
-                                     onSuccessDestroyEmail: Option[List[EmailSubmissionCreationId]]) extends WithAccountId {
+                                     onSuccessDestroyEmail: Option[List[EmailSubmissionCreationId]]) extends WithAccountId with ValidableRequest {
   def implicitEmailSetRequest(messageIdResolver: EmailSubmissionCreationId => Either[IllegalArgumentException, Option[MessageId]]): Either[IllegalArgumentException, Option[EmailSetRequest]] =
     for {
       update <- resolveOnSuccessUpdateEmail(messageIdResolver)
@@ -82,11 +82,26 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
         .sequence)
       .sequence
 
-  def validate: Either[IllegalArgumentException, EmailSubmissionSetRequest] = {
+  def validate(configuration: JmapRfc8621Configuration): Either[Exception, EmailSubmissionSetRequest] = {
     val supportedCreationIds: List[EmailSubmissionCreationId] = create.getOrElse(Map()).keys.toList
 
-    validateOnSuccessUpdateEmail(supportedCreationIds)
-      .flatMap(_ => validateOnSuccessDestroyEmail(supportedCreationIds))
+    for {
+      _ <- validateOnSuccessUpdateEmail(supportedCreationIds)
+      _ <- validateOnSuccessDestroyEmail(supportedCreationIds)
+      _ <- validateIdCount(configuration)
+    } yield {
+      this
+    }
+  }
+
+  private def validateIdCount(configuration: JmapRfc8621Configuration): Either[Exception, EmailSubmissionSetRequest] = {
+    val idCount = create.map(_.size).getOrElse(0)
+    if (idCount > configuration.maxObjectsInSet) {
+      Left(RequestTooLargeException(s"Too many items in a set request ${this.getClass}. " +
+        s"Got $idCount items instead of maximum ${configuration.maxObjectsInSet.value}."))
+    } else {
+      scala.Right(this)
+    }
   }
 
   private def validateOnSuccessDestroyEmail(supportedCreationIds: List[EmailSubmissionCreationId]) : Either[IllegalArgumentException, EmailSubmissionSetRequest] =

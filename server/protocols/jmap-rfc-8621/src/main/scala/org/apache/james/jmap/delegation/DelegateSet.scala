@@ -22,7 +22,7 @@ package org.apache.james.jmap.delegation
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, SetError, UuidState}
-import org.apache.james.jmap.method.{WithAccountId, standardError}
+import org.apache.james.jmap.method.{SetRequest, WithAccountId, standardError}
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
 
 case class DelegateCreationId(id: Id) {
@@ -31,7 +31,9 @@ case class DelegateCreationId(id: Id) {
 
 case class DelegateSetRequest(accountId: AccountId,
                               create: Option[Map[DelegateCreationId, JsObject]],
-                              destroy: Option[Seq[UnparsedDelegateId]]) extends WithAccountId
+                              destroy: Option[Seq[UnparsedDelegateId]]) extends WithAccountId with SetRequest {
+  override def idCount: Long = create.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
+}
 
 case class DelegateCreationRequest(username: Username)
 

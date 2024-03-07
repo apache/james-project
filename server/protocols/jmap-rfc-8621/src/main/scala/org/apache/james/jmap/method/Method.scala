@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 import org.apache.james.jmap.api.exception.ChangeNotFoundException
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
-import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, SessionTranslator}
+import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, JmapRfc8621Configuration, SessionTranslator}
 import org.apache.james.jmap.delegation.ForbiddenAccountManagementException
 import org.apache.james.jmap.mail.{IdentityIdNotFoundException, RequestTooLargeException, UnsupportedFilterException, UnsupportedNestingException, UnsupportedRequestParameterException, UnsupportedSortException}
 import org.apache.james.jmap.routes.{ProcessingContext, SessionSupplier}
@@ -55,6 +55,35 @@ trait Method {
 
 trait WithAccountId {
   def accountId: AccountId
+}
+trait GetRequest extends ValidableRequest {
+  def idCount: Option[Long]
+
+  override def validate(configuration: JmapRfc8621Configuration): Either[Exception, GetRequest] =
+    if (idCount.exists(value => value > configuration.maxObjectsInGet.value.value)) {
+      Left(RequestTooLargeException(s"Too many items in a get request ${this.getClass}. " +
+        s"Got $idCount items instead of maximum ${configuration.maxObjectsInGet.value}."))
+    } else {
+      scala.Right(this)
+    }
+}
+trait SetRequest extends ValidableRequest {
+  def idCount: Long
+
+  override def validate(configuration: JmapRfc8621Configuration): Either[Exception, SetRequest] =
+    validateIdCounts(configuration)
+
+  def validateIdCounts(configuration: JmapRfc8621Configuration) = {
+    if (idCount > configuration.maxObjectsInGet.value.value) {
+      Left(RequestTooLargeException(s"Too many items in a set request ${this.getClass}. " +
+        s"Got $idCount items instead of maximum ${configuration.maxObjectsInSet.value}."))
+    } else {
+      scala.Right(this)
+    }
+  }
+}
+trait ValidableRequest {
+  def validate(configuration: JmapRfc8621Configuration): Either[Exception, ValidableRequest]
 }
 trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
   def metricFactory: MetricFactory

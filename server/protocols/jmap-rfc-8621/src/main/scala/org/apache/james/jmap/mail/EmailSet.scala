@@ -32,7 +32,7 @@ import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{AccountId, SetError, UTCDate, UuidState}
 import org.apache.james.jmap.mail.Disposition.INLINE
 import org.apache.james.jmap.mail.EmailCreationRequest.KEYWORD_DRAFT
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{SetRequest, WithAccountId}
 import org.apache.james.jmap.routes.{Blob, BlobResolvers}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{Cid, MessageId}
@@ -421,7 +421,9 @@ case class DestroyIds(value: Seq[UnparsedMessageId])
 case class EmailSetRequest(accountId: AccountId,
                            create: Option[Map[EmailCreationId, JsObject]],
                            update: Option[Map[UnparsedMessageId, JsObject]],
-                           destroy: Option[DestroyIds]) extends WithAccountId
+                           destroy: Option[DestroyIds]) extends WithAccountId with SetRequest {
+  override def idCount: Long = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.value).map(_.size).getOrElse(0)
+}
 
 case class EmailSetResponse(accountId: AccountId,
                             oldState: Option[UuidState],

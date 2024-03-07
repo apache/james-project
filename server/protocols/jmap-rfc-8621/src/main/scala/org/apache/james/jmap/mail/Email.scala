@@ -36,7 +36,7 @@ import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.api.model.{EmailAddress, Preview}
 import org.apache.james.jmap.api.projections.{MessageFastViewPrecomputedProperties, MessageFastViewProjection}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
-import org.apache.james.jmap.core.{Properties, UTCDate}
+import org.apache.james.jmap.core.{JmapRfc8621Configuration, Properties, UTCDate}
 import org.apache.james.jmap.mail.BracketHeader.sanitize
 import org.apache.james.jmap.mail.EmailFullViewFactory.extractBodyValues
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
@@ -44,7 +44,7 @@ import org.apache.james.jmap.mail.EmailHeaderName.{ADDRESSES_NAMES, DATE, MESSAG
 import org.apache.james.jmap.mail.FastViewWithAttachmentsMetadataReadLevel.supportedByFastViewWithAttachments
 import org.apache.james.jmap.mail.KeywordsFactory.LENIENT_KEYWORDS_FACTORY
 import org.apache.james.jmap.method.ZoneIdProvider
-import org.apache.james.jmap.mime4j.{JamesBodyDescriptorBuilder, AvoidBinaryBodyBufferingBodyFactory}
+import org.apache.james.jmap.mime4j.{AvoidBinaryBodyBufferingBodyFactory, JamesBodyDescriptorBuilder}
 import org.apache.james.mailbox.model.FetchGroup.{FULL_CONTENT, HEADERS, HEADERS_WITH_ATTACHMENTS_METADATA, MINIMAL}
 import org.apache.james.mailbox.model.{FetchGroup, MailboxId, MessageId, MessageResult, ThreadId => JavaThreadId}
 import org.apache.james.mailbox.{MailboxSession, MessageIdManager}
@@ -116,13 +116,6 @@ object Email {
         } else {
           scala.Right(properties)
         }
-    }
-
-  def validateIdsSize(request: EmailGetRequest, maxSize: Long, chain: Properties): Either[Exception, Properties] =
-    if (EmailGetRequest.readLevel(request).equals(FullReadLevel) && request.ids.exists(_.value.size > maxSize)) {
-      Left(RequestTooLargeException(s"Too many items in an email read at level FULL. Got ${request.ids.get.value.size} items instead of maximum ${maxSize}."))
-    } else {
-      scala.Right(chain)
     }
 
   def asUnparsed(messageId: MessageId): Try[UnparsedEmailId] =

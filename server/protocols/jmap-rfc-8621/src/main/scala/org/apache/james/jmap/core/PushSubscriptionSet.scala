@@ -21,7 +21,6 @@ package org.apache.james.jmap.core
 
 import java.time.ZonedDateTime
 import java.util.UUID
-
 import cats.implicits._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
@@ -34,14 +33,16 @@ import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.Properties.toProperties
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.mail.{InvalidPropertyException, InvalidUpdateException, PatchUpdateValidationException, UnsupportedPropertyUpdatedException}
-import org.apache.james.jmap.method.WithoutAccountId
+import org.apache.james.jmap.method.{SetRequest, WithoutAccountId}
 import play.api.libs.json.{JsArray, JsObject, JsString, JsValue}
 
 import scala.util.{Failure, Success, Try}
 
 case class PushSubscriptionSetRequest(create: Option[Map[PushSubscriptionCreationId, JsObject]],
                                       update: Option[Map[UnparsedPushSubscriptionId, PushSubscriptionPatchObject]],
-                                      destroy: Option[Seq[UnparsedPushSubscriptionId]]) extends WithoutAccountId
+                                      destroy: Option[Seq[UnparsedPushSubscriptionId]]) extends WithoutAccountId with SetRequest {
+  override def idCount: Long = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
+}
 
 case class PushSubscriptionCreationId(id: Id) {
   def serialise: String = id.value

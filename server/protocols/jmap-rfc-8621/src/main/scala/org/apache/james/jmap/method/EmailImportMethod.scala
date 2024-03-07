@@ -29,7 +29,7 @@ import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, SetError, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId, SessionTranslator, SetError, UuidState}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.{BlobId, EmailCreationId, EmailCreationResponse, EmailImport, EmailImportRequest, EmailImportResponse, ThreadId, ValidatedEmailImport}
 import org.apache.james.jmap.method.EmailImportMethod.{ImportFailure, ImportResult, ImportResults, ImportSuccess, ImportWithBlob}
@@ -94,6 +94,7 @@ object EmailImportMethod {
 }
 
 class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
+                                   val configuration: JmapRfc8621Configuration,
                                    val sessionSupplier: SessionSupplier,
                                    val sessionTranslator: SessionTranslator,
                                    val blobResolvers: BlobResolvers,
@@ -105,6 +106,7 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailImportRequest] =
     serializer.deserializeEmailImportRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: EmailImportRequest): Publisher[InvocationWithContext] =
     for {
@@ -139,10 +141,10 @@ class EmailImportMethod @Inject() (val metricFactory: MetricFactory,
 
   private def importEmails(request: EmailImportRequest, mailboxSession: MailboxSession): SMono[ImportResults] =
     SFlux.fromIterable(request.emails.toList)
-      .flatMap {
+      .concatMap {
         case creationId -> emailImport => resolveBlob(mailboxSession, creationId, emailImport)
       }
-      .flatMap {
+      .concatMap {
         case Right(emailImport) => importEmail(mailboxSession, emailImport)
         case Left(e) => SMono.just(e)
       }.collectSeq()

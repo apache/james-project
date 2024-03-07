@@ -24,8 +24,8 @@ import java.util.UUID
 import cats.implicits.toTraverseOps
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{AccountId, Id, Properties, SetError}
-import org.apache.james.jmap.method.{WithAccountId, standardError}
+import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration, Properties, SetError}
+import org.apache.james.jmap.method.{SetRequest, ValidableRequest, WithAccountId, standardError}
 import org.apache.james.mailbox.model.MessageId
 import play.api.libs.json.{JsObject, JsPath, JsonValidationError}
 
@@ -122,15 +122,19 @@ case class MDNSendCreateResponse(subject: Option[SubjectField],
 case class MDNSendRequest(accountId: AccountId,
                           identityId: UnparsedIdentityId,
                           send: Map[MDNSendCreationId, JsObject],
-                          onSuccessUpdateEmail: Option[Map[MDNSendCreationId, JsObject]]) extends WithAccountId {
+                          onSuccessUpdateEmail: Option[Map[MDNSendCreationId, JsObject]]) extends WithAccountId with SetRequest {
 
-  def validate: Either[IllegalArgumentException, MDNSendRequest] = {
+
+  override def idCount: Long = send.size
+
+  override def validate(configuration: JmapRfc8621Configuration): Either[Exception, MDNSendRequest] = {
     val supportedCreationIds: List[MDNSendCreationId] = send.keys.toList
     onSuccessUpdateEmail.getOrElse(Map())
       .keys
       .toList
       .map(id => validateOnSuccessUpdateEmail(id, supportedCreationIds))
       .sequence
+      .flatMap(_ => validateIdCounts(configuration))
       .map(_ => this)
   }
 
