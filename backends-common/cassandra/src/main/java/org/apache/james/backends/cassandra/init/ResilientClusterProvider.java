@@ -48,11 +48,13 @@ public class ResilientClusterProvider implements Provider<CqlSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResilientClusterProvider.class);
 
     private final CqlSession cluster;
+    private final ClusterConfiguration clusterConfiguration;
 
     @VisibleForTesting
     @Inject
     ResilientClusterProvider(ClusterConfiguration configuration, KeyspaceConfiguration keyspaceConfiguration) {
-        Duration waitDelay = Duration.ofMillis(configuration.getMinDelay());
+        clusterConfiguration = configuration;
+        Duration waitDelay = Duration.ofMillis(clusterConfiguration.getMinDelay());
         cluster = Mono.fromCallable(getClusterRetryCallable(configuration, keyspaceConfiguration))
             .doOnError(e -> LOGGER.warn("Error establishing Cassandra connection. Next retry scheduled in {} ms", waitDelay, e))
             .retryWhen(Retry.backoff(configuration.getMaxRetry(), waitDelay).scheduler(Schedulers.boundedElastic()))
@@ -78,6 +80,14 @@ public class ResilientClusterProvider implements Provider<CqlSession> {
     @Override
     public CqlSession get() {
         return cluster;
+    }
+
+    public CqlSession get(KeyspaceConfiguration keyspaceConfiguration) {
+        Duration waitDelay = Duration.ofMillis(clusterConfiguration.getMinDelay());
+        return Mono.fromCallable(getClusterRetryCallable(clusterConfiguration, keyspaceConfiguration))
+            .doOnError(e -> LOGGER.warn("Error establishing Cassandra connection. Next retry scheduled in {} ms", waitDelay, e))
+            .retryWhen(Retry.backoff(clusterConfiguration.getMaxRetry(), waitDelay).scheduler(Schedulers.boundedElastic()))
+            .block();
     }
 
     @PreDestroy
