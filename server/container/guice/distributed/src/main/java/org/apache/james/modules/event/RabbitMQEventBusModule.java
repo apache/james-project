@@ -28,7 +28,6 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventSerializer;
-import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.NamingStrategy;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
@@ -66,7 +65,6 @@ public class RabbitMQEventBusModule extends AbstractModule {
         bind(EventBusId.class).toInstance(EventBusId.random());
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
-        reconnectionHandlerMultibinder.addBinding().to(KeyReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(EventBusReconnectionHandler.class);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)

@@ -56,7 +56,8 @@ class NetworkErrorTest {
         eventBus = new RabbitMQEventBus(new NamingStrategy(new EventBusName("test")), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
             eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
             memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
-            EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
+            EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration(),
+            null); // todo use redis client factory
 
         eventBus.start();
     }

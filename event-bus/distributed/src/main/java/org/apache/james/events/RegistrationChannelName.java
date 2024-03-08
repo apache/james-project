@@ -19,10 +19,10 @@
 
 package org.apache.james.events;
 
-class RegistrationQueueName {
+class RegistrationChannelName {
     private final String queueName;
 
-    RegistrationQueueName(String queueName) {
+    RegistrationChannelName(String queueName) {
         this.queueName = queueName;
     }
 

@@ -32,10 +32,10 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
 import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventDeadLetters;
-import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RabbitMQJmapEventBusDeadLetterQueueHealthCheck;
+import org.apache.james.events.RedisEventBusClientFactory;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.events.RoutingKeyConverter;
 import org.apache.james.jmap.InjectionKeys;
@@ -78,11 +78,6 @@ public class JMAPEventBusModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    SimpleConnectionPool.ReconnectionHandler provideReconnectionHandler(@Named(InjectionKeys.JMAP) EventBusId eventBusId, RabbitMQConfiguration configuration) {
-        return new KeyReconnectionHandler(JMAP_NAMING_STRATEGY, eventBusId, configuration);
-    }
-
-    @ProvidesIntoSet
     HealthCheck healthCheck(@Named(InjectionKeys.JMAP) RabbitMQEventBus eventBus,
                             SimpleConnectionPool connectionPool) {
         return new RabbitEventBusConsumerHealthCheck(eventBus, JMAP_NAMING_STRATEGY, connectionPool);
@@ -102,11 +97,12 @@ public class JMAPEventBusModule extends AbstractModule {
                                          EventDeadLetters eventDeadLetters,
                                          MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
                                          @Named(InjectionKeys.JMAP) EventBusId eventBusId,
-                                         RabbitMQConfiguration configuration) {
+                                         RabbitMQConfiguration configuration,
+                                         RedisEventBusClientFactory redisEventBusClientFactory) {
         return new RabbitMQEventBus(
             JMAP_NAMING_STRATEGY,
             sender, receiverProvider, eventSerializer, retryBackoffConfiguration, new RoutingKeyConverter(ImmutableSet.of(new Factory())),
-            eventDeadLetters, metricFactory, channelPool, eventBusId, configuration);
+            eventDeadLetters, metricFactory, channelPool, eventBusId, configuration, redisEventBusClientFactory);
     }
 
     @Provides

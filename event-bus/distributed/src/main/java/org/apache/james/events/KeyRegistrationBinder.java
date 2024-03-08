@@ -1,0 +1,55 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.events;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.lettuce.core.api.reactive.RedisSetReactiveCommands;
+import reactor.core.publisher.Mono;
+
+class KeyRegistrationBinder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyRegistrationBinder.class);
+
+    private final RedisSetReactiveCommands<String, String> redisSetReactiveCommands;
+    private final RegistrationChannelName registrationChannel;
+
+    KeyRegistrationBinder(RedisSetReactiveCommands<String, String> redisSetReactiveCommands,
+                          RegistrationChannelName registrationChannel) {
+        this.redisSetReactiveCommands = redisSetReactiveCommands;
+        this.registrationChannel = registrationChannel;
+    }
+
+    Mono<Void> bind(RegistrationKey key) {
+        // Use Redis Set to store 1 registrationKey -> n channel(s) mapping in Redis
+        RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
+        return redisSetReactiveCommands.sadd(routingKey.asString(), registrationChannel.asString())
+            .doOnSuccess(l -> LOGGER.info("Registered {} key-channel mapping to Redis with key {} and channel {}", l, routingKey.asString(), registrationChannel.asString()))
+            .then();
+    }
+
+    Mono<Void> unbind(RegistrationKey key) {
+        // delete the registrationKey -> channel mapping in Redis
+        RoutingKeyConverter.RoutingKey routingKey = RoutingKeyConverter.RoutingKey.of(key);
+        return redisSetReactiveCommands.srem(routingKey.asString(), registrationChannel.asString())
+            .doOnSuccess(l -> LOGGER.info("Unregistered {} key-channel mapping to Redis with key {} and channel {}", l, routingKey.asString(), registrationChannel.asString()))
+            .then();
+    }
+}

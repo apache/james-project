@@ -45,6 +45,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.rabbitmq.client.AMQP;
 
+import io.lettuce.core.api.reactive.RedisSetReactiveCommands;
+import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -56,6 +58,7 @@ import reactor.util.function.Tuples;
 import reactor.util.retry.Retry;
 
 public class EventDispatcher {
+    public static final String REDIS_CHANNEL_MESSAGE_DELIMITER = "|||";
     private static final Logger LOGGER = LoggerFactory.getLogger(EventDispatcher.class);
 
     private final NamingStrategy namingStrategy;
@@ -66,13 +69,17 @@ public class EventDispatcher {
     private final ListenerExecutor listenerExecutor;
     private final EventDeadLetters deadLetters;
     private final RabbitMQConfiguration configuration;
-
     private final DispatchingFailureGroup dispatchingFailureGroup;
+    private final RedisPubSubReactiveCommands<String, String> redisPublisher;
+    private final RedisSetReactiveCommands<String, String> redisSetReactiveCommands;
+    private final EventBusId eventBusId;
 
     EventDispatcher(NamingStrategy namingStrategy, EventBusId eventBusId, EventSerializer eventSerializer, Sender sender,
                     LocalListenerRegistry localListenerRegistry,
                     ListenerExecutor listenerExecutor,
-                    EventDeadLetters deadLetters, RabbitMQConfiguration configuration) {
+                    EventDeadLetters deadLetters, RabbitMQConfiguration configuration,
+                    RedisPubSubReactiveCommands<String, String> redisPubSubReactiveCommands,
+                    RedisSetReactiveCommands<String, String> redisSetReactiveCommands) {
         this.namingStrategy = namingStrategy;
         this.eventSerializer = eventSerializer;
         this.sender = sender;
@@ -87,6 +94,9 @@ public class EventDispatcher {
         this.deadLetters = deadLetters;
         this.configuration = configuration;
         this.dispatchingFailureGroup = new DispatchingFailureGroup(namingStrategy.getEventBusName());
+        this.redisPublisher = redisPubSubReactiveCommands;
+        this.redisSetReactiveCommands = redisSetReactiveCommands;
+        this.eventBusId = eventBusId;
     }
 
     void start() {
@@ -152,7 +162,7 @@ public class EventDispatcher {
         return Mono.fromCallable(() -> serializeEvent(event))
             .flatMap(serializedEvent -> Mono.zipDelayError(
                 remoteGroupsDispatch(serializedEvent, event),
-                remoteKeysDispatch(serializedEvent, keys)))
+                remoteKeysDispatch(eventSerializer.toJson(event), keys)))
             .then();
     }
 
@@ -168,18 +178,32 @@ public class EventDispatcher {
                 .then(Mono.error(ex)));
     }
 
-    private Mono<Void> remoteKeysDispatch(byte[] serializedEvent, Set<RegistrationKey> keys) {
-        return remoteDispatch(serializedEvent,
+    private Mono<Void> remoteKeysDispatch(String eventAsJson, Set<RegistrationKey> keys) {
+        return remoteDispatch(eventAsJson,
             keys.stream()
                 .map(RoutingKey::of)
                 .collect(ImmutableList.toImmutableList()));
     }
 
-    private Mono<Void> remoteDispatch(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
+    private Mono<Void> remoteDispatch(String eventAsJson, Collection<RoutingKey> routingKeys) {
         if (routingKeys.isEmpty()) {
             return Mono.empty();
         }
-        return sender.send(toMessages(serializedEvent, routingKeys));
+
+        return Flux.fromIterable(routingKeys)
+            .flatMap(routingKey -> getTargetChannels(routingKey)
+                .flatMap(channel -> {
+                    // message format: eventbusId|||routingKey|||event
+                    // It seems quite dummy but the general idea is to embed the eventBusId and routingKey into the channel message without refactoring the Event (not good to put them into Event IMO).
+                    String channelMessageToPublish = eventBusId.asString() + REDIS_CHANNEL_MESSAGE_DELIMITER + routingKey.asString() + REDIS_CHANNEL_MESSAGE_DELIMITER + eventAsJson;
+                    return redisPublisher.publish(channel, channelMessageToPublish);
+                })
+                .then())
+            .then();
+    }
+
+    private Flux<String> getTargetChannels(RoutingKey routingKey) {
+        return redisSetReactiveCommands.smembers(routingKey.asString());
     }
 
     private Mono<Void> remoteDispatchWithAcks(byte[] serializedEvent) {
@@ -193,11 +217,6 @@ public class EventDispatcher {
         } else {
             return sender.send(Mono.just(toMessage(serializedEvent, RoutingKey.empty())));
         }
-    }
-
-    private Flux<OutboundMessage> toMessages(byte[] serializedEvent, Collection<RoutingKey> routingKeys) {
-        return Flux.fromIterable(routingKeys)
-                .map(routingKey -> toMessage(serializedEvent, routingKey));
     }
 
     private OutboundMessage toMessage(byte[] serializedEvent, RoutingKey routingKey) {

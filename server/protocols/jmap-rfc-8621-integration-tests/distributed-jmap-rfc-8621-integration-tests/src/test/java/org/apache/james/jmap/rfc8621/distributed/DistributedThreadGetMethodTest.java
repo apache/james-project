@@ -33,6 +33,7 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.opensearch.ReactorOpenSearchClient;
+import org.apache.james.backends.redis.RedisExtension;
 import org.apache.james.jmap.rfc8621.contract.ThreadGetContract;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -65,6 +66,9 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
     org.apache.james.backends.opensearch.DockerOpenSearchExtension openSearch = new org.apache.james.backends.opensearch.DockerOpenSearchExtension();
 
     @RegisterExtension
+    static RedisExtension redisExtension = new RedisExtension();
+
+    @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder<CassandraRabbitMQJamesConfiguration>(tmpDir ->
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
@@ -76,6 +80,7 @@ public class DistributedThreadGetMethodTest implements ThreadGetContract {
                 .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
             .build())
+        .extension(redisExtension)
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())

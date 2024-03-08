@@ -35,6 +35,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
+import io.lettuce.core.api.reactive.RedisSetReactiveCommands;
+import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands;
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.Sender;
 
@@ -55,6 +57,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
     private final ReactorRabbitMQChannelPool channelPool;
     private final RabbitMQConfiguration configuration;
     private final MetricFactory metricFactory;
+    private final RedisEventBusClientFactory redisEventBusClientFactory;
+    private final RedisSetReactiveCommands<String, String> redisSetReactiveCommands;
+    private final RedisPubSubReactiveCommands<String, String> redisPublisher;
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
@@ -67,7 +72,8 @@ public class RabbitMQEventBus implements EventBus, Startable {
                             RetryBackoffConfiguration retryBackoff,
                             RoutingKeyConverter routingKeyConverter,
                             EventDeadLetters eventDeadLetters, MetricFactory metricFactory, ReactorRabbitMQChannelPool channelPool,
-                            EventBusId eventBusId, RabbitMQConfiguration configuration) {
+                            EventBusId eventBusId, RabbitMQConfiguration configuration,
+                            RedisEventBusClientFactory redisEventBusClientFactory) {
         this.namingStrategy = namingStrategy;
         this.sender = sender;
         this.receiverProvider = receiverProvider;
@@ -80,6 +86,9 @@ public class RabbitMQEventBus implements EventBus, Startable {
         this.eventDeadLetters = eventDeadLetters;
         this.configuration = configuration;
         this.metricFactory = metricFactory;
+        this.redisEventBusClientFactory = redisEventBusClientFactory;
+        this.redisSetReactiveCommands = redisEventBusClientFactory.createRedisSetCommand();
+        this.redisPublisher = redisEventBusClientFactory.createRedisPubSubCommand();
         this.isRunning = false;
         this.isStopping = false;
     }
@@ -88,9 +97,11 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, retryBackoff, configuration, metricFactory);
+            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, routingKeyConverter,
+                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory, redisSetReactiveCommands);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, eventBusId, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration,
+                redisPublisher, redisSetReactiveCommands);
 
             eventDispatcher.start();
             keyRegistrationHandler.start();
@@ -108,11 +119,13 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
 
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, sender, receiverProvider, routingKeyConverter, localListenerRegistry, listenerExecutor, retryBackoff, configuration, metricFactory);
+            keyRegistrationHandler = new KeyRegistrationHandler(namingStrategy, eventBusId, eventSerializer, routingKeyConverter,
+                localListenerRegistry, listenerExecutor, retryBackoff, metricFactory, redisEventBusClientFactory, redisSetReactiveCommands);
             groupRegistrationHandler = new GroupRegistrationHandler(namingStrategy, eventSerializer, channelPool, sender, receiverProvider, retryBackoff, eventDeadLetters, listenerExecutor, eventBusId, configuration);
-            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration);
+            eventDispatcher = new EventDispatcher(namingStrategy, eventBusId, eventSerializer, sender, localListenerRegistry, listenerExecutor, eventDeadLetters, configuration,
+                redisPublisher, redisSetReactiveCommands);
 
-            keyRegistrationHandler.declareQueue();
+            keyRegistrationHandler.declarePubSubChannel();
 
             eventDispatcher.start();
             isRunning = true;
@@ -137,7 +150,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     @Override
     public Mono<Registration> register(EventListener.ReactiveEventListener listener, RegistrationKey key) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
-        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-register", keyRegistrationHandler.register(listener, key)));
+        return Mono.from(metricFactory.decoratePublisherWithTimerMetric("redis-register", keyRegistrationHandler.register(listener, key)));
     }
 
     @Override
@@ -150,7 +163,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> key) {
         Preconditions.checkState(isRunning, NOT_RUNNING_ERROR_MESSAGE);
         if (!event.isNoop()) {
-            return Mono.from(metricFactory.decoratePublisherWithTimerMetric("rabbit-dispatch", eventDispatcher.dispatch(event, key)));
+            return Mono.from(metricFactory.decoratePublisherWithTimerMetric("redis-dispatch", eventDispatcher.dispatch(event, key)));
         }
         return Mono.empty();
     }
