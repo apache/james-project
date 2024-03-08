@@ -82,7 +82,7 @@ class VacationResponseGetMethod @Inject()(vacationService: VacationService,
     }
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, VacationResponseGetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, VacationResponseGetRequest] =
     VacationSerializer.deserializeVacationResponseGetRequest(invocation.arguments.value).asEitherRequest
       .flatMap(request => request.validate(configuration).map(_ => request))
   private def getVacationResponse(vacationResponseGetRequest: VacationResponseGetRequest,

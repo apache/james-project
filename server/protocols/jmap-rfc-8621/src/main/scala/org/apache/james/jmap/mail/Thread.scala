@@ -29,7 +29,7 @@ case class Thread(id: Id, emailIds: List[MessageId])
 
 case class ThreadGetRequest(accountId: AccountId,
                             ids: List[UnparsedThreadId]) extends WithAccountId with GetRequest {
-  override def idCount: Option[Long] = Some(ids.size)
+  override def idCount: Option[Int] = Some(ids.size)
 }
 
 case class ThreadGetResponse(accountId: AccountId,

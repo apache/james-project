@@ -52,7 +52,7 @@ case class IdentitySetRequest(accountId: AccountId,
                               create: Option[Map[IdentityCreationId, JsObject]],
                               update: Option[Map[UnparsedIdentityId, JsObject]],
                               destroy: Option[Seq[UnparsedIdentityId]]) extends WithAccountId with SetRequest {
-  override def idCount: Long = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
+  override def idCount: Int = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
 }
 
 case class IdentityCreationId(id: Id) {

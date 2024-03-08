@@ -73,7 +73,7 @@ case class IdentityGetRequest(accountId: AccountId,
 
   private def isRequested(id: IdentityId): Boolean = ids.forall(_.validIds.contains(id))
 
-  override def idCount: Option[Long] = ids.map(_.ids).map(_.size)
+  override def idCount: Option[Int] = ids.map(_.ids).map(_.size)
 }
 
 case class IdentityGetResponse(accountId: AccountId,

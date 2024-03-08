@@ -37,7 +37,7 @@ object PushSubscriptionGet {
 
 case class PushSubscriptionGetRequest(ids: Option[Ids],
                                       properties: Option[Properties]) extends WithoutAccountId with GetRequest {
-  override def idCount: Option[Long] = ids.map(_.value).map(_.size)
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
 
   def validateProperties: Either[IllegalArgumentException, Properties] =
     properties match {

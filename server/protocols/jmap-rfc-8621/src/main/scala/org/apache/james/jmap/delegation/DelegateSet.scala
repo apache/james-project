@@ -32,7 +32,7 @@ case class DelegateCreationId(id: Id) {
 case class DelegateSetRequest(accountId: AccountId,
                               create: Option[Map[DelegateCreationId, JsObject]],
                               destroy: Option[Seq[UnparsedDelegateId]]) extends WithAccountId with SetRequest {
-  override def idCount: Long = create.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
+  override def idCount: Int = create.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
 }
 
 case class DelegateCreationRequest(username: Username)

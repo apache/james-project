@@ -27,7 +27,7 @@ case class VacationResponseIds(value: List[UnparsedVacationResponseId])
 case class VacationResponseGetRequest(accountId: AccountId,
                                       ids: Option[VacationResponseIds],
                                       properties: Option[Properties]) extends WithAccountId with GetRequest {
-  override def idCount: Option[Long] = ids.map(_.value).map(_.size)
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
 }
 
 case class VacationResponseNotFound(value: Set[UnparsedVacationResponseId]) {

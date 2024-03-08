@@ -41,7 +41,7 @@ import scala.util.{Failure, Success, Try}
 case class PushSubscriptionSetRequest(create: Option[Map[PushSubscriptionCreationId, JsObject]],
                                       update: Option[Map[UnparsedPushSubscriptionId, PushSubscriptionPatchObject]],
                                       destroy: Option[Seq[UnparsedPushSubscriptionId]]) extends WithoutAccountId with SetRequest {
-  override def idCount: Long = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
+  override def idCount: Int = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
 }
 
 case class PushSubscriptionCreationId(id: Id) {

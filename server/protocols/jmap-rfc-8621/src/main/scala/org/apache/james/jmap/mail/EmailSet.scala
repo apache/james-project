@@ -422,7 +422,7 @@ case class EmailSetRequest(accountId: AccountId,
                            create: Option[Map[EmailCreationId, JsObject]],
                            update: Option[Map[UnparsedMessageId, JsObject]],
                            destroy: Option[DestroyIds]) extends WithAccountId with SetRequest {
-  override def idCount: Long = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.value).map(_.size).getOrElse(0)
+  override def idCount: Int = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.value).map(_.size).getOrElse(0)
 }
 
 case class EmailSetResponse(accountId: AccountId,

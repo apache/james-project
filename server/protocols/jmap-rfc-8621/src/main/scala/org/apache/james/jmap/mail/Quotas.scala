@@ -81,7 +81,7 @@ case class QuotaIds(value: List[UnparsedQuotaId])
 case class QuotaGetRequest(accountId: AccountId,
                            ids: Option[QuotaIds],
                            properties: Option[Properties]) extends WithAccountId with GetRequest {
-  override def idCount: Option[Long] = ids.map(_.value).map(_.size)
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
 }
 
 object JmapQuota {

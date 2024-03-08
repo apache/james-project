@@ -36,7 +36,7 @@ case class VacationResponseSetRequest(accountId: AccountId,
                                       create: Option[Map[String, JsObject]],
                                       destroy: Option[Seq[String]]) extends WithAccountId with SetRequest {
 
-  override def idCount: Long = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
+  override def idCount: Int = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
 
   def parsePatch(): Map[String, Either[IllegalArgumentException, VacationResponsePatchObject]] =
     update.getOrElse(Map())

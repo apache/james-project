@@ -90,7 +90,7 @@ case class EmailGetRequest(accountId: AccountId,
                            properties: Option[Properties],
                            bodyProperties: Option[Properties]) extends WithAccountId with GetRequest {
 
-  override def idCount: Option[Long] = ids.map(_.value).map(_.size)
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
 
   override def validate(configuration: JmapRfc8621Configuration): Either[Exception, EmailGetRequest] =
     if (EmailGetRequest.readLevel(this).equals(FullReadLevel) && ids.exists(_.value.size > configuration.jmapEmailGetFullMaxSize.asLong())) {

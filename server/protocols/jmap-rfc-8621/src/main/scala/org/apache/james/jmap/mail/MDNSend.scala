@@ -125,7 +125,7 @@ case class MDNSendRequest(accountId: AccountId,
                           onSuccessUpdateEmail: Option[Map[MDNSendCreationId, JsObject]]) extends WithAccountId with SetRequest {
 
 
-  override def idCount: Long = send.size
+  override def idCount: Int = send.size
 
   override def validate(configuration: JmapRfc8621Configuration): Either[Exception, MDNSendRequest] = {
     val supportedCreationIds: List[MDNSendCreationId] = send.keys.toList

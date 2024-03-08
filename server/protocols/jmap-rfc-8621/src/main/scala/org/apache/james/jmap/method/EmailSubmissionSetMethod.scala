@@ -212,7 +212,7 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
       })
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailSubmissionSetRequest] =
     serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value)
       .asEitherRequest
       .flatMap(_.validate(configuration))

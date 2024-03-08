@@ -96,7 +96,7 @@ case class EmailSubmissionSetRequest(accountId: AccountId,
 
   private def validateIdCount(configuration: JmapRfc8621Configuration): Either[Exception, EmailSubmissionSetRequest] = {
     val idCount = create.map(_.size).getOrElse(0)
-    if (idCount > configuration.maxObjectsInSet) {
+    if (idCount > configuration.maxObjectsInSet.value.value) {
       Left(RequestTooLargeException(s"Too many items in a set request ${this.getClass}. " +
         s"Got $idCount items instead of maximum ${configuration.maxObjectsInSet.value}."))
     } else {

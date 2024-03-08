@@ -57,7 +57,7 @@ trait WithAccountId {
   def accountId: AccountId
 }
 trait GetRequest extends ValidableRequest {
-  def idCount: Option[Long]
+  def idCount: Option[Int]
 
   override def validate(configuration: JmapRfc8621Configuration): Either[Exception, GetRequest] =
     if (idCount.exists(value => value > configuration.maxObjectsInGet.value.value)) {
@@ -68,7 +68,7 @@ trait GetRequest extends ValidableRequest {
     }
 }
 trait SetRequest extends ValidableRequest {
-  def idCount: Long
+  def idCount: Int
 
   override def validate(configuration: JmapRfc8621Configuration): Either[Exception, SetRequest] =
     validateIdCounts(configuration)
