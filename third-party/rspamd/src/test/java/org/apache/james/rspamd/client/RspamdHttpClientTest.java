@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Optional;
 
@@ -315,6 +316,15 @@ class RspamdHttpClientTest {
         RspamdHttpClient client = new RspamdHttpClient(configuration);
 
         assertThat(client.ping().block().status()).isEqualTo(HttpResponseStatus.OK);
+    }
+
+    @Test
+    void shouldNotFailOnEmptyContent() {
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(rspamdExtension.getBaseUrl(), PASSWORD, Optional.empty());
+        RspamdHttpClient client = new RspamdHttpClient(configuration);
+
+        client.reportAsSpam(ReactorUtils.toChunks(new ByteArrayInputStream("".getBytes()),
+            BUFFER_SIZE), RspamdHttpClient.Options.forUser(BOB)).block();
     }
 
     private void reportAsSpam(RspamdHttpClient client, InputStream inputStream) {
