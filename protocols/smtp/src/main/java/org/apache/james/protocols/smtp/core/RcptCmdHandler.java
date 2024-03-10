@@ -45,7 +45,6 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -56,6 +55,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         CommandHandler<SMTPSession> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RcptCmdHandler.class);
     public static final ProtocolSession.AttachmentKey<MailAddress> CURRENT_RECIPIENT = ProtocolSession.AttachmentKey.of("CURRENT_RECIPIENT", MailAddress.class);
+    public static final ProtocolSession.AttachmentKey<Map> CURRENT_RECIPIENT_PARAMETERS = ProtocolSession.AttachmentKey.of("CURRENT_RECIPIENT_PARAMETERS", Map.class);
     private static final Collection<String> COMMANDS = ImmutableSet.of("RCPT");
     private static final Response MAIL_NEEDED = new SMTPResponse(SMTPRetCode.BAD_SEQUENCE, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_OTHER) + " Need MAIL before RCPT").immutable();
     private static final Response SYNTAX_ERROR_ARGS = new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Usage: RCPT TO:<recipient>").immutable();
@@ -161,6 +161,8 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
             return SYNTAX_ERROR_ADDRESS;
         }
 
+
+        ImmutableMap.Builder<String, String> parameters = ImmutableMap.builder();
         if (rcptOptionString != null) {
 
             StringTokenizer optionTokenizer = new StringTokenizer(
@@ -179,9 +181,11 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
                         "Unrecognized or unsupported option: "
                             + parameter.getKey());
                 }
+                parameters.put(parameter.getKey(), parameter.getValue());
             }
             optionTokenizer = null;
         }
+        session.setAttachment(CURRENT_RECIPIENT_PARAMETERS, parameters.build(), State.Transaction);
 
         session.setAttachment(CURRENT_RECIPIENT, recipientAddress, State.Transaction);
 
@@ -216,18 +220,10 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     @Override
     protected HookResult callHook(RcptHook rawHook, SMTPSession session, String parametersString) {
         MaybeSender sender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
-        Map<String, String> parameters = parseParameters(parametersString);
         MailAddress rcpt = session.getAttachment(CURRENT_RECIPIENT, State.Transaction).orElse(MailAddress.nullSender());
+        Map<String, String> parameters = session.getAttachment(CURRENT_RECIPIENT_PARAMETERS, State.Transaction).orElseGet(ImmutableMap::of);
 
         return rawHook.doRcpt(session, sender, rcpt, parameters);
-    }
-
-    private Map<String, String> parseParameters(String rcptOptions) {
-        ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
-        for (String option: Splitter.on(' ').split(rcptOptions)) {
-            result.put(parseParameter(option));
-        }
-        return result.build();
     }
 
     private Pair<String, String> parseParameter(String rcptOption) {
