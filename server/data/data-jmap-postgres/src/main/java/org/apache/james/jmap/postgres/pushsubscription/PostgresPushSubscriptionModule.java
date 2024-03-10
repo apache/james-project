@@ -36,13 +36,14 @@ public interface PostgresPushSubscriptionModule {
 
     interface PushSubscriptionTable {
         Table<Record> TABLE_NAME = DSL.table("push_subscription");
+
+        String PRIMARY_KEY_CONSTRAINT = "push_subscription_primary_key_constraint";
+
         Field<String> USER = DSL.field("username", SQLDataType.VARCHAR.notNull());
         Field<String> DEVICE_CLIENT_ID = DSL.field("device_client_id", SQLDataType.VARCHAR.notNull());
-
         Field<UUID> ID = DSL.field("id", SQLDataType.UUID.notNull());
         Field<OffsetDateTime> EXPIRES = DSL.field("expires", PostgresCommons.DataTypes.TIMESTAMP_WITH_TIMEZONE);
         Field<String[]> TYPES = DSL.field("types", PostgresCommons.DataTypes.STRING_ARRAY.notNull());
-
         Field<String> URL = DSL.field("url", SQLDataType.VARCHAR.notNull());
         Field<String> VERIFICATION_CODE = DSL.field("verification_code", SQLDataType.VARCHAR);
         Field<String> ENCRYPT_PUBLIC_KEY = DSL.field("encrypt_public_key", SQLDataType.VARCHAR);
@@ -61,7 +62,8 @@ public interface PostgresPushSubscriptionModule {
                 .column(ENCRYPT_PUBLIC_KEY)
                 .column(ENCRYPT_AUTH_SECRET)
                 .column(VALIDATED)
-                .primaryKey(USER, DEVICE_CLIENT_ID)))
+                .constraint(DSL.constraint(PRIMARY_KEY_CONSTRAINT)
+                    .primaryKey(USER, DEVICE_CLIENT_ID))))
             .supportsRowLevelSecurity()
             .build();
 
