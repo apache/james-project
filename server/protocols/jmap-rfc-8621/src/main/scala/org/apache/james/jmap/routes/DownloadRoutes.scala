@@ -346,10 +346,14 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
 
   private def addContentDispositionHeaderRegardingEncoding(name: String, resp: HttpServerResponse): HttpServerResponse =
     if (CharMatcher.ascii.matchesAllOf(name)) {
-      resp.header("Content-Disposition", "attachment; filename=\"" + name + "\"")
+      Try(resp.header("Content-Disposition", "attachment; filename=\"" + name + "\""))
+        // Can fail if the file name contains valid ascii character that are invalid in a contentDisposition header
+        .getOrElse(resp.header("Content-Disposition", encodedFileName(name)))
     } else {
-      resp.header("Content-Disposition", "attachment; filename*=\"" + EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN) + "\"")
+      resp.header("Content-Disposition", encodedFileName(name))
     }
+
+  private def encodedFileName(name: String) = "attachment; filename*=\"" + EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN) + "\""
 
   private def queryParam(httpRequest: HttpServerRequest, parameterName: String): Option[String] =
     queryParam(parameterName, httpRequest.uri)
