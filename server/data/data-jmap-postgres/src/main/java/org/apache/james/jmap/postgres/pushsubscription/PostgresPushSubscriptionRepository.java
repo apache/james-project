@@ -34,7 +34,6 @@ import javax.inject.Singleton;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.change.TypeStateFactory;
-import org.apache.james.jmap.api.model.DeviceClientIdInvalidException;
 import org.apache.james.jmap.api.model.ExpireTimeInvalidException;
 import org.apache.james.jmap.api.model.InvalidPushSubscriptionKeys;
 import org.apache.james.jmap.api.model.PushSubscription;
@@ -64,26 +63,29 @@ public class PostgresPushSubscriptionRepository implements PushSubscriptionRepos
 
     @Override
     public Mono<PushSubscription> save(Username username, PushSubscriptionCreationRequest request) {
-        PushSubscription pushSubscription = PushSubscription.from(request,
-            evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)), clock));
-
         PostgresPushSubscriptionDAO pushSubscriptionDAO = getDAO(username);
-        return pushSubscriptionDAO.existDeviceClientId(username, request.deviceClientId())
-            .handle((isDuplicated, sink) -> {
+
+        return validateCreationRequest(request)
+            .then(Mono.defer(() -> {
+                PushSubscription pushSubscription = PushSubscription.from(request,
+                    evaluateExpiresTime(OptionConverters.toJava(request.expires().map(PushSubscriptionExpiredTime::value)), clock));
+
+                return pushSubscriptionDAO.save(username, pushSubscription)
+                    .thenReturn(pushSubscription);
+            }));
+    }
+
+    private Mono<Object> validateCreationRequest(PushSubscriptionCreationRequest request) {
+        return Mono.just(request)
+            .handle((creationRequest, sink) -> {
                 if (isInThePast(request.expires(), clock)) {
                     sink.error(new ExpireTimeInvalidException(request.expires().get().value(), "expires must be greater than now"));
-                    return;
-                }
-                if (isDuplicated) {
-                    sink.error(new DeviceClientIdInvalidException(request.deviceClientId(), "deviceClientId must be unique"));
                     return;
                 }
                 if (isInvalidPushSubscriptionKey(request.keys())) {
                     sink.error(new InvalidPushSubscriptionKeys(request.keys().get()));
                 }
-            })
-            .then(Mono.defer(() -> pushSubscriptionDAO.save(username, pushSubscription))
-                .thenReturn(pushSubscription));
+            });
     }
 
     @Override
