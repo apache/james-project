@@ -248,6 +248,10 @@ public class RspamdHttpClient {
                             LOGGER.debug(responseBody);
                             return Mono.empty();
                         }
+                        if (responseBody.contains("Empty body is not permitted")) {
+                            LOGGER.debug(responseBody);
+                            return Mono.empty();
+                        }
                         return Mono.error(() -> new RspamdUnexpectedException(responseBody));
                     });
         }
