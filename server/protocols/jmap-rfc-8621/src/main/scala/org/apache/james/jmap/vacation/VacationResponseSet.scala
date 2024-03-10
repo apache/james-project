@@ -21,6 +21,7 @@ package org.apache.james.jmap.vacation
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType, invalidArgumentValue, serverFailValue}
 import org.apache.james.jmap.core.{AccountId, UuidState}
 import org.apache.james.jmap.method.{SetRequest, WithAccountId}

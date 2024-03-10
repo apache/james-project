@@ -21,6 +21,7 @@ package org.apache.james.jmap.core
 
 import java.time.ZonedDateTime
 import java.util.UUID
+
 import cats.implicits._
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._

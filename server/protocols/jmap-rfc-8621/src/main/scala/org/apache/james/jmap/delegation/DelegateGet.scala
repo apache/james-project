@@ -20,6 +20,7 @@
 package org.apache.james.jmap.delegation
 
 import java.util.UUID
+
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.Id

@@ -21,6 +21,7 @@ package org.apache.james.jmap.core
 
 import java.net.URI
 import java.util.Optional
+
 import com.google.common.collect.ImmutableList
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
