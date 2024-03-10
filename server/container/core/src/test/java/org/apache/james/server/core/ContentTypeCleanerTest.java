@@ -52,4 +52,12 @@ public class ContentTypeCleanerTest {
                 .cleanContentType(null, contentType))
                 .isEqualTo(contentType);
     }
+
+    @Test
+    void shouldSupportParameters() {
+        String contentType = "application/pdf; filename=\"abc.pdf\"";
+        assertThat(ContentTypeCleaner
+            .cleanContentType(null, contentType))
+            .isEqualTo(contentType);
+    }
 }
