@@ -45,7 +45,7 @@ public class ContentTypeCleaner {
             return contentType;
         }
 
-        LOGGER.warn("Can not parse Content-Type: " + contentType);
+        LOGGER.info("Can not parse Content-Type: " + contentType);
         return null;
     }
 }
