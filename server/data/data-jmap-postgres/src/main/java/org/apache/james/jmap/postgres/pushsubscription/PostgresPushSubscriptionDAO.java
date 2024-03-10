@@ -21,6 +21,8 @@ package org.apache.james.jmap.postgres.pushsubscription;
 
 import static org.apache.james.backends.postgres.PostgresCommons.IN_CLAUSE_MAX_SIZE;
 import static org.apache.james.backends.postgres.PostgresCommons.OFFSET_DATE_TIME_ZONED_DATE_TIME_FUNCTION;
+import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
+import static org.apache.james.jmap.postgres.pushsubscription.PostgresPushSubscriptionModule.PushSubscriptionTable.PRIMARY_KEY_CONSTRAINT;
 
 import java.time.ZonedDateTime;
 import java.util.Arrays;
@@ -28,11 +30,13 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.change.TypeStateFactory;
+import org.apache.james.jmap.api.model.DeviceClientIdInvalidException;
 import org.apache.james.jmap.api.model.PushSubscription;
 import org.apache.james.jmap.api.model.PushSubscriptionExpiredTime;
 import org.apache.james.jmap.api.model.PushSubscriptionId;
@@ -51,6 +55,8 @@ import scala.jdk.javaapi.CollectionConverters;
 import scala.jdk.javaapi.OptionConverters;
 
 public class PostgresPushSubscriptionDAO {
+    private static final Predicate<Throwable> IS_PRIMARY_KEY_UNIQUE_CONSTRAINT = throwable -> throwable.getMessage().contains(PRIMARY_KEY_CONSTRAINT);
+
     private final PostgresExecutor postgresExecutor;
     private final TypeStateFactory typeStateFactory;
 
@@ -71,7 +77,9 @@ public class PostgresPushSubscriptionDAO {
             .set(PushSubscriptionTable.VERIFICATION_CODE, pushSubscription.verificationCode())
             .set(PushSubscriptionTable.VALIDATED, pushSubscription.validated())
             .set(PushSubscriptionTable.ENCRYPT_PUBLIC_KEY, OptionConverters.toJava(pushSubscription.keys().map(PushSubscriptionKeys::p256dh)).orElse(null))
-            .set(PushSubscriptionTable.ENCRYPT_AUTH_SECRET, OptionConverters.toJava(pushSubscription.keys().map(PushSubscriptionKeys::auth)).orElse(null))));
+            .set(PushSubscriptionTable.ENCRYPT_AUTH_SECRET, OptionConverters.toJava(pushSubscription.keys().map(PushSubscriptionKeys::auth)).orElse(null))))
+            .onErrorMap(UNIQUE_CONSTRAINT_VIOLATION_PREDICATE.and(IS_PRIMARY_KEY_UNIQUE_CONSTRAINT),
+                e -> new DeviceClientIdInvalidException(pushSubscription.deviceClientId(), "deviceClientId must be unique"));
     }
 
     public Flux<PushSubscription> listByUsername(Username username) {
@@ -132,13 +140,6 @@ public class PostgresPushSubscriptionDAO {
                 .and(PushSubscriptionTable.ID.eq(id.value()))
                 .returning(PushSubscriptionTable.EXPIRES)))
             .map(record -> OFFSET_DATE_TIME_ZONED_DATE_TIME_FUNCTION.apply(record.get(PushSubscriptionTable.EXPIRES)));
-    }
-
-    public Mono<Boolean> existDeviceClientId(Username username, String deviceClientId) {
-        return postgresExecutor.executeExists(dslContext -> dslContext.selectOne()
-            .from(PushSubscriptionTable.TABLE_NAME)
-            .where(PushSubscriptionTable.USER.eq(username.asString()))
-            .and(PushSubscriptionTable.DEVICE_CLIENT_ID.eq(deviceClientId)));
     }
 
     private PushSubscription recordAsPushSubscription(Record record) {
