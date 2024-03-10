@@ -57,6 +57,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.handler.codec.TooLongFrameException;
 import io.netty.handler.codec.haproxy.HAProxyMessage;
 import io.netty.handler.codec.haproxy.HAProxyProxiedProtocol;
+import io.netty.handler.ssl.NotSslRecordException;
 import io.netty.util.AttributeKey;
 
 /**
@@ -275,6 +276,8 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
                     LOGGER.info("Socket exception encountered: {}", cause.getMessage());
                 } else if (isSslHandshkeException(cause)) {
                     LOGGER.info("SSH handshake rejected {}", cause.getMessage());
+                } else if (isNotSslRecordException(cause)) {
+                    LOGGER.info("Not an SSL record {}", cause.getMessage());
                 } else if (!(cause instanceof ClosedChannelException)) {
                     LOGGER.error("Unable to process request", cause);
                 }
@@ -286,6 +289,11 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     private boolean isSslHandshkeException(Throwable cause) {
         return cause instanceof DecoderException &&
             cause.getCause() instanceof SSLHandshakeException;
+    }
+
+    private boolean isNotSslRecordException(Throwable cause) {
+        return cause instanceof DecoderException &&
+            cause.getCause() instanceof NotSslRecordException;
     }
 
     @Override
