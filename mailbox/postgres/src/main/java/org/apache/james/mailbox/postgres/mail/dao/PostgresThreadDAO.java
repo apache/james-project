@@ -83,6 +83,9 @@ public class PostgresThreadDAO {
     }
 
     public Flux<Pair<Optional<Integer>, ThreadId>> findThreads(Username username, Set<Integer> hashMimeMessageIds) {
+        if (hashMimeMessageIds.isEmpty()) {
+            return Flux.empty();
+        }
         Function<Collection<Integer>, Flux<Pair<Optional<Integer>, ThreadId>>> function = hashMimeMessageIdSubSet ->
             postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(THREAD_ID, HASH_BASE_SUBJECT)
                     .from(TABLE_NAME)
