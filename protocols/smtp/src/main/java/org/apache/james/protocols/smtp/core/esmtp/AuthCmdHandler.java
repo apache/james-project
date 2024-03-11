@@ -540,7 +540,7 @@ public class AuthCmdHandler
         if (AuthHook.class.equals(interfaceName)) {
             this.hooks = (List<AuthHook>) extension;
             // If no AuthHook is configured then we revert to the default LocalUsersRespository check
-            if (hooks == null || hooks.size() == 0) {
+            if (hooks == null || hooks.isEmpty()) {
                 throw new WiringException("AuthCmdHandler used without AuthHooks");
             }
         } else if (HookResultHook.class.equals(interfaceName)) {
