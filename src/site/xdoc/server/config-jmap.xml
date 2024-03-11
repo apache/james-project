@@ -145,6 +145,12 @@
 
                     <dt><strong>email.get.full.max.size</strong></dt>
                     <dd>Optional, default value is 5. The max number of items for EmailGet full reads</dd>
+
+                    <dt><strong>get.max.size</strong></dt>
+                    <dd>Optional, default value is 500. The max number of items for /get methods.</dd>
+
+                    <dt><strong>set.max.size</strong></dt>
+                    <dd>Optional, default value is 500. The max number of items for /set methods.</dd>
                 </dl>
 
             </subsection>
