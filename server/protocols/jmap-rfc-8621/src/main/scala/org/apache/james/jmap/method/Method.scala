@@ -56,6 +56,7 @@ trait Method {
 trait WithAccountId {
   def accountId: AccountId
 }
+
 trait GetRequest extends ValidableRequest {
   def idCount: Option[Int]
 
@@ -67,6 +68,7 @@ trait GetRequest extends ValidableRequest {
       scala.Right(this)
     }
 }
+
 trait SetRequest extends ValidableRequest {
   def idCount: Int
 
@@ -82,9 +84,11 @@ trait SetRequest extends ValidableRequest {
     }
   }
 }
+
 trait ValidableRequest {
   def validate(configuration: JmapRfc8621Configuration): Either[Exception, ValidableRequest]
 }
+
 trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
   def metricFactory: MetricFactory
   def sessionSupplier: SessionSupplier
