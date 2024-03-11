@@ -100,6 +100,6 @@ public class PostgresMessageFastViewProjection implements MessageFastViewProject
 
     @Override
     public Publisher<Void> clear() {
-        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.dropTableIfExists(TABLE_NAME)));
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.truncate(TABLE_NAME)));
     }
 }
