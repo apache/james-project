@@ -167,6 +167,9 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
 
     @Override
     public Publisher<BoxedUnit> delete(Username username, Seq<IdentityId> ids) {
+        if (ids.isEmpty()) {
+            return Mono.empty();
+        }
         return executorFactory.create(username.getDomainPart())
             .executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
                 .where(USERNAME.eq(username.asString()))
