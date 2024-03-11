@@ -299,50 +299,45 @@ public class AuthCmdHandler
      * @param user the user passed in with the AUTH command
      */
     private Response doLoginAuthPass(SMTPSession session, String user) {
-        if (user != null) {
-            try {
-                user = decodeBase64(user);
-            } catch (Exception e) {
-                // Ignored - this parse error will be
-                // addressed in the if clause below
-                user = null;
-            }
-        }
-
         session.popLineHandler();
-
         session.pushLineHandler(new AbstractSMTPLineHandler() {
-
-            private Username username;
-
-            public LineHandler<SMTPSession> setUsername(Username username) {
-                this.username = username;
-                return this;
-            }
-
             @Override
             protected Response onCommand(SMTPSession session, String l) {
-                return doLoginAuthPassCheck(session, username, l);
+                return doLoginAuthPassCheck(session, asUsername(user), l);
             }
-        }.setUsername(Username.of(user)));
+        });
         return AUTH_READY_PASSWORD_LOGIN;
     }
 
-    private Response doLoginAuthPassCheck(SMTPSession session, Username username, String pass) {
-        if (pass != null) {
+    private Username asUsername(String user) {
+        if (user != null) {
             try {
-                pass = decodeBase64(pass);
+                return Username.of(decodeBase64(user));
             } catch (Exception e) {
-                // Ignored - this parse error will be
-                // addressed in the if clause below
-                pass = null;
+                return null;
             }
         }
+        return null;
+    }
 
+    private Response doLoginAuthPassCheck(SMTPSession session, Username username, String pass) {
         session.popLineHandler();
-
         // Authenticate user
-        return doAuthTest(session, username, pass, "LOGIN");
+        return doAuthTest(session, username, sanitizePassword(username, pass), "LOGIN");
+    }
+
+    private String sanitizePassword(Username username, String pass) {
+        if (pass != null) {
+            try {
+                return decodeBase64(pass);
+            } catch (Exception e) {
+                LOGGER.info("Failed parsing base64 password {}", pass, e);
+                // Ignored - this parse error will be
+                // addressed in the if clause below
+                return null;
+            }
+        }
+        return null;
     }
 
     protected Response doDelegation(SMTPSession session, Username username) {
