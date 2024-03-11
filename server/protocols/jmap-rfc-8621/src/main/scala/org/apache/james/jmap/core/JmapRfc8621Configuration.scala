@@ -25,7 +25,7 @@ import java.util.Optional
 import com.google.common.collect.ImmutableList
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT, JMAP_MAX_OBJECT_IN_EMAIL_GET_FULL, JMAP_MAX_OBJECT_IN_GET, JMAP_MAX_OBJECT_IN_SET, JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
+import org.apache.james.jmap.core.JmapRfc8621Configuration.{JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT, JMAP_MAX_OBJECT_IN_GET, JMAP_MAX_OBJECT_IN_SET, JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT, MAX_SIZE_ATTACHMENTS_PER_MAIL_DEFAULT, UPLOAD_LIMIT_DEFAULT}
 import org.apache.james.jmap.pushsubscription.PushClientConfiguration
 import org.apache.james.util.Size
 
@@ -59,7 +59,6 @@ object JmapRfc8621Configuration {
   val JMAP_UPLOAD_QUOTA_LIMIT_DEFAULT: JmapUploadQuotaLimit = JmapUploadQuotaLimit.of(Size.of(200L, Size.Unit.M)).get
   val JMAP_EMAIL_GET_FULL_MAX_SIZE_DEFAULT: JmapEmailGetFullMaxSize = JmapEmailGetFullMaxSize(UnsignedInt.liftOrThrow(5))
   val JMAP_MAX_OBJECT_IN_GET: MaxObjectsInGet = MaxObjectsInGet(UnsignedInt.liftOrThrow(500))
-  val JMAP_MAX_OBJECT_IN_EMAIL_GET_FULL: MaxObjectsInGet = MaxObjectsInGet(UnsignedInt.liftOrThrow(5))
   val JMAP_MAX_OBJECT_IN_SET: MaxObjectsInSet = MaxObjectsInSet(UnsignedInt.liftOrThrow(500))
 
   val LOCALHOST_CONFIGURATION: JmapRfc8621Configuration = JmapRfc8621Configuration(
