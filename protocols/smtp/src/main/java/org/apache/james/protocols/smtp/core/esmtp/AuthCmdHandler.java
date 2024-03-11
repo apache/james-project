@@ -310,16 +310,12 @@ public class AuthCmdHandler
     }
 
     private Username asUsername(String user) {
-        if (user != null) {
-            try {
-                return Username.of(decodeBase64(user));
-            } catch (Exception e) {
-                LOGGER.info("Failed parsing base64 username {}", user, e);
-                return null;
-            }
+        try {
+            return Username.of(decodeBase64(user));
+        } catch (Exception e) {
+            LOGGER.info("Failed parsing base64 username {}", user, e);
+            return null;
         }
-        LOGGER.info("Missing username");
-        return null;
     }
 
     private Response doLoginAuthPassCheck(SMTPSession session, Username username, String pass) {
@@ -329,18 +325,14 @@ public class AuthCmdHandler
     }
 
     private String sanitizePassword(Username username, String pass) {
-        if (pass != null) {
-            try {
-                return decodeBase64(pass);
-            } catch (Exception e) {
-                LOGGER.info("Failed parsing base64 password for user {}", username, e);
-                // Ignored - this parse error will be
-                // addressed in the if clause below
-                return null;
-            }
+        try {
+            return decodeBase64(pass);
+        } catch (Exception e) {
+            LOGGER.info("Failed parsing base64 password for user {}", username, e);
+            // Ignored - this parse error will be
+            // addressed in the if clause below
+            return null;
         }
-        LOGGER.info("Login attempt without a password for {}", username);
-        return null;
     }
 
     protected Response doDelegation(SMTPSession session, Username username) {
