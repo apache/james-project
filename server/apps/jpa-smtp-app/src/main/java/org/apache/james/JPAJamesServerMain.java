@@ -37,6 +37,7 @@ import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
 import com.google.inject.Module;
@@ -53,7 +54,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MailQueueRoutesModule(),
         new NoJwtModule(),
         new DefaultProcessorsConfigurationProviderModule(),
-        new TaskManagerModule());
+        new TaskManagerModule(),
+        new WebAdminMailOverWebModule());
 
     private static final Module JPA_SERVER_MODULE = Modules.combine(
         new NaiveDelegationStoreModule(),
