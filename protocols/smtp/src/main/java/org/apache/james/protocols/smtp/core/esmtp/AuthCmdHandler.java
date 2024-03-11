@@ -280,6 +280,7 @@ public class AuthCmdHandler
             session.popLineHandler();
             return response;
         } catch (Exception e) {
+            LOGGER.info("Could not decode parameters for AUTH PLAIN", e);
             return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,"Could not decode parameters for AUTH PLAIN");
         }
     }
