@@ -89,6 +89,9 @@ public class PostgresPushSubscriptionDAO {
     }
 
     public Flux<PushSubscription> getByUsernameAndIds(Username username, Collection<PushSubscriptionId> ids) {
+        if (ids.isEmpty()) {
+            return Flux.empty();
+        }
         Function<Collection<PushSubscriptionId>, Flux<PushSubscription>> queryPublisherFunction = idsMatching -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(PushSubscriptionTable.TABLE_NAME)
                 .where(PushSubscriptionTable.USER.eq(username.asString()))
                 .and(PushSubscriptionTable.ID.in(idsMatching.stream().map(PushSubscriptionId::value).collect(Collectors.toList())))))

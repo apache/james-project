@@ -217,6 +217,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<MessageMetaData> deleteByMailboxIdAndMessageUids(PostgresMailboxId mailboxId, List<MessageUid> uids) {
+        if (uids.isEmpty()) {
+            return Flux.empty();
+        }
         Function<List<MessageUid>, Flux<MessageMetaData>> deletePublisherFunction = uidsToDelete -> postgresExecutor.executeDeleteAndReturnList(dslContext -> dslContext.deleteFrom(TABLE_NAME)
                 .where(MAILBOX_ID.eq(mailboxId.asUuid()))
                 .and(MESSAGE_UID.in(uidsToDelete.stream().map(MessageUid::asLong).toArray(Long[]::new)))
@@ -239,6 +242,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Mono<Void> deleteByMessageIdAndMailboxIds(PostgresMessageId messageId, Collection<PostgresMailboxId> mailboxIds) {
+        if (mailboxIds.isEmpty()) {
+            return Mono.empty();
+        }
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(TABLE_NAME)
             .where(MESSAGE_ID.eq(messageId.asUuid()))
             .and(MAILBOX_ID.in(mailboxIds.stream().map(PostgresMailboxId::asUuid).collect(ImmutableList.toImmutableList())))));
@@ -318,6 +324,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<SimpleMailboxMessage.Builder> findMessagesByMailboxIdAndUIDs(PostgresMailboxId mailboxId, List<MessageUid> uids) {
+        if (uids.isEmpty()) {
+            return Flux.empty();
+        }
         PostgresMailboxMessageFetchStrategy fetchStrategy = PostgresMailboxMessageFetchStrategy.METADATA;
         Function<List<MessageUid>, Flux<SimpleMailboxMessage.Builder>> queryPublisherFunction =
             uidsToFetch -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(fetchStrategy.fetchFields())
@@ -507,6 +516,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<MessageMetaData> resetRecentFlag(PostgresMailboxId mailboxId, List<MessageUid> uids, ModSeq newModSeq) {
+        if (uids.isEmpty()) {
+            return Flux.empty();
+        }
         Function<List<MessageUid>, Flux<MessageMetaData>> queryPublisherFunction = uidsMatching -> postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.update(TABLE_NAME)
                 .set(IS_RECENT, false)
                 .set(MOD_SEQ, newModSeq.asLong())
@@ -554,6 +566,9 @@ public class PostgresMailboxMessageDAO {
     }
 
     public Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagesByMessageIds(Collection<PostgresMessageId> messageIds, MessageMapper.FetchType fetchType) {
+        if (messageIds.isEmpty()) {
+            return Flux.empty();
+        }
         PostgresMailboxMessageFetchStrategy fetchStrategy = FETCH_TYPE_TO_FETCH_STRATEGY.apply(fetchType);
 
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.select(fetchStrategy.fetchFields())

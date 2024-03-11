@@ -128,6 +128,9 @@ public class PostgresBlobStoreDAO implements BlobStoreDAO {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, Collection<BlobId> blobIds) {
+        if (blobIds.isEmpty()) {
+            return Mono.empty();
+        }
         return postgresExecutor.executeVoid(dsl -> Mono.from(dsl.deleteFrom(TABLE_NAME)
             .where(BUCKET_NAME.eq(bucketName.asString()))
             .and(BLOB_ID.in(blobIds.stream().map(BlobId::asString).collect(ImmutableList.toImmutableList())))));
