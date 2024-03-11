@@ -49,6 +49,7 @@ import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
+import org.apache.james.modules.server.WebAdminMailOverWebModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 
@@ -66,7 +67,8 @@ public class JPAJamesServerMain implements JamesServerMain {
         new MailRepositoriesRoutesModule(),
         new ReIndexingModule(),
         new SieveRoutesModule(),
-        new WebAdminReIndexingTaskSerializationModule());
+        new WebAdminReIndexingTaskSerializationModule(),
+        new WebAdminMailOverWebModule());
 
     private static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),

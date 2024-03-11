@@ -156,6 +156,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-guice-webadmin-mail-over-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-webadmin-mailbox</artifactId>
         </dependency>
         <dependency>
