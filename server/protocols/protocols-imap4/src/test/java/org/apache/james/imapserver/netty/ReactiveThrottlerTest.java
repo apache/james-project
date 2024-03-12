@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,8 +35,10 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 
+import com.github.fge.lambdas.Throwing;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class ReactiveThrottlerTest {
 
@@ -67,6 +70,70 @@ class ReactiveThrottlerTest {
 
         // Then that task is not executed straight away
         assertThat(executed.get()).isFalse();
+    }
+
+    @RepeatedTest(10)
+    void shouldPropagateCancel() throws Exception {
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 2, 5);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        // Given a throttler
+
+        // When I submit many tasks task - they will get queued
+        AtomicBoolean executed = new AtomicBoolean(false);
+        Disposable disposable1 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable2 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable3 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable4 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable5 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable6 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable7 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+
+        disposable7.dispose();
+        disposable6.dispose();
+        disposable5.dispose();
+        disposable4.dispose();
+        disposable3.dispose();
+        disposable2.dispose();
+        disposable1.dispose();
+        Thread.sleep(200);
+
+        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)), NO_IMAP_MESSAGE)).block();
+
+        // Then that task is not executed straight away
+        assertThat(executed.get()).isTrue();
+    }
+
+    @RepeatedTest(10)
+    void shouldPropagateCancelInReverseOrder() throws Exception {
+        ReactiveThrottler testee = new ReactiveThrottler(new NoopGaugeRegistry(), 2, 5);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        // Given a throttler
+
+        // When I submit many tasks task - they will get queued
+        AtomicBoolean executed = new AtomicBoolean(false);
+        Disposable disposable1 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable2 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable3 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable4 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable5 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable6 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+        Disposable disposable7 = Mono.from(testee.throttle(Mono.fromRunnable(Throwing.runnable(latch::await)).subscribeOn(Schedulers.boundedElastic()).then(), NO_IMAP_MESSAGE)).subscribe();
+
+        disposable1.dispose();
+        disposable2.dispose();
+        disposable3.dispose();
+        disposable4.dispose();
+        disposable5.dispose();
+        disposable6.dispose();
+        disposable7.dispose();
+        Thread.sleep(200);
+
+        Mono.from(testee.throttle(Mono.fromRunnable(() -> executed.getAndSet(true)), NO_IMAP_MESSAGE)).block();
+
+        // Then that task is not executed straight away
+        assertThat(executed.get()).isTrue();
     }
 
     @Test
