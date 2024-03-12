@@ -22,7 +22,7 @@ package org.apache.james.jmap.delegation
 import eu.timepit.refined.auto._
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Properties}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 
 object DelegatedAccountGet {
   val allProperties: Properties = Properties("id", "username")
@@ -33,7 +33,9 @@ object DelegatedAccountGet {
 
 case class DelegatedAccountGetRequest(accountId: AccountId,
                                       ids: Option[DelegateIds],
-                                      properties: Option[Properties]) extends WithAccountId
+                                      properties: Option[Properties]) extends WithAccountId with GetRequest {
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
+}
 
 case class DelegatedAccountNotFound(value: Set[UnparsedDelegateId])
 

@@ -38,7 +38,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EM
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.SetError.{SetErrorDescription, SetErrorType}
-import org.apache.james.jmap.core.{ClientId, Invocation, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
+import org.apache.james.jmap.core.{ClientId, Invocation, JmapRfc8621Configuration, Properties, ServerId, SessionTranslator, SetError, SubmissionCapabilityFactory, UTCDate, UuidState}
 import org.apache.james.jmap.json.EmailSubmissionSetSerializer
 import org.apache.james.jmap.mail.{EmailSubmissionAddress, EmailSubmissionCreationId, EmailSubmissionCreationRequest, EmailSubmissionCreationResponse, EmailSubmissionId, EmailSubmissionSetRequest, EmailSubmissionSetResponse, Envelope, ParameterName, ParameterValue}
 import org.apache.james.jmap.method.EmailSubmissionSetMethod.{CreationFailure, CreationResult, CreationResults, CreationSuccess, LOGGER, MAIL_METADATA_USERNAME_ATTRIBUTE, NO_DELAY, VALID_PARAMETER_NAME_SET, formatter}
@@ -167,6 +167,7 @@ case class MessageMimeMessageSource(id: String, message: MessageResult) extends 
 }
 
 class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerializer,
+                                         configuration: JmapRfc8621Configuration,
                                          messageIdManager: MessageIdManager,
                                          mailQueueFactory: MailQueueFactory[_ <: MailQueue],
                                          canSendFrom: CanSendFrom,
@@ -211,10 +212,10 @@ class EmailSubmissionSetMethod @Inject()(serializer: EmailSubmissionSetSerialize
         SFlux.concat(SMono.just(explicitInvocation), emailSetCall)
       })
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSubmissionSetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailSubmissionSetRequest] =
     serializer.deserializeEmailSubmissionSetRequest(invocation.arguments.value)
       .asEitherRequest
-      .flatMap(_.validate)
+      .flatMap(_.validate(configuration))
 
   private def create(request: EmailSubmissionSetRequest,
                      session: MailboxSession,

@@ -26,7 +26,7 @@ import org.apache.james.jmap.api.model.{Identity, IdentityId}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, Id, Properties, UuidState}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 
 import scala.util.Try
 
@@ -57,7 +57,7 @@ case class IdentityIds(ids: List[UnparsedIdentityId]) {
 
 case class IdentityGetRequest(accountId: AccountId,
                               ids: Option[IdentityIds],
-                              properties: Option[Properties]) extends WithAccountId {
+                              properties: Option[Properties]) extends WithAccountId with GetRequest {
   def computeResponse(identities: List[Identity]): IdentityGetResponse = {
     val list: List[Identity] = identities.filter(identity => isRequested(identity.id))
     val notFound: Option[IdentityIds] = ids
@@ -72,6 +72,8 @@ case class IdentityGetRequest(accountId: AccountId,
   }
 
   private def isRequested(id: IdentityId): Boolean = ids.forall(_.validIds.contains(id))
+
+  override def idCount: Option[Int] = ids.map(_.ids).map(_.size)
 }
 
 case class IdentityGetResponse(accountId: AccountId,

@@ -29,7 +29,7 @@ import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
 import org.apache.james.jmap.core.UuidState.INSTANCE
 import org.apache.james.jmap.core.{AccountId, ErrorCode, Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.EmailGetSerializer
-import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, FullReadLevel, MetadataReadLevel, ReadLevel, UnparsedEmailId}
+import org.apache.james.jmap.mail.{Email, EmailGetRequest, EmailGetResponse, EmailIds, EmailNotFound, EmailView, EmailViewReaderFactory, UnparsedEmailId}
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.MessageId
@@ -95,19 +95,20 @@ class EmailGetMethod @Inject() (readerFactory: EmailViewReaderFactory,
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailGetRequest] =
     EmailGetSerializer.deserializeEmailGetRequest(invocation.arguments.value).asEitherRequest
 
-  private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] =
-    Email.validateProperties(request.properties)
-      .flatMap(properties => Email.validateBodyProperties(request.bodyProperties)
-        .flatMap(validatedBodyProperties => Email.validateIdsSize(request, configuration.jmapEmailGetFullMaxSize.asLong(), validatedBodyProperties))
-        .map((properties, _)))
-      .fold(
-        e => SMono.error(e), {
-          case (properties, bodyProperties) => getEmails(capabilities, request, mailboxSession)
-            .map(response => Invocation(
-              methodName = methodName,
-              arguments = Arguments(EmailGetSerializer.serialize(response, properties, bodyProperties).as[JsObject]),
-              methodCallId = invocation.methodCallId))
-        })
+  private def computeResponseInvocation(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, invocation: Invocation, mailboxSession: MailboxSession): SMono[Invocation] = {
+    val either: Either[Exception, SMono[Invocation]] = for {
+      properties <- Email.validateProperties(request.properties)
+      bodyProperties <- Email.validateBodyProperties(request.bodyProperties)
+      _ <- request.validate(configuration)
+    } yield {
+      getEmails(capabilities, request, mailboxSession)
+        .map(response => Invocation(
+          methodName = methodName,
+          arguments = Arguments(EmailGetSerializer.serialize(response, properties, bodyProperties).as[JsObject]),
+          methodCallId = invocation.methodCallId))
+    }
+    either.fold(SMono.error, v => v)
+  }
 
   private def getEmails(capabilities: Set[CapabilityIdentifier], request: EmailGetRequest, mailboxSession: MailboxSession): SMono[EmailGetResponse] =
     request.ids match {

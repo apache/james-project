@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_DELEGATION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
 import org.apache.james.jmap.delegation.{DelegatedAccountSetRequest, DelegatedAccountSetResponse, ForbiddenAccountManagementException}
 import org.apache.james.jmap.json.DelegationSerializer
 import org.apache.james.jmap.routes.SessionSupplier
@@ -33,6 +33,7 @@ import org.apache.james.metrics.api.MetricFactory
 import reactor.core.scala.publisher.SMono
 
 class DelegatedAccountSetMethod @Inject()(deletePerformer: DelegatedAccountDeletePerformer,
+                                          val configuration: JmapRfc8621Configuration,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier,
                                           val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[DelegatedAccountSetRequest] {
@@ -41,6 +42,7 @@ class DelegatedAccountSetMethod @Inject()(deletePerformer: DelegatedAccountDelet
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, DelegatedAccountSetRequest] =
     DelegationSerializer.deserializeDelegatedAccountSetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: DelegatedAccountSetRequest): SMono[InvocationWithContext] =
     if (isPrimaryAccount(mailboxSession)) {

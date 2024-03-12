@@ -31,7 +31,7 @@ import org.apache.james.jmap.core.Limit.Limit
 import org.apache.james.jmap.core.Position.Position
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.core.{AccountId, CanCalculateChanges, Id, Properties, QueryState, UnsignedInt, UuidState}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 import org.apache.james.mailbox.model.{Quota => ModelQuota, QuotaRoot => ModelQuotaRoot}
 
 import scala.compat.java8.OptionConverters._
@@ -80,7 +80,9 @@ case class QuotaIds(value: List[UnparsedQuotaId])
 
 case class QuotaGetRequest(accountId: AccountId,
                            ids: Option[QuotaIds],
-                           properties: Option[Properties]) extends WithAccountId
+                           properties: Option[Properties]) extends WithAccountId with GetRequest {
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
+}
 
 object JmapQuota {
   private val WARN_LIMIT_PERCENTAGE = 0.9

@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, EMAIL_SUBMISSION, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.IdentitySerializer
 import org.apache.james.jmap.mail.{IdentitySetRequest, IdentitySetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -34,6 +34,7 @@ import reactor.core.scala.publisher.SMono
 class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
                                   updatePerformer: IdentitySetUpdatePerformer,
                                   deletePerformer: IdentitySetDeletePerformer,
+                                  val configuration: JmapRfc8621Configuration,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
                                   val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[IdentitySetRequest] {
@@ -42,6 +43,8 @@ class IdentitySetMethod @Inject()(createPerformer: IdentitySetCreatePerformer,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, IdentitySetRequest] =
     IdentitySerializer.deserializeIdentitySetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
+
   override def doProcess(capabilities: Set[CapabilityIdentifier], invocation: InvocationWithContext, mailboxSession: MailboxSession, request: IdentitySetRequest): SMono[InvocationWithContext] =
     for {
       creationResults <- createPerformer.create(request, mailboxSession)

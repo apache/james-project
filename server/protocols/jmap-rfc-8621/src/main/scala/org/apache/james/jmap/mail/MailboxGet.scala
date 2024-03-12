@@ -23,7 +23,7 @@ import eu.timepit.refined
 import org.apache.james.jmap.api.change.{EmailChanges, Limit, MailboxChanges}
 import org.apache.james.jmap.core.Id.{Id, IdConstraint}
 import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 import org.apache.james.mailbox.model.MailboxId
 
 import scala.util.{Failure, Try}
@@ -55,7 +55,9 @@ case class Ids(value: List[UnparsedMailboxId])
 
 case class MailboxGetRequest(accountId: AccountId,
                              ids: Option[Ids],
-                             properties: Option[Properties]) extends WithAccountId
+                             properties: Option[Properties]) extends WithAccountId with GetRequest {
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
+}
 
 case class NotFound(value: Set[UnparsedMailboxId]) {
   def merge(other: NotFound): NotFound = NotFound(this.value ++ other.value)

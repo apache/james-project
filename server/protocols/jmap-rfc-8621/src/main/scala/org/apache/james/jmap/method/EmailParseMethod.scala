@@ -27,7 +27,7 @@ import org.apache.james.jmap.api.model.Preview
 import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation._
-import org.apache.james.jmap.core.{Invocation, SessionTranslator}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator}
 import org.apache.james.jmap.json.EmailGetSerializer
 import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, Email, EmailBody, EmailBodyMetadata, EmailBodyPart, EmailFullViewFactory, EmailHeaders, EmailParseMetadata, EmailParseRequest, EmailParseResponse, EmailParseResults, EmailParseView, HasAttachment}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
@@ -40,6 +40,7 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.util.Try
 
 class EmailParseMethod @Inject()(val blobResolvers: BlobResolvers,
+                                 val configuration: JmapRfc8621Configuration,
                                  val zoneIdProvider: ZoneIdProvider,
                                  val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier,
@@ -58,6 +59,7 @@ class EmailParseMethod @Inject()(val blobResolvers: BlobResolvers,
 
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailParseRequest] =
     EmailGetSerializer.deserializeEmailParseRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   def computeResponseInvocation(request: EmailParseRequest,
                                 invocation: Invocation,
@@ -83,8 +85,9 @@ class EmailParseMethod @Inject()(val blobResolvers: BlobResolvers,
     val parsedIds: Seq[BlobId] = validations.flatMap(_.toOption)
     val invalid: Seq[EmailParseResults] = validations.map(_.left).flatMap(_.toOption)
 
+    val concurrency = 2
     val parsed: SFlux[EmailParseResults] = SFlux.fromIterable(parsedIds)
-      .flatMap(blobId => toParseResults(request, blobId, mailboxSession))
+      .flatMap(blobId => toParseResults(request, blobId, mailboxSession), concurrency, concurrency)
 
     SFlux.merge(Seq(parsed, SFlux.fromIterable(invalid)))
       .reduce(EmailParseResults.empty())(EmailParseResults.merge)

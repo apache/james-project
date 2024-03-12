@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SessionTranslator}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, PushSubscriptionSetRequest, PushSubscriptionSetResponse, SessionTranslator}
 import org.apache.james.jmap.json.PushSubscriptionSerializer
 import org.apache.james.jmap.routes.SessionSupplier
 import org.apache.james.lifecycle.api.Startable
@@ -34,6 +34,7 @@ import reactor.core.scala.publisher.SMono
 class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCreatePerformer,
                                           updatePerformer: PushSubscriptionUpdatePerformer,
                                           deletePerformer: PushSubscriptionSetDeletePerformer,
+                                          configuration: JmapRfc8621Configuration,
                                           pushSubscriptionSerializer: PushSubscriptionSerializer,
                                           val metricFactory: MetricFactory,
                                           val sessionSupplier: SessionSupplier,
@@ -43,6 +44,7 @@ class PushSubscriptionSetMethod @Inject()(createPerformer: PushSubscriptionSetCr
 
   override def getRequest(invocation: Invocation): Either[Exception, PushSubscriptionSetRequest] =
     pushSubscriptionSerializer.deserializePushSubscriptionSetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   override def doProcess(invocation: InvocationWithContext, mailboxSession: MailboxSession, request: PushSubscriptionSetRequest): SMono[InvocationWithContext] =
     for {
