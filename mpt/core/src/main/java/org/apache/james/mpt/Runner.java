@@ -39,28 +39,6 @@ public class Runner {
 
     /** The Protocol session which is run after the testElements. */
     private final ProtocolSession postElements = new ProtocolSession();
-    
-    public void continueAfterFailure() {
-        preElements.setContinueAfterFailure(true);
-        testElements.setContinueAfterFailure(true);
-        postElements.setContinueAfterFailure(true);
-    }
-    
-    /**
-     * Gets protocol session run after test.
-     * @return not null
-     */
-    public ProtocolInteractor getPostElements() {
-        return postElements;
-    }
-
-    /**
-     * Gets protocol session run before test.
-     * @return not null
-     */
-    public ProtocolInteractor getPreElements() {
-        return preElements;
-    }
 
     /**
      * Gets protocol session run on test.

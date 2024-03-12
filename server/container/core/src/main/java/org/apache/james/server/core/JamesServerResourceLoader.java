@@ -45,16 +45,6 @@ public class JamesServerResourceLoader implements JamesDirectoriesProvider {
         return getRootDirectory() + "/var/";
     }
 
-    /**
-     * Return the directory where the external jar libraries must be placed
-     * by the administrator. The jars may contain mailets, jdbc drivers,...
-     * 
-     * @return externalLibraryDirectory
-     */
-    public String getExternalLibraryDirectory() {
-        return getRootDirectory() + "/conf/lib/";
-    }
-
     @Override
     public String getRootDirectory() {
         return rootDirectory;

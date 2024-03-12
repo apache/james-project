@@ -49,12 +49,4 @@ public class CassandraExtension implements GuiceModuleTestExtension {
     public DockerCassandraRule getCassandra() {
         return cassandra;
     }
-
-    public void pause() {
-        cassandra.pause();
-    }
-
-    public void unpause() {
-        cassandra.unpause();
-    }
 }

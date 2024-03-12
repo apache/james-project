@@ -40,10 +40,6 @@ public class SchemaTransition {
         return String.valueOf(toVersion.getValue());
     }
 
-    public SchemaVersion from() {
-        return toVersion.previous();
-    }
-
     public SchemaVersion to() {
         return toVersion;
     }

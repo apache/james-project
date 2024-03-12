@@ -215,26 +215,6 @@ public abstract class AbstractFileRepository implements Configurable {
             throw new RuntimeException("Exception caught while removing" + " an object", e);
         }
     }
-    
-    /**
-     * 
-     * Indicates if the given key is associated to a contained object
-     * 
-     * @param key
-     *            the key which checked for
-     * @return true if the repository contains the key
-     */
-    public synchronized boolean containsKey(String key) {
-        try {
-            final File file = getFile(key);
-            if (DEBUG) {
-                LOGGER.debug("checking key {}", key);
-            }
-            return file.exists();
-        } catch (Exception e) {
-            throw new RuntimeException("Exception caught while searching " + "an object", e);
-        }
-    }
 
     /**
      * Returns the list of used keys.

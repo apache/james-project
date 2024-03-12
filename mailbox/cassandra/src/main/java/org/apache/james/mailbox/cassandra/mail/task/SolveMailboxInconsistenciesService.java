@@ -234,11 +234,6 @@ public class SolveMailboxInconsistenciesService {
                 return this;
             }
 
-            public Builder errors(long count) {
-                errors = Optional.of(count);
-                return this;
-            }
-
             public Context build() {
                 return new Context(
                     processedMailboxEntries.orElse(0L),

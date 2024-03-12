@@ -62,14 +62,6 @@ public class Version {
             .toString();
     }
 
-    public String asString() {
-        return String.valueOf(version);
-    }
-
-    public int asInteger() {
-        return version;
-    }
-
     public Optional<EventId> asEventId() {
         if (version == -1) {
             return Optional.empty();

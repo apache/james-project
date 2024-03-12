@@ -61,30 +61,6 @@ public class CassandraModSeqProvider implements ModSeqProvider {
 
     public static final String MOD_SEQ_CONDITION = "modSeqCondition";
 
-    public static class ExceptionRelay extends RuntimeException {
-        private final MailboxException underlying;
-
-        public ExceptionRelay(MailboxException underlying) {
-            super(underlying);
-            this.underlying = underlying;
-        }
-
-        public MailboxException getUnderlying() {
-            return underlying;
-        }
-    }
-
-    private static <T> T unbox(Supplier<T> supplier) throws MailboxException {
-        try {
-            return supplier.get();
-        } catch (CompletionException e) {
-            if (e.getCause() instanceof ExceptionRelay) {
-                throw ((ExceptionRelay) e.getCause()).getUnderlying();
-            }
-            throw e;
-        }
-    }
-
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement select;
     private final PreparedStatement update;
@@ -150,9 +126,9 @@ public class CassandraModSeqProvider implements ModSeqProvider {
 
     @Override
     public ModSeq highestModSeq(MailboxId mailboxId) throws MailboxException {
-        return unbox(() -> findHighestModSeq((CassandraId) mailboxId,
-            Optional.of(lwtProfile).filter(any -> cassandraConfiguration.isUidReadStrongConsistency()))
-            .block().orElse(ModSeq.first()))
+        return findHighestModSeq((CassandraId) mailboxId,
+            Optional.of(lwtProfile).filter(any -> cassandraConfiguration.isModseqReadStrongConsistency()))
+            .block().orElse(ModSeq.first())
             .add(cassandraConfiguration.getUidModseqIncrement());
     }
 

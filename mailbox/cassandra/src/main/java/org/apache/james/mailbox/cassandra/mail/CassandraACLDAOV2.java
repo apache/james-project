@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
-import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.deleteFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
@@ -48,7 +47,6 @@ public class CassandraACLDAOV2 {
     private final PreparedStatement insertRights;
     private final PreparedStatement removeRights;
     private final PreparedStatement replaceRights;
-    private final PreparedStatement delete;
     private final PreparedStatement read;
 
     @Inject
@@ -58,13 +56,6 @@ public class CassandraACLDAOV2 {
         this.removeRights = prepareRemoveRights(session);
         this.replaceRights = prepareReplaceRights(session);
         this.read = prepareRead(session);
-        this.delete = prepareDelete(session);
-    }
-
-    private PreparedStatement prepareDelete(CqlSession session) {
-        return session.prepare(deleteFrom(CassandraACLV2Table.TABLE_NAME)
-            .where(column(CassandraACLV2Table.ID).isEqualTo(bindMarker(CassandraACLV2Table.ID)))
-            .build());
     }
 
     private PreparedStatement prepareInsertRights(CqlSession session) {
@@ -96,12 +87,6 @@ public class CassandraACLDAOV2 {
                 .all()
                 .where(column(CassandraACLV2Table.ID).isEqualTo(bindMarker(CassandraACLV2Table.ID)))
                 .build());
-    }
-
-    public Mono<Void> delete(CassandraId cassandraId) {
-        return executor.executeVoid(
-            delete.bind()
-                .setUuid(CassandraACLTable.ID, cassandraId.asUuid()));
     }
 
     public Mono<MailboxACL> getACL(CassandraId cassandraId) {

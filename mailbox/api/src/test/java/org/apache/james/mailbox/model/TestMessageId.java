@@ -56,10 +56,6 @@ public class TestMessageId implements MessageId {
         return String.valueOf(value);
     }
 
-    public long getRawId() {
-        return value;
-    }
-
     @Override
     public boolean isSerializable() {
         return true;

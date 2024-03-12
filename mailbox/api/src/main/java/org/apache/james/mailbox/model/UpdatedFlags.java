@@ -212,10 +212,6 @@ public class UpdatedFlags {
     public List<Flags.Flag> modifiedSystemFlags() {
         return ImmutableList.copyOf(modifiedFlags.getSystemFlags());
     }
-
-    public List<String> modifiedUserFlags() {
-        return ImmutableList.copyOf(modifiedFlags.getUserFlags());
-    }
     
     /**
      * Gets an iterator for the users flags changed.

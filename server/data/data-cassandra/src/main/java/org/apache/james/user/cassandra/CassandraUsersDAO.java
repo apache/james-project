@@ -177,11 +177,6 @@ public class CassandraUsersDAO implements UsersDAO {
                 Algorithm.of(row.getString(ALGORITHM), fallbackHashingMode), preferredAlgorithm));
     }
 
-    public Mono<Boolean> exist(Username name) {
-        return executor.executeReturnExists(getUserStatement.bind()
-            .setString(NAME, name.asString()));
-    }
-
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
         Preconditions.checkArgument(user instanceof DefaultUser);

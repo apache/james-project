@@ -89,15 +89,6 @@ public class Vacation {
             return this;
         }
 
-        public Builder copy(Vacation vacation) {
-            this.textBody = vacation.getTextBody();
-            this.fromDate = vacation.getFromDate();
-            this.toDate = vacation.getToDate();
-            this.isEnabled = Optional.of(vacation.isEnabled());
-            this.subject = vacation.getSubject();
-            return this;
-        }
-
         public Vacation build() {
             boolean enabled = isEnabled.orElse(DEFAULT_DISABLED);
             return new Vacation(enabled, fromDate, toDate, textBody, subject, htmlBody);

@@ -107,7 +107,6 @@ class SearchProcessorTest {
             new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(1048)) };
 
     private static final Username USER = Username.of("user");
-    private static final MailboxPath mailboxPath = new MailboxPath("namespace", USER, "name");
     private static final MailboxId mailboxId = TestId.of(18);
 
     SearchProcessor processor;
