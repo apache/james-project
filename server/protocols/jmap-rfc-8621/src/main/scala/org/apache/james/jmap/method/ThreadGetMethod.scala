@@ -23,7 +23,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{AccountId, Invocation, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{AccountId, Invocation, JmapRfc8621Configuration, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.ThreadSerializer
 import org.apache.james.jmap.mail.{Thread, ThreadGetRequest, ThreadGetResponse, ThreadNotFound, UnparsedThreadId}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -60,6 +60,7 @@ case class ThreadGetResult(threads: Set[Thread], notFound: ThreadNotFound) {
 }
 
 class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
+                                val configuration: JmapRfc8621Configuration,
                                 val sessionSupplier: SessionSupplier,
                                 val sessionTranslator: SessionTranslator,
                                 val threadIdFactory: JavaThreadId.Factory,
@@ -77,8 +78,9 @@ class ThreadGetMethod @Inject()(val metricFactory: MetricFactory,
         methodCallId = invocation.invocation.methodCallId))
       .map(InvocationWithContext(_, invocation.processingContext))
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, ThreadGetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, ThreadGetRequest] =
     ThreadSerializer.deserialize(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   private def getThreadResponse(threadGetRequest: ThreadGetRequest,
                                 mailboxSession: MailboxSession): SFlux[ThreadGetResult] =

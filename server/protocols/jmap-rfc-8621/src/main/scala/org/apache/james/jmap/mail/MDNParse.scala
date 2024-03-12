@@ -20,9 +20,9 @@
 package org.apache.james.jmap.mail
 
 import eu.timepit.refined.api.Refined
-import org.apache.james.jmap.core.{AccountId, Id}
+import org.apache.james.jmap.core.{AccountId, Id, JmapRfc8621Configuration}
 import org.apache.james.jmap.mail.MDNParse._
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{ValidableRequest, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mdn.MDN
 import org.apache.james.mime4j.dom.Message
@@ -45,12 +45,12 @@ case object MDNParseRequest {
 }
 
 case class MDNParseRequest(accountId: AccountId,
-                           blobIds: BlobIds) extends WithAccountId {
+                           blobIds: BlobIds) extends WithAccountId with ValidableRequest {
 
   import MDNParseRequest._
 
-  def validate: Either[RequestTooLargeException, MDNParseRequest] = {
-    if (blobIds.value.length > MAXIMUM_NUMBER_OF_BLOB_IDS) {
+  override def validate(configuration: JmapRfc8621Configuration): Either[RequestTooLargeException, MDNParseRequest] = {
+    if (blobIds.value.length > configuration.jmapEmailGetFullMaxSize.asLong()) {
       Left(RequestTooLargeException("The number of ids requested by the client exceeds the maximum number the server is willing to process in a single method call"))
     } else {
       scala.Right(this)

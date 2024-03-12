@@ -26,10 +26,10 @@ import eu.timepit.refined.auto._
 import eu.timepit.refined.numeric.NonNegative
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.api.change.Limit
-import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
+import org.apache.james.jmap.core.{AccountId, JmapRfc8621Configuration, Properties, UuidState}
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.EmailHeaders.SPECIFIC_HEADER_PREFIX
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 import org.apache.james.mime4j.stream.Field
 
@@ -88,7 +88,21 @@ case class EmailGetRequest(accountId: AccountId,
                            fetchHTMLBodyValues: Option[FetchHTMLBodyValues],
                            maxBodyValueBytes: Option[MaxBodyValueBytes],
                            properties: Option[Properties],
-                           bodyProperties: Option[Properties]) extends WithAccountId
+                           bodyProperties: Option[Properties]) extends WithAccountId with GetRequest {
+
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
+
+  override def validate(configuration: JmapRfc8621Configuration): Either[Exception, EmailGetRequest] =
+    if (EmailGetRequest.readLevel(this).equals(FullReadLevel) && ids.exists(_.value.size > configuration.jmapEmailGetFullMaxSize.asLong())) {
+      Left(RequestTooLargeException(s"Too many items in an email read at level FULL. " +
+        s"Got ${ids.get.value.size} items instead of maximum ${configuration.jmapEmailGetFullMaxSize.asLong()}."))
+    } else if (ids.exists(_.value.size > configuration.maxObjectsInGet.value.value)) {
+      Left(RequestTooLargeException(s"Too many items in an email read at level ${EmailGetRequest.readLevel(this)}. " +
+        s"Got ${ids.get.value.size} items instead of maximum ${configuration.maxObjectsInGet.value}."))
+    } else {
+      scala.Right(this)
+    }
+}
 
 case class EmailNotFound(value: Set[UnparsedEmailId]) {
   def merge(other: EmailNotFound): EmailNotFound = EmailNotFound(this.value ++ other.value)

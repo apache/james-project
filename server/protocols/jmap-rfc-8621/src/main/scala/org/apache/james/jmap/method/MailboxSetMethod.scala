@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{Invocation, SessionTranslator, SetError, UuidState}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator, SetError, UuidState}
 import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{MailboxSetRequest, MailboxSetResponse}
 import org.apache.james.jmap.method.MailboxSetCreatePerformer.MailboxCreationResults
@@ -48,6 +48,7 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
                                  createPerformer: MailboxSetCreatePerformer,
                                  deletePerformer: MailboxSetDeletePerformer,
                                  updatePerformer: MailboxSetUpdatePerformer,
+                                 configuration: JmapRfc8621Configuration,
                                  mailboxChangeRepository: MailboxChangeRepository,
                                  val metricFactory: MetricFactory,
                                  val sessionSupplier: SessionSupplier,
@@ -64,8 +65,9 @@ class MailboxSetMethod @Inject()(serializer: MailboxSerializer,
     response = createResponse(capabilities, invocation.invocation, request, creationResults._1, deletionResults, updateResults, oldState, newState)
   } yield InvocationWithContext(response, creationResults._2)
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxSetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MailboxSetRequest] =
     serializer.deserializeMailboxSetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   private def createResponse(capabilities: Set[CapabilityIdentifier],
                              invocation: Invocation,

@@ -24,7 +24,7 @@ import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{ClientId, Id, Invocation, ServerId, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{ClientId, Id, Invocation, JmapRfc8621Configuration, ServerId, SessionTranslator, UuidState}
 import org.apache.james.jmap.json.EmailSetSerializer
 import org.apache.james.jmap.mail.{EmailSetRequest, EmailSetResponse}
 import org.apache.james.jmap.routes.SessionSupplier
@@ -39,6 +39,7 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
                                val metricFactory: MetricFactory,
                                val sessionSupplier: SessionSupplier,
                                val sessionTranslator: SessionTranslator,
+                               val configuration: JmapRfc8621Configuration,
                                createPerformer: EmailSetCreatePerformer,
                                deletePerformer: EmailSetDeletePerformer,
                                updatePerformer: EmailSetUpdatePerformer,
@@ -76,8 +77,9 @@ class EmailSetMethod @Inject()(serializer: EmailSetSerializer,
         }))
   }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, EmailSetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, EmailSetRequest] =
     serializer.deserialize(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   private def retrieveState(capabilities: Set[CapabilityIdentifier], mailboxSession: MailboxSession): SMono[UuidState] =
     if (capabilities.contains(JAMES_SHARES)) {

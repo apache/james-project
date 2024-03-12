@@ -33,7 +33,7 @@ import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, Properties, 
 import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.MailboxName.MailboxName
 import org.apache.james.jmap.mail.MailboxPatchObject.MailboxPatchObjectKey
-import org.apache.james.jmap.method.{MailboxCreationParseException, WithAccountId}
+import org.apache.james.jmap.method.{MailboxCreationParseException, SetRequest, WithAccountId}
 import org.apache.james.mailbox.model.{MailboxId, MailboxACL => JavaMailboxACL}
 import org.apache.james.mailbox.{MailboxSession, Role}
 import play.api.libs.json.{JsBoolean, JsError, JsNull, JsObject, JsString, JsSuccess, JsValue}
@@ -43,7 +43,9 @@ case class MailboxSetRequest(accountId: AccountId,
                              create: Option[Map[MailboxCreationId, JsObject]],
                              update: Option[Map[UnparsedMailboxId, MailboxPatchObject]],
                              destroy: Option[Seq[UnparsedMailboxId]],
-                             onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy]) extends WithAccountId
+                             onDestroyRemoveEmails: Option[RemoveEmailsOnDestroy]) extends WithAccountId with SetRequest {
+  override def idCount: Int = create.map(_.size).getOrElse(0) + update.map(_.size).getOrElse(0) + destroy.map(_.size).getOrElse(0)
+}
 
 case class MailboxCreationId(id: Id)
 

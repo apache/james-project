@@ -22,13 +22,15 @@ package org.apache.james.jmap.mail
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt
 import org.apache.james.jmap.core.{AccountId, UuidState}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 import org.apache.james.mailbox.model.MessageId
 
 case class Thread(id: Id, emailIds: List[MessageId])
 
 case class ThreadGetRequest(accountId: AccountId,
-                            ids: List[UnparsedThreadId]) extends WithAccountId
+                            ids: List[UnparsedThreadId]) extends WithAccountId with GetRequest {
+  override def idCount: Option[Int] = Some(ids.size)
+}
 
 case class ThreadGetResponse(accountId: AccountId,
                              state: UuidState,

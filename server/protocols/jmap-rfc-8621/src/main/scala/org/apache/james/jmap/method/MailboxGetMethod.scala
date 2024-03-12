@@ -25,7 +25,7 @@ import org.apache.james.jmap.api.change.MailboxChangeRepository
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JAMES_SHARES, JMAP_CORE, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
-import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, Properties, SessionTranslator, UuidState}
+import org.apache.james.jmap.core.{AccountId, CapabilityIdentifier, ErrorCode, Invocation, JmapRfc8621Configuration, Properties, SessionTranslator, UuidState}
 import org.apache.james.jmap.http.MailboxesProvisioner
 import org.apache.james.jmap.json.MailboxSerializer
 import org.apache.james.jmap.mail.{Ids, Mailbox, MailboxFactory, MailboxGet, MailboxGetRequest, MailboxGetResponse, NotFound, PersonalNamespace, Subscriptions, UnparsedMailboxId}
@@ -67,6 +67,7 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
                                   mailboxFactory: MailboxFactory,
                                   provisioner: MailboxesProvisioner,
                                   mailboxChangeRepository: MailboxChangeRepository,
+                                  configuration: JmapRfc8621Configuration,
                                   val metricFactory: MetricFactory,
                                   val sessionSupplier: SessionSupplier,
                                   val sessionTranslator: SessionTranslator) extends MethodRequiringAccountId[MailboxGetRequest] {
@@ -101,8 +102,9 @@ class MailboxGetMethod @Inject() (serializer: MailboxSerializer,
         .map(UuidState.fromJava)
     }
 
-  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[IllegalArgumentException, MailboxGetRequest] =
+  override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MailboxGetRequest] =
     serializer.deserializeMailboxGetRequest(invocation.arguments.value).asEitherRequest
+      .flatMap(request => request.validate(configuration).map(_ => request))
   private def getMailboxes(capabilities: Set[CapabilityIdentifier],
                            mailboxGetRequest: MailboxGetRequest,
                            mailboxSession: MailboxSession): SFlux[MailboxGetResults] =

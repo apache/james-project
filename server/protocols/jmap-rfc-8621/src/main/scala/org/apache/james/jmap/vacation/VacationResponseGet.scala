@@ -20,13 +20,15 @@
 package org.apache.james.jmap.vacation
 
 import org.apache.james.jmap.core.{AccountId, Properties, UuidState}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 
 case class VacationResponseIds(value: List[UnparsedVacationResponseId])
 
 case class VacationResponseGetRequest(accountId: AccountId,
                                       ids: Option[VacationResponseIds],
-                                      properties: Option[Properties]) extends WithAccountId
+                                      properties: Option[Properties]) extends WithAccountId with GetRequest {
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
+}
 
 case class VacationResponseNotFound(value: Set[UnparsedVacationResponseId]) {
   def merge(other: VacationResponseNotFound): VacationResponseNotFound = VacationResponseNotFound(this.value ++ other.value)

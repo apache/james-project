@@ -25,7 +25,7 @@ import eu.timepit.refined.auto._
 import javax.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation._
-import org.apache.james.jmap.core.{Invocation, SessionTranslator}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator}
 import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.{BlobId, BlobUnParsableException, MDNParseRequest, MDNParseResponse, MDNParseResults, MDNParsed}
 import org.apache.james.jmap.routes.{BlobNotFoundException, BlobResolvers, SessionSupplier}
@@ -43,6 +43,7 @@ import scala.jdk.OptionConverters._
 import scala.util.{Try, Using}
 
 class MDNParseMethod @Inject()(serializer: MDNSerializer,
+                               val configuration: JmapRfc8621Configuration,
                                val blobResolvers: BlobResolvers,
                                val metricFactory: MetricFactory,
                                val mdnEmailIdResolver: MDNEmailIdResolver,
@@ -61,7 +62,7 @@ class MDNParseMethod @Inject()(serializer: MDNSerializer,
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MDNParseRequest] =
     serializer.deserializeMDNParseRequest(invocation.arguments.value)
       .asEitherRequest
-      .flatMap(_.validate)
+      .flatMap(request => request.validate(configuration).map(_ => request))
 
   def computeResponseInvocation(request: MDNParseRequest,
                                 invocation: Invocation,
@@ -82,8 +83,9 @@ class MDNParseMethod @Inject()(serializer: MDNSerializer,
     val parsedIds: Seq[BlobId] = validations.flatMap(_.toOption)
     val invalid: Seq[MDNParseResults] = validations.map(_.left).flatMap(_.toOption)
 
+    val concurrency = 2
     val parsed: SFlux[MDNParseResults] = SFlux.fromIterable(parsedIds)
-      .flatMap(blobId => toParseResults(blobId, mailboxSession))
+      .flatMap(blobId => toParseResults(blobId, mailboxSession), concurrency, concurrency)
 
     SFlux.merge(Seq(parsed, SFlux.fromIterable(invalid)))
       .reduce(MDNParseResults.empty())(MDNParseResults.merge)

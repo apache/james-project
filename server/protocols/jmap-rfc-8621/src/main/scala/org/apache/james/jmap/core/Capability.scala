@@ -106,17 +106,17 @@ trait CapabilityFactory {
 final case class CoreCapability(properties: CoreCapabilityProperties,
                                 identifier: CapabilityIdentifier = JMAP_CORE) extends Capability
 
-final case class CoreCapabilityFactory(maxUploadSize: MaxSizeUpload) extends CapabilityFactory {
+final case class CoreCapabilityFactory(configration: JmapRfc8621Configuration) extends CapabilityFactory {
   override def id(): CapabilityIdentifier = JMAP_CORE
 
   override def create(urlPrefixes: UrlPrefixes): Capability = CoreCapability(CoreCapabilityProperties(
-    maxUploadSize,
+    configration.maxUploadSize,
     MaxConcurrentUpload(4L),
     MaxSizeRequest(10_000_000L),
     MaxConcurrentRequests(4L),
     MaxCallsInRequest(16L),
-    MaxObjectsInGet(500L),
-    MaxObjectsInSet(500L),
+    configration.maxObjectsInGet,
+    configration.maxObjectsInSet,
     collationAlgorithms = List("i;unicode-casemap")))
 }
 

@@ -26,7 +26,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 object DefaultCapabilities {
   @VisibleForTesting
   def supported(configuration: JmapRfc8621Configuration): Set[CapabilityFactory] = Set(
-    CoreCapabilityFactory(configuration.maxUploadSize),
+    CoreCapabilityFactory(configuration),
     MailCapabilityFactory(configuration),
     QuotaCapabilityFactory,
     JmapQuotaCapabilityFactory,

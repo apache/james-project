@@ -23,7 +23,7 @@ import cats.implicits._
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscription, PushSubscriptionId, TypeName, VerificationCode}
-import org.apache.james.jmap.method.WithoutAccountId
+import org.apache.james.jmap.method.{GetRequest, ValidableRequest, WithoutAccountId}
 
 case class Ids(value: List[UnparsedPushSubscriptionId]) {
   def validate: Either[IllegalArgumentException, List[PushSubscriptionId]] =
@@ -36,7 +36,9 @@ object PushSubscriptionGet {
 }
 
 case class PushSubscriptionGetRequest(ids: Option[Ids],
-                                      properties: Option[Properties]) extends WithoutAccountId {
+                                      properties: Option[Properties]) extends WithoutAccountId with GetRequest {
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
+
   def validateProperties: Either[IllegalArgumentException, Properties] =
     properties match {
       case None => Right(PushSubscriptionGet.allowedProperties)

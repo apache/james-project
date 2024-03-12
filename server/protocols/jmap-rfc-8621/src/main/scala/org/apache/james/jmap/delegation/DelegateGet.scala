@@ -25,7 +25,7 @@ import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, Properties}
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{GetRequest, WithAccountId}
 
 import scala.util.Try
 
@@ -50,7 +50,9 @@ case class DelegateIds(value: List[UnparsedDelegateId])
 
 case class DelegateGetRequest(accountId: AccountId,
                               ids: Option[DelegateIds],
-                              properties: Option[Properties]) extends WithAccountId
+                              properties: Option[Properties]) extends WithAccountId with GetRequest {
+  override def idCount: Option[Int] = ids.map(_.value).map(_.size)
+}
 case class Delegate(id: DelegationId,
                     username: Username) {
   def delegationIdAsId(): Id = Id.validate(id.serialize) match {

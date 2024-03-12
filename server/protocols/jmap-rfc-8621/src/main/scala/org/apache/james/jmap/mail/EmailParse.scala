@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.mail
 
-import org.apache.james.jmap.core.{AccountId, Properties}
+import org.apache.james.jmap.core.{AccountId, JmapRfc8621Configuration, Properties}
 import org.apache.james.jmap.mail.EmailGetRequest.MaxBodyValueBytes
 import org.apache.james.jmap.mail.MDNParse.UnparsedBlobId
-import org.apache.james.jmap.method.WithAccountId
+import org.apache.james.jmap.method.{ValidableRequest, WithAccountId}
 
 
 case class EmailParseRequest(accountId: AccountId,
@@ -32,7 +32,15 @@ case class EmailParseRequest(accountId: AccountId,
                            fetchHTMLBodyValues: Option[FetchHTMLBodyValues],
                            maxBodyValueBytes: Option[MaxBodyValueBytes],
                            properties: Option[Properties],
-                           bodyProperties: Option[Properties]) extends WithAccountId
+                           bodyProperties: Option[Properties]) extends WithAccountId with ValidableRequest {
+  override def validate(configuration: JmapRfc8621Configuration): Either[Exception, EmailParseRequest] =
+    if (blobIds.value.size > configuration.jmapEmailGetFullMaxSize.asLong()) {
+      Left(RequestTooLargeException(s"Too many items in an email parse request. " +
+        s"Got ${blobIds.value.size} items instead of maximum ${configuration.jmapEmailGetFullMaxSize.asLong()}."))
+    } else {
+      scala.Right(this)
+    }
+}
 
 object EmailParseResults {
   def notFound(blobId: UnparsedBlobId): EmailParseResults = EmailParseResults(None, Some(EmailParseNotFound(Set(blobId))), None)

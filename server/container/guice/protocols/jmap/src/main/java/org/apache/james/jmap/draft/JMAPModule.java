@@ -173,7 +173,7 @@ public class JMAPModule extends AbstractModule {
 
     @ProvidesIntoSet
     CapabilityFactory coreCapability(JmapRfc8621Configuration configuration) {
-        return new CoreCapabilityFactory(configuration.maxUploadSize());
+        return new CoreCapabilityFactory(configuration);
     }
 
     @ProvidesIntoSet

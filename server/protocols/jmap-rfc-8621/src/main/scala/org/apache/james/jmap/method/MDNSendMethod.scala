@@ -26,7 +26,7 @@ import javax.inject.Inject
 import org.apache.james.jmap.api.model.Identity
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation._
-import org.apache.james.jmap.core.{Invocation, SessionTranslator}
+import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator}
 import org.apache.james.jmap.json.MDNSerializer
 import org.apache.james.jmap.mail.MDN._
 import org.apache.james.jmap.mail.MDNSend.MDN_ALREADY_SENT_FLAG
@@ -60,6 +60,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
                               mailQueueFactory: MailQueueFactory[_ <: MailQueue],
                               messageIdManager: MessageIdManager,
                               emailSetMethod: EmailSetMethod,
+                              val configuration: JmapRfc8621Configuration,
                               val identityResolver: IdentityResolver,
                               val metricFactory: MetricFactory,
                               val sessionSupplier: SessionSupplier,
@@ -108,7 +109,7 @@ class MDNSendMethod @Inject()(serializer: MDNSerializer,
   override def getRequest(mailboxSession: MailboxSession, invocation: Invocation): Either[Exception, MDNSendRequest] =
     serializer.deserializeMDNSendRequest(invocation.arguments.value)
       .asEitherRequest
-      .flatMap(_.validate)
+      .flatMap(_.validate(configuration))
 
   private def create(identity: Identity,
                      request: MDNSendRequest,
