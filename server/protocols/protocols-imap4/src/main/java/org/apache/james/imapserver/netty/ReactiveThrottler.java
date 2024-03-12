@@ -19,18 +19,31 @@
 
 package org.apache.james.imapserver.netty;
 
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.reactivestreams.Publisher;
 
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 public class ReactiveThrottler {
+    private static class TaskHolder {
+        private final Publisher<Void> task;
+        private final AtomicReference<Disposable> disposable = new AtomicReference<>();
+
+        private TaskHolder(Publisher<Void> task) {
+            this.task = task;
+        }
+    }
+
     public static class RejectedException extends RuntimeException {
         private final ImapMessage imapMessage;
 
@@ -48,7 +61,7 @@ public class ReactiveThrottler {
     private final int maxQueueSize;
     // In flight + executing
     private final AtomicInteger concurrentRequests = new AtomicInteger(0);
-    private final Queue<Publisher<Void>> queue = new ConcurrentLinkedQueue<>();
+    private final Queue<TaskHolder> queue = new ConcurrentLinkedQueue<>();
 
     public ReactiveThrottler(GaugeRegistry gaugeRegistry, int maxConcurrentRequests, int maxQueueSize) {
         gaugeRegistry.register("imap.request.queue.size", () -> Math.max(concurrentRequests.get() - maxConcurrentRequests, 0));
@@ -69,11 +82,27 @@ public class ReactiveThrottler {
                 .doFinally(any -> onRequestDone());
         } else if (requestNumber <= maxQueueSize + maxConcurrentRequests) {
             // Queue the request for later
+            AtomicBoolean cancelled = new AtomicBoolean(false);
             Sinks.One<Void> one = Sinks.one();
-            queue.add(Mono.from(task)
+            TaskHolder taskHolder = new TaskHolder(Mono.fromCallable(cancelled::get)
+                .flatMap(cancel -> {
+                    if (cancel) {
+                        return Mono.empty();
+                    }
+                    return Mono.from(task);
+                })
                 .then(Mono.fromRunnable(() -> one.emitEmpty(Sinks.EmitFailureHandler.FAIL_FAST))));
+            queue.add(taskHolder);
             // Let the caller await task completion
-            return one.asMono();
+            return one.asMono()
+                .doOnCancel(() -> {
+                    cancelled.set(true);
+                    Optional.ofNullable(taskHolder.disposable.get()).ifPresent(Disposable::dispose);
+                    boolean removed = queue.remove(taskHolder);
+                    if (removed) {
+                        concurrentRequests.decrementAndGet();
+                    }
+                });
         } else {
             concurrentRequests.decrementAndGet();
 
@@ -86,12 +115,15 @@ public class ReactiveThrottler {
     }
 
     private void onRequestDone() {
-        concurrentRequests.decrementAndGet();
-        Publisher<Void> throttled = queue.poll();
+        concurrentRequests.getAndDecrement();
+        TaskHolder throttled = queue.poll();
         if (throttled != null) {
-            Mono.from(throttled)
-                .doFinally(any -> onRequestDone())
+            Disposable disposable = Mono.from(throttled.task)
+                .doFinally(any -> {
+                    onRequestDone();
+                })
                 .subscribe();
+            throttled.disposable.set(disposable);
         }
     }
 }
