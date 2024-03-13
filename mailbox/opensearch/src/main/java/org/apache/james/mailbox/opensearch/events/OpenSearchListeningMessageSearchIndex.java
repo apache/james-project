@@ -53,6 +53,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.MailboxEvents;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -300,7 +301,11 @@ public class OpenSearchListeningMessageSearchIndex extends ListeningMessageSearc
     private Mono<Void> processAddedEvent(MailboxSession session, MailboxEvents.Added addedEvent, MailboxId mailboxId) {
         return factory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
-            .flatMap(mailbox -> handleAdded(session, mailbox, addedEvent, chooseFetchType()));
+            .flatMap(mailbox -> handleAdded(session, mailbox, addedEvent, chooseFetchType()))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                LOGGER.info("Added event skipped for deleted mailbox {}", mailboxId.serialize());
+                return Mono.empty();
+            });
     }
 
     private FetchType chooseFetchType() {
