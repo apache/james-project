@@ -22,9 +22,6 @@ package org.apache.james.repository.api;
 import java.util.stream.Stream;
 
 public interface ObjectRepository {
-
-    boolean containsKey(String key);
-
     Object get(String key);
 
     Object get(String key, ClassLoader loader);
