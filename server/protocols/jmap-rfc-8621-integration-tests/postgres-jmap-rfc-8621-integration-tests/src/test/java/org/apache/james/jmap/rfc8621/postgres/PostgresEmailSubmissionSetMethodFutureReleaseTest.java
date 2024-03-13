@@ -22,6 +22,7 @@ package org.apache.james.jmap.rfc8621.postgres;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.ClockExtension;
+import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
@@ -50,7 +51,7 @@ public class PostgresEmailSubmissionSetMethodFutureReleaseTest implements EmailS
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.scanning())
+            .searchConfiguration(SearchConfiguration.openSearch())
             .usersRepository(DEFAULT)
             .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
             .blobStore(BlobStoreConfiguration.builder()
@@ -61,6 +62,7 @@ public class PostgresEmailSubmissionSetMethodFutureReleaseTest implements EmailS
             .build())
         .extension(PostgresExtension.empty())
         .extension(new RabbitMQExtension())
+        .extension(new DockerOpenSearchExtension())
         .extension(new ClockExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
