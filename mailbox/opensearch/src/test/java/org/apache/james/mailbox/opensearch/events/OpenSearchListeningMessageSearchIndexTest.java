@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS;
+import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +34,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.mail.Flags;
 
@@ -393,6 +395,18 @@ class OpenSearchListeningMessageSearchIndexTest {
         SearchQuery query = SearchQuery.of(SearchQuery.all());
         assertThat(testee.search(session, mailbox, query).toStream())
             .isEmpty();
+    }
+
+    @Test
+    void addShouldNotFailWhenMailboxHadBeenDeleted() {
+        mapperFactory.getMailboxMapper(session)
+            .delete(mailbox)
+            .block();
+
+        assertThatCode(() -> testee.event(new MailboxEvents.Added(MailboxSession.SessionId.of(36), BOB, mailbox.generateAssociatedPath(),
+            mailbox.getMailboxId(), ImmutableSortedMap.of(MESSAGE_UID_1, mock(MessageMetaData.class)), Event.EventId.of(UUID.randomUUID()),
+            !IS_DELIVERY, IS_APPENDED, Optional.empty())))
+            .doesNotThrowAnyException();
     }
 
     @Test
