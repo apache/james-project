@@ -39,7 +39,6 @@ import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@Disabled
 public class PostgresThreadGetTest extends PostgresBase implements ThreadGetContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
