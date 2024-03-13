@@ -104,6 +104,7 @@ public class PostgresCommonModule extends AbstractModule {
             .password(postgresConfiguration.getCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
             .schema(postgresConfiguration.getDatabaseSchema())
+            .sslMode(postgresConfiguration.getSslMode())
             .build());
     }
 
@@ -118,6 +119,7 @@ public class PostgresCommonModule extends AbstractModule {
             .password(postgresConfiguration.getNonRLSCredential().getPassword())
             .database(postgresConfiguration.getDatabaseName())
             .schema(postgresConfiguration.getDatabaseSchema())
+            .sslMode(postgresConfiguration.getSslMode())
             .build());
     }
 

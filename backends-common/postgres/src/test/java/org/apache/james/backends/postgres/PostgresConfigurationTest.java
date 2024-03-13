@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
+import io.r2dbc.postgresql.client.SSLMode;
+
 class PostgresConfigurationTest {
 
     @Test
@@ -38,6 +40,7 @@ class PostgresConfigurationTest {
             .nonRLSUser("nonrlsjames")
             .nonRLSPassword("2")
             .rowLevelSecurityEnabled()
+            .sslMode("require")
             .build();
 
         assertThat(configuration.getHost()).isEqualTo("1.1.1.1");
@@ -49,6 +52,7 @@ class PostgresConfigurationTest {
         assertThat(configuration.getNonRLSCredential().getUsername()).isEqualTo("nonrlsjames");
         assertThat(configuration.getNonRLSCredential().getPassword()).isEqualTo("2");
         assertThat(configuration.rowLevelSecurityEnabled()).isEqualTo(true);
+        assertThat(configuration.getSslMode()).isEqualTo(SSLMode.REQUIRE);
     }
 
     @Test
@@ -65,6 +69,7 @@ class PostgresConfigurationTest {
         assertThat(configuration.getNonRLSCredential().getUsername()).isEqualTo("james");
         assertThat(configuration.getNonRLSCredential().getPassword()).isEqualTo("1");
         assertThat(configuration.rowLevelSecurityEnabled()).isEqualTo(false);
+        assertThat(configuration.getSslMode()).isEqualTo(SSLMode.DISABLE);
     }
 
     @Test
@@ -108,12 +113,13 @@ class PostgresConfigurationTest {
     }
 
     @Test
-    void rowLevelSecurityShouldBeDisabledByDefault() {
-        PostgresConfiguration configuration = PostgresConfiguration.builder()
+    void shouldThrowWhenInvalidSslMode() {
+        assertThatThrownBy(() -> PostgresConfiguration.builder()
             .username("james")
             .password("1")
-            .build();
-
-        assertThat(configuration.rowLevelSecurityEnabled()).isFalse();
+            .sslMode("invalid")
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Invalid ssl mode value: invalid");
     }
 }
