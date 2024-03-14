@@ -75,8 +75,8 @@ public class PostgresMessageBlobReferenceSourceTest {
         SimpleMailboxMessage message = createMessage(messageId1, ThreadId.fromBaseMessageId(messageId1),  CONTENT, BODY_START, new PropertyBuilder());
         MessageId messageId2 = PostgresMessageId.Factory.of(UUID.randomUUID());
         MailboxMessage message2 = createMessage(messageId2, ThreadId.fromBaseMessageId(messageId2),  CONTENT_2, BODY_START, new PropertyBuilder());
-        postgresMessageDAO.insert(message, "1") .block();
-        postgresMessageDAO.insert(message2, "2") .block();
+        postgresMessageDAO.insert(message, "1").block();
+        postgresMessageDAO.insert(message2, "2").block();
 
         assertThat(blobReferenceSource.listReferencedBlobs().collectList().block())
             .hasSize(2);
