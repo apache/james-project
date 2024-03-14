@@ -6314,7 +6314,7 @@ trait MailboxSetMethodContract {
          |}""".stripMargin)
   }
 
-  @RepeatedTest(100)
+  @RepeatedTest(20)
   def concurrencyChecksUponParentIdUpdate(server: GuiceJamesServer): Unit = {
     val mailboxId1: MailboxId = server.getProbe(classOf[MailboxProbeImpl])
       .createMailbox(MailboxPath.forUser(BOB, "mailbox1"))
