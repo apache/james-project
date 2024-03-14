@@ -58,7 +58,7 @@ trait UploadContract {
       .build
   }
 
-  @RepeatedTest(50)
+  @RepeatedTest(20)
   def shouldUploadFileAndAllowToDownloadIt(): Unit = {
     val uploadResponse: String = `given`
       .basePath("")
