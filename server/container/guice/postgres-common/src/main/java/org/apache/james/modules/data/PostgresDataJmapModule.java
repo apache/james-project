@@ -34,11 +34,11 @@ import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthChec
 import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
-import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.jmap.postgres.filtering.PostgresFilteringProjection;
 import org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDAO;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryView;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewManager;
+import org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjection;
 import org.apache.james.jmap.postgres.upload.PostgresUploadRepository;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
@@ -67,8 +67,8 @@ public class PostgresDataJmapModule extends AbstractModule {
 
         bind(DefaultTextExtractor.class).in(Scopes.SINGLETON);
 
-        bind(MemoryMessageFastViewProjection.class).in(Scopes.SINGLETON);
-        bind(MessageFastViewProjection.class).to(MemoryMessageFastViewProjection.class);
+        bind(PostgresMessageFastViewProjection.class).in(Scopes.SINGLETON);
+        bind(MessageFastViewProjection.class).to(PostgresMessageFastViewProjection.class);
 
         bind(PostgresEmailQueryView.class).in(Scopes.SINGLETON);
         bind(EmailQueryView.class).to(PostgresEmailQueryView.class);
