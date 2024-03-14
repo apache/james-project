@@ -43,7 +43,6 @@ import org.apache.james.mailbox.postgres.user.PostgresSubscriptionDAO;
 import org.apache.james.mailbox.postgres.user.PostgresSubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -92,6 +91,7 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
             new PostgresMessageDAO(executorFactory.create(session.getUser().getDomainPart()), blobIdFactory),
             new PostgresMailboxMessageDAO(executorFactory.create(session.getUser().getDomainPart())),
             getModSeqProvider(session),
+            getAttachmentMapper(session),
             blobStore,
             blobIdFactory,
             clock);
@@ -118,13 +118,13 @@ public class PostgresMailboxSessionMapperFactory extends MailboxSessionMapperFac
     }
 
     @Override
-    public AttachmentMapper createAttachmentMapper(MailboxSession session) {
+    public PostgresAttachmentMapper createAttachmentMapper(MailboxSession session) {
         PostgresAttachmentDAO postgresAttachmentDAO = new PostgresAttachmentDAO(executorFactory.create(session.getUser().getDomainPart()), blobIdFactory);
         return new PostgresAttachmentMapper(postgresAttachmentDAO, blobStore);
     }
 
     @Override
-    public AttachmentMapper getAttachmentMapper(MailboxSession session) {
+    public PostgresAttachmentMapper getAttachmentMapper(MailboxSession session) {
         return createAttachmentMapper(session);
     }
 

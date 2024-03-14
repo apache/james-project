@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
-import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -39,7 +38,6 @@ import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -84,13 +82,15 @@ public class PostgresAttachmentMapper implements AttachmentMapper {
             .switchIfEmpty(Mono.error(() -> new AttachmentNotFoundException(attachmentId.getId())));
     }
 
+    public Flux<AttachmentMetadata> getAttachmentsReactive(Collection<AttachmentId> attachmentIds) {
+        Preconditions.checkArgument(attachmentIds != null);
+        return postgresAttachmentDAO.getAttachments(attachmentIds);
+    }
+
     @Override
     public List<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
-        Preconditions.checkArgument(attachmentIds != null);
-        return Flux.fromIterable(attachmentIds)
-            .flatMap(id -> postgresAttachmentDAO.getAttachment(id)
-                .map(Pair::getLeft), DEFAULT_CONCURRENCY)
-            .collect(ImmutableList.toImmutableList())
+        return getAttachmentsReactive(attachmentIds)
+            .collectList()
             .block();
     }
 

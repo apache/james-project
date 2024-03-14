@@ -92,8 +92,8 @@ public class PostgresMailboxManagerAttachmentTest extends AbstractMailboxManager
         SessionProviderImpl sessionProvider = new SessionProviderImpl(null, null);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mapperFactory);
 
-        MessageIdManager messageIdManager = new StoreMessageIdManager(storeRightManager, mapperFactory
-            , eventBus, new NoQuotaManager(), mock(QuotaRootResolver.class), PreDeletionHooks.NO_PRE_DELETION_HOOK);
+        MessageIdManager messageIdManager = new StoreMessageIdManager(storeRightManager, mapperFactory,
+            eventBus, new NoQuotaManager(), mock(QuotaRootResolver.class), PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
         StoreAttachmentManager storeAttachmentManager = new StoreAttachmentManager(mapperFactory, messageIdManager);
 
