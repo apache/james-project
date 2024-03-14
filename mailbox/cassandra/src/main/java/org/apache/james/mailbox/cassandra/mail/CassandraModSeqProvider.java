@@ -31,8 +31,6 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
