@@ -35,7 +35,7 @@ public interface PostgresAttachmentModule {
     interface PostgresAttachmentTable {
 
         Table<Record> TABLE_NAME = DSL.table("attachment");
-        Field<UUID> ID = DSL.field("id", SQLDataType.UUID.notNull());
+        Field<String> ID = DSL.field("id", SQLDataType.VARCHAR.notNull());
         Field<String> BLOB_ID = DSL.field("blob_id", SQLDataType.VARCHAR);
         Field<String> TYPE = DSL.field("type", SQLDataType.VARCHAR);
         Field<UUID> MESSAGE_ID = DSL.field("message_id", SQLDataType.UUID);
