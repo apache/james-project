@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.postgres.PostgresMailboxId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
+import org.apache.james.mailbox.postgres.mail.dao.PostgresAttachmentDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageDAO;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
@@ -46,12 +47,9 @@ import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
-import org.apache.james.mailbox.store.mail.model.MessageUidProvider;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.utils.UpdatableTickingClock;
-import org.testcontainers.utility.ThrowingFunction;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class PostgresMapperProvider implements MapperProvider {
@@ -106,7 +104,10 @@ public class PostgresMapperProvider implements MapperProvider {
             new PostgresMessageDAO(postgresExtension.getPostgresExecutor(), blobIdFactory),
             new PostgresMailboxMessageDAO(postgresExtension.getPostgresExecutor()),
             new PostgresModSeqProvider(mailboxDAO),
-            blobStore, blobIdFactory, updatableTickingClock);
+            new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExtension.getPostgresExecutor(), blobIdFactory), blobStore),
+            blobStore,
+            blobIdFactory,
+            updatableTickingClock);
     }
 
     @Override

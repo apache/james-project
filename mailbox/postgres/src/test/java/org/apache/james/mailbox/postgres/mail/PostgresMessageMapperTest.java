@@ -32,6 +32,7 @@ public class PostgresMessageMapperTest extends MessageMapperTest {
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresMailboxAggregateModule.MODULE);
 
     private PostgresMapperProvider postgresMapperProvider;
+
     @Override
     protected MapperProvider createMapperProvider() {
         postgresMapperProvider = new PostgresMapperProvider(postgresExtension);
