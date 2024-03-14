@@ -111,6 +111,21 @@ You still need to specify the vhost in the uri parameter.
 
 |===
 
+== Tuning RabbitMQ for quorum queue use
+
+While quorum queues are great at preserving your data and enabling High Availability, they demand more resources and
+a greater care than regular RabbitMQ queues.
+
+See link:https://www.rabbitmq.com/docs/quorum-queues#performance-tuning[this section of RabbitMQ documentation regarding RabbitMQ quroum queue performance tunning].
+
+ - Provide decent amount of RAM memory to RabbitMQ. 4GB is a good start.
+ - Setting a delivery limit is advised as looping messages can cause extreme memory consumptions onto quorum queues.
+ - Set up Raft for small messages:
+
+....
+raft.segment_max_entries = 32768
+....
+
 == RabbitMQ MailQueue Configuration
 
 James mail queue is a component acting like a queue where it can enqueue and dequeue mails.
