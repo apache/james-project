@@ -21,7 +21,6 @@ package org.apache.james.jmap.rfc8621.postgres;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.PostgresJamesConfiguration;
@@ -35,8 +34,6 @@ import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresPushSubscriptionSetMethodTest implements PushSubscriptionSetMethodContract {
