@@ -43,7 +43,7 @@ public class PostgresConfiguration {
     public static final String NON_RLS_PASSWORD = "database.non-rls.password";
     public static final String RLS_ENABLED = "row.level.security.enabled";
     public static final String SSL_MODE = "ssl.mode";
-    public static final String SSL_MODE_DEFAULT_VALUE = "disable";
+    public static final String SSL_MODE_DEFAULT_VALUE = "allow";
 
     public static class Credential {
         private final String username;
