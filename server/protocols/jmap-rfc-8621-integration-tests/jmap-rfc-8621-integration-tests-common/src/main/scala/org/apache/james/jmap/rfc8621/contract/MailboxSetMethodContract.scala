@@ -8789,6 +8789,7 @@ trait MailboxSetMethodContract {
                  |    }, "c1"]]
                  |}""".stripMargin))
 
+            ws.receive().asPayload
             List(ws.receive().asPayload)
         })
         .send(backend)
