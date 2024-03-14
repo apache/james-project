@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
+import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -32,6 +33,8 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentModule.PostgresAttachmentTable;
+
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -69,7 +72,7 @@ public class PostgresAttachmentDAO {
                     PostgresAttachmentTable.MESSAGE_ID,
                     PostgresAttachmentTable.SIZE)
                 .from(PostgresAttachmentTable.TABLE_NAME)
-                .where(PostgresAttachmentTable.ID.eq(attachmentId.asUUID()))))
+                .where(PostgresAttachmentTable.ID.eq(attachmentId.getId()))))
             .map(row -> Pair.of(
                 AttachmentMetadata.builder()
                     .attachmentId(attachmentId)
@@ -80,9 +83,20 @@ public class PostgresAttachmentDAO {
                 blobIdFactory.from(row.get(PostgresAttachmentTable.BLOB_ID))));
     }
 
+    public Flux<AttachmentMetadata> getAttachments(Collection<AttachmentId> attachmentIds) {
+        return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(PostgresAttachmentTable.TABLE_NAME)
+                .where(PostgresAttachmentTable.ID.in(attachmentIds.stream().map(AttachmentId::getId).collect(ImmutableList.toImmutableList())))))
+            .map(row -> AttachmentMetadata.builder()
+                .attachmentId(AttachmentId.from(row.get(PostgresAttachmentTable.ID)))
+                .type(row.get(PostgresAttachmentTable.TYPE))
+                .messageId(PostgresMessageId.Factory.of(row.get(PostgresAttachmentTable.MESSAGE_ID)))
+                .size(row.get(PostgresAttachmentTable.SIZE))
+                .build());
+    }
+
     public Mono<Void> storeAttachment(AttachmentMetadata attachment, BlobId blobId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(PostgresAttachmentTable.TABLE_NAME)
-            .set(PostgresAttachmentTable.ID, attachment.getAttachmentId().asUUID())
+            .set(PostgresAttachmentTable.ID, attachment.getAttachmentId().getId())
             .set(PostgresAttachmentTable.BLOB_ID, blobId.asString())
             .set(PostgresAttachmentTable.TYPE, attachment.getType().asString())
             .set(PostgresAttachmentTable.MESSAGE_ID, ((PostgresMessageId) attachment.getMessageId()).asUuid())
