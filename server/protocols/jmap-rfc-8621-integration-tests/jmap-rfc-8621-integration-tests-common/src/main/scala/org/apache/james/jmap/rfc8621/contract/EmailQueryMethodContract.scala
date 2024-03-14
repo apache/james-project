@@ -55,7 +55,7 @@ import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
-import org.junit.jupiter.api.{BeforeEach, Test}
+import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
@@ -7034,22 +7034,24 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
-    .when
-      .post
-    .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
-    assertThatJson(response)
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
-      .inPath("$.methodResponses[0][1].ids")
-      .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId1.serialize}","${messageId2.serialize}"]""")
+    }
   }
 
   @Test
