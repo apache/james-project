@@ -87,6 +87,10 @@ False (default value) results in the usage of classic queues.
 | quorum.queues.replication.factor
 | Strictly positive integer. The replication factor to use when creating quorum queues.
 
+| quorum.queues.delivery.limit
+| Strictly positive integer. Value for x-delivery-limit queue parameter, default to none. Setting a delivery limit can
+prevent RabbitMQ outage if message processing fails. Read https://www.rabbitmq.com/docs/quorum-queues#poison-message-handling
+
 | hosts
 | Optional, default to the host specified as part of the URI.
 Allow creating cluster aware connections.

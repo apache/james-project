@@ -120,6 +120,10 @@
           <dt><strong>quorum.queues.replication.factor</strong></dt>
           <dd> Strictly positive integer. The replication factor to use when creating quorum queues.</dd>
 
+          <dt><strong>quorum.queues.delivery.limit</strong></dt>
+          <dd> Strictly positive integer. Value for x-delivery-limit queue parameter, default to none. Setting a delivery limit can
+          prevent RabbitMQ outage if message processing fails. Read https://www.rabbitmq.com/docs/quorum-queues#poison-message-handling</dd>
+
           <dt><strong>hosts</strong></dt>
           <dd>Optional, default to the host specified as part of the URI.
               Allow creating cluster aware connections.
