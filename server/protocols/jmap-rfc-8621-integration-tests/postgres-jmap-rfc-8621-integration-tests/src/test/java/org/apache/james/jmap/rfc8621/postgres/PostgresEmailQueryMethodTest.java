@@ -19,10 +19,65 @@
 
 package org.apache.james.jmap.rfc8621.postgres;
 
-import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
-import org.junit.jupiter.api.Disabled;
+import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
-@Disabled
-// TODO Need to fix
-public class PostgresEmailQueryMethodTest extends PostgresBase implements EmailQueryMethodContract {
+import org.apache.james.DockerOpenSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.PostgresJamesConfiguration;
+import org.apache.james.PostgresJamesServerMain;
+import org.apache.james.SearchConfiguration;
+import org.apache.james.backends.postgres.PostgresExtension;
+import org.apache.james.jmap.rfc8621.contract.EmailQueryMethodContract;
+import org.apache.james.jmap.rfc8621.contract.IdentityProbeModule;
+import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+public class PostgresEmailQueryMethodTest implements EmailQueryMethodContract {
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
+        PostgresJamesConfiguration.builder()
+            .workingDirectory(tmpDir)
+            .configurationFromClasspath()
+            .searchConfiguration(SearchConfiguration.openSearch())
+            .usersRepository(DEFAULT)
+            .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
+            .blobStore(BlobStoreConfiguration.builder()
+                .postgres()
+                .disableCache()
+                .deduplication()
+                .noCryptoConfig())
+            .build())
+        .extension(PostgresExtension.empty())
+        .extension(new RabbitMQExtension())
+        .extension(new DockerOpenSearchExtension())
+        .server(configuration -> PostgresJamesServerMain.createServer(configuration)
+            .overrideWith(new TestJMAPServerModule())
+            .overrideWith(new DelegationProbeModule())
+            .overrideWith(new IdentityProbeModule()))
+        .build();
+
+    @Override
+    @Test
+    @Disabled("Flaky test. TODO stabilize it.")
+    public void listMailsShouldBeSortedWhenUsingTo(GuiceJamesServer server) {
+    }
+
+    @Override
+    @Test
+    @Disabled("Flaky test. TODO stabilize it.")
+    public void listMailsShouldBeSortedWhenUsingFrom(GuiceJamesServer server) {
+    }
+
+    @Override
+    @Test
+    @Disabled("Flaky test. TODO stabilize it.")
+    public void inMailboxOtherThanShouldBeRejectedWhenInOperator(GuiceJamesServer server) {
+    }
 }
