@@ -40,6 +40,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @Disabled
+// Trigger build
 public class PostgresThreadGetTest extends PostgresBase implements ThreadGetContract {
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder<PostgresJamesConfiguration>(tmpDir ->
