@@ -47,12 +47,12 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
                 return reject(rcpt);
             }
             return HookResult.DECLINED;
-        } catch (IllegalAccessException e) {
-            LOGGER.warn("Encounter an error upon RCPT validation ({}), deny-soft", rcpt.asString());
+        } catch (IllegalArgumentException e) {
+            LOGGER.info("Encounter an error upon RCPT validation ({}), deny", rcpt.asString());
             return HookResult.builder()
                 .hookReturnCode(HookReturnCode.deny())
-                .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
-                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_SYNTAX) + " Unexpected error for " + rcpt.asString())
+                .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.asString())
                 .build();
         } catch (Exception e) {
             LOGGER.error("Encounter an error upon RCPT validation ({}), deny-soft", rcpt.asString(), e);
