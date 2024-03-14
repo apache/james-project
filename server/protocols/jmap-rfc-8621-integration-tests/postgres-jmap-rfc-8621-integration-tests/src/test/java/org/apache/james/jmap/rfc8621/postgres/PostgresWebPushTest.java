@@ -22,7 +22,6 @@ package org.apache.james.jmap.rfc8621.postgres;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.ClockExtension;
-import org.apache.james.DockerOpenSearchExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.PostgresJamesConfiguration;
@@ -44,7 +43,7 @@ public class PostgresWebPushTest implements WebPushContract {
         PostgresJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .searchConfiguration(SearchConfiguration.openSearch())
+            .searchConfiguration(SearchConfiguration.scanning())
             .usersRepository(DEFAULT)
             .eventBusImpl(PostgresJamesConfiguration.EventBusImpl.RABBITMQ)
             .blobStore(BlobStoreConfiguration.builder()
@@ -55,7 +54,6 @@ public class PostgresWebPushTest implements WebPushContract {
             .build())
         .extension(PostgresExtension.empty())
         .extension(new RabbitMQExtension())
-        .extension(new DockerOpenSearchExtension())
         .extension(new ClockExtension())
         .server(configuration -> PostgresJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
