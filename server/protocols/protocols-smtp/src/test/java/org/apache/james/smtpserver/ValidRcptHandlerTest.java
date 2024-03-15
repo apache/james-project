@@ -236,4 +236,12 @@ class ValidRcptHandlerTest {
         assertThat(rCode).isEqualTo(HookReturnCode.denySoft());
     }
 
+    @Test
+    void doRcptShouldReturnDeclineWhenInvalidUsername() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        HookReturnCode rCode = handler.doRcpt(session, MAYBE_SENDER, new MailAddress("\"abc@\"@localhost")).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
+    }
 }
