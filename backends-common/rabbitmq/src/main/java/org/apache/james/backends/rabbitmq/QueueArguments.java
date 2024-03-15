@@ -65,6 +65,11 @@ public class QueueArguments {
             return this;
         }
 
+        public Builder deliveryLimit(long deliveryLimit) {
+            arguments.put("x-delivery-limit", deliveryLimit);
+            return this;
+        }
+
         public ImmutableMap<String, Object> build() {
             return arguments.build();
         }

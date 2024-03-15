@@ -120,6 +120,10 @@
           <dt><strong>quorum.queues.replication.factor</strong></dt>
           <dd> Strictly positive integer. The replication factor to use when creating quorum queues.</dd>
 
+          <dt><strong>quorum.queues.delivery.limit</strong></dt>
+          <dd> Strictly positive integer. Value for x-delivery-limit queue parameter, default to none. Setting a delivery limit can
+          prevent RabbitMQ outage if message processing fails. Read https://www.rabbitmq.com/docs/quorum-queues#poison-message-handling</dd>
+
           <dt><strong>hosts</strong></dt>
           <dd>Optional, default to the host specified as part of the URI.
               Allow creating cluster aware connections.
@@ -146,7 +150,21 @@
           </dd>
       </dl>
   </section>
+  <section name="Tuning RabbitMQ for quorum queue use">
+      <p>While quorum queues are great at preserving your data and enabling High Availability, they demand more resources and
+          a greater care than regular RabbitMQ queues.</p>
 
+      <p>See <a href="https://www.rabbitmq.com/docs/quorum-queues#performance-tuning">
+          this section of RabbitMQ documentation regarding RabbitMQ quroum queue performance tunning</a>.</p>
+
+      <ul>
+          <li>Provide decent amount of RAM memory to RabbitMQ. 4GB is a good start.</li>
+          <li>Setting a delivery limit is advised as looping messages can cause extreme memory consumptions onto quorum queues.</li>
+          <li>Set up Raft for small messages:</li>
+      </ul>
+
+      <pre><code>raft.segment_max_entries = 32768</code></pre>
+  </section>
   <section name="RabbitMQ MailQueue Configuration">
       <p>
           RabbitMQ MailQueue Configuration
