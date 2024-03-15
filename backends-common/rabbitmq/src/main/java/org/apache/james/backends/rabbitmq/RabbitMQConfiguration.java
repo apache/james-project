@@ -865,6 +865,7 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.useSsl, that.useSsl)
                 && Objects.equals(this.useQuorumQueues, that.useQuorumQueues)
                 && Objects.equals(this.quorumQueueReplicationFactor, that.quorumQueueReplicationFactor)
+                && Objects.equals(this.quorumQueueDeliveryLimit, that.quorumQueueDeliveryLimit)
                 && Objects.equals(this.useSslManagement, that.useSslManagement)
                 && Objects.equals(this.sslConfiguration, that.sslConfiguration)
                 && Objects.equals(this.hosts, that.hosts)
@@ -879,7 +880,7 @@ public class RabbitMQConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, useQuorumQueues, hosts,
+        return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, quorumQueueDeliveryLimit, useQuorumQueues, hosts,
             channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement,
             sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, vhost, taskQueueConsumerTimeout);
     }
