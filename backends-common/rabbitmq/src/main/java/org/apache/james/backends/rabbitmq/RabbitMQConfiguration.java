@@ -307,6 +307,7 @@ public class RabbitMQConfiguration {
     private static final String SSL_KEY_STORE_PATH = "ssl.keystore";
     private static final String SSL_KEY_STORE_PASSWORD = "ssl.keystore.password";
     private static final String QUEUE_TTL = "notification.queue.ttl";
+    private static final String QUEUE_DELIVERY_LIMIT = "quorum.queues.delivery.limit";
     private static final String EVENT_BUS_NOTIFICATION_DURABILITY_ENABLED = "event.bus.notification.durability.enabled";
     private static final String EVENT_BUS_PUBLISH_CONFIRM_ENABLED = "event.bus.publish.confirm.enabled";
     private static final String TASK_QUEUE_CONSUMER_TIMEOUT = "task.queue.consumer.timeout";
@@ -403,6 +404,7 @@ public class RabbitMQConfiguration {
         private Optional<Boolean> useSsl;
         private Optional<Boolean> useSslManagement;
         private Optional<Boolean> useQuorumQueues;
+        private Optional<Integer> quorumQueueDeliveryLimit;
         private Optional<Integer> quorumQueueReplicationFactor;
         private Optional<SSLConfiguration> sslConfiguration;
         private Optional<Long> queueTTL;
@@ -426,6 +428,7 @@ public class RabbitMQConfiguration {
             this.useSslManagement = Optional.empty();
             this.sslConfiguration = Optional.empty();
             this.useQuorumQueues = Optional.empty();
+            this.quorumQueueDeliveryLimit = Optional.empty();
             this.quorumQueueReplicationFactor = Optional.empty();
             this.hosts = ImmutableList.builder();
             this.queueTTL = Optional.empty();
@@ -442,6 +445,17 @@ public class RabbitMQConfiguration {
 
         public Builder minDelayInMs(int minDelay) {
             this.minDelayInMs = Optional.of(minDelay);
+            return this;
+        }
+
+        public Builder quorumQueueDeliveryLimit(int limit) {
+            Preconditions.checkArgument(limit > 0, "'quorumQueueDeliveryLimit' should be strictly positive");
+            this.quorumQueueDeliveryLimit = Optional.of(limit);
+            return this;
+        }
+
+        public Builder quorumQueueDeliveryLimit(Optional<Integer> limit) {
+            limit.ifPresent(this::quorumQueueDeliveryLimit);
             return this;
         }
 
@@ -551,6 +565,7 @@ public class RabbitMQConfiguration {
                     useSslManagement.orElse(false),
                     sslConfiguration.orElse(defaultBehavior()),
                     useQuorumQueues.orElse(false),
+                    quorumQueueDeliveryLimit,
                     quorumQueueReplicationFactor.orElse(DEFAULT_QUORUM_QUEUE_REPLICATION_FACTOR),
                     hostsDefaultingToUri(),
                     queueTTL,
@@ -605,6 +620,7 @@ public class RabbitMQConfiguration {
             .orElse(ImmutableList.of());
 
         Optional<Long> queueTTL = Optional.ofNullable(configuration.getLong(QUEUE_TTL, null));
+        Optional<Integer> quorumQueueDeliveryLimit = Optional.ofNullable(configuration.getInteger(QUEUE_DELIVERY_LIMIT, null));
 
         Optional<String> vhost = Optional.ofNullable(configuration.getString(VHOST, null));
 
@@ -622,6 +638,7 @@ public class RabbitMQConfiguration {
             .sslConfiguration(sslConfiguration(configuration))
             .useQuorumQueues(useQuorumQueues)
             .quorumQueueReplicationFactor(quorumQueueReplicationFactor)
+            .quorumQueueDeliveryLimit(quorumQueueDeliveryLimit)
             .hosts(hosts)
             .queueTTL(queueTTL)
             .eventBusNotificationDurabilityEnabled(configuration.getBoolean(EVENT_BUS_NOTIFICATION_DURABILITY_ENABLED, null))
@@ -692,6 +709,7 @@ public class RabbitMQConfiguration {
     private final Boolean useSslManagement;
     private final SSLConfiguration sslConfiguration;
     private final boolean useQuorumQueues;
+    private final Optional<Integer> quorumQueueDeliveryLimit;
     private final int quorumQueueReplicationFactor;
     private final List<Host> hosts;
     private final ManagementCredentials managementCredentials;
@@ -704,7 +722,7 @@ public class RabbitMQConfiguration {
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
                                   int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs,
                                   int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration,
-                                  boolean useQuorumQueues, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL,
+                                  boolean useQuorumQueues, Optional<Integer> quorumQueueDeliveryLimit, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL,
                                   boolean eventBusPublishConfirmEnabled, boolean eventBusNotificationDurabilityEnabled,
                                   Optional<String> vhost, Duration taskQueueConsumerTimeout) {
         this.uri = uri;
@@ -721,6 +739,7 @@ public class RabbitMQConfiguration {
         this.useSslManagement = useSslManagement;
         this.sslConfiguration = sslConfiguration;
         this.useQuorumQueues = useQuorumQueues;
+        this.quorumQueueDeliveryLimit = quorumQueueDeliveryLimit;
         this.quorumQueueReplicationFactor = quorumQueueReplicationFactor;
         this.hosts = hosts;
         this.queueTTL = queueTTL;
@@ -786,6 +805,7 @@ public class RabbitMQConfiguration {
         QueueArguments.Builder builder = QueueArguments.builder();
         if (allowQuorum && useQuorumQueues) {
             builder.quorumQueue().replicationFactor(quorumQueueReplicationFactor);
+            quorumQueueDeliveryLimit.ifPresent(builder::deliveryLimit);
         }
         return builder;
     }
@@ -823,6 +843,10 @@ public class RabbitMQConfiguration {
         return taskQueueConsumerTimeout;
     }
 
+    public Optional<Integer> getQuorumQueueDeliveryLimit() {
+        return quorumQueueDeliveryLimit;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof RabbitMQConfiguration) {
@@ -841,6 +865,7 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.useSsl, that.useSsl)
                 && Objects.equals(this.useQuorumQueues, that.useQuorumQueues)
                 && Objects.equals(this.quorumQueueReplicationFactor, that.quorumQueueReplicationFactor)
+                && Objects.equals(this.quorumQueueDeliveryLimit, that.quorumQueueDeliveryLimit)
                 && Objects.equals(this.useSslManagement, that.useSslManagement)
                 && Objects.equals(this.sslConfiguration, that.sslConfiguration)
                 && Objects.equals(this.hosts, that.hosts)
@@ -855,7 +880,7 @@ public class RabbitMQConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, useQuorumQueues, hosts,
+        return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, quorumQueueDeliveryLimit, useQuorumQueues, hosts,
             channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement,
             sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, vhost, taskQueueConsumerTimeout);
     }
