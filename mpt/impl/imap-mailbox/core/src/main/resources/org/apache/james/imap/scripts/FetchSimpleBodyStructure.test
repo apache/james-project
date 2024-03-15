@@ -205,7 +205,7 @@ S: \* 1 FETCH \(BODY\[4\.2\.2\.2\] \{0\}
 S: \)
 S: A27 OK FETCH completed\.
 C: A28 FETCH 1:* (BODY BODYSTRUCTURE)
-S: \* 1 FETCH \(BODY \("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 8 0\) BODYSTRUCTURE \("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 8 0 NIL NIL NIL NIL\)\)
+S: \* 1 FETCH \(BODY \("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 8 0\) BODYSTRUCTURE \("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 8 0 NIL NIL NIL NIL\)\)
 S: \* 2 FETCH \(BODY \("TEXT" "PLAIN" \("charset" "ISO-8859-1"\) NIL NIL "7BIT" 192 6\) BODYSTRUCTURE \("TEXT" "PLAIN" \("charset" "ISO-8859-1"\) NIL NIL "7BIT" 192 6 NIL \("inline" NIL\) NIL NIL\)\)
 S: \* 3 FETCH \(BODY \("APPLICATION" "XHTML\+XML" \("e" "mc\*mc"\) "<477345345@example\.org>" "Homage to 70's TV" "7BIT" 183\) BODYSTRUCTURE \("APPLICATION" "XHTML\+XML" \("e" "mc\*mc"\) "<477345345@example\.org>" "Homage to 70's TV" "7BIT" 183 "Q2hlY2sgSW50ZWdyaXR5IQ==" \("inline" \("foo" "bar" "one" "1" "param" "value"\)\) \("en" "en-US" "en-CA"\) "http://www.example.org/rhubard.html"\)\)
 S: A28 OK FETCH completed\.
