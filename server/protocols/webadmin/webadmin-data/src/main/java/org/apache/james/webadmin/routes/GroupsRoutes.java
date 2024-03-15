@@ -78,7 +78,7 @@ public class GroupsRoutes implements Routes {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final MailAddress dummyUser = new MailAddress("fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997","fc8f9dc08044a0c0a8c23c68bd4623307353fda8169d912b89e3bff9528fe997");
+    private final MailAddress dummyUser = new MailAddress("fc8f9dc08044a0c0ff9528fe997","fc8f9dc08044a0c0a8c23c68");
 
     @Inject
     @VisibleForTesting

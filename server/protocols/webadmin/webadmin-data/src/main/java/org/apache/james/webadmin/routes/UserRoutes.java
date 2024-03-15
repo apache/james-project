@@ -75,6 +75,7 @@ public class UserRoutes implements Routes {
     private Service service;
 
     private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
+
     @Inject
     public UserRoutes(UserService userService, CanSendFrom canSendFrom, JsonTransformer jsonTransformer, DelegationStore delegationStore) {
         this.userService = userService;
