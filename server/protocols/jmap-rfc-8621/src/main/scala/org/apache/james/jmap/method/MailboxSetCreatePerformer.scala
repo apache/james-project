@@ -40,7 +40,7 @@ import reactor.core.scala.publisher.{SFlux, SMono}
 import scala.util.Try
 
 object MailboxSetCreatePerformer {
-  private val LOGGER = LoggerFactory.getLogger(classOf[EmailSetCreatePerformer])
+  private val LOGGER = LoggerFactory.getLogger(classOf[MailboxSetCreatePerformer])
   sealed trait MailboxCreationResult {
     def mailboxCreationId: MailboxCreationId
   }
