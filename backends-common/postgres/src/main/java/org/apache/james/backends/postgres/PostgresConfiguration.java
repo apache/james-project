@@ -26,6 +26,8 @@ import org.apache.commons.configuration2.Configuration;
 
 import com.google.common.base.Preconditions;
 
+import io.r2dbc.postgresql.client.SSLMode;
+
 public class PostgresConfiguration {
     public static final String DATABASE_NAME = "database.name";
     public static final String DATABASE_NAME_DEFAULT_VALUE = "postgres";
@@ -40,6 +42,8 @@ public class PostgresConfiguration {
     public static final String NON_RLS_USERNAME = "database.non-rls.username";
     public static final String NON_RLS_PASSWORD = "database.non-rls.password";
     public static final String RLS_ENABLED = "row.level.security.enabled";
+    public static final String SSL_MODE = "ssl.mode";
+    public static final String SSL_MODE_DEFAULT_VALUE = "allow";
 
     public static class Credential {
         private final String username;
@@ -70,6 +74,7 @@ public class PostgresConfiguration {
         private Optional<String> nonRLSUser = Optional.empty();
         private Optional<String> nonRLSPassword = Optional.empty();
         private Optional<Boolean> rowLevelSecurityEnabled = Optional.empty();
+        private Optional<String> sslMode = Optional.empty();
 
         public Builder databaseName(String databaseName) {
             this.databaseName = Optional.of(databaseName);
@@ -161,6 +166,16 @@ public class PostgresConfiguration {
             return this;
         }
 
+        public Builder sslMode(Optional<String> sslMode) {
+            this.sslMode = sslMode;
+            return this;
+        }
+
+        public Builder sslMode(String sslMode) {
+            this.sslMode = Optional.of(sslMode);
+            return this;
+        }
+
         public PostgresConfiguration build() {
             Preconditions.checkArgument(username.isPresent() && !username.get().isBlank(), "You need to specify username");
             Preconditions.checkArgument(password.isPresent() && !password.get().isBlank(), "You need to specify password");
@@ -176,7 +191,8 @@ public class PostgresConfiguration {
                 databaseSchema.orElse(DATABASE_SCHEMA_DEFAULT_VALUE),
                 new Credential(username.get(), password.get()),
                 new Credential(nonRLSUser.orElse(username.get()), nonRLSPassword.orElse(password.get())),
-                rowLevelSecurityEnabled.orElse(false));
+                rowLevelSecurityEnabled.orElse(false),
+                SSLMode.fromValue(sslMode.orElse(SSL_MODE_DEFAULT_VALUE)));
         }
     }
 
@@ -195,6 +211,7 @@ public class PostgresConfiguration {
             .nonRLSUser(Optional.ofNullable(propertiesConfiguration.getString(NON_RLS_USERNAME)))
             .nonRLSPassword(Optional.ofNullable(propertiesConfiguration.getString(NON_RLS_PASSWORD)))
             .rowLevelSecurityEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
+            .sslMode(Optional.ofNullable(propertiesConfiguration.getString(SSL_MODE)))
             .build();
     }
 
@@ -205,9 +222,11 @@ public class PostgresConfiguration {
     private final Credential credential;
     private final Credential nonRLSCredential;
     private final boolean rowLevelSecurityEnabled;
+    private final SSLMode sslMode;
 
     private PostgresConfiguration(String host, int port, String databaseName, String databaseSchema,
-                                  Credential credential, Credential nonRLSCredential, boolean rowLevelSecurityEnabled) {
+                                  Credential credential, Credential nonRLSCredential, boolean rowLevelSecurityEnabled,
+                                  SSLMode sslMode) {
         this.host = host;
         this.port = port;
         this.databaseName = databaseName;
@@ -215,6 +234,7 @@ public class PostgresConfiguration {
         this.credential = credential;
         this.nonRLSCredential = nonRLSCredential;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
+        this.sslMode = sslMode;
     }
 
     public String getHost() {
@@ -245,9 +265,13 @@ public class PostgresConfiguration {
         return rowLevelSecurityEnabled;
     }
 
+    public SSLMode getSslMode() {
+        return sslMode;
+    }
+
     @Override
     public final int hashCode() {
-        return Objects.hash(host, port, databaseName, databaseSchema, credential, nonRLSCredential, rowLevelSecurityEnabled);
+        return Objects.hash(host, port, databaseName, databaseSchema, credential, nonRLSCredential, rowLevelSecurityEnabled, sslMode);
     }
 
     @Override
@@ -261,7 +285,8 @@ public class PostgresConfiguration {
                 && Objects.equals(this.credential, that.credential)
                 && Objects.equals(this.nonRLSCredential, that.nonRLSCredential)
                 && Objects.equals(this.databaseName, that.databaseName)
-                && Objects.equals(this.databaseSchema, that.databaseSchema);
+                && Objects.equals(this.databaseSchema, that.databaseSchema)
+                && Objects.equals(this.sslMode, that.sslMode);
         }
         return false;
     }
