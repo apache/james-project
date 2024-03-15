@@ -109,7 +109,18 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public Mappings getResolvedMappings(String user, Domain domain, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
         Preconditions.checkState(this.configuration != null, "RecipientRewriteTable is not configured");
-        return getMappings(Username.fromLocalPartWithDomain(user, domain), configuration.getMappingLimit(), mappingTypes);
+        return asUsername(user, domain)
+            .map(Throwing.<Username, Mappings>function(username -> getMappings(username, configuration.getMappingLimit(), mappingTypes)).sneakyThrow())
+            .orElse(MappingsImpl.empty());
+    }
+
+    private static Optional<Username> asUsername(String user, Domain domain) {
+        try {
+            return Optional.of(Username.fromLocalPartWithDomain(user, domain));
+        } catch (IllegalArgumentException e) {
+            LOGGER.info("Valid mail address {}@{} could not be converted into a username. Assuming empty mappigns.", user, domain.asString(), e);
+            return Optional.empty();
+        }
     }
 
     private Mappings getMappings(Username username, int mappingLimit, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
