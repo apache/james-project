@@ -343,10 +343,21 @@ public class RecipientRewriteTableProcessor {
     }
 
     private ImmutableSet<Mapping> getForwards(MailAddress recipient) throws RecipientRewriteTableException {
-        return virtualTableStore.getStoredMappings(MappingSource.fromMailAddress(recipient))
-            .select(Mapping.Type.Forward)
-            .asStream()
-            .collect(ImmutableSet.toImmutableSet());
+        return getSource(recipient)
+            .map(Throwing.<MappingSource, ImmutableSet<Mapping>>function(source -> virtualTableStore.getStoredMappings(source)
+                .select(Mapping.Type.Forward)
+                .asStream()
+                .collect(ImmutableSet.toImmutableSet())).sneakyThrow())
+            .orElse(ImmutableSet.of());
+    }
+
+    private static Optional<MappingSource> getSource(MailAddress recipient) {
+        try {
+            return Optional.of(MappingSource.fromMailAddress(recipient));
+        } catch (IllegalArgumentException e) {
+            LOGGER.info("Valid mail address {} could not be converted into a username. Assuming empty mappigns.", recipient.asString(), e);
+            return Optional.empty();
+        }
     }
 
     private void applyDecisionOnDSNParameters(Mail mail, List<Decision> decisions) {
