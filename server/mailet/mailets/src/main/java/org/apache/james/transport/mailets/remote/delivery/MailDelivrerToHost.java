@@ -184,7 +184,7 @@ public class MailDelivrerToHost {
                 mail.dsnParameters()
                     .flatMap(Throwing.<DsnParameters, Optional<DsnParameters.RecipientDsnParameters>>function(
                         dsn -> Optional.ofNullable(dsn.getRcptParameters().get(new MailAddress(address.toString()))))
-                        .sneakyThrow())
+                        .orReturn(Optional.empty()))
                     .flatMap(DsnParameters.RecipientDsnParameters::getNotifyParameter)
                     .map(this::toJavaxNotify),
                 address))

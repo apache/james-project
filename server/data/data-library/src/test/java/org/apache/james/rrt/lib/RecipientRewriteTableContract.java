@@ -105,6 +105,11 @@ public interface RecipientRewriteTableContract {
     }
 
     @Test
+    default void testQuotedLocalPart() {
+        assertThatCode(() -> virtualUserTable().getResolvedMappings("\"a@b\"", Domain.of("test"))).doesNotThrowAnyException();
+    }
+
+    @Test
     default void notConfiguredResolutionShouldThrow() throws Exception {
         setNotConfiguredRecipientRewriteTable();
         assertThatCode(() -> virtualUserTable().getResolvedMappings(USER, Domain.LOCALHOST))
