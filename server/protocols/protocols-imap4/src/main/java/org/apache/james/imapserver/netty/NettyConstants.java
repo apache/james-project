@@ -41,8 +41,8 @@ public interface NettyConstants {
     String HEARTBEAT_HANDLER = "heartbeatHandler";
 
     AttributeKey<ImapSession> IMAP_SESSION_ATTRIBUTE_KEY = AttributeKey.valueOf("ImapSession");
-    AttributeKey<Linearalizer> LINEARALIZER_ATTRIBUTE_KEY = AttributeKey.valueOf("Linearalizer");
     AttributeKey<Disposable> REQUEST_IN_FLIGHT_ATTRIBUTE_KEY = AttributeKey.valueOf("requestInFlight");
+    AttributeKey<ImapChannelUpstreamHandler.ImapLinerarizer> LINEARIZER_ATTRIBUTE_KEY = AttributeKey.valueOf("linearizer");
     AttributeKey<Runnable> BACKPRESSURE_CALLBACK = AttributeKey.valueOf("BACKPRESSURE_CALLBACK");
     AttributeKey<Map<String, Object>> FRAME_DECODE_ATTACHMENT_ATTRIBUTE_KEY  = AttributeKey.valueOf("FrameDecoderMap");
 

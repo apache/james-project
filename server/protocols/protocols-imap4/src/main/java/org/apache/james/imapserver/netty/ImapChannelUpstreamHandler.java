@@ -29,6 +29,8 @@ import java.time.Duration;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.net.ssl.SSLHandshakeException;
 
@@ -156,6 +158,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
     }
 
+    static class ImapLinerarizer {
+        private final AtomicBoolean isExecutingRequest = new AtomicBoolean(false);
+        private final ConcurrentLinkedQueue<Object> throttled = new ConcurrentLinkedQueue<>();
+    }
+
     public static ImapChannelUpstreamHandlerBuilder builder() {
         return new ImapChannelUpstreamHandlerBuilder();
     }
@@ -200,7 +207,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             authenticationConfiguration.isPlainAuthEnabled(), sessionId,
             authenticationConfiguration.getOidcSASLConfiguration());
         ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).set(imapsession);
-        ctx.channel().attr(LINEARALIZER_ATTRIBUTE_KEY).set(new Linearalizer());
+        ctx.channel().attr(LINEARIZER_ATTRIBUTE_KEY).set(new ImapLinerarizer());
         MDCBuilder boundMDC = IMAPMDCContext.boundMDC(ctx)
             .addToContext(MDCBuilder.SESSION_ID, sessionId.asString());
         imapsession.setAttribute(MDC_KEY, boundMDC);
@@ -375,8 +382,17 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         imapCommandsMetric.increment();
         ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
-        Linearalizer linearalizer = ctx.channel().attr(LINEARALIZER_ATTRIBUTE_KEY).get();
         Attribute<Disposable> disposableAttribute = ctx.channel().attr(REQUEST_IN_FLIGHT_ATTRIBUTE_KEY);
+
+        ImapLinerarizer linearalizer = ctx.channel().attr(LINEARIZER_ATTRIBUTE_KEY).get();
+        synchronized (linearalizer) {
+            if (linearalizer.isExecutingRequest.get()) {
+                linearalizer.throttled.add(msg);
+                return;
+            }
+            linearalizer.isExecutingRequest.set(true);
+        }
+
         ChannelImapResponseWriter writer = new ChannelImapResponseWriter(ctx.channel());
         ImapResponseComposerImpl response = new ImapResponseComposerImpl(writer);
         writer.setFlushCallback(response::flush);
@@ -384,8 +400,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
 
         beforeIDLEUponProcessing(ctx);
         ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
-        Disposable disposable = reactiveThrottler.throttle(
-            linearalizer.execute(processor.processReactive(message, responseEncoder, session))
+        Disposable disposable = reactiveThrottler.throttle(processor.processReactive(message, responseEncoder, session)
                 .doOnEach(Throwing.consumer(signal -> {
                     if (session.getState() == ImapSessionState.LOGOUT) {
                         // Make sure we close the channel after all the buffers were flushed out
@@ -407,6 +422,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                             ctx.fireExceptionCaught(failure);
                         }
                     }
+                    Object waitingMessage;
+                    synchronized (linearalizer) {
+                        linearalizer.isExecutingRequest.set(false);
+                        waitingMessage = linearalizer.throttled.poll();
+                    }
                     if (signal.isOnComplete() || signal.isOnError()) {
                         afterIDLEUponProcessing(ctx);
                     }
@@ -416,6 +436,11 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
                     disposableAttribute.set(null);
                     response.flush();
                     ctx.fireChannelReadComplete();
+                    if (signal.isOnComplete() || signal.isOnError()) {
+                        if (waitingMessage != null && signal.isOnComplete()) {
+                            channelRead(ctx, waitingMessage);
+                        }
+                    }
                 }))
                 .contextWrite(ReactorUtils.context("imap", mdc(session))), message)
             // Manage throttling errors
