@@ -239,13 +239,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         } else {
             FetchSubscriber fetchSubscriber = new FetchSubscriber(imapSession, responder);
             Flux.fromIterable(consolidate(selected, ranges, fetch))
-                .concatMap(range -> {
-                    auditTrail(mailbox, mailboxSession, resultToFetch, range);
-
-                    return Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession))
-                        .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
-                        .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, selected, result));
-                })
+                .doOnNext(range -> auditTrail(mailbox, mailboxSession, resultToFetch, range))
+                .concatMap(range -> Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession)))
+                .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+                .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, selected, result))
                 .subscribe(fetchSubscriber);
 
             return fetchSubscriber.completionMono();
