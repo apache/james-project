@@ -121,7 +121,11 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         }
 
         public Mono<Void> completionMono() {
-            return sink.asMono();
+            return sink.asMono()
+                .doOnCancel(() -> {
+                    Optional.ofNullable(subscription.get()).ifPresent(Subscription::cancel);
+                    subscription.set(null);
+                });
         }
     }
 
@@ -234,19 +238,18 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 .doOnNext(responder::respond)
                 .then();
         } else {
-            return Flux.fromIterable(consolidate(selected, ranges, fetch))
+            FetchSubscriber fetchSubscriber = new FetchSubscriber(imapSession, responder);
+            Flux.fromIterable(consolidate(selected, ranges, fetch))
                 .concatMap(range -> {
-                    FetchSubscriber fetchSubscriber = new FetchSubscriber(imapSession, responder);
                     auditTrail(mailbox, mailboxSession, resultToFetch, range);
 
-                    Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession))
+                    return Flux.from(mailbox.getMessagesReactive(range, resultToFetch, mailboxSession))
                         .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
-                        .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result))
-                        .subscribe(fetchSubscriber);
-
-                    return fetchSubscriber.completionMono();
+                        .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, builder, selected, result));
                 })
-                .then();
+                .subscribe(fetchSubscriber);
+
+            return fetchSubscriber.completionMono();
         }
     }
 
