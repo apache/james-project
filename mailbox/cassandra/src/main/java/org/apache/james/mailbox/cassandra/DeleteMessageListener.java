@@ -23,6 +23,7 @@ import static org.apache.james.backends.cassandra.init.configuration.JamesExecut
 import static org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles.ConsistencyChoice.WEAK;
 import static org.apache.james.util.FunctionalUtils.negate;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 
@@ -30,6 +31,7 @@ import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.core.Username;
 import org.apache.james.events.Event;
@@ -59,6 +61,7 @@ import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -86,9 +89,72 @@ public class DeleteMessageListener implements EventListener.ReactiveGroupEventLi
 
     }
 
+    public static class DeletedMessageCopyCommand {
+        public static DeletedMessageCopyCommand of(MessageRepresentation message, MailboxId mailboxId, Username owner) {
+            return new DeletedMessageCopyCommand(message.getMessageId(), mailboxId, owner, message.getInternalDate(),
+                message.getSize(), !message.getAttachments().isEmpty(), message.getHeaderId(), message.getBodyId());
+        }
+
+        private final MessageId messageId;
+        private final MailboxId mailboxId;
+        private final Username owner;
+        private final Date internalDate;
+        private final long size;
+        private final boolean hasAttachments;
+        private final BlobId headerId;
+        private final BlobId bodyId;
+
+        public DeletedMessageCopyCommand(MessageId messageId, MailboxId mailboxId, Username owner, Date internalDate, long size, boolean hasAttachments, BlobId headerId, BlobId bodyId) {
+            this.messageId = messageId;
+            this.mailboxId = mailboxId;
+            this.owner = owner;
+            this.internalDate = internalDate;
+            this.size = size;
+            this.hasAttachments = hasAttachments;
+            this.headerId = headerId;
+            this.bodyId = bodyId;
+        }
+
+        public Username getOwner() {
+            return owner;
+        }
+
+        public MessageId getMessageId() {
+            return messageId;
+        }
+
+        public MailboxId getMailboxId() {
+            return mailboxId;
+        }
+
+        public Date getInternalDate() {
+            return internalDate;
+        }
+
+        public long getSize() {
+            return size;
+        }
+
+        public boolean hasAttachments() {
+            return hasAttachments;
+        }
+
+        public BlobId getHeaderId() {
+            return headerId;
+        }
+
+        public BlobId getBodyId() {
+            return bodyId;
+        }
+    }
+
     @FunctionalInterface
     public interface DeletionCallback {
-        Mono<Void> forMessage(MessageRepresentation message, MailboxId mailboxId, Username owner);
+        default Mono<Void> forMessage(MessageRepresentation message, MailboxId mailboxId, Username owner) {
+            return forMessage(DeletedMessageCopyCommand.of(message, mailboxId, owner));
+        }
+        
+        Mono<Void> forMessage(DeletedMessageCopyCommand copyCommand);
     }
 
     private final CassandraThreadDAO threadDAO;
