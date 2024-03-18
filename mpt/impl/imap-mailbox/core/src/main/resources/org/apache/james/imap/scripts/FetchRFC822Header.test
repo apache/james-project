@@ -30,3 +30,55 @@ S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
 S:
 S: \)
 S: f1 OK FETCH completed.
+
+
+C: f1 FETCH 1 (BODY[HEADER])
+S: \* 1 FETCH \(FLAGS \(\\Recent \\Seen\) BODY\[HEADER\] \{245\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 01
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f1 OK FETCH completed.
+
+C: f1 FETCH 1 (BODY[1])
+S: \* 1 FETCH \(BODY\[1\] \{9\}
+S: Test 01
+S: \)
+S: f1 OK FETCH completed.
+
+C: f1 FETCH 1 (BODY[1.TEXT])
+S: \* 1 FETCH \(BODY\[1.TEXT\] \{0\}
+S: \)
+S: f1 OK FETCH completed.
+
+C: f1 FETCH 1 (BODY[1.MIME])
+S: \* 1 FETCH \(BODY\[1.MIME\] \{245\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 01
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f1 OK FETCH completed.
+
+
+C: f1 FETCH 1 (BODY[1.MIME])
+S: \* 1 FETCH \(BODY\[1.MIME\] \{245\}
+S: Date: Mon, 7 Feb 1994 21:52:25 -0800 \(PST\)
+S: From: Fred Foobar <foobar@Blurdybloop\.COM>
+S: Subject: Test 01
+S: To: mooch@owatagu\.siam\.edu
+S: Message-Id: <B27397-0100000@Blurdybloop\.COM>
+S: MIME-Version: 1\.0
+S: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+S:
+S: \)
+S: f1 OK FETCH completed.
