@@ -705,10 +705,12 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
       case _ => None
     }
 
+    val lowConcurrency = 2
     SFlux.merge(Seq(
       toFastViews(availables, request, mailboxSession),
-      fullReader.read(unavailables.map(_.id), request, mailboxSession)
-        .doOnNext(storeOnCacheMisses)))
+      SFlux.fromIterable(unavailables.map(_.id))
+        .flatMap(id => fullReader.read(Seq(id), request, mailboxSession)
+          .doOnNext(storeOnCacheMisses), lowConcurrency, lowConcurrency)))
   }
 
   private def storeOnCacheMisses(fullView: EmailFullView) = {
