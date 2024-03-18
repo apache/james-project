@@ -27,7 +27,6 @@ import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.Messa
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -136,17 +135,16 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContentPublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt);
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = attachmentLoader.addAttachmentToMessage(fetchMessageWithoutFullContentPublisher, fetchType);
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt)
+            .transform(pairFlux -> attachmentLoader.addAttachmentToMessage(pairFlux, fetchType));
 
         if (fetchType == FetchType.FULL) {
             return fetchMessagePublisher
-                .flatMap(messageBuilderAndRecord -> {
+                .flatMapSequential(messageBuilderAndRecord -> {
                     SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
                     return retrieveFullContent(messageBuilderAndRecord.getRight())
                         .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
                 }, ReactorUtils.DEFAULT_CONCURRENCY)
-                .sort(Comparator.comparing(MailboxMessage::getUid))
                 .map(message -> message);
         } else {
             return fetchMessagePublisher
