@@ -20,9 +20,6 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
-import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,8 +41,6 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.Content;
-import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -100,9 +95,8 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
     private final PostgresMailboxMessageDAO mailboxMessageDAO;
     private final PostgresModSeqProvider modSeqProvider;
     private final BlobStore blobStore;
-    private final BlobId.Factory blobIdFactory;
     private final Clock clock;
-    private final AttachmentLoader attachmentLoader;
+    private final PostgresMessageRetriever messageRetriever;
 
     public PostgresMessageIdMapper(PostgresMailboxDAO mailboxDAO,
                                    PostgresMessageDAO messageDAO,
@@ -117,9 +111,8 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
         this.mailboxMessageDAO = mailboxMessageDAO;
         this.modSeqProvider = modSeqProvider;
         this.blobStore = blobStore;
-        this.blobIdFactory = blobIdFactory;
         this.clock = clock;
-        this.attachmentLoader = new AttachmentLoader(attachmentMapper);;
+        this.messageRetriever = new PostgresMessageRetriever(blobStore, blobIdFactory, attachmentMapper);
     }
 
     @Override
@@ -136,23 +129,8 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
 
     @Override
     public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher =
-            mailboxMessageDAO.findMessagesByMessageIds(messageIds.stream().map(PostgresMessageId.class::cast).collect(ImmutableList.toImmutableList()), fetchType)
-                .transform(pairFlux -> attachmentLoader.addAttachmentToMessage(pairFlux, fetchType));
-
-        if (fetchType == MessageMapper.FetchType.FULL) {
-            return fetchMessagePublisher
-                .flatMapSequential(messageBuilderAndRecord -> {
-                    SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
-                    return retrieveFullContent(messageBuilderAndRecord.getRight())
-                        .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
-                }, ReactorUtils.DEFAULT_CONCURRENCY)
-                .map(message -> message);
-        } else {
-            return fetchMessagePublisher
-                .map(messageBuilderAndBlobId -> messageBuilderAndBlobId.getLeft()
-                    .build());
-        }
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = mailboxMessageDAO.findMessagesByMessageIds(messageIds.stream().map(PostgresMessageId.class::cast).collect(ImmutableList.toImmutableList()), fetchType);
+        return messageRetriever.get(fetchType, fetchMessagePublisher);
     }
 
     @Override
@@ -270,14 +248,6 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
 
     private boolean identicalFlags(ComposedMessageIdWithMetaData oldComposedId, Flags newFlags) {
         return oldComposedId.getFlags().equals(newFlags);
-    }
-
-    private Mono<Content> retrieveFullContent(Record messageRecord) {
-        byte[] headerBytes = messageRecord.get(HEADER_CONTENT);
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(),
-                blobIdFactory.from(messageRecord.get(BODY_BLOB_ID)),
-                SIZE_BASED))
-            .map(bodyBytes -> new HeaderAndBodyByteContent(headerBytes, bodyBytes));
     }
 
     private Mono<BlobId> saveBodyContent(MailboxMessage message) {
