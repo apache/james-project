@@ -31,7 +31,6 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.postgres.mail.dto.AttachmentsDTO;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.ReactorUtils;
 import org.jooq.Record;
 
 import com.google.common.collect.ImmutableMap;
@@ -49,19 +48,18 @@ public class AttachmentLoader {
 
 
     public Flux<Pair<SimpleMailboxMessage.Builder, Record>> addAttachmentToMessage(Flux<Pair<SimpleMailboxMessage.Builder, Record>> findMessagePublisher, MessageMapper.FetchType fetchType) {
-        return findMessagePublisher.flatMap(pair -> {
-            if (fetchType == MessageMapper.FetchType.FULL || fetchType == MessageMapper.FetchType.ATTACHMENTS_METADATA) {
-                return Mono.fromCallable(() -> pair.getRight().get(ATTACHMENT_METADATA))
-                    .map(e -> toMap((AttachmentsDTO) e))
+        if (fetchType != MessageMapper.FetchType.FULL && fetchType != MessageMapper.FetchType.ATTACHMENTS_METADATA) {
+            return findMessagePublisher;
+        }
+
+        return findMessagePublisher.collectList()  // convert to list to avoid hanging the database connection with Jooq
+            .flatMapMany(list -> Flux.fromIterable(list)
+                .flatMapSequential(pair -> Mono.fromCallable(() -> toMap(pair.getRight().get(ATTACHMENT_METADATA)))
                     .flatMap(this::getAttachments)
                     .map(messageAttachmentMetadata -> {
                         pair.getLeft().addAttachments(messageAttachmentMetadata);
                         return pair;
-                    }).switchIfEmpty(Mono.just(pair));
-            } else {
-                return Mono.just(pair);
-            }
-        }, ReactorUtils.DEFAULT_CONCURRENCY);
+                    }).switchIfEmpty(Mono.just(pair))));
     }
 
     private Map<AttachmentId, MessageRepresentation.AttachmentRepresentation> toMap(AttachmentsDTO attachmentRepresentations) {
