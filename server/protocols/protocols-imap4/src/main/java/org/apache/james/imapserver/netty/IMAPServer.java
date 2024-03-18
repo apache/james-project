@@ -243,6 +243,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             @Override
             public void initChannel(Channel channel) {
                 ChannelPipeline pipeline = channel.pipeline();
+                channel.config().setWriteBufferWaterMark(writeBufferWaterMark);
                 pipeline.addLast(TIMEOUT_HANDLER, new ImapIdleStateHandler(timeout));
 
                 connectionLimitUpstreamHandler.ifPresent(handler -> pipeline.addLast(HandlerConstants.CONNECTION_LIMIT_HANDLER, handler));
