@@ -34,6 +34,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.group.ChannelGroup;
@@ -73,6 +74,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
     private boolean gracefulShutdown = true;
     private boolean useEpoll = false;
+    protected WriteBufferWaterMark writeBufferWaterMark = WriteBufferWaterMark.DEFAULT;
 
     public synchronized void setListenAddresses(InetSocketAddress... addresses) {
         if (started) {
@@ -87,6 +89,10 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
     public void setUseEpoll(boolean useEpoll) {
         this.useEpoll = useEpoll;
+    }
+
+    public void setWriteBufferWaterMark(WriteBufferWaterMark writeBufferWaterMark) {
+        this.writeBufferWaterMark = writeBufferWaterMark;
     }
 
     /**
