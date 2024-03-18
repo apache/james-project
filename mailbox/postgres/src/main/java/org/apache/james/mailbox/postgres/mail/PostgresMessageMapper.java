@@ -20,9 +20,6 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
-import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.BODY_BLOB_ID;
-import static org.apache.james.mailbox.postgres.mail.PostgresMessageModule.MessageTable.HEADER_CONTENT;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,8 +45,6 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
-import org.apache.james.mailbox.model.Content;
-import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -65,7 +60,6 @@ import org.apache.james.mailbox.store.MailboxReactorUtils;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.streams.Limit;
 import org.jooq.Record;
 
@@ -100,8 +94,7 @@ public class PostgresMessageMapper implements MessageMapper {
     private final PostgresUidProvider uidProvider;
     private final BlobStore blobStore;
     private final Clock clock;
-    private final BlobId.Factory blobIdFactory;
-    private final AttachmentLoader attachmentLoader;
+    private final PostgresMessageRetriever messageRetriever;
 
     public PostgresMessageMapper(PostgresExecutor postgresExecutor,
                                  PostgresModSeqProvider modSeqProvider,
@@ -116,8 +109,8 @@ public class PostgresMessageMapper implements MessageMapper {
         this.uidProvider = uidProvider;
         this.blobStore = blobStore;
         this.clock = clock;
-        this.blobIdFactory = blobIdFactory;
-        this.attachmentLoader = new AttachmentLoader(new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExecutor, blobIdFactory), blobStore));
+        PostgresAttachmentMapper attachmentMapper = new PostgresAttachmentMapper(new PostgresAttachmentDAO(postgresExecutor, blobIdFactory), blobStore);
+        this.messageRetriever = new PostgresMessageRetriever(blobStore, blobIdFactory, attachmentMapper);
     }
 
 
@@ -135,22 +128,8 @@ public class PostgresMessageMapper implements MessageMapper {
 
     @Override
     public Flux<MailboxMessage> findInMailboxReactive(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt)
-            .transform(pairFlux -> attachmentLoader.addAttachmentToMessage(pairFlux, fetchType));
-
-        if (fetchType == FetchType.FULL) {
-            return fetchMessagePublisher
-                .flatMapSequential(messageBuilderAndRecord -> {
-                    SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
-                    return retrieveFullContent(messageBuilderAndRecord.getRight())
-                        .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
-                }, ReactorUtils.DEFAULT_CONCURRENCY)
-                .map(message -> message);
-        } else {
-            return fetchMessagePublisher
-                .map(messageBuilderAndBlobId -> messageBuilderAndBlobId.getLeft()
-                    .build());
-        }
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = fetchMessageWithoutFullContent(mailbox, messageRange, fetchType, limitAsInt);
+        return messageRetriever.get(fetchType, fetchMessagePublisher);
     }
 
     private Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContent(Mailbox mailbox, MessageRange messageRange, FetchType fetchType, int limitAsInt) {
@@ -171,14 +150,6 @@ public class PostgresMessageMapper implements MessageMapper {
                         throw new RuntimeException("Unknown MessageRange range " + range.getType());
                 }
             });
-    }
-
-    private Mono<Content> retrieveFullContent(Record messageRecord) {
-        byte[] headerBytes = messageRecord.get(HEADER_CONTENT);
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(),
-                blobIdFactory.from(messageRecord.get(BODY_BLOB_ID)),
-                SIZE_BASED))
-            .map(bodyBytes -> new HeaderAndBodyByteContent(headerBytes, bodyBytes));
     }
 
     @Override
