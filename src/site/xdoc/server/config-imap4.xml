@@ -127,6 +127,10 @@
 
           <dt><strong>gracefulShutdown</strong></dt>
           <dd>true or false - If true attemps a graceful shutdown, which is safer but can take time. Defaults to true.</dd>
+          <dt><strong>highWriteBufferWaterMark</strong></dt>
+          <dd>Netty's write buffer high watermark configuration. Unit supported: none, K, M. Netty defaults applied.</dd>
+          <dt><strong>lowWriteBufferWaterMark</strong></dt>
+          <dd>Netty's write buffer low watermark configuration. Unit supported: none, K, M. Netty defaults applied.</dd>
 
         <dt><strong>ignoreIDLEUponProcessing</strong></dt>
         <dd>true or false - Allow disabling the heartbeat handler. Defaults to true.</dd>
