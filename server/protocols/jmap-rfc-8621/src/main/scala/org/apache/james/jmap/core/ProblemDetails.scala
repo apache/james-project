@@ -25,6 +25,7 @@ import org.apache.james.jmap.core.RequestLevelErrorType.{DEFAULT_ERROR_TYPE, Err
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.routes.UnsupportedCapabilitiesException
 import org.slf4j.{Logger, LoggerFactory}
+import reactor.netty.channel.AbortedException
 
 /**
  * Problem Details for HTTP APIs within the JMAP context
@@ -40,6 +41,9 @@ object ProblemDetails {
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[ProblemDetails])
 
   def forThrowable(throwable: Throwable): ProblemDetails = throwable match {
+    case exception: AbortedException =>
+      LOGGER.info("The connection was aborted: {}", exception.getMessage)
+      ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = exception.getMessage)
     case exception: IllegalArgumentException =>
       LOGGER.info("The request was successfully parsed as JSON but did not match the type signature of the Request object: {}", exception.getMessage)
       notRequestProblem(
