@@ -182,6 +182,12 @@
       <dd>Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like
           executing SMTP commands. Optional integer, defaults to 16.</dd>
 
+      <dt><strong>useEpoll</strong></dt>
+      <dd>true or false - If true uses native EPOLL implementation for Netty otherwise uses NIO. Defaults to false.</dd>
+
+      <dt><strong>gracefulShutdown</strong></dt>
+      <dd>true or false - If true attemps a graceful shutdown, which is safer but can take time. Defaults to true.</dd>
+
       <dt><strong>disabledFeatures</strong></dt>
       <dd>Extended SMTP features to hide in EHLO responses.</dd>
     </dl>
