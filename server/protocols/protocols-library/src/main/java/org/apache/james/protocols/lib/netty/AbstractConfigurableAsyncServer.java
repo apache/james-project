@@ -224,6 +224,7 @@ public abstract class AbstractConfigurableAsyncServer
         sslConfig = SslConfig.parse(config);
 
         Optional.ofNullable(config.getBoolean("gracefulShutdown", null)).ifPresent(this::setGracefulShutdown);
+        Optional.ofNullable(config.getBoolean("useEpoll", null)).ifPresent(this::setUseEpoll);
 
         proxyRequired = config.getBoolean(PROXY_REQUIRED, false);
 
