@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Clock;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
@@ -137,17 +136,17 @@ public class PostgresMessageIdMapper implements MessageIdMapper {
 
     @Override
     public Flux<MailboxMessage> findReactive(Collection<MessageId> messageIds, MessageMapper.FetchType fetchType) {
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessageWithoutFullContentPublisher = mailboxMessageDAO.findMessagesByMessageIds(messageIds.stream().map(PostgresMessageId.class::cast).collect(ImmutableList.toImmutableList()), fetchType);
-        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher = attachmentLoader.addAttachmentToMessage(fetchMessageWithoutFullContentPublisher, fetchType);
+        Flux<Pair<SimpleMailboxMessage.Builder, Record>> fetchMessagePublisher =
+            mailboxMessageDAO.findMessagesByMessageIds(messageIds.stream().map(PostgresMessageId.class::cast).collect(ImmutableList.toImmutableList()), fetchType)
+                .transform(pairFlux -> attachmentLoader.addAttachmentToMessage(pairFlux, fetchType));
 
         if (fetchType == MessageMapper.FetchType.FULL) {
             return fetchMessagePublisher
-                .flatMap(messageBuilderAndRecord -> {
+                .flatMapSequential(messageBuilderAndRecord -> {
                     SimpleMailboxMessage.Builder messageBuilder = messageBuilderAndRecord.getLeft();
                     return retrieveFullContent(messageBuilderAndRecord.getRight())
                         .map(headerAndBodyContent -> messageBuilder.content(headerAndBodyContent).build());
                 }, ReactorUtils.DEFAULT_CONCURRENCY)
-                .sort(Comparator.comparing(MailboxMessage::getUid))
                 .map(message -> message);
         } else {
             return fetchMessagePublisher
