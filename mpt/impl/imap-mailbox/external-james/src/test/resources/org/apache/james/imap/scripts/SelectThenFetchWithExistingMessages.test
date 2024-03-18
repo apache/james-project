@@ -47,7 +47,7 @@ S: \* 1 RECENT
 S: A04 OK (\[.+\] )?APPEND completed\.
 
 C: A05 FETCH *:* (BODY UID)
-S: \* 1 FETCH \(BODY \("TEXT" "PLAIN" \("charset" "us-ascii"\) NIL NIL "7BIT" 12 0\) UID 1\)
+S: \* 1 FETCH \(BODY \("TEXT" "PLAIN" \("charset" "US-ASCII"\) NIL NIL "7BIT" 12 0\) UID 1\)
 S: A05 OK FETCH completed\.
 
 C: A06 DELETE selectTest
