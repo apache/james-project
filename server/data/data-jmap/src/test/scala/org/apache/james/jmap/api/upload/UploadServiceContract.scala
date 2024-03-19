@@ -108,6 +108,7 @@ trait UploadServiceContract {
         .block())
 
     // Exceed 100 bytes limit
+    Thread.sleep(500)
     SMono.fromPublisher(testee.upload(asInputStream(TEN_BYTES_DATA_STRING), CONTENT_TYPE, BOB))
       .block()
 
@@ -126,6 +127,7 @@ trait UploadServiceContract {
         .block())
 
     // Exceed 100 bytes limit
+    Thread.sleep(500)
     SMono.fromPublisher(testee.upload(asInputStream(TEN_BYTES_DATA_STRING), CONTENT_TYPE, BOB))
       .block()
 
@@ -146,6 +148,7 @@ trait UploadServiceContract {
       .block()
 
     // Exceed 100 bytes limit
+    Thread.sleep(500)
     SMono.fromPublisher(testee.upload(asInputStream(TEN_BYTES_DATA_STRING), CONTENT_TYPE, BOB))
       .block()
 
@@ -173,6 +176,7 @@ trait UploadServiceContract {
         .block())
 
     // Exceed 100 bytes limit
+    Thread.sleep(500)
     SMono.fromPublisher(testee.upload(asInputStream(TEN_BYTES_DATA_STRING), CONTENT_TYPE, BOB))
       .block()
 
@@ -192,6 +196,7 @@ trait UploadServiceContract {
     SMono(uploadUsageRepository.resetSpace(BOB, QuotaSizeUsage.size(105L))).block()
 
     // Exceed 100 bytes limit
+    Thread.sleep(500)
     SMono.fromPublisher(testee.upload(asInputStream(TEN_BYTES_DATA_STRING), CONTENT_TYPE, BOB)).block()
 
     // The current stored usage should be eventually consistent
