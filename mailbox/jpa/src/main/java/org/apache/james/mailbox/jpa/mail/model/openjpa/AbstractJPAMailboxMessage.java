@@ -50,12 +50,12 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
@@ -574,7 +574,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         }
     }
 
-    private AttachmentId generateFixedAttachmentId(int position) {
-        return AttachmentId.from(getMailboxId().serialize() + "-" + getUid().asLong() + "-" + position);
+    private StringBackedAttachmentId generateFixedAttachmentId(int position) {
+        return StringBackedAttachmentId.from(getMailboxId().serialize() + "-" + getUid().asLong() + "-" + position);
     }
 }

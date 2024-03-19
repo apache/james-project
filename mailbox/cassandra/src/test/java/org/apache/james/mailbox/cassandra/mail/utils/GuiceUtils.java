@@ -37,6 +37,8 @@ import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.AttachmentIdFactory;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.ACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -96,6 +98,7 @@ public class GuiceUtils {
             binder -> binder.bind(EventStore.class).to(CassandraEventStore.class),
             binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
             binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration),
-            binder -> binder.bind(Clock.class).toInstance(Clock.systemUTC()));
+            binder -> binder.bind(Clock.class).toInstance(Clock.systemUTC()),
+            binder -> binder.bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class));
     }
 }

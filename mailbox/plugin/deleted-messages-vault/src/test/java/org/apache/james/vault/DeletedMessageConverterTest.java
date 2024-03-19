@@ -41,10 +41,10 @@ import java.util.List;
 
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -73,7 +73,7 @@ class DeletedMessageConverterTest {
     private static final Collection<MessageAttachmentMetadata> NO_ATTACHMENT = ImmutableList.of();
     private static final Collection<MessageAttachmentMetadata> ATTACHMENTS = ImmutableList.of(MessageAttachmentMetadata.builder()
         .attachment(AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from("1"))
+            .attachmentId(StringBackedAttachmentId.from("1"))
             .messageId(DeletedMessageFixture.MESSAGE_ID)
             .type("type")
             .size(48)
