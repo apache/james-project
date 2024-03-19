@@ -94,10 +94,12 @@ public class PostgresUploadDAO {
             .map(this::uploadMetaDataFromRow);
     }
 
-    public Mono<Void> delete(UploadId uploadId, Username user) {
-        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.deleteFrom(PostgresUploadTable.TABLE_NAME)
+    public Mono<Boolean> delete(UploadId uploadId, Username user) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.deleteFrom(PostgresUploadTable.TABLE_NAME)
             .where(PostgresUploadTable.ID.eq(uploadId.getId()))
-            .and(PostgresUploadTable.USER_NAME.eq(user.asString()))));
+                .and(PostgresUploadTable.USER_NAME.eq(user.asString()))
+                .returning(PostgresUploadTable.ID)))
+            .hasElement();
     }
 
     public Flux<Pair<UploadMetaData, Username>> listByUploadDateBefore(LocalDateTime before) {
