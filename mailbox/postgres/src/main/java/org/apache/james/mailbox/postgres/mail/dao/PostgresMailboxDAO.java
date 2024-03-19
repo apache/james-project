@@ -19,13 +19,13 @@
 
 package org.apache.james.mailbox.postgres.mail.dao;
 
-import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ACL;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_HIGHEST_MODSEQ;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_ID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_LAST_UID;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAMESPACE;
+import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_NAME_USER_NAME_NAMESPACE_UNIQUE_CONSTRAINT;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.MAILBOX_UID_VALIDITY;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.TABLE_NAME;
 import static org.apache.james.mailbox.postgres.mail.PostgresMailboxModule.PostgresMailboxTable.USER_NAME;
@@ -117,12 +117,14 @@ public class PostgresMailboxDAO {
     public Mono<Mailbox> create(MailboxPath mailboxPath, UidValidity uidValidity) {
         PostgresMailboxId mailboxId = PostgresMailboxId.generate();
 
-        return postgresExecutor.executeVoid(dslContext ->
+        return postgresExecutor.executeRow(dslContext ->
                 Mono.from(dslContext.insertInto(TABLE_NAME, MAILBOX_ID, MAILBOX_NAME, USER_NAME, MAILBOX_NAMESPACE, MAILBOX_UID_VALIDITY)
-                    .values(mailboxId.asUuid(), mailboxPath.getName(), mailboxPath.getUser().asString(), mailboxPath.getNamespace(), uidValidity.asLong())))
-            .thenReturn(new Mailbox(mailboxPath, uidValidity, mailboxId))
-            .onErrorMap(UNIQUE_CONSTRAINT_VIOLATION_PREDICATE,
-                e -> new MailboxExistsException(mailboxPath.getName()));
+                    .values(mailboxId.asUuid(), mailboxPath.getName(), mailboxPath.getUser().asString(), mailboxPath.getNamespace(), uidValidity.asLong())
+                    .onConflictOnConstraint(MAILBOX_NAME_USER_NAME_NAMESPACE_UNIQUE_CONSTRAINT)
+                    .doNothing()
+                    .returning(MAILBOX_ID)))
+            .map(record -> new Mailbox(mailboxPath, uidValidity, PostgresMailboxId.of(record.get(MAILBOX_ID))))
+            .switchIfEmpty(Mono.error(new MailboxExistsException(mailboxPath.getName())));
     }
 
     public Mono<MailboxId> rename(Mailbox mailbox) {

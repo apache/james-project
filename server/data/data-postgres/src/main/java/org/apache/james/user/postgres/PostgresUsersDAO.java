@@ -20,7 +20,6 @@
 package org.apache.james.user.postgres;
 
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
-import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONSTRAINT_VIOLATION_PREDICATE;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.ALGORITHM;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.AUTHORIZED_USERS;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.DELEGATED_USERS;
@@ -28,6 +27,7 @@ import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTabl
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.TABLE;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.TABLE_NAME;
 import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.USERNAME;
+import static org.apache.james.user.postgres.PostgresUserModule.PostgresUserTable.USERNAME_PRIMARY_KEY;
 import static org.jooq.impl.DSL.count;
 
 import java.util.Iterator;
@@ -149,10 +149,12 @@ public class PostgresUsersDAO implements UsersDAO {
         DefaultUser user = new DefaultUser(username, algorithm, algorithm);
         user.setPassword(password);
 
-        postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, USERNAME, HASHED_PASSWORD, ALGORITHM)
-                .values(user.getUserName().asString(), user.getHashedPassword(), user.getHashAlgorithm().asString())))
-            .onErrorMap(UNIQUE_CONSTRAINT_VIOLATION_PREDICATE,
-                e -> new AlreadyExistInUsersRepositoryException("User with username " + username + " already exist!"))
+        postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME, USERNAME, HASHED_PASSWORD, ALGORITHM)
+                .values(user.getUserName().asString(), user.getHashedPassword(), user.getHashAlgorithm().asString())
+                .onConflictOnConstraint(USERNAME_PRIMARY_KEY)
+                .doNothing()
+                .returning(USERNAME)))
+            .switchIfEmpty(Mono.error(new AlreadyExistInUsersRepositoryException("User with username " + username + " already exist!")))
             .block();
     }
 
