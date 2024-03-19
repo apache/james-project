@@ -40,9 +40,7 @@ import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mime4j.codec.EncoderUtil;
-import org.apache.james.mime4j.codec.EncoderUtil.Usage;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
@@ -612,7 +610,7 @@ class MIMEMessageConverterTest {
             String expectedMimeType = "image/png";
             String text = "123456";
             TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
                     .blobId(BlobId.of(blodId.getId()))
@@ -662,7 +660,7 @@ class MIMEMessageConverterTest {
             String expectedMimeType = "text/calendar; charset=\"iso-8859-1\"";
             String text = "123456";
             TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
@@ -718,7 +716,7 @@ class MIMEMessageConverterTest {
             String text = "123456";
             TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
 
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
                     .blobId(BlobId.of(blodId.getId()))
@@ -801,7 +799,7 @@ class MIMEMessageConverterTest {
             String expectedMimeType = "image/png";
             String text = "123456";
             String name = "ديناصور.png";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
@@ -845,7 +843,7 @@ class MIMEMessageConverterTest {
 
             String text = "123456";
             String type = "image/png";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
@@ -884,7 +882,7 @@ class MIMEMessageConverterTest {
 
             String text = "123456";
             String type = "image/png";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
@@ -922,7 +920,7 @@ class MIMEMessageConverterTest {
                 .build();
 
             String text = "123456";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             String type = "image/png";
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
@@ -963,7 +961,7 @@ class MIMEMessageConverterTest {
 
             String text = "123456";
             String type = "image/png; name=abc.png";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
@@ -991,7 +989,7 @@ class MIMEMessageConverterTest {
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             String text = "123456";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             String type = "image/png; name=abc.png; charset=\"iso-8859-1\"";
 
             Attachment attachment = Attachment.builder()
@@ -1013,7 +1011,7 @@ class MIMEMessageConverterTest {
 
             String text = "123456";
             String type = "image/png";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             Attachment attachment = Attachment.builder()
                 .blobId(BlobId.of(blodId.getId()))
                 .cid("cid")
@@ -1032,7 +1030,7 @@ class MIMEMessageConverterTest {
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             String text = "123456";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             String type = "image/png; name=abc.png";
 
             Attachment attachment = Attachment.builder()
@@ -1052,7 +1050,7 @@ class MIMEMessageConverterTest {
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             String text = "123456";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             String type = "image/png";
             Attachment attachment = Attachment.builder()
                 .blobId(BlobId.of(blodId.getId()))
@@ -1079,7 +1077,7 @@ class MIMEMessageConverterTest {
 
             String name = "ديناصور.png";
             String text = "123456";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
             String type = "image/png";
 
             Attachment.WithBlob attachment = new Attachment.WithBlob(
@@ -1123,7 +1121,7 @@ class MIMEMessageConverterTest {
 
             String text = "inline data";
             String type = "image/png";
-            AttachmentId blodId = AttachmentId.from("blodId");
+            StringBackedAttachmentId blodId = StringBackedAttachmentId.from("blodId");
 
             Attachment.WithBlob inline = new Attachment.WithBlob(
                 Attachment.builder()
@@ -1142,7 +1140,7 @@ class MIMEMessageConverterTest {
                     .build());
 
             String text2 = "attachment data";
-            final AttachmentId blodId2 = AttachmentId.from("blodId2");
+            final StringBackedAttachmentId blodId2 = StringBackedAttachmentId.from("blodId2");
             Attachment.WithBlob attachment = new Attachment.WithBlob(
                 Attachment.builder()
                     .blobId(BlobId.of(blodId.getId()))
