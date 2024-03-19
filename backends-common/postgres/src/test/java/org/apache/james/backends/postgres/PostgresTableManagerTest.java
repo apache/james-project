@@ -45,7 +45,7 @@ class PostgresTableManagerTest {
 
     @Test
     void initializeTableShouldSuccessWhenModuleHasSingleTable() {
-        String tableName = "tableName1";
+        String tableName = "tablename1";
 
         PostgresTable table = PostgresTable.name(tableName)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
@@ -71,14 +71,14 @@ class PostgresTableManagerTest {
 
     @Test
     void initializeTableShouldSuccessWhenModuleHasMultiTables() {
-        String tableName1 = "tableName1";
+        String tableName1 = "tablename1";
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity()
             .build();
 
-        String tableName2 = "tableName2";
+        String tableName2 = "tablename2";
         PostgresTable table2 = PostgresTable.name(tableName2)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("columB", SQLDataType.INTEGER)).disableRowLevelSecurity()
@@ -99,7 +99,7 @@ class PostgresTableManagerTest {
 
     @Test
     void initializeTableShouldNotThrowWhenTableExists() {
-        String tableName1 = "tableName1";
+        String tableName1 = "tablename1";
 
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
@@ -117,7 +117,7 @@ class PostgresTableManagerTest {
 
     @Test
     void initializeTableShouldNotChangeTableStructureOfExistTable() {
-        String tableName1 = "tableName1";
+        String tableName1 = "tablename1";
         PostgresTable table1 = PostgresTable.name(tableName1)
             .createTableStep((dsl, tbn) -> dsl.createTable(tbn)
                 .column("columA", SQLDataType.UUID.notNull())).disableRowLevelSecurity()
