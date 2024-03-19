@@ -227,13 +227,16 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                         fileChunkConsumer.finalizeDataTransfer();
                         ImapRequestLineReader reader = new NettyStreamImapRequestLineReader(ctx.channel(), fileChunkConsumer.getFile(), RETRY);
 
+                        // Remove ongoing subscription: now on lifecycle of the message will be managed by ImapChannelUpstreamHandler.
+                        // Not doing this causes IDLEd IMAP connections to clear IMAP append literal while they are processed.
+                        Object removed = attachment.remove(SUBSCRIPTION);
                         try {
-                            // Remove ongoing subscription: now on lifecycle of the message will be managed by ImapChannelUpstreamHandler.
-                            // Not doing this causes IDLEd IMAP connections to clear IMAP append literal while they are processed.
-                            attachment.remove(SUBSCRIPTION);
                             parseImapMessage(ctx, null, attachment, Pair.of(reader, size), readerIndex)
                                 .ifPresent(ctx::fireChannelRead);
-                        } catch (DecodingException e) {
+                        } catch (Exception e) {
+                            if (removed instanceof Disposable) {
+                                ((Disposable) removed).dispose();
+                            }
                             ctx.fireExceptionCaught(e);
                         }
                     });
