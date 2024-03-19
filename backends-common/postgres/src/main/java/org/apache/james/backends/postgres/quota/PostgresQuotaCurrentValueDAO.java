@@ -67,6 +67,21 @@ public class PostgresQuotaCurrentValueDAO {
             .map(record -> record.get(CURRENT_VALUE));
     }
 
+    public Mono<Long> upsert(QuotaCurrentValue.Key quotaKey, long newCurrentValue) {
+        return update(quotaKey, newCurrentValue)
+            .switchIfEmpty(Mono.defer(() -> insert(quotaKey, newCurrentValue, IS_INCREASE)));
+    }
+
+    public Mono<Long> update(QuotaCurrentValue.Key quotaKey, long newCurrentValue) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
+                .set(CURRENT_VALUE, newCurrentValue)
+                .where(IDENTIFIER.eq(quotaKey.getIdentifier()),
+                    COMPONENT.eq(quotaKey.getQuotaComponent().getValue()),
+                    TYPE.eq(quotaKey.getQuotaType().getValue()))
+                .returning(CURRENT_VALUE)))
+            .map(record -> record.get(CURRENT_VALUE));
+    }
+
     private Field<Long> getCurrentValueOperator(boolean isIncrease, long amount) {
         if (isIncrease) {
             return CURRENT_VALUE.plus(amount);
