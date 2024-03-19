@@ -40,8 +40,9 @@ public class PostgresIndex {
 
     public static RequireCreateIndexStep name(String indexName) {
         Preconditions.checkNotNull(indexName);
+        String strategyIndexName = indexName.toLowerCase();
 
-        return createIndexFunction -> new PostgresIndex(indexName, dsl -> createIndexFunction.createIndex(dsl, indexName));
+        return createIndexFunction -> new PostgresIndex(strategyIndexName, dsl -> createIndexFunction.createIndex(dsl, strategyIndexName));
     }
 
     private final String name;
