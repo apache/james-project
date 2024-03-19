@@ -23,9 +23,7 @@ import static org.apache.james.backends.postgres.PostgresFixture.Database.DEFAUL
 import static org.apache.james.backends.postgres.PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.james.GuiceModuleTestExtension;
@@ -69,6 +67,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     private PostgresExecutor nonRLSPostgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
     private PostgresExecutor.Factory executorFactory;
+    private PostgresTableManager postgresTableManager;
 
     public void pause() {
         PG_CONTAINER.getDockerClient().pauseContainerCmd(PG_CONTAINER.getContainerId())
@@ -159,6 +158,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         } else {
             nonRLSPostgresExecutor = postgresExecutor;
         }
+
+        this.postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration);
     }
 
     @Override
@@ -225,13 +226,13 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void initTablesAndIndexes() {
-        PostgresTableManager postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration.rowLevelSecurityEnabled());
         postgresTableManager.initializeTables().block();
         postgresTableManager.initializeTableIndexes().block();
     }
 
     private void resetSchema() {
-        dropTables(listAllTables());
+        List<String> tables = postgresTableManager.listExistTables().block();
+        dropTables(tables);
     }
 
     private void dropTables(List<String> tables) {
@@ -243,15 +244,6 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .flatMapMany(connection -> connection.createStatement(String.format("DROP table if exists %s cascade;", tablesToDelete))
                 .execute())
             .then()
-            .block();
-    }
-
-    private List<String> listAllTables() {
-        return postgresExecutor.connection()
-            .flatMapMany(connection -> connection.createStatement(String.format("SELECT tablename FROM pg_tables WHERE schemaname = '%s'", selectedDatabase.schema()))
-                .execute())
-            .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
-            .collectList()
             .block();
     }
 
