@@ -74,11 +74,11 @@ public interface PostgresVacationModule {
             .supportsRowLevelSecurity()
             .build();
 
-        PostgresIndex ACCOUNT_ID_INDEX = PostgresIndex.name("vacation_notification_registry_accountId_index")
+        PostgresIndex ACCOUNT_ID_INDEX = PostgresIndex.name("vacation_notification_registry_accountid_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, ACCOUNT_ID));
 
-        PostgresIndex FULL_COMPOSITE_INDEX = PostgresIndex.name("vacation_notification_registry_accountId_recipientId_expiryDate_index")
+        PostgresIndex FULL_COMPOSITE_INDEX = PostgresIndex.name("vnr_accountid_recipientid_expirydate_index")
             .createIndexStep((dsl, indexName) -> dsl.createIndexIfNotExists(indexName)
                 .on(TABLE_NAME, ACCOUNT_ID, RECIPIENT_ID, EXPIRY_DATE));
     }

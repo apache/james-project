@@ -80,8 +80,9 @@ public class PostgresTable {
 
     public static RequireCreateTableStep name(String tableName) {
         Preconditions.checkNotNull(tableName);
+        String strategyName = tableName.toLowerCase();
 
-        return createTableFunction -> supportsRowLevelSecurity -> new FinalStage(tableName, supportsRowLevelSecurity, dsl -> createTableFunction.createTable(dsl, tableName));
+        return createTableFunction -> supportsRowLevelSecurity -> new FinalStage(strategyName, supportsRowLevelSecurity, dsl -> createTableFunction.createTable(dsl, strategyName));
     }
 
     private final String name;

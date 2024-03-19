@@ -19,11 +19,15 @@
 
 package org.apache.james.backends.postgres;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.lifecycle.api.Startable;
+import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,12 +77,28 @@ public class PostgresTableManager implements Startable {
 
     public Mono<Void> initializeTables() {
         return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tables())
-                .flatMap(table -> Mono.from(table.getCreateTableStepFunction().apply(dsl))
-                    .then(alterTableIfNeeded(table))
-                    .doOnSuccess(any -> LOGGER.info("Table {} created", table.getName()))
-                    .onErrorResume(exception -> handleTableCreationException(table, exception)))
-                .then());
+            .flatMapMany(dsl -> listExistTables()
+                .flatMapMany(existTables -> Flux.fromIterable(module.tables())
+                    .filter(table -> !existTables.contains(table.getName()))
+                    .flatMap(table -> createAndAlterTable(table, dsl))))
+            .then();
+    }
+
+    private Mono<Void> createAndAlterTable(PostgresTable table, DSLContext dsl) {
+        return Mono.from(table.getCreateTableStepFunction().apply(dsl))
+            .then(alterTableIfNeeded(table))
+            .doOnSuccess(any -> LOGGER.info("Table {} created", table.getName()))
+            .onErrorResume(exception -> handleTableCreationException(table, exception));
+    }
+
+    public Mono<List<String>> listExistTables() {
+        return postgresExecutor.dslContext()
+            .flatMapMany(d -> Flux.from(d.select(DSL.field("tablename"))
+                .from("pg_tables")
+                .where(DSL.field("schemaname")
+                    .eq(DSL.currentSchema()))))
+            .map(r -> r.get(0, String.class))
+            .collectList();
     }
 
     private Mono<Void> handleTableCreationException(PostgresTable table, Throwable e) {
@@ -148,11 +168,28 @@ public class PostgresTableManager implements Startable {
 
     public Mono<Void> initializeTableIndexes() {
         return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tableIndexes())
-                .concatMap(index -> Mono.from(index.getCreateIndexStepFunction().apply(dsl))
-                    .doOnSuccess(any -> LOGGER.info("Index {} created", index.getName()))
-                    .onErrorResume(e -> handleIndexCreationException(index, e)))
-                .then());
+            .flatMapMany(dsl -> listExistIndexes()
+                .flatMapMany(existIndexes -> Flux.fromIterable(module.tableIndexes())
+                    .filter(index -> !existIndexes.contains(index.getName()))
+                    .flatMap(index -> createTableIndex(index, dsl))))
+            .then();
+    }
+
+    public Mono<List<String>> listExistIndexes() {
+        return postgresExecutor.dslContext()
+            .flatMapMany(dsl -> Flux.from(dsl.select(DSL.field("indexname"))
+                .from("pg_indexes")
+                .where(DSL.field("schemaname")
+                    .eq(DSL.currentSchema()))))
+            .map(r -> r.get(0, String.class))
+            .collectList();
+    }
+
+    private Mono<Void> createTableIndex(PostgresIndex index, DSLContext dsl) {
+        return Mono.from(index.getCreateIndexStepFunction().apply(dsl))
+            .doOnSuccess(any -> LOGGER.info("Index {} created", index.getName()))
+            .onErrorResume(e -> handleIndexCreationException(index, e))
+            .then();
     }
 
     private Mono<? extends Integer> handleIndexCreationException(PostgresIndex index, Throwable e) {
