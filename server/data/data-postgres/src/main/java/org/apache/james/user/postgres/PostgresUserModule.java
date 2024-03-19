@@ -22,6 +22,7 @@ package org.apache.james.user.postgres;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
+import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
@@ -37,6 +38,8 @@ public interface PostgresUserModule {
         Field<String[]> AUTHORIZED_USERS = DSL.field("authorized_users", SQLDataType.VARCHAR.getArrayDataType());
         Field<String[]> DELEGATED_USERS = DSL.field("delegated_users", SQLDataType.VARCHAR.getArrayDataType());
 
+        Name USERNAME_PRIMARY_KEY = DSL.name("users_username_pk");
+
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(USERNAME)
@@ -44,7 +47,7 @@ public interface PostgresUserModule {
                 .column(ALGORITHM)
                 .column(AUTHORIZED_USERS)
                 .column(DELEGATED_USERS)
-                .constraint(DSL.primaryKey(USERNAME))))
+                .constraint(DSL.constraint(USERNAME_PRIMARY_KEY).primaryKey(USERNAME))))
             .disableRowLevelSecurity()
             .build();
     }
