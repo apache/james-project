@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -132,7 +133,7 @@ public class CassandraAttachmentDAOV2 {
 
         return new DAOAttachment(
             messageId,
-            AttachmentId.from(row.getString(ID)),
+            StringBackedAttachmentId.from(row.getString(ID)),
             blobIfFactory.from(row.getString(BLOB_ID)),
             ContentType.of(row.getString(TYPE)),
             row.getLong(SIZE));

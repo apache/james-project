@@ -37,10 +37,10 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.opensearch.IndexAttachments;
@@ -57,7 +57,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -100,7 +99,7 @@ class IndexableMessageTest {
             .thenReturn(ImmutableList.of(MessageAttachmentMetadata.builder()
                 .attachment(AttachmentMetadata.builder()
                     .messageId(messageId)
-                    .attachmentId(AttachmentId.from("1"))
+                    .attachmentId(StringBackedAttachmentId.from("1"))
                     .type("text/plain")
                     .size(36)
                     .build())

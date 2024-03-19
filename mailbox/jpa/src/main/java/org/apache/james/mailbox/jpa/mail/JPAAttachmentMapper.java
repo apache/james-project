@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
 import com.github.fge.lambdas.Throwing;
@@ -108,9 +109,9 @@ public class JPAAttachmentMapper extends JPATransactionalMapper implements Attac
         try {
             try (InputStream stream = parsedAttachment.getContent().openStream()) {
                 byte[] bytes = IOUtils.toByteArray(stream);
-                JPAAttachment persistedAttachment = new JPAAttachment(parsedAttachment.asMessageAttachment(AttachmentId.random(), ownerMessageId), bytes);
+                JPAAttachment persistedAttachment = new JPAAttachment(parsedAttachment.asMessageAttachment(StringBackedAttachmentId.random(), ownerMessageId), bytes);
                 getEntityManager().persist(persistedAttachment);
-                AttachmentId attachmentId = AttachmentId.from(persistedAttachment.getAttachmentId());
+                AttachmentId attachmentId = StringBackedAttachmentId.from(persistedAttachment.getAttachmentId());
                 return parsedAttachment.asMessageAttachment(attachmentId, bytes.length, ownerMessageId);
             }
         } catch (IOException e) {

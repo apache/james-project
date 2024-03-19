@@ -24,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.junit.jupiter.api.Test;
 
 
@@ -46,7 +46,7 @@ class MessageAttachmentRepresentationByIdTest {
 
     @Test
     void buildShouldWorkWhenMandatoryAttributesAreGiven() {
-        AttachmentId attachmentId = AttachmentId.from("1");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("1");
         MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), false);
 
         MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
@@ -58,7 +58,7 @@ class MessageAttachmentRepresentationByIdTest {
 
     @Test
     void buildShouldSetIsInlineDefaultValueWhenNotGiven() {
-        AttachmentId attachmentId = AttachmentId.from("1");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("1");
 
         MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
             .attachmentId(attachmentId)
@@ -69,7 +69,7 @@ class MessageAttachmentRepresentationByIdTest {
 
     @Test
     void buildShouldAcceptInlineAndWithoutCid() {
-        AttachmentId attachmentId = AttachmentId.from("1");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("1");
         MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), true);
 
         MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
@@ -82,7 +82,7 @@ class MessageAttachmentRepresentationByIdTest {
 
     @Test
     void buildShouldSetAttributesWhenAllAreGiven() {
-        AttachmentId attachmentId = AttachmentId.from("1");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("1");
         MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.of("name"), Optional.of(Cid.from("cid")), true);
 
         MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()

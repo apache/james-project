@@ -44,10 +44,11 @@ import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
-import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Content;
@@ -68,7 +69,7 @@ import reactor.core.publisher.Mono;
 
 class BlobManagerImplTest {
     static final String ID = "abc";
-    static final AttachmentId ATTACHMENT_ID = AttachmentId.from(ID);
+    static final StringBackedAttachmentId ATTACHMENT_ID = StringBackedAttachmentId.from(ID);
     static final ContentType CONTENT_TYPE = ContentType.of("text/plain");
     static final byte[] BYTES = "abc".getBytes(StandardCharsets.UTF_8);
     static final TestMessageId MESSAGE_ID = TestMessageId.of(125);
@@ -88,7 +89,7 @@ class BlobManagerImplTest {
 
         blobManager = new BlobManagerImpl(attachmentManager, messageIdManager, new TestMessageId.Factory(),
             new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
-                Clock.systemUTC()));
+                Clock.systemUTC()), new StringBackedAttachmentIdFactory());
     }
 
     @Test
