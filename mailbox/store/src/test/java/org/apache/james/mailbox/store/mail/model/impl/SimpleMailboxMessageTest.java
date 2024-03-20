@@ -134,7 +134,7 @@ class SimpleMailboxMessageTest {
 
         assertThat((Object)copy).isEqualToIgnoringGivenFields(original, "message", "mailboxId").isNotSameAs(original);
         assertThat(copy.getMessage())
-            .isEqualToIgnoringGivenFields(original.getMessage(), "content")
+            .isEqualToIgnoringGivenFields(original.getMessage(), "content", "lazyLoadedFullContent")
             .isNotSameAs(original.getMessage());
         assertThat(IOUtils.toString(copy.getMessage().getFullContent(), StandardCharsets.UTF_8))
             .isEqualTo(IOUtils.toString(original.getMessage().getFullContent(), StandardCharsets.UTF_8));
