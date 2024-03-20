@@ -205,6 +205,7 @@
      assertThat(SMono.fromPublisher(testee.delete(uploadIdOfAlice, Username.of("Bob"))).block()).isFalse
    }
 
+   @Test
    def deleteByUploadDateBeforeShouldRemoveExpiredUploads(): Unit = {
      val uploadId1: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
      clock.setInstant(clock.instant().plus(8, java.time.temporal.ChronoUnit.DAYS))
@@ -217,18 +218,4 @@
      assertThat(SMono.fromPublisher(testee.retrieve(uploadId2, USER)).block())
        .isNotNull
    }
-
-   @Test
-   def deleteShouldReturnTrueWhenRowExists(): Unit = {
-     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
-
-     assertThat(SMono.fromPublisher(testee.delete(uploadId, USER)).block()).isTrue
-   }
-
-   @Test
-   def deleteShouldReturnFalseWhenRowDoesNotExist(): Unit = {
-     val uploadIdOfAlice: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, Username.of("Alice"))).block().uploadId
-     assertThat(SMono.fromPublisher(testee.delete(uploadIdOfAlice, Username.of("Bob"))).block()).isFalse
-   }
-
  }

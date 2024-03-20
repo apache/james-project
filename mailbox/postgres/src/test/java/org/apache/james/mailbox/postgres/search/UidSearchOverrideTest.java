@@ -24,7 +24,7 @@ import static org.apache.james.mailbox.postgres.search.SearchOverrideFixture.MAI
 import static org.apache.james.mailbox.postgres.search.SearchOverrideFixture.MAILBOX_SESSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.blob.api.HashBlobId;

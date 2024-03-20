@@ -21,7 +21,7 @@ package org.apache.james.mailrepository.postgres;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.mail.MessagingException;
+import jakarta.mail.MessagingException;
 
 import org.apache.james.backends.postgres.PostgresExtension;
 import org.apache.james.backends.postgres.PostgresModule;
