@@ -62,7 +62,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scala.publisher.SMono;
 import scala.Option;
-import scala.collection.immutable.Seq;
+import scala.collection.immutable.Set;
 import scala.jdk.javaapi.CollectionConverters;
 import scala.jdk.javaapi.OptionConverters;
 import scala.runtime.BoxedUnit;
@@ -166,7 +166,7 @@ public class PostgresCustomIdentityDAO implements CustomIdentityDAO {
     }
 
     @Override
-    public Publisher<BoxedUnit> delete(Username username, Seq<IdentityId> ids) {
+    public Publisher<BoxedUnit> delete(Username username, Set<IdentityId> ids) {
         if (ids.isEmpty()) {
             return Mono.empty();
         }
