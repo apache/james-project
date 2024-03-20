@@ -236,6 +236,17 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 .concatMap(result -> toResponse(mailbox, fetch, mailboxSession, selected, result))
                 .doOnNext(responder::respond)
                 .then();
+        } else if (getMailboxManager().getSupportedMailboxCapabilities().contains(MailboxManager.MailboxCapabilities.MessageContentStreaming) && fetch.singleBodyRead()) {
+            // Stream directly from the mailbox content
+            FetchSubscriber fetchSubscriber = new FetchSubscriber(imapSession, responder);
+            Flux.fromIterable(consolidate(selected, ranges, fetch))
+                .doOnNext(range -> auditTrail(mailbox, mailboxSession, resultToFetch, range))
+                .concatMap(range -> Flux.from(mailbox.getMessagesReactive(range, FetchGroup.HEADERS_WITH_ATTACHMENTS_METADATA, mailboxSession)))
+                .filter(ids -> !fetch.contains(Item.MODSEQ) || ids.getModSeq().asLong() > fetch.getChangedSince())
+                .concatMap(result -> toStreamedResponse(mailbox, fetch, mailboxSession, selected, result))
+                .subscribe(fetchSubscriber);
+
+            return fetchSubscriber.completionMono();
         } else {
             FetchSubscriber fetchSubscriber = new FetchSubscriber(imapSession, responder);
             Flux.fromIterable(consolidate(selected, ranges, fetch))
@@ -284,6 +295,24 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     private Mono<FetchResponse> toResponse(MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, SelectedMailbox selected, MessageResult result) {
         try {
             return new FetchResponseBuilder(new EnvelopeBuilder()).build(fetch, result, mailbox, selected, mailboxSession);
+        } catch (MessageRangeException e) {
+            // we can't for whatever reason find the message so
+            // just skip it and log it to debug
+            return ReactorUtils.logAsMono(() -> LOGGER.debug("Unable to find message with uid {}", result.getUid(), e))
+                .then(Mono.empty());
+        } catch (MailboxException e) {
+            // we can't for whatever reason find parse all requested parts of the message. This may because it was deleted while try to access the parts.
+            // So we just skip it
+            //
+            // See IMAP-347
+            return ReactorUtils.logAsMono(() -> LOGGER.error("Unable to fetch message with uid {}, so skip it", result.getUid(), e))
+                .then(Mono.empty());
+        }
+    }
+
+    private Mono<FetchResponse> toStreamedResponse(MessageManager mailbox, FetchData fetch, MailboxSession mailboxSession, SelectedMailbox selected, MessageResult result) {
+        try {
+            return new FetchResponseBuilder(new EnvelopeBuilder()).buildStreamedResponse(fetch, result, mailbox, selected, mailboxSession);
         } catch (MessageRangeException e) {
             // we can't for whatever reason find the message so
             // just skip it and log it to debug

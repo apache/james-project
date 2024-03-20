@@ -23,6 +23,7 @@
 package org.apache.james.imap.processor.fetch;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -53,6 +54,9 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimePath;
 import org.apache.james.mailbox.model.ThreadId;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Mono;
 
@@ -186,6 +190,47 @@ public final class FetchResponseBuilder {
         });
     }
 
+    public Mono<FetchResponse> buildStreamedResponse(FetchData fetch, MessageResult result, MessageManager mailbox, SelectedMailbox selectedMailbox, MailboxSession mailboxSession) throws MessageRangeException, MailboxException {
+        Preconditions.checkArgument(fetch.singleBodyRead(), "Stream IMAP FETCH response must be a single body read");
+        BodyFetchElement bodyFetchElement = fetch.getBodyElements().stream().findAny().get();
+
+        MessageUid resultUid = result.getUid();
+        return selectedMailbox.msn(resultUid).fold(() -> {
+            throw new MessageRangeException("No such message found with uid " + resultUid);
+        }, msn -> streamedFullContent(result, bodyFetchElement)
+            .flatMap(Throwing.<FetchResponse.BodyElement, Mono<FetchResponse>>function(bodyElement -> {
+                reset(msn);
+                // INTERNALDATE response
+                if (fetch.contains(Item.INTERNAL_DATE)) {
+                    setInternalDate(result.getInternalDate());
+                }
+                // RFC822.SIZE response
+                if (fetch.contains(Item.SIZE)) {
+                    setSize(result.getSize());
+                }
+                if (fetch.contains(Item.ENVELOPE)) {
+                    this.envelope = buildEnvelope(result);
+                }
+                this.elements = new ArrayList<>();
+                this.elements.add(bodyElement);
+
+                addUid(fetch, resultUid);
+
+                addThreadId(fetch, result.getThreadId());
+                addMessageId(fetch, result.getMessageId());
+                addSaveDate(fetch, result.getSaveDate());
+
+                addModSeq(fetch, result.getModSeq());
+
+                // FLAGS response
+                // Check if this fetch will cause the "SEEN" flag to be set on this
+                // message. If so, update the flags, and ensure that a flags response is
+                // included in the response.
+                return addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags())
+                    .then(Mono.fromCallable(this::build));
+            }).sneakyThrow()));
+    }
+
     private void addUid(FetchData fetch, MessageUid resultUid) {
         // UID response
         if (fetch.contains(Item.UID)) {
@@ -297,6 +342,30 @@ public final class FetchResponseBuilder {
         final Collection<String> names = fetchElement.getFieldNames();
         final FetchResponse.BodyElement fullResult = bodyContent(messageResult, name, specifier, path, names);
         return wrapIfPartialFetch(firstOctet, numberOfOctets, fullResult);
+    }
+
+    private Mono<FetchResponse.BodyElement> streamedFullContent(MessageResult messageResult, BodyFetchElement fetchElement) throws MailboxException {
+        final Long firstOctet = fetchElement.getFirstOctet();
+        final Long numberOfOctets = fetchElement.getNumberOfOctets();
+
+        return Mono.from(messageResult.lazyLoadedFullContent())
+            .map(content -> new FetchResponse.BodyElement() {
+                @Override
+                public long size() throws IOException {
+                    return messageResult.getSize();
+                }
+
+                @Override
+                public InputStream getInputStream() throws IOException {
+                    return content;
+                }
+
+                @Override
+                public String getName() {
+                    return fetchElement.getResponseName();
+                }
+            })
+            .map(bodyElement -> wrapIfPartialFetch(firstOctet, numberOfOctets, bodyElement));
     }
 
     private FetchResponse.BodyElement bodyContent(MessageResult messageResult, String name, SectionType specifier, Optional<MimePath> path, Collection<String> names) throws MailboxException {
@@ -424,7 +493,7 @@ public final class FetchResponseBuilder {
 
     private FetchResponse.BodyElement content(MessageResult messageResult, String name, Optional<MimePath> path) throws MailboxException {
         Content full =  Optional.ofNullable(getContent(messageResult, path))
-            .orElseGet(EmptyContent::new);;
+            .orElseGet(EmptyContent::new);
         return new ContentBodyElement(name, full);
     }
 

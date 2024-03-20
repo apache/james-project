@@ -173,6 +173,26 @@ public class FetchData {
             .isEmpty();
     }
 
+    public boolean singleBodyRead() {
+        if (getBodyElements().size() != 1) {
+            return false;
+        }
+        if (itemToFetch.contains(Item.BODY) || itemToFetch.contains(Item.BODY_STRUCTURE)) {
+            return false;
+        }
+        BodyFetchElement bodyFetchElement = getBodyElements().stream().findAny().get();
+        if (bodyFetchElement.getPath() != null) {
+            return false;
+        }
+        if (bodyFetchElement.getSectionType() != SectionType.CONTENT) {
+            return false;
+        }
+        if (bodyFetchElement.getFieldNames() != null && !bodyFetchElement.getFieldNames().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public final int hashCode() {
         return Objects.hash(itemToFetch, bodyElements, setSeen, changedSince);
