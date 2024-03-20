@@ -31,8 +31,8 @@ import org.apache.james.user.postgres.PostgresUsersRepositoryConfiguration;
 
 import com.github.fge.lambdas.Throwing;
 
-import cucumber.api.java.After;
-import cucumber.api.java.Before;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
 
 public class PostgresStepdefs {
     static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresModule.aggregateModules(PostgresRecipientRewriteTableModule.MODULE, PostgresUserModule.MODULE));
