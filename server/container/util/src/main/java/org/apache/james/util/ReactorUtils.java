@@ -21,6 +21,7 @@ package org.apache.james.util;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Iterator;
@@ -146,6 +147,11 @@ public class ReactorUtils {
                     return toRead;
                 })
                 .orElse(NO_MORE_DATA);
+        }
+
+        @Override
+        public int available() {
+            return currentItemByteStream.map(Buffer::remaining).orElse(0);
         }
 
         @Override
