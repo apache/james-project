@@ -44,7 +44,10 @@
         </processor>
 
         <processor state="error" enableJmx="true">
-            <mailet match="All" class="Bounce">
+            <matcher name="not-reprocessed" match="org.apache.james.mailetcontainer.impl.matchers.Not">
+                <matcher match="HasMailAttribute=mailRepository-reprocessing"/>
+            </matcher>
+            <mailet match="not-reprocessed" class="Bounce">
                 <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="All" class="ToRepository">
