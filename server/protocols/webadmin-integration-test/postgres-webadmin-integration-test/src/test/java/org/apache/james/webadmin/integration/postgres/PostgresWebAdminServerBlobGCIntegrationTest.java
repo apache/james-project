@@ -28,8 +28,8 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Date;
 
-import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
+import jakarta.mail.Flags;
+import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.GuiceModuleTestExtension;
