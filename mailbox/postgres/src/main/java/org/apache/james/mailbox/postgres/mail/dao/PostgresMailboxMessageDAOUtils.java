@@ -53,7 +53,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
