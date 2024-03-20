@@ -613,7 +613,38 @@ class ReactorUtilsTest {
             assertThat(readBytes).contains(0, 1, 2, 3, 4);
             //make sure reactor is done with prefetch
             Thread.sleep(200);
-            assertThat(generateElements.get()).isEqualTo(3);
+            assertThat(generateElements.get()).isLessThanOrEqualTo(3);
+        }
+
+        @Test
+        void shouldSupportNonBlockingReads() throws IOException, InterruptedException {
+            // Emptying current buffer should automatically fetch the next one then polling on available() not to be null
+            // is enough to ensure a full read.
+            AtomicInteger generateElements = new AtomicInteger(0);
+            Flux<ByteBuffer> source = Flux.just(
+                new byte[] {0, 1, 2},
+                new byte[] {3, 4, 5},
+                new byte[] {6, 7, 8})
+                    .subscribeOn(Schedulers.fromExecutor(Executors.newCachedThreadPool()))
+                    .map(ByteBuffer::wrap)
+                    .limitRate(2)
+                    .doOnRequest(request -> generateElements.getAndAdd((int) request));
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+            while (inputStream.available() == 0) {
+                Thread.sleep(1);
+            }
+            assertThat(inputStream.available()).isEqualTo(3);
+            inputStream.read();
+            assertThat(inputStream.available()).isEqualTo(2);
+            inputStream.read();
+            assertThat(inputStream.available()).isEqualTo(1);
+            inputStream.read();
+            Thread.sleep(10);
+            assertThat(inputStream.available()).isEqualTo(3);
+            while (inputStream.available() == 0) {
+                Thread.sleep(1);
+            }
         }
 
         @Test

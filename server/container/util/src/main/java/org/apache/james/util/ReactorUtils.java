@@ -24,17 +24,21 @@ import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.time.Duration;
-import java.util.Iterator;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
 import reactor.core.publisher.Flux;
@@ -106,7 +110,9 @@ public class ReactorUtils {
     }
 
     public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {
-        return new StreamInputStream(byteArrays.toStream(1));
+        InputStreamSubscriber inputStreamSubscriber = new InputStreamSubscriber();
+        byteArrays.subscribe(inputStreamSubscriber);
+        return inputStreamSubscriber;
     }
 
     public static Flux<ByteBuffer> toChunks(InputStream inputStream, int bufferSize) {
@@ -125,58 +131,131 @@ public class ReactorUtils {
             }).defaultIfEmpty(ByteBuffer.wrap(new byte[0]));
     }
 
-    private static class StreamInputStream extends InputStream {
+    private static class InputStreamSubscriber extends InputStream implements Subscriber<ByteBuffer> {
         private static final int NO_MORE_DATA = -1;
 
-        private final Iterator<ByteBuffer> source;
-        private final Stream<ByteBuffer> sourceAsStream;
-        private Optional<ByteBuffer> currentItemByteStream;
+        private final AtomicReference<Subscription> subscription = new AtomicReference<>();
+        private final AtomicReference<Throwable> exception = new AtomicReference<>();
+        private final AtomicReference<ByteBuffer> currentBuffer = new AtomicReference<>();
+        private final AtomicReference<CountDownLatch> nextBufferSignal = new AtomicReference<>();
+        private final AtomicBoolean completed = new AtomicBoolean(false);
 
-        StreamInputStream(Stream<ByteBuffer> source) {
-            this.source = source.iterator();
-            this.sourceAsStream = source;
-            this.currentItemByteStream = Optional.empty();
+        @Override
+        public void onSubscribe(Subscription s) {
+            subscription.set(s);
+            requestOne();
         }
 
         @Override
-        public int read(byte[] b, int off, int len) throws IOException {
+        public void onNext(ByteBuffer byteBuffer) {
+            if (byteBuffer.remaining() == 0) {
+                subscription.get().request(1);
+            } else {
+            currentBuffer.set(byteBuffer);
+            CountDownLatch countDownLatch = nextBufferSignal.get();
+            nextBufferSignal.set(null);
+            Optional.ofNullable(countDownLatch).ifPresent(CountDownLatch::countDown);
+            }
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            subscription.set(null);
+            exception.set(t);
+            Optional.ofNullable(nextBufferSignal.get()).ifPresent(CountDownLatch::countDown);
+            nextBufferSignal.set(null);
+            completed.set(true);
+        }
+
+        @Override
+        public void onComplete() {
+            subscription.set(null);
+            completed.set(true);
+            Optional.ofNullable(nextBufferSignal.get()).ifPresent(CountDownLatch::countDown);
+            nextBufferSignal.set(null);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) {
             return nextNonEmptyBuffer()
                 .map(buffer -> {
                     int toRead = Math.min(len, buffer.remaining());
                     buffer.get(b, off, toRead);
+                    if (buffer.remaining() == 0 && !completed.get()) {
+                        currentBuffer.set(null);
+                        requestOne();
+                    }
                     return toRead;
                 })
-                .orElse(NO_MORE_DATA);
+                .orElseGet(Throwing.supplier(() -> {
+                    if (exception.get() != null) {
+                        throw exception.get();
+                    }
+                    return NO_MORE_DATA;
+                }).sneakyThrow());
         }
 
         @Override
         public int available() {
-            return currentItemByteStream.map(Buffer::remaining).orElse(0);
+            return Optional.ofNullable(currentBuffer.get()).map(Buffer::remaining).orElse(0);
         }
 
         @Override
         public int read() {
             return nextNonEmptyBuffer()
-                .map(ReactorUtils::byteToInt)
-                .orElse(NO_MORE_DATA);
+                .map(byteBuffer -> {
+                    int result = byteToInt(byteBuffer);
+                    if (byteBuffer.remaining() == 0 && !completed.get()) {
+                        currentBuffer.set(null);
+                        requestOne();
+                    }
+                    return result;
+                })
+                .orElseGet(Throwing.supplier(() -> {
+                    if (exception.get() != null) {
+                        throw exception.get();
+                    }
+                    return NO_MORE_DATA;
+                }).sneakyThrow());
         }
 
         private Optional<ByteBuffer> nextNonEmptyBuffer() {
-            Boolean needsNewBuffer = currentItemByteStream.map(buffer -> !buffer.hasRemaining()).orElse(true);
-            if (needsNewBuffer) {
-                if (source.hasNext()) {
-                    currentItemByteStream = Optional.of(source.next());
-                    return nextNonEmptyBuffer();
-                } else {
+            ByteBuffer byteBuffer = currentBuffer.get();
+            if (byteBuffer == null || byteBuffer.remaining() == 0) {
+                if (completed.get() || exception.get() != null || subscription.get() == null) {
                     return Optional.empty();
+                } else {
+                    CountDownLatch countDownLatch = nextBufferSignal.get();
+                    if (countDownLatch != null) {
+                        try {
+                            countDownLatch.await();
+                        } catch (InterruptedException e) {
+                            close();
+                            Thread.currentThread().interrupt();
+                            return Optional.empty();
+                        }
+                    } else {
+                        requestOne();
+                    }
+                    return nextNonEmptyBuffer();
                 }
             }
-            return currentItemByteStream;
+            return Optional.of(byteBuffer);
+        }
+
+        private CountDownLatch requestOne() {
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            nextBufferSignal.set(countDownLatch);
+            subscription.get().request(1);
+            return countDownLatch;
         }
 
         @Override
-        public void close() throws IOException {
-            sourceAsStream.close();
+        public void close() {
+            Optional.ofNullable(subscription.get()).ifPresent(Subscription::cancel);
+            subscription.set(null);
+            Optional.ofNullable(nextBufferSignal.get()).ifPresent(CountDownLatch::countDown);
+            nextBufferSignal.set(null);
         }
     }
 
