@@ -43,6 +43,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.reactivestreams.Publisher;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -295,6 +296,11 @@ public class CassandraMessageMetadata {
         @Override
         public MailboxMessage copy(Mailbox mailbox) throws MailboxException {
             return new CassandraMailboxMessage(delegate.copy(mailbox), headerBlobId);
+        }
+
+        @Override
+        public Publisher<InputStream> lazyLoadedFullContent() {
+            return delegate.lazyLoadedFullContent();
         }
     }
 

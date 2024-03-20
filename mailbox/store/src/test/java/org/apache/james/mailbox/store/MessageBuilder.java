@@ -30,6 +30,7 @@ import java.util.Optional;
 
 import jakarta.mail.Flags;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
@@ -43,6 +44,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
+import reactor.core.publisher.Mono;
 
 public class MessageBuilder {
     private static final char[] NEW_LINE = { 0x0D, 0x0A };
@@ -85,7 +87,7 @@ public class MessageBuilder {
         byte[] headerContent = getHeaderContent();
         ThreadId threadId = ThreadId.fromBaseMessageId(messageId);
         SimpleMailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, size, headerContent.length,
-            new ByteContent(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS, saveDate);
+            new ByteContent(Bytes.concat(headerContent, body)), flags, new PropertyBuilder().build(), mailboxId, NO_ATTACHMENTS, Mono.error(new NotImplementedException()), saveDate);
         mailboxMessage.setUid(uid);
         return mailboxMessage;
     }

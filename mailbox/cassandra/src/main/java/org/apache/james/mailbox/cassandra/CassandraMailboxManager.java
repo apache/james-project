@@ -54,7 +54,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
         MailboxCapabilities.Namespace,
         MailboxCapabilities.Annotation,
         MailboxCapabilities.ACL,
-        MailboxCapabilities.Quota);
+        MailboxCapabilities.Quota,
+        MailboxCapabilities.MessageContentStreaming);
     public static final EnumSet<MessageCapabilities> MESSAGE_CAPABILITIES = EnumSet.of(MessageCapabilities.UniqueID);
 
     private final MailboxPathLocker locker;

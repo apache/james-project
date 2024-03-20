@@ -56,6 +56,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.T
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -346,7 +347,23 @@ public class CassandraMessageDAOV3 {
                     getProperties(row),
                     getAttachments(row),
                     headerId,
-                    bodyId));
+                    bodyId,
+                    lazyLoadedFullContent(headerId, bodyId, fetchType, content)));
+    }
+
+    private Mono<InputStream> lazyLoadedFullContent(BlobId headerId, BlobId bodyId, FetchType fetchType, Content content) {
+        switch (fetchType) {
+            case FULL:
+                return Mono.fromCallable(content::getInputStream);
+            case HEADERS:
+                return Mono.defer(() -> Mono.fromCallable(content::getInputStream)
+                    .zipWith(Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), bodyId, LOW_COST)), SequenceInputStream::new)
+                    .subscribeOn(Schedulers.boundedElastic()));
+            default:
+                return Mono.defer(() -> Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), headerId, SIZE_BASED))
+                    .zipWith(Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), bodyId, LOW_COST)), SequenceInputStream::new)
+                    .subscribeOn(Schedulers.boundedElastic()));
+        }
     }
 
     private Properties getProperties(Row row) {

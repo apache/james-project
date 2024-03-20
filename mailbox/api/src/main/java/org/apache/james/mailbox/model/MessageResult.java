@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.model;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +31,7 @@ import jakarta.mail.Flags;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.reactivestreams.Publisher;
 
 
 /**
@@ -168,4 +170,5 @@ public interface MessageResult extends Comparable<MessageResult> {
      */
     List<MessageAttachmentMetadata> getLoadedAttachments() throws MailboxException;
 
+    Publisher<InputStream> lazyLoadedFullContent();
 }

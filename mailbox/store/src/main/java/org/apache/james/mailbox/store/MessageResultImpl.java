@@ -376,4 +376,9 @@ public class MessageResultImpl implements MessageResult {
             return headers.iterator();
         }
     }
+
+    @Override
+    public Publisher<InputStream> lazyLoadedFullContent() {
+        return message.lazyLoadedFullContent();
+    }
 }

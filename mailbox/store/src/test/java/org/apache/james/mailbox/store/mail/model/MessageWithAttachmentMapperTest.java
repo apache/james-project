@@ -31,6 +31,7 @@ import java.util.List;
 
 import jakarta.mail.Flags;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ByteContent;
@@ -54,6 +55,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
+import reactor.core.publisher.Mono;
 
 public abstract class MessageWithAttachmentMapperTest {
 
@@ -186,7 +188,7 @@ public abstract class MessageWithAttachmentMapperTest {
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
-        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments, EMPTY_SAVE_DATE);
+        return new SimpleMailboxMessage(messageId, threadId, new Date(), content.length(), bodyStart, new ByteContent(content.getBytes()), new Flags(), propertyBuilder.build(), mailbox.getMailboxId(), attachments, Mono.error(new NotImplementedException()), EMPTY_SAVE_DATE);
     }
 
     private SimpleMailboxMessage createMessage(Mailbox mailbox, MessageId messageId, ThreadId threadId, String content, int bodyStart, PropertyBuilder propertyBuilder) {

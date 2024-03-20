@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store;
 
 import static org.apache.james.mailbox.store.mail.FetchGroupConverter.getFetchType;
 
+import java.io.InputStream;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -51,8 +52,11 @@ import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Mono;
 
 public class StoreMessageResultIterator implements MessageResultIterator {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageResultIterator.class);
@@ -290,6 +294,10 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             throw exception;
         }
 
+        @Override
+        public Publisher<InputStream> lazyLoadedFullContent() {
+            return Mono.error(exception);
+        }
     }
 
 }

@@ -68,10 +68,13 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
+import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Abstract base class for JPA based implementations of
@@ -576,5 +579,10 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     private AttachmentId generateFixedAttachmentId(int position) {
         return AttachmentId.from(getMailboxId().serialize() + "-" + getUid().asLong() + "-" + position);
+    }
+
+    @Override
+    public Publisher<InputStream> lazyLoadedFullContent() {
+        return Mono.fromCallable(this::getFullContent);
     }
 }

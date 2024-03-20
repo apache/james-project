@@ -34,6 +34,7 @@ import jakarta.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -52,6 +53,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+import reactor.core.publisher.Mono;
 
 class SimpleMailboxMessageTest {
     static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
@@ -125,7 +127,7 @@ class SimpleMailboxMessageTest {
             new Flags(),
             propertyBuilder.build(),
             TEST_ID,
-            List.of(),
+            List.of(), Mono.error(new NotImplementedException()),
             saveDate);
 
         SimpleMailboxMessage copy = SimpleMailboxMessage.copy(TestId.of(1337), original);

@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail.model.impl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Optional;
 import jakarta.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -42,6 +44,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ThreadId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.reactivestreams.Publisher;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -49,6 +52,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
+
+import reactor.core.publisher.Mono;
 
 public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
@@ -69,10 +74,16 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private MailboxId mailboxId;
         private Optional<MessageUid> uid = Optional.empty();
         private Optional<ModSeq> modseq = Optional.empty();
+        private Optional<Publisher<InputStream>> lazyLoadedFullContent = Optional.empty();
         private ImmutableList.Builder<MessageAttachmentMetadata> attachments = ImmutableList.builder();
 
         public Builder messageId(MessageId messageId) {
             this.messageId = messageId;
+            return this;
+        }
+
+        public Builder lazyLoadedFullContent(Publisher<InputStream> lazyLoadedFullContent) {
+            this.lazyLoadedFullContent = Optional.of(lazyLoadedFullContent);
             return this;
         }
 
@@ -161,7 +172,8 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
             ImmutableList<MessageAttachmentMetadata> attachments = this.attachments.build();
             SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, threadId, internalDate, size,
-                bodyStartOctet, content, flags, properties, mailboxId, attachments, saveDate);
+                bodyStartOctet, content, flags, properties, mailboxId, attachments,
+                lazyLoadedFullContent.orElse(Mono.error(new NotImplementedException("build"))), saveDate);
 
             uid.ifPresent(simpleMailboxMessage::setUid);
             modseq.ifPresent(simpleMailboxMessage::setModSeq);
@@ -184,6 +196,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .threadId(original.getThreadId())
             .bodyStartOctet(Ints.checkedCast(original.getFullContentOctets() - original.getBodyOctets()))
             .content(copyFullContent(original))
+            .lazyLoadedFullContent(Mono.fromCallable(original::getFullContent))
             .messageId(original.getMessageId())
             .internalDate(original.getInternalDate())
             .saveDate(original.getSaveDate())
@@ -207,6 +220,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     private MessageUid uid;
     private final MailboxId mailboxId;
+    private final Publisher<InputStream> lazyLoadedFullContent;
     private final ThreadId threadId;
     private Optional<Date> saveDate;
     private boolean answered;
@@ -220,7 +234,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
 
     public SimpleMailboxMessage(MessageId messageId, ThreadId threadId, Date internalDate, long size, int bodyStartOctet,
                                 Content content, Flags flags,
-                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
+                                Properties properties, MailboxId mailboxId, List<MessageAttachmentMetadata> attachments, Publisher<InputStream> lazyLoadedFullContent, Optional<Date> saveDate) {
         super(new SimpleMessage(
                 messageId,
                 content, size, internalDate,
@@ -228,6 +242,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
                 properties.getTextualLineCount(),
                 properties,
                 attachments));
+        this.lazyLoadedFullContent = lazyLoadedFullContent;
 
         setFlags(flags);
         this.mailboxId = mailboxId;
@@ -241,7 +256,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
                                 Properties properties, MailboxId mailboxId) {
         this(messageId, threadId, internalDate, size, bodyStartOctet,
                 content, flags,
-                properties, mailboxId, ImmutableList.of(), EMPTY_SAVE_DATE);
+                properties, mailboxId, ImmutableList.of(), Mono.error(() -> new NotImplementedException("SimpleMailboxMessage constructor")), EMPTY_SAVE_DATE);
     }
 
     @Override
@@ -373,5 +388,10 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     @Override
     public MailboxMessage copy(Mailbox mailbox) throws MailboxException {
         return SimpleMailboxMessage.copy(mailbox.getMailboxId(), this);
+    }
+
+    @Override
+    public Publisher<InputStream> lazyLoadedFullContent() {
+        return lazyLoadedFullContent;
     }
 }

@@ -87,7 +87,9 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
         Namespace,
         UserFlag,
         ACL,
-        Quota
+        Quota,
+        // Reads at level HeaderWithAttachementsMetadata allows to also lazy load the body
+        MessageContentStreaming
     }
 
     EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();

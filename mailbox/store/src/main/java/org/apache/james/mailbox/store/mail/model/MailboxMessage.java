@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model;
 
+import java.io.InputStream;
 import java.util.Date;
 import java.util.Optional;
 
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.ThreadId;
+import org.reactivestreams.Publisher;
 
 /**
  * A MIME message, consisting of meta-data (including MIME headers)
@@ -129,4 +131,6 @@ public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
     MailboxMessage copy(Mailbox mailbox) throws MailboxException;
 
     Optional<Date> getSaveDate();
+
+    Publisher<InputStream> lazyLoadedFullContent();
 }

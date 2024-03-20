@@ -33,6 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -172,6 +173,22 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             .operation((a, b) -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName + a), session))
             .threadCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
+    }
+
+    @Test
+    void headerFetchGroupShouldAllowToStreamContent() throws Exception {
+        assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.MessageContentStreaming));
+
+        MailboxSession session = mailboxManager.createSystemSession(USER_1);
+        MailboxId mailboxId = mailboxManager.createMailbox(MailboxPath.inbox(USER_1), session).get();
+        MessageManager inboxManager = mailboxManager.getMailbox(mailboxId, session);
+        ComposedMessageId message1 = inboxManager.appendMessage(AppendCommand.builder()
+            .build(message), session).getId();
+
+        InputStream streamedContent = Mono.from(inboxManager.getMessages(MessageRange.one(message1.getUid()), FetchGroup.HEADERS_WITH_ATTACHMENTS_METADATA, session).next().lazyLoadedFullContent()).block();
+        MessageResult fullContent = inboxManager.getMessages(MessageRange.one(message1.getUid()), FetchGroup.FULL_CONTENT, session).next();
+
+        assertThat(streamedContent).hasSameContentAs(fullContent.getFullContent().getInputStream());
     }
 
     @Test

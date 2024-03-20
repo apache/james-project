@@ -33,6 +33,7 @@ import java.util.Optional;
 
 import jakarta.mail.Flags;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
@@ -73,6 +74,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteSource;
+import reactor.core.publisher.Mono;
 
 class CassandraMessageMapperTest extends MessageMapperTest {
     @RegisterExtension
@@ -451,7 +453,7 @@ class CassandraMessageMapperTest extends MessageMapperTest {
         List<MessageAttachmentMetadata> messageAttachments = attachmentMapper.storeAttachments(ImmutableList.of(attachment1), messageId);
         MailboxMessage message = new SimpleMailboxMessage(messageId, ThreadId.fromBaseMessageId(messageId), new Date(), content.length(), 16,
             new ByteContent(content.getBytes()), new Flags(), new PropertyBuilder().build(), benwaInboxMailbox.getMailboxId(),
-            messageAttachments, Optional.empty());
+            messageAttachments, Mono.error(new NotImplementedException()), Optional.empty());
         messageMapper.add(benwaInboxMailbox, message);
         message.setModSeq(messageMapper.getHighestModSeq(benwaInboxMailbox));
 

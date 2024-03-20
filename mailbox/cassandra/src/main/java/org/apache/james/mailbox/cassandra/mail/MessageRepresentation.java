@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.reactivestreams.Publisher;
 
 public class MessageRepresentation {
     private final MessageId messageId;
@@ -41,9 +43,11 @@ public class MessageRepresentation {
     private final List<MessageAttachmentRepresentation> attachments;
     private final BlobId headerId;
     private final BlobId bodyId;
+    private final Publisher<InputStream> lazyLoadedFullContent;
 
     public MessageRepresentation(MessageId messageId, Date internalDate, Long size, Integer bodyStartOctet, Content content,
-                                 Properties properties, List<MessageAttachmentRepresentation> attachments, BlobId headerId, BlobId bodyId) {
+                                 Properties properties, List<MessageAttachmentRepresentation> attachments, BlobId headerId, BlobId bodyId,
+                                 Publisher<InputStream> lazyLoadedFullContent) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
@@ -53,6 +57,7 @@ public class MessageRepresentation {
         this.attachments = attachments;
         this.headerId = headerId;
         this.bodyId = bodyId;
+        this.lazyLoadedFullContent = lazyLoadedFullContent;
     }
 
     public SimpleMailboxMessage toMailboxMessage(ComposedMessageIdWithMetaData metadata, List<MessageAttachmentMetadata> attachments, Optional<Date> saveDate) {
@@ -70,6 +75,7 @@ public class MessageRepresentation {
             .flags(metadata.getFlags())
             .properties(properties)
             .addAttachments(attachments)
+            .lazyLoadedFullContent(lazyLoadedFullContent)
             .build();
     }
 
@@ -107,5 +113,9 @@ public class MessageRepresentation {
 
     public BlobId getBodyId() {
         return bodyId;
+    }
+
+    public Publisher<InputStream> getLazyLoadedFullContent() {
+        return lazyLoadedFullContent;
     }
 }

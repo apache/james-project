@@ -35,6 +35,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
+import reactor.core.publisher.Mono;
+
 public interface MessageFactory<T extends MailboxMessage> {
     T createMessage(MessageId messageId, ThreadId threadId, Mailbox mailbox, Date internalDate, Date saveDate, int size, int bodyStartOctet,
                     Content content, Flags flags, PropertyBuilder propertyBuilder,
@@ -46,7 +48,7 @@ public interface MessageFactory<T extends MailboxMessage> {
                                                   int bodyStartOctet, Content content, Flags flags,
                                                   PropertyBuilder propertyBuilder, List<MessageAttachmentMetadata> attachments) {
             return new SimpleMailboxMessage(messageId, threadId, internalDate, size, bodyStartOctet, content, flags, propertyBuilder.build(),
-                mailbox.getMailboxId(), attachments, Optional.of(saveDate));
+                mailbox.getMailboxId(), attachments, Mono.fromCallable(content::getInputStream), Optional.of(saveDate));
         }
     }
 }
