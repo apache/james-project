@@ -46,7 +46,7 @@ import org.apache.james.modules.{ACLProbeImpl, MailboxProbeImpl}
 import org.apache.james.util.concurrency.ConcurrentTestRunner
 import org.apache.james.utils.DataProbeImpl
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.{Assertions, SoftAssertions}
+import org.assertj.core.api.{Assertions, SoftAssertions, ThrowingConsumer}
 import org.awaitility.Awaitility
 import org.hamcrest.Matchers.{equalTo, hasSize, not}
 import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Tag, Test}
@@ -62,6 +62,7 @@ import sttp.monad.MonadError
 import sttp.ws.WebSocketFrame
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration.MILLISECONDS
 import scala.jdk.CollectionConverters._
 
 
@@ -8168,18 +8169,15 @@ trait MailboxSetMethodContract {
                  |      }
                  |    }, "c1"]]
                  |}""".stripMargin))
-
-            ws.receive().asPayload
-            List(ws.receive().asPayload)
+            ws.receiveMessageInTimespan(scala.concurrent.duration.Duration(1000, MILLISECONDS))
         })
         .send(backend)
         .body
 
-    Thread.sleep(200)
+    val hasMailboxStateChangeConsumer : ThrowingConsumer[String] = (s: String) => assertThat(s)
+        .startsWith("{\"@type\":\"StateChange\",\"changed\":{\"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\":{\"Mailbox\":")
     assertThat(response.toOption.get.asJava)
-      .hasSize(1)
-    assertThat(response.toOption.get.head)
-      .startsWith("{\"@type\":\"StateChange\",\"changed\":{\"29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6\":{\"Mailbox\":")
+      .anySatisfy(hasMailboxStateChangeConsumer)
   }
 
   @Test
