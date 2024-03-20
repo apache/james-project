@@ -33,7 +33,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 
-import javax.mail.Flags;
+import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresUtils;
