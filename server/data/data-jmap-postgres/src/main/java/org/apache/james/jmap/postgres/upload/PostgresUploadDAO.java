@@ -71,14 +71,21 @@ public class PostgresUploadDAO {
         this.blobIdFactory = blobIdFactory;
     }
 
-    public Mono<Void> insert(UploadMetaData upload, Username user) {
-        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(PostgresUploadTable.TABLE_NAME)
-            .set(PostgresUploadTable.ID, upload.uploadId().getId())
-            .set(PostgresUploadTable.CONTENT_TYPE, upload.contentType().asString())
-            .set(PostgresUploadTable.SIZE, upload.sizeAsLong())
-            .set(PostgresUploadTable.BLOB_ID, upload.blobId().asString())
-            .set(PostgresUploadTable.USER_NAME, user.asString())
-            .set(PostgresUploadTable.UPLOAD_DATE, INSTANT_TO_LOCAL_DATE_TIME.apply(upload.uploadDate()))));
+    public Mono<UploadMetaData> insert(UploadMetaData upload, Username user) {
+        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.insertInto(PostgresUploadTable.TABLE_NAME)
+                .set(PostgresUploadTable.ID, upload.uploadId().getId())
+                .set(PostgresUploadTable.CONTENT_TYPE, upload.contentType().asString())
+                .set(PostgresUploadTable.SIZE, upload.sizeAsLong())
+                .set(PostgresUploadTable.BLOB_ID, upload.blobId().asString())
+                .set(PostgresUploadTable.USER_NAME, user.asString())
+                .set(PostgresUploadTable.UPLOAD_DATE, INSTANT_TO_LOCAL_DATE_TIME.apply(upload.uploadDate()))
+                .returning(PostgresUploadTable.ID,
+                    PostgresUploadTable.CONTENT_TYPE,
+                    PostgresUploadTable.SIZE,
+                    PostgresUploadTable.BLOB_ID,
+                    PostgresUploadTable.UPLOAD_DATE,
+                    PostgresUploadTable.USER_NAME)))
+            .map(this::uploadMetaDataFromRow);
     }
 
     public Flux<UploadMetaData> list(Username user) {
