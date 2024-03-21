@@ -72,8 +72,7 @@ public class PostgresUploadRepository implements UploadRepository {
         return Mono.fromCallable(() -> new CountingInputStream(data))
             .flatMap(countingInputStream -> Mono.from(blobStore.save(UPLOAD_BUCKET, countingInputStream, LOW_COST))
                 .map(blobId -> UploadMetaData.from(uploadId, contentType, countingInputStream.getCount(), blobId, clock.instant()))
-                .flatMap(uploadMetaData -> uploadDAO.insert(uploadMetaData, user)
-                    .thenReturn(uploadMetaData)));
+                .flatMap(uploadMetaData -> uploadDAO.insert(uploadMetaData, user)));
     }
 
     @Override
