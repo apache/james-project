@@ -62,6 +62,7 @@ import io.netty.handler.stream.ChunkedWriteHandler;
  */
 public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapConstants, IMAPServerMBean, NettyConstants {
     private static final Logger LOG = LoggerFactory.getLogger(IMAPServer.class);
+    private static final DefaultMessageSizeEstimatorSupportingChunkedStream SIZE_ESTIMATOR_SUPPORTING_CHUNKED_STREAM = new DefaultMessageSizeEstimatorSupportingChunkedStream(8);
 
     public static class AuthenticationConfiguration {
         private static final boolean PLAIN_AUTH_DISALLOWED_DEFAULT = true;
@@ -273,6 +274,9 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                     literalSizeLimit, maxLineLength));
 
                 pipeline.addLast(CORE_HANDLER, createCoreHandler());
+
+                // A ChunkedStream supported MessageSizeEstimator is needed to back Netty backpressure
+                channel.config().setMessageSizeEstimator(SIZE_ESTIMATOR_SUPPORTING_CHUNKED_STREAM);
             }
 
         };

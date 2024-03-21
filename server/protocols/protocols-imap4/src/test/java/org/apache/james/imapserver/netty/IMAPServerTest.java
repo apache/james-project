@@ -56,18 +56,6 @@ import java.util.stream.IntStream;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import jakarta.mail.FetchProfile;
-import jakarta.mail.Flags;
-import jakarta.mail.Folder;
-import jakarta.mail.Message;
-import jakarta.mail.Session;
-import jakarta.mail.Store;
-import jakarta.mail.search.AndTerm;
-import jakarta.mail.search.BodyTerm;
-import jakarta.mail.search.FromStringTerm;
-import jakarta.mail.search.RecipientStringTerm;
-import jakarta.mail.search.SearchTerm;
-import jakarta.mail.search.SubjectTerm;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -113,7 +101,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
@@ -133,6 +120,18 @@ import io.netty.handler.codec.compression.JdkZlibDecoder;
 import io.netty.handler.codec.compression.JdkZlibEncoder;
 import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.ssl.SslContextBuilder;
+import jakarta.mail.FetchProfile;
+import jakarta.mail.Flags;
+import jakarta.mail.Folder;
+import jakarta.mail.Message;
+import jakarta.mail.Session;
+import jakarta.mail.Store;
+import jakarta.mail.search.AndTerm;
+import jakarta.mail.search.BodyTerm;
+import jakarta.mail.search.FromStringTerm;
+import jakarta.mail.search.RecipientStringTerm;
+import jakarta.mail.search.SearchTerm;
+import jakarta.mail.search.SubjectTerm;
 import nl.altindag.ssl.exception.GenericKeyStoreException;
 import nl.altindag.ssl.pem.exception.PrivateKeyParseException;
 import reactor.core.publisher.Flux;
@@ -2516,6 +2515,35 @@ class IMAPServerTest {
         @Test
         void fetchShouldBackPressureWhenNoRead() throws Exception {
             String msgIn = "MIME-Version: 1.0\r\n\r\nCONTENT\r\n\r\n" + "0123456789\r\n0123456789\r\n0123456789\r\n".repeat(1024);
+            IntStream.range(0, 500)
+                .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
+                    .build(msgIn), mailboxSession)));
+            AtomicInteger loaded = new AtomicInteger(0);
+            MessageManager inboxSpy = spy(inbox);
+            doReturn(Mono.just(inboxSpy)).when(mailboxManager).getMailboxReactive(eq(MailboxPath.inbox(USER)), any());
+            doReturn(Mono.just(inboxSpy)).when(mailboxManager).getMailboxReactive(eq(inbox.getMailboxEntity().getMailboxId()), any());
+            doAnswer((Answer<Object>) invocationOnMock -> Flux.from(inbox.getMessagesReactive(invocationOnMock.getArgument(0), invocationOnMock.getArgument(1), invocationOnMock.getArgument(2)))
+                .doOnNext(any -> loaded.incrementAndGet())).when(inboxSpy).getMessagesReactive(any(), any(), any());
+
+            clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
+            readBytes(clientConnection);
+
+            clientConnection.write(ByteBuffer.wrap(("A1 SELECT INBOX\r\n").getBytes(StandardCharsets.UTF_8)));
+            // Select completes first
+            readStringUntil(clientConnection, s -> s.contains("A1 OK [READ-WRITE] SELECT completed."));
+            clientConnection.write(ByteBuffer.wrap(("A2 UID FETCH 1:500 (BODY[])\r\n").getBytes(StandardCharsets.UTF_8)));
+
+            Thread.sleep(1000);
+
+            assertThat(loaded.get()).isLessThan(500);
+            readStringUntil(clientConnection, s -> s.contains("A2 OK FETCH completed."));
+            assertThat(loaded.get()).isEqualTo(500);
+        }
+
+
+        @Test
+        void fetchShouldBackPressureWhenIMAPServerMemoryIsFullLoadingMessages() throws Exception {
+            String msgIn = "MIME-Version: 1.0\r\n\r\nCONTENT\r\n\r\n" + "0123456789\r\n0123456789\r\n0123456789\r\n".repeat(8000);
             IntStream.range(0, 500)
                 .forEach(Throwing.intConsumer(i -> inbox.appendMessage(MessageManager.AppendCommand.builder()
                     .build(msgIn), mailboxSession)));

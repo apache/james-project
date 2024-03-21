@@ -34,7 +34,6 @@ import io.netty.channel.DefaultFileRegion;
 import io.netty.handler.codec.compression.ZlibEncoder;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedNioFile;
-import io.netty.handler.stream.ChunkedStream;
 
 /**
  * {@link ImapResponseWriter} implementation which writes the data to a
@@ -90,7 +89,7 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
                     channel.writeAndFlush(new ChunkedNioFile(fc, 8192));
                 }
             } else {
-                channel.writeAndFlush(new ChunkedStream(in));
+                channel.writeAndFlush(new ChunkedStreamWithSize(in));
             }
         }
     }

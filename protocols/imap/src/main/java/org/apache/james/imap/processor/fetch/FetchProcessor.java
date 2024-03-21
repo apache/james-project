@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
@@ -77,6 +78,7 @@ import reactor.core.publisher.Sinks;
 
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     static class FetchSubscriber implements Subscriber<FetchResponse> {
+        private final AtomicInteger messagesTransferToClientCount = new AtomicInteger(0);
         private final AtomicReference<Subscription> subscription = new AtomicReference<>();
         private final Sinks.One<Void> sink = Sinks.one();
         private final ImapSession imapSession;
@@ -97,9 +99,11 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         public void onNext(FetchResponse fetchResponse) {
             responder.respond(fetchResponse);
             if (imapSession.backpressureNeeded(this::requestOne)) {
+                System.out.println(String.format("Triggered backpressure after %d messages transferred to client", messagesTransferToClientCount.get()));
                 LOGGER.debug("Applying backpressure as we encounter a slow reader");
             } else {
                 requestOne();
+                System.out.println(String.format("returning a message number %d", messagesTransferToClientCount.incrementAndGet()));
             }
         }
 
