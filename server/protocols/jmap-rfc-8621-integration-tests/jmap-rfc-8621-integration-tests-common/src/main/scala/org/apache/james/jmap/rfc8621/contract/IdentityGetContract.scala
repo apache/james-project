@@ -686,7 +686,8 @@ trait IdentityGetContract {
                 |    "Identity/get",
                 |    {
                 |      "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
-                |      "ids": [ "$serverSetIdentityId" ]
+                |      "ids": [ "$serverSetIdentityId" ],
+                |      "properties": ["id", "mayDelete"]
                 |    },
                 |    "c1"]]
                 |}""".stripMargin)
@@ -703,11 +704,7 @@ trait IdentityGetContract {
       .inPath("methodResponses[0][1].list[0]")
       .isEqualTo(
         s"""{
-           |    "name": "",
-           |    "email": "bob@domain.tld",
-           |    "htmlSignature": "html signature",
            |    "id": "$serverSetIdentityId",
-           |    "textSignature": "",
            |    "mayDelete": false
            |}""".stripMargin)
   }
