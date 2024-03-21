@@ -30,7 +30,7 @@
 
     <properties>
         <jooq.version>3.19.6</jooq.version>
-        <r2dbc.postgresql.version>1.0.3.RELEASE</r2dbc.postgresql.version>
+        <r2dbc.postgresql.version>1.0.4.RELEASE</r2dbc.postgresql.version>
     </properties>
 
     <dependencies>
