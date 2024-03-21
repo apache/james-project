@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;

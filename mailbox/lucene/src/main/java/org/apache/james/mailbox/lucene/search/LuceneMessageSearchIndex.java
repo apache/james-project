@@ -36,9 +36,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 import jakarta.mail.Flags.Flag;
 

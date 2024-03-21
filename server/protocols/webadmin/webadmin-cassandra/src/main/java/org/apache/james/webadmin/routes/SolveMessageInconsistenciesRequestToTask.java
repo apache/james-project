@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesService;
 import org.apache.james.mailbox.cassandra.mail.task.SolveMessageInconsistenciesTask;

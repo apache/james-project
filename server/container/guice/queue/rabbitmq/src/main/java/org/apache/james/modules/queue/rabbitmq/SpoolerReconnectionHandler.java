@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.queue.rabbitmq;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;

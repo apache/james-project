@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

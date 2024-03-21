@@ -21,8 +21,8 @@ package org.apache.james.jpa.healthcheck;
 import static org.apache.james.core.healthcheck.Result.healthy;
 import static org.apache.james.core.healthcheck.Result.unhealthy;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManagerFactory;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.healthcheck.ComponentName;

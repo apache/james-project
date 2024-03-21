@@ -22,7 +22,7 @@ package org.apache.james.adapter.mailbox;
 import java.io.Closeable;
 import java.io.IOException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;

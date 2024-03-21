@@ -19,7 +19,7 @@
 
 package org.apache.james.spamassassin.module;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
 import org.apache.james.modules.mailbox.ListenerConfiguration;

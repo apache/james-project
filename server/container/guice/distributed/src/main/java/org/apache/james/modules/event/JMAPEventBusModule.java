@@ -21,7 +21,7 @@ package org.apache.james.modules.event;
 
 import static org.apache.james.events.NamingStrategy.JMAP_NAMING_STRATEGY;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;

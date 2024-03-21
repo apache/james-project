@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.routes
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.{CapabilityFactory, ErrorCode, Invocation, JmapRfc8621Configuration, MissingCapabilityException, RequestObject, ResponseObject}

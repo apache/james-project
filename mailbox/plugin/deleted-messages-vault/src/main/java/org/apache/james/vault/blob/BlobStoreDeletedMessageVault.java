@@ -27,7 +27,7 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreDAO;

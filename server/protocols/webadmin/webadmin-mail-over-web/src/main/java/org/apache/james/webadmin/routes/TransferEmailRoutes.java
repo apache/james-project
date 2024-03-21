@@ -23,9 +23,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.UUID;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 

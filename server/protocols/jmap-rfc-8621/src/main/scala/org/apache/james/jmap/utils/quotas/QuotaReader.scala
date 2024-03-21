@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.utils.quotas
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.quota.{QuotaLimitValue, QuotaUsageValue}
 import org.apache.james.jmap.core.UnsignedInt
 import org.apache.james.jmap.core.UnsignedInt.UnsignedInt

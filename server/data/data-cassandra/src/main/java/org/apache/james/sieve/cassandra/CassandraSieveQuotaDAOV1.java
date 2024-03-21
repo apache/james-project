@@ -27,7 +27,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.update;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;

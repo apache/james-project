@@ -28,7 +28,7 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;

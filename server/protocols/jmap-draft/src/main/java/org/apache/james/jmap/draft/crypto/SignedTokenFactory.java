@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.crypto;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;

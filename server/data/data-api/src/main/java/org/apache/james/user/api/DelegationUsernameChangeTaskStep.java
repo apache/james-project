@@ -19,7 +19,7 @@
 
 package org.apache.james.user.api;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.reactivestreams.Publisher;

@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra;
 
 import java.time.Clock;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;

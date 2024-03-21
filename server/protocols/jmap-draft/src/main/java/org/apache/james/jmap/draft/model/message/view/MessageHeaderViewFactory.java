@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.model.message.view;
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.methods.BlobManager;
 import org.apache.james.jmap.draft.model.BlobId;

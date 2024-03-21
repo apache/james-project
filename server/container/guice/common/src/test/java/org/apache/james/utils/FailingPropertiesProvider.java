@@ -21,7 +21,7 @@ package org.apache.james.utils;
 
 import java.io.FileNotFoundException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

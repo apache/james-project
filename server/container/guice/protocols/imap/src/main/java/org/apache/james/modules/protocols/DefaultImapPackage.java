@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.protocols;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
 

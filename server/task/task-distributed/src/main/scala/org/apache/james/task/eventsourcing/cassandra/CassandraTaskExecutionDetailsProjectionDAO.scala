@@ -33,7 +33,7 @@ import reactor.core.scala.publisher.SMono
 
 import java.time.Instant
 import java.util.Optional
-import javax.inject.Inject
+import jakarta.inject.Inject
 import scala.compat.java8.OptionConverters._
 
 class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: CqlSession, typesProvider: CassandraTypesProvider, jsonTaskAdditionalInformationSerializer: JsonTaskAdditionalInformationSerializer) {

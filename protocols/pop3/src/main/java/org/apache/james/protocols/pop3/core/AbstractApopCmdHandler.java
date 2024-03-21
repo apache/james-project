@@ -21,7 +21,7 @@ package org.apache.james.protocols.pop3.core;
 
 import java.util.Collection;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Username;

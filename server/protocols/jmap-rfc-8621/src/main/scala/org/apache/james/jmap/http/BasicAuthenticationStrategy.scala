@@ -25,7 +25,7 @@ import com.google.common.base.CharMatcher
 import eu.timepit.refined.api.{Refined, Validate}
 import eu.timepit.refined.auto._
 import eu.timepit.refined.refineV
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.UserCredential._

@@ -24,7 +24,7 @@ import static spark.Spark.halt;
 
 import java.util.Comparator;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;

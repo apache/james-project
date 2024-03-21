@@ -26,7 +26,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.UUID;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;

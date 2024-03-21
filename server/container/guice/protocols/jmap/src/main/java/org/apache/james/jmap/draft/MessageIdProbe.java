@@ -21,8 +21,7 @@ package org.apache.james.jmap.draft;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;

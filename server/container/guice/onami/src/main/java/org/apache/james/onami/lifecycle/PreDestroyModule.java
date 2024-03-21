@@ -19,7 +19,7 @@
 
 package org.apache.james.onami.lifecycle;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 
 import com.google.inject.TypeLiteral;
 

@@ -19,7 +19,7 @@
 
 package org.apache.james.pop3server.mailbox;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener.ReactiveGroupEventListener;

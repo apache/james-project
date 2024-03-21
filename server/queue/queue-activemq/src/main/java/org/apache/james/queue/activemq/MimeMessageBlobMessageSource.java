@@ -21,7 +21,7 @@ package org.apache.james.queue.activemq;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.BlobMessage;
 import org.apache.james.server.core.MimeMessageSource;

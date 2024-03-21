@@ -29,7 +29,7 @@ import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.NUMBER_
 
 import java.nio.ByteBuffer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;

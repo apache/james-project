@@ -22,7 +22,7 @@ package org.apache.james.sieve.cassandra;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;

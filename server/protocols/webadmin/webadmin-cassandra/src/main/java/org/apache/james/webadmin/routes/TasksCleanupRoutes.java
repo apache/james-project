@@ -23,7 +23,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;

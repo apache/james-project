@@ -35,7 +35,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentV2Tabl
 
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;

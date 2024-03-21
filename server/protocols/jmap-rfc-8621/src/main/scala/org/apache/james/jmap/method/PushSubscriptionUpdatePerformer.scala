@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 
 import com.google.common.collect.ImmutableSet
 import eu.timepit.refined.auto._
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{ExpireTimeInvalidException, PushSubscription, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionNotFoundException, TypeName, VerificationCode}
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository

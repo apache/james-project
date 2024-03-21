@@ -20,7 +20,7 @@ package org.apache.james.modules;
 
 import java.util.Set;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;

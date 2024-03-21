@@ -21,7 +21,7 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined
 import eu.timepit.refined.refineV
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{SetError, UuidState}

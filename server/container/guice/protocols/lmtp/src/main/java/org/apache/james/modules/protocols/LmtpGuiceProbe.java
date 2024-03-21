@@ -20,7 +20,7 @@ package org.apache.james.modules.protocols;
 
 import java.net.InetSocketAddress;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.utils.GuiceProbe;

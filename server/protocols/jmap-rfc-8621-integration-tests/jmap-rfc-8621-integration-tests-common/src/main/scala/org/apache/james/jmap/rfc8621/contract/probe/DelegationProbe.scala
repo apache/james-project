@@ -21,7 +21,7 @@ package org.apache.james.jmap.rfc8621.contract.probe
 
 import com.google.inject.AbstractModule
 import com.google.inject.multibindings.Multibinder
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.delegation.DelegationId
 import org.apache.james.user.api.DelegationStore

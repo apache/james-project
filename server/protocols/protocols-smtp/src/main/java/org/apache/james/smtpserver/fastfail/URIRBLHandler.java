@@ -26,8 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;

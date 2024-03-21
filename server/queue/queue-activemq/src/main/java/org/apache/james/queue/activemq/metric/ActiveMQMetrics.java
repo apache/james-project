@@ -22,8 +22,8 @@ package org.apache.james.queue.activemq.metric;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jms.JMSException;
-import javax.jms.MapMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.MapMessage;
 
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.GaugeRegistry.SettableGauge;

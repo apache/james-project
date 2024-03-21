@@ -26,7 +26,7 @@ import java.time.temporal.ChronoUnit
 
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.HttpResponseStatus
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
 import org.apache.james.jmap.pushsubscription.DefaultWebPushClient.{PUSH_SERVER_ERROR_RESPONSE_MAX_LENGTH, buildHttpClient}
 import org.apache.james.jmap.pushsubscription.WebPushClientHeader.{CONTENT_ENCODING, DEFAULT_TIMEOUT, MESSAGE_URGENCY, TIME_TO_LIVE, TOPIC}

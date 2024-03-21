@@ -21,7 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static spark.Spark.halt;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.api.LoopDetectedException;

@@ -32,9 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 import jakarta.mail.Address;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;

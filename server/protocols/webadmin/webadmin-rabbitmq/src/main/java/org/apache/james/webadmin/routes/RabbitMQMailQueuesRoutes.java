@@ -33,8 +33,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueName;

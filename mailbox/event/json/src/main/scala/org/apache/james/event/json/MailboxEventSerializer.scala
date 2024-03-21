@@ -22,7 +22,7 @@ package org.apache.james.event.json
 import java.time.Instant
 import java.util.{TreeMap => JavaTreeMap}
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import julienrf.json.derived
 import org.apache.james.core.Username
 import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaSizeLimit, QuotaSizeUsage}

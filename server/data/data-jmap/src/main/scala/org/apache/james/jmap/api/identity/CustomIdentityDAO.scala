@@ -21,7 +21,7 @@ package org.apache.james.jmap.api.identity
 
 import java.nio.charset.StandardCharsets
 import java.util.{Optional, UUID}
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom

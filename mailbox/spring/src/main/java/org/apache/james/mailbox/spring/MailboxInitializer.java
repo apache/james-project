@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.spring;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxManager;

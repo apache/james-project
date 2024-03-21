@@ -20,7 +20,7 @@
 
 package org.apache.james.managesieve.transcode;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.managesieve.api.ManageSieveException;

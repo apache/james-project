@@ -26,7 +26,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static org.apache.james.events.tables.CassandraEventDeadLettersGroupTable.GROUP;
 import static org.apache.james.events.tables.CassandraEventDeadLettersGroupTable.TABLE_NAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 

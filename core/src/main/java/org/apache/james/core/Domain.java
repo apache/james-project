@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;

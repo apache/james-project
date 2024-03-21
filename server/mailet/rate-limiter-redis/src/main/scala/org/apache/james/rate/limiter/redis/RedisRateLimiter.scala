@@ -29,7 +29,7 @@ import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.resource.ClientResources
 import org.apache.james.backends.redis.{RedisConfiguration, RedisHealthCheck}
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.healthcheck.HealthCheck
 import org.apache.james.rate.limiter.api.Increment.Increment
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult, Rule, Rules}

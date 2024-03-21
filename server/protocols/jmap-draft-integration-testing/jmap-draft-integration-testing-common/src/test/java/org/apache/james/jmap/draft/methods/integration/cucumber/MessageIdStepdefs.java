@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.methods.integration.cucumber;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.model.MessageId;
 

@@ -22,7 +22,7 @@ package org.apache.james.domainlist.memory;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
