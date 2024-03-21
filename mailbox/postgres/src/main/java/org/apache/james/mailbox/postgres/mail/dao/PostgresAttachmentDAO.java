@@ -31,6 +31,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.UuidBackedAttachmentId;
 import org.apache.james.mailbox.postgres.PostgresMessageId;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentModule.PostgresAttachmentTable;
 
@@ -72,7 +73,7 @@ public class PostgresAttachmentDAO {
                     PostgresAttachmentTable.MESSAGE_ID,
                     PostgresAttachmentTable.SIZE)
                 .from(PostgresAttachmentTable.TABLE_NAME)
-                .where(PostgresAttachmentTable.ID.eq(attachmentId.getId()))))
+                .where(PostgresAttachmentTable.ID.eq(attachmentId.asUUID()))))
             .map(row -> Pair.of(
                 AttachmentMetadata.builder()
                     .attachmentId(attachmentId)
@@ -90,7 +91,7 @@ public class PostgresAttachmentDAO {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(PostgresAttachmentTable.TABLE_NAME)
                 .where(PostgresAttachmentTable.ID.in(attachmentIds.stream().map(AttachmentId::getId).collect(ImmutableList.toImmutableList())))))
             .map(row -> AttachmentMetadata.builder()
-                .attachmentId(AttachmentId.from(row.get(PostgresAttachmentTable.ID)))
+                .attachmentId(UuidBackedAttachmentId.from(row.get(PostgresAttachmentTable.ID)))
                 .type(row.get(PostgresAttachmentTable.TYPE))
                 .messageId(PostgresMessageId.Factory.of(row.get(PostgresAttachmentTable.MESSAGE_ID)))
                 .size(row.get(PostgresAttachmentTable.SIZE))
@@ -99,7 +100,7 @@ public class PostgresAttachmentDAO {
 
     public Mono<Void> storeAttachment(AttachmentMetadata attachment, BlobId blobId) {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(PostgresAttachmentTable.TABLE_NAME)
-            .set(PostgresAttachmentTable.ID, attachment.getAttachmentId().getId())
+            .set(PostgresAttachmentTable.ID, attachment.getAttachmentId().asUUID())
             .set(PostgresAttachmentTable.BLOB_ID, blobId.asString())
             .set(PostgresAttachmentTable.TYPE, attachment.getType().asString())
             .set(PostgresAttachmentTable.MESSAGE_ID, ((PostgresMessageId) attachment.getMessageId()).asUuid())
