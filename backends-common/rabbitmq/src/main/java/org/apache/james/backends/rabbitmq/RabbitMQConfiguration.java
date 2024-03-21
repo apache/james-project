@@ -801,9 +801,9 @@ public class RabbitMQConfiguration {
         return sslConfiguration;
     }
 
-    public QueueArguments.Builder workQueueArgumentsBuilder(boolean allowQuorum) {
+    public QueueArguments.Builder workQueueArgumentsBuilder() {
         QueueArguments.Builder builder = QueueArguments.builder();
-        if (allowQuorum && useQuorumQueues) {
+        if (useQuorumQueues) {
             builder.quorumQueue().replicationFactor(quorumQueueReplicationFactor);
             quorumQueueDeliveryLimit.ifPresent(builder::deliveryLimit);
         }
@@ -815,7 +815,7 @@ public class RabbitMQConfiguration {
     }
 
     public Optional<Long> getQueueTTL() {
-        return queueTTL;
+        return Optional.empty(); //TODO make it clean
     }
 
     public boolean isEventBusPublishConfirmEnabled() {
