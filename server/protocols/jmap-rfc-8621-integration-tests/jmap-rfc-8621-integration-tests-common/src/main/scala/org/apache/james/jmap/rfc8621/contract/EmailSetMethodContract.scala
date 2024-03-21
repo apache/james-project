@@ -7677,14 +7677,22 @@ trait EmailSetMethodContract {
       .body
       .asString
 
+    val messageId = Json.parse(response)
+      .\("methodResponses")
+      .\(0).\(1)
+      .\("created")
+      .\("e1526")
+      .\("id")
+      .get.asInstanceOf[JsString].value
+
     assertThatJson(response)
       .inPath("methodResponses[1][1].list")
-      .isEqualTo("""[{
+      .isEqualTo(s"""[{
                    |    "to": [{
                    |        "name": "name1",
                    |        "email": "invalid1"
                    |      }],
-                   |    "id": "1",
+                   |    "id": "$messageId",
                    |    "from": [{
                    |        "email": "bob@domain.tld"
                    |      }
