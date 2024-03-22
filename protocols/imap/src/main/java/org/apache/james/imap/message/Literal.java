@@ -21,6 +21,7 @@ package org.apache.james.imap.message;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
@@ -41,6 +42,10 @@ public interface Literal {
      * @return elementIn
      */
     InputStream getInputStream() throws IOException;
+
+    default Optional<byte[][]> asBytesSequence() {
+        return Optional.empty();
+    }
 
     default Content asMailboxContent() {
         Literal literal = this;

@@ -22,6 +22,7 @@ package org.apache.james.imap.message;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
@@ -59,5 +60,12 @@ public class BytesBackedLiteral implements Literal {
     @Override
     public InputStream getInputStream() {
         return new ByteArrayInputStream(content);
+    }
+
+    @Override
+    public Optional<byte[][]> asBytesSequence() {
+        byte[][] answer = new byte[1][];
+        answer[0] = content;
+        return Optional.of(answer);
     }
 }

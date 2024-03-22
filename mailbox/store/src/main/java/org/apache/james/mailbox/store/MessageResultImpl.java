@@ -365,6 +365,11 @@ public class MessageResultImpl implements MessageResult {
         }
 
         @Override
+        public Optional<byte[][]> asBytesSequence() {
+            return msg.getHeadersBytes();
+        }
+
+        @Override
         public Iterator<Header> headers() throws MailboxException {
             if (headers == null) {
                 try {
