@@ -14,9 +14,14 @@ services:
         condition: service_started
       s3:
         condition: service_started
-    image: sami7786/distributed-james-test:MailetGroupJWT3
+    image: sami7786/distributed-james-test:MailetGroup
     container_name: james
     hostname: james.local
+    #volumes:
+     # - ./docker-configuration/jvm.properties:/root/conf/jvm.properties
+      #- ./docker-configuration/webadmin.properties:/root/conf/webadmin.properties
+      #- ./docker-configuration/jmap.properties:/root/conf/jmap.properties
+      #- ./docker-configuration/cassandra.properties:/root/conf/cassandra.properties
     command:
       - --generate-keystore
     networks:

@@ -38,9 +38,13 @@ import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.dto.AddUserRequest;
+import org.apache.james.webadmin.dto.VerifyUserRequest;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
+import org.apache.james.webadmin.utils.JsonExtractException;
+import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
@@ -66,21 +70,23 @@ public class UserRoutes implements Routes {
     private static final String FORCE_PARAM = "force";
     private static final String VERIFY = "verify";
     private static final String AUTHORIZED_USERS = "authorizedUsers";
-
+    private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
+    private final JsonExtractor<VerifyUserRequest> jsonExtractorVerify;
     private final CanSendFrom canSendFrom;
+    private final JsonExtractor<AddUserRequest> jsonExtractor;
     private final DelegationStore delegationStore;
 
     private Service service;
-
-    private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
 
     @Inject
     public UserRoutes(UserService userService, CanSendFrom canSendFrom, JsonTransformer jsonTransformer, DelegationStore delegationStore) {
         this.userService = userService;
         this.jsonTransformer = jsonTransformer;
         this.canSendFrom = canSendFrom;
+        this.jsonExtractor = new JsonExtractor<>(AddUserRequest.class);
+        this.jsonExtractorVerify = new JsonExtractor<>(VerifyUserRequest.class);
         this.delegationStore = delegationStore;
     }
 
@@ -193,9 +199,13 @@ public class UserRoutes implements Routes {
                     .message("Username supplied is invalid")
                     .haltError();
         }
-
         try {
-            userService.upsertUser(username, "".toCharArray());
+            boolean isForced = request.queryParams().contains(FORCE_PARAM);
+            if (isForced) {
+                userService.upsertUser(username, jsonExtractor.parse(request.body()).getPassword());
+            } else {
+                userService.insertUser(username, jsonExtractor.parse(request.body()).getPassword());
+            }
             return halt(HttpStatus.NO_CONTENT_204);
         } catch (InvalidUsernameException e) {
             LOGGER.info("Invalid username", e);
@@ -225,9 +235,33 @@ public class UserRoutes implements Routes {
         }
     }
 
-    private String verifyUser(Request request, Response response) {
-        response.status(HttpStatus.FORBIDDEN_403);
-        return Constants.BASIC_AUTH_DISABLED;
+    private String verifyUser(Request request, Response response) throws UsersRepositoryException {
+        Username username = extractUsername(request);
+        try {
+            if (userService.verifyUser(username,
+                    jsonExtractorVerify.parse(request.body()).getPassword())) {
+                response.status(HttpStatus.NO_CONTENT_204);
+            } else {
+                response.status(HttpStatus.UNAUTHORIZED_401);
+            }
+            return Constants.EMPTY_BODY;
+        } catch (JsonExtractException e) {
+            LOGGER.info("Error while deserializing verifyUser request", e);
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Error while deserializing verifyUser request")
+                    .cause(e)
+                    .haltError();
+        } catch (IllegalArgumentException e) {
+            LOGGER.info("Invalid user path", e);
+            throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Invalid user path")
+                    .cause(e)
+                    .haltError();
+        }
     }
 
     private List<String> getAuthorizedUsers(Request request, Response response) throws UsersRepositoryException {

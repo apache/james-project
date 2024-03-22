@@ -1,0 +1,430 @@
+diff --git a/server/apps/distributed-app/README.adoc b/server/apps/distributed-app/README.adoc
+index 0b2a90b3a9..ee6202890c 100644
+--- a/server/apps/distributed-app/README.adoc
++++ b/server/apps/distributed-app/README.adoc
+@@ -18,10 +18,9 @@ Third party compulsory dependencies:
+ The server ignores any string following the "+" character until the "@" character.
+ (more details: https://eit.ces.ncsu.edu/2023/02/gmail-plus-addressing-the-hidden-feature-that-can-help-you-get-more-out-of-your-inbox/)
+ * Disabled all authentication methods except JWT Authentication (RS256). User creation no longer requires a password.
+-Generating a JWT key pair: https://github.com/apache/james-project/blob/master/server/apps/distributed-app/docs/modules/ROOT/pages/configure/jmap.adoc#generating-a-jwt-key-pair
+ * Added a webadmin route for deleting an entire group. Example cURL command:
+ -----
+-$ curl --location --request DELETE 'http://ip:port/address/groups/myGroup@mydomain'
++$ curl --location --request DELETE 'http://ip:port/address/groups/myGroup'
+ -----
+ * Added a webadmin route for deleting multiple groups. Example cURL command:
+ -----
+@@ -30,10 +29,6 @@ $ curl --location --request DELETE 'http://ip:port/address/groups' --data-raw '[
+     "myGroup2@mydomain"
+ ]'
+ -----
+-* Added a webadmin route for creating an empty group. Example cURL command:
+------
+-$ curl --location --request POST 'http://ip:port/address/groups/myGroup@mydomain'
+------
+ 
+ 
+ [source]
+diff --git a/server/apps/distributed-app/conf/jmap.properties b/server/apps/distributed-app/conf/jmap.properties
+index bb95829577..f7a6e9c2af 100644
+--- a/server/apps/distributed-app/conf/jmap.properties
++++ b/server/apps/distributed-app/conf/jmap.properties
+@@ -8,8 +8,7 @@ tls.secret=james72laBalle
+ 
+ 
+ jmap.port=80
+-url.prefix=http://james.appscode.ninja
+-websocket.url.prefix=ws://james.appscode.ninja
++url.prefix=http://localhost
+ 
+ email.send.max.size=100M
+ max.size.attachments.per.mail=100M
+diff --git a/server/apps/distributed-app/docker-configuration/jmap.properties b/server/apps/distributed-app/docker-configuration/jmap.properties
+index cd73dc9f6e..e3b0134090 100644
+--- a/server/apps/distributed-app/docker-configuration/jmap.properties
++++ b/server/apps/distributed-app/docker-configuration/jmap.properties
+@@ -8,8 +8,7 @@ tls.secret=james72laBalle
+ 
+ 
+ jmap.port=80
+-url.prefix=http://james.appscode.ninja
+-websocket.url.prefix=ws://james.appscode.ninja
++url.prefix=http://localhost
+ 
+ email.send.max.size=100M
+ max.size.attachments.per.mail=100M
+diff --git a/server/data/data-library/src/main/java/org/apache/james/user/lib/model/DefaultUser.java b/server/data/data-library/src/main/java/org/apache/james/user/lib/model/DefaultUser.java
+index f764b29e49..9be1106c6a 100644
+--- a/server/data/data-library/src/main/java/org/apache/james/user/lib/model/DefaultUser.java
++++ b/server/data/data-library/src/main/java/org/apache/james/user/lib/model/DefaultUser.java
+@@ -20,7 +20,6 @@
+ package org.apache.james.user.lib.model;
+ 
+ import java.io.Serializable;
+-import java.security.SecureRandom;
+ 
+ import org.apache.james.core.Username;
+ import org.apache.james.user.api.model.User;
+@@ -38,14 +37,6 @@ public class DefaultUser implements User, Serializable {
+     private Algorithm currentAlgorithm;
+     private final Algorithm preferredAlgorithm;
+ 
+-    private static final SecureRandom secureRandom;
+-    private static final String MySalt;
+-
+-    static {
+-        secureRandom = new SecureRandom();
+-        secureRandom.setSeed(System.nanoTime());
+-        MySalt = ((Long)secureRandom.nextLong()).toString();
+-    }
+     /**
+      * Standard constructor.
+      * 
+@@ -56,7 +47,6 @@ public class DefaultUser implements User, Serializable {
+      * @param updateAlg
+      *            the algorithm used to update the hash of the password
+      */
+-
+     public DefaultUser(Username name, Algorithm verifyAlg, Algorithm updateAlg) {
+         userName = name;
+         currentAlgorithm = verifyAlg;
+@@ -78,9 +68,9 @@ public class DefaultUser implements User, Serializable {
+      */
+     public DefaultUser(Username name, String passwordHash, Algorithm verifyAlg, Algorithm updateAlg) {
+         userName = name;
++        hashedPassword = passwordHash;
+         currentAlgorithm = verifyAlg;
+         preferredAlgorithm = updateAlg;
+-        hashedPassword = getHashedPassword();
+     }
+ 
+     @Override
+@@ -90,16 +80,14 @@ public class DefaultUser implements User, Serializable {
+ 
+     @Override
+     public boolean verifyPassword(String pass) {
+-        System.out.printf("Basic Authentication Disabled");
+-        return Boolean.FALSE;
+-        /*String hashGuess = digestString(pass, currentAlgorithm, userName.asString());
+-        return hashedPassword.equals(hashGuess);*/
++        String hashGuess = digestString(pass, currentAlgorithm, userName.asString());
++        return hashedPassword.equals(hashGuess);
+     }
+ 
+     @Override
+     public boolean setPassword(String newPass) {
++        hashedPassword = digestString(newPass, preferredAlgorithm, userName.asString());
+         currentAlgorithm = preferredAlgorithm;
+-        hashedPassword = getHashedPassword();
+         return true;
+     }
+ 
+@@ -111,7 +99,7 @@ public class DefaultUser implements User, Serializable {
+      * @return the String of the hashed Password
+      */
+     public String getHashedPassword() {
+-        return digestString(((Long)secureRandom.nextLong()).toString(), preferredAlgorithm, MySalt);
++        return hashedPassword;
+     }
+ 
+     /**
+diff --git a/server/protocols/jmap-draft-integration-testing/pom.xml b/server/protocols/jmap-draft-integration-testing/pom.xml
+index 1731ca2042..7691c5d3b5 100644
+--- a/server/protocols/jmap-draft-integration-testing/pom.xml
++++ b/server/protocols/jmap-draft-integration-testing/pom.xml
+@@ -38,6 +38,7 @@
+         <module>rabbitmq-jmap-draft-integration-testing</module>
+     </modules>
+ 
++
+     <build>
+         <plugins>
+             <plugin>
+diff --git a/server/protocols/jmap-draft-integration-testing/rabbitmq-jmap-draft-integration-testing/pom.xml b/server/protocols/jmap-draft-integration-testing/rabbitmq-jmap-draft-integration-testing/pom.xml
+index 8acc1109ad..a03e2edc84 100644
+--- a/server/protocols/jmap-draft-integration-testing/rabbitmq-jmap-draft-integration-testing/pom.xml
++++ b/server/protocols/jmap-draft-integration-testing/rabbitmq-jmap-draft-integration-testing/pom.xml
+@@ -176,7 +176,7 @@
+                             <groupId>org.apache.maven.plugins</groupId>
+                             <artifactId>maven-surefire-plugin</artifactId>
+                             <configuration>
+-                                <excludedGroups/>
++                                <excludedGroups />
+                                 <groups combine.self="override">org.apache.james.junit.categories.Unstable</groups>
+                             </configuration>
+                         </plugin>
+diff --git a/server/protocols/protocols-imap4/pom.xml b/server/protocols/protocols-imap4/pom.xml
+index 41abdcbe08..734b0457d2 100644
+--- a/server/protocols/protocols-imap4/pom.xml
++++ b/server/protocols/protocols-imap4/pom.xml
+@@ -33,7 +33,6 @@
+     <name>Apache James :: Server :: IMAP</name>
+ 
+     <dependencies>
+-
+         <dependency>
+             <groupId>${james.groupId}</groupId>
+             <artifactId>apache-james-mailbox-api</artifactId>
+@@ -145,7 +144,6 @@
+             <groupId>org.apache.commons</groupId>
+             <artifactId>commons-configuration2</artifactId>
+         </dependency>
+-
+         <dependency>
+             <groupId>org.mock-server</groupId>
+             <artifactId>mockserver-netty</artifactId>
+diff --git a/server/protocols/protocols-pop3/pom.xml b/server/protocols/protocols-pop3/pom.xml
+index 36f6925f3e..fce154e37a 100644
+--- a/server/protocols/protocols-pop3/pom.xml
++++ b/server/protocols/protocols-pop3/pom.xml
+@@ -169,6 +169,7 @@
+         </dependency>
+     </dependencies>
+ 
++
+     <build>
+         <plugins>
+             <plugin>
+diff --git a/server/protocols/webadmin-integration-test/distributed-webadmin-integration-test/pom.xml b/server/protocols/webadmin-integration-test/distributed-webadmin-integration-test/pom.xml
+index 6253b3469c..e2f36b1d57 100644
+--- a/server/protocols/webadmin-integration-test/distributed-webadmin-integration-test/pom.xml
++++ b/server/protocols/webadmin-integration-test/distributed-webadmin-integration-test/pom.xml
+@@ -123,7 +123,7 @@
+                             <groupId>org.apache.maven.plugins</groupId>
+                             <artifactId>maven-surefire-plugin</artifactId>
+                             <configuration>
+-                                <excludedGroups/>
++                                <excludedGroups />
+                                 <groups>unstable</groups>
+                             </configuration>
+                         </plugin>
+diff --git a/server/protocols/webadmin-integration-test/webadmin-integration-test-common/src/main/java/org/apache/james/webadmin/integration/WebAdminServerIntegrationTest.java b/server/protocols/webadmin-integration-test/webadmin-integration-test-common/src/main/java/org/apache/james/webadmin/integration/WebAdminServerIntegrationTest.java
+index 68be0fecfe..dd5df6dbe3 100644
+--- a/server/protocols/webadmin-integration-test/webadmin-integration-test-common/src/main/java/org/apache/james/webadmin/integration/WebAdminServerIntegrationTest.java
++++ b/server/protocols/webadmin-integration-test/webadmin-integration-test-common/src/main/java/org/apache/james/webadmin/integration/WebAdminServerIntegrationTest.java
+@@ -55,7 +55,6 @@ import org.apache.james.webadmin.routes.UserMailboxesRoutes;
+ import org.apache.james.webadmin.routes.UserRoutes;
+ import org.eclipse.jetty.http.HttpStatus;
+ import org.junit.jupiter.api.BeforeEach;
+-import org.junit.jupiter.api.Disabled;
+ import org.junit.jupiter.api.Test;
+ import org.slf4j.LoggerFactory;
+ 
+@@ -246,7 +245,6 @@ public abstract class WebAdminServerIntegrationTest {
+     }
+ 
+     @Test
+-    @Disabled
+     void deleteMailboxShouldRemoveAMailbox(GuiceJamesServer guiceJamesServer) throws Exception {
+         dataProbe.addUser(USERNAME, "anyPassword");
+         guiceJamesServer.getProbe(MailboxProbeImpl.class).createMailbox("#private", USERNAME, MAILBOX);
+diff --git a/server/protocols/webadmin/webadmin-cassandra-data/pom.xml b/server/protocols/webadmin/webadmin-cassandra-data/pom.xml
+index 40d22cc568..28a55186de 100644
+--- a/server/protocols/webadmin/webadmin-cassandra-data/pom.xml
++++ b/server/protocols/webadmin/webadmin-cassandra-data/pom.xml
+@@ -17,6 +17,7 @@
+     specific language governing permissions and limitations
+     under the License.
+ -->
++
+ <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+     <modelVersion>4.0.0</modelVersion>
+ 
+@@ -98,4 +99,4 @@
+         </dependency>
+     </dependencies>
+ 
+-</project>
++</project>
+\ No newline at end of file
+diff --git a/server/protocols/webadmin/webadmin-core/src/main/java/org/apache/james/webadmin/Constants.java b/server/protocols/webadmin/webadmin-core/src/main/java/org/apache/james/webadmin/Constants.java
+index 946162d69f..8c54f94121 100644
+--- a/server/protocols/webadmin/webadmin-core/src/main/java/org/apache/james/webadmin/Constants.java
++++ b/server/protocols/webadmin/webadmin-core/src/main/java/org/apache/james/webadmin/Constants.java
+@@ -25,5 +25,5 @@ public interface Constants {
+     String EMPTY_BODY = "";
+     String JSON_CONTENT_TYPE = "application/json";
+     String RFC822_CONTENT_TYPE = "message/rfc822";
+-    String BASIC_AUTH_DISABLED = "Basic Authentication Disabled";
++
+ }
+diff --git a/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/GroupsRoutes.java b/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/GroupsRoutes.java
+index fa1285a646..706f309c7d 100644
+--- a/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/GroupsRoutes.java
++++ b/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/GroupsRoutes.java
+@@ -78,11 +78,9 @@ public class GroupsRoutes implements Routes {
+ 
+     private final ObjectMapper objectMapper = new ObjectMapper();
+ 
+-    private final MailAddress dummyUser = new MailAddress("fc8f9dc08044a0c0ff9528fe997","fc8f9dc08044a0c0a8c23c68");
+-
+     @Inject
+     @VisibleForTesting
+-    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer) throws AddressException {
++    GroupsRoutes(RecipientRewriteTable recipientRewriteTable, JsonTransformer jsonTransformer) {
+         this.jsonTransformer = jsonTransformer;
+         this.recipientRewriteTable = recipientRewriteTable;
+     }
+@@ -97,7 +95,6 @@ public class GroupsRoutes implements Routes {
+         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
+         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);
+         service.put(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
+-        service.post(GROUP_ADDRESS_PATH, this::createGroupWithDummyUser);
+         service.put(USER_IN_GROUP_ADDRESS_PATH, this::addToGroup);
+         //service.delete(GROUP_ADDRESS_PATH, (request, response) -> halt(HttpStatus.BAD_REQUEST_400));
+         service.delete(USER_IN_GROUP_ADDRESS_PATH, this::removeFromGroup);
+@@ -109,14 +106,6 @@ public class GroupsRoutes implements Routes {
+         return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(ImmutableList.toImmutableList());
+     }
+ 
+-    public HaltException createGroupWithDummyUser(Request request, Response response) {
+-        MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
+-        Domain domain = groupAddress.getDomain();
+-        MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
+-        addGroupMember(source, dummyUser);
+-        return halt(HttpStatus.NO_CONTENT_204);
+-    }
+-
+     public HaltException addToGroup(Request request, Response response) {
+         MailAddress groupAddress = MailAddressParser.parseMailAddress(request.params(GROUP_ADDRESS), GROUP_ADDRESS_TYPE);
+         Domain domain = groupAddress.getDomain();
+diff --git a/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UserRoutes.java b/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UserRoutes.java
+index 6a5f2404bc..d76188f99d 100644
+--- a/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UserRoutes.java
++++ b/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UserRoutes.java
+@@ -38,9 +38,13 @@ import org.apache.james.user.api.InvalidUsernameException;
+ import org.apache.james.user.api.UsersRepositoryException;
+ import org.apache.james.webadmin.Constants;
+ import org.apache.james.webadmin.Routes;
++import org.apache.james.webadmin.dto.AddUserRequest;
++import org.apache.james.webadmin.dto.VerifyUserRequest;
+ import org.apache.james.webadmin.service.UserService;
+ import org.apache.james.webadmin.utils.ErrorResponder;
+ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
++import org.apache.james.webadmin.utils.JsonExtractException;
++import org.apache.james.webadmin.utils.JsonExtractor;
+ import org.apache.james.webadmin.utils.JsonTransformer;
+ import org.apache.james.webadmin.utils.Responses;
+ import org.eclipse.jetty.http.HttpStatus;
+@@ -69,18 +73,20 @@ public class UserRoutes implements Routes {
+ 
+     private final UserService userService;
+     private final JsonTransformer jsonTransformer;
++    private final JsonExtractor<VerifyUserRequest> jsonExtractorVerify;
+     private final CanSendFrom canSendFrom;
++    private final JsonExtractor<AddUserRequest> jsonExtractor;
+     private final DelegationStore delegationStore;
+ 
+     private Service service;
+ 
+-    private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
+-
+     @Inject
+     public UserRoutes(UserService userService, CanSendFrom canSendFrom, JsonTransformer jsonTransformer, DelegationStore delegationStore) {
+         this.userService = userService;
+         this.jsonTransformer = jsonTransformer;
+         this.canSendFrom = canSendFrom;
++        this.jsonExtractor = new JsonExtractor<>(AddUserRequest.class);
++        this.jsonExtractorVerify = new JsonExtractor<>(VerifyUserRequest.class);
+         this.delegationStore = delegationStore;
+     }
+ 
+@@ -185,17 +191,13 @@ public class UserRoutes implements Routes {
+ 
+     private HaltException upsertUser(Request request, Response response) throws Exception {
+         Username username = extractUsername(request);
+-        if (dummyUser.equals(username.asString())) {
+-            LOGGER.info("Invalid username");
+-            throw ErrorResponder.builder()
+-                    .statusCode(HttpStatus.BAD_REQUEST_400)
+-                    .type(ErrorType.INVALID_ARGUMENT)
+-                    .message("Username supplied is invalid")
+-                    .haltError();
+-        }
+-
+         try {
+-            userService.upsertUser(username, "".toCharArray());
++            boolean isForced = request.queryParams().contains(FORCE_PARAM);
++            if (isForced) {
++                userService.upsertUser(username, jsonExtractor.parse(request.body()).getPassword());
++            } else {
++                userService.insertUser(username, jsonExtractor.parse(request.body()).getPassword());
++            }
+             return halt(HttpStatus.NO_CONTENT_204);
+         } catch (InvalidUsernameException e) {
+             LOGGER.info("Invalid username", e);
+@@ -225,9 +227,33 @@ public class UserRoutes implements Routes {
+         }
+     }
+ 
+-    private String verifyUser(Request request, Response response) {
+-        response.status(HttpStatus.FORBIDDEN_403);
+-        return Constants.BASIC_AUTH_DISABLED;
++    private String verifyUser(Request request, Response response) throws UsersRepositoryException {
++        Username username = extractUsername(request);
++        try {
++            if (userService.verifyUser(username,
++                    jsonExtractorVerify.parse(request.body()).getPassword())) {
++                response.status(HttpStatus.NO_CONTENT_204);
++            } else {
++                response.status(HttpStatus.UNAUTHORIZED_401);
++            }
++            return Constants.EMPTY_BODY;
++        } catch (JsonExtractException e) {
++            LOGGER.info("Error while deserializing verifyUser request", e);
++            throw ErrorResponder.builder()
++                    .statusCode(HttpStatus.BAD_REQUEST_400)
++                    .type(ErrorType.INVALID_ARGUMENT)
++                    .message("Error while deserializing verifyUser request")
++                    .cause(e)
++                    .haltError();
++        } catch (IllegalArgumentException e) {
++            LOGGER.info("Invalid user path", e);
++            throw ErrorResponder.builder()
++                    .statusCode(HttpStatus.BAD_REQUEST_400)
++                    .type(ErrorType.INVALID_ARGUMENT)
++                    .message("Invalid user path")
++                    .cause(e)
++                    .haltError();
++        }
+     }
+ 
+     private List<String> getAuthorizedUsers(Request request, Response response) throws UsersRepositoryException {
+diff --git a/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UsernameChangeRoutes.java b/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UsernameChangeRoutes.java
+index cac7fba1de..f87dfecb51 100644
+--- a/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UsernameChangeRoutes.java
++++ b/server/protocols/webadmin/webadmin-data/src/main/java/org/apache/james/webadmin/routes/UsernameChangeRoutes.java
+@@ -32,9 +32,7 @@ import org.apache.james.webadmin.service.UsernameChangeService;
+ import org.apache.james.webadmin.service.UsernameChangeTask;
+ import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+ import org.apache.james.webadmin.tasks.TaskRegistrationKey;
+-import org.apache.james.webadmin.utils.ErrorResponder;
+ import org.apache.james.webadmin.utils.JsonTransformer;
+-import org.eclipse.jetty.http.HttpStatus;
+ 
+ import com.google.common.base.Preconditions;
+ 
+@@ -52,8 +50,6 @@ public class UsernameChangeRoutes implements Routes {
+     private final TaskManager taskManager;
+     private final JsonTransformer jsonTransformer;
+ 
+-    private final String dummyUser = "fc8f9dc08044a0c0ff9528fe997@fc8f9dc08044a0c0a8c23c68";
+-
+     @Inject
+     UsernameChangeRoutes(UsersRepository usersRepository, UsernameChangeService service, TaskManager taskManager, JsonTransformer jsonTransformer) {
+         this.usersRepository = usersRepository;
+@@ -77,14 +73,6 @@ public class UsernameChangeRoutes implements Routes {
+             Username oldUser = Username.of(request.params(OLD_USER_PARAM));
+             Username newUser = Username.of(request.params(NEW_USER_PARAM));
+ 
+-            if (dummyUser.equals(newUser.asString())) {
+-                throw ErrorResponder.builder()
+-                        .statusCode(HttpStatus.BAD_REQUEST_400)
+-                        .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+-                        .message("Username supplied is invalid")
+-                        .haltError();
+-            }
+-
+             Preconditions.checkArgument(usersRepository.contains(oldUser), "'oldUser' parameter should be an existing user");
+             Preconditions.checkArgument(usersRepository.contains(newUser), "'newUser' parameter should be an existing user");
+ 
