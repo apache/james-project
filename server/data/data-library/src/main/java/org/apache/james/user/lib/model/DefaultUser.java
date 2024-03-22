@@ -20,7 +20,6 @@
 package org.apache.james.user.lib.model;
 
 import java.io.Serializable;
-import java.security.SecureRandom;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
@@ -38,14 +37,6 @@ public class DefaultUser implements User, Serializable {
     private Algorithm currentAlgorithm;
     private final Algorithm preferredAlgorithm;
 
-    private static final SecureRandom secureRandom;
-    private static final String MySalt;
-
-    static {
-        secureRandom = new SecureRandom();
-        secureRandom.setSeed(System.nanoTime());
-        MySalt = ((Long)secureRandom.nextLong()).toString();
-    }
     /**
      * Standard constructor.
      * 
@@ -56,7 +47,6 @@ public class DefaultUser implements User, Serializable {
      * @param updateAlg
      *            the algorithm used to update the hash of the password
      */
-
     public DefaultUser(Username name, Algorithm verifyAlg, Algorithm updateAlg) {
         userName = name;
         currentAlgorithm = verifyAlg;
@@ -78,9 +68,9 @@ public class DefaultUser implements User, Serializable {
      */
     public DefaultUser(Username name, String passwordHash, Algorithm verifyAlg, Algorithm updateAlg) {
         userName = name;
+        hashedPassword = passwordHash;
         currentAlgorithm = verifyAlg;
         preferredAlgorithm = updateAlg;
-        hashedPassword = getHashedPassword();
     }
 
     @Override
@@ -90,16 +80,14 @@ public class DefaultUser implements User, Serializable {
 
     @Override
     public boolean verifyPassword(String pass) {
-        System.out.printf("Basic Authentication Disabled");
-        return Boolean.FALSE;
-        /*String hashGuess = digestString(pass, currentAlgorithm, userName.asString());
-        return hashedPassword.equals(hashGuess);*/
+        String hashGuess = digestString(pass, currentAlgorithm, userName.asString());
+        return hashedPassword.equals(hashGuess);
     }
 
     @Override
     public boolean setPassword(String newPass) {
+        hashedPassword = digestString(newPass, preferredAlgorithm, userName.asString());
         currentAlgorithm = preferredAlgorithm;
-        hashedPassword = getHashedPassword();
         return true;
     }
 
@@ -111,7 +99,7 @@ public class DefaultUser implements User, Serializable {
      * @return the String of the hashed Password
      */
     public String getHashedPassword() {
-        return digestString(((Long)secureRandom.nextLong()).toString(), preferredAlgorithm, MySalt);
+        return hashedPassword;
     }
 
     /**
