@@ -199,7 +199,11 @@ Regards, Postmaster XXX.YYY
     <processor state="error" enableJmx="true">
        <!-- If you want to notify the sender their message generated an error, uncomment this       -->
        <!--
-       <mailet match="All" class="Bounce"/>
+
+            <matcher name="not-reprocessed" match="org.apache.james.mailetcontainer.impl.matchers.Not">
+                <matcher match="HasMailAttribute=mailRepository-reprocessing"/>
+            </matcher>
+       <mailet match="not-reprocessed" class="Bounce"/>
          -->
        <!-- If you want to notify the postmaster that a message generated an error, uncomment this  -->
        <!--
