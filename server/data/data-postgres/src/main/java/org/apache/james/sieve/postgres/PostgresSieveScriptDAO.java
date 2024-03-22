@@ -53,7 +53,7 @@ public class PostgresSieveScriptDAO {
         this.postgresExecutor = postgresExecutor;
     }
 
-    public Mono<Long> upsertScript(PostgresSieveScript sieveScript) {
+    public Mono<Integer> upsertScript(PostgresSieveScript sieveScript) {
         return postgresExecutor.executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
             .set(SCRIPT_ID, sieveScript.getId().getValue())
             .set(USERNAME, sieveScript.getUsername())
@@ -128,7 +128,7 @@ public class PostgresSieveScriptDAO {
                 IS_ACTIVE.eq(true))));
     }
 
-    public Mono<Long> renameScript(Username username, ScriptName oldName, ScriptName newName) {
+    public Mono<Integer> renameScript(Username username, ScriptName oldName, ScriptName newName) {
         return postgresExecutor.executeReturnAffectedRowsCount(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
             .set(SCRIPT_NAME, newName.getValue())
             .where(USERNAME.eq(username.asString()),
