@@ -25,6 +25,7 @@ package org.apache.james.mailbox.model;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
@@ -55,5 +56,12 @@ public final class ByteContent implements Content {
     public Publisher<ByteBuffer> reactiveBytes() {
         return Flux.just(contents)
             .map(ByteBuffer::wrap);
+    }
+
+    @Override
+    public Optional<byte[][]> asBytesSequence() {
+        byte[][] answer = new byte[1][];
+        answer[0] = contents;
+        return Optional.of(answer);
     }
 }

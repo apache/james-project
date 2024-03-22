@@ -22,6 +22,7 @@ package org.apache.james.mailbox.model;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.util.ReactorUtils;
@@ -41,7 +42,11 @@ public interface Content {
      * Return the content as {@link InputStream}
      */
     InputStream getInputStream() throws IOException;
-    
+
+    default Optional<byte[][]> asBytesSequence() {
+        return Optional.empty();
+    }
+
     /**
      * Size (in octets) of the content.
      * 

@@ -24,6 +24,7 @@ package org.apache.james.imap.processor.fetch;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -51,7 +52,11 @@ class ContentBodyElement implements BodyElement {
             throw new IOException("Unable to get size for body element", e);
         }
     }
-
+    
+    @Override
+    public Optional<byte[][]> asBytesSequence() {
+        return content.asBytesSequence();
+    }
 
     @Override
     public InputStream getInputStream() throws IOException {

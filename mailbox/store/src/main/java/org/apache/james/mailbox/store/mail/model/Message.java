@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
@@ -49,6 +50,10 @@ public interface Message {
      * @return body, not null
      */
     InputStream getBodyContent() throws IOException;
+
+    default Optional<byte[][]> getBodyBytes() {
+        return Optional.empty();
+    }
 
     default Publisher<ByteBuffer> getBodyContentReactive() {
         try {
@@ -103,6 +108,10 @@ public interface Message {
      */
     InputStream getHeaderContent() throws IOException;
 
+    default Optional<byte[][]> getHeadersBytes() {
+        return Optional.empty();
+    }
+
 
     default Publisher<ByteBuffer> getHeaderContentReactive() {
         try {
@@ -121,6 +130,9 @@ public interface Message {
      */
     InputStream getFullContent() throws IOException;
 
+    default Optional<byte[][]> getFullBytes() {
+        return Optional.empty();
+    }
 
     default Publisher<ByteBuffer> getFullContentReactive() {
         try {
