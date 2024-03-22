@@ -25,5 +25,5 @@ public interface Constants {
     String EMPTY_BODY = "";
     String JSON_CONTENT_TYPE = "application/json";
     String RFC822_CONTENT_TYPE = "message/rfc822";
-    String BASIC_AUTH_DISABLED = "Basic Authentication Disabled";
+
 }

@@ -452,12 +452,12 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:21.0.1_12-jre-jammy</image>
+                        <image>eclipse-temurin:11-jre-jammy</image>
                     </from>
                     <to>
                         <image>sami7786/distributed-james-test</image>
                         <tags>
-                            <tag>MailetGroupJWT3</tag>
+                            <tag>MailetGroup</tag>
                         </tags>
                     </to>
                     <container>
@@ -499,6 +499,10 @@
                     </container>
                     <extraDirectories>
                         <paths>
+                            <path>
+                                <from>conf</from>
+                                <into>/root/conf</into>
+                            </path>
                             <path>
                                 <from>docker-configuration</from>
                                 <into>/root/conf</into>
