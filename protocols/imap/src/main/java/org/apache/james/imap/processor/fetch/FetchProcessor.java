@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
@@ -78,6 +79,7 @@ import reactor.core.publisher.Sinks;
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     static class FetchSubscriber implements Subscriber<FetchResponse> {
         private final AtomicReference<Subscription> subscription = new AtomicReference<>();
+        private final AtomicBoolean requested = new AtomicBoolean(false);
         private final Sinks.One<Void> sink = Sinks.one();
         private final ImapSession imapSession;
         private final Responder responder;
@@ -90,11 +92,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         @Override
         public void onSubscribe(Subscription subscription) {
             this.subscription.set(subscription);
-            subscription.request(1);
+            requestOne();
         }
 
         @Override
         public void onNext(FetchResponse fetchResponse) {
+            requested.getAndSet(false);
             responder.respond(fetchResponse);
             if (imapSession.backpressureNeeded(this::requestOne)) {
                 LOGGER.debug("Applying backpressure as we encounter a slow reader");
@@ -104,8 +107,11 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         }
 
         private void requestOne() {
-            Optional.ofNullable(subscription.get())
-                .ifPresent(s -> s.request(1));
+            boolean alreadyRequested = requested.getAndSet(true);
+            if (!alreadyRequested) {
+                Optional.ofNullable(subscription.get())
+                    .ifPresent(s -> s.request(1));
+            }
         }
 
         @Override
