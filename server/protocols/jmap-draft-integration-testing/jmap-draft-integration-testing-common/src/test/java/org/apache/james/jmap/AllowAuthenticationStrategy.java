@@ -21,7 +21,7 @@ package org.apache.james.jmap;
 
 import static org.apache.james.jmap.ModularizeJmapDraftAuthenticationStrategyTest.BOB;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.http.AuthenticationChallenge;
 import org.apache.james.jmap.http.AuthenticationScheme;

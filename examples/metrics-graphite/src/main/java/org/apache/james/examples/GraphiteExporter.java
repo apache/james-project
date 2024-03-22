@@ -22,7 +22,7 @@ package org.apache.james.examples;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.utils.UserDefinedStartable;
 

@@ -21,9 +21,9 @@ package org.apache.james.modules.mailbox;
 
 import static org.apache.james.mailbox.opensearch.search.OpenSearchSearcher.DEFAULT_SEARCH_SIZE;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.apache.james.backends.opensearch.OpenSearchConfiguration;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;

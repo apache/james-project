@@ -25,8 +25,7 @@ import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import java.util.Iterator;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 

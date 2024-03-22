@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.james.utils.UserDefinedStartable;
 

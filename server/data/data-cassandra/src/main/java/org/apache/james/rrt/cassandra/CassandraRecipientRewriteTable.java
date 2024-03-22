@@ -21,7 +21,7 @@ package org.apache.james.rrt.cassandra;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;

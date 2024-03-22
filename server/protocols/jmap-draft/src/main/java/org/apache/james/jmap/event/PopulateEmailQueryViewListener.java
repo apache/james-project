@@ -28,7 +28,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener.ReactiveGroupEventListener;

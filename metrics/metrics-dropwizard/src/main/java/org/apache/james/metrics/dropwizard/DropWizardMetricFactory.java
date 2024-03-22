@@ -21,9 +21,9 @@ package org.apache.james.metrics.dropwizard;
 
 import static org.apache.james.metrics.api.TimeMetric.ExecutionResult.DEFAULT_100_MS_THRESHOLD;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.Metric;

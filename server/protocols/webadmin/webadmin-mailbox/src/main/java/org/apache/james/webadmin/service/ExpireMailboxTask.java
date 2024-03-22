@@ -24,7 +24,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.task.AsyncSafeTask;
 import org.apache.james.task.TaskExecutionDetails;

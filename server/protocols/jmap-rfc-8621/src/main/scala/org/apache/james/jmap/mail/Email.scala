@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableMap
 import eu.timepit.refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.api.model.{EmailAddress, Preview}

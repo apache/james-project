@@ -21,7 +21,7 @@ package org.apache.james.imap.decode.parser;
 import java.util.EnumSet;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.imap.api.ImapCommand;

@@ -24,7 +24,7 @@ import eu.timepit.refined
 import eu.timepit.refined.collection.NonEmpty
 import eu.timepit.refined.refineV
 import eu.timepit.refined.types.string.NonEmptyString
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.model.{EmailAddress, EmailerName}
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.{Id, SetError, UTCDate, UuidState}

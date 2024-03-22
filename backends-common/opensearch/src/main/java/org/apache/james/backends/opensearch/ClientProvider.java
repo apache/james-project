@@ -26,11 +26,12 @@ import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.time.DurationFormatUtils;

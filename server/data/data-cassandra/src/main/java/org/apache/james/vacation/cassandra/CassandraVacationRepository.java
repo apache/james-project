@@ -19,7 +19,7 @@
 
 package org.apache.james.vacation.cassandra;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.Vacation;

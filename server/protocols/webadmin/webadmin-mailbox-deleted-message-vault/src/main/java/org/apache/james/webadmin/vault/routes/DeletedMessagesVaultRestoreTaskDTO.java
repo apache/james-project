@@ -20,7 +20,7 @@
 
 package org.apache.james.webadmin.vault.routes;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;

@@ -21,8 +21,7 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.BodyPart;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;

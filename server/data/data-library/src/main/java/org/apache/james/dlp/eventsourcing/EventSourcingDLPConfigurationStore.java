@@ -21,7 +21,7 @@ package org.apache.james.dlp.eventsourcing;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationItem;

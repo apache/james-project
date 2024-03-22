@@ -20,10 +20,10 @@ package org.apache.james.mailbox.jpa.mail;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.mailbox.MessageUid;

@@ -33,8 +33,9 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
-import javax.inject.Inject;
 import javax.net.ssl.SSLContext;
+
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.ssl.SSLContextBuilder;

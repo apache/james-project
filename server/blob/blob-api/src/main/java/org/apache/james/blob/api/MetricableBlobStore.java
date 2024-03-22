@@ -20,8 +20,8 @@ package org.apache.james.blob.api;
 
 import java.io.InputStream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.reactivestreams.Publisher;

@@ -21,7 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.service.EventDeadLettersRedeliverService.RunningOptions;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.EventDeadLetters;
 import org.apache.james.events.EventSerializer;

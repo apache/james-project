@@ -21,7 +21,7 @@ package org.apache.james.jmap.memory.projections;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;

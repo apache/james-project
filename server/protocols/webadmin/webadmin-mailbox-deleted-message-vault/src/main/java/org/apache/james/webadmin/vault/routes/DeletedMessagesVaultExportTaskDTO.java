@@ -19,8 +19,7 @@
 
 package org.apache.james.webadmin.vault.routes;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;

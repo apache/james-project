@@ -22,8 +22,7 @@ package org.apache.james.vault.dto;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
 import org.apache.james.blob.api.BlobId;

@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.netty;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

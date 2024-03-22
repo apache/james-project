@@ -22,7 +22,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import java.time.Clock;
 import java.time.Instant;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;

@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.processor;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;

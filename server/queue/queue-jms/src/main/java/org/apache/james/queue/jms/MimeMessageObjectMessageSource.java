@@ -21,9 +21,8 @@ package org.apache.james.queue.jms;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.jms.JMSException;
-import javax.jms.ObjectMessage;
-
+import jakarta.jms.JMSException;
+import jakarta.jms.ObjectMessage;
 import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.lifecycle.api.Disposable;

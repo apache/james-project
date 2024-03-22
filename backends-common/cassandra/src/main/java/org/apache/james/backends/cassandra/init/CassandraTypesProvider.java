@@ -22,7 +22,7 @@ package org.apache.james.backends.cassandra.init;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;

@@ -23,7 +23,7 @@ import java.util
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.google.common.collect.ImmutableSet
-import javax.inject.{Inject, Named}
+import jakarta.inject.{Inject, Named}
 import org.apache.james.eventsourcing.Event
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.{EventDTO, EventDTOModule}
 import org.apache.james.json.{DTO, DTOModule, JsonGenericSerializer}

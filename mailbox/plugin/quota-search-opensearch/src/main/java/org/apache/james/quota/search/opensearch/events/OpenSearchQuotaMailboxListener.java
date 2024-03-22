@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.quota.search.opensearch.events;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.opensearch.DocumentId;
 import org.apache.james.backends.opensearch.OpenSearchIndexer;

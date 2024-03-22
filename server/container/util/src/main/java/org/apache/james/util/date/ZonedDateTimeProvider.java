@@ -21,7 +21,7 @@ package org.apache.james.util.date;
 
 import java.time.ZonedDateTime;
 
-import javax.inject.Provider;
+import jakarta.inject.Provider;
 
 public interface ZonedDateTimeProvider extends Provider<ZonedDateTime> {
 

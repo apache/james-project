@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.queue.jms;
 
-import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
+import jakarta.inject.Inject;
+import jakarta.jms.ConnectionFactory;
 
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;

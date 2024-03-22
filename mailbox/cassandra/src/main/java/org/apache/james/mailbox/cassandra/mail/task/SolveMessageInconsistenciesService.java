@@ -30,8 +30,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;

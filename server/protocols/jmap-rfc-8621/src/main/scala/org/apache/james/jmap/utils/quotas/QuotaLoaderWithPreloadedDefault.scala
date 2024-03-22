@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.utils.quotas
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.mail.{QuotaRoot, Quotas}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.{MailboxPath, QuotaRoot => ModelQuotaRoot}

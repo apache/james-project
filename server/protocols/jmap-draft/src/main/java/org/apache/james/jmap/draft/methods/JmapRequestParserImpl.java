@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.methods;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.model.InvocationRequest;

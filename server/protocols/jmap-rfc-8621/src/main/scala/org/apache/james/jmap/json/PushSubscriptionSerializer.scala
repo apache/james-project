@@ -21,7 +21,7 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined
 import eu.timepit.refined.refineV
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{DeviceClientId, PushSubscriptionCreationRequest, PushSubscriptionExpiredTime, PushSubscriptionId, PushSubscriptionKeys, PushSubscriptionServerURL, TypeName, VerificationCode}
 import org.apache.james.jmap.core.Id.IdConstraint

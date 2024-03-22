@@ -29,7 +29,7 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.TABLE_NAME;
 import static org.apache.james.util.FunctionalUtils.negate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.queue.rabbitmq.EnqueueId;

@@ -25,7 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;

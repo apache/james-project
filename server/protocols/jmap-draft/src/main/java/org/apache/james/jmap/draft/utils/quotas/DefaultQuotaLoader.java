@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.draft.utils.quotas;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.model.mailbox.Quotas;
 import org.apache.james.mailbox.model.MailboxPath;

@@ -22,9 +22,8 @@ package org.apache.james.transport.util;
 import java.io.IOException;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
 import jakarta.activation.DataHandler;
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.internet.MimeBodyPart;

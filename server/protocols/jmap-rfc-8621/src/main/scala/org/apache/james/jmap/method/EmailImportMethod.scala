@@ -22,7 +22,7 @@ package org.apache.james.jmap.method
 import java.util.Date
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.change.EmailChangeRepository
 import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}

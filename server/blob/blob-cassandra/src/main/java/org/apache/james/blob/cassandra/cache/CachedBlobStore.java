@@ -27,8 +27,8 @@ import java.io.PushbackInputStream;
 import java.util.Arrays;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;

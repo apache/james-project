@@ -22,7 +22,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import java.time.Clock;
 import java.time.Duration;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.healthcheck.ComponentName;

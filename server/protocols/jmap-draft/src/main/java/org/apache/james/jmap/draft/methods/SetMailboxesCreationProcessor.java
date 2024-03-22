@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.draft.exceptions.MailboxParentNotFoundException;

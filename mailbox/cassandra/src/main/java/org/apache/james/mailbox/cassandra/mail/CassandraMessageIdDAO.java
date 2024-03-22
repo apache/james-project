@@ -54,8 +54,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 import jakarta.mail.Flags.Flag;
 

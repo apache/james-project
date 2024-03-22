@@ -29,7 +29,7 @@ import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTabl
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.SOURCE;
 import static org.apache.james.rrt.cassandra.tables.CassandraMappingsSourcesTable.TABLE_NAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.rrt.lib.Mapping;

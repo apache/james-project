@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.json.ObjectMapperFactory;

@@ -20,7 +20,7 @@
 package org.apache.james.jmap.rfc8621.contract.custom.authentication.strategy
 
 import com.google.common.collect.ImmutableMap
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.http.{AuthenticationChallenge, AuthenticationScheme, AuthenticationStrategy}
 import org.apache.james.jmap.rfc8621.contract.Fixture
 import org.apache.james.mailbox.{MailboxManager, MailboxSession}

@@ -19,8 +19,8 @@
 
 package org.apache.james.sieve.cassandra.migration;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.core.Username;

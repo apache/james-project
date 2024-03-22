@@ -20,7 +20,7 @@ package org.apache.james.mailbox.inmemory;
 
 import java.time.Clock;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;

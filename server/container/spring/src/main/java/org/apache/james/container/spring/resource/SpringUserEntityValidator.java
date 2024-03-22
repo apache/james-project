@@ -21,7 +21,7 @@ package org.apache.james.container.spring.resource;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.DefaultUserEntityValidator;
 import org.apache.james.RecipientRewriteTableUserEntityValidator;

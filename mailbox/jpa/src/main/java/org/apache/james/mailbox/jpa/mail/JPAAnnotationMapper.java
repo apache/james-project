@@ -25,9 +25,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;

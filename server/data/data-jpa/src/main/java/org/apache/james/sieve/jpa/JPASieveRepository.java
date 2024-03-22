@@ -27,12 +27,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceException;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.jpa.TransactionRunner;

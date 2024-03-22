@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.send;
 
 import static org.apache.james.queue.api.MailQueueFactory.SPOOL;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;

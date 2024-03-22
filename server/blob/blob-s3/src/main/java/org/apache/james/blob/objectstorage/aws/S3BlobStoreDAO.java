@@ -34,11 +34,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;

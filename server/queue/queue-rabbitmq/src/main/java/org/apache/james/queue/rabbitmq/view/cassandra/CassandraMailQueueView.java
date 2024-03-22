@@ -23,8 +23,7 @@ import static org.apache.james.util.FunctionalUtils.negate;
 
 import java.time.Instant;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.Store;

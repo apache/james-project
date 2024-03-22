@@ -23,7 +23,7 @@ import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.cql.{BoundStatement, PreparedStatement, Row}
 import com.datastax.oss.driver.api.core.data.UdtValue
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder.{bindMarker, deleteFrom, insertInto, selectFrom}
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.core.{MailAddress, Username}

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.exceptions.MailboxHasChildException;
 import org.apache.james.jmap.draft.exceptions.SystemMailboxNotUpdatableException;

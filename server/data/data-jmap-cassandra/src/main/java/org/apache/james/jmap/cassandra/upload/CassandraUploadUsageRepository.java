@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.cassandra.upload;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.core.Username;

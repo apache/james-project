@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.jpa.JPAId;

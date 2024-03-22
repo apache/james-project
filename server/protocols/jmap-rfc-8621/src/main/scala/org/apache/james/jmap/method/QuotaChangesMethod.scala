@@ -21,7 +21,7 @@ package org.apache.james.jmap.method
 
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.api.change.CanNotCalculateChangesException
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_QUOTA}

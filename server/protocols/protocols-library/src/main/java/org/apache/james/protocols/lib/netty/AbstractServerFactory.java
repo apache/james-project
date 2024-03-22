@@ -22,8 +22,8 @@ package org.apache.james.protocols.lib.netty;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;

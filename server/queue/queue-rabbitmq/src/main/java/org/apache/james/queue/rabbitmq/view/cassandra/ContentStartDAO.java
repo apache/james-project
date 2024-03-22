@@ -30,7 +30,7 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 
 import java.time.Instant;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.queue.rabbitmq.MailQueueName;

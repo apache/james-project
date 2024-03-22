@@ -20,8 +20,7 @@
 package org.apache.james.spamassassin;
 
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 

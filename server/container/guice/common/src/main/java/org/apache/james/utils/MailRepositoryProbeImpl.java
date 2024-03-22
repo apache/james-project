@@ -22,7 +22,7 @@ package org.apache.james.utils;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailKey;
