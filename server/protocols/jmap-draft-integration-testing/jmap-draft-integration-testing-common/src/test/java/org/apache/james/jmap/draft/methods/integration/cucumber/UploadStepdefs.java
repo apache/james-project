@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Async;

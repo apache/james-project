@@ -22,7 +22,7 @@ package org.apache.james.lmtpserver;
 import java.util.Collection;
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;

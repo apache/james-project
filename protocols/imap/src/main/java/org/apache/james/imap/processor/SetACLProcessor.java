@@ -23,7 +23,7 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;

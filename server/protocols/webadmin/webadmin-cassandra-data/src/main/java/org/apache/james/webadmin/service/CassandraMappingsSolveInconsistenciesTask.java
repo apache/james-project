@@ -21,7 +21,7 @@ package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;

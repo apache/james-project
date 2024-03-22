@@ -19,7 +19,7 @@
 
 package org.apache.james.examples.imap;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;

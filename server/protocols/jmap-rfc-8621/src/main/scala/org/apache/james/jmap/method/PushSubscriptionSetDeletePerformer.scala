@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.method
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.model.PushSubscriptionId
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository
 import org.apache.james.jmap.core.SetError.SetErrorDescription

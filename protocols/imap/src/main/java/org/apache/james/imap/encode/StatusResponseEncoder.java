@@ -22,7 +22,7 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 import java.util.Collection;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;

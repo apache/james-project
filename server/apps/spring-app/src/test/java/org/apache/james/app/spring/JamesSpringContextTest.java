@@ -59,7 +59,7 @@ class JamesSpringContextTest {
     @AfterEach
     void tearDown() {
         context.stop();
-        context.destroy();
+        context.close();
     }
 
     @Test

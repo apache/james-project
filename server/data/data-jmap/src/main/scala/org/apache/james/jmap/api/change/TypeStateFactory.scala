@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.api.change
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.model.TypeName
 
 import scala.jdk.CollectionConverters._

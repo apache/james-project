@@ -24,7 +24,7 @@ import java.util
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult}
 import org.apache.james.transport.mailets.ConfigurationOps.DurationOps

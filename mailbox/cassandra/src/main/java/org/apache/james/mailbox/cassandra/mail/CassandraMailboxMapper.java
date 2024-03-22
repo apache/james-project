@@ -25,7 +25,7 @@ import static org.apache.james.backends.cassandra.init.configuration.JamesExecut
 import java.security.SecureRandom;
 import java.time.Duration;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;

@@ -24,8 +24,8 @@ import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEM
 import java.net.URISyntaxException;
 import java.time.Duration;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;

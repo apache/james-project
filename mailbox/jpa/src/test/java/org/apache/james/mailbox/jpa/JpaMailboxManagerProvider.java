@@ -21,7 +21,7 @@ package org.apache.james.mailbox.jpa;
 
 import java.time.Instant;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;

@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.methods.integration.cucumber;
 
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;

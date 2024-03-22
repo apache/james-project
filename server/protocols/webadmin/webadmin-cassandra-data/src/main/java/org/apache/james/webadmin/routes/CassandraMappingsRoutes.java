@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;

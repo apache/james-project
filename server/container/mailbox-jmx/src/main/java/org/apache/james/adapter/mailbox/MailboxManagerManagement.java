@@ -28,10 +28,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;

@@ -23,7 +23,7 @@ import static org.apache.james.jmap.http.DownloadRoutes.BLOB_ID_PATH_PARAM;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenManager;

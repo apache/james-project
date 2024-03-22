@@ -19,7 +19,7 @@
 
 package org.apache.james.utils;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminServer;

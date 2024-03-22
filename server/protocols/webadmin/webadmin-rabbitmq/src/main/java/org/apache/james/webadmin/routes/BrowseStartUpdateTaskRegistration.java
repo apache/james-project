@@ -21,7 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.routes.MailQueueRoutes.MAIL_QUEUE_NAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;

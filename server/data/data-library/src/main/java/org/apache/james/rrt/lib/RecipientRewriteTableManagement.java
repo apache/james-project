@@ -20,9 +20,10 @@ package org.apache.james.rrt.lib;
 
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
+
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;

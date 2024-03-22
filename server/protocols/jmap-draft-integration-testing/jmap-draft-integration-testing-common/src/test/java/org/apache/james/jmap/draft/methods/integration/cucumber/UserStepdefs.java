@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.base.Splitter;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;

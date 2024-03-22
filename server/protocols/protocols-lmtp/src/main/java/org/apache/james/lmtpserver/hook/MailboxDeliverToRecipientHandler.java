@@ -24,8 +24,8 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

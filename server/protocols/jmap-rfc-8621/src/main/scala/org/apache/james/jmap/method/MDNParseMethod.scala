@@ -22,7 +22,7 @@ package org.apache.james.jmap.method
 import java.io.InputStream
 
 import eu.timepit.refined.auto._
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL, JMAP_MDN}
 import org.apache.james.jmap.core.Invocation._
 import org.apache.james.jmap.core.{Invocation, JmapRfc8621Configuration, SessionTranslator}

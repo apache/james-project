@@ -21,7 +21,7 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.apache.james.queue.api.MailQueueFactory.SPOOL;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;

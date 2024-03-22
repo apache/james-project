@@ -22,7 +22,7 @@ package org.apache.james.webadmin.services;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.eventsourcing.eventstore.EventStore;

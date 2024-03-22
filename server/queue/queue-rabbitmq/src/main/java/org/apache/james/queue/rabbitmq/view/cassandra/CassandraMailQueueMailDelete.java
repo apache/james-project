@@ -26,7 +26,7 @@ import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.queue.rabbitmq.EnqueueId;
 import org.apache.james.queue.rabbitmq.MailQueueName;

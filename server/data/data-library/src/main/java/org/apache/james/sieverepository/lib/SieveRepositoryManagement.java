@@ -25,9 +25,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
+
+import jakarta.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;

@@ -21,7 +21,7 @@ package org.apache.james.queue.rabbitmq;
 
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.ComponentName;

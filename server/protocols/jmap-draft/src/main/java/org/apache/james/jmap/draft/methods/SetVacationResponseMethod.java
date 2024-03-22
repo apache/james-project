@@ -23,7 +23,7 @@ import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountI
 import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
 import static org.apache.james.util.ReactorUtils.context;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.draft.model.MethodCallId;

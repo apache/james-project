@@ -21,8 +21,8 @@ package org.apache.james;
 
 import java.util.Set;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskType;

@@ -32,7 +32,7 @@ import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.SIZE;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.TABLE_NAME;
 import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.USER_NAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;

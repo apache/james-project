@@ -39,8 +39,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import io.cucumber.datatable.DataTable;
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.commons.io.IOUtils;

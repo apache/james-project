@@ -24,7 +24,7 @@ import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import java.io.IOException;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;

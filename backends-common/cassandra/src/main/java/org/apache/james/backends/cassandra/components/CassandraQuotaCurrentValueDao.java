@@ -32,7 +32,7 @@ import static org.apache.james.backends.cassandra.components.CassandraQuotaCurre
 
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.quota.QuotaComponent;

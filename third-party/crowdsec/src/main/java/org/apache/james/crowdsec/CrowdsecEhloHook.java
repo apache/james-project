@@ -21,7 +21,7 @@ package org.apache.james.crowdsec;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.apache.james.crowdsec.model.CrowdsecDecision;

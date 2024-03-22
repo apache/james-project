@@ -25,7 +25,7 @@ import java.util.Base64
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.hash.Hashing
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.events.EventListener.ReactiveGroupEventListener
 import org.apache.james.events.{Event, Group}
 import org.apache.james.jmap.api.model.PushSubscription

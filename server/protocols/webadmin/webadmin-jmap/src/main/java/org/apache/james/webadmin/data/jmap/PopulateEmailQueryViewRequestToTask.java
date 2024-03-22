@@ -21,7 +21,7 @@ package org.apache.james.webadmin.data.jmap;
 
 import static org.apache.james.webadmin.data.jmap.Constants.POPULATE_EMAIL_QUERY_VIEW;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 

@@ -28,7 +28,7 @@ import static org.apache.james.blob.cassandra.BlobTables.DefaultBucketBlobTable.
 
 import java.nio.ByteBuffer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;

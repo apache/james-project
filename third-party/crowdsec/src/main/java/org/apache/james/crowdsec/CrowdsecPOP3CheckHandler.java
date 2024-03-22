@@ -25,7 +25,7 @@ import static org.apache.james.protocols.pop3.POP3Response.OK;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.crowdsec.client.CrowdsecHttpClient;
 import org.apache.james.crowdsec.model.CrowdsecDecision;

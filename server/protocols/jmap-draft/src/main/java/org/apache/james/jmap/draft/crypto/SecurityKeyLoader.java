@@ -30,7 +30,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.filesystem.api.FileSystem;

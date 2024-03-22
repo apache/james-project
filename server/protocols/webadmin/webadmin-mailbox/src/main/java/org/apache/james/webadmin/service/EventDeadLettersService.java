@@ -22,7 +22,7 @@ package org.apache.james.webadmin.service;
 import java.util.List;
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventDeadLetters;

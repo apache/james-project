@@ -23,7 +23,7 @@ import static org.apache.james.crowdsec.CrowdsecUtils.isBanned;
 
 import java.net.InetSocketAddress;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.apache.james.crowdsec.client.CrowdsecHttpClient;

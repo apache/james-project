@@ -21,7 +21,7 @@ package org.apache.james.backends.cassandra.migration;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 

@@ -22,7 +22,7 @@ package org.apache.james.jmap.memory.cucumber;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import io.cucumber.guice.ScenarioScoped;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.MemoryJamesConfiguration;
 import org.apache.james.MemoryJamesServerMain;

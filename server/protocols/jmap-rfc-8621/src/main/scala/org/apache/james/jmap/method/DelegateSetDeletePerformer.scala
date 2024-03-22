@@ -20,7 +20,7 @@
 package org.apache.james.jmap.method
 
 import com.google.common.collect.ImmutableMap
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription

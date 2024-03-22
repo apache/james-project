@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.dnsservice.api.DNSService;

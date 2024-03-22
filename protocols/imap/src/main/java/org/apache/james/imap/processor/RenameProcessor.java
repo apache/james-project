@@ -21,7 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.util.ReactorUtils.logAsMono;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;

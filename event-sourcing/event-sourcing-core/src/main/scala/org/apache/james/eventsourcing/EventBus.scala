@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.eventsourcing
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreFailedException}
 import org.reactivestreams.Publisher
 import org.slf4j.LoggerFactory

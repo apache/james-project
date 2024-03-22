@@ -1356,7 +1356,6 @@ All rights reserved.
                 <resource name='protocols-api-1.5.jar'/>
                 <resource name='protocols-impl-1.5.jar'/>
                 <resource name='protocols-smtp-1.5.jar'/>
-                <resource name='xbean-spring-3.6.jar'/>
                 <resource name='tika-core-0.8.jar'/>
                 <resource name='tika-parsers-0.8.jar'/>
             </by-organisation>

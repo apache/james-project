@@ -598,15 +598,17 @@
 
         <james.groupId>org.apache.james</james.groupId>
         <james.protocols.groupId>${james.groupId}.protocols</james.protocols.groupId>
-        <activemq.version>5.18.3</activemq.version>
+        <activemq.version>6.1.0</activemq.version>
         <apache-mime4j.version>0.8.11</apache-mime4j.version>
-        <apache.openjpa.version>3.2.2</apache.openjpa.version>
+        <apache.openjpa.version>4.0.0</apache.openjpa.version>
         <derby.version>10.14.2.0</derby.version>
         <log4j2.version>2.20.0</log4j2.version>
-        <javax.inject.version>1</javax.inject.version>
+        <jakarta.inject-api.version>2.0.1</jakarta.inject-api.version>
+        <jakarta.annotation-api.version>2.1.1</jakarta.annotation-api.version>
+        <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
         <jsieve.version>0.8</jsieve.version>
-        <spring.version>4.3.25.RELEASE</spring.version>
-        <activmq-artemis.version>2.29.0</activmq-artemis.version>
+        <spring.version>6.1.4</spring.version>
+        <activmq-artemis.version>2.32.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.3</apache-jspf-resolver.version>
         <angus-mail.version>2.0.2</angus-mail.version>
         <angus-activation.version>2.0.1</angus-activation.version>
@@ -618,7 +620,6 @@
         <junit.platform.version>1.9.3</junit.platform.version>
         <junit.vintage.version>5.9.3</junit.vintage.version>
         <concurrent.version>1.3.4</concurrent.version>
-        <xbean-spring.version>4.21</xbean-spring.version>
         <netty.version>4.1.101.Final</netty.version>
         <cucumber.version>7.15.0</cucumber.version>
 
@@ -643,11 +644,10 @@
         <maven-reporting-impl.version>3.1.0</maven-reporting-impl.version>
         <maven-reporting-api.version>3.1.1</maven-reporting-api.version>
         <qdox.version>2.0.3</qdox.version>
-        <javax.persistence.version>1.0.2</javax.persistence.version>
         <jaxb.version>2.3.1</jaxb.version>
         <lucene.version>3.6.2</lucene.version>
         <jasypt.version>1.9.3</jasypt.version>
-        <guice.version>6.0.0</guice.version>
+        <guice.version>7.0.0</guice.version>
         <logback.version>1.4.14</logback.version>
         <tink.version>1.9.0</tink.version>
         <lettuce.core.version>6.3.0.RELEASE</lettuce.core.version>
@@ -2501,19 +2501,19 @@
                 <version>${jakarta.activation-api.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.annotation</groupId>
-                <artifactId>javax.annotation-api</artifactId>
-                <version>1.3.2</version>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>${jakarta.annotation-api.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>${javax.inject.version}</version>
+                <groupId>jakarta.inject</groupId>
+                <artifactId>jakarta.inject-api</artifactId>
+                <version>${jakarta.inject-api.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>javax.servlet-api</artifactId>
-                <version>4.0.1</version>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>${jakarta.servlet-api.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.xml.bind</groupId>
@@ -2540,10 +2540,6 @@
                 <artifactId>activemq-broker</artifactId>
                 <version>${activemq.version}</version>
                 <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework.osgi</groupId>
-                        <artifactId>spring-osgi-core</artifactId>
-                    </exclusion>
                     <!-- exclude this, it's only used in the authentication plugin which we don't use -->
                     <!-- exclude this, we don't use osgi yet -->
                     <exclusion>
@@ -2554,13 +2550,9 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.activemq</groupId>
-                <artifactId>artemis-jms-client</artifactId>
+                <artifactId>artemis-jakarta-client</artifactId>
                 <version>${activmq-artemis.version}</version>
                 <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
                     <exclusion>
                         <groupId>io.netty</groupId>
                         <artifactId>*</artifactId>
@@ -2713,21 +2705,6 @@
                     <exclusion>
                         <groupId>commons-logging</groupId>
                         <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.xbean</groupId>
-                <artifactId>xbean-spring</artifactId>
-                <version>${xbean-spring.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-web</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -2895,12 +2872,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-core</artifactId>
                 <version>${spring.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -2916,28 +2887,6 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-orm</artifactId>
                 <version>${spring.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.oracle.toplink</groupId>
-                        <artifactId>toplink</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.oracle</groupId>
-                        <artifactId>toplink-essentials</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.hibernate</groupId>
-                        <artifactId>hibernate-entitymanager</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-web</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
@@ -3165,6 +3114,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.11.0</version>
                     <configuration>
+                        <parameters>true</parameters>
                         <optimize>true</optimize>
                         <source>${target.jdk}</source>
                         <target>${target.jdk}</target>

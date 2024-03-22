@@ -24,7 +24,7 @@ import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class ConfiguredListener implements EventListener.GroupEventListener {
     static String value = null;

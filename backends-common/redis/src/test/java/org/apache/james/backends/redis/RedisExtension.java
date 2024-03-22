@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.redis;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.GuiceModuleTestExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;

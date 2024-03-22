@@ -20,9 +20,8 @@ package org.apache.james.transport.mailets;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.mail.Flags;
 import jakarta.mail.MessagingException;
 

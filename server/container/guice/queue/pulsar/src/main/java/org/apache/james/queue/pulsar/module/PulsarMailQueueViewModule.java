@@ -19,8 +19,8 @@
 
 package org.apache.james.queue.pulsar.module;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.backends.pulsar.PulsarConfiguration;

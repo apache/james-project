@@ -21,9 +21,10 @@ package org.apache.james.domainlist.lib;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
+
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;

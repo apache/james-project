@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.server;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 import org.apache.james.jwt.JwtTokenVerifier;
 

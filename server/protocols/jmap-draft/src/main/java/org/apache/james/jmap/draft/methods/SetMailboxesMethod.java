@@ -24,7 +24,7 @@ import static org.apache.james.util.ReactorUtils.context;
 
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetMailboxesRequest;

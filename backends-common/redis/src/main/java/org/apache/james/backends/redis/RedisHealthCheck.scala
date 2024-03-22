@@ -25,7 +25,7 @@ import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.{RedisClient, RedisURI}
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.healthcheck.{ComponentName, HealthCheck, Result}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.SMono

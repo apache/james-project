@@ -21,7 +21,7 @@ package org.apache.james.mailbox.events;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.RegistrationKey;
 import org.apache.james.mailbox.model.MailboxId;

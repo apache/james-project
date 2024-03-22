@@ -19,8 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.search;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;

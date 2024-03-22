@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.quota.mailing.listeners;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;

@@ -27,7 +27,7 @@ import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserP
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.TABLE;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.UserPerBucketTable.USER;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BucketName;

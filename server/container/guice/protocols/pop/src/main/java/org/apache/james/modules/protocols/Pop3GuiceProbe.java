@@ -22,7 +22,7 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;

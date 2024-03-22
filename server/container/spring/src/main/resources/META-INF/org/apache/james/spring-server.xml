@@ -21,10 +21,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
           http://www.springframework.org/schema/context
-          http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+          http://www.springframework.org/schema/context/spring-context-2.5.xsd
+          http://www.springframework.org/schema/util
+          http://www.springframework.org/schema/util/spring-util.xsd">
 
     <!-- 
     ===========================================================================
@@ -189,14 +192,14 @@
     </bean>
     <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="dataSource" ref="datasource"/>
-        <property name="jpaVendorAdapter" ref="vendorAdapter"/>
+        <property name="jpaPropertyMap" ref="jpaPropertyMap"/>
+        <property name="persistenceProviderClass" value="org.apache.openjpa.persistence.PersistenceProviderImpl"/>
         <property name="persistenceXmlLocation" value="classpath:META-INF/persistence.xml"/>
     </bean>
-    <bean id="vendorAdapter" class="org.springframework.orm.jpa.vendor.OpenJpaVendorAdapter">
-        <property name="database" value="${vendorAdapter.database}"/>
-        <!-- set this to true for debugging purposes -->
-        <property name="showSql" value="false"/>
-    </bean>
+    <util:map id="jpaPropertyMap">
+        <!-- uncomment below to enable debug logging -->
+        <!-- <entry key="openjpa.Log" value="DefaultLevel=WARN, Runtime=INFO, Tool=INFO, SQL=TRACE"/> -->
+    </util:map>
 
     <!-- 
     ===========================================================================
@@ -228,10 +231,9 @@
         </property>
     </bean>
 
-    <bean id="registry" class="org.springframework.remoting.rmi.RmiRegistryFactoryBean">
-        <property name="port" value="${jmx.port}"/>
-        <property name="serverSocketFactory" ref="restrictedRmiSocketFactory"/>
-        <property name="clientSocketFactory" ref="restrictedRmiSocketFactory"/>
+    <bean id="registry" class="org.apache.james.container.spring.rmi.RmiRegistryFactoryBean">
+        <constructor-arg index="0" value="${jmx.port}"/>
+        <constructor-arg index="1" ref="restrictedRmiSocketFactory"/>
     </bean>
 
     <bean id="restrictedRmiSocketFactory" class="org.apache.james.util.RestrictingRMISocketFactory">
@@ -288,11 +290,6 @@
     </bean>
     <!--
         <bean id="james23importermanagement" class="org.apache.james.container.spring.tool.James23ImporterManagement" />
-    -->
-
-    <!-- uncomment the folowing line to enable JETM monitoring -->
-    <!--
-        <import resource="classpath:jetm-monitoring.conf" />
     -->
 
     <!--

@@ -24,11 +24,11 @@ import static org.apache.james.mailbox.jpa.user.model.JPASubscription.FIND_SUBSC
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;

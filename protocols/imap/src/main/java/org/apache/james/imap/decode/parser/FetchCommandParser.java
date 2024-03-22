@@ -33,7 +33,7 @@ import static org.apache.james.imap.api.message.FetchData.Item.UID;
 import java.util.List;
 import java.util.Locale;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;

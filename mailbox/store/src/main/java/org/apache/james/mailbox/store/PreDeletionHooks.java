@@ -22,7 +22,7 @@ package org.apache.james.mailbox.store;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.metrics.api.MetricFactory;

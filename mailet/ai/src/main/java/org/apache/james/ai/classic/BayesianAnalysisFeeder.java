@@ -25,9 +25,9 @@ import java.io.StringReader;
 import java.sql.Connection;
 import java.util.Enumeration;
 
-import javax.annotation.Resource;
 import javax.sql.DataSource;
 
+import jakarta.annotation.Resource;
 import jakarta.mail.Header;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

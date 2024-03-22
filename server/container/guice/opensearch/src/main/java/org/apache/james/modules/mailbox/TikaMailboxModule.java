@@ -22,7 +22,7 @@ package org.apache.james.modules.mailbox;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

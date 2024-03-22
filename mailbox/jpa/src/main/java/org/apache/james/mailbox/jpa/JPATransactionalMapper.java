@@ -18,10 +18,10 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceException;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.mailbox.exception.MailboxException;

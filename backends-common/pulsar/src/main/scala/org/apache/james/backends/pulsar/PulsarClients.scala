@@ -25,7 +25,7 @@ import org.apache.pulsar.client.admin.PulsarAdmin
 import org.apache.pulsar.client.impl.auth.{AuthenticationBasic, AuthenticationDisabled, AuthenticationToken}
 
 import java.io.Closeable
-import javax.annotation.PreDestroy
+import jakarta.annotation.PreDestroy
 import scala.jdk.CollectionConverters.MapHasAsJava
 
 object PulsarClients {

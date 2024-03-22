@@ -34,7 +34,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.TAB
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxTable.UIDVALIDITY;
 import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;

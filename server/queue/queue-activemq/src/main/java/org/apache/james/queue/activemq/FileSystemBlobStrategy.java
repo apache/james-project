@@ -28,7 +28,7 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.util.regex.Pattern;
 
-import javax.jms.JMSException;
+import jakarta.jms.JMSException;
 
 import org.apache.activemq.BlobMessage;
 import org.apache.activemq.blob.BlobDownloadStrategy;

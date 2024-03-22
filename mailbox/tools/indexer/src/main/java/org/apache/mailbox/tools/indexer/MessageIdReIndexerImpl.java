@@ -19,7 +19,7 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.model.MessageId;

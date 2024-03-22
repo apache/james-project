@@ -22,7 +22,7 @@ package org.apache.james.protocols.webadmin;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.protocols.lib.netty.CertificateReloadable;
 import org.apache.james.util.Port;

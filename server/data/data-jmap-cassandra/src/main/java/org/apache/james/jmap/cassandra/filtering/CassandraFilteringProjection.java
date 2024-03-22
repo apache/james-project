@@ -30,7 +30,7 @@ import static org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjec
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;

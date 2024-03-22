@@ -20,7 +20,7 @@ package org.apache.james.smtpserver.fastfail;
 
 import java.util.Collection;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.protocols.smtp.SMTPSession;

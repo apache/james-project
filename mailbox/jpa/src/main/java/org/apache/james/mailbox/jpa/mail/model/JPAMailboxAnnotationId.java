@@ -21,7 +21,7 @@ package org.apache.james.mailbox.jpa.mail.model;
 
 import java.io.Serializable;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 import com.google.common.base.Objects;
 

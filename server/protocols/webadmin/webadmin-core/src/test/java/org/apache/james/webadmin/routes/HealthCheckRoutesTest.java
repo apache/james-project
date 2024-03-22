@@ -381,10 +381,8 @@ class HealthCheckRoutesTest {
     void performHealthCheckShouldWorkWithEscapedPathParam() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
         
-        // disable URL encoding
-        RestAssured.requestSpecification.urlEncodingEnabled(false);
-
         given()
+            .urlEncodingEnabled(false)
             .pathParam("componentName", NAME_3_ESCAPED)
         .when()
             .get("/checks/{componentName}")

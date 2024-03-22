@@ -25,9 +25,13 @@ import static spark.Spark.halt;
 import java.util.List;
 import java.util.Optional;
 
+<<<<<<< HEAD
 import javax.inject.Inject;
 import javax.mail.internet.AddressException;
 
+=======
+import jakarta.inject.Inject;
+>>>>>>> 11646b05bb ([UPDATE] more javax APIs migrated to jakarta (#2141))
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;

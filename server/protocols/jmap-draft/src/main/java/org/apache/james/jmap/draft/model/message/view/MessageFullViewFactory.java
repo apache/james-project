@@ -29,8 +29,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.api.model.Preview;

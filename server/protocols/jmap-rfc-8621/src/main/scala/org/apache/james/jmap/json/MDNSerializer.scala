@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.core.{Id, SetError}
 import org.apache.james.jmap.mail.{BlobId, BlobIds, ErrorField, ExtensionFieldName, ExtensionFieldValue, FinalRecipientField, ForEmailIdField, IncludeOriginalMessageField, MDNDisposition, MDNGatewayField, MDNNotFound, MDNNotParsable, MDNParseRequest, MDNParseResponse, MDNParsed, MDNSendCreateRequest, MDNSendCreateResponse, MDNSendCreationId, MDNSendRequest, MDNSendResponse, OriginalMessageIdField, OriginalRecipientField, ReportUAField, SubjectField, TextBodyField, UnparsedIdentityId}
 import org.apache.james.mailbox.model.MessageId

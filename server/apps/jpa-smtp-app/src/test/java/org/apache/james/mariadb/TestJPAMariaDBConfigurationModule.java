@@ -19,7 +19,7 @@
 
 package org.apache.james.mariadb;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
 

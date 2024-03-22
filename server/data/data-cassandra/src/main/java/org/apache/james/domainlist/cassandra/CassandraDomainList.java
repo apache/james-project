@@ -28,7 +28,7 @@ import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Domain;

@@ -23,7 +23,7 @@ import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.jmap.draft.model.SetError;

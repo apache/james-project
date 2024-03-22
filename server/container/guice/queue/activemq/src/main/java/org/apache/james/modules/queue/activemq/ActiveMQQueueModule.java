@@ -21,7 +21,7 @@ package org.apache.james.modules.queue.activemq;
 
 import java.io.FileNotFoundException;
 
-import javax.jms.ConnectionFactory;
+import jakarta.jms.ConnectionFactory;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;

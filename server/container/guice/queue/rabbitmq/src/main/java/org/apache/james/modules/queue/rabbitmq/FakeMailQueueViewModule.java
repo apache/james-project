@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.modules.queue.rabbitmq;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.queue.rabbitmq.view.api.FakeMailQueueView;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;

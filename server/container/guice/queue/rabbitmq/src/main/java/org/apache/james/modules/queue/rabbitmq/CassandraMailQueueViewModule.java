@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules.queue.rabbitmq;
 
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobReferenceSource;

@@ -23,7 +23,7 @@ import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountI
 
 import java.util.Arrays;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;

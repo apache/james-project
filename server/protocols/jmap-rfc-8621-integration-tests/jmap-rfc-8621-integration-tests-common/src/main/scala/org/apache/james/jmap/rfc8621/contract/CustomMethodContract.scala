@@ -31,7 +31,7 @@ import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
-import javax.inject.{Inject, Named}
+import jakarta.inject.{Inject, Named}
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer

@@ -31,8 +31,8 @@ import static org.apache.james.blob.cassandra.BlobTables.BucketBlobTable.ID;
 
 import java.nio.ByteBuffer;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.cassandra.init.configuration.InjectionNames;
 import org.apache.james.backends.cassandra.init.configuration.JamesExecutionProfiles;

@@ -19,7 +19,7 @@
 
 package org.apache.james.modules;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.utils.GuiceProbe;

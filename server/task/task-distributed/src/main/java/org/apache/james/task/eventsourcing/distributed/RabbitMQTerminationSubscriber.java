@@ -28,8 +28,8 @@ import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.QueueArguments;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;

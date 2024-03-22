@@ -21,7 +21,7 @@ package org.apache.james.webadmin.data.jmap;
 
 import static org.apache.james.webadmin.data.jmap.Constants.POPULATE_FILTERING_PROJECTION;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.user.api.UsersRepository;

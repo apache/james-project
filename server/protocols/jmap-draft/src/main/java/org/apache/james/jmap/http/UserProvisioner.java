@@ -20,7 +20,7 @@ package org.apache.james.jmap.http;
 
 import java.util.UUID;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPConfiguration;

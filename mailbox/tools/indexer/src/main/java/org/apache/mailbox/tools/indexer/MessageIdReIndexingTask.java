@@ -22,7 +22,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;

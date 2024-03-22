@@ -21,9 +21,9 @@ package org.apache.james.mailbox.jpa.quota;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.backends.jpa.TransactionRunner;

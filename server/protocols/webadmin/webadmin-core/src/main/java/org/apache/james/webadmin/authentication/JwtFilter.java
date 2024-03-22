@@ -23,8 +23,8 @@ import static spark.Spark.halt;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.eclipse.jetty.http.HttpStatus;

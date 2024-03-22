@@ -20,7 +20,7 @@ package org.apache.james.mailbox.store.quota;
 
 import java.time.Instant;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;

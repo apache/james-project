@@ -20,9 +20,9 @@ package org.apache.james.mailbox.tools.jpa.migrator;
 
 import java.util.Locale;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 import org.apache.james.mailbox.tools.jpa.migrator.command.JpaMigrateCommand;
 import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;

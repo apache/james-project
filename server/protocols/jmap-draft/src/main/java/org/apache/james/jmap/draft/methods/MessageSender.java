@@ -21,8 +21,7 @@ package org.apache.james.jmap.draft.methods;
 
 import java.io.InputStream;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;

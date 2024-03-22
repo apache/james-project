@@ -19,7 +19,7 @@
 
 package org.apache.james.vault.metadata;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.Username;

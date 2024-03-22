@@ -21,12 +21,12 @@ package org.apache.james.mailbox.jpa.mail;
 
 import java.util.NoSuchElementException;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
+import jakarta.persistence.TypedQuery;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;

@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class MailboxManagerConfiguration {
     public static final MailboxManagerConfiguration DEFAULT = new MailboxManagerConfiguration(BatchSizes.defaultValues());

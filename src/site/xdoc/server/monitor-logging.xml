@@ -329,7 +329,6 @@ log4j.appender.DOMAINLIST.layout.ConversionPattern=%-5p %d{HH:mm:ss,SSS} | %c | 
 log4j.logger.org.apache.jackrabbit=ERROR, CONS, FILE
 
 # logger for activemq
-log4j.logger.org.apache.xbean.spring=WARN, CONS, FILE
 log4j.logger.org.apache.activemq=WARN, CONS, FILE
 
 # logger for camel

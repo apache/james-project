@@ -22,7 +22,7 @@ package org.apache.james.mailbox.inmemory.quota;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;

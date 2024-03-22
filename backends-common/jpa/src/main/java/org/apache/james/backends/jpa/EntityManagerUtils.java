@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.jpa;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 public class EntityManagerUtils {
 

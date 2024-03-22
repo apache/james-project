@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;

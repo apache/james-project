@@ -30,9 +30,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import javax.inject.Inject;
 import javax.sql.DataSource;
 
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Domain;

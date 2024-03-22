@@ -21,7 +21,7 @@ package org.apache.james.modules;
 
 import java.net.URISyntaxException;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaContainer;

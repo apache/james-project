@@ -20,8 +20,8 @@ package org.apache.james.mailbox.tools.jpa.migrator.command;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 

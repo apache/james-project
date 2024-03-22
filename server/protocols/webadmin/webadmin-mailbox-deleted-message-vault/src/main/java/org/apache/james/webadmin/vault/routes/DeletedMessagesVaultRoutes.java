@@ -23,8 +23,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
 import org.apache.commons.lang3.StringUtils;

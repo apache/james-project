@@ -20,7 +20,7 @@ package org.apache.james.protocols.netty;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.protocols.api.Protocol;
 

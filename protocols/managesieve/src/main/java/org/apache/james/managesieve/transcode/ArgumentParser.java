@@ -22,7 +22,7 @@ package org.apache.james.managesieve.transcode;
 
 import java.util.Iterator;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.managesieve.api.ArgumentException;
 import org.apache.james.managesieve.api.Session;

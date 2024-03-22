@@ -22,12 +22,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Table;
-
 import jakarta.mail.Flags;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Table;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.mailbox.MessageUid;

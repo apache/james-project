@@ -19,9 +19,9 @@
 
 package org.apache.james.queue.activemq;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.jms.ConnectionFactory;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;

@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.tools.jpa.migrator.command;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 import org.apache.openjpa.kernel.DelegatingResultList;

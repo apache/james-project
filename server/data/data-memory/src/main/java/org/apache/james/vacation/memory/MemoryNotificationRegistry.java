@@ -22,7 +22,7 @@ package org.apache.james.vacation.memory;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.vacation.api.AccountId;

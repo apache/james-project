@@ -23,7 +23,7 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;

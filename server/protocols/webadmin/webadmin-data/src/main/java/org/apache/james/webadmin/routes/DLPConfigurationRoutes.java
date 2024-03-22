@@ -23,7 +23,7 @@ import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationItem;

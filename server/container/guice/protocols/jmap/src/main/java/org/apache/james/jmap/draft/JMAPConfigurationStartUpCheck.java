@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.crypto.SecurityKeyLoader;
 import org.apache.james.lifecycle.api.StartUpCheck;

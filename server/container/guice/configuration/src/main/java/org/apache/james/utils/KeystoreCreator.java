@@ -38,7 +38,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.bouncycastle.asn1.x500.X500Name;

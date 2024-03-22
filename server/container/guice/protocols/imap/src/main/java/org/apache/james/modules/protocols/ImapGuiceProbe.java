@@ -22,8 +22,8 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.james.imapserver.netty.IMAPServerFactory;
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;

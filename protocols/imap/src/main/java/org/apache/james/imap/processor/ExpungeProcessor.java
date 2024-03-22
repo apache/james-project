@@ -25,7 +25,7 @@ import static org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode
 import java.util.EnumSet;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;

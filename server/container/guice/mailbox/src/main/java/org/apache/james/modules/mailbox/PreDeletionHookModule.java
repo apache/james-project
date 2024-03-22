@@ -21,7 +21,7 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.mailbox.extension.PreDeletionHook;

@@ -27,8 +27,7 @@ import java.util.Enumeration;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;

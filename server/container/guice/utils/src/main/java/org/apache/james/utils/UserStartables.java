@@ -19,7 +19,7 @@
 
 package org.apache.james.utils;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.slf4j.Logger;

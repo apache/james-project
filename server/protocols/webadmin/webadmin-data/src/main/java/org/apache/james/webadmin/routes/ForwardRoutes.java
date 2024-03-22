@@ -24,7 +24,7 @@ import static spark.Spark.halt;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;

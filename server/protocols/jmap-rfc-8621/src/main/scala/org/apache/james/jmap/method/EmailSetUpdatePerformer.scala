@@ -20,8 +20,8 @@
 package org.apache.james.jmap.method
 
 import com.google.common.collect.ImmutableList
+import jakarta.inject.Inject
 import jakarta.mail.Flags
-import javax.inject.Inject
 import org.apache.james.jmap.core.SetError
 import org.apache.james.jmap.core.SetError.SetErrorDescription
 import org.apache.james.jmap.json.EmailSetSerializer

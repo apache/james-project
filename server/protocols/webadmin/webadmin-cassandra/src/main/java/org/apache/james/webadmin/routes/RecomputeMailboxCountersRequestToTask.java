@@ -21,7 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService;
 import org.apache.james.mailbox.cassandra.mail.task.RecomputeMailboxCountersService.Options;

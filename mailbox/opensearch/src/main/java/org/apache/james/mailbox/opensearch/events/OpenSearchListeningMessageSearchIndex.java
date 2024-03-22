@@ -35,9 +35,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.mail.Flags;
 
 import org.apache.james.backends.opensearch.DocumentId;
