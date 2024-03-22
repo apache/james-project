@@ -69,10 +69,6 @@ public final class CassandraCluster implements AutoCloseable {
         this.typesProvider = new CassandraTypesProvider(nonPrivilegedSession);
     }
 
-    public ClusterConfiguration getClusterConfiguration() {
-        return clusterConfiguration;
-    }
-
     public TestingSession getConf() {
         return nonPrivilegedSession;
     }

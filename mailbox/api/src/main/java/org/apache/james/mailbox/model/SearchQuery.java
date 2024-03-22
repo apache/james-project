@@ -1966,12 +1966,6 @@ public class SearchQuery {
      */
     public static class DateOperator implements HeaderOperator {
 
-        public static final int BEFORE = 1;
-
-        public static final int AFTER = 2;
-
-        public static final int ON = 3;
-
         private final DateComparator type;
 
         private final Date date;
@@ -2053,14 +2047,6 @@ public class SearchQuery {
         public UidRange[] getRange() {
             return ranges;
         }
-
-        public boolean isAll() {
-            return ranges.length == 0
-                || (ranges.length == 1
-                && ranges[0].getLowValue() == MessageUid.MIN_VALUE
-                && ranges[0].getHighValue() == MessageUid.MAX_VALUE);
-        }
-
         
         @Override
         public int hashCode() {

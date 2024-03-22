@@ -24,11 +24,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RunArguments {
-
-    public static RunArguments empty() {
-        return new RunArguments(Set.of());
-    }
-
     public static RunArguments from(String[] args) {
         return new RunArguments(Arrays.stream(args)
             .map(Argument::parse)
@@ -49,10 +44,6 @@ public class RunArguments {
                 .filter(argument -> argument.rawValue.equals(arg))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Invalid running argument: " + arg));
-        }
-
-        public String getRawValue() {
-            return rawValue;
         }
     }
 

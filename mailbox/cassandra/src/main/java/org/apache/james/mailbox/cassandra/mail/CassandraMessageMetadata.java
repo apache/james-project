@@ -81,11 +81,6 @@ public class CassandraMessageMetadata {
             return this;
         }
 
-        public Builder saveDate(Date date) {
-            this.saveDate = Optional.ofNullable(date);
-            return this;
-        }
-
         public Builder saveDate(Optional<Date> date) {
             this.saveDate = date;
             return this;

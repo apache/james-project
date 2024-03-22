@@ -32,13 +32,6 @@ import com.google.common.primitives.Ints;
 import com.rabbitmq.client.Connection;
 
 public class RabbitMQWaitStrategy implements WaitStrategy {
-
-    private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
-
-    public static RabbitMQWaitStrategy withDefaultTimeout(DockerRabbitMQ rabbitMQ) {
-        return new RabbitMQWaitStrategy(rabbitMQ, DEFAULT_TIMEOUT);
-    }
-
     private final DockerRabbitMQ rabbitMQ;
     private final Duration timeout;
 

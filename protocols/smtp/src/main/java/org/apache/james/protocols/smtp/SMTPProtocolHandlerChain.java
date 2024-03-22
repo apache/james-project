@@ -19,6 +19,7 @@
 package org.apache.james.protocols.smtp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -78,9 +79,7 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
      */
     public SMTPProtocolHandlerChain(MetricFactory metricFactory, Hook... hooks) throws WiringException {
         this(metricFactory, true);
-        for (Hook hook : hooks) {
-            add(hook);
-        }
+        this.addAll(Arrays.asList(hooks));
         wireExtensibleHandlers();
     }
     

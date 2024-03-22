@@ -85,7 +85,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
-import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.data.UdtValue;
@@ -181,37 +180,6 @@ public class CassandraMessageDAOV3 {
     public Mono<Tuple2<BlobId, BlobId>> save(MailboxMessage message) {
         return saveContent(message)
             .flatMap(pair -> cassandraAsyncExecutor.executeVoid(boundWriteStatement(message, pair)).thenReturn(pair));
-    }
-
-    public Mono<Void> save(MessageRepresentation message) {
-        CassandraMessageId messageId = (CassandraMessageId) message.getMessageId();
-        BoundStatementBuilder boundStatement = insert.boundStatementBuilder()
-            .setUuid(MESSAGE_ID, messageId.get())
-            .setInstant(INTERNAL_DATE, message.getInternalDate().toInstant())
-            .setInt(BODY_START_OCTET, message.getBodyStartOctet())
-            .setLong(FULL_CONTENT_OCTETS, message.getSize())
-            .setLong(BODY_OCTECTS, message.getSize() - message.getBodyStartOctet())
-            .setString(BODY_CONTENT, message.getBodyId().asString())
-            .setString(HEADER_CONTENT, message.getHeaderId().asString())
-            .setLong(TEXTUAL_LINE_COUNT, Optional.ofNullable(message.getProperties().getTextualLineCount()).orElse(DEFAULT_LONG_VALUE))
-            .setString(CONTENT_DESCRIPTION, message.getProperties().getContentDescription())
-            .setString(CONTENT_DISPOSITION_TYPE, message.getProperties().getContentDispositionType())
-            .setString(MEDIA_TYPE, message.getProperties().getMediaType())
-            .setString(SUB_TYPE, message.getProperties().getSubType())
-            .setString(CONTENT_ID, message.getProperties().getContentID())
-            .setString(CONTENT_MD5, message.getProperties().getContentMD5())
-            .setString(CONTENT_TRANSFER_ENCODING, message.getProperties().getContentTransferEncoding())
-            .setString(CONTENT_LOCATION, message.getProperties().getContentLocation())
-            .set(CONTENT_LANGUAGE, message.getProperties().getContentLanguage(), LIST_OF_STRINGS_CODEC)
-            .set(CONTENT_DISPOSITION_PARAMETERS, message.getProperties().getContentDispositionParameters(), MAP_OF_STRINGS_CODEC)
-            .set(CONTENT_TYPE_PARAMETERS, message.getProperties().getContentTypeParameters(), MAP_OF_STRINGS_CODEC);
-
-        if (message.getAttachments().isEmpty()) {
-            return cassandraAsyncExecutor.executeVoid(boundStatement.unset(ATTACHMENTS).build());
-        } else {
-            return cassandraAsyncExecutor.executeVoid(boundStatement.setList(ATTACHMENTS, buildAttachmentUdt(message.getAttachments()), UdtValue.class).build());
-        }
-
     }
 
     private Mono<Tuple2<BlobId, BlobId>> saveContent(MailboxMessage message) {

@@ -200,13 +200,6 @@ public class CassandraMailboxCounterDAO {
         return cassandraAsyncExecutor.executeVoid(bindWithMailbox(mailboxId, incrementUnseenAndCountStatement));
     }
 
-    public Mono<Void> incrementUnseenAndCount(CassandraId mailboxId, long count, long unseen) {
-        return cassandraAsyncExecutor.executeVoid(
-            bindWithMailbox(mailboxId, addToCounters)
-                .setLong(COUNT, count)
-                .setLong(UNSEEN, unseen));
-    }
-
     private BoundStatement bindWithMailbox(CassandraId mailboxId, PreparedStatement statement) {
         return statement.bind()
             .set(MAILBOX_ID, mailboxId.asUuid(), TypeCodecs.TIMEUUID);

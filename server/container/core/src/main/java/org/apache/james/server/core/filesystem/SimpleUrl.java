@@ -63,10 +63,6 @@ public class SimpleUrl {
         return simplified;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
     public String getSimplified() {
         return simplifiedUrl;
     }

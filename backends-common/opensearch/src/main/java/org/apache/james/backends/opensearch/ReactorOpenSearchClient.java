@@ -81,10 +81,6 @@ public class ReactorOpenSearchClient implements AutoCloseable {
         return toReactor(client.deleteByQuery(deleteRequest));
     }
 
-    public RestClient getLowLevelClient() {
-        return lowLevelRestClient;
-    }
-
     public <T> Mono<IndexResponse> index(IndexRequest<T> indexRequest) throws IOException {
         return toReactor(client.index(indexRequest));
     }

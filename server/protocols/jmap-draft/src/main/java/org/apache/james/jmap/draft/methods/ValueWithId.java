@@ -57,12 +57,6 @@ public class ValueWithId<T> {
         }
     }
 
-    public static class ErrorWithId extends ValueWithId<SetError> {
-        public ErrorWithId(CreationMessageId creationId, SetError error) {
-            super(creationId, error);
-        }
-    }
-
     public static class MessageWithId extends ValueWithId<MessageFullView> {
         public MessageWithId(CreationMessageId creationId, MessageFullView message) {
             super(creationId, message);

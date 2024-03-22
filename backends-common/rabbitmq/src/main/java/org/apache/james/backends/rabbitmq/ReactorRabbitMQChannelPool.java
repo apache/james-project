@@ -652,10 +652,6 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         private RetryBackoffSpec backoffSpec() {
             return Retry.backoff(retries, maxBorrowDelay);
         }
-
-        public int getMaxChannel() {
-            return maxChannel;
-        }
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactorRabbitMQChannelPool.class);

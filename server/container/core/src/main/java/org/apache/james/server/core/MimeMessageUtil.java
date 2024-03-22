@@ -194,20 +194,6 @@ public class MimeMessageUtil {
     }
 
     /**
-     * Get an InputStream which holds all headers of the given MimeMessage
-     * 
-     * @param message
-     *            the MimeMessage used as source
-     * @param ignoreList
-     *            the String[] which holds headers which should be ignored
-     * @return stream the InputStream which holds the headers
-     * @throws MessagingException
-     */
-    public static InputStream getHeadersInputStream(MimeMessage message, String[] ignoreList) throws MessagingException {
-        return new InternetHeadersInputStream(message.getNonMatchingHeaderLines(ignoreList));
-    }
-
-    /**
      * Slow method to calculate the exact size of a message!
      */
     private static final class SizeCalculatorOutputStream extends OutputStream {

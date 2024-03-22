@@ -38,11 +38,6 @@ public class SMTPRelayConfiguration implements Configuration {
             configurationPath = Optional.empty();
         }
 
-        public Builder workingDirectory(String path) {
-            rootDirectory = Optional.of(path);
-            return this;
-        }
-
         public Builder workingDirectory(File file) {
             rootDirectory = Optional.of(file.getAbsolutePath());
             return this;
@@ -53,11 +48,6 @@ public class SMTPRelayConfiguration implements Configuration {
             if (!rootDirectory.isPresent()) {
                 throw new MissingArgumentException("Server needs a working.directory env entry");
             }
-            return this;
-        }
-
-        public Builder configurationPath(ConfigurationPath path) {
-            configurationPath = Optional.of(path);
             return this;
         }
 

@@ -96,11 +96,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             return this;
         }
 
-        public Builder saveDate(Date saveDate) {
-            this.saveDate = Optional.ofNullable(saveDate);
-            return this;
-        }
-
         public Builder saveDate(Optional<Date> saveDate) {
             this.saveDate = saveDate;
             return this;
@@ -190,11 +185,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             .size(original.getFullContentOctets())
             .flags(original.createFlags())
             .properties(original.getProperties());
-    }
-
-    public static SimpleMailboxMessage copyWithoutAttachments(MailboxId mailboxId, MailboxMessage original) throws MailboxException {
-        return fromWithoutAttachments(original)
-            .mailboxId(mailboxId).build();
     }
 
     private static Content copyFullContent(MailboxMessage original) throws MailboxException {

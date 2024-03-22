@@ -54,16 +54,6 @@ public class SMTPMessageSender extends ExternalResource implements Closeable, Af
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
 
-    public static SMTPMessageSender authentication(String ip, int port, String senderDomain, String username, String password)
-        throws NoSuchAlgorithmException, IOException, InvalidKeySpecException, InvalidKeyException {
-        AuthenticatingSMTPClient smtpClient = newUtf8AuthenticatingClient();
-        smtpClient.connect(ip, port);
-        if (!smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password)) {
-            throw new RuntimeException("auth failed");
-        }
-        return new SMTPMessageSender(smtpClient, senderDomain);
-    }
-
     private static AuthenticatingSMTPClient newUtf8AuthenticatingClient() {
         return new AuthenticatingSMTPClient(DEFAULT_PROTOCOL, UTF_8_ENCODING);
     }
