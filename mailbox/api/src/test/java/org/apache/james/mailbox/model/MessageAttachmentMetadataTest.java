@@ -45,7 +45,7 @@ class MessageAttachmentMetadataTest {
     @Test
     void buildShouldWorkWhenMandatoryAttributesAreGiven() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from("1"))
+            .attachmentId(StringBackedAttachmentId.from("1"))
             .size(36)
             .type("type")
             .messageId(TestMessageId.of(23))
@@ -62,7 +62,7 @@ class MessageAttachmentMetadataTest {
     @Test
     void buildShouldAcceptIsInlineAndNoCid() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from("1"))
+            .attachmentId(StringBackedAttachmentId.from("1"))
             .size(36)
             .type("type")
             .messageId(TestMessageId.of(23))
@@ -79,7 +79,7 @@ class MessageAttachmentMetadataTest {
     @Test
     void buildShouldSetAttributesWhenAllAreGiven() {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from("1"))
+            .attachmentId(StringBackedAttachmentId.from("1"))
             .size(36)
             .type("type")
             .messageId(TestMessageId.of(23))
@@ -99,7 +99,7 @@ class MessageAttachmentMetadataTest {
     @Test
     void isInlinedWithCidShouldReturnTrueWhenIsInlineAndHasCid() throws Exception {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from("1"))
+            .attachmentId(StringBackedAttachmentId.from("1"))
             .size(36)
             .type("type")
             .messageId(TestMessageId.of(23))
@@ -118,7 +118,7 @@ class MessageAttachmentMetadataTest {
     @Test
     void isInlinedWithCidShouldReturnFalseWhenIsNotInline() throws Exception {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from("1"))
+            .attachmentId(StringBackedAttachmentId.from("1"))
             .size(36)
             .type("type")
             .messageId(TestMessageId.of(23))
@@ -137,7 +137,7 @@ class MessageAttachmentMetadataTest {
     @Test
     void isInlinedWithCidShouldReturnFalseWhenIsInlineButNoCid() throws Exception {
         AttachmentMetadata attachment = AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from("1"))
+            .attachmentId(StringBackedAttachmentId.from("1"))
             .size(36)
             .type("type")
             .messageId(TestMessageId.of(23))

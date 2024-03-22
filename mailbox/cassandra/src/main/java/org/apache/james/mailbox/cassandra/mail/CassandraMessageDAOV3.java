@@ -70,13 +70,13 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV3Table.Attachments;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.HeaderAndBodyByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.Properties;
@@ -380,7 +380,7 @@ public class CassandraMessageDAOV3 {
 
     private MessageAttachmentRepresentation messageAttachmentByIdFrom(UdtValue udtValue) {
         return MessageAttachmentRepresentation.builder()
-            .attachmentId(AttachmentId.from(udtValue.get(Attachments.ID, TypeCodecs.TEXT)))
+            .attachmentId(StringBackedAttachmentId.from(udtValue.get(Attachments.ID, TypeCodecs.TEXT)))
             .name(udtValue.get(Attachments.NAME, TypeCodecs.TEXT))
             .cid(cidParser.parse(udtValue.get(Attachments.CID, TypeCodecs.TEXT)))
             .isInline(udtValue.getBoolean(Attachments.IS_INLINE))

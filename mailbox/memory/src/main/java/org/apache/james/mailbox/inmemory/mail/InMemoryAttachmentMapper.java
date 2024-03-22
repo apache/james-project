@@ -34,6 +34,7 @@ import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
 import com.github.fge.lambdas.Throwing;
@@ -88,7 +89,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     private MessageAttachmentMetadata storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
-        AttachmentId attachmentId = AttachmentId.random();
+        AttachmentId attachmentId = StringBackedAttachmentId.random();
         try {
             try (InputStream stream = parsedAttachment.getContent().openStream()) {
                 byte[] bytes = IOUtils.toByteArray(stream);

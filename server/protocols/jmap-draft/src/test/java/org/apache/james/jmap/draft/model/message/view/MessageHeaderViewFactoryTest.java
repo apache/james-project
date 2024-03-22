@@ -43,6 +43,7 @@ import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -84,7 +85,8 @@ class MessageHeaderViewFactoryTest {
             session).getId();
         BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
             new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"), new HashBlobId.Factory()),
-                Clock.systemUTC()));
+                Clock.systemUTC()),
+            new StringBackedAttachmentIdFactory());
 
         testee = new MessageHeaderViewFactory(blobManager, messageIdManager);
     }

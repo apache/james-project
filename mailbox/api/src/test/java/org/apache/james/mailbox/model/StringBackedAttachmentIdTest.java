@@ -26,35 +26,35 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-class AttachmentIdTest {
+class StringBackedAttachmentIdTest {
     @Test
     void randomShouldGenerateDifferentIds() {
-        AttachmentId attachmentId = AttachmentId.random();
-        AttachmentId attachmentId2 = AttachmentId.random();
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.random();
+        StringBackedAttachmentId attachmentId2 = StringBackedAttachmentId.random();
         assertThat(attachmentId.getId()).isNotEqualTo(attachmentId2.getId());
     }
 
     @Test
     void fromShouldThrowWhenIdIsNull() {
         String value = null;
-        assertThatThrownBy(() -> AttachmentId.from(value)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> StringBackedAttachmentId.from(value)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void fromShouldThrowWhenIdIsEmpty() {
-        assertThatThrownBy(() -> AttachmentId.from("")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> StringBackedAttachmentId.from("")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void fromStringShouldWork() {
         String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
-        AttachmentId attachmentId = AttachmentId.from(expectedId);
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from(expectedId);
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
     }
 
     @Test
     void asUUIDShouldReturnAValidUUID() {
-        AttachmentId attachmentId = AttachmentId.from("magic");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("magic");
 
         assertThat(attachmentId.asUUID())
             .isEqualTo(UUID.fromString("2f3a4fcc-ca64-36e3-9bcf-33e92dd93135"));

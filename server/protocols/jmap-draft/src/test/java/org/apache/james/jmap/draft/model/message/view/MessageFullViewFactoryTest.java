@@ -62,11 +62,11 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -77,6 +77,7 @@ import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
@@ -135,7 +136,8 @@ class MessageFullViewFactoryTest {
         fastViewProjection = spy(new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
         BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
             new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(),
-                BucketName.of("default"), new HashBlobId.Factory()), Clock.systemUTC()));
+                BucketName.of("default"), new HashBlobId.Factory()), Clock.systemUTC()),
+            new StringBackedAttachmentIdFactory());
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor,
             messageIdManager,
             fastViewProjection);
@@ -505,7 +507,7 @@ class MessageFullViewFactoryTest {
                 .attachments(ImmutableList.of(MessageAttachmentMetadata.builder()
                         .attachment(AttachmentMetadata.builder()
                                 .messageId(InMemoryMessageId.of(46))
-                                .attachmentId(AttachmentId.from(blodId.getRawValue()))
+                                .attachmentId(StringBackedAttachmentId.from(blodId.getRawValue()))
                                 .size(payload.length())
                                 .type(type)
                                 .build())
