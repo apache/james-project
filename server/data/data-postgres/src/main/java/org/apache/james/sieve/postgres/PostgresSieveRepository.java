@@ -196,7 +196,7 @@ public class PostgresSieveRepository implements SieveRepository {
     @Override
     public void renameScript(Username username, ScriptName oldName, ScriptName newName) throws DuplicateException, ScriptNotFoundException {
         try {
-            long renamedScripts = postgresSieveScriptDAO.renameScript(username, oldName, newName).block();
+            int renamedScripts = postgresSieveScriptDAO.renameScript(username, oldName, newName).block();
             if (renamedScripts == 0) {
                 throw new ScriptNotFoundException();
             }
