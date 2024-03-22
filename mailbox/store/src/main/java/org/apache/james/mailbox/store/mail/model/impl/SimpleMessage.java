@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -115,6 +116,11 @@ public class SimpleMessage implements Message {
     @Override
     public InputStream getFullContent() throws IOException {
         return content.getInputStream();
+    }
+
+    @Override
+    public Optional<byte[][]> getFullBytes() {
+        return content.asBytesSequence();
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 
@@ -51,6 +52,14 @@ public final class HeaderAndBodyByteContent implements Content {
         return new SequenceInputStream(
             new ByteArrayInputStream(headers),
             new ByteArrayInputStream(body));
+    }
+
+    @Override
+    public Optional<byte[][]> asBytesSequence() {
+        byte[][] answer = new byte[2][];
+        answer[0] = headers;
+        answer[1] = body;
+        return Optional.of(answer);
     }
 
     @Override

@@ -77,6 +77,10 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
     public void write(Literal literal) throws IOException {
         flushCallback.run();
         if (channel.isActive()) {
+            if (literal.asBytesSequence().isPresent()) {
+                channel.writeAndFlush(Unpooled.wrappedBuffer(literal.asBytesSequence().get()));
+                return;
+            }
             InputStream in = literal.getInputStream();
             if (in instanceof FileInputStream) {
                 FileChannel fc = ((FileInputStream) in).getChannel();
