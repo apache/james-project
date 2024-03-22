@@ -138,10 +138,9 @@ public class PostgresExecutor {
             .map(record -> record.get(0, Boolean.class));
     }
 
-    public Mono<Long> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
+    public Mono<Integer> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
-            .cast(Long.class)
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()));
     }
