@@ -26,10 +26,10 @@ import java.util.Collection;
 import java.util.Optional;
 
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +51,7 @@ class AttachmentLoaderTest {
 
     @Test
     void getAttachmentsShouldWorkWithDuplicatedAttachments() {
-        AttachmentId attachmentId = AttachmentId.from("1");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("1");
 
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)
@@ -78,7 +78,7 @@ class AttachmentLoaderTest {
 
     @Test
     void getAttachmentsShouldWorkWithDuplicatedIds() {
-        AttachmentId attachmentId = AttachmentId.from("1");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("1");
 
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)
@@ -107,8 +107,8 @@ class AttachmentLoaderTest {
 
     @Test
     void getAttachmentsShouldReturnMultipleAttachmentWhenSeveralAttachmentsRepresentation() {
-        AttachmentId attachmentId1 = AttachmentId.from("1");
-        AttachmentId attachmentId2 = AttachmentId.from("2");
+        StringBackedAttachmentId attachmentId1 = StringBackedAttachmentId.from("1");
+        StringBackedAttachmentId attachmentId2 = StringBackedAttachmentId.from("2");
 
         AttachmentMetadata attachment1 = AttachmentMetadata.builder()
             .attachmentId(attachmentId1)
@@ -145,7 +145,7 @@ class AttachmentLoaderTest {
 
     @Test
     void getAttachmentsShouldReturnEmptyByDefault() {
-        AttachmentId attachmentId = AttachmentId.from("1");
+        StringBackedAttachmentId attachmentId = StringBackedAttachmentId.from("1");
 
         AttachmentMetadata attachment = AttachmentMetadata.builder()
             .attachmentId(attachmentId)

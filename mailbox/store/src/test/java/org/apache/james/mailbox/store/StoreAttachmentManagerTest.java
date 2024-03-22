@@ -27,9 +27,9 @@ import static org.mockito.Mockito.when;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableSet;
 class StoreAttachmentManagerTest {
     static final TestMessageId MESSAGE_ID = TestMessageId.of(1L);
     static final ImmutableList<MessageId> MESSAGE_IDS = ImmutableList.of(MESSAGE_ID);
-    static final AttachmentId ATTACHMENT_ID = AttachmentId.from("1");
+    static final StringBackedAttachmentId ATTACHMENT_ID = StringBackedAttachmentId.from("1");
     static final AttachmentMetadata ATTACHMENT = AttachmentMetadata.builder()
         .attachmentId(ATTACHMENT_ID)
         .messageId(MESSAGE_ID)

@@ -56,7 +56,7 @@ class AttachmentMetadataTest {
     @Test
     void buildShouldThrowWhenSizeIsNotProvided() {
         assertThatThrownBy(() -> AttachmentMetadata.builder()
-                .attachmentId(AttachmentId.random())
+                .attachmentId(StringBackedAttachmentId.random())
                 .type("TYPE")
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -65,7 +65,7 @@ class AttachmentMetadataTest {
     @Test
     void buildShouldThrowWhenTypeIsNotProvided() {
         assertThatThrownBy(() -> AttachmentMetadata.builder()
-                .attachmentId(AttachmentId.random())
+                .attachmentId(StringBackedAttachmentId.random())
                 .size(36)
                 .build())
             .isInstanceOf(IllegalStateException.class);
@@ -74,7 +74,7 @@ class AttachmentMetadataTest {
     @Test
     void sizeShouldThrowOnNegativeValue() {
         assertThatThrownBy(() -> AttachmentMetadata.builder()
-                .attachmentId(AttachmentId.random())
+                .attachmentId(StringBackedAttachmentId.random())
                 .size(-3))
             .isInstanceOf(IllegalArgumentException.class);
     }

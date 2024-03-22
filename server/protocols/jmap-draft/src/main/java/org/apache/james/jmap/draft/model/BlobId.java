@@ -60,10 +60,6 @@ public class BlobId {
         return rawValue;
     }
 
-    public AttachmentId asAttachmentId() {
-        return AttachmentId.from(rawValue);
-    }
-
     public Optional<UploadId> asUploadId() {
         if (rawValue.startsWith(UPLOAD_PREFIX)) {
             UploadId uploadId = UploadId.from(rawValue.substring(UPLOAD_PREFIX.length()));

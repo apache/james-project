@@ -48,7 +48,7 @@ import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.model.ContentType.{MediaType, MimeType, SubType}
 import org.apache.james.mailbox.model._
-import org.apache.james.mailbox.{AttachmentManager, MailboxSession, MessageIdManager}
+import org.apache.james.mailbox.{AttachmentIdFactory, AttachmentManager, MailboxSession, MessageIdManager}
 import org.apache.james.mime4j.codec.EncoderUtil
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.dom.SingleBody
@@ -173,10 +173,10 @@ class UploadResolver @Inject()(val uploadService: UploadService) extends BlobRes
   }
 }
 
-class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager) extends BlobResolver {
+class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager, val attachmentIdFactory: AttachmentIdFactory) extends BlobResolver {
   override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult =
-    AttachmentId.from(blobId.value.value) match {
-      case attachmentId: AttachmentId =>
+    attachmentIdFactory.from(blobId.value.value) match {
+      case attachmentId: StringBackedAttachmentId =>
         Try(attachmentManager.getAttachment(attachmentId, mailboxSession)) match {
           case Success(attachmentMetadata) =>
             Applicable(SMono(attachmentManager.loadReactive(attachmentMetadata, mailboxSession))

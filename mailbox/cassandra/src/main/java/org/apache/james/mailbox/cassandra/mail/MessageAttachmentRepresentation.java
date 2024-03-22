@@ -21,8 +21,8 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -37,7 +37,7 @@ public class MessageAttachmentRepresentation {
 
     public static class Builder {
 
-        private AttachmentId attachmentId;
+        private StringBackedAttachmentId attachmentId;
         private Optional<String> name;
         private Optional<Cid> cid;
         private Optional<Boolean> isInline;
@@ -48,7 +48,7 @@ public class MessageAttachmentRepresentation {
             isInline = Optional.empty();
         }
 
-        public Builder attachmentId(AttachmentId attachmentId) {
+        public Builder attachmentId(StringBackedAttachmentId attachmentId) {
             Preconditions.checkArgument(attachmentId != null);
             this.attachmentId = attachmentId;
             return this;
@@ -83,20 +83,20 @@ public class MessageAttachmentRepresentation {
         }
     }
 
-    private final AttachmentId attachmentId;
+    private final StringBackedAttachmentId attachmentId;
     private final Optional<String> name;
     private final Optional<Cid> cid;
     private final boolean isInline;
 
     @VisibleForTesting
-    MessageAttachmentRepresentation(AttachmentId attachmentId, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+    MessageAttachmentRepresentation(StringBackedAttachmentId attachmentId, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.attachmentId = attachmentId;
         this.name = name;
         this.cid = cid;
         this.isInline = isInline;
     }
 
-    public AttachmentId getAttachmentId() {
+    public StringBackedAttachmentId getAttachmentId() {
         return attachmentId;
     }
 

@@ -19,31 +19,30 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteSource;
-
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 public abstract class AttachmentMapperTest {
-    private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
+    private static final StringBackedAttachmentId UNKNOWN_ATTACHMENT_ID = StringBackedAttachmentId.from("unknown");
     private static final Username OWNER = Username.of("owner");
     private static final Username ADDITIONAL_OWNER = Username.of("additionalOwner");
 

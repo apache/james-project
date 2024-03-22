@@ -37,11 +37,11 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ByteContent;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.ThreadId;
@@ -190,7 +190,7 @@ class SimpleMailboxMessageTest {
         MessageUid uid = MessageUid.of(45);
         MessageAttachmentMetadata messageAttachment = MessageAttachmentMetadata.builder()
             .attachment(AttachmentMetadata.builder()
-                .attachmentId(AttachmentId.from("1"))
+                .attachmentId(StringBackedAttachmentId.from("1"))
                 .messageId(MESSAGE_ID)
                 .type("type")
                 .size(485)

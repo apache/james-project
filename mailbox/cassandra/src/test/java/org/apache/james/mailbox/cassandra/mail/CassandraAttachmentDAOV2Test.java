@@ -31,19 +31,17 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 
-import reactor.core.publisher.Mono;
-
 class CassandraAttachmentDAOV2Test {
-    private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
-    private static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
+    private static final StringBackedAttachmentId ATTACHMENT_ID = StringBackedAttachmentId.from("id1");
+    private static final StringBackedAttachmentId ATTACHMENT_ID_2 = StringBackedAttachmentId.from("id2");
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @RegisterExtension

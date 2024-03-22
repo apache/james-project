@@ -93,7 +93,6 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -103,6 +102,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
@@ -4419,7 +4419,7 @@ public abstract class SetMessagesMethodTest {
 
         return AttachmentMetadata.builder()
             .messageId(new DefaultMessageId())
-            .attachmentId(AttachmentId.from(json.getString("blobId")))
+            .attachmentId(StringBackedAttachmentId.from(json.getString("blobId")))
             .size(json.getLong("size"))
             .type(json.getString("type"))
             .build();
@@ -4438,7 +4438,7 @@ public abstract class SetMessagesMethodTest {
 
         return AttachmentMetadata.builder()
             .messageId(new DefaultMessageId())
-            .attachmentId(AttachmentId.from(json.getString("blobId")))
+            .attachmentId(StringBackedAttachmentId.from(json.getString("blobId")))
             .size(json.getLong("size"))
             .type(json.getString("type"))
             .build();

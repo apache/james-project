@@ -31,6 +31,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -55,11 +56,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private final CassandraAttachmentDAOV2 attachmentDAOV2;
     private final BlobStore blobStore;
+    private final AttachmentIdFactory attachmentIdFactory;
 
     @Inject
-    public CassandraAttachmentMapper(CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore) {
+    public CassandraAttachmentMapper(CassandraAttachmentDAOV2 attachmentDAOV2, BlobStore blobStore, AttachmentIdFactory attachmentIdFactory) {
         this.attachmentDAOV2 = attachmentDAOV2;
         this.blobStore = blobStore;
+        this.attachmentIdFactory = attachmentIdFactory;
     }
 
     @Override
@@ -127,7 +130,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private Mono<MessageAttachmentMetadata> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
         try {
-            AttachmentId attachmentId = AttachmentId.random();
+            AttachmentId attachmentId = attachmentIdFactory.random();
             ByteSource content = parsedAttachment.getContent();
             long size = content.size();
             return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))

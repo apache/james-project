@@ -52,6 +52,7 @@ import org.apache.james.jmap.cassandra.change.CassandraStateFactory;
 import org.apache.james.jmap.cassandra.change.EmailChangeRepositoryDAO;
 import org.apache.james.jmap.cassandra.change.MailboxChangeRepositoryDAO;
 import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.MailboxManager;
@@ -59,6 +60,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
@@ -184,6 +186,7 @@ public class CassandraMailboxModule extends AbstractModule {
 
         bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
+        bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class);
         bind(AttachmentMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
         bind(SubscriptionMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);

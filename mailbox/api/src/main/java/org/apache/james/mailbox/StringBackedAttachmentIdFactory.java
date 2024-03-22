@@ -17,12 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.model;
+package org.apache.james.mailbox;
 
-import java.util.UUID;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 
-public interface AttachmentId {
-    String getId();
+public class StringBackedAttachmentIdFactory implements AttachmentIdFactory {
+    @Override
+    public StringBackedAttachmentId random() {
+        return StringBackedAttachmentId.random();
+    }
 
-    UUID asUUID();
+    @Override
+    public StringBackedAttachmentId from(String id) {
+        return StringBackedAttachmentId.from(id);
+    }
 }

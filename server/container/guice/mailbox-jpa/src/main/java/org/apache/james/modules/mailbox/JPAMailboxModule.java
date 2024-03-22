@@ -30,11 +30,13 @@ import org.apache.james.adapter.mailbox.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.events.EventListener;
 import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.Authenticator;
 import org.apache.james.mailbox.Authorizator;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.SessionProvider;
+import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
@@ -116,6 +118,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(Authorizator.class).to(UserRepositoryAuthorizator.class);
         bind(MailboxId.Factory.class).to(JPAId.Factory.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
+        bind(AttachmentIdFactory.class).to(StringBackedAttachmentIdFactory.class);
         bind(AttachmentContentLoader.class).to(JPAAttachmentContentLoader.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);

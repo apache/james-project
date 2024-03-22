@@ -34,6 +34,7 @@ import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.draft.exceptions.BlobNotFoundException;
 import org.apache.james.jmap.draft.model.Blob;
 import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -65,14 +66,17 @@ public class BlobManagerImpl implements BlobManager {
     private final MessageIdManager messageIdManager;
     private final MessageId.Factory messageIdFactory;
     private final UploadRepository uploadRepository;
+    private final AttachmentIdFactory attachmentIdFactory;
 
     @Inject
     public BlobManagerImpl(AttachmentManager attachmentManager, MessageIdManager messageIdManager,
-                           MessageId.Factory messageIdFactory, UploadRepository uploadRepository) {
+                           MessageId.Factory messageIdFactory, UploadRepository uploadRepository,
+                           AttachmentIdFactory attachmentIdFactory) {
         this.attachmentManager = attachmentManager;
         this.messageIdManager = messageIdManager;
         this.messageIdFactory = messageIdFactory;
         this.uploadRepository = uploadRepository;
+        this.attachmentIdFactory = attachmentIdFactory;
     }
 
     @Override
@@ -88,7 +92,7 @@ public class BlobManagerImpl implements BlobManager {
 
 
         List<AttachmentId> notEncodingUploadsAsAttachmentIds = notEncodingUploads.stream()
-            .map(BlobId::asAttachmentId)
+            .map(blobId -> attachmentIdFactory.from(blobId.getRawValue()))
             .collect(ImmutableList.toImmutableList());
 
         Flux<Blob> attachmentOrMessage = Mono.fromCallable(() -> attachmentManager.getAttachments(notEncodingUploadsAsAttachmentIds, session))
@@ -145,7 +149,7 @@ public class BlobManagerImpl implements BlobManager {
 
     private Optional<Blob> getBlobFromAttachment(BlobId blobId, MailboxSession mailboxSession) throws MailboxException {
         try {
-            AttachmentId attachmentId = blobId.asAttachmentId();
+            AttachmentId attachmentId = attachmentIdFactory.from(blobId.getRawValue());
             AttachmentMetadata attachment = attachmentManager.getAttachment(attachmentId, mailboxSession);
 
             return Optional.of(loadAttachmentContent(attachment, mailboxSession));

@@ -35,10 +35,10 @@ import javax.persistence.Lob;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.AttachmentMetadata;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachmentMetadata;
+import org.apache.james.mailbox.model.StringBackedAttachmentId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 
 @Entity(name = "Attachment")
@@ -102,7 +102,7 @@ public class JPAAttachment {
 
     public AttachmentMetadata toAttachmentMetadata() {
         return AttachmentMetadata.builder()
-            .attachmentId(AttachmentId.from(attachmentId))
+            .attachmentId(StringBackedAttachmentId.from(attachmentId))
             .messageId(new DefaultMessageId())
             .type(type)
             .size(size)
