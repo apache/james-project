@@ -1,0 +1,84 @@
+diff '--color=auto' conf/blob.properties docker-configuration/blob.properties
+8c8
+< implementation=cassandra
+---
+> implementation=s3
+diff '--color=auto' conf/cassandra.properties docker-configuration/cassandra.properties
+5c5
+< cassandra.nodes=localhost
+---
+> cassandra.nodes=cassandra
+diff '--color=auto' conf/extensions.properties docker-configuration/extensions.properties
+10c10
+< #guice.extension.module=mailets.MemoryBlacklistModule
+\ No newline at end of file
+---
+> #guice.extension.module=
+\ No newline at end of file
+diff '--color=auto' conf/jmap.properties docker-configuration/jmap.properties
+32a33
+> 
+Only in conf/: jmxremote.access
+Only in conf/: jmxremote.password
+diff '--color=auto' conf/jvm.properties docker-configuration/jvm.properties
+5c5
+< config.file=conf/cassandra-driver.conf
+---
+> config.file=/root/conf/cassandra-driver.conf
+48,61c48
+< sun.rmi.dgc.client.gcInterval=3600000000
+< 
+< # Automatically generate a JMX password upon start. CLI is able to retrieve this password. Not supported on windows.
+< james.jmx.credential.generation=true
+< 
+< # Disable Remote Code Execution feature from JMX
+< # CF https://github.com/AdoptOpenJDK/openjdk-jdk11/blob/19fb8f93c59dfd791f62d41f332db9e306bc1422/src/java.management/share/classes/com/sun/jmx/remote/security/MBeanServerAccessController.java#L646
+< jmx.remote.x.mlet.allow.getMBeansFromURL=false
+< 
+< # Disabling JMAP filters event source increments is necessary during rolling adoption of this change.
+< # Defaults to true, meaning James will use JMAP filters event source increments, thus transparently and significantly
+< # improving JMAP filter storage efficiency. Snapshots enable to only build the aggregate from the last few events.
+< # james.jmap.filters.eventsource.increments.enabled=true
+< # james.jmap.filters.eventsource.snapshots.enabled=true
+---
+> sun.rmi.dgc.client.gcInterval=3600000000
+\ No newline at end of file
+Only in conf/: keystore
+diff '--color=auto' conf/opensearch.properties docker-configuration/opensearch.properties
+24c24
+< opensearch.masterHost=localhost
+---
+> opensearch.masterHost=opensearch
+28c28
+< opensearch.hostScheme=https
+---
+> # opensearch.hostScheme=http
+35c35
+< opensearch.hostScheme.https.sslValidationStrategy=ignore
+---
+> # opensearch.hostScheme.https.sslValidationStrategy=default
+57c57
+< opensearch.user=admin
+---
+> # opensearch.user=elasticsearch
+63c63
+< opensearch.password=admin
+---
+> # opensearch.password=secret
+diff '--color=auto' conf/rabbitmq.properties docker-configuration/rabbitmq.properties
+6c6
+< uri=amqp://localhost:5672
+---
+> uri=amqp://rabbitmq:5672
+20c20
+< management.uri=http://localhost:15672
+---
+> management.uri=http://rabbitmq:15672
+diff '--color=auto' conf/webadmin.properties docker-configuration/webadmin.properties
+25,26c25
+< # Use host=0.0.0.0 to listen on all addresses
+< host=localhost
+---
+> host=0.0.0.0
+30d28
+< 
