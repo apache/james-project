@@ -491,6 +491,10 @@
                     <extraDirectories>
                         <paths>
                             <path>
+                                <from>conf</from>
+                                <into>/root/conf</into>
+                            </path>
+                            <path>
                                 <from>docker-configuration</from>
                                 <into>/root/conf</into>
                             </path>
