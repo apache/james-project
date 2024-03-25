@@ -44,6 +44,7 @@ import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -77,6 +78,7 @@ import org.apache.james.modules.data.PostgresCommonModule;
 import org.apache.james.user.api.DeleteUserDataTaskStep;
 import org.apache.james.user.api.UsernameChangeTaskStep;
 import org.apache.james.utils.MailboxManagerDefinition;
+import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 
 import com.google.inject.AbstractModule;
@@ -133,6 +135,7 @@ public class PostgresMailboxModule extends AbstractModule {
         bind(AttachmentMapperFactory.class).to(PostgresMailboxSessionMapperFactory.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
+        bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);
 
         bind(PostgresMessageDAO.class).in(Scopes.SINGLETON);
 
