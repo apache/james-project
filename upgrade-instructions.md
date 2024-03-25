@@ -27,6 +27,35 @@ Change list:
  - [RRT forwards now rewrite senders](#rrt-forwards-now-rewrite-senders)
  - [Increase RabbitMQ consumer timeout on the task queue](#increase-rabbitmq-consumer-timeout-on-the-task-queue)
  - [JMX authentication for Spring](#jmx-authentication-for-spring)
+ - [Java 21](#java-21)
+ - [javax -> jakarta](#javax---jakarta)
+
+### Java 21
+
+Date: 25/03/2024
+
+Apache James now requires the use of Java 21 and of maven 3.8.1+.
+
+Extension developer might need to upgrade their extensions as well.
+
+### javax -> jakarta
+
+Date: 25/03/2024
+
+Apache James migrated to jakarta as a replacement for javax.
+
+Extension developers needs to also rely on Jakarta. This is mostly an import change:
+
+```java
+import javax.xxx;
+```
+
+Would become:
+
+
+```java
+import jakarta.xxx;
+```
 
 ### JMX authentication for Spring
 
