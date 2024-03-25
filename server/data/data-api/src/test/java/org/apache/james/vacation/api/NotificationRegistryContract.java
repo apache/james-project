@@ -63,6 +63,22 @@ public interface NotificationRegistryContract {
     }
 
     @Test
+    default void registerShouldWorkWithExpiracyDateInTheFarFuture() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.of(ZonedDateTime.parse("2050-04-03T02:01:05+07:00[Asia/Vientiane]"))).block();
+
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
+    }
+
+    @Test
+    default void registerShouldWorkWithExpiracyDateInTheFarFarFuture() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
+        notificationRegistry().register(ACCOUNT_ID, recipientId(), Optional.of(ZonedDateTime.parse("2120-04-03T02:01:05+07:00[Asia/Vientiane]"))).block();
+
+        assertThat(notificationRegistry().isRegistered(ACCOUNT_ID, recipientId()).block()).isTrue();
+    }
+
+    @Test
     default void registerShouldExpireAfterExpiracyDate() {
         when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
 
