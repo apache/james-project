@@ -20,7 +20,7 @@
 package org.apache.james.util.docker;
 
 public interface Images {
-    String FAKE_SMTP = "weave/rest-smtp-sink:latest";
+    String FAKE_SMTP = "quanth99/rest-smtp-sink:1.0"; // Original Dockerfile: https://github.com/ambled/rest-smtp-sink/blob/master/Dockerfile
     String RABBITMQ = "rabbitmq:3.12.1-management";
     String ELASTICSEARCH_2 = "elasticsearch:2.4.6";
     String ELASTICSEARCH_6 = "docker.elastic.co/elasticsearch/elasticsearch:6.3.2";
