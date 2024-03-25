@@ -74,6 +74,19 @@ diff '--color=auto' conf/rabbitmq.properties docker-configuration/rabbitmq.prope
 < management.uri=http://localhost:15672
 ---
 > management.uri=http://rabbitmq:15672
+diff '--color=auto' conf/smtpserver.xml docker-configuration/smtpserver.xml
+54c54
+<         <verifyIdentity>true</verifyIdentity>
+---
+>         <verifyIdentity>false</verifyIdentity>
+104c104
+<         <verifyIdentity>true</verifyIdentity>
+---
+>         <verifyIdentity>false</verifyIdentity>
+151c151
+<         <verifyIdentity>true</verifyIdentity>
+---
+>         <verifyIdentity>false</verifyIdentity>
 diff '--color=auto' conf/webadmin.properties docker-configuration/webadmin.properties
 25,26c25
 < # Use host=0.0.0.0 to listen on all addresses
