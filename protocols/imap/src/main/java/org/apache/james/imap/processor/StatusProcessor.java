@@ -104,8 +104,8 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
             .onErrorResume(MailboxException.class, e -> {
-                no(request, responder, HumanReadableText.STATUS_FAILED);
-                return ReactorUtils.logAsMono(() -> LOGGER.error("Status failed for mailbox {}", mailboxPath, e));
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                return ReactorUtils.logAsMono(() -> LOGGER.info("Status failed for mailbox '{}' as it does not exist.", mailboxPath));
             })
             .then();
     }
