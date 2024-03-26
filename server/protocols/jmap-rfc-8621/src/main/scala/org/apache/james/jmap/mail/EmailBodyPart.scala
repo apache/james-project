@@ -19,7 +19,6 @@
 
 package org.apache.james.jmap.mail
 
-import java.io.OutputStream
 import java.time.ZoneId
 
 import cats.implicits._
@@ -33,15 +32,13 @@ import org.apache.james.jmap.api.model.Size.Size
 import org.apache.james.jmap.core.Properties
 import org.apache.james.jmap.mail.EmailBodyPart.{FILENAME_PREFIX, MDN_TYPE, MULTIPART_ALTERNATIVE, TEXT_HTML, TEXT_PLAIN, of}
 import org.apache.james.jmap.mail.PartId.PartIdValue
-import org.apache.james.jmap.mime4j.{ JamesBodyDescriptorBuilder, SizeUtils}
-import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata, MessageResult}
+import org.apache.james.jmap.mime4j. SizeUtils
+import org.apache.james.mailbox.model.{Cid, MessageAttachmentMetadata}
 import org.apache.james.mime4j.Charsets.ISO_8859_1
 import org.apache.james.mime4j.codec.{DecodeMonitor, DecoderUtil}
 import org.apache.james.mime4j.dom.field.{ContentDispositionField, ContentLanguageField, ContentTypeField, FieldName}
 import org.apache.james.mime4j.dom.{Entity, Message, Multipart, TextBody => Mime4JTextBody}
-import org.apache.james.mime4j.field.LenientFieldParser
-import org.apache.james.mime4j.message.{BasicBodyFactory, DefaultMessageBuilder}
-import org.apache.james.mime4j.stream.{Field, MimeConfig, RawField}
+import org.apache.james.mime4j.stream.{Field, RawField}
 import org.apache.james.util.html.HtmlTextExtractor
 
 import scala.jdk.CollectionConverters._
@@ -76,17 +73,6 @@ object EmailBodyPart {
 
   val defaultProperties: Properties = Properties("partId", "blobId", "size", "name", "type", "charset", "disposition", "cid", "language", "location")
   val allowedProperties: Properties = defaultProperties ++ Properties("subParts", "headers")
-
-  def ofMessage(properties: Option[Properties], zoneId: ZoneId, blobId: BlobId, message: MessageResult): Try[EmailBodyPart] = {
-    val defaultMessageBuilder = new DefaultMessageBuilder
-    defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE)
-    defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT)
-    defaultMessageBuilder.setBodyDescriptorBuilder(new JamesBodyDescriptorBuilder(null, LenientFieldParser.getParser, DecodeMonitor.SILENT))
-    defaultMessageBuilder.setBodyFactory(new BasicBodyFactory(Email.defaultCharset))
-
-    val mime4JMessage = Try(defaultMessageBuilder.parseMessage(message.getFullContent.getInputStream))
-    mime4JMessage.flatMap(of(properties, zoneId, blobId, _))
-  }
 
   def fromAttachment(properties: Option[Properties], zoneId: ZoneId, attachment: MessageAttachmentMetadata, entity: Message): EmailBodyPart = {
     def parseDisposition(attachment: MessageAttachmentMetadata): Option[Disposition] =
