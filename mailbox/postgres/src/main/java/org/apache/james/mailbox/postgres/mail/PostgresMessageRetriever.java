@@ -65,14 +65,13 @@ public class PostgresMessageRetriever {
 
         @Override
         public Flux<Pair<SimpleMailboxMessage.Builder, Record>> doRetrieve(Flux<Pair<SimpleMailboxMessage.Builder, Record>> chain) {
-            return chain.collectList()  // convert to list to avoid hanging the database connection with Jooq
-                .flatMapMany(list -> Flux.fromIterable(list)
-                    .flatMapSequential(pair -> Mono.fromCallable(() -> toMap(pair.getRight().get(ATTACHMENT_METADATA)))
-                        .flatMap(this::getAttachments)
-                        .map(messageAttachmentMetadata -> {
-                            pair.getLeft().addAttachments(messageAttachmentMetadata);
-                            return pair;
-                        }).switchIfEmpty(Mono.just(pair))));
+            return chain
+                .flatMapSequential(pair -> Mono.fromCallable(() -> toMap(pair.getRight().get(ATTACHMENT_METADATA)))
+                    .flatMap(this::getAttachments)
+                    .map(messageAttachmentMetadata -> {
+                        pair.getLeft().addAttachments(messageAttachmentMetadata);
+                        return pair;
+                    }).switchIfEmpty(Mono.just(pair)), ReactorUtils.DEFAULT_CONCURRENCY);
         }
 
         private Map<AttachmentId, MessageRepresentation.AttachmentRepresentation> toMap(AttachmentsDTO attachmentRepresentations) {
