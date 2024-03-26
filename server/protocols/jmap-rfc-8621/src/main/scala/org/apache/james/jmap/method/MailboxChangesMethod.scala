@@ -22,6 +22,7 @@ package org.apache.james.jmap.method
 import eu.timepit.refined.auto._
 import jakarta.inject.Inject
 import org.apache.james.jmap.api.change.{CanNotCalculateChangesException, MailboxChangeRepository, MailboxChanges, State => JavaState}
+import org.apache.james.jmap.api.exception.ChangeNotFoundException
 import org.apache.james.jmap.api.model.{AccountId => JavaAccountId}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_MAIL}
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodName}
@@ -68,6 +69,7 @@ class MailboxChangesMethod @Inject()(mailboxSerializer: MailboxSerializer,
         processingContext = invocation.processingContext))
       .onErrorResume {
         case e: CanNotCalculateChangesException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+        case e: ChangeNotFoundException => SMono.just(InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
         case e => SMono.error(e)
       }
 
