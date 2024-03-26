@@ -42,7 +42,7 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.mail.{BlobId, EmailBodyPart}
+import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, MinimalEmailBodyPart}
 import org.apache.james.jmap.method.{AccountNotFoundException, ZoneIdProvider}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
@@ -124,8 +124,8 @@ case class AttachmentBlob(attachmentMetadata: AttachmentMetadata, fileContent: I
   override def blobId: BlobId = BlobId.of(attachmentMetadata.getAttachmentId.getId).get
 }
 
-case class EmailBodyPartBlob(blobId: BlobId, part: EmailBodyPart) extends Blob {
-  override def size: Try[Size] = Success(part.size)
+case class EmailBodyPartBlob(blobId: BlobId, part: MinimalEmailBodyPart) extends Blob {
+  override def size: Try[Size] = part.size
 
   override def contentType: ContentType = ContentType.of(part.`type`.value)
 
@@ -211,13 +211,13 @@ class MessagePartBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
       case Success((messageId, blobIds)) =>
         Applicable(SMono.fromPublisher(
           messageIdManager.getMessagesReactive(List(messageId).asJava, FetchGroup.FULL_CONTENT, mailboxSession))
-          .handle[EmailBodyPart] {
-            case (message, sink) => EmailBodyPart.ofMessage(None, zoneIdSupplier.get(), BlobId.of(messageId).get, message)
+          .handle[MinimalEmailBodyPart] {
+            case (message, sink) => MinimalEmailBodyPart.ofMessage(None, zoneIdSupplier.get(), BlobId.of(messageId).get, message)
               .fold(sink.error, sink.next)
           }
-          .handle[EmailBodyPart] {
+          .handle[MinimalEmailBodyPart] {
             case (bodyStructure, sink) =>
-              blobIds.foldLeft[Option[EmailBodyPart]](Some(bodyStructure)) {
+              blobIds.foldLeft[Option[MinimalEmailBodyPart]](Some(bodyStructure)) {
                 case (None, _) => None
                 case (Some(nestedBodyStructure), blobId) => nestedBodyStructure.partWithBlobId(blobId)
                     .orElse(nestedBodyStructure.nested(zoneIdSupplier.get()).flatMap(_.partWithBlobId(blobId)))
