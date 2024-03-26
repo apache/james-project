@@ -92,7 +92,8 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new MailboxesExportRoutesModule(),
         new UserIdentityModule(),
         new DLPRoutesModule(),
-        new JmapUploadCleanupModule());
+        new JmapUploadCleanupModule(),
+        new JmapTasksModule());
 
     private static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
@@ -122,8 +123,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new PostgresJmapModule(),
         new PostgresDataJmapModule(),
         new JmapEventBusModule(),
-        new JMAPServerModule(),
-        new JmapTasksModule());
+        new JMAPServerModule());
 
     private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
         new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP);
