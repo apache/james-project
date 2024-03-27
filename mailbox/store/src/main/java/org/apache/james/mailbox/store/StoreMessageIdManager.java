@@ -177,11 +177,13 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
+        boolean delayError = false;
+        int prefetch = 1;
         return messageIdMapper.findReactive(messageIds, fetchType)
             .groupBy(MailboxMessage::getMailboxId)
             .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
             .flatMap(Function.identity(), DEFAULT_CONCURRENCY)
-            .publishOn(forFetchType(fetchType))
+            .publishOn(forFetchType(fetchType), delayError, prefetch)
             .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
     }
 
