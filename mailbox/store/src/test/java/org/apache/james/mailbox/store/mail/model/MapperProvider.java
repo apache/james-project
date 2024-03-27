@@ -42,7 +42,9 @@ public interface MapperProvider {
         UNIQUE_MESSAGE_ID,
         THREAD_SAFE_FLAGS_UPDATE,
         INCREMENTAL_APPLICABLE_FLAGS,
-        ACL_STORAGE
+        ACL_STORAGE,
+        FULL_BYTES,
+        HEADER_BYTES
     }
 
     List<Capabilities> getSupportedCapabilities();

@@ -113,7 +113,8 @@ public class InMemoryMapperProvider implements MapperProvider {
             Capabilities.ANNOTATION,
             Capabilities.MOVE,
             Capabilities.ACL_STORAGE,
-            Capabilities.UNIQUE_MESSAGE_ID);
+            Capabilities.UNIQUE_MESSAGE_ID,
+            Capabilities.FULL_BYTES);
     }
 
     @Override

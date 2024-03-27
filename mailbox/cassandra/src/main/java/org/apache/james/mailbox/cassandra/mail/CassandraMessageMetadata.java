@@ -269,6 +269,16 @@ public class CassandraMessageMetadata {
         }
 
         @Override
+        public Optional<byte[][]> getFullBytes() {
+            return delegate.getFullBytes();
+        }
+
+        @Override
+        public Optional<byte[][]> getHeadersBytes() {
+            return delegate.getHeadersBytes();
+        }
+
+        @Override
         public ThreadId getThreadId() {
             return delegate.getThreadId();
         }

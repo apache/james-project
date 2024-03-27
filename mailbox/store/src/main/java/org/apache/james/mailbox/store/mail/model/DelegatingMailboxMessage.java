@@ -132,4 +132,9 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     public Optional<byte[][]> getFullBytes() {
         return message.getFullBytes();
     }
+
+    @Override
+    public Optional<byte[][]> getHeadersBytes() {
+        return message.getHeadersBytes();
+    }
 }
