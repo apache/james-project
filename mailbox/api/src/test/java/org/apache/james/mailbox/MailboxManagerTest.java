@@ -2923,6 +2923,13 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MessageResult messageResult = inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroup.MINIMAL, session).next();
             assertThat(messageResult.getSaveDate()).isPresent();
         }
+
+        @Test
+        void fullFetchGroupShouldPreserveBytesSequence() throws Exception {
+            ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getId();
+            MessageResult messageResult = inboxManager.getMessages(MessageRange.one(composeId1.getUid()), FetchGroup.FULL_CONTENT, session).next();
+            assertThat(messageResult.getFullContent().asBytesSequence()).isPresent();
+        }
     }
 
     @Nested
