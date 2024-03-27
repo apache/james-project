@@ -44,6 +44,7 @@ import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.PostgresDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.PostgresMailboxModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
+import org.apache.james.modules.plugins.QuotaMailingModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.JMAPServerModule;
 import org.apache.james.modules.protocols.JmapEventBusModule;
@@ -125,8 +126,10 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new JmapEventBusModule(),
         new JMAPServerModule());
 
+    public static final Module PLUGINS = new QuotaMailingModule();
+
     private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
-        new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP);
+        new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP, PLUGINS);
 
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
