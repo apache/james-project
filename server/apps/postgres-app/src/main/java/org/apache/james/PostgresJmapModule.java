@@ -20,10 +20,14 @@
 package org.apache.james;
 
 import org.apache.james.backends.postgres.PostgresModule;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.Limit;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;
 import org.apache.james.jmap.api.change.State;
+import org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
 import org.apache.james.jmap.postgres.PostgresDataJMapAggregateModule;
@@ -41,6 +45,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -71,5 +76,9 @@ public class PostgresJmapModule extends AbstractModule {
         bind(State.Factory.class).to(PostgresStateFactory.class);
 
         bind(PushSubscriptionRepository.class).to(PostgresPushSubscriptionRepository.class);
+
+        Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<>() {});
+        eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
+        eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT);
     }
 }
