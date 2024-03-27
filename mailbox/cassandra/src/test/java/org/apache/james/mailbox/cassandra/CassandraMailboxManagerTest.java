@@ -36,6 +36,7 @@ import java.util.stream.IntStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
@@ -897,6 +898,36 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
             // Would OOM if message streaming is badly implemented
             Flux.from(inboxManager.getMessagesReactive(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
                 .blockLast();
+        }
+
+        @Test
+        void shouldNotLoadMoreDataThanPrefetch() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+
+            mailboxManager.createMailbox(inbox, session).get();
+            MessageManager inboxManager = mailboxManager.getMailbox(inbox, session);
+
+            MessageManager.AppendCommand appendCommand = MessageManager.AppendCommand.from(Message.Builder.of()
+                .setSubject("Test")
+                .setBody("01234567890\r\n", StandardCharsets.UTF_8));
+
+            IntStream.range(0, 64)
+                .forEach(Throwing.intConsumer(i -> inboxManager.appendMessage(appendCommand, session)));
+
+
+            cassandra.getCassandraCluster().getConf().printStatements();
+            StatementRecorder statementRecorder = cassandra.getCassandraCluster().getConf().recordStatements();
+
+            Flux.from(inboxManager.getMessagesReactive(MessageRange.all(), FetchGroup.FULL_CONTENT, session))
+                .skip(10)
+                .next()
+                .block();
+
+            Thread.sleep(1000);
+            assertThat(statementRecorder.listExecutedStatements(StatementRecorder.Selector.preparedStatement("SELECT * FROM blobs WHERE id=:id")))
+                .hasSizeLessThanOrEqualTo(30); // times 2 for header and blob, 10 skipped 5 prefetch.
+            cassandra.getCassandraCluster().getConf().stopPrintingStatements();
         }
 
     }
