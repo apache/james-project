@@ -234,8 +234,8 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
         }
         if (vaultConfiguration.isEnabled()) {
             return Modules.combine(
-                new DistributedDeletedMessageVaultModule(),
-                new CassandraDeletedMessageVaultModule());
+                new CassandraDeletedMessageVaultModule(),
+                new DeletedMessageVaultRoutesModule());
         }
         return binder -> {
 
