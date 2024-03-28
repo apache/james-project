@@ -22,7 +22,7 @@ package org.apache.james.modules.mailbox;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
-import org.apache.james.mailbox.quota.cassandra.dto.QuotaEventDTOModules;
+import org.apache.james.mailbox.quota.mailing.events.QuotaEventDTOModules;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
