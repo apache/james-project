@@ -121,6 +121,7 @@
         <module>task/task-distributed</module>
         <module>task/task-json</module>
         <module>task/task-memory</module>
+        <module>task/task-postgres</module>
 
         <module>testing</module>
 
