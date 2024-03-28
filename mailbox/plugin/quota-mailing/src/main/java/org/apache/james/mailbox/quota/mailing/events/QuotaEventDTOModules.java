@@ -17,13 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.cassandra.dto;
+package org.apache.james.mailbox.quota.mailing.events;
 
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
-import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 
 public interface QuotaEventDTOModules {
-
     EventDTOModule<QuotaThresholdChangedEvent, QuotaThresholdChangedEventDTO> QUOTA_THRESHOLD_CHANGE =
         EventDTOModule
             .forEvent(QuotaThresholdChangedEvent.class)

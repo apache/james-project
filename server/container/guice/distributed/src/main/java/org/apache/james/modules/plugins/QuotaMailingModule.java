@@ -17,16 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.cassandra.listeners;
+package org.apache.james.modules.plugins;
 
-import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
-import org.apache.james.mailbox.quota.mailing.events.QuotaEventDTOModules;
-import org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdMailingIntegrationTest;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import static org.apache.james.mailbox.quota.mailing.events.QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE;
 
-class CassandraQuotaMailingListenersIntegrationTest implements QuotaThresholdMailingIntegrationTest {
-    @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension =
-        new CassandraEventStoreExtension(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType());
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
+
+public class QuotaMailingModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
+
+        eventDTOModuleBinder.addBinding()
+            .toInstance(QUOTA_THRESHOLD_CHANGE);
+    }
 }

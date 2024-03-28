@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.cassandra.dto;
+package org.apache.james.mailbox.quota.mailing.events;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -26,14 +26,17 @@ import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Booleans;
 
-class HistoryEvolutionDTO {
+public record HistoryEvolutionDTO(@JsonProperty("change") HistoryEvolution.HistoryChangeType change,
+                                  @JsonProperty("recentness") Optional<HistoryEvolution.HighestThresholdRecentness> recentness,
+                                  @JsonProperty("threshold") Optional<Double> threshold,
+                                  @JsonProperty("instant") Optional<Long> instant) {
 
+    @JsonIgnore
     public static HistoryEvolutionDTO toDto(HistoryEvolution historyEvolution) {
         return new HistoryEvolutionDTO(
             historyEvolution.getThresholdHistoryChange(),
@@ -46,43 +49,9 @@ class HistoryEvolutionDTO {
                 .map(Instant::toEpochMilli));
     }
 
-    private final HistoryEvolution.HistoryChangeType change;
-    private final Optional<HistoryEvolution.HighestThresholdRecentness> recentness;
-    private final Optional<Double> threshold;
-    private final Optional<Long> instant;
-
-    @JsonCreator
-    public HistoryEvolutionDTO(
-            @JsonProperty("changeType") HistoryEvolution.HistoryChangeType change,
-            @JsonProperty("recentness") Optional<HistoryEvolution.HighestThresholdRecentness> recentness,
-            @JsonProperty("threshold") Optional<Double> threshold,
-            @JsonProperty("instant") Optional<Long> instant) {
-        this.change = change;
-        this.recentness = recentness;
-        this.threshold = threshold;
-        this.instant = instant;
-    }
-
-    public HistoryEvolution.HistoryChangeType getChange() {
-        return change;
-    }
-
-    public Optional<HistoryEvolution.HighestThresholdRecentness> getRecentness() {
-        return recentness;
-    }
-
-    public Optional<Double> getThreshold() {
-        return threshold;
-    }
-
-    public Optional<Long> getInstant() {
-        return instant;
-    }
-
     @JsonIgnore
     public HistoryEvolution toHistoryEvolution() {
-        Preconditions.checkState(Booleans.countTrue(
-            threshold.isPresent(), instant.isPresent()) != 1,
+        Preconditions.checkState(Booleans.countTrue(threshold.isPresent(), instant.isPresent()) != 1,
             "threshold and instant needs to be both set, or both unset. Mixed states not allowed.");
 
         Optional<QuotaThresholdChange> quotaThresholdChange = threshold
@@ -93,6 +62,5 @@ class HistoryEvolutionDTO {
             change,
             recentness,
             quotaThresholdChange);
-
     }
 }

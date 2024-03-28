@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.cassandra.dto;
+package org.apache.james.mailbox.quota.mailing.events;
 
 import java.util.Optional;
 
@@ -27,34 +27,18 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class QuotaDTO {
+public record QuotaDTO(@JsonProperty("used") long used,
+                       @JsonProperty("limit") Optional<Long> limit) {
+
+    @JsonIgnore
     public static QuotaDTO from(Quota<?, ?> quota) {
         if (quota.getLimit().isUnlimited()) {
             return new QuotaDTO(quota.getUsed().asLong(), Optional.empty());
         }
         return new QuotaDTO(quota.getUsed().asLong(), Optional.of(quota.getLimit().asLong()));
-    }
-
-    private final long used;
-    private final Optional<Long> limit;
-
-    @JsonCreator
-    private QuotaDTO(@JsonProperty("used") long used,
-                     @JsonProperty("limit") Optional<Long> limit) {
-        this.used = used;
-        this.limit = limit;
-    }
-
-    public long getUsed() {
-        return used;
-    }
-
-    public Optional<Long> getLimit() {
-        return limit;
     }
 
     @JsonIgnore

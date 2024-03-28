@@ -17,82 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.cassandra.dto;
+package org.apache.james.mailbox.quota.mailing.events;
 
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
-import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class QuotaThresholdChangedEventDTO implements EventDTO {
+public record QuotaThresholdChangedEventDTO(@JsonProperty("type") String type,
+                                            @JsonProperty("eventId") int eventId,
+                                            @JsonProperty("aggregateId") String aggregateId,
+                                            @JsonProperty("sizeQuota") QuotaDTO sizeQuota,
+                                            @JsonProperty("countQuota") QuotaDTO countQuota,
+                                            @JsonProperty("sizeEvolution") HistoryEvolutionDTO sizeEvolution,
+                                            @JsonProperty("countEvolution") HistoryEvolutionDTO countEvolution) implements EventDTO {
 
     @JsonIgnore
     public static QuotaThresholdChangedEventDTO from(QuotaThresholdChangedEvent event, String type) {
         return new QuotaThresholdChangedEventDTO(
-            type, event.eventId().serialize(),
+            type,
+            event.eventId().serialize(),
             event.getAggregateId().asAggregateKey(),
             QuotaDTO.from(event.getSizeQuota()),
             QuotaDTO.from(event.getCountQuota()),
             HistoryEvolutionDTO.toDto(event.getSizeHistoryEvolution()),
             HistoryEvolutionDTO.toDto(event.getCountHistoryEvolution()));
-    }
-
-    private final String type;
-    private final int eventId;
-    private final String aggregateId;
-    private final QuotaDTO sizeQuota;
-    private final QuotaDTO countQuota;
-    private final HistoryEvolutionDTO sizeEvolution;
-    private final HistoryEvolutionDTO countEvolution;
-
-    @JsonCreator
-    private QuotaThresholdChangedEventDTO(
-            @JsonProperty("type") String type,
-            @JsonProperty("eventId") int eventId,
-            @JsonProperty("aggregateId") String aggregateId,
-            @JsonProperty("sizeQuota") QuotaDTO sizeQuota,
-            @JsonProperty("countQuota") QuotaDTO countQuota,
-            @JsonProperty("sizeEvolution") HistoryEvolutionDTO sizeEvolution,
-            @JsonProperty("countEvolution") HistoryEvolutionDTO countEvolution) {
-        this.type = type;
-        this.eventId = eventId;
-        this.aggregateId = aggregateId;
-        this.sizeQuota = sizeQuota;
-        this.countQuota = countQuota;
-        this.sizeEvolution = sizeEvolution;
-        this.countEvolution = countEvolution;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public long getEventId() {
-        return eventId;
-    }
-
-    public String getAggregateId() {
-        return aggregateId;
-    }
-
-    public QuotaDTO getSizeQuota() {
-        return sizeQuota;
-    }
-
-    public QuotaDTO getCountQuota() {
-        return countQuota;
-    }
-
-    public HistoryEvolutionDTO getSizeEvolution() {
-        return sizeEvolution;
-    }
-
-    public HistoryEvolutionDTO getCountEvolution() {
-        return countEvolution;
     }
 
     @JsonIgnore
@@ -104,5 +55,11 @@ class QuotaThresholdChangedEventDTO implements EventDTO {
             sizeQuota.asSizeQuota(),
             countQuota.asCountQuota(),
             UserQuotaThresholds.Id.fromKey(aggregateId));
+    }
+
+    @Override
+    @JsonIgnore
+    public String getType() {
+        return type;
     }
 }
