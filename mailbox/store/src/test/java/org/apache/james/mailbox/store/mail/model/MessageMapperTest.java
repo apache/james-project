@@ -73,7 +73,7 @@ public abstract class MessageMapperTest {
 
     private static final char DELIMITER = '.';
     private static final int LIMIT = 10;
-    private static final int BODY_START = 16;
+    private static final int BODY_START = 19;
     private static final UidValidity UID_VALIDITY = UidValidity.of(42);
 
     private static final String CUSTOMS_USER_FLAGS_VALUE = "CustomsFlags";
@@ -115,12 +115,12 @@ public abstract class MessageMapperTest {
         benwaInboxMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX"));
         benwaWorkMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work"));
 
-        message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
-        message2 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
-        message3 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test3 \n\nBody3\n.\n", BODY_START, new PropertyBuilder());
-        message4 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test4 \n\nBody4\n.\n", BODY_START, new PropertyBuilder());
-        message5 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test5 \n\nBody5\n.\n", BODY_START, new PropertyBuilder());
-        message6 = createMessage(benwaWorkMailbox, mapperProvider.generateMessageId(), "Subject: Test6 \n\nBody6\n.\n", BODY_START, new PropertyBuilder());
+        message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \r\n\r\nBody1\n.\n", BODY_START, new PropertyBuilder());
+        message2 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test2 \r\n\r\nBody2\n.\n", BODY_START, new PropertyBuilder());
+        message3 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test3 \r\n\r\nBody3\n.\n", BODY_START, new PropertyBuilder());
+        message4 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test4 \r\n\r\nBody4\n.\n", BODY_START, new PropertyBuilder());
+        message5 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test5 \r\n\r\nBody5\n.\n", BODY_START, new PropertyBuilder());
+        message6 = createMessage(benwaWorkMailbox, mapperProvider.generateMessageId(), "Subject: Test6 \r\n\r\nBody6\n.\n", BODY_START, new PropertyBuilder());
     }
 
     @Test
@@ -210,6 +210,54 @@ public abstract class MessageMapperTest {
         int limit = 10;
         assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), fetchType, limit).next())
             .isEqualToWithoutAttachment(message1, fetchType);
+    }
+
+    @Test
+    void getFullBytesShouldBePresentWhenFullFetchType() throws MailboxException, IOException {
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.FULL_BYTES));
+        saveMessages();
+        int limit = 10;
+        MailboxMessage next = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.FULL, limit).next();
+        assertThat(next.getFullBytes())
+            .isNotEmpty();
+    }
+
+    @Test
+    void getFullBytesShouldBePresentWhenHeadersFetchType() throws Exception {
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.FULL_BYTES));
+        saveMessages();
+        int limit = 10;
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.HEADERS, limit).next().getFullBytes())
+            .get()
+            .satisfies(b -> assertThat(b.length).isEqualTo(1));
+    }
+
+    @Test
+    void getHeadersBytesShouldBePresentWhenHeadersFetchType() throws Exception {
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.HEADER_BYTES));
+        saveMessages();
+        int limit = 10;
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.HEADERS, limit).next().getHeadersBytes())
+            .isNotEmpty();
+    }
+
+    @Test
+    void getFullBytesShouldBePresentWhenAttachmentMetadataFetchType() throws Exception {
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.FULL_BYTES));
+        saveMessages();
+        int limit = 10;
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.ATTACHMENTS_METADATA, limit).next().getFullBytes())
+            .get()
+            .satisfies(b -> assertThat(b.length).isEqualTo(1));
+    }
+
+    @Test
+    void getHeadersBytesShouldBePresentWhenAttachmentMetadataFetchType() throws Exception {
+        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(Capabilities.HEADER_BYTES));
+        saveMessages();
+        int limit = 10;
+        assertThat(messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()), FetchType.ATTACHMENTS_METADATA, limit).next().getHeadersBytes())
+            .isNotEmpty();
     }
 
     @Test

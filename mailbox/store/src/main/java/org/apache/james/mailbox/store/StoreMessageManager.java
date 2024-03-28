@@ -771,9 +771,11 @@ public class StoreMessageManager implements MessageManager {
     @Override
     public Publisher<MessageResult> getMessagesReactive(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) {
         FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
+        boolean delayError = false;
+        int prefetch = 1;
         return Flux.from(mapperFactory.getMessageMapper(mailboxSession)
             .findInMailboxReactive(mailbox, set, fetchType, -1))
-            .publishOn(forFetchType(fetchType))
+            .publishOn(forFetchType(fetchType), delayError, prefetch)
             .map(Throwing.<MailboxMessage, MessageResult>function(message -> ResultUtils.loadMessageResult(message, fetchGroup)).sneakyThrow());
     }
 

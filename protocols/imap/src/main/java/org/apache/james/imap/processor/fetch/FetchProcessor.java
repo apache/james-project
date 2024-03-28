@@ -79,7 +79,6 @@ import reactor.core.publisher.Sinks;
 public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     static class FetchSubscriber implements Subscriber<FetchResponse> {
         private final AtomicReference<Subscription> subscription = new AtomicReference<>();
-        private final AtomicBoolean requested = new AtomicBoolean(false);
         private final Sinks.One<Void> sink = Sinks.one();
         private final ImapSession imapSession;
         private final Responder responder;
@@ -97,21 +96,27 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
         @Override
         public void onNext(FetchResponse fetchResponse) {
-            requested.getAndSet(false);
+            AtomicBoolean mustRequestOne = new AtomicBoolean(true);
             responder.respond(fetchResponse);
-            if (imapSession.backpressureNeeded(this::requestOne)) {
-                LOGGER.debug("Applying backpressure as we encounter a slow reader");
+            Runnable requestOne = () -> {
+                LOGGER.info("Resuming IMAP FETCH for user {}", imapSession.getUserName().asString());
+                if (mustRequestOne.getAndSet(false)) {
+                    requestOne();
+                }
+            };
+            if (imapSession.backpressureNeeded(requestOne)) {
+                LOGGER.info("Applying backpressure as user {} is a slow reader",
+                    imapSession.getUserName().asString());
             } else {
-                requestOne();
+                if (mustRequestOne.getAndSet(false)) {
+                    requestOne();
+                }
             }
         }
 
         private void requestOne() {
-            boolean alreadyRequested = requested.getAndSet(true);
-            if (!alreadyRequested) {
-                Optional.ofNullable(subscription.get())
-                    .ifPresent(s -> s.request(1));
-            }
+            Optional.ofNullable(subscription.get())
+                .ifPresent(s -> s.request(1));
         }
 
         @Override

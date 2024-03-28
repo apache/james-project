@@ -106,11 +106,23 @@ public class SimpleMessage implements Message {
 
     @Override
     public InputStream getHeaderContent() throws IOException {
-        long headerEnd = bodyStartOctet;
-        if (headerEnd < 0) {
-            headerEnd = 0;
+        return new BoundedInputStream(content.getInputStream(), headerSize());
+    }
+
+    private long headerSize() {
+        return Math.max(0, bodyStartOctet);
+    }
+
+    @Override
+    public Optional<byte[][]> getHeadersBytes() {
+        try {
+            if (headerSize() == content.size()) {
+                return content.asBytesSequence();
+            }
+        } catch (MailboxException e) {
+            return Optional.empty();
         }
-        return new BoundedInputStream(content.getInputStream(), headerEnd);
+        return Optional.empty();
     }
 
     @Override

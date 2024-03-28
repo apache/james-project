@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.net.ssl.SSLHandshakeException;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ConnectionCheck;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -269,7 +270,7 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
         try (Closeable closeable = mdc(imapSession).build()) {
             InetSocketAddress address = (InetSocketAddress) ctx.channel().remoteAddress();
-            LOGGER.info("Connection closed for {}", address.getAddress().getHostAddress());
+            LOGGER.info("Connection closed for {} and user {}", address.getAddress().getHostAddress(), retrieveUsername(imapSession));
 
             Optional.ofNullable(imapSession).ifPresent(ImapSession::cancelOngoingProcessing);
             Optional.ofNullable(imapSession)
@@ -285,11 +286,20 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
         }
     }
 
+    private static String retrieveUsername(ImapSession imapSession) {
+        return Optional.ofNullable(imapSession)
+            .flatMap(session -> Optional.ofNullable(session.getUserName()))
+            .map(Username::asString)
+            .orElse("");
+    }
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        ImapSession imapSession = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).getAndSet(null);
+        String username = retrieveUsername(imapSession);
         try (Closeable closeable = mdc(ctx).build()) {
             if (cause instanceof SocketException) {
-                LOGGER.info("Socket exception encountered: {}", cause.getMessage());
+                LOGGER.info("Socket exception encountered for user {}: {}", username, cause.getMessage());
             } else if (isSslHandshkeException(cause)) {
                 LOGGER.info("SSH handshake rejected {}", cause.getMessage());
             } else if (isNotSslRecordException(cause)) {
@@ -370,7 +380,8 @@ public class ImapChannelUpstreamHandler extends ChannelInboundHandlerAdapter imp
             .subscribe(any -> {
 
             }, e -> {
-                LOGGER.error("Exception while handling errors for channel {}", ctx.channel(), e);
+                LOGGER.error("Exception while handling errors for channel {} and user {}", ctx.channel(),
+                    Optional.ofNullable(imapSession).map(u -> u.getUserName().asString()).orElse(""), e);
                 Channel channel = ctx.channel();
                 if (channel.isActive()) {
                     channel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
