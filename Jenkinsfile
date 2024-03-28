@@ -48,6 +48,7 @@ pipeline {
                 'server/apps/postgres-app,' +
                 'server/protocols/jmap-rfc-8621-integration-tests/postgres-jmap-rfc-8621-integration-tests,' +
                 'server/protocols/webadmin-integration-test/postgres-webadmin-integration-test,' +
+                'server/task/task-postgres,' +
                 'mpt/impl/imap-mailbox/postgres,' +
                 'event-bus/postgres,' +
                 'mailbox/plugin/deleted-messages-vault-postgres'
