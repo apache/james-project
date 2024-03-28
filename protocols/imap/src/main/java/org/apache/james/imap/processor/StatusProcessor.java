@@ -45,6 +45,7 @@ import org.apache.james.mailbox.MessageManager.MailboxMetaData.RecentMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
@@ -103,6 +104,10 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> imp
             .then(sendStatus(mailboxPath, statusDataItems, responder, session, mailboxSession))
             .then(unsolicitedResponses(session, responder, false))
             .then(Mono.fromRunnable(() -> okComplete(request, responder)))
+            .onErrorResume(MailboxNotFoundException.class, e -> {
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                return ReactorUtils.logAsMono(() -> LOGGER.info("Status failed for mailbox '{}' as it does not exist.", mailboxPath));
+            })
             .onErrorResume(MailboxException.class, e -> {
                 no(request, responder, HumanReadableText.STATUS_FAILED);
                 return ReactorUtils.logAsMono(() -> LOGGER.error("Status failed for mailbox {}", mailboxPath, e));
