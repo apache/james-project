@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.quota.cassandra.dto;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.apache.james.mailbox.quota.cassandra.dto.QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE;
+import static org.apache.james.mailbox.quota.mailing.events.QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._75;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._80;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +36,10 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
+import org.apache.james.mailbox.quota.mailing.events.HistoryEvolutionDTO;
+import org.apache.james.mailbox.quota.mailing.events.QuotaDTO;
 import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
+import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEventDTO;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
 import org.apache.james.util.ClassLoaderUtils;
