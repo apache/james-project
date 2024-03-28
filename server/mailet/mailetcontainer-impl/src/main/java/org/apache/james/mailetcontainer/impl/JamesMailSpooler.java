@@ -138,14 +138,14 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
                     throw new InterruptedException("Thread has been interrupted");
                 }
                 queueItem.done(MailQueueItem.CompletionStatus.SUCCESS);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 handleError(queueItem, mail, originalRecipients, e);
             } finally {
                 LOGGER.debug("==== End processing mail {} ====", mail.getName());
             }
         }
 
-        private void handleError(MailQueueItem queueItem, Mail mail, ImmutableList<MailAddress> originalRecipients, Exception processingException) {
+        private void handleError(MailQueueItem queueItem, Mail mail, ImmutableList<MailAddress> originalRecipients, Throwable processingException) {
             int failureCount = computeFailureCount(mail);
 
             // Restore original recipients
@@ -184,7 +184,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
             queueItem.done(MailQueueItem.CompletionStatus.SUCCESS);
         }
 
-        private void nack(MailQueueItem queueItem, Exception processingException) {
+        private void nack(MailQueueItem queueItem, Throwable processingException) {
             try {
                 queueItem.done(MailQueueItem.CompletionStatus.REJECT);
             } catch (MailQueue.MailQueueException ex) {
