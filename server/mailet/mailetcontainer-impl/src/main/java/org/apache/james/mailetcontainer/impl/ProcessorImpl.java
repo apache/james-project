@@ -79,7 +79,7 @@ public class ProcessorImpl {
                      .build()) {
             MailetPipelineLogging.logBeginOfMailetProcess(mailet, mail);
             mailet.service(mail);
-        } catch (Exception | NoClassDefFoundError me) {
+        } catch (Throwable me) {
             ex = me;
             String onMailetException = null;
 
