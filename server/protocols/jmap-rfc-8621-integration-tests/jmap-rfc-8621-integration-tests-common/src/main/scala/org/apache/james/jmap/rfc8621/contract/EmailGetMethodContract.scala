@@ -39,14 +39,14 @@ import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.UuidState.INSTANCE
-import org.apache.james.jmap.draft.JmapGuiceProbe
+import org.apache.james.jmap.draft.{JmapGuiceProbe}
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.EmailGetMethodContract.createTestMessage
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ALICE, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.mailbox.MessageManager.AppendCommand
 import org.apache.james.mailbox.model.MailboxACL.Right
-import org.apache.james.mailbox.model.{MailboxACL, MailboxId, MailboxPath, MessageId}
+import org.apache.james.mailbox.model.{ComposedMessageId, MailboxACL, MailboxId, MailboxPath, MessageId}
 import org.apache.james.mime4j.dom.Message
 import org.apache.james.mime4j.message.MultipartBuilder
 import org.apache.james.mime4j.stream.RawField
@@ -6761,6 +6761,72 @@ trait EmailGetMethodContract {
            |  {
            |     "id":"${messageId.serialize}",
            |    "keywords": {}
+           |  }
+      """.stripMargin)
+  }
+
+  @Test
+  def shouldAggregateKeywordsAccrossMailbox(server: GuiceJamesServer): Unit = {
+    val message: Message = createTestMessage
+
+    val flags1: Flags = new Flags(Flags.Flag.ANSWERED)
+    flags1.add(Flags.Flag.FLAGGED)
+    flags1.add("f1")
+    flags1.add("f2")
+
+    val flags2: Flags = new Flags(Flags.Flag.SEEN)
+    flags2.add(Flags.Flag.FLAGGED)
+    flags2.add("f3")
+    flags2.add("f2")
+
+    val path1 = MailboxPath.inbox(BOB)
+    val path2 = MailboxPath.forUser(BOB, "box2")
+    val mailboxProbe = server.getProbe(classOf[MailboxProbeImpl])
+    mailboxProbe.createMailbox(path1)
+    mailboxProbe.createMailbox(path2)
+    val messageId: ComposedMessageId = mailboxProbe.appendMessage(BOB.asString(), path1, AppendCommand.builder()
+      .withFlags(flags1)
+      .build(message))
+    mailboxProbe.copy(BOB, path1, path2, messageId.getUid)
+    mailboxProbe.setFlags(BOB, path1, messageId.getUid, flags2)
+
+    val response = `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(
+        s"""{
+           |  "using": ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+           |  "methodCalls": [[
+           |     "Email/get",
+           |     {
+           |       "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+           |       "ids": ["${messageId.getMessageId.serialize}"],
+           |       "properties": ["keywords"]
+           |     },
+           |     "c1"]]
+           |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .contentType(JSON)
+      .extract
+      .body
+      .asString
+
+    assertThatJson(response)
+      .inPath("methodResponses[0][1].list[0]")
+      .isEqualTo(
+        s"""
+           |  {
+           |     "id":"${messageId.getMessageId.serialize}",
+           |     "keywords": {
+           |       "$$flagged": true,
+           |       "f1": true,
+           |       "f2": true,
+           |       "f3": true,
+           |       "$$seen": true,
+           |       "$$answered": true
+           |     }
            |  }
       """.stripMargin)
   }
