@@ -45,7 +45,14 @@ public interface TaskExecutionDetailsProjectionContract {
         testee.update(TASK_EXECUTION_DETAILS());
 
         Optional<TaskExecutionDetails> taskExecutionDetails = OptionConverters.toJava(testee.load(TASK_ID()));
-        assertThat(taskExecutionDetails).contains(TASK_EXECUTION_DETAILS());
+
+        assertThat(taskExecutionDetails.get())
+            .usingRecursiveComparison()
+            .ignoringFields("submittedDate")
+            .isEqualTo(TASK_EXECUTION_DETAILS());
+
+        assertThat(taskExecutionDetails.get().getSubmittedDate().isEqual(TASK_EXECUTION_DETAILS().getSubmittedDate()))
+            .isTrue();
     }
 
     @Test
@@ -54,7 +61,14 @@ public interface TaskExecutionDetailsProjectionContract {
         testee.update(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION());
 
         Optional<TaskExecutionDetails> taskExecutionDetails = OptionConverters.toJava(testee.load(TASK_ID()));
-        assertThat(taskExecutionDetails).contains(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION());
+
+        assertThat(taskExecutionDetails.get())
+            .usingRecursiveComparison()
+            .ignoringFields("submittedDate")
+            .isEqualTo(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION());
+
+        assertThat(taskExecutionDetails.get().getSubmittedDate().isEqual(TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION().getSubmittedDate()))
+            .isTrue();
     }
 
     @Test
@@ -65,7 +79,14 @@ public interface TaskExecutionDetailsProjectionContract {
         testee.update(TASK_EXECUTION_DETAILS_UPDATED());
 
         Optional<TaskExecutionDetails> taskExecutionDetails = OptionConverters.toJava(testee.load(TASK_ID()));
-        assertThat(taskExecutionDetails).contains(TASK_EXECUTION_DETAILS_UPDATED());
+
+        assertThat(taskExecutionDetails.get())
+            .usingRecursiveComparison()
+            .ignoringFields("submittedDate")
+            .isEqualTo(TASK_EXECUTION_DETAILS_UPDATED());
+
+        assertThat(taskExecutionDetails.get().getSubmittedDate().isEqual(TASK_EXECUTION_DETAILS_UPDATED().getSubmittedDate()))
+            .isTrue();
     }
 
     @Test
@@ -89,7 +110,10 @@ public interface TaskExecutionDetailsProjectionContract {
         testee.update(TASK_EXECUTION_DETAILS_2());
 
         List<TaskExecutionDetails> taskExecutionDetails = asJava(testee.list());
-        assertThat(taskExecutionDetails).containsOnly(TASK_EXECUTION_DETAILS(), TASK_EXECUTION_DETAILS_2());
+
+        assertThat(taskExecutionDetails)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("submittedDate")
+            .containsOnly(TASK_EXECUTION_DETAILS(), TASK_EXECUTION_DETAILS_2());
     }
 
     @Test
@@ -99,6 +123,8 @@ public interface TaskExecutionDetailsProjectionContract {
         testee.update(TASK_EXECUTION_DETAILS_UPDATED());
 
         List<TaskExecutionDetails> taskExecutionDetails = asJava(testee.list());
-        assertThat(taskExecutionDetails).containsOnly(TASK_EXECUTION_DETAILS_UPDATED());
+        assertThat(taskExecutionDetails)
+            .usingRecursiveFieldByFieldElementComparatorIgnoringFields("submittedDate")
+            .containsOnly(TASK_EXECUTION_DETAILS_UPDATED());
     }
 }
