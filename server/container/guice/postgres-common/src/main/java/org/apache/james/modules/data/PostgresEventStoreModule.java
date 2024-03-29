@@ -19,24 +19,17 @@
 
 package org.apache.james.modules.data;
 
-import java.util.Set;
-
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStore;
-import org.apache.james.json.DTO;
-import org.apache.james.json.DTOModule;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
 
 public class PostgresEventStoreModule extends AbstractModule {
     @Override
@@ -47,8 +40,6 @@ public class PostgresEventStoreModule extends AbstractModule {
         Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
         postgresDataDefinitions.addBinding().toInstance(org.apache.james.eventsourcing.eventstore.postgres.PostgresEventStoreModule.MODULE);
 
-        bind(new TypeLiteral<Set<DTOModule<?, ? extends DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
-            .toInstance(ImmutableSet.of());
         Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
     }
 }
