@@ -64,6 +64,10 @@ public class PostgresCommons {
         .map(value -> LocalDateTime.ofInstant(value.toInstant(), ZoneOffset.UTC))
         .orElse(null);
 
+    public static final Function<ZonedDateTime, LocalDateTime> ZONED_DATE_TIME_TO_LOCAL_DATE_TIME = date -> Optional.ofNullable(date)
+        .map(value -> value.withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
+        .orElse(null);
+
     public static final Function<Instant, LocalDateTime> INSTANT_TO_LOCAL_DATE_TIME = instant -> Optional.ofNullable(instant)
         .map(value -> LocalDateTime.ofInstant(instant, ZoneOffset.UTC))
         .orElse(null);
