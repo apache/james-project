@@ -70,14 +70,12 @@ public abstract class AbstractChannelPipelineFactory<C extends SocketChannel> ex
             pipeline.addLast(HandlerConstants.PROXY_HANDLER, new HAProxyMessageDecoder());
         }
 
-        // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
-        pipeline.addLast(eventExecutorGroup, HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
-       
         // Add the ChunkedWriteHandler to be able to write ChunkInput
         pipeline.addLast(HandlerConstants.CHUNK_HANDLER, new ChunkedWriteHandler());
         pipeline.addLast(HandlerConstants.TIMEOUT_HANDLER, new TimeoutHandler(timeout));
-
-        pipeline.addLast(HandlerConstants.CORE_HANDLER, createHandler());
+        // Add the text line decoder which limit the max line length, don't strip the delimiter and use CRLF as delimiter
+        pipeline.addLast(eventExecutorGroup, HandlerConstants.FRAMER, frameHandlerFactory.create(pipeline));
+        pipeline.addLast(eventExecutorGroup, HandlerConstants.CORE_HANDLER, createHandler());
     }
 
     
