@@ -20,10 +20,15 @@
 package org.apache.james;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
+import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
 import org.apache.james.jmap.draft.JMAPListenerModule;
+import org.apache.james.json.DTO;
+import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
+import org.apache.james.modules.DistributedTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -71,14 +76,22 @@ import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.task.DistributedTaskManagerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
 public class PostgresJamesServerMain implements JamesServerMain {
+
+    private static final Module EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->
+        binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
+            .toInstance(ImmutableSet.of());
 
     private static final Module WEBADMIN = Modules.combine(
         new WebAdminServerModule(),
@@ -114,11 +127,11 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new PostgresDataModule(),
         new MailboxModule(),
         new SievePostgresRepositoryModules(),
-        new TaskManagerModule(),
         new PostgresEventStoreModule(),
         new TikaMailboxModule(),
         new PostgresDLPConfigurationStoreModule(),
-        new PostgresVacationModule());
+        new PostgresVacationModule(),
+        EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
 
     public static final Module JMAP = Modules.combine(
         new PostgresJmapModule(),
@@ -150,13 +163,14 @@ public class PostgresJamesServerMain implements JamesServerMain {
         SearchConfiguration searchConfiguration = configuration.searchConfiguration();
 
         return GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(POSTGRES_MODULE_AGGREGATE)
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
             .combineWith(chooseUsersRepositoryModule(configuration))
             .combineWith(chooseBlobStoreModules(configuration))
             .combineWith(chooseEventBusModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
-            .combineWith(POSTGRES_MODULE_AGGREGATE)
-            .overrideWith(chooseJmapModules(configuration));
+            .overrideWith(chooseJmapModules(configuration))
+            .overrideWith(chooseTaskManagerModules(configuration));
     }
 
     private static List<Module> chooseUsersRepositoryModule(PostgresJamesConfiguration configuration) {
@@ -171,6 +185,17 @@ public class PostgresJamesServerMain implements JamesServerMain {
             .add(new BlobStoreCacheModulesChooser.CacheDisabledModule());
 
         return builder.build();
+    }
+
+    public static List<Module> chooseTaskManagerModules(PostgresJamesConfiguration configuration) {
+        switch (configuration.eventBusImpl()) {
+            case IN_MEMORY:
+                return List.of(new TaskManagerModule());
+            case RABBITMQ:
+                return List.of(new DistributedTaskManagerModule(), new DistributedTaskSerializationModule());
+            default:
+                throw new RuntimeException("Unsupported event-bus implementation " + configuration.eventBusImpl().name());
+        }
     }
 
     public static List<Module> chooseEventBusModules(PostgresJamesConfiguration configuration) {
