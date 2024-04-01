@@ -27,14 +27,12 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.modules.server.HostnameModule;
 import org.apache.james.modules.server.TaskSerializationModule;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
-import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.TerminationSubscriber;
 import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.distributed.CancelRequestQueueName;
@@ -47,8 +45,6 @@ import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueReconnec
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueSupplier;
 import org.apache.james.task.eventsourcing.distributed.TerminationQueueName;
 import org.apache.james.task.eventsourcing.distributed.TerminationReconnectionHandler;
-import org.apache.james.task.eventsourcing.postgres.PostgresTaskExecutionDetailsProjection;
-import org.apache.james.task.eventsourcing.postgres.PostgresTaskExecutionDetailsProjectionModule;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -65,20 +61,16 @@ public class DistributedTaskManagerModule extends AbstractModule {
     protected void configure() {
         install(new HostnameModule());
         install(new TaskSerializationModule());
+        install(new PostgresTaskExecutionDetailsProjectionGuiceModule());
 
-        bind(PostgresTaskExecutionDetailsProjection.class).in(Scopes.SINGLETON);
         bind(EventSourcingTaskManager.class).in(Scopes.SINGLETON);
         bind(RabbitMQWorkQueueSupplier.class).in(Scopes.SINGLETON);
         bind(RabbitMQTerminationSubscriber.class).in(Scopes.SINGLETON);
-        bind(TaskExecutionDetailsProjection.class).to(PostgresTaskExecutionDetailsProjection.class);
         bind(TerminationSubscriber.class).to(RabbitMQTerminationSubscriber.class);
         bind(TaskManager.class).to(EventSourcingTaskManager.class);
         bind(WorkQueueSupplier.class).to(RabbitMQWorkQueueSupplier.class);
         bind(CancelRequestQueueName.class).toInstance(CancelRequestQueueName.generate());
         bind(TerminationQueueName.class).toInstance(TerminationQueueName.generate());
-
-        Multibinder<PostgresModule> postgresDataDefinitions = Multibinder.newSetBinder(binder(), PostgresModule.class);
-        postgresDataDefinitions.addBinding().toInstance(PostgresTaskExecutionDetailsProjectionModule.MODULE());
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(RabbitMQWorkQueueReconnectionHandler.class);
