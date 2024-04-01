@@ -28,7 +28,6 @@ import org.apache.james.jmap.draft.JMAPListenerModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
-import org.apache.james.modules.DistributedTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -192,7 +191,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
             case IN_MEMORY:
                 return List.of(new TaskManagerModule());
             case RABBITMQ:
-                return List.of(new DistributedTaskManagerModule(), new DistributedTaskSerializationModule());
+                return List.of(new DistributedTaskManagerModule());
             default:
                 throw new RuntimeException("Unsupported event-bus implementation " + configuration.eventBusImpl().name());
         }
