@@ -59,6 +59,8 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
+import org.apache.james.modules.queue.rabbitmq.FakeMailQueueViewModule;
+import org.apache.james.modules.queue.rabbitmq.RabbitMQMailQueueModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
@@ -70,6 +72,7 @@ import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MailboxesExportRoutesModule;
+import org.apache.james.modules.server.RabbitMailQueueRoutesModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
@@ -123,7 +126,6 @@ public class PostgresJamesServerMain implements JamesServerMain {
         WEBADMIN);
 
     private static final Module POSTGRES_SERVER_MODULE = Modules.combine(
-        new ActiveMQQueueModule(),
         new BlobExportMechanismModule(),
         new PostgresDelegationStoreModule(),
         new PostgresMailboxModule(),
@@ -205,10 +207,14 @@ public class PostgresJamesServerMain implements JamesServerMain {
     public static List<Module> chooseEventBusModules(PostgresJamesConfiguration configuration) {
         switch (configuration.eventBusImpl()) {
             case IN_MEMORY:
-                return List.of(new DefaultEventModule());
+                return List.of(new DefaultEventModule(),
+                    new ActiveMQQueueModule());
             case RABBITMQ:
                 return List.of(new RabbitMQModule(),
-                    Modules.override(new DefaultEventModule()).with(new RabbitMQEventBusModule()));
+                    Modules.override(new DefaultEventModule()).with(new RabbitMQEventBusModule()),
+                    new RabbitMQMailQueueModule(),
+                    new FakeMailQueueViewModule(),
+                    new RabbitMailQueueRoutesModule());
             default:
                 throw new RuntimeException("Unsupported event-bus implementation " + configuration.eventBusImpl().name());
         }
