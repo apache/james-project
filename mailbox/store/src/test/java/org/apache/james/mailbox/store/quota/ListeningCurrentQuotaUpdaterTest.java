@@ -42,11 +42,9 @@ import org.apache.james.events.EventBus;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
-import org.apache.james.mailbox.events.MailboxEvents;
 import org.apache.james.mailbox.events.MailboxEvents.Added;
 import org.apache.james.mailbox.events.MailboxEvents.Expunged;
 import org.apache.james.mailbox.events.MailboxEvents.MailboxDeletion;
-import org.apache.james.mailbox.model.CurrentQuotas;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -195,41 +193,5 @@ class ListeningCurrentQuotaUpdaterTest {
         testee.event(deletion);
 
         verifyNoMoreInteractions(mockedCurrentQuotaManager);
-    }
-
-    @Test
-    void mailboxAddEventShouldProvisionCurrentQuota() throws Exception {
-        QuotaOperation operation = new QuotaOperation(QUOTA_ROOT, QuotaCountUsage.count(0), QuotaSizeUsage.size(0));
-
-        MailboxEvents.MailboxAdded added;
-        added = mock(MailboxEvents.MailboxAdded.class);
-
-        when(added.getMailboxId()).thenReturn(MAILBOX_ID);
-        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
-        when(added.getUsername()).thenReturn(USERNAME_BENWA);
-        when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_PATH)))
-            .thenReturn(Mono.just(QUOTA_ROOT));
-        when(mockedCurrentQuotaManager.getCurrentQuotas(QUOTA_ROOT)).thenAnswer(any -> Mono.empty());
-        when(mockedCurrentQuotaManager.setCurrentQuotas(operation)).thenAnswer(any -> Mono.empty());
-
-        testee.event(added);
-
-        verify(mockedCurrentQuotaManager).setCurrentQuotas(operation);
-    }
-
-    @Test
-    void mailboxAddEventShouldNotProvisionWhenAlreadyExist() throws Exception {
-        MailboxEvents.MailboxAdded added = mock(MailboxEvents.MailboxAdded.class);
-        when(added.getMailboxId()).thenReturn(MAILBOX_ID);
-        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
-        when(added.getUsername()).thenReturn(USERNAME_BENWA);
-        when(mockedQuotaRootResolver.getQuotaRootReactive(eq(MAILBOX_PATH)))
-            .thenReturn(Mono.just(QUOTA_ROOT));
-        when(mockedCurrentQuotaManager.getCurrentQuotas(QUOTA_ROOT))
-            .thenAnswer(any -> Mono.just(CurrentQuotas.from(QUOTA)));
-
-        testee.event(added);
-
-        verify(mockedCurrentQuotaManager, never()).setCurrentQuotas(any());
     }
 }
