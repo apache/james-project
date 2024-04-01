@@ -62,6 +62,7 @@ import org.apache.james.modules.queue.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.queue.rabbitmq.FakeMailQueueViewModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQMailQueueModule;
 import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
+import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
@@ -148,7 +149,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
     public static final Module PLUGINS = new QuotaMailingModule();
 
     private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
-        new MailetProcessingModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP, PLUGINS);
+        new MailetProcessingModule(), new DKIMMailetModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP, PLUGINS);
 
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
