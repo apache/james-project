@@ -31,6 +31,7 @@ import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
+import org.apache.james.modules.TasksCleanupTaskSerializationModule;
 import org.apache.james.modules.blobstore.BlobStoreCacheModulesChooser;
 import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.data.PostgresDLPConfigurationStoreModule;
@@ -76,7 +77,9 @@ import org.apache.james.modules.server.UserIdentityModule;
 import org.apache.james.modules.server.WebAdminReIndexingTaskSerializationModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.task.DistributedTaskManagerModule;
+import org.apache.james.modules.task.PostgresTaskExecutionDetailsProjectionGuiceModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
+import org.apache.james.modules.webadmin.TasksCleanupRoutesModule;
 import org.apache.james.vault.VaultConfiguration;
 
 import com.google.common.collect.ImmutableList;
@@ -106,7 +109,9 @@ public class PostgresJamesServerMain implements JamesServerMain {
         new UserIdentityModule(),
         new DLPRoutesModule(),
         new JmapUploadCleanupModule(),
-        new JmapTasksModule());
+        new JmapTasksModule(),
+        new TasksCleanupRoutesModule(),
+        new TasksCleanupTaskSerializationModule());
 
     private static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
@@ -189,7 +194,7 @@ public class PostgresJamesServerMain implements JamesServerMain {
     public static List<Module> chooseTaskManagerModules(PostgresJamesConfiguration configuration) {
         switch (configuration.eventBusImpl()) {
             case IN_MEMORY:
-                return List.of(new TaskManagerModule());
+                return List.of(new TaskManagerModule(), new PostgresTaskExecutionDetailsProjectionGuiceModule());
             case RABBITMQ:
                 return List.of(new DistributedTaskManagerModule());
             default:
