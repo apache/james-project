@@ -22,6 +22,7 @@ package org.apache.james.backends.postgres.quota;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.COMPONENT;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.CURRENT_VALUE;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.IDENTIFIER;
+import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.PRIMARY_KEY_CONSTRAINT_NAME;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TABLE_NAME;
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaCurrentValueTable.TYPE;
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
@@ -35,13 +36,15 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.quota.QuotaComponent;
 import org.apache.james.core.quota.QuotaCurrentValue;
 import org.apache.james.core.quota.QuotaType;
-import org.jooq.Field;
 import org.jooq.Record;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresQuotaCurrentValueDAO {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresQuotaCurrentValueDAO.class);
     private static final boolean IS_INCREASE = true;
 
     private final PostgresExecutor postgresExecutor;
@@ -52,19 +55,19 @@ public class PostgresQuotaCurrentValueDAO {
     }
 
     public Mono<Void> increase(QuotaCurrentValue.Key quotaKey, long amount) {
-        return updateCurrentValue(quotaKey, amount, IS_INCREASE)
-            .switchIfEmpty(Mono.defer(() -> insert(quotaKey, amount, IS_INCREASE)))
-            .then();
-    }
-
-    public Mono<Long> updateCurrentValue(QuotaCurrentValue.Key quotaKey, long amount, boolean isIncrease) {
-        return postgresExecutor.executeRow(dslContext -> Mono.from(dslContext.update(TABLE_NAME)
-                .set(CURRENT_VALUE, getCurrentValueOperator(isIncrease, amount))
-                .where(IDENTIFIER.eq(quotaKey.getIdentifier()),
-                    COMPONENT.eq(quotaKey.getQuotaComponent().getValue()),
-                    TYPE.eq(quotaKey.getQuotaType().getValue()))
-                .returning(CURRENT_VALUE)))
-            .map(record -> record.get(CURRENT_VALUE));
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
+                .set(IDENTIFIER, quotaKey.getIdentifier())
+                .set(COMPONENT, quotaKey.getQuotaComponent().getValue())
+                .set(TYPE, quotaKey.getQuotaType().getValue())
+                .set(CURRENT_VALUE, amount)
+                .onConflictOnConstraint(PRIMARY_KEY_CONSTRAINT_NAME)
+                .doUpdate()
+                .set(CURRENT_VALUE, CURRENT_VALUE.plus(amount))))
+            .onErrorResume(ex -> {
+                LOGGER.warn("Failure when increasing {} {} quota for {}. Quota current value is thus not updated and needs re-computation",
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier(), ex);
+                return Mono.empty();
+            });
     }
 
     public Mono<Long> upsert(QuotaCurrentValue.Key quotaKey, long newCurrentValue) {
@@ -80,13 +83,6 @@ public class PostgresQuotaCurrentValueDAO {
                     TYPE.eq(quotaKey.getQuotaType().getValue()))
                 .returning(CURRENT_VALUE)))
             .map(record -> record.get(CURRENT_VALUE));
-    }
-
-    private Field<Long> getCurrentValueOperator(boolean isIncrease, long amount) {
-        if (isIncrease) {
-            return CURRENT_VALUE.plus(amount);
-        }
-        return CURRENT_VALUE.minus(amount);
     }
 
     public Mono<Long> insert(QuotaCurrentValue.Key quotaKey, long amount, boolean isIncrease) {
@@ -107,9 +103,19 @@ public class PostgresQuotaCurrentValueDAO {
     }
 
     public Mono<Void> decrease(QuotaCurrentValue.Key quotaKey, long amount) {
-        return updateCurrentValue(quotaKey, amount, !IS_INCREASE)
-            .switchIfEmpty(Mono.defer(() -> insert(quotaKey, amount, !IS_INCREASE)))
-            .then();
+        return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
+                .set(IDENTIFIER, quotaKey.getIdentifier())
+                .set(COMPONENT, quotaKey.getQuotaComponent().getValue())
+                .set(TYPE, quotaKey.getQuotaType().getValue())
+                .set(CURRENT_VALUE, -amount)
+                .onConflictOnConstraint(PRIMARY_KEY_CONSTRAINT_NAME)
+                .doUpdate()
+                .set(CURRENT_VALUE, CURRENT_VALUE.minus(amount))))
+            .onErrorResume(ex -> {
+                LOGGER.warn("Failure when decreasing {} {} quota for {}. Quota current value is thus not updated and needs re-computation",
+                    quotaKey.getQuotaComponent().getValue(), quotaKey.getQuotaType().getValue(), quotaKey.getIdentifier(), ex);
+                return Mono.empty();
+            });
     }
 
     public Mono<QuotaCurrentValue> getQuotaCurrentValue(QuotaCurrentValue.Key quotaKey) {
