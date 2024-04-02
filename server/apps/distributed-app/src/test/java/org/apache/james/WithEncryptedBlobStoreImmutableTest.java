@@ -21,6 +21,7 @@ package org.apache.james;
 
 import org.apache.james.blob.aes.CryptoConfig;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
@@ -32,7 +33,8 @@ public class WithEncryptedBlobStoreImmutableTest implements JmapJamesServerContr
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration.cassandra()
+            .blobStore(BlobStoreConfiguration.s3()
+                .enableCache()
                 .deduplication()
                 .cryptoConfig(CryptoConfig.builder()
                     .password("myPass".toCharArray())
@@ -46,6 +48,7 @@ public class WithEncryptedBlobStoreImmutableTest implements JmapJamesServerContr
         .extension(new DockerOpenSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
+        .extension(new AwsS3BlobStoreExtension())
         .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
         .build();
 }
