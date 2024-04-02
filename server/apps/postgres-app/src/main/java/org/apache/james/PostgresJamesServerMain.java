@@ -21,6 +21,7 @@ package org.apache.james;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
@@ -28,6 +29,7 @@ import org.apache.james.jmap.draft.JMAPListenerModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
+import org.apache.james.modules.DistributedTaskSerializationModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.modules.RunArgumentsModule;
@@ -148,8 +150,15 @@ public class PostgresJamesServerMain implements JamesServerMain {
 
     public static final Module PLUGINS = new QuotaMailingModule();
 
-    private static final Module POSTGRES_MODULE_AGGREGATE = Modules.combine(
-        new MailetProcessingModule(), new DKIMMailetModule(), POSTGRES_SERVER_MODULE, PROTOCOLS, JMAP, PLUGINS);
+    private static final Function<PostgresJamesConfiguration, Module> POSTGRES_MODULE_AGGREGATE = configuration ->
+        Modules.override(Modules.combine(
+                new MailetProcessingModule(),
+                new DKIMMailetModule(),
+                POSTGRES_SERVER_MODULE,
+                JMAP,
+                PROTOCOLS,
+                PLUGINS))
+            .with(chooseEventBusModules(configuration));
 
     public static void main(String[] args) throws Exception {
         ExtraProperties.initialize();
@@ -170,11 +179,10 @@ public class PostgresJamesServerMain implements JamesServerMain {
         SearchConfiguration searchConfiguration = configuration.searchConfiguration();
 
         return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(POSTGRES_MODULE_AGGREGATE)
+            .combineWith(POSTGRES_MODULE_AGGREGATE.apply(configuration))
             .combineWith(SearchModuleChooser.chooseModules(searchConfiguration))
             .combineWith(chooseUsersRepositoryModule(configuration))
             .combineWith(chooseBlobStoreModules(configuration))
-            .combineWith(chooseEventBusModules(configuration))
             .combineWith(chooseDeletedMessageVaultModules(configuration.getDeletedMessageVaultConfiguration()))
             .overrideWith(chooseJmapModules(configuration))
             .overrideWith(chooseTaskManagerModules(configuration));
@@ -208,14 +216,17 @@ public class PostgresJamesServerMain implements JamesServerMain {
     public static List<Module> chooseEventBusModules(PostgresJamesConfiguration configuration) {
         switch (configuration.eventBusImpl()) {
             case IN_MEMORY:
-                return List.of(new DefaultEventModule(),
+                return List.of(
+                    new DefaultEventModule(),
                     new ActiveMQQueueModule());
             case RABBITMQ:
-                return List.of(new RabbitMQModule(),
+                return List.of(
                     Modules.override(new DefaultEventModule()).with(new RabbitMQEventBusModule()),
+                    new RabbitMQModule(),
                     new RabbitMQMailQueueModule(),
                     new FakeMailQueueViewModule(),
-                    new RabbitMailQueueRoutesModule());
+                    new RabbitMailQueueRoutesModule(),
+                    new DistributedTaskSerializationModule());
             default:
                 throw new RuntimeException("Unsupported event-bus implementation " + configuration.eventBusImpl().name());
         }
