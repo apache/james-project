@@ -144,8 +144,8 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
     @Override
     public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return Mono.from(underlying.readAsByteSource(bucketName, blobId))
-            .flatMap(reactiveByteSource -> decryptReactiveByteSource(reactiveByteSource, blobId))
-            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+            .publishOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+            .flatMap(reactiveByteSource -> decryptReactiveByteSource(reactiveByteSource, blobId));
     }
 
     @Override
