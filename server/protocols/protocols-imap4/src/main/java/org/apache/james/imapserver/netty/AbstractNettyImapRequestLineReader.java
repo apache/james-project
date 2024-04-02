@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
@@ -27,7 +29,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 
-public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLineReader {
+public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLineReader implements Closeable {
     private static final Supplier<ByteBuf> CONTINUATION_REQUEST = () -> Unpooled.wrappedUnmodifiableBuffer(Unpooled.wrappedBuffer("+ Ok\r\n".getBytes(StandardCharsets.US_ASCII)));
 
     private final Channel channel;
@@ -49,4 +51,8 @@ public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLine
         }
     }
 
+    @Override
+    public void close() throws IOException {
+
+    }
 }

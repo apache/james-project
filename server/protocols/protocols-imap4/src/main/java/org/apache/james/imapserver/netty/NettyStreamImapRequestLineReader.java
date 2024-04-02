@@ -55,7 +55,10 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
 
         @Override
         public void close() {
-            Mono.fromRunnable(Throwing.runnable(() -> file.dispose()))
+            Mono.fromRunnable(Throwing.runnable(() -> {
+                    file.dispose();
+                    reader.close();
+                }))
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
         }
