@@ -3311,7 +3311,7 @@
                         </systemPropertyVariables>
                         <argLine>-Djava.library.path=
                             -javaagent:"${settings.localRepository}"/org/jacoco/org.jacoco.agent/${jacoco-maven-plugin.version}/org.jacoco.agent-${jacoco-maven-plugin.version}-runtime.jar=destfile=${basedir}/target/jacoco.exec
-                            -Xms512m -Xmx1024m --illegal-access=permit
+                            -Xms512m -Xmx1024m
                             --add-opens java.base/java.lang=ALL-UNNAMED
                             --add-opens java.base/java.math=ALL-UNNAMED
                             --add-opens java.base/java.net=ALL-UNNAMED
