@@ -40,6 +40,10 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-dnsservice-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-common</artifactId>
         </dependency>
         <dependency>
@@ -53,6 +57,10 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-testing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>mock-smtp-server</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
