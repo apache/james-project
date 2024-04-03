@@ -32,6 +32,9 @@ import org.apache.james.adapter.mailbox.UserRepositoryAuthorizator;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.blob.api.BlobReferenceSource;
 import org.apache.james.events.EventListener;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentIdFactory;
 import org.apache.james.mailbox.AttachmentManager;
@@ -60,6 +63,7 @@ import org.apache.james.mailbox.postgres.PostgresThreadIdGuessingAlgorithm;
 import org.apache.james.mailbox.postgres.mail.PostgresAttachmentBlobReferenceSource;
 import org.apache.james.mailbox.postgres.mail.PostgresMessageBlobReferenceSource;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMessageDAO;
+import org.apache.james.mailbox.postgres.mail.eventsourcing.acl.ACLModule;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
@@ -86,6 +90,7 @@ import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
@@ -170,6 +175,9 @@ public class PostgresMailboxModule extends AbstractModule {
         Multibinder<BlobReferenceSource> blobReferenceSourceMultibinder = Multibinder.newSetBinder(binder(), BlobReferenceSource.class);
         blobReferenceSourceMultibinder.addBinding().to(PostgresMessageBlobReferenceSource.class);
         blobReferenceSourceMultibinder.addBinding().to(PostgresAttachmentBlobReferenceSource.class);
+
+        Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {})
+            .addBinding().toInstance(ACLModule.ACL_UPDATE);
     }
 
     @Singleton
