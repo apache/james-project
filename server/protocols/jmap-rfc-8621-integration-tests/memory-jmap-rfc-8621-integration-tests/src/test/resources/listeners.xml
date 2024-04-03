@@ -20,6 +20,30 @@
 
 <listeners>
   <listener>
+    <class>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</class>
+    <group>QuotaThresholdCrossingListener-lower-threshold</group>
+    <configuration>
+      <thresholds>
+        <threshold>
+          <value>0.1</value>
+        </threshold>
+      </thresholds>
+      <name>first</name>
+    </configuration>
+  </listener>
+  <listener>
+    <class>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</class>
+    <group>QuotaThresholdCrossingListener-upper-threshold</group>
+    <configuration>
+      <thresholds>
+        <threshold>
+          <value>0.2</value>
+        </threshold>
+      </thresholds>
+      <name>second</name>
+    </configuration>
+  </listener>
+  <listener>
     <class>org.apache.james.jmap.event.PopulateEmailQueryViewListener</class>
     <async>true</async>
   </listener>
