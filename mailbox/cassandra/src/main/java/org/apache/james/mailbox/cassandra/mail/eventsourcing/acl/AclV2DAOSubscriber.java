@@ -19,9 +19,11 @@
 
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
+import org.apache.james.event.acl.ACLUpdated;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.ReactiveSubscriber;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLDAOV2;
 
 import reactor.core.publisher.Flux;
@@ -43,7 +45,7 @@ public class AclV2DAOSubscriber implements ReactiveSubscriber {
             return Flux.fromStream(
                 aclUpdated.getAclDiff()
                     .commands())
-                .flatMap(command -> acldaov2.updateACL(aclUpdated.mailboxId(), command))
+                .flatMap(command -> acldaov2.updateACL((CassandraId) aclUpdated.mailboxId(), command))
                 .then();
         }
         return Mono.empty();

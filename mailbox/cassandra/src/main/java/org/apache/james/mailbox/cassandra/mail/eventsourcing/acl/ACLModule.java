@@ -19,17 +19,21 @@
 
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
+import org.apache.james.event.acl.ACLUpdated;
+import org.apache.james.event.acl.ACLUpdatedDTO;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.model.MailboxId;
 
 public interface ACLModule {
-
     String UPDATE_TYPE_NAME = "acl-updated";
+    MailboxId.Factory mailboxIdFactory = new CassandraId.Factory();
 
     EventDTOModule<ACLUpdated, ACLUpdatedDTO> ACL_UPDATE =
         new DTOModule.Builder<>(ACLUpdated.class)
             .convertToDTO(ACLUpdatedDTO.class)
-            .toDomainObjectConverter(ACLUpdatedDTO::toEvent)
+            .toDomainObjectConverter(dto -> dto.toEvent(mailboxIdFactory))
             .toDTOConverter(ACLUpdatedDTO::from)
             .typeName(UPDATE_TYPE_NAME)
             .withFactory(EventDTOModule::new);

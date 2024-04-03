@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
 import java.util.List;
 
+import org.apache.james.event.MailboxAggregateId;
 import org.apache.james.eventsourcing.Command;
 import org.apache.james.eventsourcing.EventWithState;
 import org.apache.james.eventsourcing.eventstore.EventStore;
