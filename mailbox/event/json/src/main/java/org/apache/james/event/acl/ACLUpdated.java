@@ -17,15 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
+package org.apache.james.event.acl;
 
 import java.util.Objects;
 
+import org.apache.james.event.MailboxAggregateId;
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.mailbox.acl.ACLDiff;
-import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.model.MailboxId;
 
 public class ACLUpdated implements Event {
     private final MailboxAggregateId id;
@@ -38,7 +39,7 @@ public class ACLUpdated implements Event {
         this.aclDiff = aclDiff;
     }
 
-    public CassandraId mailboxId() {
+    public MailboxId mailboxId() {
         return id.asMailboxId();
     }
 
