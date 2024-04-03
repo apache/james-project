@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,35 +15,32 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ***************************************************************/
+ ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
+package org.apache.james.event.acl;
 
 import java.util.Objects;
 
+import org.apache.james.event.MailboxAggregateId;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
-import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
-class ACLUpdatedDTO implements EventDTO {
+public class ACLUpdatedDTO implements EventDTO {
 
-    static ACLUpdatedDTO from(ACLUpdated event, String type) {
+    public static ACLUpdatedDTO from(ACLUpdated event, String type) {
         Preconditions.checkNotNull(event);
 
         return new ACLUpdatedDTO(
-                event.eventId().serialize(),
-                event.getAggregateId().asAggregateKey(),
-                type,
-                ACLDiffDTO.fromACLDiff(event.getAclDiff()));
-    }
-
-    static ACLUpdatedDTO from(ACLUpdated event) {
-        return from(event, ACLModule.UPDATE_TYPE_NAME);
+            event.eventId().serialize(),
+            event.getAggregateId().asAggregateKey(),
+            type,
+            ACLDiffDTO.fromACLDiff(event.getAclDiff()));
     }
 
     private final int eventId;
@@ -63,9 +60,9 @@ class ACLUpdatedDTO implements EventDTO {
     }
 
     @JsonIgnore
-    public ACLUpdated toEvent() {
+    public ACLUpdated toEvent(MailboxId.Factory mailboxIdFactory) {
         return new ACLUpdated(
-            new MailboxAggregateId(CassandraId.of(aggregateKey)),
+            new MailboxAggregateId(mailboxIdFactory.fromString(aggregateKey)),
             EventId.fromSerialized(eventId),
             aclDiff.asACLDiff());
     }
