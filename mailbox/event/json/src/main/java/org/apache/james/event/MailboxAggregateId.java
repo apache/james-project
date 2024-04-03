@@ -17,27 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
+package org.apache.james.event;
 
 import java.util.Objects;
 
 import org.apache.james.eventsourcing.AggregateId;
-import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.model.MailboxId;
 
 public class MailboxAggregateId implements AggregateId {
-    private final CassandraId cassandraId;
 
-    public MailboxAggregateId(CassandraId cassandraId) {
-        this.cassandraId = cassandraId;
+    private final MailboxId mailboxId;
+
+    public MailboxAggregateId(MailboxId mailboxId) {
+        this.mailboxId = mailboxId;
     }
 
-    public CassandraId asMailboxId() {
-        return cassandraId;
+    public MailboxId asMailboxId() {
+        return mailboxId;
     }
 
     @Override
     public String asAggregateKey() {
-        return cassandraId.serialize();
+        return mailboxId.serialize();
     }
 
     @Override
@@ -45,13 +46,13 @@ public class MailboxAggregateId implements AggregateId {
         if (o instanceof MailboxAggregateId) {
             MailboxAggregateId that = (MailboxAggregateId) o;
 
-            return Objects.equals(this.cassandraId, that.cassandraId);
+            return Objects.equals(this.mailboxId, that.mailboxId);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(cassandraId);
+        return Objects.hash(mailboxId);
     }
 }

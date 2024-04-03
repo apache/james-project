@@ -17,57 +17,61 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
+package org.apache.james.event.acl;
 
-import java.util.Map;
+
 import java.util.Objects;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.acl.ACLDiff;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableMap;
 
-public class ACLDTO {
-    public static ACLDTO fromACL(MailboxACL acl) {
-        return new ACLDTO(acl.getEntries().entrySet().stream()
-            .map(entry -> Pair.of(entry.getKey().serialize(), entry.getValue().serialize()))
-            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
+public class ACLDiffDTO {
+    public static ACLDiffDTO fromACLDiff(ACLDiff aclDiff) {
+        return new ACLDiffDTO(ACLDTO.fromACL(aclDiff.getOldACL()),
+            ACLDTO.fromACL(aclDiff.getNewACL()));
     }
 
-    private final Map<String, String> entries;
+    private final ACLDTO oldAcl;
+    private final ACLDTO newAcl;
 
     @JsonCreator
-    public ACLDTO(@JsonProperty("entries") Map<String, String> entries) {
-        this.entries = entries;
+    public ACLDiffDTO(@JsonProperty("oldAcl") ACLDTO oldAcl,
+                      @JsonProperty("newAcl") ACLDTO newAcl) {
+        this.oldAcl = oldAcl;
+        this.newAcl = newAcl;
     }
 
-    @JsonProperty("entries")
-    public Map<String, String> getEntries() {
-        return entries;
+    @JsonProperty("oldAcl")
+    public ACLDTO getOldAcl() {
+        return oldAcl;
     }
 
-    public MailboxACL asACL() {
-        return new MailboxACL(entries.entrySet().stream()
-            .map(Throwing.function(entry -> Pair.of(MailboxACL.EntryKey.deserialize(entry.getKey()),
-                MailboxACL.Rfc4314Rights.deserialize(entry.getValue()))))
-            .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
+    @JsonProperty("newAcl")
+    public ACLDTO getNewAcl() {
+        return newAcl;
+    }
+
+    public ACLDiff asACLDiff() {
+        return ACLDiff.computeDiff(
+            oldAcl.asACL(),
+            newAcl.asACL());
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof ACLDTO) {
-            ACLDTO that = (ACLDTO) o;
+        if (o instanceof ACLDiffDTO) {
+            ACLDiffDTO that = (ACLDiffDTO) o;
 
-            return Objects.equals(this.entries, that.entries);
+            return Objects.equals(this.newAcl, that.newAcl)
+                && Objects.equals(this.oldAcl, that.oldAcl);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(entries);
+        return Objects.hash(newAcl, oldAcl);
     }
 }
