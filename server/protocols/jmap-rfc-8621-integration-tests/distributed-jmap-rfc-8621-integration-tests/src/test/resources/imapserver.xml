@@ -21,4 +21,21 @@ under the License.
 
 
 <imapservers>
+    <imapserver enabled="true">
+        <jmxName>imapserver</jmxName>
+        <bind>0.0.0.0:0</bind>
+        <connectionBacklog>200</connectionBacklog>
+        <tls socketTLS="false" startTLS="false">
+            <!-- To create a new keystore execute:
+            keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore
+              -->
+            <keystore>file://conf/keystore</keystore>
+            <secret>james72laBalle</secret>
+            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
+        </tls>
+        <connectionLimit>0</connectionLimit>
+        <connectionLimitPerIP>0</connectionLimitPerIP>
+        <plainAuthDisallowed>false</plainAuthDisallowed>
+        <gracefulShutdown>false</gracefulShutdown>
+    </imapserver>
 </imapservers>
