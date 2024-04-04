@@ -34,7 +34,7 @@ To verify the coherence and avoid errors, the packages can validate the input.
 
 This package contains a default `values.yaml` file, but that you should override with proper configuration for your deployment (`conf.yaml`).
 The file `secrets.sample.yaml` will show you the possible values of the secrets file. To generate the `secrets.yaml` file, 
-you will need a plugin for Helm called link:https://github.com/jkroepke/helm-secrets)[helm-scecrets].
+you will need a plugin for Helm called link:https://github.com/jkroepke/helm-secrets[helm-secrets].
 
 Usually, you will save those configurations in different repositories, per deployment.
 
