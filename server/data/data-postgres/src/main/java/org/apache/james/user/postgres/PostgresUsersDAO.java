@@ -32,6 +32,7 @@ import static org.jooq.impl.DSL.count;
 
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -141,7 +142,9 @@ public class PostgresUsersDAO implements UsersDAO {
     @Override
     public Flux<Username> listReactive() {
         return postgresExecutor.executeRows(dslContext -> Flux.from(dslContext.selectFrom(TABLE_NAME)))
-            .map(record -> Username.of(record.get(USERNAME)));
+            .map(record -> Username.of(record.get(USERNAME)))
+            .collectList()
+            .flatMapIterable(Function.identity());
     }
 
     @Override
