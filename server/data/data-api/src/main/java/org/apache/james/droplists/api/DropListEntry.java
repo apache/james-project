@@ -102,8 +102,12 @@ public class DropListEntry {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         DropListEntry that = (DropListEntry) o;
         return ownerScope == that.ownerScope &&
             Objects.equals(owner, that.owner) &&
