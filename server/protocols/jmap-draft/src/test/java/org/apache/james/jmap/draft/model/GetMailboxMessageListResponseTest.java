@@ -30,6 +30,7 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.james.jmap.model.Number;
 
 public class GetMailboxMessageListResponseTest {
 

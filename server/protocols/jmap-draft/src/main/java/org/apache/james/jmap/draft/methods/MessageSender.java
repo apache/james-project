@@ -24,9 +24,9 @@ import java.io.InputStream;
 import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
-import org.apache.james.jmap.draft.send.MailMetadata;
 import org.apache.james.jmap.draft.send.MailSpool;
+import org.apache.james.jmap.model.message.view.MessageFullViewFactory.MetaDataWithContent;
+import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;

@@ -22,7 +22,7 @@ package org.apache.james.jmap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.jmap.api.model.Preview;
-import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
+import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.jupiter.api.BeforeEach;

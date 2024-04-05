@@ -32,9 +32,9 @@ import java.time.ZonedDateTime;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.methods.ValueWithId.MessageWithId;
-import org.apache.james.jmap.draft.model.Attachment;
-import org.apache.james.jmap.draft.model.Blob;
-import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.model.Attachment;
+import org.apache.james.jmap.model.Blob;
+import org.apache.james.jmap.model.BlobId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;

@@ -33,8 +33,12 @@ import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 
 import org.apache.james.jmap.draft.methods.ValidationResult;
-import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
-import org.apache.james.jmap.draft.model.message.view.SubMessage;
+import org.apache.james.jmap.model.Attachment;
+import org.apache.james.jmap.model.BlobId;
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.model.message.view.SubMessage;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.util.StreamUtils;
 
@@ -228,7 +232,7 @@ public class CreationMessage {
                     attachments, attachedMessages, computeKeywords(maybeKeywords, oldKeywords));
         }
 
-        private Optional<Keywords> creationKeywords() {
+        public Optional<Keywords> creationKeywords() {
             return keywords.map(map -> Keywords.strictFactory()
                     .fromMap(map));
         }

@@ -32,11 +32,11 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.JMAPRoute;
-import org.apache.james.jmap.draft.methods.ErrorResponse;
-import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.methods.Method;
 import org.apache.james.jmap.draft.methods.RequestHandler;
-import org.apache.james.jmap.draft.model.InvocationResponse;
-import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.jmap.model.InvocationResponse;
+import org.apache.james.jmap.methods.ErrorResponse;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.After;

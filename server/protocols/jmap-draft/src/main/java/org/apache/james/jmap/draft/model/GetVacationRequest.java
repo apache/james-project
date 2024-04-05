@@ -20,7 +20,7 @@
 package org.apache.james.jmap.draft.model;
 
 import org.apache.james.jmap.draft.exceptions.JmapFieldNotSupportedException;
-import org.apache.james.jmap.draft.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

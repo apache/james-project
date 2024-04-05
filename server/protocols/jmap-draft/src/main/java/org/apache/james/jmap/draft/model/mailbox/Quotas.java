@@ -28,7 +28,7 @@ import org.apache.james.core.quota.QuotaLimitValue;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.core.quota.QuotaUsageValue;
-import org.apache.james.jmap.draft.model.Number;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.model.QuotaRoot;
 
 import com.fasterxml.jackson.annotation.JsonValue;

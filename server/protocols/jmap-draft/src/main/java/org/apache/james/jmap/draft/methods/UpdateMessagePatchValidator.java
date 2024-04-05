@@ -26,9 +26,9 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.jmap.draft.json.ObjectMapperFactory;
-import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.UpdateMessagePatch;
+import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.model.MessageProperties;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

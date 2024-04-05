@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.exceptions;
 
 import java.util.List;
 
-import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.model.BlobId;
 
 import com.google.common.collect.ImmutableList;
 

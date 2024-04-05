@@ -28,7 +28,9 @@ import java.util.stream.Stream;
 
 import org.apache.james.jmap.draft.model.GetMailboxesRequest;
 import org.apache.james.jmap.draft.model.MailboxCreationId;
-import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetMailboxesRequest;
 import org.apache.james.jmap.draft.model.SetMailboxesResponse;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;

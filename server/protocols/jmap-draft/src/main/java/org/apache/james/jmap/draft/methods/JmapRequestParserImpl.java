@@ -23,8 +23,9 @@ import java.io.IOException;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.model.InvocationRequest;
+import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
