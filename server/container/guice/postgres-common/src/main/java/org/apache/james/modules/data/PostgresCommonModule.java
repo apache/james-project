@@ -140,8 +140,9 @@ public class PostgresCommonModule extends AbstractModule {
     @Provides
     @Named(PostgresExecutor.NON_RLS_INJECT)
     @Singleton
-    PostgresExecutor.Factory postgresExecutorFactoryWithRLSBypass(@Named(PostgresExecutor.NON_RLS_INJECT) JamesPostgresConnectionFactory singlePostgresConnectionFactory) {
-        return new PostgresExecutor.Factory(singlePostgresConnectionFactory);
+    PostgresExecutor.Factory postgresExecutorFactoryWithRLSBypass(@Named(PostgresExecutor.NON_RLS_INJECT) JamesPostgresConnectionFactory singlePostgresConnectionFactory,
+                                                                  PostgresConfiguration postgresConfiguration) {
+        return new PostgresExecutor.Factory(singlePostgresConnectionFactory, postgresConfiguration);
     }
 
     @Provides

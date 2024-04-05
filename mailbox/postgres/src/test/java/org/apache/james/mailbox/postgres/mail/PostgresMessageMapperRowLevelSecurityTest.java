@@ -79,7 +79,8 @@ public class PostgresMessageMapperRowLevelSecurityTest {
     @BeforeEach
     public void setUp() {
         BlobId.Factory blobIdFactory = new HashBlobId.Factory();
-        postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory())),
+        postgresMailboxSessionMapperFactory = new PostgresMailboxSessionMapperFactory(new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()),
+            postgresExtension.getPostgresConfiguration()),
             new UpdatableTickingClock(Instant.now()),
             new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.DEFAULT, blobIdFactory),
             blobIdFactory);
