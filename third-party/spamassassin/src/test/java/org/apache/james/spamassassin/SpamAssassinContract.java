@@ -19,7 +19,6 @@
 
 package org.apache.james.spamassassin;
 
-
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
@@ -41,7 +40,7 @@ import java.util.function.Consumer;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapRFCCommonRequests;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.mailbox.Role;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;

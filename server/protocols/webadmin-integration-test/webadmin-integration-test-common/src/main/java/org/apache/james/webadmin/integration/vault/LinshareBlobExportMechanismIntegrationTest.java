@@ -44,8 +44,8 @@ import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.JmapRFCCommonRequests;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.linshare.client.Document;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.backup.ZipAssert;
