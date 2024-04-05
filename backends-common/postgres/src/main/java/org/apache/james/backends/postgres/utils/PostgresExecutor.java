@@ -24,11 +24,13 @@ import static org.jooq.impl.DSL.field;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
+import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.core.Domain;
 import org.jooq.DSLContext;
 import org.jooq.DeleteResultStep;
@@ -40,6 +42,8 @@ import org.jooq.conf.Settings;
 import org.jooq.conf.StatementType;
 import org.jooq.impl.DSL;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -55,18 +59,23 @@ public class PostgresExecutor {
     public static final String NON_RLS_INJECT = "non_rls";
     public static final int MAX_RETRY_ATTEMPTS = 5;
     public static final Duration MIN_BACKOFF = Duration.ofMillis(1);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresExecutor.class);
+    private static final String JOOQ_TIMEOUT_ERROR_LOG = "Time out executing Postgres query. May need to check either jOOQ reactive issue or Postgres DB performance.";
 
     public static class Factory {
 
         private final JamesPostgresConnectionFactory jamesPostgresConnectionFactory;
+        private final PostgresConfiguration postgresConfiguration;
 
         @Inject
-        public Factory(JamesPostgresConnectionFactory jamesPostgresConnectionFactory) {
+        public Factory(JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
+                       PostgresConfiguration postgresConfiguration) {
             this.jamesPostgresConnectionFactory = jamesPostgresConnectionFactory;
+            this.postgresConfiguration = postgresConfiguration;
         }
 
         public PostgresExecutor create(Optional<Domain> domain) {
-            return new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(domain));
+            return new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(domain), postgresConfiguration);
         }
 
         public PostgresExecutor create() {
@@ -78,10 +87,14 @@ public class PostgresExecutor {
     private static final Settings SETTINGS = new Settings()
         .withRenderFormatted(true)
         .withStatementType(StatementType.PREPARED_STATEMENT);
-    private final Mono<Connection> connection;
 
-    private PostgresExecutor(Mono<Connection> connection) {
+    private final Mono<Connection> connection;
+    private final PostgresConfiguration postgresConfiguration;
+
+    private PostgresExecutor(Mono<Connection> connection,
+                             PostgresConfiguration postgresConfiguration) {
         this.connection = connection;
+        this.postgresConfiguration = postgresConfiguration;
     }
 
     public Mono<DSLContext> dslContext() {
@@ -91,6 +104,8 @@ public class PostgresExecutor {
     public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
+            .timeout(postgresConfiguration.getJooqReactiveTimeout())
+            .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()))
             .then();
@@ -99,6 +114,8 @@ public class PostgresExecutor {
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return dslContext()
             .flatMapMany(queryFunction)
+            .timeout(postgresConfiguration.getJooqReactiveTimeout())
+            .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()));
     }
@@ -106,6 +123,8 @@ public class PostgresExecutor {
     public Flux<Record> executeDeleteAndReturnList(Function<DSLContext, DeleteResultStep<Record>> queryFunction) {
         return dslContext()
             .flatMapMany(queryFunction)
+            .timeout(postgresConfiguration.getJooqReactiveTimeout())
+            .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
             .collectList()
             .flatMapIterable(list -> list) // The convert Flux -> Mono<List> -> Flux to avoid a hanging issue. See: https://github.com/jOOQ/jOOQ/issues/16055
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
@@ -115,6 +134,8 @@ public class PostgresExecutor {
     public Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction.andThen(Mono::from))
+            .timeout(postgresConfiguration.getJooqReactiveTimeout())
+            .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()));
     }
@@ -128,6 +149,8 @@ public class PostgresExecutor {
     public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
+            .timeout(postgresConfiguration.getJooqReactiveTimeout())
+            .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()))
             .map(Record1::value1);
@@ -141,6 +164,8 @@ public class PostgresExecutor {
     public Mono<Integer> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
         return dslContext()
             .flatMap(queryFunction)
+            .timeout(postgresConfiguration.getJooqReactiveTimeout())
+            .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()));
     }

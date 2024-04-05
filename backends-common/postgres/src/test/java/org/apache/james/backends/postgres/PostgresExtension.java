@@ -139,11 +139,12 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .build());
 
         if (rlsEnabled) {
-            executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory));
+            executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory), postgresConfiguration);
         } else {
             executorFactory = new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connectionFactory.create()
                 .cache()
-                .cast(Connection.class).block()));
+                .cast(Connection.class).block()),
+                postgresConfiguration);
         }
 
         postgresExecutor = executorFactory.create();
@@ -153,7 +154,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
                     .password(postgresConfiguration.getNonRLSCredential().getPassword())
                     .build())
                 .flatMap(configuration -> new PostgresqlConnectionFactory(configuration).create().cache())
-                .map(connection -> new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connection)).create())
+                .map(connection -> new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connection), postgresConfiguration).create())
                 .block();
         } else {
             nonRLSPostgresExecutor = postgresExecutor;
@@ -223,6 +224,10 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
     public PostgresExecutor.Factory getExecutorFactory() {
         return executorFactory;
+    }
+
+    public PostgresConfiguration getPostgresConfiguration() {
+        return postgresConfiguration;
     }
 
     private void initTablesAndIndexes() {
