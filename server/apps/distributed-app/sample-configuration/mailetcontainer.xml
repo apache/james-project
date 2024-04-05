@@ -52,7 +52,7 @@
             <mailet match="All" class="MetricsMailet">
                 <metricName>mailetContainerErrors</metricName>
             </mailet>
-            <mailet match="not-reprocessed" class="MetricsMailet">
+            <mailet match="not-reprocessed" class="Bounce">
                 <onMailetException>ignore</onMailetException>
             </mailet>
             <mailet match="All" class="ToRepository">
