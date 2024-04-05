@@ -1,0 +1,42 @@
+Return-Path: <local@localhost.com>
+MIME-Version: 1.0
+Delivered-To: to@localhost.com
+From: User From <fromUser@localhost.com>
+Message-ID: <2d0fa16c-4c37-58de-1acc-50b5f6a23a60@localhost.com>
+To: User To <toUser@linagora.com>
+Date: Wed, 26 Jul 2017 10:34:02 +0200
+Subject: Any subject
+Content-class: urn:content-classes:calendarmessage
+Content-Type: text/calendar; method=REPLY; charset=UTF-8
+Content-transfer-encoding: 8BIT
+
+BEGIN:VCALENDAR
+PRODID:-//Mozilla.org/NONSGML Mozilla Calendar V1.1//EN
+VERSION:2.0
+METHOD:REPLY
+BEGIN:VEVENT
+CREATED:20170726T081145Z
+LAST-MODIFIED:20170726T083402Z
+DTSTAMP:20170726T083402Z
+UID:f1514f44bf39311568d6407249cb76c48103fcd1fb398c3c501cb72b2d293f36e04
+ b2aab16e43439a608f28671ab7c10e754cbc85ddee4a07fa8cf8f4f7af05bfb502b8f6
+
+SUMMARY:[A CONFIRMER] Call OVH
+PRIORITY:5
+ORGANIZER;CN=User;X-OBM-ID=id:mailto:userTo@localhost.com
+ATTENDEE;CN=User;PARTSTAT=ACCEPTED;CUTYPE=INDIVIDUAL;X-OBM-ID=810:
+ mailto:user1To@linagora.com
+DTSTART:20170727T130000Z
+DURATION:PT1H
+TRANSP:OPAQUE
+SEQUENCE:2
+X-LIC-ERROR;X-LIC-ERRORTYPE=VALUE-PARSE-ERROR:No value for X property. Rem
+ oving entire property:
+CLASS:PUBLIC
+X-OBM-DOMAIN:linagora.com
+X-OBM-DOMAIN-UUID:uuid_value
+LOCATION:01.78.14.42.61 / 1586
+X-OBM-ALERT;X-OBM-ID=486:600
+END:VEVENT
+END:VCALENDAR
+
