@@ -39,7 +39,7 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.backends.cassandra.StatementRecorder;
 import org.apache.james.backends.cassandra.TestingSession;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.http.UserCredential;
 import org.apache.james.jmap.rfc8621.contract.Fixture;
 import org.apache.james.jmap.rfc8621.contract.tags.CategoryTags;

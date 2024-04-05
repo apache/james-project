@@ -55,7 +55,7 @@ import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rules;
 import org.apache.james.jmap.api.filtering.Version;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;

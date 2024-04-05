@@ -22,12 +22,12 @@ package org.apache.james.modules.protocols;
 import java.security.Security;
 
 import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.JMAPServer;
+import org.apache.james.jmap.JmapGuiceProbe;
+import org.apache.james.jmap.MessageIdProbe;
 import org.apache.james.jmap.Version;
-import org.apache.james.jmap.draft.JMAPModule;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
-import org.apache.james.jmap.draft.MessageIdProbe;
 import org.apache.james.jmap.draft.crypto.JamesSignatureHandler;
 import org.apache.james.jmap.http.AuthenticationRoutes;
 import org.apache.james.jmap.http.DownloadRoutes;

@@ -20,7 +20,7 @@ package org.apache.james.jmap;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.util.Port;
 
 public class JmapURIBuilder {

@@ -32,8 +32,8 @@ import io.restassured.http.{ContentType, Header, Headers}
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.JMAPUrls.JMAP
+import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.mime4j.dom.Message
 

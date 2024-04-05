@@ -47,7 +47,7 @@ import java.util.Locale;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.JmapCommonRequests;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;

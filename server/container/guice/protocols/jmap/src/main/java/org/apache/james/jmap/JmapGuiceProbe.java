@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft;
+package org.apache.james.jmap;
 
 import static org.apache.james.jmap.utils.AccountIdUtil.toVacationAccountId;
 
@@ -28,7 +28,6 @@ import jakarta.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
-import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.api.change.EmailChange;
 import org.apache.james.jmap.api.change.EmailChangeRepository;
 import org.apache.james.jmap.api.change.MailboxChangeRepository;

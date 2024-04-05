@@ -42,8 +42,8 @@ import java.util.stream.IntStream;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.healthcheck.ResultStatus;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.JmapRFCCommonRequests;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;

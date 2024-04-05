@@ -36,7 +36,7 @@ import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;

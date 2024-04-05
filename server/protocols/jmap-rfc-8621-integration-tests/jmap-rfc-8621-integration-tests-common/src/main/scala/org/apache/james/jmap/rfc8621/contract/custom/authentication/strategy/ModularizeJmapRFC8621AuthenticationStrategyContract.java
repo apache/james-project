@@ -45,8 +45,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.core.JmapRfc8621Configuration;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

@@ -39,8 +39,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.JmapRFCCommonRequests;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.probe.MailboxProbe;

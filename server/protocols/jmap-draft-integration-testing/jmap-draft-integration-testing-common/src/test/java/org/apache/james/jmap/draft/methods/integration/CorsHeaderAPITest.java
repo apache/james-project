@@ -31,7 +31,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.AccessToken;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;

@@ -33,7 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.draft.model.ContinuationToken;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.utils.DataProbeImpl;

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.draft.MessageIdProbe;
+import org.apache.james.jmap.MessageIdProbe;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
