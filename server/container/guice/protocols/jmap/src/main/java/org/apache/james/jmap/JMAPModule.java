@@ -48,7 +48,7 @@ import org.apache.james.jmap.core.SubmissionCapabilityFactory;
 import org.apache.james.jmap.core.VacationResponseCapabilityFactory$;
 import org.apache.james.jmap.core.WebSocketCapabilityFactory$;
 import org.apache.james.jmap.draft.DraftMethodsModule;
-import org.apache.james.jmap.draft.JMAPCommonModule;
+import org.apache.james.jmap.draft.JMAPDraftCommonModule;
 import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
@@ -120,7 +120,8 @@ public class JMAPModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new JMAPCommonModule());
+        install(new JMAPDraftCommonModule());
+        install(new JMAPWithoutDraftCommonModule());
         install(new DraftMethodsModule());
         install(new RFC8621MethodsModule());
         install(binder -> binder
