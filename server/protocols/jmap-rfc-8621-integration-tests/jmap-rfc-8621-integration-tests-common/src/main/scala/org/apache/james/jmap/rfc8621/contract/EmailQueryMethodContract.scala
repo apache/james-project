@@ -55,7 +55,7 @@ import org.apache.james.util.ClassLoaderUtils
 import org.apache.james.utils.DataProbeImpl
 import org.awaitility.Awaitility
 import org.awaitility.Durations.ONE_HUNDRED_MILLISECONDS
-import org.junit.jupiter.api.{BeforeEach, RepeatedTest, Test}
+import org.junit.jupiter.api.{BeforeEach, Test}
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource, ValueSource}
 import org.threeten.extra.Seconds
@@ -2997,7 +2997,7 @@ trait EmailQueryMethodContract {
 
     val message1: Message = Message.Builder
       .of
-      .setTo("aaa@domain.tld")
+      .setTo("\"aaa\" <aaa@domain.tld>")
       .setSubject("subject")
       .setBody("any body", StandardCharsets.UTF_8)
       .build
@@ -3008,7 +3008,7 @@ trait EmailQueryMethodContract {
 
     val message2: Message = Message.Builder
       .of
-      .setTo("ccc@domain.tld")
+      .setTo("\"ccc\" <ccc@domain.tld>")
       .setSubject("subject")
       .setBody("any body", StandardCharsets.UTF_8)
       .build
@@ -3019,7 +3019,7 @@ trait EmailQueryMethodContract {
 
     val message3: Message = Message.Builder
       .of
-      .setTo("aba@domain.tld")
+      .setTo("\"aba\" <aba@domain.tld>")
       .setSubject("subject")
       .setBody("any body", StandardCharsets.UTF_8)
       .build
@@ -3067,7 +3067,7 @@ trait EmailQueryMethodContract {
 
     val message1: Message = Message.Builder
       .of
-      .setFrom("aaa@domain.tld")
+      .setFrom("\"aaa\" <aaa@domain.tld>")
       .setSubject("subject")
       .setBody("any body", StandardCharsets.UTF_8)
       .build
@@ -3078,7 +3078,7 @@ trait EmailQueryMethodContract {
 
     val message2: Message = Message.Builder
       .of
-      .setFrom("ccc@domain.tld")
+      .setFrom("\"ccc\" <ccc@domain.tld>")
       .setSubject("subject")
       .setBody("any body", StandardCharsets.UTF_8)
       .build
@@ -3089,7 +3089,7 @@ trait EmailQueryMethodContract {
 
     val message3: Message = Message.Builder
       .of
-      .setFrom("aba@domain.tld")
+      .setFrom("\"aba\" <aba@domain.tld>")
       .setSubject("subject")
       .setBody("any body", StandardCharsets.UTF_8)
       .build
@@ -7177,22 +7177,24 @@ trait EmailQueryMethodContract {
          |    "c1"]]
          |}""".stripMargin
 
-    val response = `given`
-      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
-      .body(request)
+    awaitAtMostTenSeconds.untilAsserted { () =>
+      val response = `given`
+        .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+        .body(request)
       .when
-      .post
+        .post
       .`then`
-      .statusCode(SC_OK)
-      .contentType(JSON)
-      .extract
-      .body
-      .asString
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString
 
-    assertThatJson(response)
-      .withOptions(new Options(IGNORING_ARRAY_ORDER))
-      .inPath("$.methodResponses[0][1].ids")
-      .isEqualTo(s"""["${messageId.serialize}"]""")
+      assertThatJson(response)
+        .withOptions(new Options(IGNORING_ARRAY_ORDER))
+        .inPath("$.methodResponses[0][1].ids")
+        .isEqualTo(s"""["${messageId.serialize}"]""")
+    }
   }
 
   @Test
