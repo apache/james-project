@@ -1,0 +1,57 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.jmap;
+
+import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.methods.BlobManager;
+import org.apache.james.jmap.methods.BlobManagerImpl;
+import org.apache.james.jmap.methods.JmapResponseWriter;
+import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+import org.apache.james.jmap.model.message.view.MessageFastViewFactory;
+import org.apache.james.jmap.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.model.message.view.MessageHeaderViewFactory;
+import org.apache.james.jmap.model.message.view.MessageMetadataViewFactory;
+import org.apache.james.util.date.DefaultZonedDateTimeProvider;
+import org.apache.james.util.date.ZonedDateTimeProvider;
+import org.apache.james.util.mime.MessageContentExtractor;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
+
+public class JMAPWithoutDraftCommonModule extends AbstractModule {
+
+    @Override
+    protected void configure() {
+        bind(MessageFullViewFactory.class).in(Scopes.SINGLETON);
+        bind(MessageMetadataViewFactory.class).in(Scopes.SINGLETON);
+        bind(MessageHeaderViewFactory.class).in(Scopes.SINGLETON);
+        bind(MessageFastViewFactory.class).in(Scopes.SINGLETON);
+
+        bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
+        bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
+        bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
+
+        bind(BlobManagerImpl.class).in(Scopes.SINGLETON);
+        bind(BlobManager.class).to(BlobManagerImpl.class);
+        bind(ObjectMapperFactory.class).in(Scopes.SINGLETON);
+        bind(JmapResponseWriterImpl.class).in(Scopes.SINGLETON);
+        bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class);
+    }
+}

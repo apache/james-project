@@ -32,15 +32,8 @@ import org.apache.james.jmap.draft.crypto.SignedTokenFactory;
 import org.apache.james.jmap.draft.crypto.SignedTokenManager;
 import org.apache.james.jmap.draft.model.MailboxFactory;
 import org.apache.james.jmap.draft.send.MailSpool;
-import org.apache.james.jmap.model.message.view.MessageFastViewFactory;
-import org.apache.james.jmap.model.message.view.MessageFullViewFactory;
-import org.apache.james.jmap.model.message.view.MessageHeaderViewFactory;
-import org.apache.james.jmap.model.message.view.MessageMetadataViewFactory;
 import org.apache.james.lifecycle.api.ConfigurationSanitizer;
 import org.apache.james.lifecycle.api.StartUpCheck;
-import org.apache.james.util.date.DefaultZonedDateTimeProvider;
-import org.apache.james.util.date.ZonedDateTimeProvider;
-import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 
@@ -50,36 +43,26 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
-public class JMAPCommonModule extends AbstractModule {
+public class JMAPDraftCommonModule extends AbstractModule {
     
     private static final long DEFAULT_TOKEN_EXPIRATION_IN_MS = TimeUnit.MILLISECONDS.convert(15, TimeUnit.MINUTES);
 
     @Override
     protected void configure() {
         bind(JamesSignatureHandler.class).in(Scopes.SINGLETON);
-        bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
         bind(SignedTokenManager.class).in(Scopes.SINGLETON);
         bind(AccessTokenManagerImpl.class).in(Scopes.SINGLETON);
         bind(MailSpool.class).in(Scopes.SINGLETON);
         bind(MailboxFactory.class).in(Scopes.SINGLETON);
-
-        bind(MessageFullViewFactory.class).in(Scopes.SINGLETON);
-        bind(MessageMetadataViewFactory.class).in(Scopes.SINGLETON);
-        bind(MessageHeaderViewFactory.class).in(Scopes.SINGLETON);
-        bind(MessageFastViewFactory.class).in(Scopes.SINGLETON);
-
-        bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
         bind(SecurityKeyLoader.class).in(Scopes.SINGLETON);
 
         bind(SignatureHandler.class).to(JamesSignatureHandler.class);
-        bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
+
         bind(SimpleTokenManager.class).to(SignedTokenManager.class);
         bind(SimpleTokenFactory.class).to(SignedTokenFactory.class);
 
         bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
         bind(AccessTokenManager.class).to(AccessTokenManagerImpl.class);
-
-
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding().to(JMAPConfigurationStartUpCheck.class);

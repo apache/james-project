@@ -48,11 +48,6 @@ import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.InjectionKeys;
 import org.apache.james.jmap.http.JWTAuthenticationStrategy;
 import org.apache.james.jmap.http.QueryParameterAccessTokenAuthenticationStrategy;
-import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.methods.BlobManager;
-import org.apache.james.jmap.methods.BlobManagerImpl;
-import org.apache.james.jmap.methods.JmapResponseWriter;
-import org.apache.james.jmap.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.ClassName;
@@ -80,11 +75,7 @@ public class DraftMethodsModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(JmapRequestParserImpl.class).in(Scopes.SINGLETON);
-        bind(JmapResponseWriterImpl.class).in(Scopes.SINGLETON);
-        bind(ObjectMapperFactory.class).in(Scopes.SINGLETON);
-
         bind(JmapRequestParser.class).to(JmapRequestParserImpl.class);
-        bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class);
 
         bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT);
 
@@ -111,10 +102,6 @@ public class DraftMethodsModule extends AbstractModule {
         setMessagesProcessors.addBinding().to(SetMessagesCreationProcessor.class);
         setMessagesProcessors.addBinding().to(SetMessagesDestructionProcessor.class);
         setMessagesProcessors.addBinding().to(SendMDNProcessor.class);
-
-
-        bind(BlobManagerImpl.class).in(Scopes.SINGLETON);
-        bind(BlobManager.class).to(BlobManagerImpl.class);
     }
 
     @Provides
