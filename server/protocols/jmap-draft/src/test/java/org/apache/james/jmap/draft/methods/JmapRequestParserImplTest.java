@@ -21,8 +21,9 @@ package org.apache.james.jmap.draft.methods;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.model.InvocationRequest;
+import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.junit.Before;

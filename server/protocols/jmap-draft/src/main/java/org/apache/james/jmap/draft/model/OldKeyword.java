@@ -25,6 +25,9 @@ import java.util.stream.Stream;
 
 import jakarta.mail.Flags;
 
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;

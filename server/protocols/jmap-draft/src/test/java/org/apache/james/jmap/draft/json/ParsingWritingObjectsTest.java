@@ -29,8 +29,9 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.jmap.draft.methods.GetMessagesMethod;
-import org.apache.james.jmap.draft.methods.JmapResponseWriterImpl;
-import org.apache.james.jmap.draft.model.message.view.SubMessage;
+import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+import org.apache.james.jmap.model.message.view.SubMessage;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.Before;

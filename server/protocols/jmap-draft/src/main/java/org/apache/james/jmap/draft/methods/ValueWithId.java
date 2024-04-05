@@ -23,7 +23,7 @@ import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessageId;
 import org.apache.james.jmap.draft.model.JmapMDN;
 import org.apache.james.jmap.draft.model.SetError;
-import org.apache.james.jmap.draft.model.message.view.MessageFullView;
+import org.apache.james.jmap.model.message.view.MessageFullView;
 
 import com.google.common.base.MoreObjects;
 

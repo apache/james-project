@@ -25,12 +25,12 @@ import java.util.Optional;
 import jakarta.mail.Flags;
 
 import org.apache.james.jmap.api.model.Preview;
-import org.apache.james.jmap.draft.model.BlobId;
-import org.apache.james.jmap.draft.model.Emailer;
-import org.apache.james.jmap.draft.model.Keyword;
-import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.SubMessage;
+import org.apache.james.jmap.model.BlobId;
+import org.apache.james.jmap.model.Emailer;
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
+import org.apache.james.jmap.model.message.view.MessageFullView;
+import org.apache.james.jmap.model.message.view.SubMessage;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MailboxId;

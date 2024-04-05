@@ -26,10 +26,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.james.jmap.draft.exceptions.JmapFieldNotSupportedException;
-import org.apache.james.jmap.draft.methods.JmapRequest;
 import org.apache.james.jmap.draft.methods.UpdateMessagePatchConverter;
 import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.methods.ValueWithId.MDNCreationEntry;
+import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

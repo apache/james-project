@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Number;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;

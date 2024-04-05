@@ -68,6 +68,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-jmap-rfc-8621</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-task-memory</artifactId>
             <scope>test</scope>
         </dependency>
@@ -130,10 +135,6 @@
             <artifactId>james-server-data-jmap</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-jmap-draft</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

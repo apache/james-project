@@ -23,8 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
-import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.model.MessageProperties;
+import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

@@ -19,16 +19,19 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
+import static org.apache.james.jmap.utils.AccountIdUtil.toVacationAccountId;
 
 import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.draft.model.GetVacationRequest;
 import org.apache.james.jmap.draft.model.GetVacationResponse;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.VacationResponse;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.date.ZonedDateTimeProvider;
@@ -43,7 +46,7 @@ import reactor.core.publisher.Mono;
 public class GetVacationResponseMethod implements Method {
 
     public static final Request.Name METHOD_NAME = Request.name("getVacationResponse");
-    public static final Response.Name RESPONSE_NAME = Response.name("vacationResponse");
+    public static final Response.Name RESPONSE_NAME = Method.Response.name("vacationResponse");
 
     private final VacationService vacationService;
     private final ZonedDateTimeProvider zonedDateTimeProvider;

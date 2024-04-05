@@ -28,8 +28,8 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.Set;
 
-import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.model.UpdateMessagePatch;
+import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.junit.Before;
 import org.junit.Test;
 

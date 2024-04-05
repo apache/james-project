@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.james.jmap.draft.methods.Method;
-import org.apache.james.jmap.draft.model.message.view.MessageView;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.message.view.MessageView;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
+import static org.apache.james.jmap.utils.AccountIdUtil.toVacationAccountId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,7 +33,8 @@ import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.jmap.draft.model.GetMailboxesRequest;
 import org.apache.james.jmap.draft.model.GetVacationRequest;
 import org.apache.james.jmap.draft.model.GetVacationResponse;
-import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetMailboxesRequest;
 import org.apache.james.jmap.draft.model.VacationResponse;
 import org.apache.james.mailbox.MailboxSession;

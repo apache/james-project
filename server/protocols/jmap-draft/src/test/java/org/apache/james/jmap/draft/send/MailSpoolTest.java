@@ -22,6 +22,7 @@ package org.apache.james.jmap.draft.send;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueItem;

@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.james.jmap.model.Number;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

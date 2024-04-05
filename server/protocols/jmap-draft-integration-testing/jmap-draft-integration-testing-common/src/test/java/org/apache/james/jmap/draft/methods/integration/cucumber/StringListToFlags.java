@@ -23,7 +23,7 @@ import java.util.List;
 
 import jakarta.mail.Flags;
 
-import org.apache.james.jmap.draft.model.Keyword;
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.mailbox.FlagsBuilder;
 
 import com.google.common.collect.ImmutableList;

@@ -26,7 +26,8 @@ import java.time.Instant;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.api.model.Preview;
-import org.apache.james.jmap.draft.model.message.view.MessageFullView;
+import org.apache.james.jmap.model.BlobId;
+import org.apache.james.jmap.model.message.view.MessageFullView;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;

@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.junit.Test;
 
 public class MessagePropertyTest {

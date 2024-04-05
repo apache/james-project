@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.google.common.annotations.VisibleForTesting;

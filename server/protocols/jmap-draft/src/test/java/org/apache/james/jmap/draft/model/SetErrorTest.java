@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.model;
 
-import static org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import static org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

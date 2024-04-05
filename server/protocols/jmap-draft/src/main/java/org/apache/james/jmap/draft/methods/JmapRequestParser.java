@@ -22,6 +22,7 @@ package org.apache.james.jmap.draft.methods;
 import java.io.IOException;
 
 import org.apache.james.jmap.draft.model.InvocationRequest;
+import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;

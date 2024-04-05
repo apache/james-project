@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import jakarta.mail.Flags;
 
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.junit.Rule;
 import org.junit.Test;

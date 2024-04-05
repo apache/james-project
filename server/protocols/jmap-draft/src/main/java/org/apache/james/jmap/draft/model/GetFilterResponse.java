@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.model;
 import java.util.List;
 
 import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.methods.Method;
 
 import com.google.common.collect.ImmutableList;
 
