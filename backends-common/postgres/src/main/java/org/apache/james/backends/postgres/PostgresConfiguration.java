@@ -19,10 +19,13 @@
 
 package org.apache.james.backends.postgres;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.james.util.DurationParser;
 
 import com.google.common.base.Preconditions;
 
@@ -44,6 +47,8 @@ public class PostgresConfiguration {
     public static final String RLS_ENABLED = "row.level.security.enabled";
     public static final String SSL_MODE = "ssl.mode";
     public static final String SSL_MODE_DEFAULT_VALUE = "allow";
+    public static final String JOOQ_REACTIVE_TIMEOUT = "jooq.reactive.timeout";
+    public static final Duration JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE = Duration.ofSeconds(10);
 
     public static class Credential {
         private final String username;
@@ -75,6 +80,7 @@ public class PostgresConfiguration {
         private Optional<String> nonRLSPassword = Optional.empty();
         private Optional<Boolean> rowLevelSecurityEnabled = Optional.empty();
         private Optional<String> sslMode = Optional.empty();
+        private Optional<Duration> jooqReactiveTimeout = Optional.empty();
 
         public Builder databaseName(String databaseName) {
             this.databaseName = Optional.of(databaseName);
@@ -176,6 +182,11 @@ public class PostgresConfiguration {
             return this;
         }
 
+        public Builder jooqReactiveTimeout(Optional<Duration> jooqReactiveTimeout) {
+            this.jooqReactiveTimeout = jooqReactiveTimeout;
+            return this;
+        }
+
         public PostgresConfiguration build() {
             Preconditions.checkArgument(username.isPresent() && !username.get().isBlank(), "You need to specify username");
             Preconditions.checkArgument(password.isPresent() && !password.get().isBlank(), "You need to specify password");
@@ -192,7 +203,8 @@ public class PostgresConfiguration {
                 new Credential(username.get(), password.get()),
                 new Credential(nonRLSUser.orElse(username.get()), nonRLSPassword.orElse(password.get())),
                 rowLevelSecurityEnabled.orElse(false),
-                SSLMode.fromValue(sslMode.orElse(SSL_MODE_DEFAULT_VALUE)));
+                SSLMode.fromValue(sslMode.orElse(SSL_MODE_DEFAULT_VALUE)),
+                jooqReactiveTimeout.orElse(JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE));
         }
     }
 
@@ -212,6 +224,8 @@ public class PostgresConfiguration {
             .nonRLSPassword(Optional.ofNullable(propertiesConfiguration.getString(NON_RLS_PASSWORD)))
             .rowLevelSecurityEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
             .sslMode(Optional.ofNullable(propertiesConfiguration.getString(SSL_MODE)))
+            .jooqReactiveTimeout(Optional.ofNullable(propertiesConfiguration.getString(JOOQ_REACTIVE_TIMEOUT))
+                .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS)))
             .build();
     }
 
@@ -223,10 +237,11 @@ public class PostgresConfiguration {
     private final Credential nonRLSCredential;
     private final boolean rowLevelSecurityEnabled;
     private final SSLMode sslMode;
+    private final Duration jooqReactiveTimeout;
 
     private PostgresConfiguration(String host, int port, String databaseName, String databaseSchema,
                                   Credential credential, Credential nonRLSCredential, boolean rowLevelSecurityEnabled,
-                                  SSLMode sslMode) {
+                                  SSLMode sslMode, Duration jooqReactiveTimeout) {
         this.host = host;
         this.port = port;
         this.databaseName = databaseName;
@@ -235,6 +250,7 @@ public class PostgresConfiguration {
         this.nonRLSCredential = nonRLSCredential;
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
         this.sslMode = sslMode;
+        this.jooqReactiveTimeout = jooqReactiveTimeout;
     }
 
     public String getHost() {
@@ -269,9 +285,13 @@ public class PostgresConfiguration {
         return sslMode;
     }
 
+    public Duration getJooqReactiveTimeout() {
+        return jooqReactiveTimeout;
+    }
+
     @Override
     public final int hashCode() {
-        return Objects.hash(host, port, databaseName, databaseSchema, credential, nonRLSCredential, rowLevelSecurityEnabled, sslMode);
+        return Objects.hash(host, port, databaseName, databaseSchema, credential, nonRLSCredential, rowLevelSecurityEnabled, sslMode, jooqReactiveTimeout);
     }
 
     @Override
@@ -286,7 +306,8 @@ public class PostgresConfiguration {
                 && Objects.equals(this.nonRLSCredential, that.nonRLSCredential)
                 && Objects.equals(this.databaseName, that.databaseName)
                 && Objects.equals(this.databaseSchema, that.databaseSchema)
-                && Objects.equals(this.sslMode, that.sslMode);
+                && Objects.equals(this.sslMode, that.sslMode)
+                && Objects.equals(this.jooqReactiveTimeout, that.jooqReactiveTimeout);
         }
         return false;
     }
