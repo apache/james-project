@@ -26,7 +26,8 @@ import java.util.Optional;
 
 import org.apache.james.jmap.draft.methods.ValidationResult;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
-import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 import org.junit.Before;
 import org.junit.Test;
 

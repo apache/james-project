@@ -28,7 +28,7 @@ import java.util.Optional;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.model.mailbox.MailboxNamespace;
-import org.apache.james.jmap.draft.model.mailbox.Rights;
+import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -50,6 +50,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.apache.james.jmap.model.Number;
 
 public class MailboxFactoryTest {
     public static final char DELIMITER = '.';

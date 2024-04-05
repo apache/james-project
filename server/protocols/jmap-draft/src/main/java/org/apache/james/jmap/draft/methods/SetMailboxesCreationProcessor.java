@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
 
 import java.util.HashMap;
 import java.util.Map;

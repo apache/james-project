@@ -28,6 +28,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.james.jmap.model.Number;
 
 public class GetMessageListRequestTest {
 

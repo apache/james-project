@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.draft.send.MailMetadata;
+import org.apache.james.jmap.send.MailMetadata;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeValue;
 import org.apache.mailet.base.MailAddressFixture;

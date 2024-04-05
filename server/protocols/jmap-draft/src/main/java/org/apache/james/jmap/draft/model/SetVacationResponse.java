@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.methods.Method;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

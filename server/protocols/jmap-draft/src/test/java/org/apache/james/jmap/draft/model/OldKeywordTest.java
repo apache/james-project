@@ -26,6 +26,8 @@ import java.util.Optional;
 import jakarta.mail.Flags;
 import jakarta.mail.Flags.Flag;
 
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.junit.Test;
 

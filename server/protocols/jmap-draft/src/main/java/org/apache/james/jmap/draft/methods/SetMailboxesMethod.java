@@ -26,9 +26,12 @@ import java.util.Set;
 
 import jakarta.inject.Inject;
 
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetMailboxesRequest;
 import org.apache.james.jmap.draft.model.SetMailboxesResponse;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;

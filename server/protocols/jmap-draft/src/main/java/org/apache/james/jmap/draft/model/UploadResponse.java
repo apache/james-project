@@ -22,6 +22,8 @@ package org.apache.james.jmap.draft.model;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.apache.james.jmap.model.Number;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;

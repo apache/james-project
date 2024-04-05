@@ -28,6 +28,7 @@ import java.util.Set;
 import jakarta.mail.Flags;
 
 import org.apache.james.jmap.draft.methods.ValidationResult;
+import org.apache.james.jmap.model.Keywords;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -108,7 +109,7 @@ public class UpdateMessagePatch {
             return new UpdateMessagePatch(mailboxIds, mayBeKeywords, oldKeywords, ImmutableList.copyOf(validationResult));
         }
 
-        private Optional<Keywords> creationKeywords() {
+        public Optional<Keywords> creationKeywords() {
             return keywords.map(map -> Keywords.strictFactory()
                     .fromMap(map));
         }

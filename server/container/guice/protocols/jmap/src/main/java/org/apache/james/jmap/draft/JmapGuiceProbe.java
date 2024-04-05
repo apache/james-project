@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft;
 
-import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
+import static org.apache.james.jmap.utils.AccountIdUtil.toVacationAccountId;
 
 import java.util.Arrays;
 

@@ -23,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;

@@ -24,6 +24,7 @@ import java.io.IOException;
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 
+import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.queue.api.MailQueue;

@@ -21,7 +21,9 @@ package org.apache.james.jmap.draft.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.InvocationResponse;
+import org.apache.james.jmap.model.MethodCallId;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.draft.model;
 
-import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

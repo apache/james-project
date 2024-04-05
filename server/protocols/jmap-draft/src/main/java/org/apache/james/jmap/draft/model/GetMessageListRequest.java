@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.jmap.draft.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.model.Number;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

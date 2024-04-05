@@ -32,7 +32,7 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
-import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
+import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.mailbox.MailboxSession;
