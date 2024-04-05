@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft;
+package org.apache.james.jmap;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -33,9 +33,6 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.JMAPServer;
-import org.apache.james.jmap.Version;
 import org.apache.james.jmap.api.upload.JmapUploadQuotaConfiguration;
 import org.apache.james.jmap.core.CapabilityFactory;
 import org.apache.james.jmap.core.CoreCapabilityFactory;
@@ -50,6 +47,9 @@ import org.apache.james.jmap.core.SharesCapabilityFactory$;
 import org.apache.james.jmap.core.SubmissionCapabilityFactory;
 import org.apache.james.jmap.core.VacationResponseCapabilityFactory$;
 import org.apache.james.jmap.core.WebSocketCapabilityFactory$;
+import org.apache.james.jmap.draft.DraftMethodsModule;
+import org.apache.james.jmap.draft.JMAPCommonModule;
+import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;

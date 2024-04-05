@@ -57,7 +57,7 @@ import java.util.Map;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.Role;

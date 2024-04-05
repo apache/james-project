@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.stream.IntStream;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;

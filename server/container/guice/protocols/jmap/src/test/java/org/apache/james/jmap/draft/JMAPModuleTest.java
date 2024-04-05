@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
 
-import org.apache.james.jmap.draft.JMAPModule.RequiredCapabilitiesStartUpCheck;
+import org.apache.james.jmap.JMAPModule.RequiredCapabilitiesStartUpCheck;
 import org.apache.james.mailbox.MailboxManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;

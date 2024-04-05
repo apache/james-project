@@ -25,10 +25,10 @@ import java.util.concurrent.TimeUnit
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
+import org.apache.james.jmap.JmapGuiceProbe
 import org.apache.james.jmap.api.change.State
 import org.apache.james.jmap.api.model.AccountId
 import org.apache.james.jmap.core.{PushState, UuidState}
-import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbe
 import org.apache.james.mailbox.MessageManager.AppendCommand
