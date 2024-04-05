@@ -22,7 +22,6 @@ package org.apache.james.jmap.rfc8621.postgres;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.DockerOpenSearchExtension;
-import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.PostgresJamesConfiguration;
@@ -35,8 +34,6 @@ import org.apache.james.jmap.rfc8621.contract.probe.DelegationProbeModule;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PostgresEmailQueryMethodTest implements EmailQueryMethodContract {
@@ -62,22 +59,4 @@ public class PostgresEmailQueryMethodTest implements EmailQueryMethodContract {
             .overrideWith(new DelegationProbeModule())
             .overrideWith(new IdentityProbeModule()))
         .build();
-
-    @Override
-    @Test
-    @Disabled("Flaky test. TODO stabilize it.")
-    public void listMailsShouldBeSortedWhenUsingTo(GuiceJamesServer server) {
-    }
-
-    @Override
-    @Test
-    @Disabled("Flaky test. TODO stabilize it.")
-    public void listMailsShouldBeSortedWhenUsingFrom(GuiceJamesServer server) {
-    }
-
-    @Override
-    @Test
-    @Disabled("Flaky test. TODO stabilize it.")
-    public void inMailboxOtherThanShouldBeRejectedWhenInOperator(GuiceJamesServer server) {
-    }
 }
