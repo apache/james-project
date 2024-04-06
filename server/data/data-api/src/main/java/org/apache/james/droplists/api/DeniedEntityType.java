@@ -19,19 +19,15 @@
 package org.apache.james.droplists.api;
 
 /**
- * Enum representing the scope of ownership that can be used when managing email droplists.
+ * Enum representing the types of entities that can be denied when managing email droplists.
  */
-public enum OwnerScope {
+public enum DeniedEntityType {
     /**
-     * Represents domain and user level ownership
+     * Represents denying an address entity.
      */
-    GLOBAL,
+    ADDRESS,
     /**
-     * Represents ownership at the domain level.
+     * Represents denying a domain entity.
      */
-    DOMAIN,
-    /**
-     * Represents ownership at the user level.
-     */
-    USER
+    DOMAIN
 }
