@@ -45,7 +45,7 @@
                 </tr>
                 <tr>
                     <td>POP3</td>
-                    <td>Experimental</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>yes</td>
                     <td>1.1</td>
@@ -53,7 +53,7 @@
                 </tr>
                 <tr>
                     <td>IMAP</td>
-                    <td>Supported</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>no</td>
                     <td>3.0</td>
@@ -69,7 +69,7 @@
                 </tr>
                 <tr>
                     <td>LMTP</td>
-                    <td>Experimental</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>no</td>
                     <td></td>
@@ -85,15 +85,15 @@
                 </tr>
                 <tr>
                     <td>NNTP</td>
-                    <td>Experimental</td>
+                    <td>Dropped (3.x)</td>
                     <td>no</td>
                     <td>yes</td>
                     <td>1.2</td>
                     <td>1.2</td>
                 </tr>
                 <tr>
-                    <td>TLS POP3/SMTP</td>
-                    <td>Experimental</td>
+                    <td>TLS POP3/SMTP/IMAP</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>yes</td>
                     <td>1.2</td>
@@ -101,7 +101,7 @@
                 </tr>
                 <tr>
                     <td>Mailing List</td>
-                    <td>Experimental</td>
+                    <td>Dropped (3.x)</td>
                     <td>no</td>
                     <td>yes</td>
                     <td></td>
@@ -109,7 +109,7 @@
                 </tr>
                 <tr>
                     <td>FetchMail</td>
-                    <td>Stable</td>
+                    <td>Experimental</td>
                     <td>yes</td>
                     <td>yes</td>
                     <td>2.2</td>
@@ -141,7 +141,7 @@
                 </tr>
                 <tr>
                     <td>TLS Remote Manager</td>
-                    <td>Stable</td>
+                    <td>Dropped (3.x)</td>
                     <td>yes</td>
                     <td>yes</td>
                     <td>1.2</td>
@@ -149,7 +149,7 @@
                 </tr>
                 <tr>
                     <td>JPA Mailbox</td>
-                    <td>Stable</td>
+                    <td>Legacy</td>
                     <td>yes</td>
                     <td>no</td>
                     <td></td>
@@ -157,7 +157,7 @@
                 </tr>
                 <tr>
                     <td>Cassandra Mailbox</td>
-                    <td>Beta</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>no</td>
                     <td>3.0.0</td>
@@ -165,7 +165,7 @@
                 </tr>
                 <tr>
                     <td>Lucene search</td>
-                    <td>Stable</td>
+                    <td>Legacy</td>
                     <td>yes</td>
                     <td>no</td>
                     <td></td>
@@ -181,7 +181,7 @@
                 </tr>
                 <tr>
                     <td>Simple search</td>
-                    <td>Stable</td>
+                    <td>Stable but not advised</td>
                     <td>yes</td>
                     <td>no</td>
                     <td>3.0.0</td>
@@ -196,36 +196,12 @@
                     <td>1.0</td>
                 </tr>
                 <tr>
-                    <td>JDBC Database Mail Store</td>
-                    <td>Experimental</td>
-                    <td>yes</td>
-                    <td>yes</td>
-                    <td>1.2</td>
-                    <td>1.2</td>
-                </tr>
-                <tr>
                     <td>JPA Database Mail Store</td>
                     <td>Experimental</td>
                     <td>yes</td>
                     <td>no</td>
                     <td></td>
                     <td></td>
-                </tr>
-                <tr>
-                    <td>Alternate Mail stores</td>
-                    <td>Experimental</td>
-                    <td>yes</td>
-                    <td>yes</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>JDBC Users</td>
-                    <td>Stable</td>
-                    <td>yes</td>
-                    <td>yes</td>
-                    <td>1.2.1</td>
-                    <td>1.2.1</td>
                 </tr>
                 <tr>
                     <td>JPA Users</td>
@@ -237,7 +213,7 @@
                 </tr>
                 <tr>
                     <td>Cassandra Users</td>
-                    <td>Beta</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>no</td>
                     <td>3.0.0</td>
@@ -245,19 +221,11 @@
                 </tr>
                 <tr>
                     <td>LDAP Users</td>
-                    <td>Experimental</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>yes</td>
                     <td>1.2</td>
                     <td>1.2</td>
-                </tr>
-                <tr>
-                    <td>Alternate User Stores</td>
-                    <td>Experimental</td>
-                    <td>yes</td>
-                    <td>yes</td>
-                    <td></td>
-                    <td></td>
                 </tr>
                 <tr>
                     <td>ActiveMQ Queue</td>
@@ -268,8 +236,8 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td>File Queue</td>
-                    <td>Experimental</td>
+                    <td>RabbitMQ Queue</td>
+                    <td>Stable</td>
                     <td>yes</td>
                     <td>no</td>
                     <td></td>
@@ -292,14 +260,6 @@
                     <td>3.0.0</td>
                 </tr>
                 <tr>
-                    <td>Deployment in WEB container</td>
-                    <td>Experimental</td>
-                    <td>yes</td>
-                    <td>no</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                <tr>
                     <td>Monitoring via JMX</td>
                     <td>Experimental</td>
                     <td>yes</td>
@@ -316,16 +276,14 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td>Java 1.6</td>
+                    <td>Java 1.21</td>
                     <td><i>Requirement</i></td>
                     <td>yes</td>
                     <td>no</td>
                     <td></td>
                     <td></td>
                 </tr>
-
             </table>
-
         </p>
 
     </body>
