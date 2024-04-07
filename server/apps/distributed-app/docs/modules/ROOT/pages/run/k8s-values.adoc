@@ -101,6 +101,10 @@ James. It’s better to disable it for prod environments
 using it to expose JMAP and attach our SSL certificates for
 SMTP/IMAP/JMAP. Default is false
 
+|ingress.ingressClassName |change-me |kubernetes.io/ingress.class is 
+deprecated from Kubernetes v1.22+. Used ingressClassName instead for 
+Kubernetes v1.18+
+
 |james.tls.secretName |the-name-of-a-secret |The name of the secret
 created separately contenting the SSL certificate for JMAP, IMAPS and
 SMTPS
