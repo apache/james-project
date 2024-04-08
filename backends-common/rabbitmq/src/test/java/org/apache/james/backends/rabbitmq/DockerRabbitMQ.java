@@ -271,4 +271,22 @@ public class DockerRabbitMQ {
             .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND)
             .build();
     }
+
+    public RabbitMQConfiguration withQuorumQueueConfiguration() throws URISyntaxException {
+        return RabbitMQConfiguration.builder()
+            .amqpUri(amqpUri())
+            .managementUri(managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .maxRetries(MAX_THREE_RETRIES)
+            .minDelayInMs(MIN_DELAY_OF_TEN_MILLISECONDS)
+            .connectionTimeoutInMs(CONNECTION_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+            .channelRpcTimeoutInMs(CHANNEL_RPC_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+            .handshakeTimeoutInMs(HANDSHAKE_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+            .shutdownTimeoutInMs(SHUTDOWN_TIMEOUT_OF_ONE_HUNDRED_MILLISECOND)
+            .networkRecoveryIntervalInMs(NETWORK_RECOVERY_INTERVAL_OF_ONE_HUNDRED_MILLISECOND)
+            .useQuorumQueues(true)
+            .eventBusNotificationDurabilityEnabled(false)
+            .queueTTL(Optional.of(3600000L))
+            .build();
+    }
 }
