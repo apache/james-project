@@ -24,6 +24,9 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 import static org.apache.james.events.GroupRegistration.DEFAULT_RETRY_COUNT;
 
 import java.util.Collection;
@@ -106,9 +109,9 @@ class GroupRegistrationHandler {
         scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
         channelPool.createWorkQueue(
             QueueSpecification.queue(queueName.asString())
-                .durable(DURABLE)
-                .exclusive(!EXCLUSIVE)
-                .autoDelete(!AUTO_DELETE)
+                .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
+                .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
+                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()))
                 .arguments(configuration.workQueueArgumentsBuilder()
                     .deadLetter(namingStrategy.deadLetterExchange())
                     .build()),

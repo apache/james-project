@@ -23,6 +23,8 @@ import static com.rabbitmq.client.MessageProperties.PERSISTENT_TEXT_PLAIN;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
 import java.io.IOException;
@@ -124,7 +126,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.DeclareOk> declareQueue = sender
             .declare(QueueSpecification.queue(QUEUE_NAME)
-                .durable(true)
+                .durable(evaluateDurable(DURABLE, rabbitMQConfiguration.isQuorumQueuesUsed()))
                 .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder()
                     .singleActiveConsumer()
                     .consumerTimeout(rabbitMQConfiguration.getTaskQueueConsumerTimeout().toMillis())
@@ -199,8 +201,8 @@ public class RabbitMQWorkQueue implements WorkQueue {
         QueueArguments.Builder builder = rabbitMQConfiguration.workQueueArgumentsBuilder();
         rabbitMQConfiguration.getQueueTTL().ifPresent(builder::queueTTL);
         QueueSpecification specification = QueueSpecification.queue(cancelRequestQueueName.asString())
-            .durable(!DURABLE)
-            .autoDelete(AUTO_DELETE)
+            .durable(evaluateDurable(!DURABLE, rabbitMQConfiguration.isQuorumQueuesUsed()))
+            .autoDelete(evaluateAutoDelete(AUTO_DELETE, rabbitMQConfiguration.isQuorumQueuesUsed()))
             .arguments(builder.build());
         sender.declare(specification).block();
         sender.bind(BindingSpecification.binding(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, cancelRequestQueueName.asString())).block();
