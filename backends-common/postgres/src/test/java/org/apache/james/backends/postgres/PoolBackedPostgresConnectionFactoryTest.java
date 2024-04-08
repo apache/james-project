@@ -17,34 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.postgres.utils;
+package org.apache.james.backends.postgres;
 
-import java.util.Optional;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFactory;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.apache.james.core.Domain;
-
-import io.r2dbc.spi.Connection;
-import reactor.core.publisher.Mono;
-
-public class SinglePostgresConnectionFactory implements JamesPostgresConnectionFactory {
-    private final Connection connection;
-
-    public SinglePostgresConnectionFactory(Connection connection) {
-        this.connection = connection;
-    }
+public class PoolBackedPostgresConnectionFactoryTest extends JamesPostgresConnectionFactoryTest {
+    @RegisterExtension
+    static PostgresExtension postgresExtension = PostgresExtension.empty();
 
     @Override
-    public Mono<Connection> getConnection(Optional<Domain> domain) {
-        return Mono.just(connection);
-    }
-
-    @Override
-    public Mono<Void> closeConnection(Connection connection) {
-        return Mono.empty();
-    }
-
-    @Override
-    public Mono<Void> close() {
-        return Mono.from(connection.close());
+    JamesPostgresConnectionFactory jamesPostgresConnectionFactory() {
+        return new PoolBackedPostgresConnectionFactory(true, postgresExtension.getConnectionFactory());
     }
 }
