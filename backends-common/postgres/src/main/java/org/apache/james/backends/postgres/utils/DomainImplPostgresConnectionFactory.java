@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class DomainImplPostgresConnectionFactory implements JamesPostgresConnectionFactory {
@@ -46,9 +47,22 @@ public class DomainImplPostgresConnectionFactory implements JamesPostgresConnect
         this.connectionFactory = connectionFactory;
     }
 
+    @Override
     public Mono<Connection> getConnection(Optional<Domain> maybeDomain) {
         return maybeDomain.map(this::getConnectionForDomain)
             .orElse(getConnectionForDomain(DEFAULT));
+    }
+
+    @Override
+    public Mono<Void> closeConnection(Connection connection) {
+        return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> close() {
+        return Flux.fromIterable(mapDomainToConnection.values())
+            .flatMap(connection -> Mono.from(connection.close()))
+            .then();
     }
 
     private Mono<Connection> getConnectionForDomain(Domain domain) {
@@ -74,14 +88,14 @@ public class DomainImplPostgresConnectionFactory implements JamesPostgresConnect
             }).switchIfEmpty(setDomainAttributeForConnection(domain, newConnection));
     }
 
-    private static Mono<Connection> setDomainAttributeForConnection(Domain domain, Connection newConnection) {
+    private Mono<Connection> setDomainAttributeForConnection(Domain domain, Connection newConnection) {
         return Mono.from(newConnection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + getDomainAttributeValue(domain) + "'") // It should be set value via Bind, but it doesn't work
                 .execute())
             .doOnError(e -> LOGGER.error("Error while setting domain attribute for domain {}", domain, e))
             .then(Mono.just(newConnection));
     }
 
-    private static String getDomainAttributeValue(Domain domain) {
+    private String getDomainAttributeValue(Domain domain) {
         if (DEFAULT.equals(domain)) {
             return DEFAULT_DOMAIN_ATTRIBUTE_VALUE;
         } else {
