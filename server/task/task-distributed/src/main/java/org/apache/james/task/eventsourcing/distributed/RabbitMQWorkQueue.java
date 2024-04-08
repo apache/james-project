@@ -27,7 +27,6 @@ import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
 import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
@@ -264,7 +263,11 @@ public class RabbitMQWorkQueue implements WorkQueue {
     public void close() {
         try {
             worker.close();
-        } catch (IOException e) {
+
+            sender.delete(QueueSpecification.queue(cancelRequestQueueName.asString()))
+                .timeout(Duration.ofSeconds(30))
+                .block();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         closeRabbitResources();
