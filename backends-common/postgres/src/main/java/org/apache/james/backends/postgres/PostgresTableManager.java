@@ -20,6 +20,7 @@
 package org.apache.james.backends.postgres;
 
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.inject.Inject;
 
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Result;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -68,37 +70,43 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<Void> initializePostgresExtension() {
-        return postgresExecutor.connection()
-            .flatMapMany(connection -> connection.createStatement("CREATE EXTENSION IF NOT EXISTS hstore")
-                .execute())
-            .flatMap(Result::getRowsUpdated)
-            .then();
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+            connection -> Mono.just(connection)
+                .flatMapMany(pgConnection -> pgConnection.createStatement("CREATE EXTENSION IF NOT EXISTS hstore")
+                    .execute())
+                .flatMap(Result::getRowsUpdated)
+                .then(),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
     public Mono<Void> initializeTables() {
-        return postgresExecutor.dslContext()
-            .flatMapMany(dsl -> listExistTables()
-                .flatMapMany(existTables -> Flux.fromIterable(module.tables())
-                    .filter(table -> !existTables.contains(table.getName()))
-                    .flatMap(table -> createAndAlterTable(table, dsl))))
-            .then();
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+            connection -> postgresExecutor.dslContext(connection)
+                .flatMapMany(dsl -> listExistTables()
+                    .flatMapMany(existTables -> Flux.fromIterable(module.tables())
+                        .filter(table -> !existTables.contains(table.getName()))
+                        .flatMap(table -> createAndAlterTable(table, dsl, connection))))
+                .then(),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
-    private Mono<Void> createAndAlterTable(PostgresTable table, DSLContext dsl) {
+    private Mono<Void> createAndAlterTable(PostgresTable table, DSLContext dsl, Connection connection) {
         return Mono.from(table.getCreateTableStepFunction().apply(dsl))
-            .then(alterTableIfNeeded(table))
+            .then(alterTableIfNeeded(table, connection))
             .doOnSuccess(any -> LOGGER.info("Table {} created", table.getName()))
             .onErrorResume(exception -> handleTableCreationException(table, exception));
     }
 
     public Mono<List<String>> listExistTables() {
-        return postgresExecutor.dslContext()
-            .flatMapMany(d -> Flux.from(d.select(DSL.field("tablename"))
-                .from("pg_tables")
-                .where(DSL.field("schemaname")
-                    .eq(DSL.currentSchema()))))
-            .map(r -> r.get(0, String.class))
-            .collectList();
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+            connection -> postgresExecutor.dslContext(connection)
+                .flatMapMany(d -> Flux.from(d.select(DSL.field("tablename"))
+                    .from("pg_tables")
+                    .where(DSL.field("schemaname")
+                        .eq(DSL.currentSchema()))))
+                .map(r -> r.get(0, String.class))
+                .collectList(),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
     private Mono<Void> handleTableCreationException(PostgresTable table, Throwable e) {
@@ -109,15 +117,15 @@ public class PostgresTableManager implements Startable {
         return Mono.error(e);
     }
 
-    private Mono<Void> alterTableIfNeeded(PostgresTable table) {
-        return executeAdditionalAlterQueries(table)
-            .then(enableRLSIfNeeded(table));
+    private Mono<Void> alterTableIfNeeded(PostgresTable table, Connection connection) {
+        return executeAdditionalAlterQueries(table, connection)
+            .then(enableRLSIfNeeded(table, connection));
     }
 
-    private Mono<Void> executeAdditionalAlterQueries(PostgresTable table) {
+    private Mono<Void> executeAdditionalAlterQueries(PostgresTable table, Connection connection) {
         return Flux.fromIterable(table.getAdditionalAlterQueries())
-            .concatMap(alterSQLQuery -> postgresExecutor.connection()
-                .flatMapMany(connection -> connection.createStatement(alterSQLQuery)
+            .concatMap(alterSQLQuery -> Mono.just(connection)
+                .flatMapMany(pgConnection -> pgConnection.createStatement(alterSQLQuery)
                     .execute())
                 .flatMap(Result::getRowsUpdated)
                 .then()
@@ -131,16 +139,16 @@ public class PostgresTableManager implements Startable {
             .then();
     }
 
-    private Mono<Void> enableRLSIfNeeded(PostgresTable table) {
+    private Mono<Void> enableRLSIfNeeded(PostgresTable table, Connection connection) {
         if (rowLevelSecurityEnabled && table.supportsRowLevelSecurity()) {
-            return alterTableEnableRLS(table);
+            return alterTableEnableRLS(table, connection);
         }
         return Mono.empty();
     }
 
-    public Mono<Void> alterTableEnableRLS(PostgresTable table) {
-        return postgresExecutor.connection()
-            .flatMapMany(connection -> connection.createStatement(rowLevelSecurityAlterStatement(table.getName()))
+    private Mono<Void> alterTableEnableRLS(PostgresTable table, Connection connection) {
+        return Mono.just(connection)
+            .flatMapMany(pgConnection -> pgConnection.createStatement(rowLevelSecurityAlterStatement(table.getName()))
                 .execute())
             .flatMap(Result::getRowsUpdated)
             .then();
@@ -158,25 +166,29 @@ public class PostgresTableManager implements Startable {
     }
 
     public Mono<Void> truncate() {
-        return postgresExecutor.dslContext()
-            .flatMap(dsl -> Flux.fromIterable(module.tables())
-                .flatMap(table -> Mono.from(dsl.truncateTable(table.getName()))
-                    .doOnSuccess(any -> LOGGER.info("Table {} truncated", table.getName()))
-                    .doOnError(e -> LOGGER.error("Error while truncating table {}", table.getName(), e)))
-                .then());
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+            connection -> postgresExecutor.dslContext(connection)
+                .flatMap(dsl -> Flux.fromIterable(module.tables())
+                    .flatMap(table -> Mono.from(dsl.truncateTable(table.getName()))
+                        .doOnSuccess(any -> LOGGER.info("Table {} truncated", table.getName()))
+                        .doOnError(e -> LOGGER.error("Error while truncating table {}", table.getName(), e)))
+                    .then()),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
     public Mono<Void> initializeTableIndexes() {
-        return postgresExecutor.dslContext()
-            .flatMapMany(dsl -> listExistIndexes()
-                .flatMapMany(existIndexes -> Flux.fromIterable(module.tableIndexes())
-                    .filter(index -> !existIndexes.contains(index.getName()))
-                    .flatMap(index -> createTableIndex(index, dsl))))
-            .then();
+        return Mono.usingWhen(postgresExecutor.connectionFactory().getConnection(Optional.empty()),
+            connection -> postgresExecutor.dslContext(connection)
+                .flatMapMany(dsl -> listExistIndexes(dsl)
+                    .flatMapMany(existIndexes -> Flux.fromIterable(module.tableIndexes())
+                        .filter(index -> !existIndexes.contains(index.getName()))
+                        .flatMap(index -> createTableIndex(index, dsl))))
+                .then(),
+            connection -> postgresExecutor.connectionFactory().closeConnection(connection));
     }
 
-    public Mono<List<String>> listExistIndexes() {
-        return postgresExecutor.dslContext()
+    private Mono<List<String>> listExistIndexes(DSLContext dslContext) {
+        return Mono.just(dslContext)
             .flatMapMany(dsl -> Flux.from(dsl.select(DSL.field("indexname"))
                 .from("pg_indexes")
                 .where(DSL.field("schemaname")

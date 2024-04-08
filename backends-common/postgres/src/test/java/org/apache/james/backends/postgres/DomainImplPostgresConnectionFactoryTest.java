@@ -28,8 +28,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.core.Domain;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.jetbrains.annotations.Nullable;

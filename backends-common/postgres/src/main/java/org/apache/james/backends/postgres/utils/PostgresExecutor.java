@@ -79,7 +79,7 @@ public class PostgresExecutor {
         }
 
         public PostgresExecutor create(Optional<Domain> domain) {
-            return new PostgresExecutor(jamesPostgresConnectionFactory.getConnection(domain), postgresConfiguration, metricFactory);
+            return new PostgresExecutor(domain, jamesPostgresConnectionFactory, postgresConfiguration, metricFactory);
         }
 
         public PostgresExecutor create() {
@@ -92,65 +92,81 @@ public class PostgresExecutor {
         .withRenderFormatted(true)
         .withStatementType(StatementType.PREPARED_STATEMENT);
 
-    private final Mono<Connection> connection;
+    private final Optional<Domain> domain;
+    private final JamesPostgresConnectionFactory jamesPostgresConnectionFactory;
     private final PostgresConfiguration postgresConfiguration;
     private final MetricFactory metricFactory;
 
-    private PostgresExecutor(Mono<Connection> connection,
+    private PostgresExecutor(Optional<Domain> domain,
+                             JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
                              PostgresConfiguration postgresConfiguration,
                              MetricFactory metricFactory) {
-        this.connection = connection;
+        this.domain = domain;
+        this.jamesPostgresConnectionFactory = jamesPostgresConnectionFactory;
         this.postgresConfiguration = postgresConfiguration;
         this.metricFactory = metricFactory;
     }
 
     public Mono<DSLContext> dslContext() {
-        return connection.map(con -> DSL.using(con, PGSQL_DIALECT, SETTINGS));
+        return jamesPostgresConnectionFactory.getConnection(domain)
+            .map(con -> DSL.using(con, PGSQL_DIALECT, SETTINGS));
+    }
+
+    public Mono<DSLContext> dslContext(Connection connection) {
+        return Mono.fromCallable(() -> DSL.using(connection, PGSQL_DIALECT, SETTINGS));
     }
 
     public Mono<Void> executeVoid(Function<DSLContext, Mono<?>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            dslContext()
-                .flatMap(queryFunction)
-                .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                    .filter(preparedStatementConflictException()))
-                .then()));
+            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+                connection -> dslContext(connection)
+                    .flatMap(queryFunction)
+                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                        .filter(preparedStatementConflictException()))
+                    .then(),
+                jamesPostgresConnectionFactory::closeConnection)));
     }
 
     public Flux<Record> executeRows(Function<DSLContext, Flux<Record>> queryFunction) {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            dslContext()
-                .flatMapMany(queryFunction)
-                .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                .collectList()
-                .flatMapIterable(list -> list) // Mitigation fix for https://github.com/jOOQ/jOOQ/issues/16556
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                    .filter(preparedStatementConflictException()))));
+            Flux.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+                connection -> dslContext(connection)
+                    .flatMapMany(queryFunction)
+                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .collectList()
+                    .flatMapIterable(list -> list) // Mitigation fix for https://github.com/jOOQ/jOOQ/issues/16556
+                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                        .filter(preparedStatementConflictException())),
+                jamesPostgresConnectionFactory::closeConnection)));
     }
 
     public Flux<Record> executeDeleteAndReturnList(Function<DSLContext, DeleteResultStep<Record>> queryFunction) {
         return Flux.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            dslContext()
-                .flatMapMany(queryFunction)
-                .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                .collectList()
-                .flatMapIterable(list -> list) // The convert Flux -> Mono<List> -> Flux to avoid a hanging issue. See: https://github.com/jOOQ/jOOQ/issues/16055
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                    .filter(preparedStatementConflictException()))));
+            Flux.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+                connection -> dslContext(connection)
+                    .flatMapMany(queryFunction)
+                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .collectList()
+                    .flatMapIterable(list -> list) // The convert Flux -> Mono<List> -> Flux to avoid a hanging issue. See: https://github.com/jOOQ/jOOQ/issues/16055
+                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                        .filter(preparedStatementConflictException())),
+                jamesPostgresConnectionFactory::closeConnection)));
     }
 
     public Mono<Record> executeRow(Function<DSLContext, Publisher<Record>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            dslContext()
-                .flatMap(queryFunction.andThen(Mono::from))
-                .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                    .filter(preparedStatementConflictException()))));
+            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+                connection -> dslContext(connection)
+                    .flatMap(queryFunction.andThen(Mono::from))
+                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                        .filter(preparedStatementConflictException())),
+                jamesPostgresConnectionFactory::closeConnection)));
     }
 
     public Mono<Optional<Record>> executeSingleRowOptional(Function<DSLContext, Publisher<Record>> queryFunction) {
@@ -161,13 +177,15 @@ public class PostgresExecutor {
 
     public Mono<Integer> executeCount(Function<DSLContext, Mono<Record1<Integer>>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            dslContext()
-                .flatMap(queryFunction)
-                .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                    .filter(preparedStatementConflictException()))
-                .map(Record1::value1)));
+            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+                connection -> dslContext(connection)
+                    .flatMap(queryFunction)
+                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                        .filter(preparedStatementConflictException()))
+                    .map(Record1::value1),
+                jamesPostgresConnectionFactory::closeConnection)));
     }
 
     public Mono<Boolean> executeExists(Function<DSLContext, SelectConditionStep<?>> queryFunction) {
@@ -177,21 +195,27 @@ public class PostgresExecutor {
 
     public Mono<Integer> executeReturnAffectedRowsCount(Function<DSLContext, Mono<Integer>> queryFunction) {
         return Mono.from(metricFactory.decoratePublisherWithTimerMetric("postgres-execution",
-            dslContext()
-                .flatMap(queryFunction)
-                .timeout(postgresConfiguration.getJooqReactiveTimeout())
-                .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
-                .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
-                    .filter(preparedStatementConflictException()))));
+            Mono.usingWhen(jamesPostgresConnectionFactory.getConnection(domain),
+                connection -> dslContext(connection)
+                    .flatMap(queryFunction)
+                    .timeout(postgresConfiguration.getJooqReactiveTimeout())
+                    .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+                    .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
+                        .filter(preparedStatementConflictException())),
+                jamesPostgresConnectionFactory::closeConnection)));
+    }
+
+    public JamesPostgresConnectionFactory connectionFactory() {
+        return jamesPostgresConnectionFactory;
     }
 
     public Mono<Connection> connection() {
-        return connection;
+        return jamesPostgresConnectionFactory.getConnection(domain);
     }
 
     @VisibleForTesting
     public Mono<Void> dispose() {
-        return connection.flatMap(con -> Mono.from(con.close()));
+        return jamesPostgresConnectionFactory.close();
     }
 
     private Predicate<Throwable> preparedStatementConflictException() {
