@@ -97,11 +97,17 @@ pod
 |glowroot.enabled |true |Enabling or disabling Glowroot usage with
 James. It’s better to disable it for prod environments
 
-|ingress.enabled |false |Enabling or disabling Nginx Ingress. We are
+|ingress.enabled |false |Enabling or disabling Ingress. We are
 using it to expose JMAP and attach our SSL certificates for
 SMTP/IMAP/JMAP. Default is false
 
 |ingress.ingressClassName |change-me |kubernetes.io/ingress.class is 
+deprecated from Kubernetes v1.22+. Use ingressClassName instead for 
+Kubernetes v1.18+
+
+|adminIngress.enabled |false |Enabling or disabling Ingress for Web Admin.
+
+|adminIngress.ingressClassName |change-me |kubernetes.io/ingress.class is 
 deprecated from Kubernetes v1.22+. Use ingressClassName instead for 
 Kubernetes v1.18+
 

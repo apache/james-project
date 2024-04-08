@@ -57,7 +57,15 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: name-of-the-cluster-issuer
   tls:
-      secretName: the-name-of-a-secret      
+      secretName: the-name-of-a-secret
+
+adminIngress:
+  enabled: false
+  # ingressClassName: "change-me"
+  annotations:
+    cert-manager.io/cluster-issuer: name-of-the-cluster-issuer
+  tls:
+      secretName: the-name-of-a-secret
 
 ###
 # Please refer to the values.yaml from the Helm package for databases
