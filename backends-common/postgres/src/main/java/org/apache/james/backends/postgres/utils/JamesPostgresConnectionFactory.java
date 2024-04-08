@@ -35,4 +35,8 @@ public interface JamesPostgresConnectionFactory {
     }
 
     Mono<Connection> getConnection(Optional<Domain> domain);
+
+    Mono<Void> closeConnection(Connection connection);
+
+    Mono<Void> close();
 }
