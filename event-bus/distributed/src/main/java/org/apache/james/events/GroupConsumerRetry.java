@@ -25,6 +25,7 @@ import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.events.GroupRegistration.RETRY_COUNT;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.util.MDCStructuredLogger;
 import org.apache.james.util.StructuredLogger;
 import org.slf4j.Logger;
@@ -63,10 +64,12 @@ class GroupConsumerRetry {
     private final EventDeadLetters eventDeadLetters;
     private final Group group;
     private final EventSerializer eventSerializer;
+    private final RabbitMQConfiguration rabbitMQConfiguration;
 
     GroupConsumerRetry(NamingStrategy namingStrategy, Sender sender, Group group, RetryBackoffConfiguration retryBackoff,
-                       EventDeadLetters eventDeadLetters, EventSerializer eventSerializer) {
+                       EventDeadLetters eventDeadLetters, EventSerializer eventSerializer, RabbitMQConfiguration rabbitMQConfiguration) {
         this.sender = sender;
+        this.rabbitMQConfiguration = rabbitMQConfiguration;
         this.retryExchangeName = namingStrategy.retryExchange(group);
         this.retryBackoff = retryBackoff;
         this.eventDeadLetters = eventDeadLetters;
