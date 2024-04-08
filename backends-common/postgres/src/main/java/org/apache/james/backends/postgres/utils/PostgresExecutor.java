@@ -116,6 +116,8 @@ public class PostgresExecutor {
             .flatMapMany(queryFunction)
             .timeout(postgresConfiguration.getJooqReactiveTimeout())
             .doOnError(TimeoutException.class, e -> LOGGER.error(JOOQ_TIMEOUT_ERROR_LOG, e))
+            .collectList()
+            .flatMapIterable(list -> list) // Mitigation fix for https://github.com/jOOQ/jOOQ/issues/16556
             .retryWhen(Retry.backoff(MAX_RETRY_ATTEMPTS, MIN_BACKOFF)
                 .filter(preparedStatementConflictException()));
     }
