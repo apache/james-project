@@ -21,6 +21,8 @@ package org.apache.james.task.eventsourcing.distributed;
 
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 import static reactor.core.publisher.Sinks.EmitFailureHandler.FAIL_FAST;
 
@@ -86,7 +88,11 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
         QueueArguments.Builder builder = rabbitMQConfiguration.workQueueArgumentsBuilder();
         rabbitMQConfiguration.getQueueTTL().ifPresent(builder::queueTTL);
-        sender.declare(QueueSpecification.queue(queueName.asString()).durable(!DURABLE).autoDelete(!AUTO_DELETE).arguments(builder.build())).block();
+        sender.declare(QueueSpecification.queue(queueName.asString())
+            .durable(evaluateDurable(!DURABLE, rabbitMQConfiguration.isQuorumQueuesUsed()))
+            .autoDelete(evaluateAutoDelete(!AUTO_DELETE, rabbitMQConfiguration.isQuorumQueuesUsed()))
+            .arguments(builder.build()))
+            .block();
         sender.bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, queueName.asString())).block();
         sendQueue = Sinks.many().unicast().onBackpressureBuffer();
         sendQueueHandle = sender

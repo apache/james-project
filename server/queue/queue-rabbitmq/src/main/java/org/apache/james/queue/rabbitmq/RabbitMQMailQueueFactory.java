@@ -23,6 +23,9 @@ import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 import static org.apache.james.queue.api.MailQueue.QUEUE_SIZE_METRIC_NAME_PREFIX;
 
 import java.time.Clock;
@@ -163,16 +166,16 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                 .durable(true)
                 .type("direct")),
             sender.declareQueue(QueueSpecification.queue(mailQueueName.toWorkQueueName().asString())
-                .durable(DURABLE)
-                .exclusive(!EXCLUSIVE)
-                .autoDelete(!AUTO_DELETE)
+                .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
+                .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
+                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()))
                 .arguments(configuration.workQueueArgumentsBuilder()
                     .deadLetter(mailQueueName.toDeadLetterExchangeName())
                     .build())),
             sender.declareQueue(QueueSpecification.queue(mailQueueName.toDeadLetterQueueName())
-                .durable(DURABLE)
-                .exclusive(!EXCLUSIVE)
-                .autoDelete(!AUTO_DELETE)
+                .durable(evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()))
+                .exclusive(evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()))
+                .autoDelete(evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()))
                 .arguments(configuration.workQueueArgumentsBuilder()
                     .build())),
             sender.bind(BindingSpecification.binding()

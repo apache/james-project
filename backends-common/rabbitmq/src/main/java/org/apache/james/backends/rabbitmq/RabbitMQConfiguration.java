@@ -810,6 +810,10 @@ public class RabbitMQConfiguration {
         return builder;
     }
 
+    public boolean isQuorumQueuesUsed() {
+        return useQuorumQueues;
+    }
+
     public List<Host> rabbitMQHosts() {
         return hosts;
     }

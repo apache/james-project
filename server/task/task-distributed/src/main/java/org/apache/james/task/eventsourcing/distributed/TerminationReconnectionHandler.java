@@ -22,6 +22,9 @@ package org.apache.james.task.eventsourcing.distributed;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 
 import jakarta.inject.Inject;
 
@@ -61,7 +64,11 @@ public class TerminationReconnectionHandler implements SimpleConnectionPool.Reco
         try (Channel channel = connection.createChannel()) {
             QueueArguments.Builder builder = QueueArguments.builder();
             configuration.getQueueTTL().ifPresent(builder::queueTTL);
-            channel.queueDeclare(queueName.asString(), !DURABLE, !EXCLUSIVE, !AUTO_DELETE, builder.build());
+            channel.queueDeclare(queueName.asString(),
+                evaluateDurable(!DURABLE, configuration.isQuorumQueuesUsed()),
+                evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()),
+                evaluateAutoDelete(!AUTO_DELETE, configuration.isQuorumQueuesUsed()),
+                builder.build());
         } catch (Exception e) {
             LOGGER.error("Error recovering connection", e);
         }

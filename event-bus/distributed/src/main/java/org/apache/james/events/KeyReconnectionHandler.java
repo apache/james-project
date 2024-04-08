@@ -22,6 +22,9 @@ package org.apache.james.events;
 import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateAutoDelete;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateDurable;
+import static org.apache.james.backends.rabbitmq.Constants.evaluateExclusive;
 
 import jakarta.inject.Inject;
 
@@ -57,7 +60,11 @@ public class KeyReconnectionHandler implements SimpleConnectionPool.Reconnection
             try (Channel channel = connection.createChannel()) {
                 QueueArguments.Builder builder = configuration.workQueueArgumentsBuilder();
                 configuration.getQueueTTL().ifPresent(builder::queueTTL);
-                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(), DURABLE, !EXCLUSIVE, AUTO_DELETE, builder.build());
+                channel.queueDeclare(namingStrategy.queueName(eventBusId).asString(),
+                    evaluateDurable(DURABLE, configuration.isQuorumQueuesUsed()),
+                    evaluateExclusive(!EXCLUSIVE, configuration.isQuorumQueuesUsed()),
+                    evaluateAutoDelete(AUTO_DELETE, configuration.isQuorumQueuesUsed()),
+                    builder.build());
             } catch (Exception e) {
                 LOGGER.error("Error recovering connection", e);
             }
