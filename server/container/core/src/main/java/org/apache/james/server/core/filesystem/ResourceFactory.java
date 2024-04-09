@@ -21,8 +21,6 @@ package org.apache.james.server.core.filesystem;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,15 +57,15 @@ public class ResourceFactory {
             try {
                 // Try to parse the location as a URL...
                 return handleUrlResource(fileURL);
-            } catch (MalformedURLException | URISyntaxException ex) {
+            } catch (MalformedURLException ex) {
                 // No URL -> resolve as resource path.
                 return new ClassPathResource(fileURL);
             }
         }
     }
 
-    private Resource handleUrlResource(String fileURL) throws MalformedURLException, URISyntaxException {
-        URL url = new URI(fileURL).toURL();
+    private Resource handleUrlResource(String fileURL) throws MalformedURLException {
+        URL url = new URL(fileURL);
         return new UrlResource(url);
     }
 

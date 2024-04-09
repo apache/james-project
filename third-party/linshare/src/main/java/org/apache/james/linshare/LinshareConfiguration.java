@@ -42,7 +42,10 @@ public class LinshareConfiguration {
         public interface RequireUrl {
             RequireBasicAuthorization url(URL url);
 
-            default RequireBasicAuthorization urlAsString(String url) {
+            default RequireBasicAuthorization urlAsString(String url) throws MalformedURLException {
+                if (url == null) {
+                    throw new MalformedURLException("url can not be null");
+                }
                 return url(Throwing.supplier(() -> new URI(url).toURL()).get());
             }
         }

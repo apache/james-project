@@ -111,7 +111,7 @@ class LinshareConfigurationTest {
         configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, LinshareFixture.TECHNICAL_ACCOUNT.getPassword());
         configuration.addProperty(LinshareConfiguration.URL_PROPERTY, "invalid");
 
-        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(MalformedURLException.class);
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
