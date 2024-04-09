@@ -19,9 +19,13 @@
 
 package org.apache.james.user.postgres;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Optional;
+
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepository;
@@ -29,9 +33,14 @@ import org.apache.james.user.lib.UsersRepositoryContract;
 import org.apache.james.user.lib.UsersRepositoryImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.util.Optional;
+import com.github.fge.lambdas.Throwing;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class PostgresUsersRepositoryTest {
 
@@ -60,6 +69,26 @@ class PostgresUsersRepositoryTest {
         @Override
         public UsersRepository testee(Optional<Username> administrator) throws Exception {
             return getUsersRepository(testSystem.getDomainList(), extension.isSupportVirtualHosting(), administrator);
+        }
+
+        @Test
+        void listUsersReactiveThenExecuteOtherPostgresQueriesShouldNotHang() throws Exception {
+            Domain domain = Domain.of("example.com");
+            testSystem.getDomainList().addDomain(domain);
+
+            Flux.range(1, 1000)
+                .flatMap(counter -> Mono.fromRunnable(Throwing.runnable(() -> usersRepository.addUser(Username.fromLocalPartWithDomain(counter.toString(), domain), "password"))),
+                    128)
+                .collectList()
+                .block();
+
+            assertThat(Flux.from(usersRepository.listReactive())
+                .flatMap(username -> Mono.fromCallable(() -> usersRepository.test(username, "password")
+                    .orElseThrow(() -> new RuntimeException("Wrong user credential")))
+                    .subscribeOn(Schedulers.boundedElastic()))
+                .collectList()
+                .block())
+                .hasSize(1000);
         }
     }
 
