@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.util.UUID;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -145,7 +145,7 @@ class LinshareConfigurationTest {
         configuration.addProperty(LinshareConfiguration.URL_PROPERTY, url);
 
         assertThat(LinshareConfiguration.from(configuration)).isEqualTo(LinshareConfiguration.builder()
-            .url(new URL(url))
+            .url(new URI(url).toURL())
             .basicAuthorization(DEFAULT_UUID, password)
             .build());
     }

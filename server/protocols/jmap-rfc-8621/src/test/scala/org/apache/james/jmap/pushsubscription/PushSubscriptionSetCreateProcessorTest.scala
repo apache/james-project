@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.pushsubscription
 
-import java.net.URL
+import java.net.URI
 import java.security.KeyPair
 import java.security.interfaces.ECPublicKey
 import java.util.{Base64, UUID}
@@ -55,7 +55,7 @@ class PushSubscriptionSetCreateProcessorTest {
   def setup(pushServer: ClientAndServer): Unit = {
     val webPushClient: WebPushClient = new DefaultWebPushClient(WebPushClientTestFixture.PUSH_CLIENT_CONFIGURATION)
     testee = new PushSubscriptionSetCreateProcessor(webPushClient)
-    pushServerUrl = PushSubscriptionServerURL(new URL(s"http://127.0.0.1:${pushServer.getLocalPort}/subscribe"))
+    pushServerUrl = PushSubscriptionServerURL(new URI(s"http://127.0.0.1:${pushServer.getLocalPort}/subscribe").toURL)
 
     pushServer
       .when(request

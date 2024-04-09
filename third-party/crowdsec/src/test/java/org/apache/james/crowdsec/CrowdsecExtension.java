@@ -22,6 +22,7 @@ package org.apache.james.crowdsec;
 import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_API_KEY;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.util.UUID;
@@ -117,10 +118,14 @@ public class CrowdsecExtension implements GuiceModuleTestExtension {
     }
 
     public URL getCrowdSecUrl() {
-        return Throwing.supplier(() -> new URL("http",
-            crowdsecContainer.getHost(),
-            crowdsecContainer.getMappedPort(CROWDSEC_PORT),
-            "/v1")).get();
+        return Throwing.supplier(() -> new URI("http://" +
+            crowdsecContainer.getHost() + ":" +
+            crowdsecContainer.getMappedPort(CROWDSEC_PORT) +
+            "/v1").toURL()).get();
+    }
+
+    public URL getLocalhostCrowdsecUrl() {
+        return Throwing.supplier(() -> new URI("http://localhost:" + crowdsecContainer.getMappedPort(CROWDSEC_PORT) + "/v1").toURL()).get();
     }
 
     public GenericContainer<?> getCrowdsecContainer() {

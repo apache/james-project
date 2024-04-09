@@ -22,6 +22,7 @@ import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounc
 import static org.apache.james.smtpserver.netty.SMTPServer.AuthenticationAnnounceMode.NEVER;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -110,7 +111,7 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             if (haveOidcProperties) {
                 try {
                     return Optional.of(OidcSASLConfiguration.parse(configuration.configurationAt(OIDC_PATH)));
-                } catch (MalformedURLException exception) {
+                } catch (MalformedURLException | URISyntaxException exception) {
                    throw new ConfigurationException("Failed to retrieve oauth component", exception);
                 }
             } else {

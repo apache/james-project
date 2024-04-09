@@ -28,6 +28,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;

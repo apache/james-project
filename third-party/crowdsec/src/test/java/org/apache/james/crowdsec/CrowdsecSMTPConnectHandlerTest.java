@@ -22,8 +22,7 @@ class CrowdsecSMTPConnectHandlerTest {
 
     @BeforeEach
     void setUpEach() throws IOException {
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        var crowdsecClientConfiguration = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), CrowdsecClientConfiguration.DEFAULT_API_KEY);
+        var crowdsecClientConfiguration = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), CrowdsecClientConfiguration.DEFAULT_API_KEY);
         connectHandler = new CrowdsecSMTPConnectHandler(new CrowdsecService(crowdsecClientConfiguration));
     }
 

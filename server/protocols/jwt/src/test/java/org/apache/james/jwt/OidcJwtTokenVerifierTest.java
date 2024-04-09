@@ -25,6 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -361,24 +363,24 @@ class OidcJwtTokenVerifierTest {
 
     private URL getJwksURL() {
         try {
-            return new URL(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), JWKS_URI_PATH));
-        } catch (MalformedURLException e) {
+            return new URI(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), JWKS_URI_PATH)).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
 
     private URL getUserInfoEndpoint() {
         try {
-            return new URL(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), USERINFO_PATH));
-        } catch (MalformedURLException e) {
+            return new URI(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), USERINFO_PATH)).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
 
     private URL getIntrospectionEndpoint() {
         try {
-            return new URL(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), INTROSPECTION_PATH));
-        } catch (MalformedURLException e) {
+            return new URI(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), INTROSPECTION_PATH)).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }

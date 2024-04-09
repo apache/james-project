@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.pushsubscription
 
-import java.net.URL
+import java.net.URI
 import java.nio.charset.StandardCharsets
 
 import org.apache.james.jmap.api.model.PushSubscriptionServerURL
@@ -48,7 +48,7 @@ trait SafeWebPushClientContract {
   @ParameterizedTest
   @ValueSource(strings = Array("127.0.0.1", "127.0.0.9", "10.9.0.3", "192.168.102.35"))
   def serverSideRequestForgeryAttemptsShouldBeRejected(ip: String): Unit = {
-    assertThatThrownBy(() => Mono.from(testee.push(PushSubscriptionServerURL(new URL(s"http://$ip")), PUSH_REQUEST_SAMPLE)).block)
+    assertThatThrownBy(() => Mono.from(testee.push(PushSubscriptionServerURL(new URI(s"http://$ip").toURL), PUSH_REQUEST_SAMPLE)).block)
       .isInstanceOf(classOf[IllegalArgumentException])
   }
 }
