@@ -49,7 +49,7 @@ object SessionSerializationTest {
   private val COLLATION_ALGORITHMS : List[CollationAlgorithm] = List(ALGO_1, ALGO_2, ALGO_3)
   private val USER_1 = Username.of("user1@james.org")
   private val USER_2 = Username.of("user2@james.org")
-  private val URL = new URL("http://james.org")
+  private val URL = new URI("http://james.org").toURL()
 
   private val MAIL_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
   private val CONTACT_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:contact"

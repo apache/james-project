@@ -290,7 +290,7 @@ class MemoryUserDeletionIntegrationTest {
         server.getProbe(MemoryUserDeletionIntegrationTestProbe.class)
             .addPushSubscriptions(ALICE, new PushSubscriptionCreationRequest(
                 "device",
-                new PushSubscriptionServerURL(new URL("http://whatever/toto")),
+                new PushSubscriptionServerURL(new URI("http://whatever/toto").toURL()),
                 Option.empty(),
                 Option.empty(),
                 PushSubscriptionCreationRequest.noTypes()));

@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.routes
 
-import java.net.URL
+import java.net.{URI, URL}
 
 import cats.data.Validated
 import cats.implicits.toTraverseOps
@@ -80,11 +80,11 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
 }
 
 class JmapUrlEndpointResolver(val urlPrefixes: UrlPrefixes) {
-  val apiUrl: URL = new URL(urlPrefixes.httpUrlPrefix.toString + "/jmap")
+  val apiUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/jmap").toURL
 
-  val downloadUrl: URL = new URL(urlPrefixes.httpUrlPrefix.toString + "/download/{accountId}/{blobId}?type={type}&name={name}")
+  val downloadUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/download/{accountId}/{blobId}?type={type}&name={name}").toURL
 
-  val uploadUrl: URL = new URL(urlPrefixes.httpUrlPrefix.toString + "/upload/{accountId}")
+  val uploadUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/upload/{accountId}").toURL
 
-  val eventSourceUrl: URL = new URL(urlPrefixes.httpUrlPrefix.toString + "/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
+  val eventSourceUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/eventSource?types={types}&closeAfter={closeafter}&ping={ping}").toURL
 }

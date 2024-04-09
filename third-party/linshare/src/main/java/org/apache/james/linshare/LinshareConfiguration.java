@@ -20,12 +20,14 @@
 package org.apache.james.linshare;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.commons.configuration2.Configuration;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -40,8 +42,8 @@ public class LinshareConfiguration {
         public interface RequireUrl {
             RequireBasicAuthorization url(URL url);
 
-            default RequireBasicAuthorization urlAsString(String url) throws MalformedURLException {
-                return url(new URL(url));
+            default RequireBasicAuthorization urlAsString(String url) {
+                return url(Throwing.supplier(() -> new URI(url).toURL()).get());
             }
         }
 
