@@ -20,13 +20,14 @@
 package org.apache.james.webadmin.integration.rabbitmq;
 
 import static io.restassured.RestAssured.with;
-import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
 import static org.apache.james.jmap.JMAPTestingConstants.ALICE_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
-import static org.apache.james.jmap.JmapCommonRequests.getDraftId;
-import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
+import static org.apache.james.jmap.JmapRFCCommonRequests.UserCredential;
+import static org.apache.james.jmap.JmapRFCCommonRequests.getDraftId;
+import static org.apache.james.jmap.JmapRFCCommonRequests.getUserCredential;
+import static org.apache.james.jmap.JmapRFCCommonRequests.listMessageIdsForAccount;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
@@ -41,8 +42,6 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.events.RetryBackoffConfiguration;
-import org.apache.james.jmap.AccessToken;
-import org.apache.james.jmap.LocalHostURIBuilder;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -106,7 +105,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .build();
 
     private RequestSpecification webAdminApi;
-    private AccessToken aliceAccessToken;
+    private UserCredential aliceCredential;
 
     @BeforeEach
     void setUp(GuiceJamesServer jamesServer) throws Exception {
@@ -123,7 +122,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
 
         webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
 
-        aliceAccessToken = authenticateJamesUser(LocalHostURIBuilder.baseUri(jmapPort), ALICE, ALICE_PASSWORD);
+        aliceCredential = getUserCredential(ALICE, ALICE_PASSWORD);
 
         dockerOpenSearch.getDockerOS().pause();
         Thread.sleep(Duration.ofSeconds(2).toMillis()); // Docker pause is asynchronous and we found no way to poll for it
@@ -137,7 +136,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         CALMLY_AWAIT.until(() -> listOpenSearchFailedEvents().size() == 1);
 
         unpauseOpenSearch();
-        assertThat(listMessageIdsForAccount(aliceAccessToken)).isEmpty();
+        assertThat(listMessageIdsForAccount(aliceCredential)).isEmpty();
     }
 
     @Test
@@ -148,7 +147,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         unpauseOpenSearch();
         redeliverAllFailedEvents();
 
-        CALMLY_AWAIT.until(() -> listMessageIdsForAccount(aliceAccessToken).size() == 1);
+        CALMLY_AWAIT.until(() -> listMessageIdsForAccount(aliceCredential).size() == 1);
         assertThat(listOpenSearchFailedEvents()).isEmpty();
     }
 
@@ -158,25 +157,28 @@ class RabbitMQReindexingWithEventDeadLettersTest {
     }
 
     private void aliceSavesADraft() {
-        String messageCreationId = "creationId1337";
-        String requestBody = "[" +
-            "  [" +
-            "    \"setMessages\"," +
-            "    {" +
-            "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Me\", \"email\": \"" + ALICE.asString() + "\"}," +
-            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
-            "        \"subject\": \"subject\"," +
-            "        \"keywords\": {\"$Draft\": true}," +
-            "        \"mailboxIds\": [\"" + getDraftId(aliceAccessToken) + "\"]" +
-            "      }}" +
-            "    }," +
-            "    \"#0\"" +
-            "  ]" +
-            "]";
+        String draftMailboxId = getDraftId(aliceCredential);
+        String requestBody =
+            "{" +
+                "    \"using\": [\"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\"]," +
+                "    \"methodCalls\": [" +
+                "        [\"Email/set\", {" +
+                "            \"accountId\": \"" + aliceCredential.accountId() + "\"," +
+                "            \"create\": {" +
+                "                \"e1526\": {" +
+                "                    \"mailboxIds\": { \"" + draftMailboxId + "\": true }," +
+                "                    \"subject\": \"subject\"," +
+                "                    \"keywords\": {\"$Draft\": true}," +
+                "                    \"to\": [{\"email\": \"someone@example.com\"}]," +
+                "                    \"from\": [{\"email\": \"" + ALICE.asString() + "\"}]" +
+                "                }" +
+                "            }" +
+                "        }, \"c1\"]" +
+                "    ]" +
+                "}";
 
         with()
-            .header("Authorization", aliceAccessToken.asString())
+            .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
             .body(requestBody)
             .post("/jmap");
     }
