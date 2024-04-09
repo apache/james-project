@@ -1,18 +1,21 @@
-{{- if .Values.ingress.enabled }}
+{{- if .Values.adminIngress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: james-admin
-  {{- with .Values.ingress.annotations }}
+  {{- with .Values.adminIngress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-{{- if .Values.ingress.tls }}
+{{- if .Values.adminIngress.ingressClassName }}
+  ingressClassName: {{ .Values.adminIngress.ingressClassName }}
+{{- end }} 
+{{- if .Values.adminIngress.tls }}
   tls:
   - hosts:
     - {{ .Values.dns.adminUrl }}
-    {{ toYaml .Values.ingress.tls }}
+    {{ toYaml .Values.adminIngress.tls }}
 {{- end }}    
   rules:
   - host: {{ .Values.dns.adminUrl }}
