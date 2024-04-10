@@ -25,16 +25,36 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.CompressionCodecResolver;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
 
 public class JwtTokenVerifier {
+    private static final CompressionCodecResolver DEFAULT_COMPRESSION_CODEC_RESOLVER = new DefaultCompressionCodecResolver();
+    private static final CompressionCodecResolver SECURE_COMPRESSION_CODEC_RESOLVER = header -> {
+        if (Optional.ofNullable(header.getCompressionAlgorithm()).isPresent()) {
+            throw new RuntimeException("Rejecting a ZIP JWT. Usage of ZIPPED JWT can result in " +
+                "excessive memory usage with malicious JWT tokens. To activate support for ZIPPed" +
+                "JWT please run James with the -Djames.jwt.zip.allow=true system property.");
+        }
+        return DEFAULT_COMPRESSION_CODEC_RESOLVER.resolveCompressionCodec(header);
+    };
+    private static final boolean allowZipJWT = Optional.ofNullable(System.getProperty("james.jwt.zip.allow"))
+        .map(Boolean::parseBoolean)
+        .orElse(false);
+    @VisibleForTesting
+    static CompressionCodecResolver CONFIGURED_COMPRESSION_CODEC_RESOLVER = Optional.of(allowZipJWT)
+        .filter(b -> b)
+        .map(any -> DEFAULT_COMPRESSION_CODEC_RESOLVER)
+        .orElse(SECURE_COMPRESSION_CODEC_RESOLVER);
 
     public interface Factory {
         JwtTokenVerifier create();
@@ -97,6 +117,7 @@ public class JwtTokenVerifier {
     private JwtParser toImmutableJwtParser(PublicKey publicKey) {
         return Jwts.parserBuilder()
             .setSigningKey(publicKey)
+            .setCompressionCodecResolver(CONFIGURED_COMPRESSION_CODEC_RESOLVER)
             .build();
     }
 }
