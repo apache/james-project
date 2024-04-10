@@ -42,10 +42,10 @@ class JmapUrlEndpointResolverTest extends AnyWordSpec with Matchers {
     "succeed to configuration urlPrefix when provided" in {
       val testee : JmapUrlEndpointResolver= new JmapUrlEndpointResolver(UrlPrefixes(new URI("http://random-domain.com"), new URI("ws://random-domain.com")))
 
-      testee.apiUrl must be(new URI("http://random-domain.com/jmap").toURL())
-      testee.downloadUrl must be(new URI("http://random-domain.com/download/{accountId}/{blobId}?type={type}&name={name}").toURL())
-      testee.uploadUrl must be(new URI("http://random-domain.com/upload/{accountId}").toURL())
-      testee.eventSourceUrl must be(new URI("http://random-domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}").toURL())
+      testee.apiUrl must be(URL("http://random-domain.com/jmap"))
+      testee.downloadUrl must be(URL("http://random-domain.com/download/{accountId}/{blobId}?type={type}&name={name}"))
+      testee.uploadUrl must be(URL("http://random-domain.com/upload/{accountId}"))
+      testee.eventSourceUrl must be(URL("http://random-domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
     }
   }
 }

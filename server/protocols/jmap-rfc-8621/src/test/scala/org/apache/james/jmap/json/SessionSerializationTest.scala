@@ -19,8 +19,6 @@
 
 package org.apache.james.jmap.json
 
-import java.net.URI
-
 import eu.timepit.refined.auto._
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
@@ -49,7 +47,7 @@ object SessionSerializationTest {
   private val COLLATION_ALGORITHMS : List[CollationAlgorithm] = List(ALGO_1, ALGO_2, ALGO_3)
   private val USER_1 = Username.of("user1@james.org")
   private val USER_2 = Username.of("user2@james.org")
-  private val URL = new URI("http://james.org").toURL
+  private val URL = org.apache.james.jmap.core.URL("http://james.org")
 
   private val MAIL_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:mail"
   private val CONTACT_IDENTIFIER: CapabilityIdentifier = "urn:ietf:params:jmap:contact"

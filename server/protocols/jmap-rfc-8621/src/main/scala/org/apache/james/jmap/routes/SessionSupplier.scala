@@ -19,15 +19,13 @@
 
 package org.apache.james.jmap.routes
 
-import java.net.{URI, URL}
-
 import cats.data.Validated
 import cats.implicits.toTraverseOps
 import cats.instances.list._
 import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
-import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, CapabilityFactory, IsPersonal, IsReadOnly, Session, UrlPrefixes}
+import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, CapabilityFactory, IsPersonal, IsReadOnly, Session, URL, UrlPrefixes}
 
 import scala.jdk.CollectionConverters._
 
@@ -80,11 +78,11 @@ class SessionSupplier(capabilityFactories: Set[CapabilityFactory]) {
 }
 
 class JmapUrlEndpointResolver(val urlPrefixes: UrlPrefixes) {
-  val apiUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/jmap").toURL
+  val apiUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/jmap")
 
-  val downloadUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/download/{accountId}/{blobId}?type={type}&name={name}").toURL
+  val downloadUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/download/{accountId}/{blobId}?type={type}&name={name}")
 
-  val uploadUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/upload/{accountId}").toURL
+  val uploadUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/upload/{accountId}")
 
-  val eventSourceUrl: URL = new URI(urlPrefixes.httpUrlPrefix.toString + "/eventSource?types={types}&closeAfter={closeafter}&ping={ping}").toURL
+  val eventSourceUrl: URL = URL(urlPrefixes.httpUrlPrefix.toString + "/eventSource?types={types}&closeAfter={closeafter}&ping={ping}")
 }
