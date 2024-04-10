@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxDAO;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -45,7 +46,8 @@ public class PostgresMailboxMapperRowLevelSecurityTest {
     @BeforeEach
     public void setUp() {
         PostgresExecutor.Factory executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(postgresExtension.getConnectionFactory()),
-            postgresExtension.getPostgresConfiguration());
+            postgresExtension.getPostgresConfiguration(),
+            new RecordingMetricFactory());
         mailboxMapperFactory = session -> new PostgresMailboxMapper(new PostgresMailboxDAO(executorFactory.create(session.getUser().getDomainPart())));
     }
 
