@@ -34,6 +34,7 @@ import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresHealthCheck;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
@@ -141,8 +142,9 @@ public class PostgresCommonModule extends AbstractModule {
     @Named(PostgresExecutor.NON_RLS_INJECT)
     @Singleton
     PostgresExecutor.Factory postgresExecutorFactoryWithRLSBypass(@Named(PostgresExecutor.NON_RLS_INJECT) JamesPostgresConnectionFactory singlePostgresConnectionFactory,
-                                                                  PostgresConfiguration postgresConfiguration) {
-        return new PostgresExecutor.Factory(singlePostgresConnectionFactory, postgresConfiguration);
+                                                                  PostgresConfiguration postgresConfiguration,
+                                                                  MetricFactory metricFactory) {
+        return new PostgresExecutor.Factory(singlePostgresConnectionFactory, postgresConfiguration, metricFactory);
     }
 
     @Provides
