@@ -387,7 +387,9 @@ class RabbitMQTest {
             @Test
             void rabbitMQShouldDeliverMessageToSingleActiveConsumer() throws Exception {
                 channel1.exchangeDeclare(EXCHANGE_NAME, "direct", DURABLE);
-                channel1.queueDeclare(WORK_QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, Constants.WITH_SINGLE_ACTIVE_CONSUMER);
+                channel1.queueDeclare(WORK_QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, QueueArguments.builder()
+                    .put("x-single-active-consumer", true)
+                    .build());
                 channel1.queueBind(WORK_QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
                 IntStream.range(0, 10)
