@@ -70,6 +70,11 @@ public class QueueArguments {
             return this;
         }
 
+        public Builder put(String key, Object value) {
+            arguments.put(key, value);
+            return this;
+        }
+
         public ImmutableMap<String, Object> build() {
             return arguments.build();
         }
