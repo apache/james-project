@@ -30,6 +30,7 @@ import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 
@@ -139,12 +140,13 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .build());
 
         if (rlsEnabled) {
-            executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory), postgresConfiguration);
+            executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory), postgresConfiguration, new RecordingMetricFactory());
         } else {
             executorFactory = new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connectionFactory.create()
                 .cache()
                 .cast(Connection.class).block()),
-                postgresConfiguration);
+                postgresConfiguration,
+                new RecordingMetricFactory());
         }
 
         postgresExecutor = executorFactory.create();
@@ -154,7 +156,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
                     .password(postgresConfiguration.getNonRLSCredential().getPassword())
                     .build())
                 .flatMap(configuration -> new PostgresqlConnectionFactory(configuration).create().cache())
-                .map(connection -> new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connection), postgresConfiguration).create())
+                .map(connection -> new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connection), postgresConfiguration, new RecordingMetricFactory()).create())
                 .block();
         } else {
             nonRLSPostgresExecutor = postgresExecutor;
