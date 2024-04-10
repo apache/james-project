@@ -21,8 +21,7 @@ package org.apache.james.jwt;
 
 public class OidcTokenFixture {
 
-    public static final String PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\n" +
-        "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCroSIEhNYajXzC\n" +
+    public static final String PRIVATE_KEY_BASE64 = "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCroSIEhNYajXzC\n" +
         "gsn+xetgjqYc/SaihaHCIjWra2xMbkyl42BITRmjBFGbUxThMEg5YvaBXC1XQeib\n" +
         "auW7gJnBZs8S54K5FMyjgUXOKbjHqPRxE76vUaIYkAZoeufAnXosfDf/XUZTTKE2\n" +
         "yxyZJhdfgU/RSEpN19joXfskIQWmIXlMKkIG9lGqj7eIcyomdlHHuYxb9owqU+lP\n" +
@@ -47,7 +46,9 @@ public class OidcTokenFixture {
         "EdbOTUKhdenKEcSvICOjCrRL/sZHQCSZCH+d7UkCgYAbGniqH/pp73sGd9NZyVT/\n" +
         "HJdOH5dfBfS9sBBJ1f0/pySJLKcArOXS9BMIFueOq4EIc+7hKDCQuqeyhpYZ6UCe\n" +
         "C9h0QNig49qGI/UEtlNrIlydHyPinTa1fDqu99EuRHG0d4RuONW45tmZAY7mGIbf\n" +
-        "PRhJhwOHZT9xO+uPrtQIAw==\n" +
+        "PRhJhwOHZT9xO+uPrtQIAw==\n";
+    public static final String PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\n" +
+        PRIVATE_KEY_BASE64 +
         "-----END PRIVATE KEY-----";
 
     public static final String PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n" +

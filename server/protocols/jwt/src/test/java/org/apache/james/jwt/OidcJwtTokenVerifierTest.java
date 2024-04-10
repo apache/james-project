@@ -22,6 +22,7 @@ package org.apache.james.jwt;
 import static org.apache.james.jwt.OidcTokenFixture.INTROSPECTION_RESPONSE;
 import static org.apache.james.jwt.OidcTokenFixture.USERINFO_RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
@@ -40,6 +41,10 @@ import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
+import io.jsonwebtoken.CompressionCodecs;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
 import reactor.core.publisher.Mono;
 
 class OidcJwtTokenVerifierTest {
@@ -84,6 +89,33 @@ class OidcJwtTokenVerifierTest {
             softly.assertThat(email_address.isPresent()).isTrue();
             softly.assertThat(email_address.get()).isEqualTo("user@domain.org");
         });
+    }
+
+    @Test
+    void shouldRejectZippedJWTByDefault() {
+        String jws = Jwts.builder()
+            .claim("kid", "a".repeat(100))
+            .compressWith(CompressionCodecs.DEFLATE)
+            .signWith(SignatureAlgorithm.HS256, OidcTokenFixture.PRIVATE_KEY_BASE64.replace("\n", ""))
+            .compact();
+
+        assertThatThrownBy(() -> OidcJwtTokenVerifier.verifySignatureAndExtractClaim(jws, getJwksURL(), "kid"))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Rejecting a ZIP JWT");
+    }
+
+    @Test
+    void shouldAcceptZippedJWTWhenConfigured() {
+        String jws = Jwts.builder()
+            .claim("kid", "a".repeat(100))
+            .compressWith(CompressionCodecs.DEFLATE)
+            .signWith(SignatureAlgorithm.HS256, OidcTokenFixture.PRIVATE_KEY_BASE64.replace("\n", ""))
+            .compact();
+
+        JwtTokenVerifier.CONFIGURED_COMPRESSION_CODEC_RESOLVER = new DefaultCompressionCodecResolver();
+
+        assertThatCode(() -> OidcJwtTokenVerifier.verifySignatureAndExtractClaim(jws, getJwksURL(), "kid"))
+            .doesNotThrowAnyException();
     }
 
     @Test
