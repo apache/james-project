@@ -236,7 +236,6 @@ trait ImapKeywordsConsistencyContract {
     assertThat(ids.size).isEqualTo(0)
   }
 
-  @Disabled("JAMES-4026: Issue with solving inconsistency created from IMAP via Email/set update JMAP RFC-8621 request")
   @Test
   def emailSetShouldSucceedToSolveKeywordsConflictsIntroducedViaImapUponFlagsAddition(server: GuiceJamesServer): Unit = {
     // Given the user has a message "m1" in "inbox" mailbox with subject "My awesome subject", content "This is the content"
