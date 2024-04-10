@@ -487,6 +487,10 @@ case class EmailSetUpdate(keywords: Option[Keywords],
 
   def isOnlyFlagRemoval: Boolean = keywordsToRemove.isDefined && keywordsToAdd.isEmpty && mailboxIds.isEmpty &&
     mailboxIdsToAdd.isEmpty && mailboxIdsToRemove.isEmpty
+
+  def isFlagUpdate: Boolean = keywords.isDefined || keywordsToAdd.isDefined || keywordsToRemove.isDefined
+
+  def isMailboxUpdate: Boolean = mailboxIds.isDefined || mailboxIdsToAdd.isDefined || mailboxIdsToRemove.isDefined
 }
 
 case class ValidatedEmailSetUpdate private(keywordsTransformation: Function[Keywords, Keywords],
