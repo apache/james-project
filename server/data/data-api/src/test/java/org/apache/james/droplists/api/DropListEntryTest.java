@@ -21,6 +21,8 @@ package org.apache.james.droplists.api;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import jakarta.mail.internet.AddressException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
@@ -121,23 +123,23 @@ class DropListEntryTest {
     }
 
     @Test
-    void shouldDefaultGlobalOwnerScopeWhenNotSpecified() {
+    void shouldDefaultGlobalOwnerScopeWhenNotSpecified() throws AddressException {
         DropListEntry dropListEntry = DropListEntry.builder()
             .owner("owner")
             .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("entity")
+            .deniedEntity("entity.com")
             .build();
 
         assertThat(dropListEntry.getOwnerScope()).isEqualTo(OwnerScope.GLOBAL);
     }
 
     @Test
-    void shouldDefaultGlobalOwnerScopeOnNull() {
+    void shouldDefaultGlobalOwnerScopeOnNull() throws AddressException {
         DropListEntry dropListEntry = DropListEntry.builder()
             .ownerScope(null)
             .owner("owner")
             .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("entity")
+            .deniedEntity("entity.com")
             .build();
 
         assertThat(dropListEntry.getOwnerScope()).isEqualTo(OwnerScope.GLOBAL);
@@ -174,7 +176,7 @@ class DropListEntryTest {
     }
 
     @Test
-    void shouldReturnDropListEntryAsString() {
+    void shouldReturnDropListEntryAsString() throws AddressException {
         String expectedString = "DropListEntry{ownerScope=GLOBAL, owner=owner, deniedType=DOMAIN, deniedEntity=entity}";
         DropListEntry dropListEntry = DropListEntry.builder()
             .owner("owner")

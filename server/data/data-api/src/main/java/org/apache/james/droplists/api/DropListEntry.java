@@ -24,6 +24,11 @@ import static org.apache.james.droplists.api.OwnerScope.GLOBAL;
 import java.util.Objects;
 import java.util.Optional;
 
+import jakarta.mail.internet.AddressException;
+
+import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
@@ -62,7 +67,7 @@ public class DropListEntry {
             return this;
         }
 
-        public DropListEntry build() {
+        public DropListEntry build() throws AddressException {
             OwnerScope scope = ownerScope.orElse(GLOBAL);
             Preconditions.checkArgument(owner != null && !owner.trim().isBlank(), "owner must not be null, empty, or blank");
             Preconditions.checkArgument(owner.length() <= MAXIMUM_DOMAIN_LENGTH,
@@ -71,6 +76,11 @@ public class DropListEntry {
             Preconditions.checkArgument(deniedEntity != null && !deniedEntity.isBlank(), "`deniedEntity` must not be null, empty, or blank");
             Preconditions.checkArgument(deniedEntity.length() <= MAXIMUM_DOMAIN_LENGTH,
                 "deniedEntity length should not be longer than %s characters", MAXIMUM_DOMAIN_LENGTH);
+            if (deniedEntityType.equals(DeniedEntityType.DOMAIN)) {
+                deniedEntity = Domain.of(deniedEntity).asString();
+            } else {
+                deniedEntity = new MailAddress(deniedEntity).toString();
+            }
             return new DropListEntry(scope, owner, deniedEntityType, deniedEntity);
         }
     }
