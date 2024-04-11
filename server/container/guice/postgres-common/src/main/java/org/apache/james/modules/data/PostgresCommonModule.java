@@ -28,8 +28,8 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTableManager;
-import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresHealthCheck;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
@@ -76,14 +76,14 @@ public class PostgresCommonModule extends AbstractModule {
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactory(PostgresConfiguration postgresConfiguration,
                                                                          ConnectionFactory connectionFactory,
-                                                                         @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT) JamesPostgresConnectionFactory singlePostgresConnectionFactory) {
+                                                                         @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT) JamesPostgresConnectionFactory jamesPostgresConnectionFactory) {
         if (postgresConfiguration.rowLevelSecurityEnabled()) {
             LOGGER.info("PostgreSQL row level security enabled");
-            LOGGER.info("Implementation for PostgreSQL connection factory: {}", DomainImplPostgresConnectionFactory.class.getName());
-            return new DomainImplPostgresConnectionFactory(connectionFactory);
+            LOGGER.info("Implementation for PostgreSQL connection factory: {}", PoolBackedPostgresConnectionFactory.class.getName());
+            return new PoolBackedPostgresConnectionFactory(true, connectionFactory);
         }
-        LOGGER.info("Implementation for PostgreSQL connection factory: {}", SinglePostgresConnectionFactory.class.getName());
-        return singlePostgresConnectionFactory;
+        LOGGER.info("Implementation for PostgreSQL connection factory: {}", PoolBackedPostgresConnectionFactory.class.getName());
+        return new PoolBackedPostgresConnectionFactory(false, connectionFactory);
     }
 
     @Provides
