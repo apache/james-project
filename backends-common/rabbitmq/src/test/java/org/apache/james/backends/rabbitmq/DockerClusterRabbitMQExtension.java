@@ -136,6 +136,10 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
                 rabbitMQ1.address(), rabbitMQ2.address(), rabbitMQ3.address());
         }
 
+        public ImmutableList<DockerRabbitMQ> getNodes() {
+            return ImmutableList.of(rabbitMQ1, rabbitMQ2, rabbitMQ3);
+        }
+
         public void detach() {
             rabbitMQ3.performIfRunning(DockerRabbitMQ::reset);
             rabbitMQ1.performIfRunning(rabbitMQ -> rabbitMQ.forgetNode(rabbitMQ3.getNodeName()));
