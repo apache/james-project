@@ -22,8 +22,6 @@ package org.apache.james.backends.postgres.utils;
 import java.time.Duration;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
 import org.apache.james.core.Domain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,21 +37,24 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     private static final Domain DEFAULT = Domain.of("default");
     private static final String DEFAULT_DOMAIN_ATTRIBUTE_VALUE = "";
     private static final int INITIAL_SIZE = 10;
-    private static final int MAX_SIZE = 50;
+    private static final int MAX_SIZE = 20;
     private static final Duration MAX_IDLE_TIME = Duration.ofMillis(5000);
 
     private final boolean rowLevelSecurityEnabled;
     private final ConnectionPool pool;
 
-    @Inject
-    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, ConnectionFactory connectionFactory) {
+    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, Optional<Integer> maxSize, ConnectionFactory connectionFactory) {
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
         final ConnectionPoolConfiguration configuration = ConnectionPoolConfiguration.builder(connectionFactory)
             .maxIdleTime(MAX_IDLE_TIME)
             .initialSize(INITIAL_SIZE)
-            .maxSize(MAX_SIZE)
+            .maxSize(maxSize.orElse(MAX_SIZE))
             .build();
         pool = new ConnectionPool(configuration);
+    }
+
+    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, ConnectionFactory connectionFactory) {
+        this(rowLevelSecurityEnabled, Optional.empty(), connectionFactory);
     }
 
     @Override
