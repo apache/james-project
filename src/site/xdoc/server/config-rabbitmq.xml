@@ -79,6 +79,11 @@
           <dd>Configure the size of the channel pool.
               Optional integer, defaults to 3</dd>
 
+          <dt><strong>driver.network.recovery.interval</strong></dt>
+          <dd>Optional, non-negative integer, default to 100ms.
+              The interval (in ms) that RabbitMQ driver will automatic recovery wait before attempting to reconnect.
+              See https://www.rabbitmq.com/client-libraries/java-api-guide#connection-recovery</dd>
+
           <dt><strong>ssl.enabled</strong></dt>
           <dd>Is using ssl enabled
               Optional boolean, defaults to false</dd>
