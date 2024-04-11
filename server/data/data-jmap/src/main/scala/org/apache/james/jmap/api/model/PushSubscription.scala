@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.api.model
 
-import java.net.URL
+import java.net.{URI, URL}
 import java.security.interfaces.ECPublicKey
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -56,7 +56,7 @@ object VerificationCode {
 case class VerificationCode(value: String) extends AnyVal
 
 object PushSubscriptionServerURL {
-  def from(value: String): Try[PushSubscriptionServerURL] = Try(PushSubscriptionServerURL(new URL(value)))
+  def from(value: String): Try[PushSubscriptionServerURL] = Try(PushSubscriptionServerURL(new URI(value).toURL))
 }
 
 case class PushSubscriptionServerURL(value: URL)

@@ -41,8 +41,7 @@ class CrowdsecServiceTest {
 
     @BeforeEach
     void setUpEach() throws IOException {
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        service = new CrowdsecService(new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), CrowdsecClientConfiguration.DEFAULT_API_KEY));
+        service = new CrowdsecService(new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), CrowdsecClientConfiguration.DEFAULT_API_KEY));
     }
 
     @Test

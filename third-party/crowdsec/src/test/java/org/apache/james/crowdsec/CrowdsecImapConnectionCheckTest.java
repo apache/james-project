@@ -40,8 +40,7 @@ public class CrowdsecImapConnectionCheckTest {
     @Test
     void givenIPBannedByCrowdsecDecisionIp() throws IOException, InterruptedException {
         banIP("--ip", "127.0.0.3");
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
 
         CrowdsecImapConnectionCheck connectionCheck = new CrowdsecImapConnectionCheck(crowdsecClientConfiguration);
         connectionCheck.validate(new InetSocketAddress("127.0.0.3", 8800));
@@ -52,8 +51,7 @@ public class CrowdsecImapConnectionCheckTest {
     @Test
     void givenIPBannedByCrowdsecDecisionIpRange() throws IOException, InterruptedException {
         banIP("--range", "127.0.0.1/24");
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
 
         CrowdsecImapConnectionCheck connectionCheck = new CrowdsecImapConnectionCheck(crowdsecClientConfiguration);
         connectionCheck.validate(new InetSocketAddress("127.0.0.3", 8800));
@@ -64,9 +62,7 @@ public class CrowdsecImapConnectionCheckTest {
     @Test
     void givenIPNotBannedByCrowdsecDecisionIp() throws IOException, InterruptedException {
         banIP("--ip", "192.182.39.2");
-
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
 
         CrowdsecImapConnectionCheck connectionCheck = new CrowdsecImapConnectionCheck(crowdsecClientConfiguration);
         connectionCheck.validate(new InetSocketAddress("127.0.0.3", 8800));
@@ -77,8 +73,7 @@ public class CrowdsecImapConnectionCheckTest {
     void givenIPNotBannedByCrowdsecDecisionIpRange() throws IOException, InterruptedException {
         banIP("--range", "192.182.39.2/24");
 
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration crowdsecClientConfiguration = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
 
         CrowdsecImapConnectionCheck connectionCheck = new CrowdsecImapConnectionCheck(crowdsecClientConfiguration);
         connectionCheck.validate(new InetSocketAddress("127.0.0.3", 8800));

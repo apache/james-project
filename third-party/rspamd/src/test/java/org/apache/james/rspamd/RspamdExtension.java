@@ -20,6 +20,7 @@
 package org.apache.james.rspamd;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.util.UUID;
@@ -123,10 +124,10 @@ public class RspamdExtension implements GuiceModuleTestExtension {
     }
 
     public URL rspamdURL() {
-        return Throwing.supplier(() -> new URL("http",
-            rspamdContainer.getHost(),
-            rspamdContainer.getMappedPort(RSPAMD_DEFAULT_PORT),
-            "/")).get();
+        return Throwing.supplier(() -> new URI("http://"+
+            rspamdContainer.getHost() + ":" +
+            rspamdContainer.getMappedPort(RSPAMD_DEFAULT_PORT) +
+            "/").toURL()).get();
     }
 
     public URL getBaseUrl() {

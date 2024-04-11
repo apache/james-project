@@ -19,14 +19,12 @@
 
 package org.apache.james.crowdsec;
 
-import static org.apache.james.crowdsec.CrowdsecExtension.CROWDSEC_PORT;
 import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_API_KEY;
 import static org.apache.james.crowdsec.model.CrowdsecDecision.BAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
@@ -43,8 +41,7 @@ class CrowdsecHttpClientTest {
     @Test
     void getDecisionsWhenBanningAnIP() throws IOException, InterruptedException {
         banIP("--ip", "192.168.0.4");
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
         CrowdsecHttpClient httpClient = new CrowdsecHttpClient(config);
         List<CrowdsecDecision> decisions = httpClient.getCrowdsecDecisions().block();
 
@@ -58,8 +55,7 @@ class CrowdsecHttpClientTest {
     @Test
     void getDecisionsWhenBanningAnIPRange() throws IOException, InterruptedException {
         banIP("--range", "192.168.0.0/16");
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
         CrowdsecHttpClient httpClient = new CrowdsecHttpClient(config);
         List<CrowdsecDecision> decisions = httpClient.getCrowdsecDecisions().block();
 
@@ -73,8 +69,7 @@ class CrowdsecHttpClientTest {
     @Test
     void getDecisionsWithWrongApiKey() throws IOException, InterruptedException {
         banIP("--range", "192.168.0.0/16");
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), "wrong-key");
+        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), "wrong-key");
         CrowdsecHttpClient httpClient = new CrowdsecHttpClient(config);
 
         assertThatThrownBy(() -> httpClient.getCrowdsecDecisions().block())
@@ -83,8 +78,7 @@ class CrowdsecHttpClientTest {
 
     @Test
     void getDecisionsWhenNoBanning() throws IOException {
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
         CrowdsecHttpClient httpClient = new CrowdsecHttpClient(config);
         List<CrowdsecDecision> decisions = httpClient.getCrowdsecDecisions().block();
 
@@ -95,8 +89,7 @@ class CrowdsecHttpClientTest {
     void getDecisionsWhenBanningMultipleIP() throws IOException, InterruptedException {
         banIP("--ip", "192.168.0.4");
         banIP("--ip", "192.168.0.5");
-        int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), DEFAULT_API_KEY);
+        CrowdsecClientConfiguration config = new CrowdsecClientConfiguration(crowdsecExtension.getLocalhostCrowdsecUrl(), DEFAULT_API_KEY);
         CrowdsecHttpClient httpClient = new CrowdsecHttpClient(config);
         List<CrowdsecDecision> decisions = httpClient.getCrowdsecDecisions().block();
 

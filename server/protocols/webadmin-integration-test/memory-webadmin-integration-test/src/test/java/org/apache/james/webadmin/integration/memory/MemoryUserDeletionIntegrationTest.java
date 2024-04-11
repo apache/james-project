@@ -28,6 +28,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -288,7 +289,7 @@ class MemoryUserDeletionIntegrationTest {
         server.getProbe(MemoryUserDeletionIntegrationTestProbe.class)
             .addPushSubscriptions(ALICE, new PushSubscriptionCreationRequest(
                 "device",
-                new PushSubscriptionServerURL(new URL("http://whatever/toto")),
+                new PushSubscriptionServerURL(new URI("http://whatever/toto").toURL()),
                 Option.empty(),
                 Option.empty(),
                 PushSubscriptionCreationRequest.noTypes()));

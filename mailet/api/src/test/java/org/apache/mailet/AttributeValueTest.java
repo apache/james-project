@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -396,8 +398,8 @@ class AttributeValueTest {
     @Nested
     class UrlSerialization {
         @Test
-        void urlShouldBeSerializedAndBack() throws MalformedURLException {
-            AttributeValue<URL> expected = AttributeValue.of(new URL("https://james.apache.org/"));
+        void urlShouldBeSerializedAndBack() throws MalformedURLException, URISyntaxException {
+            AttributeValue<URL> expected = AttributeValue.of(new URI("https://james.apache.org/").toURL());
 
             JsonNode json = expected.toJson().get();
             AttributeValue<?> actual = AttributeValue.fromJson(json);
@@ -413,7 +415,7 @@ class AttributeValueTest {
 
         @Test
         void fromJsonStringShouldReturnUrlAttributeValueWhenUrl() throws Exception {
-            AttributeValue<URL> expected = AttributeValue.of(new URL("https://james.apache.org/"));
+            AttributeValue<URL> expected = AttributeValue.of(new URI("https://james.apache.org/").toURL());
 
             AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"UrlSerializer\",\"value\": \"https://james.apache.org/\"}");
 

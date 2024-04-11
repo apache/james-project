@@ -19,6 +19,7 @@
 package org.apache.james.imapserver.netty;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
@@ -82,7 +83,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                         isRequireSSL,
                         isPlainAuthEnabled,
                         OidcSASLConfiguration.parse(configuration.configurationAt(OIDC_PATH)));
-                } catch (MalformedURLException | NullPointerException exception) {
+                } catch (MalformedURLException | NullPointerException | URISyntaxException exception) {
                     throw new ConfigurationException("Failed to retrieve oauth component", exception);
                 }
             }
