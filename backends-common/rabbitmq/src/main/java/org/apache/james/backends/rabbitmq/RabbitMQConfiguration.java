@@ -297,6 +297,7 @@ public class RabbitMQConfiguration {
     private static final String HOSTS = "hosts";
     private static final String USE_QUORUM_QUEUES = "quorum.queues.enable";
     private static final String QUORUM_QUEUES_REPLICATION_FACTOR = "quorum.queues.replication.factor";
+    private static final String NETWORK_RECOVERY_INTERVAL = "driver.network.recovery.interval";
     private static final String USE_SSL_MANAGEMENT = "ssl.management.enabled";
 
     private static final String SSL_TRUST_STORE_PATH = "ssl.truststore";
@@ -386,7 +387,7 @@ public class RabbitMQConfiguration {
         static final int DEFAULT_CHANNEL_RPC_TIMEOUT = 60_000;
         static final int DEFAULT_HANDSHAKE_TIMEOUT = 10_000;
         static final int DEFAULT_SHUTDOWN_TIMEOUT = 10_000;
-        static final int DEFAULT_NETWORK_RECOVERY_INTERVAL = 5_000;
+        static final int DEFAULT_NETWORK_RECOVERY_INTERVAL = 100;
         static final int DEFAULT_PORT = 5672;
         static final Duration DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT = Duration.ofDays(1);
 
@@ -492,8 +493,15 @@ public class RabbitMQConfiguration {
         }
 
         public Builder networkRecoveryIntervalInMs(int networkRecoveryInterval) {
+            Preconditions.checkArgument(networkRecoveryInterval >= 0, "'networkRecoveryInterval' must be non-negative");
             this.networkRecoveryIntervalInMs = Optional.of(networkRecoveryInterval);
             return this;
+        }
+
+        public Builder networkRecoveryIntervalInMs(Optional<Integer> networkRecoveryInterval) {
+            return networkRecoveryInterval
+                .map(this::networkRecoveryIntervalInMs)
+                .orElse(this);
         }
 
         public Builder useSsl(Boolean useSsl) {
@@ -613,6 +621,8 @@ public class RabbitMQConfiguration {
         Boolean useQuorumQueues = configuration.getBoolean(USE_QUORUM_QUEUES, null);
         Optional<Integer> quorumQueueReplicationFactor = Optional.ofNullable(configuration.getInteger(QUORUM_QUEUES_REPLICATION_FACTOR, null));
 
+        Optional<Integer> networkRecoveryInterval = Optional.ofNullable(configuration.getInteger(NETWORK_RECOVERY_INTERVAL, null));
+
         List<Host> hosts = Optional.ofNullable(configuration.getList(String.class, HOSTS))
             .map(hostList -> hostList.stream()
                 .map(string -> Host.parseConfString(string, DEFAULT_PORT))
@@ -639,6 +649,7 @@ public class RabbitMQConfiguration {
             .useQuorumQueues(useQuorumQueues)
             .quorumQueueReplicationFactor(quorumQueueReplicationFactor)
             .quorumQueueDeliveryLimit(quorumQueueDeliveryLimit)
+            .networkRecoveryIntervalInMs(networkRecoveryInterval)
             .hosts(hosts)
             .queueTTL(queueTTL)
             .eventBusNotificationDurabilityEnabled(configuration.getBoolean(EVENT_BUS_NOTIFICATION_DURABILITY_ENABLED, null))
