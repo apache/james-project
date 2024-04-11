@@ -174,6 +174,7 @@ class RabbitMQClusterTest {
         @BeforeEach
         void setup(DockerRabbitMQCluster cluster) throws IOException, TimeoutException {
             node1ConnectionFactory = cluster.getRabbitMQ1().connectionFactory();
+            node1ConnectionFactory.setNetworkRecoveryInterval(100);
             resilientConnection = node1ConnectionFactory.newConnection(cluster.getAddresses());
             resilientChannel = resilientConnection.createChannel();
             ConnectionFactory node2ConnectionFactory = cluster.getRabbitMQ2().connectionFactory();
@@ -185,6 +186,44 @@ class RabbitMQClusterTest {
         void tearDown() {
             closeQuietly(resilientConnection, resilientChannel);
         }
+
+        @Test
+        void connectionShouldBeRecoveredWhenConnectedNodeIsDown(DockerRabbitMQCluster cluster) throws Exception {
+            // find the connected node and shutdown the node
+            DockerRabbitMQ connectedNode = getConnectedNode(cluster, resilientChannel);
+            connectedNode.stop();
+
+            // give sometime to the connection recovered
+            Thread.sleep(100L);
+
+            // make sure the connection can be recovered (to other nodes)
+            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
+            resilientChannel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
+            resilientChannel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+
+            int nbMessages = 10;
+            IntStream.range(0, nbMessages)
+                .mapToObj(i -> asBytes(String.valueOf(i)))
+                .forEach(Throwing.consumer(
+                    bytes -> resilientChannel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, NO_PROPERTIES, bytes)));
+
+            InMemoryConsumer consumer = new InMemoryConsumer(resilientChannel);
+            resilientChannel.basicConsume(QUEUE, consumer);
+
+            awaitAtMostOneMinute.until(() -> consumer.getConsumedMessages().size() == nbMessages);
+
+            Integer[] expectedResult = IntStream.range(0, nbMessages).boxed().toArray(Integer[]::new);
+            assertThat(consumer.getConsumedMessages()).containsOnly(expectedResult);
+        }
+
+        private DockerRabbitMQ getConnectedNode(DockerRabbitMQCluster cluster, Channel resilientChannel) {
+            return cluster.getNodes()
+                .stream()
+                .filter(node -> node.getNodeName().equals(resilientChannel.getConnection().getServerProperties().get("cluster_name").toString()))
+                .findFirst()
+                .get();
+        }
+
 
         @Disabled("JAMES-2334 For some reason, we are unable to recover topology when reconnecting" +
             "See https://github.com/rabbitmq/rabbitmq-server/issues/959")
