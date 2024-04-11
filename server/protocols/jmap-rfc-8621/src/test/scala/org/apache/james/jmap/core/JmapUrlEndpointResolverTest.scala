@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.core
 
-import java.net.{URI, URL}
+import java.net.URI
 
 import org.apache.commons.configuration2.{Configuration, PropertiesConfiguration}
 import org.apache.james.jmap.core.JmapConfigProperties.{URL_PREFIX_PROPERTY, WEBSOCKET_URL_PREFIX_PROPERTY}
@@ -42,10 +42,10 @@ class JmapUrlEndpointResolverTest extends AnyWordSpec with Matchers {
     "succeed to configuration urlPrefix when provided" in {
       val testee : JmapUrlEndpointResolver= new JmapUrlEndpointResolver(UrlPrefixes(new URI("http://random-domain.com"), new URI("ws://random-domain.com")))
 
-      testee.apiUrl must be(new URL("http://random-domain.com/jmap"))
-      testee.downloadUrl must be(new URL("http://random-domain.com/download/{accountId}/{blobId}?type={type}&name={name}"))
-      testee.uploadUrl must be(new URL("http://random-domain.com/upload/{accountId}"))
-      testee.eventSourceUrl must be(new URL("http://random-domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
+      testee.apiUrl must be(URL("http://random-domain.com/jmap"))
+      testee.downloadUrl must be(URL("http://random-domain.com/download/{accountId}/{blobId}?type={type}&name={name}"))
+      testee.uploadUrl must be(URL("http://random-domain.com/upload/{accountId}"))
+      testee.eventSourceUrl must be(URL("http://random-domain.com/eventSource?types={types}&closeAfter={closeafter}&ping={ping}"))
     }
   }
 }

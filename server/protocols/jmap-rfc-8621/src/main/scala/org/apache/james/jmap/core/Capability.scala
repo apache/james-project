@@ -92,7 +92,7 @@ object UrlPrefixes {
 
   private def safeURI(string: String): Option[URI] = Option(string).flatMap(s => Try(new URI(s)).toOption)
 
-  private def safeURL(string: String): Option[URL] = Option(string).flatMap(s => Try(new URL(s)).toOption)
+  private def safeURL(string: String): Option[URL] = Option(string).flatMap(s => Try(new URI(s).toURL).toOption)
 }
 
 final case class UrlPrefixes(httpUrlPrefix: URI, webSocketURLPrefix: URI)

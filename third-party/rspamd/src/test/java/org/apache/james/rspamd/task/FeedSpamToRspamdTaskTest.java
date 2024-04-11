@@ -29,7 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
-import java.net.URL;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.Instant;
@@ -530,7 +530,7 @@ public class FeedSpamToRspamdTaskTest {
             .when(HttpRequest.request().withPath("/learnspam"))
             .respond(httpRequest -> HttpResponse.response().withStatusCode(200), Delay.delay(TimeUnit.SECONDS, 10));
 
-        RspamdHttpClient httpClient = new RspamdHttpClient(new RspamdClientConfiguration(new URL(String.format("http://localhost:%s", mockServer.getLocalPort())),
+        RspamdHttpClient httpClient = new RspamdHttpClient(new RspamdClientConfiguration(new URI(String.format("http://localhost:%s", mockServer.getLocalPort())).toURL(),
             PASSWORD, Optional.of(3)));
 
         RunningOptions runningOptions = new RunningOptions(Optional.empty(),

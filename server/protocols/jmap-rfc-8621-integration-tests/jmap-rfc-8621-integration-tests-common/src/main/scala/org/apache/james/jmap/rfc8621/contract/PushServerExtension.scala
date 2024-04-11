@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.rfc8621.contract
 
-import java.net.URL
+import java.net.{URI, URL}
 import java.time.Clock
 import java.util.UUID
 
@@ -48,7 +48,7 @@ class PushServerExtension extends BeforeEachCallback with AfterEachCallback with
     MockPushServer.appendSpec(mockServer)
   }
 
-  def getBaseUrl: URL = new URL(s"http://127.0.0.1:${mockServer.getLocalPort}")
+  def getBaseUrl: URL = new URI(s"http://127.0.0.1:${mockServer.getLocalPort}").toURL
 }
 
 object MockPushServer {

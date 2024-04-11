@@ -20,7 +20,6 @@
 package org.apache.james.jmap.json
 
 import java.io.InputStream
-import java.net.URL
 
 import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -30,7 +29,7 @@ import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint
 import org.apache.james.jmap.core.Invocation.{Arguments, MethodCallId, MethodName}
 import org.apache.james.jmap.core.SetError.SetErrorDescription
-import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, ClientId, CoreCapabilityProperties, CreatedIds, EhloArg, EhloArgs, EhloName, Invocation, IsPersonal, IsReadOnly, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxDelayedSend, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, ProblemDetails, Properties, RequestObject, ResponseObject, ServerId, Session, SetError, SubmissionProperties, SupportsPush, UuidState, WebSocketCapabilityProperties}
+import org.apache.james.jmap.core.{Account, AccountId, Capabilities, Capability, ClientId, CoreCapabilityProperties, CreatedIds, EhloArg, EhloArgs, EhloName, Invocation, IsPersonal, IsReadOnly, MailCapabilityProperties, MaxCallsInRequest, MaxConcurrentRequests, MaxConcurrentUpload, MaxDelayedSend, MaxMailboxDepth, MaxMailboxesPerEmail, MaxObjectsInGet, MaxObjectsInSet, MaxSizeAttachmentsPerEmail, MaxSizeMailboxName, MaxSizeRequest, MaxSizeUpload, MayCreateTopLevelMailbox, ProblemDetails, Properties, RequestObject, ResponseObject, ServerId, Session, SetError, SubmissionProperties, SupportsPush, UuidState, WebSocketCapabilityProperties, URL}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -85,7 +84,7 @@ object ResponseSerializer {
   private implicit val mayCreateTopLevelMailboxWrites: Writes[MayCreateTopLevelMailbox] = Json.valueWrites[MayCreateTopLevelMailbox]
 
   private implicit val usernameWrites: Writes[Username] = username => JsString(username.asString)
-  private implicit val urlWrites: Writes[URL] = url => JsString(url.toString)
+  private implicit val urlWrites: Writes[URL] = url => JsString(url.value)
   val coreCapabilityWrites: OWrites[CoreCapabilityProperties] = Json.writes[CoreCapabilityProperties]
   val mailCapabilityWrites: OWrites[MailCapabilityProperties] = Json.writes[MailCapabilityProperties]
   private implicit val maxDelayedSendWrites: Writes[MaxDelayedSend] = Json.valueWrites[MaxDelayedSend]

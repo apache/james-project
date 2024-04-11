@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.api.pushsubscription
 
-import java.net.URL
+import java.net.{URI, URL}
 import java.time.Clock
 
 import org.apache.james.jmap.api.identity.CustomIdentityDAOContract.bob
@@ -51,7 +51,7 @@ class PushDeleteUserDataTaskStepTest {
   def shouldDeleteUserData(): Unit = {
     val validRequest = PushSubscriptionCreationRequest(
       deviceClientId = DeviceClientId("1"),
-      url = PushSubscriptionServerURL(new URL("https://example.com/push")),
+      url = PushSubscriptionServerURL(new URI("https://example.com/push").toURL()),
       types = Seq(CustomTypeName1))
     SMono.fromPublisher(pushSubscriptionRepository.save(ALICE, validRequest)).block().id
 

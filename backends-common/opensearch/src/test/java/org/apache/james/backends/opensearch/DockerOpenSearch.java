@@ -24,6 +24,8 @@ import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.OS_H
 import static org.apache.james.backends.opensearch.DockerOpenSearch.Fixture.OS_MEMORY;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
@@ -276,8 +278,8 @@ public interface DockerOpenSearch {
         @Override
         public URL getUrl() {
             try {
-                return new URL("https://" + getIp() + ":" + getHttpPort());
-            } catch (MalformedURLException e) {
+                return new URI("https://" + getIp() + ":" + getHttpPort()).toURL();
+            } catch (MalformedURLException | URISyntaxException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -321,8 +323,8 @@ public interface DockerOpenSearch {
 
     default URL getUrl() {
         try {
-            return new URL("http://" + getIp() + ":" + getHttpPort());
-        } catch (MalformedURLException e) {
+            return new URI("http://" + getIp() + ":" + getHttpPort()).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }

@@ -21,7 +21,7 @@ package org.apache.james.rspamd.healthcheck;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.Optional;
 
 import org.apache.james.core.healthcheck.Result;
@@ -68,7 +68,7 @@ class RspamdHealthcheckTest {
 
     @Test
     void checkShouldReturnUnhealthyWhenWrongRspamdURL() throws Exception {
-        RspamdClientConfiguration configuration = new RspamdClientConfiguration(new URL("http://wrongRspamdURL:11334"), "passwordDoesNotMatter", Optional.empty());
+        RspamdClientConfiguration configuration = new RspamdClientConfiguration(new URI("http://wrongRspamdURL:11334").toURL(), "passwordDoesNotMatter", Optional.empty());
         RspamdHttpClient client = new RspamdHttpClient(configuration);
         rspamdHealthCheck = new RspamdHealthCheck(client);
 

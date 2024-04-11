@@ -20,6 +20,8 @@
 package org.apache.james.protocols.api;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Optional;
 
@@ -31,7 +33,7 @@ import com.google.common.base.Preconditions;
 
 public class OidcSASLConfiguration {
 
-    public static OidcSASLConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws MalformedURLException {
+    public static OidcSASLConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) throws MalformedURLException, URISyntaxException {
         String jwksURL = configuration.getString("jwksURL", null);
         String claim = configuration.getString("claim", null);
         String oidcConfigurationURL = configuration.getString("oidcConfigurationURL", null);
@@ -45,9 +47,9 @@ public class OidcSASLConfiguration {
         String introspectionUrl = configuration.getString("introspection.url", null);
         String userInfoUrl = configuration.getString("userinfo.url", null);
 
-        return new OidcSASLConfiguration(new URL(jwksURL), claim, new URL(oidcConfigurationURL), scope, Optional.ofNullable(introspectionUrl)
-            .map(Throwing.function(URL::new)), Optional.ofNullable(configuration.getString("introspection.auth", null)),
-            Optional.ofNullable(userInfoUrl).map(Throwing.function(URL::new)));
+        return new OidcSASLConfiguration(new URI(jwksURL).toURL(), claim, new URI(oidcConfigurationURL).toURL(), scope, Optional.ofNullable(introspectionUrl)
+            .map(Throwing.function(value -> new URI(value).toURL())), Optional.ofNullable(configuration.getString("introspection.auth", null)),
+            Optional.ofNullable(userInfoUrl).map(Throwing.function(value -> new URI(value).toURL())));
     }
 
     private final URL jwksURL;
