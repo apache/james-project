@@ -473,6 +473,43 @@ class OpenSearchIntegrationTest extends AbstractMessageSearchIndexTest {
             .containsOnly(messageId2.getUid());
     }
 
+    @Test
+    void multiMailboxSearchShouldBeSupportedWhenUsersHaveManyMailboxes() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        Message.Builder messageBuilder = Message.Builder
+            .of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8);
+
+        ComposedMessageId messageId1 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "alice@domain.tld"))
+                    .build()),
+            session).getId();
+
+        ComposedMessageId messageId2 = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder().build(
+                messageBuilder
+                    .addField(new RawField("To", "bob@other.tld"))
+                    .build()),
+            session).getId();
+
+        awaitForOpenSearch(QueryBuilders.matchAll().build()._toQuery(), 15);
+        Thread.sleep(500);
+
+        Flux.range(0, 1050)
+            .concatMap(i -> storeMailboxManager.createMailboxReactive(MailboxPath.forUser(USERNAME, "box" + i), session))
+            .blockLast();
+
+        MultimailboxesSearchQuery query = MultimailboxesSearchQuery.from(SearchQuery.of(SearchQuery.address(SearchQuery.AddressType.To, "other"))).build();
+        assertThat(Flux.from(storeMailboxManager.search(query, session, 10)).collectList().block())
+            .containsOnly(messageId2.getMessageId());
+    }
+
     @Disabled("MAILBOX-403 Relaxed the matching constraints for email addresses in text bodies to reduce OpenSearch disk space usage")
     @Test
     public void textShouldNotMatchOtherAddressesOfTheSameDomain() {
