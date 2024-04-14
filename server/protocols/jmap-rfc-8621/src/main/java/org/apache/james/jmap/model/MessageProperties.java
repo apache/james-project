@@ -80,7 +80,7 @@ public class MessageProperties {
                 .map(MessageProperty::getReadProfile),
             headerPropertiesReadLevel());
 
-        // If `null`, all properties will be fetched (JMAP Draft)
+        // If `null`, all properties will be fetched
         // This defer from RFC-8621 behavior (not implemented here)
         // If omitted, this defaults to: [ "partId", "blobId", "size", "name", "type", "charset", "disposition", "cid",
         // "language", "location" ]

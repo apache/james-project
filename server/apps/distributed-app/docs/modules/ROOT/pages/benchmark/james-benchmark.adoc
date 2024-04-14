@@ -88,7 +88,6 @@ We did provide a lot of simulations in `org.apache.james.gatling.simulation` pat
 Some symbolic simulations we often use:
 
 * IMAP: `org.apache.james.gatling.simulation.imap.PlatformValidationSimulation`
-* JMAP draft: `org.apache.james.gatling.simulation.jmap.draft.PlatformValidationSimulation`
 * JMAP rfc8621: `org.apache.james.gatling.simulation.jmap.rfc8621.PushPlatformValidationSimulation`
 
 === Base performance result

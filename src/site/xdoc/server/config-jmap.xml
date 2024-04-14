@@ -75,7 +75,7 @@
                     <dd>Default value: 200M. Supported units are B (bytes) K (KB) M (MB) G (GB).</dd>
 
                     <dt><strong>email.send.max.size</strong></dt>
-                    <dd>Optional. Configuration max size for message created in both JMAP Draft amd RFC-8621.</dd>
+                    <dd>Optional. Configuration max size for message created in RFC-8621.</dd>
                     <dd>Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).</dd>
 
                     <dt><strong>max.size.attachments.per.mail</strong></dt>
@@ -96,14 +96,6 @@
                     <dd>Governs whether authenticated users that do not exist locally should be created in the users repository.
                     </dd>
 
-                    <dt><strong>authentication.strategy.draft</strong></dt>
-                    <dd>List[String] with delimiter ",". Defaults to AccessTokenAuthenticationStrategy,JWTAuthenticationStrategy,
-                        QueryParameterAccessTokenAuthenticationStrategy.</dd>
-                    <dd>Specify which authentication strategies system admin want to use for JMAP draft server.
-                        The implicit package name is "org.apache.james.jmap.http". If you have a custom authentication strategy outside this package, you have to specify its FQDN.
-                        If no authentication strategy is specified, JMAP draft server will fallback to default strategies:
-                    AccessTokenAuthenticationStrategy, JWTAuthenticationStrategy, QueryParameterAccessTokenAuthenticationStrategy.</dd>
-
                     <dt><strong>authentication.strategy.rfc8621</strong></dt>
                     <dd>List[String] with delimiter ",". Defaults to JWTAuthenticationStrategy,BasicAuthenticationStrategy.</dd>
                     <dd>Specify which authentication strategies system admin want to use for JMAP RFC-8621 server.
@@ -112,10 +104,8 @@
                     JWTAuthenticationStrategy, BasicAuthenticationStrategy.</dd>
 
                     <dt><strong>jmap.version.default</strong></dt>
-                    <dd>Optional string. Defaults to draft. Allowed values: draft, rfc-8621.</dd>
-                    <dd>Which version of the JMAP protocol should be served when none supplied in the Accept header.
-                    Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
-                    rfc-8621 allow compatibility with other third party apps.</dd>
+                    <dd>Optional string. Defaults to rfc-8621. Allowed values: rfc-8621</dd>
+                    <dd>Which version of the JMAP protocol should be served when none supplied in the Accept header.</dd>
 
                     <dt><strong>dynamic.jmap.prefix.resolution.enabled</strong></dt>
                     <dd>Optional boolean. Defaults to false. Supported Jmap session endpoint returns dynamic prefix in response.
@@ -169,22 +159,14 @@
                     <a href="https://www.krakend.io/">Krackend</a> API gateway, but usage of similar technologies is definitely doable.</p>
             </subsection>
 
-            <subsection name="JMAP-draft vs JMAP-RFC-8621">
-                <p>James had been supporting an implementation based on an early specification of JMAP, what we call here
-                <em>JMAP-draft</em> version. But the protocol went under a lot of changes until its finalization as an
-                official RFC.</p>
-
+            <subsection name="JMAP-RFC-8621">
                 <p>The finalized version of JMAP regarding the core specifications [<a href="https://tools.ietf.org/html/rfc8620">RFC-8620</a>]
                 and the mail specifications [<a href="https://tools.ietf.org/html/rfc8621">RFC-8621</a>] are being
-                currently implemented in James (<em>JMAP-RFC-8621</em> version). It's supposed to replace at term the
-                <em>JMAP-draft</em> version.</p>
+                currently implemented in James (<em>JMAP-RFC-8621</em> version).</p>
 
-                <p>Meanwhile, both versions will be available. The version by default will be <em>JMAP-draft</em> during
-                the time it takes to implement the new version. If you want to use a specific version for a request,
-                you will need to add an extra <em>jmapVersion</em> field in your <b>Accept</b> header of your JMAP request:</p>
+                <p>You need to add an extra <em>jmapVersion</em> field in your <b>Accept</b> header of your JMAP request:</p>
 
                 <ul>
-                    <li><b>JMAP-draft</b>: <em>Accept: application/json; jmapVersion=draft</em></li>
                     <li><b>JMAP-RFC-8621</b>: <em>Accept: application/json; jmapVersion=rfc-8621</em></li>
                 </ul>
             </subsection>
@@ -202,8 +184,6 @@
                 <p>Contributions enhancing support are furthermore welcomed.</p>
 
                 <ul>The list of tested JMAP clients are:
-                    <li><a href="https://open-paas.org/">OpenPaaS</a> is actively using the draft version of the JMAP implementation. Migration to
-                    RFC-8621 is planned.</li>
                     <li>Experiments had been run on top of <a href="https://github.com/iNPUTmice/lttrs-android">LTT.RS</a>. Version in the Accept
                         headers needs to be explicitly set to `rfc-8621`. <a href="https://github.com/linagora/james-project/pull/4089">Read more</a>.</li>
                 </ul>
