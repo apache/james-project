@@ -21,7 +21,7 @@ package org.apache.james;
 
 import java.util.Optional;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.jmap.JmapJamesServerContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.blob.deduplication.StorageStrategy;
 import org.junit.jupiter.api.extension.RegisterExtension;
