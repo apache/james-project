@@ -22,7 +22,7 @@ package org.apache.mailbox.tools.indexer;
 import java.time.Clock;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.indexer.ReIndexer.RunningOptions;
 import org.apache.james.task.Task;

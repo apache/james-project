@@ -21,7 +21,7 @@ package org.apache.james.jmap.json
 
 import eu.timepit.refined
 import eu.timepit.refined._
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.{Domain, Username}
 import org.apache.james.jmap.core.CapabilityIdentifier.CapabilityIdentifier
 import org.apache.james.jmap.core.Id.IdConstraint

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.mail.Flags;
 
@@ -125,5 +126,15 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     @Override
     public List<MessageAttachmentMetadata> getAttachments() {
         return message.getAttachments();
+    }
+
+    @Override
+    public Optional<byte[][]> getFullBytes() {
+        return message.getFullBytes();
+    }
+
+    @Override
+    public Optional<byte[][]> getHeadersBytes() {
+        return message.getHeadersBytes();
     }
 }

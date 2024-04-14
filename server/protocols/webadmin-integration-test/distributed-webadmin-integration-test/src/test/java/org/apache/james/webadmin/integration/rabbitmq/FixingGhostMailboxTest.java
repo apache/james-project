@@ -27,12 +27,10 @@ import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.backends.rabbitmq.RabbitMQFixture.calmlyAwait;
-import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
-import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
+import static org.apache.james.jmap.JmapRFCCommonRequests.UserCredential;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -55,8 +53,8 @@ import org.apache.james.backends.cassandra.init.ClusterFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.AccessToken;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
+import org.apache.james.jmap.JmapRFCCommonRequests;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.junit.categories.Unstable;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
@@ -84,6 +82,7 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -98,10 +97,6 @@ import io.restassured.specification.RequestSpecification;
 
 @Tag(BasicFeature.TAG)
 class FixingGhostMailboxTest {
-    private static final String NAME = "[0][0]";
-    private static final String ARGUMENTS = "[0][1]";
-    private static final String FIRST_MAILBOX = ARGUMENTS + ".list[0]";
-
     private static final String DOMAIN = "domain.tld";
     private static final String CEDRIC = "cedric@" + DOMAIN;
     private static final String BOB = "bob@" + DOMAIN;
@@ -136,7 +131,7 @@ class FixingGhostMailboxTest {
                     .build())))
         .build();
 
-    private AccessToken accessToken;
+    private UserCredential aliceCredential;
     private MailboxProbeImpl mailboxProbe;
     private ACLProbe aclProbe;
     private ComposedMessageId message1;
@@ -157,6 +152,7 @@ class FixingGhostMailboxTest {
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(jmapPort.getValue())
+            .addHeader("accept", "application/json; jmapVersion=rfc-8621")
             .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         webadminSpecification = WebAdminUtils.buildRequestSpecification(webAdminProbe.getWebAdminPort())
@@ -166,7 +162,7 @@ class FixingGhostMailboxTest {
             .addDomain(DOMAIN)
             .addUser(ALICE, ALICE_SECRET)
             .addUser(BOB, BOB_SECRET);
-        accessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(ALICE), ALICE_SECRET);
+        aliceCredential = JmapRFCCommonRequests.getUserCredential(Username.of(ALICE), ALICE_SECRET);
 
         CassandraProbe probe = server.getProbe(CassandraProbe.class);
         ClusterConfiguration cassandraConfiguration = probe.getConfiguration();
@@ -193,8 +189,24 @@ class FixingGhostMailboxTest {
 
         // trigger provisioning
         given()
-            .header("Authorization", accessToken.asString())
-            .body("[[\"getMailboxes\", {}, \"#0\"]]")
+            .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
+            .body("""
+                {
+                    "using": [
+                        "urn:ietf:params:jmap:core",
+                        "urn:ietf:params:jmap:mail"
+                    ],
+                    "methodCalls": [
+                        [
+                            "Mailbox/get",
+                            {
+                                "accountId": "%s",
+                                "ids": null
+                            },
+                            "c1"
+                        ]
+                    ]
+                }""".formatted(aliceCredential.accountId()))
         .when()
             .post("/jmap")
         .then()
@@ -227,16 +239,31 @@ class FixingGhostMailboxTest {
             .timeout(THIRTY_SECONDS)
             .untilAsserted(() ->
                 given()
-                    .header("Authorization", accessToken.asString())
-                    .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
+                    .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
+                    .body("""
+                        {
+                            "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+                            "methodCalls": [
+                                [
+                                    "Email/query",
+                                    {
+                                        "accountId": "%s",
+                                        "filter": {
+                                            "inMailbox": "%s"
+                                        }
+                                    },
+                                    "c1"
+                                ]
+                            ]
+                        }
+                        """.formatted(aliceCredential.accountId(), newAliceInbox.serialize()))
                 .when()
                     .post("/jmap")
                 .then()
                     .statusCode(200)
-                    .body(NAME, equalTo("messageList"))
-                    .body(ARGUMENTS + ".messageIds", hasSize(1))
-                    .body(ARGUMENTS + ".messageIds", not(contains(message1.getMessageId().serialize())))
-                    .body(ARGUMENTS + ".messageIds", contains(message2.getMessageId().serialize())));
+                    .body("methodResponses[0][1].ids", hasSize(1))
+                    .body("methodResponses[0][1].ids", not(contains(message1.getMessageId().serialize())))
+                    .body("methodResponses[0][1].ids", contains(message2.getMessageId().serialize())));
     }
 
 
@@ -254,18 +281,35 @@ class FixingGhostMailboxTest {
 
         fixGhostMailboxes(newAliceInbox);
 
-        given()
-            .header("Authorization", accessToken.asString())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
+        calmlyAwait
+            .timeout(THIRTY_SECONDS)
+            .untilAsserted(() -> given()
+            .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
+            .body("""
+                {
+                    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+                    "methodCalls": [
+                        [
+                            "Email/query",
+                            {
+                                "accountId": "%s",
+                                "filter": {
+                                    "inMailbox": "%s"
+                                }
+                            },
+                            "c1"
+                        ]
+                    ]
+                }
+                """.formatted(aliceCredential.accountId(), newAliceInbox.serialize()))
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", hasSize(2))
-            .body(ARGUMENTS + ".messageIds", containsInAnyOrder(
+            .body("methodResponses[0][1].ids", hasSize(2))
+            .body("methodResponses[0][1].ids", containsInAnyOrder(
                 message1.getMessageId().serialize(),
-                message2.getMessageId().serialize()));
+                message2.getMessageId().serialize())));
     }
 
     @Test
@@ -276,15 +320,28 @@ class FixingGhostMailboxTest {
         fixGhostMailboxes(newAliceInbox);
 
         given()
-            .header("Authorization", accessToken.asString())
-            .body("[[\"getMailboxes\", {\"ids\": [\"" + newAliceInbox.serialize() + "\"]}, \"#0\"]]")
+            .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
+            .header("accept", "application/json; jmapVersion=rfc-8621")
+            .body("""
+                {
+                    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares" ],
+                    "methodCalls": [
+                        [
+                            "Mailbox/get",
+                            {
+                                "accountId": "%s",
+                                "ids": ["%s"]
+                            },
+                            "c1"
+                        ]
+                    ]
+                }""".formatted(aliceCredential.accountId(), newAliceInbox.serialize()))
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body(NAME, equalTo("mailboxes"))
-            .body(FIRST_MAILBOX + ".sharedWith", hasKey(BOB))
-            .body(FIRST_MAILBOX + ".sharedWith", hasKey(CEDRIC));
+            .body("methodResponses[0][1].list[0].rights", hasKey(BOB))
+            .body("methodResponses[0][1].list[0].rights", hasKey(CEDRIC));
     }
 
     @Test
@@ -295,14 +352,30 @@ class FixingGhostMailboxTest {
         fixGhostMailboxes(newAliceInbox);
 
         given()
-            .header("Authorization", accessToken.asString())
-            .body("[[\"getMailboxes\", {\"ids\": [\"" + aliceGhostInboxId.serialize() + "\"]}, \"#0\"]]")
+            .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
+            .body("""
+                {
+                    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail", "urn:apache:james:params:jmap:mail:shares"],
+                    "methodCalls": [
+                        [
+                            "Email/query",
+                            {
+                                "accountId": "%s",
+                                "filter": {
+                                    "inMailbox": "%s"
+                                }
+                            },
+                            "c1"
+                        ]
+                    ]
+                }
+                """.formatted(aliceCredential.accountId(), aliceGhostInboxId.serialize()))
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body(NAME, equalTo("mailboxes"))
-            .body(ARGUMENTS + ".list", hasSize(0));
+            .body("methodResponses[0][1].type", Matchers.is("invalidArguments"))
+            .body("methodResponses[0][1].description", Matchers.is(aliceGhostInboxId.serialize() + " can not be found"));
     }
 
     @Test

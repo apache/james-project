@@ -25,7 +25,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Base64;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -22,7 +22,7 @@ package org.apache.james.jmap.change
 import java.util.Optional
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.core.Username
 import org.apache.james.events.Event.EventId
 import org.apache.james.events.{Event, EventSerializer}

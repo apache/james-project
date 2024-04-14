@@ -31,7 +31,7 @@ import eu.timepit.refined.refineV
 import io.netty.handler.codec.http.HttpHeaderNames.ACCEPT
 import io.restassured.RestAssured._
 import io.restassured.http.ContentType.JSON
-import javax.inject.{Inject, Named}
+import jakarta.inject.{Inject, Named}
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
@@ -44,14 +44,13 @@ import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JM
 import org.apache.james.jmap.core.Invocation.MethodName
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
 import org.apache.james.jmap.core.{Capability, CapabilityFactory, CapabilityProperties, UrlPrefixes}
-import org.apache.james.jmap.draft.JmapGuiceProbe
 import org.apache.james.jmap.http.UserCredential
-import org.apache.james.jmap.mail
 import org.apache.james.jmap.method.{InvocationWithContext, Method}
 import org.apache.james.jmap.rfc8621.contract.CustomMethodContract.CUSTOM
 import org.apache.james.jmap.rfc8621.contract.DownloadContract.accountId
 import org.apache.james.jmap.rfc8621.contract.Fixture._
 import org.apache.james.jmap.routes.{Applicable, Blob, BlobResolutionResult, BlobResolver, NonApplicable}
+import org.apache.james.jmap.{JmapGuiceProbe, mail}
 import org.apache.james.mailbox.MailboxSession
 import org.apache.james.mailbox.model.ContentType
 import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
@@ -66,9 +65,7 @@ import sttp.client3.okhttp.OkHttpSyncBackend
 import sttp.client3.{Identity, RequestT, SttpBackend, asWebSocket, basicRequest}
 import sttp.model.Uri
 import sttp.monad.MonadError
-import sttp.monad.syntax.MonadErrorOps
 import sttp.ws.WebSocketFrame
-import sttp.ws.WebSocketFrame.Text
 
 import scala.util.{Success, Try}
 

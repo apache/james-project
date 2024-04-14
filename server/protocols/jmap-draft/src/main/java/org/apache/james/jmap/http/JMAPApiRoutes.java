@@ -31,8 +31,8 @@ import static org.apache.james.util.ReactorUtils.logOnError;
 import java.io.IOException;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
@@ -42,8 +42,8 @@ import org.apache.james.jmap.draft.exceptions.InternalErrorException;
 import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.draft.model.AuthenticatedRequest;
 import org.apache.james.jmap.draft.model.InvocationRequest;
-import org.apache.james.jmap.draft.model.InvocationResponse;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
+import org.apache.james.jmap.model.InvocationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;

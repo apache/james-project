@@ -30,7 +30,7 @@ import static org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTab
 
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;

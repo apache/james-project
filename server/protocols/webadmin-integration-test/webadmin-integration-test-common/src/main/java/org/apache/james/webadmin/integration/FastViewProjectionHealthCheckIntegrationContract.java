@@ -20,49 +20,50 @@
 package org.apache.james.webadmin.integration;
 
 import static io.restassured.RestAssured.with;
-import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
 import static org.apache.james.jmap.JMAPTestingConstants.ALICE_PASSWORD;
-import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.JMAPTestingConstants.BOB;
 import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.CEDRIC;
 import static org.apache.james.jmap.JMAPTestingConstants.CEDRIC_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
-import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
-import static org.apache.james.jmap.JmapCommonRequests.bodyOfMessage;
-import static org.apache.james.jmap.JmapCommonRequests.getLastMessageId;
-import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
-import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
-import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
+import static org.apache.james.jmap.JmapRFCCommonRequests.ACCEPT_JMAP_RFC_HEADER;
+import static org.apache.james.jmap.JmapRFCCommonRequests.UserCredential;
+import static org.apache.james.jmap.JmapRFCCommonRequests.getLastMessageId;
+import static org.apache.james.jmap.JmapRFCCommonRequests.getUserCredential;
+import static org.apache.james.jmap.JmapRFCCommonRequests.listMessageIdsForAccount;
+import static org.apache.james.webadmin.integration.TestFixture.WAIT_THIRTY_SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.stream.IntStream;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.healthcheck.ResultStatus;
-import org.apache.james.jmap.AccessToken;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
+import org.apache.james.jmap.JmapRFCCommonRequests;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.eclipse.jetty.http.HttpStatus;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 public abstract class FastViewProjectionHealthCheckIntegrationContract {
     private static final String MESSAGE_FAST_VIEW_PROJECTION = "MessageFastViewProjection";
 
     private RequestSpecification webAdminApi;
-    private AccessToken bobAccessToken;
-    private AccessToken aliceAccessToken;
+    private UserCredential bobCredential;
+    private UserCredential aliceCredential;
 
     @BeforeEach
     void setUp(GuiceJamesServer jamesServer) throws Exception {
@@ -76,9 +77,8 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
         RestAssured.requestSpecification = jmapRequestSpecBuilder
             .setPort(jmapPort.getValue())
             .build();
-
-        bobAccessToken = authenticateJamesUser(baseUri(jmapPort), BOB, BOB_PASSWORD);
-        aliceAccessToken = authenticateJamesUser(baseUri(jmapPort), ALICE, ALICE_PASSWORD);
+        bobCredential = getUserCredential(BOB, BOB_PASSWORD);
+        aliceCredential = getUserCredential(ALICE, ALICE_PASSWORD);
 
         webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
     }
@@ -96,7 +96,7 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
 
     @Test
     void checkShouldReturnHealthyAfterSendingAMessageWithReads() {
-        bobSendAMessageToAlice();
+        bobSendAnEmailToAlice();
 
         IntStream.rangeClosed(1, 20)
             .forEach(counter -> aliceReadLastMessage());
@@ -112,7 +112,7 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
 
     @Test
     void checkShouldReturnDegradedAfterFewReadsOnAMissedProjection(GuiceJamesServer guiceJamesServer) throws Exception {
-        bobSendAMessageToAlice();
+        bobSendAnEmailToAlice();
 
         makeHealthCheckDegraded(guiceJamesServer);
 
@@ -130,7 +130,7 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
 
     @Test
     void checkShouldTurnFromDegradedToHealthyAfterMoreReadsOnAMissedProjection(GuiceJamesServer guiceJamesServer) {
-        bobSendAMessageToAlice();
+        bobSendAnEmailToAlice();
 
         makeHealthCheckDegraded(guiceJamesServer);
 
@@ -152,39 +152,89 @@ public abstract class FastViewProjectionHealthCheckIntegrationContract {
         aliceReadLastMessage();
     }
 
-    private void bobSendAMessageToAlice() {
-        String messageCreationId = "creationId";
-        String outboxId = getOutboxId(bobAccessToken);
-        String requestBody = "[" +
-            "  [" +
-            "    \"setMessages\"," +
-            "    {" +
-            "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
-            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
-            "        \"subject\": \"bob to alice\"," +
-            "        \"textBody\": \"body\"," +
-            "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
-            "        \"mailboxIds\": [\"" + outboxId + "\"] " +
-            "      }}" +
-            "    }," +
-            "    \"#0\"" +
-            "  ]" +
-            "]";
+    private void bobSendAnEmailToAlice() {
+        JmapRFCCommonRequests.UserCredential bobCredential = getUserCredential(BOB, BOB_PASSWORD);
+        String bobOutboxId = JmapRFCCommonRequests.getOutboxId(bobCredential);
+        String request =
+            "{" +
+                "    \"using\": [\"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"]," +
+                "    \"methodCalls\": [" +
+                "        [\"Email/set\", {" +
+                "            \"accountId\": \"" + bobCredential.accountId() + "\"," +
+                "            \"create\": {" +
+                "                \"e1526\": {" +
+                "                    \"mailboxIds\": { \"" + bobOutboxId + "\": true }," +
+                "                    \"subject\": \"subject\"," +
+                "                    \"htmlBody\": [{" +
+                "                        \"partId\": \"a49d\"," +
+                "                        \"type\": \"text/html\"" +
+                "                    }]," +
+                "                    \"bodyValues\": {" +
+                "                        \"a49d\": {" +
+                "                            \"value\": \"Test <b>body</b>, HTML version\"" +
+                "                        }" +
+                "                    }," +
+                "                    \"to\": [{\"email\": \"" + ALICE.asString() + "\"}]," +
+                "                    \"from\": [{\"email\": \"" + BOB.asString() + "\"}]" +
+                "                }" +
+                "            }" +
+                "        }, \"c1\"]," +
+                "        [\"EmailSubmission/set\", {" +
+                "            \"accountId\": \"" + bobCredential.accountId() + "\"," +
+                "            \"create\": {" +
+                "                \"k1490\": {" +
+                "                    \"emailId\": \"#e1526\"," +
+                "                    \"envelope\": {" +
+                "                        \"mailFrom\": {\"email\": \"" + BOB.asString() + "\"}," +
+                "                        \"rcptTo\": [{\"email\": \"" + ALICE.asString() + "\"}]" +
+                "                    }" +
+                "                }" +
+                "            }" +
+                "        }, \"c3\"]" +
+                "    ]" +
+                "}";
+
         with()
-            .header("Authorization", bobAccessToken.asString())
-            .body(requestBody)
+            .auth().basic(bobCredential.username().asString(), bobCredential.password())
+            .header(ACCEPT_JMAP_RFC_HEADER)
+            .body(request)
             .post("/jmap")
         .then()
-            .extract()
-            .body()
-            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .statusCode(200)
+            .contentType(ContentType.JSON)
+            .body("methodResponses[0][1].created.e1526", Matchers.is(notNullValue()));
 
-        calmlyAwait.untilAsserted(() -> assertThat(listMessageIdsForAccount(aliceAccessToken))
-            .hasSize(1));
+        WAIT_THIRTY_SECONDS
+            .untilAsserted(() -> assertThat(listMessageIdsForAccount(aliceCredential)).hasSize(1));
     }
 
     private void aliceReadLastMessage() {
-        bodyOfMessage(aliceAccessToken, getLastMessageId(aliceAccessToken));
+        // read with fast view
+        with()
+            .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
+            .header(ACCEPT_JMAP_RFC_HEADER)
+            .body("""
+                {
+                    "using": [ "urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail" ],
+                    "methodCalls": [
+                        [
+                            "Email/get",
+                            {
+                                "accountId": "%s",
+                                "ids": ["%s"],
+                                "properties": [ "preview", "hasAttachment" ]
+                            },
+                            "c1"
+                        ]
+                    ]
+                }
+                """.formatted(aliceCredential.accountId(), getLastMessageId(aliceCredential)))
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .contentType(ContentType.JSON)
+            .extract()
+            .jsonPath();
     }
 }

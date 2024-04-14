@@ -29,7 +29,7 @@ import static org.apache.james.backends.cassandra.versions.table.CassandraSchema
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable;

@@ -21,14 +21,18 @@ package org.apache.james.jmap.draft.methods;
 
 import static org.apache.james.util.ReactorUtils.context;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.draft.model.GetFilterRequest;
 import org.apache.james.jmap.draft.model.GetFilterResponse;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetError;
+import org.apache.james.jmap.methods.ErrorResponse;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;

@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
 import org.apache.james.mailbox.events.MailboxEvents;

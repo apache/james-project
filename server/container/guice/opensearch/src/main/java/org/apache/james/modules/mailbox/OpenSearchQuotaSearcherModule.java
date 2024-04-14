@@ -24,7 +24,7 @@ import static org.apache.james.modules.mailbox.OpenSearchMailboxModule.OPENSEARC
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

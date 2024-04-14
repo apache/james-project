@@ -30,7 +30,7 @@ import java.util.List;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
-import org.apache.james.jmap.draft.methods.BlobManager;
+import org.apache.james.jmap.methods.BlobManager;
 import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;

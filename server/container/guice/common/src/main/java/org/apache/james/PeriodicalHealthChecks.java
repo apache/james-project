@@ -24,9 +24,9 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;

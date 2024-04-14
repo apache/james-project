@@ -19,6 +19,8 @@
 
 package org.apache.james.server.core;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,9 +37,12 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetHeaders;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeUtility;
+import jakarta.mail.internet.SharedInputStream;
 import jakarta.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.UnsynchronizedBufferedInputStream;
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -569,8 +574,34 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
     protected void parse(InputStream is) throws MessagingException {
         // the super implementation calls
         // headers = createInternetHeaders(is);
-        super.parse(is);
+        parseUnsynchronized(is);
         messageParsed = true;
+    }
+
+    protected void parseUnsynchronized(InputStream is) throws MessagingException {
+        if (!(is instanceof ByteArrayInputStream) && !(is instanceof BufferedInputStream) && !(is instanceof SharedInputStream)) {
+            try {
+                is = UnsynchronizedBufferedInputStream.builder()
+                    .setBufferSize(8192)
+                    .setInputStream(is)
+                    .get();
+            } catch (IOException e) {
+                throw new MessagingException("Failure buffering stream", e);
+            }
+        }
+
+        this.headers = this.createInternetHeaders(is);
+        if (is instanceof SharedInputStream) {
+            SharedInputStream sharedInputStream = (SharedInputStream)is;
+            this.contentStream = sharedInputStream.newStream(sharedInputStream.getPosition(), -1L);
+        } else {
+            try {
+                this.content = MimeUtility.getBytes(is);
+            } catch (IOException var3) {
+                throw new MessagingException("IOException", var3);
+            }
+        }
+        this.modified = false;
     }
 
     /**

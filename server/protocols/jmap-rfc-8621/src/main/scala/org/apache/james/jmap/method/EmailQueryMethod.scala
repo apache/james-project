@@ -22,8 +22,8 @@ import java.time.ZonedDateTime
 
 import cats.implicits._
 import eu.timepit.refined.auto._
+import jakarta.inject.Inject
 import jakarta.mail.Flags.Flag.DELETED
-import javax.inject.Inject
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.projections.{EmailQueryView, EmailQueryViewManager}
 import org.apache.james.jmap.core.CapabilityIdentifier.{CapabilityIdentifier, JMAP_CORE, JMAP_MAIL}

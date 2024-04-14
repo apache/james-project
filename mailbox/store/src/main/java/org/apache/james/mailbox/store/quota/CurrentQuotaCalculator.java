@@ -21,7 +21,7 @@ package org.apache.james.mailbox.store.quota;
 
 import static org.apache.james.mailbox.store.mail.AbstractMessageMapper.UNLIMITED;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;

@@ -21,8 +21,8 @@ package org.apache.james.jmap.memory.access;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.apache.james.core.Username;

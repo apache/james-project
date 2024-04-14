@@ -22,15 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.model.mailbox.MailboxNamespace;
-import org.apache.james.jmap.draft.model.mailbox.Rights;
 import org.apache.james.jmap.draft.model.mailbox.SortOrder;
 import org.apache.james.jmap.draft.utils.quotas.DefaultQuotaLoader;
 import org.apache.james.jmap.draft.utils.quotas.QuotaLoader;
+import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;

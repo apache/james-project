@@ -109,6 +109,8 @@ case class UuidState(value: UUID) extends State {
   override def serialize: String = value.toString
 }
 
+case class URL(value: String) extends AnyVal
+
 final case class Session(capabilities: Capabilities,
                          accounts: List[Account],
                          primaryAccounts: Map[CapabilityIdentifier, AccountId],

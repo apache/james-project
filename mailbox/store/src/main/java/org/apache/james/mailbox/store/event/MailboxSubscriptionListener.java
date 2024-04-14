@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.store.event;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;

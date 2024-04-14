@@ -29,7 +29,7 @@ import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.Stora
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.OWNER;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.StorageInformationTable.TABLE;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;

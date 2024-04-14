@@ -33,7 +33,7 @@ import java.nio.file.NoSuchFileException;
 import java.time.Duration;
 import java.util.Collection;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.blob.api.BlobId;

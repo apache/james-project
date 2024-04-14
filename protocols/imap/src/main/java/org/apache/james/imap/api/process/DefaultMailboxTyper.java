@@ -21,7 +21,7 @@ package org.apache.james.imap.api.process;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.model.MailboxPath;

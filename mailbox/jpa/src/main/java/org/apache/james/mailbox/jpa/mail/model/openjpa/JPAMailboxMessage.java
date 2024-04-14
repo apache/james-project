@@ -22,15 +22,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
-
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import java.util.Optional;
 
 import jakarta.mail.Flags;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BoundedInputStream;
@@ -123,5 +123,27 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
     @Override
     public MailboxMessage copy(Mailbox mailbox) throws MailboxException {
         return new JPAMailboxMessage(JPAMailbox.from(mailbox), getUid(), getModSeq(), this);
+    }
+
+    @Override
+    public Optional<byte[][]> getBodyBytes() {
+        byte[][] answer = new byte[1][];
+        answer[0] = body;
+        return Optional.of(answer);
+    }
+
+    @Override
+    public Optional<byte[][]> getFullBytes() {
+        byte[][] answer = new byte[2][];
+        answer[0] = header;
+        answer[1] = body;
+        return Optional.of(answer);
+    }
+
+    @Override
+    public Optional<byte[][]> getHeadersBytes() {
+        byte[][] answer = new byte[1][];
+        answer[0] = header;
+        return Optional.of(answer);
     }
 }

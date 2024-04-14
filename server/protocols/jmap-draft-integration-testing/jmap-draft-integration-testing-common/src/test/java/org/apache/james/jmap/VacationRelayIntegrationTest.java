@@ -33,7 +33,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;

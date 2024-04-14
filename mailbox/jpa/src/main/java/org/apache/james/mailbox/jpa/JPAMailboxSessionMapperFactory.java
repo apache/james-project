@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa;
 
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.EntityManagerUtils;

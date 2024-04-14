@@ -21,7 +21,7 @@ package org.apache.james.pop3.webadmin;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesService;
 import org.apache.james.pop3server.mailbox.task.MetaDataFixInconsistenciesService.RunningOptions;

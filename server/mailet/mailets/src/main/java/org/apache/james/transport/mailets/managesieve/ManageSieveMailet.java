@@ -23,12 +23,13 @@ package org.apache.james.transport.mailets.managesieve;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Username;
@@ -173,8 +174,8 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
 
     private void setHelpURL(String helpURL) throws MessagingException {
         try {
-            this.helpURL = new URL(helpURL);
-        } catch (MalformedURLException ex) {
+            this.helpURL = new URI(helpURL).toURL();
+        } catch (MalformedURLException | URISyntaxException ex) {
             throw new MessagingException("Invalid helpURL", ex);
         }
     }

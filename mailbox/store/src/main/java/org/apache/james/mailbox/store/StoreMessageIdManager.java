@@ -33,8 +33,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -178,11 +177,13 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
+        boolean delayError = false;
+        int prefetch = 1;
         return messageIdMapper.findReactive(messageIds, fetchType)
             .groupBy(MailboxMessage::getMailboxId)
             .filterWhen(groupedFlux -> hasRightsOnMailboxReactive(mailboxSession, Right.Read).apply(groupedFlux.key()), DEFAULT_CONCURRENCY)
             .flatMap(Function.identity(), DEFAULT_CONCURRENCY)
-            .publishOn(forFetchType(fetchType))
+            .publishOn(forFetchType(fetchType), delayError, prefetch)
             .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow());
     }
 

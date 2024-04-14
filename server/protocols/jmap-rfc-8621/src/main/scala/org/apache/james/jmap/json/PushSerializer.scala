@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.api.change.TypeStateFactory
 import org.apache.james.jmap.api.model.{State, TypeName}
 import org.apache.james.jmap.change.TypeState

@@ -67,8 +67,6 @@
           database.url=jdbc:postgresql://<strong>ip_of_postgres</strong>/<strong>database_name</strong>
           database.username=postgres
           database.password=postgres
-
-          vendorAdapter.database=POSTGRESQL
         </source>
         <p>If you are using the James Spring docker image. You need to customise the configuration file of the docker container with those steps:</p>
           <ul>

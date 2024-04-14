@@ -29,8 +29,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.internet.AddressException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;

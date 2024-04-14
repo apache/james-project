@@ -21,8 +21,8 @@ package org.apache.james.jmap.draft.model;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.james.jmap.draft.methods.Method;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
+import org.apache.james.jmap.methods.Method;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.google.common.annotations.VisibleForTesting;

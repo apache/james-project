@@ -19,7 +19,7 @@
 
 package org.apache.james.modules;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;

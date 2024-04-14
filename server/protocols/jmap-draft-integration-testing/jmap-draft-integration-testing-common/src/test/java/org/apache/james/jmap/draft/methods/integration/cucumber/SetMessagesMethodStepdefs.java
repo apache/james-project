@@ -27,12 +27,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Splitter;
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.model.Keywords;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 

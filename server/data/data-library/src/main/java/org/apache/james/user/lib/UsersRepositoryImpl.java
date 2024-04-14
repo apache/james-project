@@ -23,7 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;

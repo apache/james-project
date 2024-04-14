@@ -23,8 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;

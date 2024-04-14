@@ -19,7 +19,7 @@
 
 package org.apache.james.server;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;

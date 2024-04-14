@@ -23,7 +23,7 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_XLIST;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;

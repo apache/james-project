@@ -24,7 +24,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.backends.jpa.JPAConfiguration;
 

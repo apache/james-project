@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
-import org.apache.james.jmap.draft.json.ObjectMapperFactory;
-import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.UpdateMessagePatch;
+import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.model.MessageProperties;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

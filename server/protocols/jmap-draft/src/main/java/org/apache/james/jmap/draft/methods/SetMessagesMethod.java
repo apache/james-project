@@ -24,11 +24,14 @@ import static org.apache.james.util.ReactorUtils.context;
 
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.util.MDCBuilder;
 

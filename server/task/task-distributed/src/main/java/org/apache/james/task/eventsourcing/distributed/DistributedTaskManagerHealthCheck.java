@@ -23,7 +23,7 @@ import static org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue.
 
 import java.io.IOException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.ComponentName;

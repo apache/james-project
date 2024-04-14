@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.model;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

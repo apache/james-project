@@ -19,13 +19,12 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
 
 import java.io.IOException;
 import java.util.List;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 import jakarta.mail.MessagingException;
 
@@ -35,7 +34,7 @@ import org.apache.james.jmap.draft.model.JmapMDN;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
+import org.apache.james.jmap.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;

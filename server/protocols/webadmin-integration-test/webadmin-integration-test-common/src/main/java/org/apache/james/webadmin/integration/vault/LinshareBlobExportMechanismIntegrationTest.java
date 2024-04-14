@@ -20,16 +20,15 @@
 package org.apache.james.webadmin.integration.vault;
 
 import static io.restassured.RestAssured.with;
-import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
-import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static io.restassured.http.ContentType.JSON;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
-import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
-import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
-import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
-import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
+import static org.apache.james.jmap.JmapRFCCommonRequests.UserCredential;
+import static org.apache.james.jmap.JmapRFCCommonRequests.deleteMessages;
+import static org.apache.james.jmap.JmapRFCCommonRequests.getUserCredential;
+import static org.apache.james.jmap.JmapRFCCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.linshare.LinshareExtension.LinshareAPIForTechnicalAccountTesting;
 import static org.apache.james.linshare.LinshareExtension.LinshareAPIForUserTesting;
 import static org.apache.james.linshare.LinshareFixture.MATCH_ALL_QUERY;
@@ -38,14 +37,15 @@ import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.exportVaultContent;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Durations.TEN_SECONDS;
+import static org.hamcrest.Matchers.notNullValue;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.AccessToken;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.JmapGuiceProbe;
+import org.apache.james.jmap.JmapRFCCommonRequests;
 import org.apache.james.linshare.client.Document;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.backup.ZipAssert;
@@ -59,6 +59,7 @@ import org.apache.james.utils.TestIMAPClient;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.core.ConditionFactory;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -83,8 +84,9 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     @RegisterExtension
     TestIMAPClient testIMAPClient = new TestIMAPClient();
 
-    private AccessToken homerAccessToken;
-    private AccessToken bartAccessToken;
+    private UserCredential homerCredential;
+    private UserCredential bartCredential;
+
     private GuiceJamesServer jmapServer;
     private RequestSpecification webAdminApi;
     private LinshareAPIForUserTesting user1LinshareAPI;
@@ -110,8 +112,8 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, HOMER, DefaultMailboxes.INBOX);
 
-        homerAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(HOMER), HOMER_PASSWORD);
-        bartAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(BART), BART_PASSWORD);
+        homerCredential = getUserCredential(Username.of(HOMER), HOMER_PASSWORD);
+        bartCredential = getUserCredential(Username.of(BART), BART_PASSWORD);
 
         user1LinshareAPI = LinshareAPIForUserTesting.from(USER_1);
     }
@@ -120,10 +122,10 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     void exportShouldShareTheDocumentViaLinshareWhenJmapDelete() {
         bartSendMessageToHomer();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).size() == 1);
 
-        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
+        homerDeletesMessages(listMessageIdsForAccount(homerCredential));
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -136,7 +138,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     void exportShouldShareTheDocumentViaLinshareWhenImapDelete() throws Exception {
         bartSendMessageToHomer();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).size() == 1);
 
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, HOMER_PASSWORD)
@@ -144,7 +146,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
             .setFlagsForAllMessagesInMailbox("\\Deleted");
         testIMAPClient.expunge();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -157,10 +159,10 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     void exportShouldShareNonEmptyZipViaLinshareWhenJmapDelete(LinshareAPIForTechnicalAccountTesting linshareAPIForTechnicalAccountTesting) throws Exception {
         bartSendMessageToHomer();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).size() == 1);
 
-        homerDeletesMessages(listMessageIdsForAccount(homerAccessToken));
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
+        homerDeletesMessages(listMessageIdsForAccount(homerCredential));
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -177,7 +179,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     void exportShouldShareNonEmptyZipViaLinshareWhenImapDelete(LinshareAPIForTechnicalAccountTesting linshareAPIForTechnicalAccountTesting) throws Exception {
         bartSendMessageToHomer();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).size() == 1);
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).size() == 1);
 
         testIMAPClient.connect(LOCALHOST_IP, jmapServer.getProbe(ImapGuiceProbe.class).getImapPort())
             .login(HOMER, HOMER_PASSWORD)
@@ -185,7 +187,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
             .setFlagsForAllMessagesInMailbox("\\Deleted");
         testIMAPClient.expunge();
 
-        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerAccessToken).isEmpty());
+        WAIT_TEN_SECONDS.until(() -> listMessageIdsForAccount(homerCredential).isEmpty());
 
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
@@ -199,37 +201,62 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     }
 
     private void bartSendMessageToHomer() {
-        String messageCreationId = "creationId";
-        String outboxId = getOutboxId(bartAccessToken);
-        String textBody = "You got mail!";
-        String requestBody = "[" +
-            "  [" +
-            "    \"setMessages\"," +
-            "    {" +
-            "      \"create\": { \"" + messageCreationId + "\" : {" +
-            "        \"from\": { \"name\": \"user2\", \"email\": \"" + BART + "\"}," +
-            "        \"to\": [{ \"name\": \"user1\", \"email\": \"" + HOMER + "\"}]," +
-            "        \"subject\": \"" + SUBJECT + "\"," +
-            "        \"textBody\": \"" + textBody + "\"," +
-            "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
-            "        \"mailboxIds\": [\"" + outboxId + "\"] " +
-            "      }}" +
-            "    }," +
-            "    \"#0\"" +
-            "  ]" +
-            "]";
+        String outboxId = JmapRFCCommonRequests.getOutboxId(bartCredential);
+        String requestBody =
+            "{" +
+                "    \"using\": [\"urn:ietf:params:jmap:core\", \"urn:ietf:params:jmap:mail\", \"urn:ietf:params:jmap:submission\"]," +
+                "    \"methodCalls\": [" +
+                "        [\"Email/set\", {" +
+                "            \"accountId\": \"" + bartCredential.accountId() + "\"," +
+                "            \"create\": {" +
+                "                \"e1526\": {" +
+                "                    \"mailboxIds\": { \"" + outboxId + "\": true }," +
+                "                    \"subject\": \"" + SUBJECT + "\"," +
+                "                    \"htmlBody\": [{" +
+                "                        \"partId\": \"a49d\"," +
+                "                        \"type\": \"text/html\"" +
+                "                    }]," +
+                "                    \"bodyValues\": {" +
+                "                        \"a49d\": {" +
+                "                            \"value\": \"Test <b>body</b>, HTML version\"" +
+                "                        }" +
+                "                    }," +
+                "                    \"to\": [{\"email\": \"" + HOMER + "\"}]," +
+                "                    \"from\": [{\"email\": \"" + BART + "\"}]" +
+                "                }" +
+                "            }" +
+                "        }, \"c1\"]," +
+                "        [\"Email/get\", {" +
+                "            \"accountId\": \"" + bartCredential.accountId() + "\"," +
+                "            \"ids\": [\"#e1526\"]," +
+                "            \"properties\": [\"sentAt\"]" +
+                "        }, \"c2\"]," +
+                "        [\"EmailSubmission/set\", {" +
+                "            \"accountId\": \"" + bartCredential.accountId() + "\"," +
+                "            \"create\": {" +
+                "                \"k1490\": {" +
+                "                    \"emailId\": \"#e1526\"," +
+                "                    \"envelope\": {" +
+                "                        \"mailFrom\": {\"email\": \"" + BART + "\"}," +
+                "                        \"rcptTo\": [{\"email\": \"" + HOMER + "\"}]" +
+                "                    }" +
+                "                }" +
+                "            }" +
+                "        }, \"c3\"]" +
+                "    ]" +
+                "}";
 
         with()
-            .header("Authorization", bartAccessToken.asString())
+            .auth().basic(bartCredential.username().asString(), bartCredential.password())
             .body(requestBody)
             .post("/jmap")
-        .then()
-            .extract()
-            .body()
-            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .then()
+            .statusCode(200)
+            .contentType(JSON)
+            .body("methodResponses[2][1].created", Matchers.is(notNullValue()));
     }
 
     private void homerDeletesMessages(List<String> idsToDestroy) {
-        deleteMessages(homerAccessToken, idsToDestroy);
+        deleteMessages(homerCredential, idsToDestroy);
     }
 }

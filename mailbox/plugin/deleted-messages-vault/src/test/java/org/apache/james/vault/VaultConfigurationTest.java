@@ -40,13 +40,13 @@ class VaultConfigurationTest {
 
     @Test
     void constructorShouldThrowWhenRetentionPeriodIsNull() {
-        assertThatThrownBy(() -> new VaultConfiguration(true, null, DefaultMailboxes.RESTORED_MESSAGES))
+        assertThatThrownBy(() -> new VaultConfiguration(true, false, null, DefaultMailboxes.RESTORED_MESSAGES))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void constructorShouldThrowWhenRestoreLocationIsNull() {
-        assertThatThrownBy(() -> new VaultConfiguration(true, ChronoUnit.YEARS.getDuration(), null))
+        assertThatThrownBy(() -> new VaultConfiguration(true, false, ChronoUnit.YEARS.getDuration(), null))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -62,7 +62,7 @@ class VaultConfigurationTest {
         configuration.addProperty("restoreLocation", "INBOX");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.INBOX));
+            new VaultConfiguration(false, false, ChronoUnit.YEARS.getDuration(), DefaultMailboxes.INBOX));
     }
 
     @Test
@@ -71,7 +71,7 @@ class VaultConfigurationTest {
         configuration.addProperty("retentionPeriod", "15d");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
+            new VaultConfiguration(false, false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
     }
 
     @Test
@@ -80,7 +80,7 @@ class VaultConfigurationTest {
         configuration.addProperty("retentionPeriod", "15h");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, Duration.ofHours(15), DefaultMailboxes.RESTORED_MESSAGES));
+            new VaultConfiguration(false, false, Duration.ofHours(15), DefaultMailboxes.RESTORED_MESSAGES));
     }
 
     @Test
@@ -89,7 +89,7 @@ class VaultConfigurationTest {
         configuration.addProperty("retentionPeriod", "15");
 
         assertThat(VaultConfiguration.from(configuration)).isEqualTo(
-            new VaultConfiguration(false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
+            new VaultConfiguration(false, false, Duration.ofDays(15), DefaultMailboxes.RESTORED_MESSAGES));
     }
 
     @Test

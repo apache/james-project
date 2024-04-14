@@ -24,7 +24,7 @@ import java.net.InetSocketAddress;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.protocols.lib.netty.AbstractConfigurableAsyncServer;
 import org.apache.james.smtpserver.netty.SMTPServer;

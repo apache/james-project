@@ -27,7 +27,7 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.vacation.api.AccountId;
@@ -76,7 +76,8 @@ public class CassandraNotificationRegistryDAO {
 
     public Mono<Void> register(AccountId accountId, RecipientId recipientId, Optional<Integer> ttl) {
         return cassandraAsyncExecutor.executeVoid(
-            ttl.map(value -> registerWithTTLStatement.bind().setInt(TTL, value))
+            ttl.filter(value -> value <= 630720000) // Maximum value for Cassandra's TTL
+                .map(value -> registerWithTTLStatement.bind().setInt(TTL, value))
                 .orElse(registerStatement.bind())
                 .setString(CassandraNotificationTable.ACCOUNT_ID, accountId.getIdentifier())
                 .setString(CassandraNotificationTable.RECIPIENT_ID, recipientId.getAsString()));

@@ -21,7 +21,7 @@ package org.apache.james.modules.vault;
 
 import java.io.FileNotFoundException;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.utils.PropertiesProvider;

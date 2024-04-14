@@ -28,9 +28,10 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConstants;
@@ -90,16 +91,26 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         @Override
         public void onSubscribe(Subscription subscription) {
             this.subscription.set(subscription);
-            subscription.request(1);
+            requestOne();
         }
 
         @Override
         public void onNext(FetchResponse fetchResponse) {
+            AtomicBoolean mustRequestOne = new AtomicBoolean(true);
             responder.respond(fetchResponse);
-            if (imapSession.backpressureNeeded(this::requestOne)) {
-                LOGGER.debug("Applying backpressure as we encounter a slow reader");
+            Runnable requestOne = () -> {
+                LOGGER.info("Resuming IMAP FETCH for user {}", imapSession.getUserName().asString());
+                if (mustRequestOne.getAndSet(false)) {
+                    requestOne();
+                }
+            };
+            if (imapSession.backpressureNeeded(requestOne)) {
+                LOGGER.info("Applying backpressure as user {} is a slow reader",
+                    imapSession.getUserName().asString());
             } else {
-                requestOne();
+                if (mustRequestOne.getAndSet(false)) {
+                    requestOne();
+                }
             }
         }
 

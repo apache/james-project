@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
@@ -83,8 +85,8 @@ class JwksPublicKeyProviderTest {
 
     private URL getJwksURL() {
         try {
-            return new URL(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), JWKS_URI_PATH));
-        } catch (MalformedURLException e) {
+            return new URI(String.format("http://127.0.0.1:%s%s", mockServer.getLocalPort(), JWKS_URI_PATH)).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
@@ -106,13 +108,13 @@ class JwksPublicKeyProviderTest {
     }
 
     @Test
-    void getShouldFailWhenBadJwksURL() throws MalformedURLException {
+    void getShouldFailWhenBadJwksURL() throws MalformedURLException, URISyntaxException {
         mockServer
             .when(HttpRequest.request().withPath("/invalid"))
             .respond(HttpResponse.response().withStatusCode(200)
                 .withBody("invalid body", StandardCharsets.UTF_8));
 
-        PublicKeyProvider testee = JwksPublicKeyProvider.of(new URL(String.format("http://127.0.0.1:%s/invalid", mockServer.getLocalPort())),
+        PublicKeyProvider testee = JwksPublicKeyProvider.of(new URI(String.format("http://127.0.0.1:%s/invalid", mockServer.getLocalPort())).toURL(),
             "wu-9VZEr0gHF986PYPVzvU-5IP1q26EzzQVK_sjG29Q");
         assertThatThrownBy(testee::get)
             .isInstanceOf(MissingOrInvalidKeyException.class);

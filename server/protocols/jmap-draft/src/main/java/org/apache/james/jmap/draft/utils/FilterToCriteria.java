@@ -28,7 +28,7 @@ import jakarta.mail.Flags.Flag;
 import org.apache.james.jmap.draft.model.Filter;
 import org.apache.james.jmap.draft.model.FilterCondition;
 import org.apache.james.jmap.draft.model.FilterOperator;
-import org.apache.james.jmap.draft.model.Keyword;
+import org.apache.james.jmap.model.Keyword;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;

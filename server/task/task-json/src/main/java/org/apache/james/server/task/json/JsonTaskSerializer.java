@@ -22,8 +22,8 @@ package org.apache.james.server.task.json;
 import java.io.IOException;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.server.task.json.dto.TaskDTO;

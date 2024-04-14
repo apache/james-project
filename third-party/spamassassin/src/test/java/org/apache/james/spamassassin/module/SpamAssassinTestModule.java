@@ -19,21 +19,18 @@
 
 package org.apache.james.spamassassin.module;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
-import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
+import org.apache.james.jmap.event.PopulateEmailQueryViewListener;
 import org.apache.james.modules.mailbox.ListenerConfiguration;
 import org.apache.james.modules.mailbox.ListenersConfiguration;
-import org.apache.james.spamassassin.SpamAssassin;
 import org.apache.james.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.apache.james.spamassassin.SpamAssassinListener;
 import org.apache.james.util.Host;
-import org.apache.james.utils.MailetConfigurationOverride;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.multibindings.Multibinder;
 
 public class SpamAssassinTestModule extends AbstractModule {
 
@@ -47,7 +44,8 @@ public class SpamAssassinTestModule extends AbstractModule {
     protected void configure() {
         bind(ListenersConfiguration.class)
             .toInstance(ListenersConfiguration.of(
-                ListenerConfiguration.forClass(SpamAssassinListener.class.getCanonicalName())));
+                ListenerConfiguration.forClass(SpamAssassinListener.class.getCanonicalName()),
+                ListenerConfiguration.forClass(PopulateEmailQueryViewListener.class.getCanonicalName())));
     }
 
     @Provides

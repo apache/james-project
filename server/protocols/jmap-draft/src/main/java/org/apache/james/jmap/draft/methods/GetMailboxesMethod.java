@@ -27,16 +27,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.model.GetMailboxesRequest;
 import org.apache.james.jmap.draft.model.GetMailboxesResponse;
 import org.apache.james.jmap.draft.model.MailboxFactory;
 import org.apache.james.jmap.draft.model.MailboxProperty;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.utils.quotas.QuotaLoaderWithDefaultPreloaded;
 import org.apache.james.jmap.http.DefaultMailboxesProvisioner;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;

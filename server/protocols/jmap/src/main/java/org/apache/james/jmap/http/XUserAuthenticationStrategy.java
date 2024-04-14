@@ -21,7 +21,7 @@ package org.apache.james.jmap.http;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.exceptions.UnauthorizedException;

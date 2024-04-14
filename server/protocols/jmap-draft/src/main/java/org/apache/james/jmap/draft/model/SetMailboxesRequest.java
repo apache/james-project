@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.jmap.draft.methods.JmapRequest;
 import org.apache.james.jmap.draft.model.mailbox.MailboxCreateRequest;
 import org.apache.james.jmap.draft.model.mailbox.MailboxUpdateRequest;
+import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.mailbox.model.MailboxId;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

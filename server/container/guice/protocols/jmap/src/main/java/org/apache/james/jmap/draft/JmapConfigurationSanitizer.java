@@ -21,7 +21,7 @@ package org.apache.james.jmap.draft;
 
 import java.io.FileNotFoundException;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.RunArguments;
 import org.apache.james.filesystem.api.FileSystem;

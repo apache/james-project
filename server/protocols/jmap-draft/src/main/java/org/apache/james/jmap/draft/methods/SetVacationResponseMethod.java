@@ -19,18 +19,22 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.utils.AccountIdUtil.toVacationAccountId;
 import static org.apache.james.jmap.http.LoggingHelper.jmapAction;
+import static org.apache.james.jmap.utils.AccountIdUtil.toVacationAccountId;
 import static org.apache.james.util.ReactorUtils.context;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.model.AccountId;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetVacationRequest;
 import org.apache.james.jmap.draft.model.SetVacationResponse;
 import org.apache.james.jmap.draft.model.VacationResponse;
+import org.apache.james.jmap.methods.ErrorResponse;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;

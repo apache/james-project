@@ -23,7 +23,8 @@ import static org.apache.james.crowdsec.CrowdsecExtension.CROWDSEC_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -40,9 +41,9 @@ class CrowdsecEhloHookTest {
     static CrowdsecExtension crowdsecExtension = new CrowdsecExtension();
 
     @BeforeEach
-    void setUpEach() throws IOException {
+    void setUpEach() throws IOException, URISyntaxException {
         int port = crowdsecExtension.getCrowdsecContainer().getMappedPort(CROWDSEC_PORT);
-        ehloHook = new CrowdsecEhloHook(new CrowdsecClientConfiguration(new URL("http://localhost:" + port + "/v1"), CrowdsecClientConfiguration.DEFAULT_API_KEY));
+        ehloHook = new CrowdsecEhloHook(new CrowdsecClientConfiguration(new URI("http://localhost:" + port + "/v1").toURL(), CrowdsecClientConfiguration.DEFAULT_API_KEY));
     }
 
     @Test

@@ -19,7 +19,7 @@
 
 package org.apache.james.onami.lifecycle;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 @Singleton
 public class MultiLifeCycleObject {

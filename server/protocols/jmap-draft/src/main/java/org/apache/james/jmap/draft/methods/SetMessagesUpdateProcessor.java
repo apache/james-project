@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -31,8 +31,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
@@ -41,14 +40,14 @@ import jakarta.mail.internet.MimeMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.InvalidOutboxMoveException;
-import org.apache.james.jmap.draft.model.Keyword;
-import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.model.UpdateMessagePatch;
-import org.apache.james.jmap.draft.utils.KeywordsCombiner;
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
+import org.apache.james.jmap.model.MessageProperties;
+import org.apache.james.jmap.utils.KeywordsCombiner;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;

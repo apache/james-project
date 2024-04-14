@@ -21,7 +21,8 @@ package org.apache.james.transport.mailets;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -90,8 +91,8 @@ public class SerialiseToHTTP extends GenericMailet {
             try {
                 // targetUrl = targetUrl + ( targetUrl.contains("?") ? "&" :
                 // "?") + parameterKey + "=" + parameterValue;
-                url = new URL(targetUrl).toExternalForm();
-            } catch (MalformedURLException e) {
+                url = new URI(targetUrl).toURL().toExternalForm();
+            } catch (MalformedURLException | URISyntaxException e) {
                 throw new MessagingException(
                         "Unable to contruct URL object from url");
             }

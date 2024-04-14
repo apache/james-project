@@ -50,7 +50,6 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     private static final Logger LOGGER = LoggerFactory.getLogger(MailSizeEsmtpExtension.class);
 
     private static final ProtocolSession.AttachmentKey<Integer> MESG_SIZE = ProtocolSession.AttachmentKey.of("MESG_SIZE", Integer.class); // The size of the
-    private static final ProtocolSession.AttachmentKey<Boolean> MESG_FAILED = ProtocolSession.AttachmentKey.of("MESG_FAILED", Boolean.class);   // Message failed flag
     private static final String[] MAIL_PARAMS = { "SIZE" };
     
     private static final HookResult SYNTAX_ERROR = HookResult.builder()
@@ -70,6 +69,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     public HookResult doMailParameter(SMTPSession session, String paramName,
                                       String paramValue) {
         MaybeSender tempSender = session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender());
+        session.setMessageFailed(false);
         return doMailSize(session, paramValue, tempSender);
     }
 
@@ -135,10 +135,10 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
     @Override
     public Response onLine(SMTPSession session, byte[] line, LineHandler<SMTPSession> next) {
-        Optional<Boolean> failed = session.getAttachment(MESG_FAILED, State.Transaction);
+        boolean failed = session.messageFailed();
         // If we already defined we failed and sent a reply we should simply
         // wait for a CRLF.CRLF to be sent by the client.
-        if (failed.isPresent() && failed.get()) {
+        if (failed) {
             if (isDataTerminated(line)) {
                 next.onLine(session, line);
                 return new SMTPResponse(SMTPRetCode.QUOTA_EXCEEDED, "Quota exceeded");
@@ -160,7 +160,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
                     // logging of extra lines of data
                     // that are sent after the size limit has
                     // been hit.
-                    session.setAttachment(MESG_FAILED, Boolean.TRUE, State.Transaction);
+                    session.setMessageFailed(true);
 
                     return null;
                 } else {
@@ -176,8 +176,8 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
 
     @Override
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-        Optional<Boolean> failed = session.getAttachment(MESG_FAILED, State.Transaction);
-        if (failed.orElse(false)) {
+        boolean failed = session.messageFailed();
+        if (failed) {
             LOGGER.info("Rejected message from {} from {} exceeding system maximum message size of {}",
                 session.getAttachment(SMTPSession.SENDER, State.Transaction).orElse(MaybeSender.nullSender()).asPrettyString(),
                 session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());

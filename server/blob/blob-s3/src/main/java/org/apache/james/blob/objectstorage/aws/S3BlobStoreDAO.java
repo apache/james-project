@@ -34,11 +34,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -232,6 +233,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         return getObject(resolvedBucketName, blobId)
             .onErrorMap(NoSuchBucketException.class, e -> new ObjectNotFoundException("Bucket not found " + resolvedBucketName.asString(), e))
             .onErrorMap(NoSuchKeyException.class, e -> new ObjectNotFoundException("Blob not found " + blobId.asString() + " in bucket " + resolvedBucketName.asString(), e))
+            .publishOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
             .map(res -> ReactorUtils.toInputStream(res.flux));
     }
 

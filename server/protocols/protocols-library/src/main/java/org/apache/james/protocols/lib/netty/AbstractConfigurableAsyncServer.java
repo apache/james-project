@@ -26,11 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -47,6 +48,7 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.protocols.netty.AbstractSSLAwareChannelPipelineFactory;
 import org.apache.james.protocols.netty.ChannelHandlerFactory;
 import org.apache.james.protocols.netty.Encryption;
+import org.apache.james.util.Size;
 import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
@@ -223,6 +226,18 @@ public abstract class AbstractConfigurableAsyncServer
         sslConfig = SslConfig.parse(config);
 
         Optional.ofNullable(config.getBoolean("gracefulShutdown", null)).ifPresent(this::setGracefulShutdown);
+        Optional.ofNullable(config.getBoolean("useEpoll", null)).ifPresent(this::setUseEpoll);
+
+        Optional<Size> highWaterMark = Optional.ofNullable(config.getString("highWriteBufferWaterMark", null)).map(Size::parse);
+        Optional<Size> lowWaterMark = Optional.ofNullable(config.getString("lowWriteBufferWaterMark", null)).map(Size::parse);
+
+        if (highWaterMark.isPresent() || lowWaterMark.isPresent()) {
+            setWriteBufferWaterMark(new WriteBufferWaterMark(
+                (int) lowWaterMark.or(() -> highWaterMark).get().asBytes(),
+                (int) highWaterMark.or(() -> lowWaterMark).get().asBytes()));
+        }
+
+        Optional.ofNullable(config.getBoolean("useEpoll", null)).ifPresent(this::setUseEpoll);
 
         proxyRequired = config.getBoolean(PROXY_REQUIRED, false);
 

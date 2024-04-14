@@ -34,8 +34,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.jmap.Endpoint;
 import org.apache.james.jmap.JMAPRoute;
@@ -43,9 +43,9 @@ import org.apache.james.jmap.JMAPRoutes;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.draft.exceptions.BadRequestException;
 import org.apache.james.jmap.draft.exceptions.InternalErrorException;
-import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.model.UploadResponse;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
+import org.apache.james.jmap.methods.BlobManagerImpl;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.ContentType;
 import org.apache.james.metrics.api.MetricFactory;

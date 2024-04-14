@@ -19,7 +19,7 @@
 
 package org.apache.james.modules.blobstore.validation;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;

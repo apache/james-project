@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -105,16 +106,33 @@ public class SimpleMessage implements Message {
 
     @Override
     public InputStream getHeaderContent() throws IOException {
-        long headerEnd = bodyStartOctet;
-        if (headerEnd < 0) {
-            headerEnd = 0;
+        return new BoundedInputStream(content.getInputStream(), headerSize());
+    }
+
+    private long headerSize() {
+        return Math.max(0, bodyStartOctet);
+    }
+
+    @Override
+    public Optional<byte[][]> getHeadersBytes() {
+        try {
+            if (headerSize() == content.size()) {
+                return content.asBytesSequence();
+            }
+        } catch (MailboxException e) {
+            return Optional.empty();
         }
-        return new BoundedInputStream(content.getInputStream(), headerEnd);
+        return Optional.empty();
     }
 
     @Override
     public InputStream getFullContent() throws IOException {
         return content.getInputStream();
+    }
+
+    @Override
+    public Optional<byte[][]> getFullBytes() {
+        return content.asBytesSequence();
     }
 
     @Override

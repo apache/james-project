@@ -21,7 +21,7 @@ package org.apache.james.vault.metadata;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationDTO;

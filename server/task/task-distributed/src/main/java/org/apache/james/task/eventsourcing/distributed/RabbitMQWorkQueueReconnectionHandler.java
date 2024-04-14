@@ -19,7 +19,7 @@
 
 package org.apache.james.task.eventsourcing.distributed;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;

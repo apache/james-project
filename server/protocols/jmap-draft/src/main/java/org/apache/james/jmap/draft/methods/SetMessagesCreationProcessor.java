@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,8 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.Username;
@@ -42,15 +41,15 @@ import org.apache.james.jmap.draft.methods.ValueWithId.MessageWithId;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.EnvelopeUtils;
-import org.apache.james.jmap.draft.model.MessageProperties;
-import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetMessagesError;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.model.SetMessagesResponse.Builder;
-import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.model.MessageProperties;
+import org.apache.james.jmap.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.model.message.view.MessageFullView;
+import org.apache.james.jmap.model.message.view.MessageFullViewFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;

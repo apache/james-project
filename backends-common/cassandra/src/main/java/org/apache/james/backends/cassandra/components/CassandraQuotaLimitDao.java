@@ -31,7 +31,7 @@ import static org.apache.james.backends.cassandra.components.CassandraQuotaLimit
 import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.QUOTA_TYPE;
 import static org.apache.james.backends.cassandra.components.CassandraQuotaLimitTable.TABLE_NAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.quota.QuotaComponent;

@@ -21,6 +21,8 @@ package org.apache.james.jmap.draft.model;
 import java.util.Arrays;
 import java.util.Optional;
 
+import org.apache.james.jmap.model.Property;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 

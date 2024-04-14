@@ -34,6 +34,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -70,7 +73,9 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     protected String jmxName;
 
     private boolean gracefulShutdown = true;
-    
+    private boolean useEpoll = false;
+    protected WriteBufferWaterMark writeBufferWaterMark = WriteBufferWaterMark.DEFAULT;
+
     public synchronized void setListenAddresses(InetSocketAddress... addresses) {
         if (started) {
             throw new IllegalStateException("Can only be set when the server is not running");
@@ -80,6 +85,14 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
     public void setGracefulShutdown(boolean gracefulShutdown) {
         this.gracefulShutdown = gracefulShutdown;
+    }
+
+    public void setUseEpoll(boolean useEpoll) {
+        this.useEpoll = useEpoll;
+    }
+
+    public void setWriteBufferWaterMark(WriteBufferWaterMark writeBufferWaterMark) {
+        this.writeBufferWaterMark = writeBufferWaterMark;
     }
 
     /**
@@ -121,10 +134,15 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         }
 
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.channel(NioServerSocketChannel.class);
-
-        bossGroup = bossWorker.map(count -> new NioEventLoopGroup(count, NamedThreadFactory.withName(jmxName + "-boss")));
-        workerGroup = new NioEventLoopGroup(ioWorker, NamedThreadFactory.withName(jmxName + "-io"));
+        if (useEpoll) {
+            bootstrap.channel(EpollServerSocketChannel.class);
+            bossGroup = bossWorker.map(count -> new EpollEventLoopGroup(count, NamedThreadFactory.withName(jmxName + "-boss")));
+            workerGroup = new EpollEventLoopGroup(ioWorker, NamedThreadFactory.withName(jmxName + "-io"));
+        } else {
+            bootstrap.channel(NioServerSocketChannel.class);
+            bossGroup = bossWorker.map(count -> new NioEventLoopGroup(count, NamedThreadFactory.withName(jmxName + "-boss")));
+            workerGroup = new NioEventLoopGroup(ioWorker, NamedThreadFactory.withName(jmxName + "-io"));
+        }
 
         bossGroup.<Runnable>map(boss -> () -> bootstrap.group(boss, workerGroup))
             .orElse(() -> bootstrap.group(workerGroup))

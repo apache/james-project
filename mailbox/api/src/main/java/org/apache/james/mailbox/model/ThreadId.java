@@ -21,7 +21,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.Objects;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.google.common.base.MoreObjects;
 

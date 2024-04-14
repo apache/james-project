@@ -24,7 +24,7 @@ import static org.apache.james.utils.InitializationOperation.DEFAULT_PRIORITY;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.lifecycle.api.Startable;
 

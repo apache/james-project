@@ -28,14 +28,14 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ByteSourceContent;
@@ -44,6 +44,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
@@ -165,6 +166,17 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         } catch (IOException e) {
             throw new MailboxException("Failed appending message", e);
         }
+    }
+
+    public void copy(Username username, MailboxPath source, MailboxPath destination, MessageUid uid) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+        mailboxManager.copyMessages(MessageRange.one(uid), source, destination, mailboxSession);
+    }
+
+    public void setFlags(Username username, MailboxPath mailboxPath, MessageUid uid, Flags flags) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        messageManager.setFlags(flags, MessageManager.FlagsUpdateMode.REPLACE, MessageRange.one(uid), mailboxSession);
     }
 
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, MessageManager.AppendCommand appendCommand)

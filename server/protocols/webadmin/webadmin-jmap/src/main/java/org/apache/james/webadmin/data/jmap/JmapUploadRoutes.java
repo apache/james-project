@@ -21,7 +21,7 @@ package org.apache.james.webadmin.data.jmap;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.task.Task;

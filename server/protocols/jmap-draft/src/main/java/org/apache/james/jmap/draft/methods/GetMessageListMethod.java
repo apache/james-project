@@ -30,8 +30,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.JMAPConfiguration;
@@ -41,10 +41,14 @@ import org.apache.james.jmap.draft.model.FilterCondition;
 import org.apache.james.jmap.draft.model.GetMessageListRequest;
 import org.apache.james.jmap.draft.model.GetMessageListResponse;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
-import org.apache.james.jmap.draft.model.MethodCallId;
-import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.utils.FilterToCriteria;
 import org.apache.james.jmap.draft.utils.SortConverter;
+import org.apache.james.jmap.methods.ErrorResponse;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.MethodCallId;
+import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;

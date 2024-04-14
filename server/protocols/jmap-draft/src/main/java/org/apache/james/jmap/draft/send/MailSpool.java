@@ -21,9 +21,10 @@ package org.apache.james.jmap.draft.send;
 
 import java.io.IOException;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
 
+import org.apache.james.jmap.send.MailMetadata;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.queue.api.MailQueue;

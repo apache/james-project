@@ -32,7 +32,7 @@ import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;

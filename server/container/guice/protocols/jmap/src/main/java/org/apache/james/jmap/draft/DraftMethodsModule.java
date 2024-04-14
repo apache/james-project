@@ -22,9 +22,6 @@ package org.apache.james.jmap.draft;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.james.jmap.draft.json.ObjectMapperFactory;
-import org.apache.james.jmap.draft.methods.BlobManager;
-import org.apache.james.jmap.draft.methods.BlobManagerImpl;
 import org.apache.james.jmap.draft.methods.GetFilterMethod;
 import org.apache.james.jmap.draft.methods.GetMailboxesMethod;
 import org.apache.james.jmap.draft.methods.GetMessageListMethod;
@@ -32,9 +29,6 @@ import org.apache.james.jmap.draft.methods.GetMessagesMethod;
 import org.apache.james.jmap.draft.methods.GetVacationResponseMethod;
 import org.apache.james.jmap.draft.methods.JmapRequestParser;
 import org.apache.james.jmap.draft.methods.JmapRequestParserImpl;
-import org.apache.james.jmap.draft.methods.JmapResponseWriter;
-import org.apache.james.jmap.draft.methods.JmapResponseWriterImpl;
-import org.apache.james.jmap.draft.methods.Method;
 import org.apache.james.jmap.draft.methods.SendMDNProcessor;
 import org.apache.james.jmap.draft.methods.SetFilterMethod;
 import org.apache.james.jmap.draft.methods.SetMailboxesCreationProcessor;
@@ -54,6 +48,7 @@ import org.apache.james.jmap.http.Authenticator;
 import org.apache.james.jmap.http.InjectionKeys;
 import org.apache.james.jmap.http.JWTAuthenticationStrategy;
 import org.apache.james.jmap.http.QueryParameterAccessTokenAuthenticationStrategy;
+import org.apache.james.jmap.methods.Method;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
@@ -80,11 +75,7 @@ public class DraftMethodsModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(JmapRequestParserImpl.class).in(Scopes.SINGLETON);
-        bind(JmapResponseWriterImpl.class).in(Scopes.SINGLETON);
-        bind(ObjectMapperFactory.class).in(Scopes.SINGLETON);
-
         bind(JmapRequestParser.class).to(JmapRequestParserImpl.class);
-        bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class);
 
         bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(GetMessageListMethod.DEFAULT_MAXIMUM_LIMIT);
 
@@ -111,10 +102,6 @@ public class DraftMethodsModule extends AbstractModule {
         setMessagesProcessors.addBinding().to(SetMessagesCreationProcessor.class);
         setMessagesProcessors.addBinding().to(SetMessagesDestructionProcessor.class);
         setMessagesProcessors.addBinding().to(SendMDNProcessor.class);
-
-
-        bind(BlobManagerImpl.class).in(Scopes.SINGLETON);
-        bind(BlobManager.class).to(BlobManagerImpl.class);
     }
 
     @Provides

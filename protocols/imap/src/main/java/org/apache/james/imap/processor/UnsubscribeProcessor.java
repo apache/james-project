@@ -21,7 +21,7 @@ package org.apache.james.imap.processor;
 
 import static org.apache.james.util.ReactorUtils.logOnError;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;

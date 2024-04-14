@@ -22,7 +22,7 @@ package org.apache.james.sieve.cassandra;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.backends.cassandra.components.CassandraQuotaLimitDao;

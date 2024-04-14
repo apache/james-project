@@ -23,8 +23,8 @@ import java.time.ZonedDateTime
 import java.util.Date
 
 import eu.timepit.refined.auto._
+import jakarta.inject.Inject
 import jakarta.mail.Flags
-import javax.inject.Inject
 import org.apache.james.jmap.JMAPConfiguration
 import org.apache.james.jmap.api.model.Size.sanitizeSize
 import org.apache.james.jmap.core.SetError.SetErrorDescription

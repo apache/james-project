@@ -25,7 +25,7 @@ import java.util.stream.Stream
 import io.netty.handler.codec.http.HttpHeaderNames.{CONTENT_LENGTH, CONTENT_TYPE}
 import io.netty.handler.codec.http.HttpResponseStatus.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK, UNAUTHORIZED}
 import io.netty.handler.codec.http.{HttpMethod, HttpResponseStatus}
-import javax.inject.{Inject, Named}
+import jakarta.inject.{Inject, Named}
 import org.apache.commons.lang3.tuple.Pair
 import org.apache.james.core.Username
 import org.apache.james.jmap.HttpConstants.{JSON_CONTENT_TYPE, JSON_CONTENT_TYPE_UTF8}

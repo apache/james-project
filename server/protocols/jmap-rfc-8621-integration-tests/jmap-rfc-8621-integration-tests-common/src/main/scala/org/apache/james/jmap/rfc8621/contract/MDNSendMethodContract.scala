@@ -31,8 +31,8 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.apache.http.HttpStatus.SC_OK
 import org.apache.james.GuiceJamesServer
 import org.apache.james.core.Username
+import org.apache.james.jmap.MessageIdProbe
 import org.apache.james.jmap.core.ResponseObject.SESSION_STATE
-import org.apache.james.jmap.draft.MessageIdProbe
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, ACCOUNT_ID, ANDRE, ANDRE_ACCOUNT_ID, ANDRE_IDENTITY_ID, ANDRE_PASSWORD, BOB, BOB_PASSWORD, CEDRIC, DAVID, DOMAIN, IDENTITY_ID, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.MDNSendMethodContract.TAG_MDN_MESSAGE_FORMAT

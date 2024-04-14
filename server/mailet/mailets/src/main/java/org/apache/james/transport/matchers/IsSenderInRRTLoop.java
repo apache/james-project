@@ -21,7 +21,7 @@ package org.apache.james.transport.matchers;
 
 import java.util.Collection;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.api.RecipientRewriteTable;

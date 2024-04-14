@@ -29,15 +29,12 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.DeleteMessageListener;
-import org.apache.james.mailbox.cassandra.mail.MessageRepresentation;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.MimeIOException;
 import org.apache.james.mime4j.codec.DecodeMonitor;
@@ -71,28 +68,29 @@ public class DeletedMessageVaultDeletionCallback implements DeleteMessageListene
     }
 
     @Override
-    public Mono<Void> forMessage(MessageRepresentation message, MailboxId mailboxId, Username owner) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), message.getHeaderId(), BlobStore.StoragePolicy.LOW_COST))
+    public Mono<Void> forMessage(DeleteMessageListener.DeletedMessageCopyCommand copyCommand) {
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), copyCommand.getHeaderId(), BlobStore.StoragePolicy.LOW_COST))
             .flatMap(bytes -> {
-                Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), message.getMessageId());
+                Optional<Message> mimeMessage = parseMessage(new ByteArrayInputStream(bytes), copyCommand.getMessageId());
                 DeletedMessage deletedMessage = DeletedMessage.builder()
-                    .messageId(message.getMessageId())
-                    .originMailboxes(mailboxId)
-                    .user(owner)
-                    .deliveryDate(ZonedDateTime.ofInstant(message.getInternalDate().toInstant(), ZoneOffset.UTC))
+                    .messageId(copyCommand.getMessageId())
+                    .originMailboxes(copyCommand.getMailboxId())
+                    .user(copyCommand.getOwner())
+                    .deliveryDate(ZonedDateTime.ofInstant(copyCommand.getInternalDate().toInstant(), ZoneOffset.UTC))
                     .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
                     .sender(retrieveSender(mimeMessage))
                     .recipients(retrieveRecipients(mimeMessage))
-                    .hasAttachment(!message.getAttachments().isEmpty())
-                    .size(message.getSize())
+                    .hasAttachment(copyCommand.hasAttachments())
+                    .size(copyCommand.getSize())
                     .subject(mimeMessage.map(Message::getSubject))
                     .build();
 
-                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), message.getBodyId(), BlobStore.StoragePolicy.LOW_COST))
+                return Mono.from(blobStore.readReactive(blobStore.getDefaultBucketName(), copyCommand.getBodyId(), BlobStore.StoragePolicy.LOW_COST))
                     .map(bodyStream -> new SequenceInputStream(new ByteArrayInputStream(bytes), bodyStream))
                     .flatMap(bodyStream -> Mono.from(deletedMessageVault.append(deletedMessage, bodyStream)));
             });
     }
+
 
     private Optional<Message> parseMessage(InputStream inputStream, MessageId messageId) {
         DefaultMessageBuilder messageBuilder = new DefaultMessageBuilder();

@@ -20,8 +20,10 @@
 
 <beans xmlns="http://www.springframework.org/schema/beans" 
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="
-          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+          http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 
     <!-- 
       Mailbox JPA
@@ -85,14 +87,14 @@
     </bean>
     <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
         <property name="dataSource" ref="datasource"/>
-        <property name="jpaVendorAdapter" ref="vendorAdapter"/>
+        <property name="jpaPropertyMap" ref="jpaPropertyMap"/>
+        <property name="persistenceProviderClass" value="org.apache.openjpa.persistence.PersistenceProviderImpl"/>
         <property name="persistenceUnitName" value="James"/>
     </bean>
-    <bean id="vendorAdapter" class="org.springframework.orm.jpa.vendor.OpenJpaVendorAdapter">
-        <property name="database" value="${vendorAdapter.database}"/>
-        <!-- set this to true for debugging purposes -->
-        <property name="showSql" value="false"/>
-    </bean>
+    <util:map id="jpaPropertyMap">
+        <!-- uncomment below to enable debug logging -->
+        <!-- <entry key="openjpa.Log" value="DefaultLevel=WARN, Runtime=INFO, Tool=INFO, SQL=TRACE"/> -->
+    </util:map>
 
     <bean id="jpa-per-user-max-quota-dao" class="org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaDAO">
         <constructor-arg index="0" ref="entityManagerFactory"/>

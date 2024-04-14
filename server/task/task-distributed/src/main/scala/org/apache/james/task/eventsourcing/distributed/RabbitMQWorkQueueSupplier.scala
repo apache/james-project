@@ -21,7 +21,7 @@ package org.apache.james.task.eventsourcing.distributed
 import java.time.Duration
 
 import com.google.common.annotations.VisibleForTesting
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.backends.rabbitmq.{RabbitMQConfiguration, ReceiverProvider}
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.server.task.json.JsonTaskSerializer

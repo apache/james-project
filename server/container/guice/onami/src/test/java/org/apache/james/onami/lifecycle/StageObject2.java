@@ -19,7 +19,7 @@
 
 package org.apache.james.onami.lifecycle;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class StageObject2 {
     private final StringBuilder str;

@@ -24,14 +24,19 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.json.ObjectMapperFactory;
 import org.apache.james.jmap.draft.model.AuthenticatedRequest;
 import org.apache.james.jmap.draft.model.InvocationRequest;
-import org.apache.james.jmap.draft.model.InvocationResponse;
-import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.jmap.json.ObjectMapperFactory;
+import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.james.jmap.methods.JmapResponse;
+import org.apache.james.jmap.methods.JmapResponseWriter;
+import org.apache.james.jmap.methods.JmapResponseWriterImpl;
+import org.apache.james.jmap.methods.Method;
+import org.apache.james.jmap.model.InvocationResponse;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.inmemory.InMemoryId;

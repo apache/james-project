@@ -19,11 +19,11 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
+import static org.apache.james.jmap.methods.Method.JMAP_PREFIX;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.draft.exceptions.MailboxHasChildException;
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;

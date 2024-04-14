@@ -22,7 +22,7 @@ package org.apache.james.modules;
 import java.io.FileNotFoundException;
 import java.util.Optional;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;

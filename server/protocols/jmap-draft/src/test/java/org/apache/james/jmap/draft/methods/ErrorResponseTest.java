@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.jmap.methods.ErrorResponse;
 import org.junit.Test;
 
 public class ErrorResponseTest {

@@ -22,7 +22,7 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UNSELECT;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.Capability;

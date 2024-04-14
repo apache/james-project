@@ -23,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.apache.james.jmap.draft.model.Number;
+import org.apache.james.jmap.model.Number;
+import org.apache.james.jmap.model.mailbox.Rights;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.junit.Test;

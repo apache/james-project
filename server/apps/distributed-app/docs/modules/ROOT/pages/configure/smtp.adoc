@@ -181,6 +181,12 @@ Optional integer, defaults to 2 times the count of CPUs.
 | Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like executing SMTP commands.
 Optional integer, defaults to 16.
 
+| useEpoll
+| true or false - If true uses native EPOLL implementation for Netty otherwise uses NIO. Defaults to false.
+
+| gracefulShutdown
+| true or false - If true attempts a graceful shutdown, which is safer but can take time. Defaults to true.
+
 | disabledFeatures
 | Extended SMTP features to hide in EHLO responses.
 |===

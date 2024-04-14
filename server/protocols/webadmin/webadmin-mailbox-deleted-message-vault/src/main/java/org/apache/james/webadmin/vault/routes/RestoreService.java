@@ -27,7 +27,7 @@ import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResul
 import java.io.InputStream;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;

@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.json
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.jmap.core.{CanCalculateChanges, LimitUnparsed, PositionUnparsed, QueryState}
 import org.apache.james.jmap.mail.{AllInThreadHaveKeywordSortProperty, Anchor, AnchorOffset, And, Bcc, Body, Cc, CollapseThreads, Collation, Comparator, EmailQueryRequest, EmailQueryResponse, FilterCondition, FilterOperator, FilterQuery, From, FromSortProperty, HasAttachment, HasKeywordSortProperty, Header, HeaderContains, HeaderExist, IsAscending, Keyword, Not, Operator, Or, ReceivedAtSortProperty, SentAtSortProperty, SizeSortProperty, SomeInThreadHaveKeywordSortProperty, SortProperty, Subject, SubjectSortProperty, Text, To, ToSortProperty}
 import org.apache.james.mailbox.model.{MailboxId, MessageId}

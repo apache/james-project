@@ -21,7 +21,7 @@ package org.apache.james.protocols.lmtp.core;
 
 import java.util.Collection;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.smtp.core.esmtp.EhloCmdHandler;

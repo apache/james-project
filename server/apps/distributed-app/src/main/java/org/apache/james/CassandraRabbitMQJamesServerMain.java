@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.data.UsersRepositoryModuleChooser;
 import org.apache.james.eventsourcing.eventstore.EventNestedTypes;
-import org.apache.james.jmap.draft.JMAPListenerModule;
+import org.apache.james.jmap.JMAPListenerModule;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
@@ -57,6 +57,7 @@ import org.apache.james.modules.mailbox.CassandraMailboxQuotaLegacyModule;
 import org.apache.james.modules.mailbox.CassandraMailboxQuotaModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
+import org.apache.james.modules.mailbox.DistributedDeletedMessageVaultModule;
 import org.apache.james.modules.mailbox.TikaMailboxModule;
 import org.apache.james.modules.mailrepository.CassandraMailRepositoryModule;
 import org.apache.james.modules.metrics.CassandraMetricsModule;
@@ -226,6 +227,11 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
     }
 
     private static Module chooseDeletedMessageVault(VaultConfiguration vaultConfiguration) {
+        if (vaultConfiguration.isEnabled() && vaultConfiguration.isWorkQueueEnabled()) {
+            return Modules.combine(
+                new DistributedDeletedMessageVaultModule(),
+                new DeletedMessageVaultRoutesModule());
+        }
         if (vaultConfiguration.isEnabled()) {
             return Modules.combine(
                 new CassandraDeletedMessageVaultModule(),

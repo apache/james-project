@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableMap
 import eu.timepit.refined
 import eu.timepit.refined.auto._
 import eu.timepit.refined.types.string.NonEmptyString
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
 import org.apache.james.jmap.api.model.{EmailAddress, Preview}
@@ -67,6 +67,13 @@ import scala.util.{Failure, Success, Try}
 
 object Email {
   private val logger: Logger = LoggerFactory.getLogger(classOf[EmailView])
+
+  def mergeKeywords(messages: Seq[MessageResult]): Try[Keywords] = {
+    messages.map(_.getFlags)
+      .map(LENIENT_KEYWORDS_FACTORY.fromFlags)
+      .sequence
+      .map(list => list.reduce(_ ++ _))
+  }
 
   val defaultCharset = Option(System.getenv("james.jmap.default.charset"))
     .map(value => java.nio.charset.Charset.forName(value))
@@ -498,7 +505,7 @@ private class EmailMetadataViewFactory @Inject()(zoneIdProvider: ZoneIdProvider)
         .map(Success(_))
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       blobId <- BlobId.of(messageId)
-      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+      keywords <- Email.mergeKeywords(message._2)
     } yield {
       EmailMetadataView(
         metadata = EmailMetadata(
@@ -528,7 +535,7 @@ private class EmailHeaderViewFactory @Inject()(zoneIdProvider: ZoneIdProvider) e
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
       blobId <- BlobId.of(messageId)
-      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+      keywords <- Email.mergeKeywords(message._2)
     } yield {
       EmailHeaderView(
         metadata = EmailMetadata(
@@ -605,7 +612,7 @@ private class EmailFullViewFactory @Inject()(zoneIdProvider: ZoneIdProvider, pre
       bodyStructure <- EmailBodyPart.of(request.bodyProperties, zoneIdProvider.get(), blobId, mime4JMessage)
       bodyValues <- extractBodyValues(htmlTextExtractor)(bodyStructure, request)
       preview <- Try(previewFactory.fromMime4JMessage(mime4JMessage))
-      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+      keywords <- Email.mergeKeywords(message._2)
     } yield {
       EmailFullView(
         metadata = EmailMetadata(
@@ -705,10 +712,12 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
       case _ => None
     }
 
+    val lowConcurrency = 2
     SFlux.merge(Seq(
       toFastViews(availables, request, mailboxSession),
-      fullReader.read(unavailables.map(_.id), request, mailboxSession)
-        .doOnNext(storeOnCacheMisses)))
+      SFlux.fromIterable(unavailables.map(_.id))
+        .flatMap(id => fullReader.read(Seq(id), request, mailboxSession)
+          .doOnNext(storeOnCacheMisses), lowConcurrency, lowConcurrency)))
   }
 
   private def storeOnCacheMisses(fullView: EmailFullView) = {
@@ -751,7 +760,7 @@ private class EmailFastViewReader @Inject()(messageIdManager: MessageIdManager,
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
       blobId <- BlobId.of(messageId)
-      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+      keywords <- Email.mergeKeywords(message._2)
     } yield {
       EmailFastView(
         metadata = EmailMetadata(
@@ -842,7 +851,7 @@ private class EmailFastViewWithAttachmentsMetadataReader @Inject()(messageIdMana
         .getOrElse(Failure(new IllegalArgumentException("No message supplied")))
       mime4JMessage <- Email.parseAsMime4JMessage(firstMessage)
       blobId <- BlobId.of(messageId)
-      keywords <- LENIENT_KEYWORDS_FACTORY.fromFlags(firstMessage.getFlags)
+      keywords <- Email.mergeKeywords(message._2)
     } yield {
       EmailFastViewWithAttachments(
         metadata = EmailMetadata(

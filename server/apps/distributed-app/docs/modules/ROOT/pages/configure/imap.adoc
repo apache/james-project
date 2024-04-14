@@ -133,6 +133,18 @@ Optional integer, defaults to 2 times the count of CPUs.
 
 | ignoreIDLEUponProcessing
 | true or false - Allow disabling the heartbeat handler. Defaults to true.
+
+| useEpoll
+| true or false - If true uses native EPOLL implementation for Netty otherwise uses NIO. Defaults to false.
+
+| gracefulShutdown
+| true or false - If true attempts a graceful shutdown, which is safer but can take time. Defaults to true.
+
+| highWriteBufferWaterMark
+| Netty's write buffer high watermark configuration. Unit supported: none, K, M. Netty defaults applied.
+
+| lowWriteBufferWaterMark
+| Netty's write buffer low watermark configuration. Unit supported: none, K, M. Netty defaults applied.
 |===
 
 == OIDC setup

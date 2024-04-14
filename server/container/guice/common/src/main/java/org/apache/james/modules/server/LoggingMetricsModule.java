@@ -23,9 +23,9 @@ import static com.codahale.metrics.Slf4jReporter.LoggingLevel.DEBUG;
 
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PreDestroy;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.annotation.PreDestroy;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.InitializationOperation;

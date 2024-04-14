@@ -32,8 +32,8 @@ import reactor.core.scala.publisher.SMono
 import java.io.Closeable
 import java.time.Duration
 import java.util
-import javax.annotation.PreDestroy
-import javax.inject.Inject
+import jakarta.annotation.PreDestroy
+import jakarta.inject.Inject
 
 class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing](workQueueSupplier: WorkQueueSupplier,
                                                                                  val eventStore: EventStore,

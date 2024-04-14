@@ -26,7 +26,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;

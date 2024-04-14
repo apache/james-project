@@ -21,7 +21,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
 import static org.apache.james.util.ReactorUtils.publishIfPresent;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.EventSourcingSystem;

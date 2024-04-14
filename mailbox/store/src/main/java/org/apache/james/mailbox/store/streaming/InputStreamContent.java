@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.streaming;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.store.mail.model.Message;
@@ -64,7 +65,16 @@ public final class InputStreamContent implements Content {
         default:
             return m.getBodyContent();
         }
-       
+    }
+
+    @Override
+    public Optional<byte[][]> asBytesSequence() {
+        switch (type) {
+            case FULL:
+                return m.getFullBytes();
+            default:
+                return m.getBodyBytes();
+        }
     }
 
     @Override
