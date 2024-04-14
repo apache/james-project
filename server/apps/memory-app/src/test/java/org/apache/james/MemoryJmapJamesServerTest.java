@@ -20,17 +20,12 @@
 package org.apache.james;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.jmap.draft.JMAPConfigurationStartUpCheck;
-import org.apache.james.jmap.draft.JMAPDraftConfiguration;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryJmapJamesServerTest {
@@ -60,58 +55,5 @@ class MemoryJmapJamesServerTest {
 
         @RegisterExtension
         JamesServerExtension jamesServerExtension = extensionBuilder().build();
-    }
-
-    @Nested
-    class JamesServerJmapConfigurationTest {
-
-        @Nested
-        class BadAliasKeyStore {
-
-            @RegisterExtension
-            JamesServerExtension jamesServerExtension = extensionBuilder()
-                .disableAutoStart()
-                .overrideServerModule(binder -> binder.bind(JMAPDraftConfiguration.class)
-                    .toInstance(TestJMAPServerModule
-                        .jmapDraftConfigurationBuilder()
-                        .keystore("badAliasKeystore")
-                        .secret("password")
-                        .build()))
-                .build();
-
-            @Test
-            void jamesShouldNotStartWhenBadAliasKeyStore(GuiceJamesServer server) {
-                assertThatThrownBy(server::start)
-                    .isInstanceOfSatisfying(
-                        StartUpChecksPerformer.StartUpChecksException.class,
-                        ex -> assertThat(ex.badCheckNames())
-                            .containsOnly(JMAPConfigurationStartUpCheck.CHECK_NAME))
-                    .hasMessageContaining("Alias 'james' keystore can't be found");
-            }
-        }
-
-        @Nested
-        class BadSecretKeyStore {
-
-            @RegisterExtension
-            JamesServerExtension jamesServerExtension = extensionBuilder()
-                .disableAutoStart()
-                .overrideServerModule(binder -> binder.bind(JMAPDraftConfiguration.class)
-                    .toInstance(TestJMAPServerModule
-                        .jmapDraftConfigurationBuilder()
-                        .secret("WrongSecret")
-                        .build()))
-                .build();
-
-            @Test
-            void jamesShouldNotStartWhenBadSecret(GuiceJamesServer server) {
-                assertThatThrownBy(server::start)
-                    .isInstanceOfSatisfying(
-                        StartUpChecksPerformer.StartUpChecksException.class,
-                        ex -> assertThat(ex.badCheckNames())
-                            .containsOnly(JMAPConfigurationStartUpCheck.CHECK_NAME))
-                    .hasMessageContaining("Keystore was tampered with, or password was incorrect");
-            }
-        }
     }
 }
