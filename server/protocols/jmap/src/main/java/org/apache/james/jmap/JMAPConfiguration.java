@@ -118,7 +118,7 @@ public class JMAPConfiguration {
             Preconditions.checkState(enabled.isPresent(), "You should specify if JMAP server should be started");
             return new JMAPConfiguration(enabled.get(), port, emailQueryViewEnabled.orElse(false),
                 userProvisioningEnabled.orElse(true),
-                defaultVersion.orElse(Version.DRAFT), maximumSendSize);
+                defaultVersion.orElse(Version.RFC8621), maximumSendSize);
         }
     }
 

@@ -50,8 +50,9 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.server.HttpServerResponse;
 
 class JMAPServerTest {
+    private static final Version DRAFT = new Version("draft");
     private static final String ACCEPT_JMAP_VERSION_HEADER = "application/json; jmapVersion=";
-    private static final String ACCEPT_DRAFT_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.DRAFT.asString();
+    private static final String ACCEPT_DRAFT_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + DRAFT.asString();
     private static final String ACCEPT_RFC8621_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.RFC8621.asString();
 
     private static final JMAPConfiguration DISABLED_CONFIGURATION = JMAPConfiguration.builder().disable().build();
@@ -72,9 +73,9 @@ class JMAPServerTest {
 
     private static final ImmutableSet<JMAPRoutesHandler> FAKE_ROUTES_HANDLERS = ImmutableSet.of(
         new JMAPRoutesHandler(
-            Version.DRAFT,
-            new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.DRAFT),
-            new FakeJMAPRoutes(JMAP_ENDPOINTS, Version.DRAFT)),
+            DRAFT,
+            new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, DRAFT),
+            new FakeJMAPRoutes(JMAP_ENDPOINTS, DRAFT)),
         new JMAPRoutesHandler(
             Version.RFC8621,
             new FakeJMAPRoutes(AUTHENTICATION_ENDPOINTS, Version.RFC8621))
@@ -82,14 +83,14 @@ class JMAPServerTest {
 
     private static final ImmutableSet<JMAPRoutesHandler> CORS_ROUTES = ImmutableSet.of(
         new JMAPRoutesHandler(
-            Version.DRAFT,
-            new FakeJMAPRoutes(ImmutableSet.of(Endpoint.ofFixedPath(HttpMethod.OPTIONS, "/a")), Version.DRAFT)),
+            DRAFT,
+            new FakeJMAPRoutes(ImmutableSet.of(Endpoint.ofFixedPath(HttpMethod.OPTIONS, "/a")), DRAFT)),
         new JMAPRoutesHandler(
             Version.RFC8621,
             new FakeJMAPRoutes(ImmutableSet.of(new Endpoint(HttpMethod.OPTIONS, "/b")), Version.RFC8621)));
 
     private static final ImmutableSet<Version> SUPPORTED_VERSIONS = ImmutableSet.of(
-        Version.DRAFT,
+        DRAFT,
         Version.RFC8621
     );
 
@@ -179,7 +180,7 @@ class JMAPServerTest {
                 .get()
             .then()
                 .statusCode(HttpResponseStatus.OK.code())
-                .body("Version", is(Version.DRAFT.asString()));
+                .body("Version", is(Version.RFC8621.asString()));
         }
 
         @Test
@@ -203,7 +204,7 @@ class JMAPServerTest {
                 .post()
             .then()
                 .statusCode(HttpResponseStatus.OK.code())
-                .body("Version", is(Version.DRAFT.asString()));
+                .body("Version", is(DRAFT.asString()));
         }
 
         @Test

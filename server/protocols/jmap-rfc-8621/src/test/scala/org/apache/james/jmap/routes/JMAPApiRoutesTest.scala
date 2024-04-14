@@ -59,7 +59,6 @@ import reactor.core.scala.publisher.SFlux
 object JMAPApiRoutesTest {
   private val TEST_CONFIGURATION: JMAPConfiguration = JMAPConfiguration.builder().enable().randomPort().build()
   private val ACCEPT_JMAP_VERSION_HEADER = "application/json; jmapVersion="
-  private val ACCEPT_DRAFT_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.DRAFT.asString()
   private val ACCEPT_RFC8621_VERSION_HEADER = ACCEPT_JMAP_VERSION_HEADER + Version.RFC8621.asString()
 
   private val empty_set: ImmutableSet[PreDeletionHook] = ImmutableSet.of()
@@ -210,7 +209,7 @@ object JMAPApiRoutesTest {
       |  ]
       |}""".stripMargin
 
-  private val SUPPORTED_VERSIONS = ImmutableSet.of(Version.DRAFT, Version.RFC8621)
+  private val SUPPORTED_VERSIONS = ImmutableSet.of(Version.RFC8621)
 
   private val WRONG_OBJECT_REQUEST: String =
     """
@@ -345,35 +344,6 @@ class JMAPApiRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
         .asString()
 
     assertThatJson(response).isEqualTo(RESPONSE_OBJECT_WITH_UNSUPPORTED_METHOD)
-  }
-
-  "Draft version, GET" should "return 404 status" in {
-    val headers: Headers = Headers.headers(
-      new Header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER),
-      new Header("Authorization", s"Basic ${userBase64String}")
-    )
-
-    RestAssured
-      .`given`()
-        .headers(headers)
-      .when()
-        .get
-      .`then`
-        .statusCode(HttpStatus.SC_NOT_FOUND)
-  }
-
-  "Draft version, POST, without body" should "return 400 status" in {
-    val headers: Headers = Headers.headers(
-      new Header(ACCEPT.toString, ACCEPT_DRAFT_VERSION_HEADER),
-      new Header("Authorization", s"Basic ${userBase64String}")
-    )
-    RestAssured
-      .`given`()
-        .headers(headers)
-      .when()
-        .post
-      .`then`
-        .statusCode(HttpStatus.SC_NOT_FOUND)
   }
 
   "RFC-8621 version, POST, with wrong requestObject body" should "return 400 status" in {

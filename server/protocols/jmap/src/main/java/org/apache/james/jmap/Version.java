@@ -22,7 +22,6 @@ package org.apache.james.jmap;
 import java.util.Objects;
 
 public class Version {
-    public static final Version DRAFT = new Version("draft");
     public static final Version RFC8621 = new Version("rfc-8621");
 
     public static Version of(String value) {
