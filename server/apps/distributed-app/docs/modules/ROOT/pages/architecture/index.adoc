@@ -38,10 +38,6 @@ The following protocols should be considered experimental:
 * *JMAP* (RFC-8620 &RFC-8621 specifications and known limitations of the James implementation are defined link:https://github.com/apache/james-project/tree/master/server/protocols/jmap-rfc-8621/doc[here])
 * *ManagedSieve*
 
-The following protocols should be considered deprecated:
-
-* *JMAP-draft* (draft specification as defined link:https://github.com/apache/james-project/tree/master/server/protocols/jmap-draft/doc[here])
-
 Read more on xref:architecture/implemented-standards.adoc[implemented standards].
 
 == Topology

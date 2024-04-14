@@ -37,7 +37,7 @@ Defaults to an empty list.
 | Optional. URL for JMAP WebSocket route. Default value: ws://localhost
 
 | email.send.max.size
-| Optional. Configuration max size for message created in both JMAP Draft amd RFC-8621.
+| Optional. Configuration max size for message created in RFC-8621.
 Default value: None. Supported units are B (bytes) K (KB) M (MB) G (GB).
 
 | max.size.attachments.per.mail
@@ -62,13 +62,6 @@ This enables a higher resilience, but the projection needs to be correctly popul
 | user.provisioning.enabled
 | Optional boolean. Defaults to true. Governs whether authenticated users that do not exist locally should be created in the users repository.
 
-
-| authentication.strategy.draft
-| Optional List[String] with delimiter `,` . Specify which authentication strategies system admin want to use for JMAP draft server.
-The implicit package name is `org.apache.james.jmap.http`. If you have a custom authentication strategy outside this package, you have to specify its FQDN.
-If no authentication strategy is specified, JMAP draft server will fallback to default strategies:
-`AccessTokenAuthenticationStrategy`, `JWTAuthenticationStrategy`, `QueryParameterAccessTokenAuthenticationStrategy`
-
 | authentication.strategy.rfc8621
 | Optional List[String] with delimiter `,` . Specify which authentication strategies system admin want to use for JMAP RFC-8621 server.
 The implicit package name is `org.apache.james.jmap.http`. If you have a custom authentication strategy outside this package, you have to specify its FQDN.
@@ -76,10 +69,8 @@ If no authentication strategy is specified, JMAP RFC-8621 server will fallback t
 `JWTAuthenticationStrategy`, `BasicAuthenticationStrategy`.
 
 | jmap.version.default
-| Optional string. Defaults to draft. Allowed values: draft, rfc-8621.
+| Optional string. Defaults to `rfc-8621`. Allowed values: rfc-8621
 Which version of the JMAP protocol should be served when none supplied in the Accept header.
-Defaults to draft for legacy reasons (avoid breaking changes) but setting the value to
-rfc-8621 allow compatibility with other third party apps.
 
 | dynamic.jmap.prefix.resolution.enabled
 | Optional boolean. Defaults to false. Supported Jmap session endpoint returns dynamic prefix in response.
@@ -169,8 +160,6 @@ Contributions enhancing support are furthermore welcomed.
 
 The list of tested JMAP clients are:
 
- - [OpenPaaS](https://open-paas.org/) is actively using the draft version of the JMAP implementation. Migration to
- RFC-8621 is planned.
  - Experiments had been run on top of [LTT.RS](https://github.com/iNPUTmice/lttrs-android). Version in the Accept
  headers needs to be explicitly set to `rfc-8621`. [Read more](https://github.com/linagora/james-project/pull/4089).
 
