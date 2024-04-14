@@ -130,7 +130,6 @@ public class JMAPModule extends AbstractModule {
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
-        supportedVersions.addBinding().toInstance(Version.DRAFT);
         supportedVersions.addBinding().toInstance(Version.RFC8621);
 
         Multibinder<CapabilityFactory> supportedCapabilities = Multibinder.newSetBinder(binder(), CapabilityFactory.class);
