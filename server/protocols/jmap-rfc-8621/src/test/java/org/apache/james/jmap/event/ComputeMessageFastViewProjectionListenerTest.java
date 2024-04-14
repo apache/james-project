@@ -30,12 +30,8 @@ import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
 import java.time.Duration;
 
-import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.core.Username;
 import org.apache.james.events.Group;
 import org.apache.james.events.InVMEventBus;
@@ -45,16 +41,12 @@ import org.apache.james.events.delivery.InVmEventDelivery;
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
-import org.apache.james.jmap.methods.BlobManagerImpl;
-import org.apache.james.jmap.model.message.view.MessageFullViewFactory;
-import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
-import org.apache.james.jmap.memory.upload.InMemoryUploadRepository;
+import org.apache.james.jmap.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.StringBackedAttachmentIdFactory;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -69,7 +61,6 @@ import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -105,7 +96,6 @@ class ComputeMessageFastViewProjectionListenerTest {
         .build();
 
     MessageFastViewProjection messageFastViewProjection;
-    MessageFullViewFactory messageFullViewFactory;
     MailboxSession mailboxSession;
     StoreMailboxManager mailboxManager;
 
@@ -143,12 +133,6 @@ class ComputeMessageFastViewProjectionListenerTest {
 
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
-
-        BlobManagerImpl blobManager = new BlobManagerImpl(resources.getAttachmentManager(), resources.getMessageIdManager(), resources.getMessageIdFactory(),
-            new InMemoryUploadRepository(new DeDuplicationBlobStore(new MemoryBlobStoreDAO(), BucketName.of("default"),
-                new HashBlobId.Factory()), Clock.systemUTC()),
-            new StringBackedAttachmentIdFactory());
-        messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager, messageFastViewProjection);
 
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(BOB, "12345");
