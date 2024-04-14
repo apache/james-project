@@ -94,7 +94,6 @@
 
         <module>protocols/fetchmail</module>
         <module>protocols/jmap</module>
-        <module>protocols/jmap-draft</module>
         <module>protocols/jmap-rfc-8621</module>
         <module>protocols/jmap-rfc-8621-integration-tests</module>
         <module>protocols/jwt</module>
