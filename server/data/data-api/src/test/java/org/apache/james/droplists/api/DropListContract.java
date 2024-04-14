@@ -22,13 +22,16 @@ import static org.apache.james.droplists.api.OwnerScope.GLOBAL;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import jakarta.mail.internet.AddressException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,101 +42,101 @@ public interface DropListContract {
 
     @Test
     default void shouldAddEntry() throws AddressException {
-        DropListEntry dropListEntry = DropListEntry.builder()
-            .owner("global_scope@example.com")
-            .deniedEntity("denied@denied.com")
-            .deniedEntityType(DeniedEntityType.ADDRESS)
-            .build();
+        DropListEntry dropListEntry = getDropListTestEntries().toList().getFirst();
 
         Mono<Void> result = dropList().add(dropListEntry);
 
-        assertThat(1).isEqualTo(Objects.requireNonNull(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block()).size());
-        assertThat(Mono.empty()).isEqualTo(result);
+        assertThat(Objects.requireNonNull(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block()).size()).isEqualTo(1);
+        assertThat(result).isEqualTo(Mono.empty());
     }
 
     @Test
     default void shouldRemoveEntry() throws AddressException {
-        DropListEntry dropListEntry = DropListEntry.builder()
-            .owner("global_scope@example.com")
-            .deniedEntity("denied@denied.com")
-            .deniedEntityType(DeniedEntityType.ADDRESS)
-            .build();
+        DropListEntry dropListEntry = getDropListTestEntries().toList().getFirst();
 
         dropList().add(dropListEntry);
 
         Mono<Void> result = dropList().remove(dropListEntry);
 
-        assertThat(0).isEqualTo(Objects.requireNonNull(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block()).size());
-        assertThat(Mono.empty()).isEqualTo(result);
+        assertThat(Objects.requireNonNull(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block()).size()).isZero();
+        assertThat(result).isEqualTo(Mono.empty());
     }
 
-    @ParameterizedTest(name = "{index} ownerScope: {0}, owner: {1},")
-    @CsvSource(value = {
-        "GLOBAL, global_scope@example.com",
-        "DOMAIN, domain_scope@example.com",
-        "USER, user_scope@example.com",
-    })
-    default void shouldGetEntryListForSpecifiedScopeAndOwner(OwnerScope ownerScope, String owner) throws AddressException {
-        DropListEntry dropListEntry = DropListEntry.builder()
-            .ownerScope(ownerScope)
-            .owner(owner)
-            .deniedEntity("denied@denied.com")
-            .deniedEntityType(DeniedEntityType.ADDRESS)
-            .build();
+    @ParameterizedTest(name = "{index} {0}")
+    @MethodSource("provideParametersForGetEntryListTest")
+    default void shouldGetEntryListForSpecifiedScopeAndOwner(DropListEntry dropListEntry) {
         dropList().add(dropListEntry);
 
-        Flux<DropListEntry> result = dropList().list(ownerScope, owner);
+        Flux<DropListEntry> result = dropList().list(dropListEntry.getOwnerScope(), dropListEntry.getOwner());
 
-        assertThat(1).isEqualTo(Objects.requireNonNull(result.collectList().block()).size());
+        assertThat(Objects.requireNonNull(result.collectList().block()).size()).isEqualTo(1);
     }
 
-    @ParameterizedTest(name = "{index} ownerScope: {0}, owner: {1}, deniedEntity: {2}, deniedEntityType: {3}, senderMailAddress: {4}")
-    @CsvSource(value = {
-        "GLOBAL, global_scope@example.com, denied@denied.com, ADDRESS, allowed@allowed.com",
-        "GLOBAL, global_scope@example.com, denied.com, DOMAIN, allowed@allowed.com",
-        "DOMAIN, domain_scope@example.com, denied@denied.com, ADDRESS, allowed@allowed.com",
-        "DOMAIN, domain_scope@example.com, denied.com, DOMAIN, allowed@allowed.com",
-        "USER, user_scope@example.com, denied@denied.com, ADDRESS, allowed@allowed.com",
-        "USER, user_scope@example.com, denied.com, DOMAIN, allowed@allowed.com",
-    })
-    default void shouldReturnAllowed(OwnerScope ownerScope, String owner, String deniedEntity, DeniedEntityType deniedEntityType,
-                                     String senderMailAddress) throws AddressException {
-        MailAddress allowedSender = new MailAddress(senderMailAddress);
-        dropList().add(DropListEntry.builder()
-            .owner(owner)
-            .ownerScope(ownerScope)
-            .deniedEntity(deniedEntity)
-            .deniedEntityType(deniedEntityType)
-            .build());
 
-        Mono<DropList.Status> result = dropList().query(ownerScope, owner, allowedSender);
+    @ParameterizedTest(name = "{index} {0}")
+    @MethodSource("provideParametersForReturnAllowedTest")
+    default void shouldReturnAllowed(DropListEntry dropListEntry, MailAddress senderMailAddress) {
+        dropList().add(dropListEntry);
 
-        assertThat(DropList.Status.ALLOWED).isEqualTo(result.block());
+        Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), dropListEntry.getOwner(), senderMailAddress);
+
+        assertThat(result.block()).isEqualTo(DropList.Status.ALLOWED);
     }
 
-    @ParameterizedTest(name = "{index} ownerScope: {0}, owner: {1}, deniedEntity: {2}, deniedEntityType: {3}, senderMailAddress: {4}")
-    @CsvSource(value = {
-        "GLOBAL, global_scope@example.com, denied@denied.com, ADDRESS, denied@denied.com",
-        "GLOBAL, global_scope@example.com, denied@denied.com, ADDRESS, allowed@denied.com",
-        "GLOBAL, global_scope@example.com, denied.com, DOMAIN, allowed@denied.com",
-        "DOMAIN, domain_scope@example.com, denied@denied.com, ADDRESS, denied@denied.com",
-        "DOMAIN, domain_scope@example.com, denied.com, DOMAIN, allowed@denied.com",
-        "USER, user_scope@example.com, denied@denied.com, ADDRESS, denied@denied.com",
-        "USER, user_scope@example.com, denied.com, DOMAIN, allowed@denied.com",
-    })
-    default void shouldReturnBlocked(OwnerScope ownerScope, String owner, String deniedEntity, DeniedEntityType deniedEntityType,
-                                     String senderMailAddress) throws AddressException {
-        MailAddress deniedSender = new MailAddress(senderMailAddress);
-        dropList().add(DropListEntry.builder()
-            .owner(owner)
-            .ownerScope(ownerScope)
-            .deniedEntity(deniedEntity)
-            .deniedEntityType(deniedEntityType)
-            .build());
+    @ParameterizedTest(name = "{index} {0}")
+    @MethodSource("provideParametersForReturnBlockedTest")
+    default void shouldReturnBlocked(DropListEntry dropListEntry, MailAddress senderMailAddress) {
+        dropList().add(dropListEntry);
 
-        Mono<DropList.Status> result = dropList().query(ownerScope, owner, deniedSender);
+        Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), dropListEntry.getOwner(), senderMailAddress);
 
-        assertThat(DropList.Status.BLOCKED).isEqualTo(result.block());
+        assertThat(result.block()).isEqualTo(DropList.Status.BLOCKED);
     }
 
+    static Stream<DropListEntry> getDropListTestEntries() throws AddressException {
+        return Stream.of(
+            DropListEntry.builder()
+                .forAll()
+                .denyAddress(new MailAddress("denied@denied.com"))
+                .build(),
+            DropListEntry.builder()
+                .forAll()
+                .denyDomain(Domain.of("denied.com"))
+                .build(),
+            DropListEntry.builder()
+                .domainOwner(Domain.of("example.com"))
+                .denyAddress(new MailAddress("denied@denied.com"))
+                .build(),
+            DropListEntry.builder()
+                .domainOwner(Domain.of("example.com"))
+                .denyDomain(Domain.of("denied.com"))
+                .build(),
+            DropListEntry.builder()
+                .userOwner(new MailAddress("owner@example.com"))
+                .denyAddress(new MailAddress("denied@denied.com"))
+                .build(),
+            DropListEntry.builder()
+                .userOwner(new MailAddress("owner@example.com"))
+                .denyDomain(Domain.of("denied.com"))
+                .build());
+    }
+
+    static Stream<Arguments> provideParametersForGetEntryListTest() throws AddressException {
+        return getDropListTestEntries().map(Arguments::of);
+    }
+
+    static Stream<Arguments> provideParametersForReturnAllowedTest() throws AddressException {
+        MailAddress allowedSenderAddress = new MailAddress("allowed@allowed.com");
+        return getDropListTestEntries().map(dropListEntry -> Arguments.of(dropListEntry, allowedSenderAddress));
+    }
+
+    static Stream<Arguments> provideParametersForReturnBlockedTest() throws AddressException {
+
+        MailAddress deniedSenderAddress = new MailAddress("denied@denied.com");
+        MailAddress deniedSenderDomain = new MailAddress("allowed@denied.com");
+        return getDropListTestEntries().map(dropListEntry ->
+            dropListEntry.getDeniedEntityType().equals(DeniedEntityType.DOMAIN) ?
+                Arguments.of(dropListEntry, deniedSenderDomain) :
+                Arguments.of(dropListEntry, deniedSenderAddress));
+    }
 }

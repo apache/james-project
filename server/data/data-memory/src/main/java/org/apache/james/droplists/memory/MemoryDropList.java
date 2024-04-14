@@ -18,16 +18,13 @@
  ****************************************************************/
 package org.apache.james.droplists.memory;
 
-import static org.apache.james.droplists.api.DeniedEntityType.DOMAIN;
-
-import jakarta.mail.internet.AddressException;
-
-import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.droplists.api.DeniedEntityType;
 import org.apache.james.droplists.api.DropList;
 import org.apache.james.droplists.api.DropListEntry;
 import org.apache.james.droplists.api.OwnerScope;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -37,51 +34,63 @@ import reactor.core.publisher.Mono;
 
 public class MemoryDropList implements DropList {
 
-    private final Multimap<String, DropListEntry> dropList = Multimaps.synchronizedMultimap(HashMultimap.create());
+    private final Multimap<OwnerScope, DropListEntry> globalDropList = Multimaps.synchronizedMultimap(HashMultimap.create());
+    private final Multimap<OwnerScope, DropListEntry> domainDropList = Multimaps.synchronizedMultimap(HashMultimap.create());
+    private final Multimap<OwnerScope, DropListEntry> userDropList = Multimaps.synchronizedMultimap(HashMultimap.create());
 
     @Override
     public Mono<Void> add(DropListEntry entry) {
-        dropList.put(entry.getOwnerScope().name(), entry);
+        OwnerScope ownerScope = entry.getOwnerScope();
+        Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
+        selectedDropList.put(ownerScope, entry);
         return Mono.empty();
     }
 
     @Override
     public Mono<Void> remove(DropListEntry entry) {
-        dropList.remove(entry.getOwnerScope().name(), entry);
+        Preconditions.checkArgument(entry != null);
+        OwnerScope ownerScope = entry.getOwnerScope();
+        Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
+        selectedDropList.remove(ownerScope, entry);
         return Mono.empty();
     }
 
     @Override
     public Flux<DropListEntry> list(OwnerScope ownerScope, String owner) {
-        return Flux.fromIterable(dropList.get(ownerScope.name()).stream()
-            .filter(entry -> entry.getOwner().equals(owner))
-            .toList());
+        Preconditions.checkArgument(ownerScope != null);
+        Preconditions.checkArgument(owner != null);
+        Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
+        return Flux.fromIterable(selectedDropList.get(ownerScope))
+            .filter(entry -> entry.getOwner().equals(owner));
     }
 
     @Override
     public Mono<Status> query(OwnerScope ownerScope, String owner, MailAddress sender) {
-        boolean isBlocked = dropList.get(ownerScope.name()).stream()
-            .anyMatch(entry -> isEntryMatchingOwnerAndDeniedEntity(owner, sender, entry));
+        Preconditions.checkArgument(ownerScope != null);
+        Preconditions.checkArgument(owner != null);
+        Preconditions.checkArgument(sender != null);
+        Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
+        boolean isBlocked = selectedDropList.get(ownerScope).stream()
+            .anyMatch(entry -> isEntryMatchingOwner(owner, entry) && isEntryMatchingDeniedEntity(sender, entry));
 
         return Mono.just(isBlocked ? Status.BLOCKED : Status.ALLOWED);
     }
 
-    private static boolean isEntryMatchingOwnerAndDeniedEntity(String owner, MailAddress sender, DropListEntry entry) {
-        String entityFromSender;
-        String deniedEntity;
-        if (entry.getOwnerScope().equals(OwnerScope.GLOBAL)) {
-            entityFromSender = sender.getDomain().asString();
-            try {
-                deniedEntity = (entry.getDeniedEntityType().equals(DOMAIN)) ? Domain.of(entry.getDeniedEntity()).asString() :
-                    new MailAddress(entry.getDeniedEntity()).getDomain().asString();
-                return entry.getOwner().equals(owner) && deniedEntity.equals(entityFromSender);
-            } catch (AddressException e) {
-                return false;
-            }
-        } else {
-            entityFromSender = (entry.getDeniedEntityType().equals(DOMAIN)) ? sender.getDomain().asString() : sender.asString();
-            deniedEntity = (entry.getDeniedEntityType().equals(DOMAIN)) ? Domain.of(entry.getDeniedEntity()).asString() : entry.getDeniedEntity();
-            return entry.getOwner().equals(owner) && deniedEntity.equals(entityFromSender);
-        }
+    private Multimap<OwnerScope, DropListEntry> getDropListByScope(OwnerScope ownerScope) {
+        return switch (ownerScope) {
+            case GLOBAL -> globalDropList;
+            case DOMAIN -> domainDropList;
+            case USER -> userDropList;
+        };
+    }
+
+    private boolean isEntryMatchingOwner(String owner, DropListEntry entry) {
+        return entry.getOwner().equals(owner);
+    }
+
+    private boolean isEntryMatchingDeniedEntity(MailAddress sender, DropListEntry entry) {
+        String entityFromSender = entry.getDeniedEntityType() == DeniedEntityType.DOMAIN ? sender.getDomain().asString() : sender.asString();
+
+        return entry.getDeniedEntity().equals(entityFromSender);
     }
 }

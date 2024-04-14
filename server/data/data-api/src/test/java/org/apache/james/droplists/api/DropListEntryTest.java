@@ -23,14 +23,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import jakarta.mail.internet.AddressException;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class DropListEntryTest {
-
-    private final String LONG_ENTITY = StringUtils.repeat('x', 254);
 
     @Test
     void shouldRespectEqualsContract() {
@@ -39,152 +38,105 @@ class DropListEntryTest {
     }
 
     @Test
-    void shouldThrowOnWithoutOwner() {
-        DropListEntry.Builder builder = DropListEntry.builder()
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("deniedEntity");
-
-        assertThatThrownBy(builder::build)
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowOnEmptyOwner() {
-        DropListEntry.Builder builder = DropListEntry.builder()
-            .owner("")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("deniedEntity");
-
-        assertThatThrownBy(builder::build)
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowOnBlankOwner() {
-        DropListEntry.Builder builder = DropListEntry.builder()
-            .owner(" ")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("deniedEntity");
-
-        assertThatThrownBy(builder::build)
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowOnNullOwner() {
+    void shouldThrowOnWhenBuilderIsEmpty() {
         DropListEntry.Builder builder = DropListEntry.builder();
 
-        assertThatThrownBy(() -> builder.owner(null))
+        assertThatThrownBy(builder::build)
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldThrowOnWithoutOwnerScope() {
+        DropListEntry.Builder builder = DropListEntry.builder()
+            .denyDomain(Domain.of("denied.com"));
+
+        assertThatThrownBy(builder::build)
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldThrowOnNullUserOwner() {
+        DropListEntry.Builder builder = DropListEntry.builder();
+
+        assertThatThrownBy(() -> builder.userOwner(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowOnNullDomainOwner() {
+        DropListEntry.Builder builder = DropListEntry.builder();
+
+        assertThatThrownBy(() -> builder.domainOwner(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void shouldThrowOnWithoutDeniedEntity() {
         DropListEntry.Builder builder = DropListEntry.builder()
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("");
+            .forAll();
 
         assertThatThrownBy(builder::build)
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    void shouldThrowOnEmptyDeniedEntity() {
+    void shouldThrowOnNullDeniedDomain() {
         DropListEntry.Builder builder = DropListEntry.builder()
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("");
+            .forAll();
 
-        assertThatThrownBy(builder::build)
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowOnBlankDeniedEntity() {
-        DropListEntry.Builder builder = DropListEntry.builder()
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity(" ");
-
-        assertThatThrownBy(builder::build)
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowOnNullDeniedEntity() {
-        DropListEntry.Builder builder = DropListEntry.builder()
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity(" ");
-
-        assertThatThrownBy(() -> builder.deniedEntity(null))
+        assertThatThrownBy(() -> builder.denyDomain(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void shouldDefaultGlobalOwnerScopeWhenNotSpecified() throws AddressException {
+    void shouldThrowOnNullDeniedMailAddress() {
+        DropListEntry.Builder builder = DropListEntry.builder()
+            .forAll();
+
+        assertThatThrownBy(() -> builder.denyAddress(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldGlobalOwnerScopeBeSetWhenForAllIsCalled() {
         DropListEntry dropListEntry = DropListEntry.builder()
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("entity.com")
+            .forAll()
+            .denyDomain(Domain.of("denied.com"))
             .build();
 
         assertThat(dropListEntry.getOwnerScope()).isEqualTo(OwnerScope.GLOBAL);
     }
 
     @Test
-    void shouldDefaultGlobalOwnerScopeOnNull() throws AddressException {
+    void shouldEmptyOwnerBeSetWhenForAllIsCalled() throws AddressException {
         DropListEntry dropListEntry = DropListEntry.builder()
-            .ownerScope(null)
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("entity.com")
+            .forAll()
+            .denyAddress(new MailAddress("denied@example.com"))
             .build();
 
-        assertThat(dropListEntry.getOwnerScope()).isEqualTo(OwnerScope.GLOBAL);
-    }
-
-    @Test
-    void shouldThrowOnNullDeniedEntityType() {
-        DropListEntry.Builder builder = DropListEntry.builder();
-
-        assertThatThrownBy(() -> builder.deniedEntityType(null))
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void shouldThrowWhenDeniedEntityTooLong() {
-        DropListEntry.Builder builder = DropListEntry.builder()
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity(LONG_ENTITY);
-
-        assertThatThrownBy(builder::build)
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldThrowWhenOwnerEntityTooLong() {
-        DropListEntry.Builder builder = DropListEntry.builder()
-            .owner(LONG_ENTITY)
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("deniedEntity");
-
-        assertThatThrownBy(builder::build)
-            .isInstanceOf(IllegalArgumentException.class);
+        assertThat(dropListEntry.getOwner()).isEmpty();
     }
 
     @Test
     void shouldReturnDropListEntryAsString() throws AddressException {
-        String expectedString = "DropListEntry{ownerScope=GLOBAL, owner=owner, deniedType=DOMAIN, deniedEntity=entity}";
+        String expectedString = "DropListEntry{ownerScope=USER, owner=owner@example.com, deniedType=DOMAIN, deniedEntity=denied.com}";
         DropListEntry dropListEntry = DropListEntry.builder()
-            .owner("owner")
-            .deniedEntityType(DeniedEntityType.DOMAIN)
-            .deniedEntity("entity")
+            .userOwner(new MailAddress("owner@example.com"))
+            .denyDomain(Domain.of("denied.com"))
             .build();
 
-        assertThat(expectedString).isEqualTo(dropListEntry.toString());
+        assertThat(dropListEntry).hasToString(expectedString);
+    }
+
+    @Test
+    void shouldReturnDropListEntryAsStringWithoutOwnerWhenScopeGlobal() {
+        String expectedString = "DropListEntry{ownerScope=GLOBAL, deniedType=DOMAIN, deniedEntity=denied.com}";
+        DropListEntry dropListEntry = DropListEntry.builder()
+            .forAll()
+            .denyDomain(Domain.of("denied.com"))
+            .build();
+
+        assertThat(dropListEntry).hasToString(expectedString);
     }
 
 }
