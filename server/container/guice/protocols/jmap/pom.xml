@@ -29,7 +29,7 @@
     <artifactId>james-server-guice-jmap</artifactId>
 
     <name>Apache James :: Server :: Guice :: JMAP</name>
-    <description>JMAP (draft and RFC8621) modules for Guice implementation of James server</description>
+    <description>JMAP RFC8621 modules for Guice implementation of James server</description>
 
     <dependencies>
         <dependency>
@@ -56,10 +56,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-mailet</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-jmap-draft</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
