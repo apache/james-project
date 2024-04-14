@@ -21,7 +21,7 @@ package org.apache.james.task.eventsourcing.postgres
 
 import java.time.Instant
 
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection
 import org.apache.james.task.{TaskExecutionDetails, TaskId}
 import org.reactivestreams.Publisher

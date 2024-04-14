@@ -29,8 +29,8 @@ import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_
 
 import java.util.function.Function;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.quota.QuotaComponent;

@@ -24,7 +24,7 @@ import static org.apache.james.jmap.postgres.projections.PostgresMessageFastView
 import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule.MessageFastViewProjectionTable.PREVIEW;
 import static org.apache.james.jmap.postgres.projections.PostgresMessageFastViewProjectionModule.MessageFastViewProjectionTable.TABLE_NAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.jmap.api.model.Preview;
