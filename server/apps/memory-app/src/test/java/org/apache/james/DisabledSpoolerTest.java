@@ -26,7 +26,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.BOB;
 import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
-import static org.apache.james.jmap.draft.JmapJamesServerContract.JAMES_SERVER_HOST;
+import static org.apache.james.jmap.JmapJamesServerContract.JAMES_SERVER_HOST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.model.MailboxConstants;
