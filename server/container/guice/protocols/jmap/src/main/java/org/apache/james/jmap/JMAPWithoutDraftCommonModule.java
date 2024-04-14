@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap;
 
+import java.util.concurrent.TimeUnit;
+
+import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.methods.BlobManager;
 import org.apache.james.jmap.methods.BlobManagerImpl;
@@ -34,8 +37,10 @@ import org.apache.james.util.mime.MessageContentExtractor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.name.Names;
 
 public class JMAPWithoutDraftCommonModule extends AbstractModule {
+    private static final long DEFAULT_TOKEN_EXPIRATION_IN_MS = TimeUnit.MILLISECONDS.convert(15, TimeUnit.MINUTES);
 
     @Override
     protected void configure() {
@@ -53,5 +58,7 @@ public class JMAPWithoutDraftCommonModule extends AbstractModule {
         bind(ObjectMapperFactory.class).in(Scopes.SINGLETON);
         bind(JmapResponseWriterImpl.class).in(Scopes.SINGLETON);
         bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class);
+
+        bindConstant().annotatedWith(Names.named(AccessTokenRepository.TOKEN_EXPIRATION_IN_MS)).to(DEFAULT_TOKEN_EXPIRATION_IN_MS);
     }
 }
