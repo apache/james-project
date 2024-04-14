@@ -1,6 +1,0 @@
-docs_dir: specs
-site_name: JMAP specifications with annotations from apache/james contributors
-theme: readthedocs
-use_directory_urls: false
-extra_css:
-  - annotations.css
