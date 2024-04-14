@@ -38,20 +38,6 @@ pipeline {
         MVN_SHOW_TIMESTAMPS="-Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS"
         CI = true
         LC_CTYPE = 'en_US.UTF-8'
-
-        POSTGRES_MODULES = 'backends-common/postgres,' +
-                'mailbox/postgres,' +
-                'server/data/data-postgres,' +
-                'server/data/data-jmap-postgres,' +
-                'server/container/guice/postgres-common,' +
-                'server/container/guice/mailbox-postgres,' +
-                'server/apps/postgres-app,' +
-                'server/protocols/jmap-rfc-8621-integration-tests/postgres-jmap-rfc-8621-integration-tests,' +
-                'server/protocols/webadmin-integration-test/postgres-webadmin-integration-test,' +
-                'server/task/task-postgres,' +
-                'mpt/impl/imap-mailbox/postgres,' +
-                'event-bus/postgres,' +
-                'mailbox/plugin/deleted-messages-vault-postgres'
     }
 
     tools {
@@ -108,7 +94,7 @@ pipeline {
         stage('Stable Tests') {
             steps {
                 echo 'Running tests'
-                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -pl ${POSTGRES_MODULES} -Dassembly.skipAssembly=true jacoco:report-aggregate@jacoco-report'
+                sh 'mvn -B -e -fae test ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true jacoco:report-aggregate@jacoco-report'
             }
             post {
                 always {
@@ -129,7 +115,7 @@ pipeline {
             steps {
                 echo 'Running unstable tests'
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT}  -pl ${POSTGRES_MODULES} -Dassembly.skipAssembly=true'
+                    sh 'mvn -B -e -fae test -Punstable-tests ${MVN_SHOW_TIMESTAMPS} -P ci-test ${MVN_LOCAL_REPO_OPT} -Dassembly.skipAssembly=true'
                 }
             }
             post {
