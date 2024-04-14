@@ -20,7 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.blob.aes.CryptoConfig;
-import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.jmap.JmapJamesServerContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;

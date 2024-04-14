@@ -21,7 +21,7 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.jmap.JmapJamesServerContract;
 import org.apache.james.modules.ConfigurationProbe;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.Test;
