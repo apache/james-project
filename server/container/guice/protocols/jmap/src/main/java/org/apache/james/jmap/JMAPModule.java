@@ -19,7 +19,6 @@
 package org.apache.james.jmap;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.EnumSet;
@@ -47,10 +46,6 @@ import org.apache.james.jmap.core.SharesCapabilityFactory$;
 import org.apache.james.jmap.core.SubmissionCapabilityFactory;
 import org.apache.james.jmap.core.VacationResponseCapabilityFactory$;
 import org.apache.james.jmap.core.WebSocketCapabilityFactory$;
-import org.apache.james.jmap.draft.DraftMethodsModule;
-import org.apache.james.jmap.draft.JMAPDraftCommonModule;
-import org.apache.james.jmap.draft.JMAPDraftConfiguration;
-import org.apache.james.jmap.draft.methods.RequestHandler;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.rfc8621.RFC8621MethodsModule;
 import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
@@ -120,16 +115,13 @@ public class JMAPModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new JMAPDraftCommonModule());
         install(new JMAPWithoutDraftCommonModule());
-        install(new DraftMethodsModule());
         install(new RFC8621MethodsModule());
         install(binder -> binder
             .bind(MailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
             .toInstance(DEFAULT_JMAP_PROCESSORS_CONFIGURATION_SUPPLIER));
 
         bind(JMAPServer.class).in(Scopes.SINGLETON);
-        bind(RequestHandler.class).in(Scopes.SINGLETON);
         bind(JsoupHtmlTextExtractor.class).in(Scopes.SINGLETON);
 
         bind(HtmlTextExtractor.class).to(JsoupHtmlTextExtractor.class);
@@ -138,7 +130,6 @@ public class JMAPModule extends AbstractModule {
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 
         Multibinder<Version> supportedVersions = Multibinder.newSetBinder(binder(), Version.class);
-        supportedVersions.addBinding().toInstance(Version.DRAFT);
         supportedVersions.addBinding().toInstance(Version.RFC8621);
 
         Multibinder<CapabilityFactory> supportedCapabilities = Multibinder.newSetBinder(binder(), CapabilityFactory.class);
@@ -228,33 +219,17 @@ public class JMAPModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPDraftConfiguration provideDraftConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException {
+    @Named("jmap")
+    JwtTokenVerifier providesJwtTokenVerifier(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration("jmap");
-            return JMAPDraftConfiguration.builder()
-                .enabled(configuration.getBoolean("enabled", true))
-                .keystore(configuration.getString("tls.keystoreURL", null))
-                .privateKey(configuration.getString("tls.privateKey", null))
-                .certificates(configuration.getString("tls.certificates", null))
-                .keystoreType(configuration.getString("tls.keystoreType", null))
-                .secret(configuration.getString("tls.secret", null))
-                .jwtPublicKeyPem(loadPublicKey(fileSystem, ImmutableList.copyOf(configuration.getStringArray("jwt.publickeypem.url"))))
-                .authenticationStrategies(Optional.ofNullable(configuration.getList(String.class, "authentication.strategy.draft", null)))
-                .build();
+            List<String> loadedPublicKey = loadPublicKey(fileSystem, ImmutableList.copyOf(configuration.getStringArray("jwt.publickeypem.url")));
+            JwtConfiguration jwtConfiguration = new JwtConfiguration(loadedPublicKey);
+            return JwtTokenVerifier.create(jwtConfiguration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find JMAP configuration file. JMAP server will not be enabled.");
-            return JMAPDraftConfiguration.builder()
-                .disable()
-                .build();
+            LOGGER.warn("Could not find JMAP configuration file. JwtTokenVerifier was initialized with empty public key ");
+            return JwtTokenVerifier.create(new JwtConfiguration(List.of()));
         }
-    }
-
-    @Provides
-    @Singleton
-    @Named("jmap")
-    JwtTokenVerifier providesJwtTokenVerifier(JMAPDraftConfiguration jmapConfiguration) {
-        JwtConfiguration jwtConfiguration = new JwtConfiguration(jmapConfiguration.getJwtPublicKeyPem());
-        return JwtTokenVerifier.create(jwtConfiguration);
     }
 
     private List<String> loadPublicKey(FileSystem fileSystem, List<String> jwtPublickeyPemUrl) {

@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSet;
 
 class VersionParserTest {
     private static final ImmutableSet<Version> SUPPORTED_VERSIONS = ImmutableSet.of(
-        Version.DRAFT,
         Version.RFC8621
     );
 

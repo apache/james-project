@@ -78,7 +78,7 @@ class SessionRoutesTest extends AnyFlatSpec with BeforeAndAfter with Matchers {
     jmapServer = new JMAPServer(
       TEST_CONFIGURATION,
       Set(new JMAPRoutesHandler(Version.RFC8621, sessionRoutes)).asJava,
-      new VersionParser(Set(Version.RFC8621, Version.DRAFT).asJava, JMAPConfiguration.DEFAULT))
+      new VersionParser(Set(Version.RFC8621).asJava, JMAPConfiguration.DEFAULT))
     jmapServer.start()
 
     RestAssured.requestSpecification = new RequestSpecBuilder()

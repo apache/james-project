@@ -19,15 +19,6 @@
 
 package org.apache.james.jmap;
 
-import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.methods.BlobManager;
-import org.apache.james.jmap.methods.BlobManagerImpl;
-import org.apache.james.jmap.methods.JmapResponseWriter;
-import org.apache.james.jmap.methods.JmapResponseWriterImpl;
-import org.apache.james.jmap.model.message.view.MessageFastViewFactory;
-import org.apache.james.jmap.model.message.view.MessageFullViewFactory;
-import org.apache.james.jmap.model.message.view.MessageHeaderViewFactory;
-import org.apache.james.jmap.model.message.view.MessageMetadataViewFactory;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -39,19 +30,8 @@ public class JMAPWithoutDraftCommonModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(MessageFullViewFactory.class).in(Scopes.SINGLETON);
-        bind(MessageMetadataViewFactory.class).in(Scopes.SINGLETON);
-        bind(MessageHeaderViewFactory.class).in(Scopes.SINGLETON);
-        bind(MessageFastViewFactory.class).in(Scopes.SINGLETON);
-
         bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
         bind(DefaultZonedDateTimeProvider.class).in(Scopes.SINGLETON);
         bind(ZonedDateTimeProvider.class).to(DefaultZonedDateTimeProvider.class);
-
-        bind(BlobManagerImpl.class).in(Scopes.SINGLETON);
-        bind(BlobManager.class).to(BlobManagerImpl.class);
-        bind(ObjectMapperFactory.class).in(Scopes.SINGLETON);
-        bind(JmapResponseWriterImpl.class).in(Scopes.SINGLETON);
-        bind(JmapResponseWriter.class).to(JmapResponseWriterImpl.class);
     }
 }

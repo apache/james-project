@@ -23,16 +23,9 @@ import java.security.Security;
 
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.JMAPModule;
-import org.apache.james.jmap.JMAPRoutesHandler;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.MessageIdProbe;
-import org.apache.james.jmap.Version;
-import org.apache.james.jmap.draft.crypto.JamesSignatureHandler;
-import org.apache.james.jmap.http.AuthenticationRoutes;
-import org.apache.james.jmap.http.DownloadRoutes;
-import org.apache.james.jmap.http.JMAPApiRoutes;
-import org.apache.james.jmap.http.UploadRoutes;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -49,31 +42,19 @@ public class JMAPServerModule extends AbstractModule {
         install(new JMAPModule());
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
+
     }
 
     @ProvidesIntoSet
-    InitializationOperation startJmap(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {
+    InitializationOperation startJmap(JMAPServer server, JMAPConfiguration jmapConfiguration) {
         return InitilizationOperationBuilder
             .forClass(JMAPServer.class)
             .init(() -> {
                 if (jmapConfiguration.isEnabled()) {
-                    signatureHandler.init();
                     server.start();
                     registerPEMWithSecurityProvider();
                 }
             });
-    }
-
-    @ProvidesIntoSet
-    JMAPRoutesHandler routesHandler(AuthenticationRoutes authenticationRoutes,
-                                    JMAPApiRoutes jmapApiRoutes,
-                                    UploadRoutes uploadRoutes,
-                                    DownloadRoutes  downloadRoutes) {
-        return new JMAPRoutesHandler(Version.DRAFT,
-            authenticationRoutes,
-            jmapApiRoutes,
-            uploadRoutes,
-            downloadRoutes);
     }
 
     private void registerPEMWithSecurityProvider() {

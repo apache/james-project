@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import static org.apache.james.jmap.draft.JmapJamesServerContract.JAMES_SERVER_HOST;
+import static org.apache.james.jmap.JmapJamesServerContract.JAMES_SERVER_HOST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;

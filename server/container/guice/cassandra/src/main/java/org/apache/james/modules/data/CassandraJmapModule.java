@@ -28,7 +28,6 @@ import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.dto.EventDTOModule;
-import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules;
 import org.apache.james.jmap.api.filtering.FiltersDeleteUserDataTaskStep;
@@ -45,8 +44,6 @@ import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.pushsubscription.PushSubscriptionRepository;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadUsageRepository;
-import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
-import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
 import org.apache.james.jmap.cassandra.change.CassandraEmailChangeModule;
 import org.apache.james.jmap.cassandra.change.CassandraMailboxChangeModule;
 import org.apache.james.jmap.cassandra.filtering.CassandraFilteringProjection;
@@ -77,9 +74,6 @@ import com.google.inject.multibindings.Multibinder;
 public class CassandraJmapModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(CassandraAccessTokenRepository.class).in(Scopes.SINGLETON);
-        bind(AccessTokenRepository.class).to(CassandraAccessTokenRepository.class);
-
         bind(CassandraUploadRepository.class).in(Scopes.SINGLETON);
         bind(UploadDAO.class).in(Scopes.SINGLETON);
         bind(UploadRepository.class).to(CassandraUploadRepository.class);
@@ -107,7 +101,6 @@ public class CassandraJmapModule extends AbstractModule {
         bind(EmailQueryViewManager.class).to(DefaultEmailQueryViewManager.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraAccessModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraMessageFastViewProjectionModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraEmailQueryViewModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraMailboxChangeModule.MODULE);
@@ -130,12 +123,13 @@ public class CassandraJmapModule extends AbstractModule {
         deleteUserDataTaskSteps.addBinding().to(FiltersDeleteUserDataTaskStep.class);
         deleteUserDataTaskSteps.addBinding().to(IdentityUserDeletionTaskStep.class);
         deleteUserDataTaskSteps.addBinding().to(PushDeleteUserDataTaskStep.class);
+        bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class).asEagerSingleton();
     }
 
     @Singleton
     @Provides
-    FilteringManagement provideFilteringManagement(EventStore eventStore, CassandraFilteringProjection cassandraFilteringProjection,
-                                                   PropertiesProvider propertiesProvider) throws ConfigurationException {
+    EventSourcingFilteringManagement provideFilteringManagement(EventStore eventStore, CassandraFilteringProjection cassandraFilteringProjection,
+                                                                PropertiesProvider propertiesProvider) throws ConfigurationException {
         if (cassandraFilterProjectionActivated(propertiesProvider)) {
             return new EventSourcingFilteringManagement(eventStore, cassandraFilteringProjection);
         } else {
