@@ -37,20 +37,20 @@ public interface JmapJamesServerContract {
     String JAMES_SERVER_HOST = "127.0.0.1";
 
     @Test
-    default void connectJMAPServerShouldRespondBadRequest(GuiceJamesServer server) {
+    default void connectJMAPServerShouldFailWhenUnAuthenticatedRequest(GuiceJamesServer server) {
         RestAssured.requestSpecification = requestSpec(server);
         given()
             .body("{\"badAttributeName\": \"value\"}")
         .when()
-            .post("/authentication")
+            .post("/jmap")
         .then()
-            .statusCode(400);
+            .statusCode(401);
     }
 
     static RequestSpecification requestSpec(GuiceJamesServer server) {
         return new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
+            .setAccept("application/json; jmapVersion=rfc-8621")
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
             .build();
