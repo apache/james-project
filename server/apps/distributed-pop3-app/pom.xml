@@ -247,12 +247,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-jmap-draft-integration-testing</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
         </dependency>
         <dependency>
