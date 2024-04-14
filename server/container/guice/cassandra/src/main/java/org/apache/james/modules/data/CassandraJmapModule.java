@@ -126,12 +126,13 @@ public class CassandraJmapModule extends AbstractModule {
         deleteUserDataTaskSteps.addBinding().to(FiltersDeleteUserDataTaskStep.class);
         deleteUserDataTaskSteps.addBinding().to(IdentityUserDeletionTaskStep.class);
         deleteUserDataTaskSteps.addBinding().to(PushDeleteUserDataTaskStep.class);
+        bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class).asEagerSingleton();
     }
 
     @Singleton
     @Provides
-    FilteringManagement provideFilteringManagement(EventStore eventStore, CassandraFilteringProjection cassandraFilteringProjection,
-                                                   PropertiesProvider propertiesProvider) throws ConfigurationException {
+    EventSourcingFilteringManagement provideFilteringManagement(EventStore eventStore, CassandraFilteringProjection cassandraFilteringProjection,
+                                                                PropertiesProvider propertiesProvider) throws ConfigurationException {
         if (cassandraFilterProjectionActivated(propertiesProvider)) {
             return new EventSourcingFilteringManagement(eventStore, cassandraFilteringProjection);
         } else {
