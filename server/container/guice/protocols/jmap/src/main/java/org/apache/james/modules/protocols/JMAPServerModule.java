@@ -26,7 +26,6 @@ import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.JMAPServer;
 import org.apache.james.jmap.JmapGuiceProbe;
 import org.apache.james.jmap.MessageIdProbe;
-import org.apache.james.jmap.methods.Method;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -44,7 +43,6 @@ public class JMAPServerModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
 
-        Multibinder.newSetBinder(binder(), Method.class);
     }
 
     @ProvidesIntoSet
