@@ -22,41 +22,20 @@ package org.apache.james.modules;
 import java.io.FileNotFoundException;
 import java.util.Optional;
 
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.draft.JMAPDraftConfiguration;
-import org.apache.james.jmap.draft.methods.GetMessageListMethod;
-import org.apache.james.jmap.pushsubscription.PushClientConfiguration;
+import org.apache.james.jwt.JwtConfiguration;
+import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.modules.mailbox.FastRetryBackoffModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.name.Names;
 
 public class TestJMAPServerModule extends AbstractModule {
-    public static class SearchModule extends AbstractModule {
-        public static final long LIMIT_TO_3_MESSAGES = 3;
-
-        public static SearchModule maximumMessages(long maximumLimit) {
-            return new SearchModule(maximumLimit);
-        }
-
-        private final long maximumLimit;
-
-        public SearchModule(long maximumLimit) {
-            this.maximumLimit = maximumLimit;
-        }
-
-        @Override
-        protected void configure() {
-            bindConstant().annotatedWith(Names.named(GetMessageListMethod.MAXIMUM_LIMIT)).to(maximumLimit);
-
-            bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT());
-        }
-    }
 
     private static final String PUBLIC_PEM_KEY =
         "-----BEGIN PUBLIC KEY-----\n" +
@@ -101,14 +80,6 @@ public class TestJMAPServerModule extends AbstractModule {
             "ICQil1aaN7/2au+p7E4n7nzfYG7nRX5syDoqgBbdhpJxV8/5ohA=\n" +
             "-----END RSA PRIVATE KEY-----\n";
 
-    public static JMAPDraftConfiguration.Builder jmapDraftConfigurationBuilder() {
-        return JMAPDraftConfiguration.builder()
-                .enable()
-                .keystore("keystore")
-                .keystoreType("JKS")
-                .secret("james72laBalle")
-                .jwtPublicKeyPem(ImmutableList.of(PUBLIC_PEM_KEY));
-    }
 
     @Override
     protected void configure() {
@@ -128,7 +99,8 @@ public class TestJMAPServerModule extends AbstractModule {
 
     @Provides
     @Singleton
-    JMAPDraftConfiguration provideDraftConfiguration() throws FileNotFoundException, ConfigurationException {
-        return jmapDraftConfigurationBuilder().build();
+    @Named("jmap")
+    JwtTokenVerifier providesJwtTokenVerifier() {
+        return JwtTokenVerifier.create(new JwtConfiguration(ImmutableList.of(PUBLIC_PEM_KEY)));
     }
 }
