@@ -18,11 +18,16 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.redirect;
 
+import static org.apache.mailet.LoopPrevention.RECORDED_RECIPIENTS_ATTRIBUTE_NAME;
+
+import java.util.Optional;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MailImpl;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +113,9 @@ public class ProcessRedirectNotify {
 
     private void finalizeMail(MailImpl mail) throws MessagingException {
         mail.getMessage().saveChanges();
+        Optional<Attribute> recordedRecipients = mail.getAttribute(RECORDED_RECIPIENTS_ATTRIBUTE_NAME);
         mail.removeAllAttributes();
+        recordedRecipients.ifPresent(mail::setAttribute);
     }
 
     private boolean keepMessageId() {
