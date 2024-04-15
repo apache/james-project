@@ -377,7 +377,8 @@ public class JamesMailetContext implements MailetContext, Configurable, Disposab
 
     @Override
     public void sendMail(Mail mail) throws MessagingException {
-        sendMail(mail, Optional.ofNullable(mail.getState()).orElse(Mail.DEFAULT));
+        String state = Optional.ofNullable(mail.getState()).orElse(Mail.DEFAULT);
+        sendMail(mail, state);
     }
 
     @Override
