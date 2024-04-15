@@ -44,6 +44,7 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.ParseException;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -323,7 +324,7 @@ public class MailImpl implements Disposable, Mail {
     @VisibleForTesting static String deriveNewName(String currentName) throws MessagingException {
         char separator = '!';
         int loopThreshold = 7;
-        int suffixLength = 9;
+        int suffixLength = 5;
         int suffixMaxLength = loopThreshold * suffixLength;
         int nameMaxLength = suffixMaxLength + 13;
 
@@ -342,7 +343,7 @@ public class MailImpl implements Disposable, Mail {
     }
 
     private static String generateRandomSuffix(int suffixLength, char separator) {
-        return "-" + separator + RandomStringUtils.randomNumeric(suffixLength - 2);
+        return separator + RandomStringUtils.randomAlphanumeric(suffixLength - 1);
     }
 
     private static void detectPossibleLoop(String currentName, int loopThreshold, char separator) throws MessagingException {
@@ -788,7 +789,7 @@ public class MailImpl implements Disposable, Mail {
      * @return the new identifier
      */
     public static String getId() {
-        return "Mail" + System.currentTimeMillis() + "-" + UUID.randomUUID();
+        return "Mail" + System.currentTimeMillis() + "-" + RandomStringUtils.randomAlphanumeric(20);
     }
 
     @Override
