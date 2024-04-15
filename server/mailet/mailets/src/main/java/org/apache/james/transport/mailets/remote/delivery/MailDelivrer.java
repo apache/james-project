@@ -218,7 +218,12 @@ public class MailDelivrer {
         if (!validUnsentAddresses.isEmpty()) {
             if (!invalidAddresses.isEmpty()) {
                 mail.setRecipients(invalidAddresses);
-                bouncer.bounce(mail, sfe);
+                try {
+                    bouncer.bounce(mail, sfe);
+                } catch (MessagingException e) {
+                    LOGGER.warn("Failed bouncing permanently failed recipients, returning full temporarily failure instead", e);
+                    return logAndReturn(mail, ExecutionResult.temporaryFailure(sfe));
+                }
             }
             mail.setRecipients(validUnsentAddresses);
             if (enhancedMessagingException.hasReturnCode()) {
