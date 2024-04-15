@@ -42,7 +42,6 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
@@ -415,14 +414,14 @@ public class RecipientRewriteTableProcessor {
                 return new Decision(recipient, RrtExecutionResult.success(newMailAddresses));
             }
             return new Decision(recipient, RrtExecutionResult.success(recipient));
-        } catch (ErrorMappingException | RecipientRewriteTableException e) {
+        } catch (Exception e) {
             LOGGER.warn("Could not rewrite recipient {}", recipient, e);
             return new Decision(recipient, RrtExecutionResult.error(recipient));
         }
     }
 
     @VisibleForTesting
-    List<MailAddress> handleMappings(Mappings mappings, Mail mail, MailAddress recipient) {
+    List<MailAddress> handleMappings(Mappings mappings, Mail mail, MailAddress recipient) throws MessagingException {
         boolean isLocal = true;
         Map<Boolean, List<MailAddress>> mailAddressSplit = splitRemoteMailAddresses(mappings);
 
@@ -456,7 +455,7 @@ public class RecipientRewriteTableProcessor {
             .stream();
     }
 
-    private void forwardToRemoteAddress(Mail mail, MailAddress recipient, Collection<MailAddress> remoteRecipients) {
+    private void forwardToRemoteAddress(Mail mail, MailAddress recipient, Collection<MailAddress> remoteRecipients) throws MessagingException {
         if (!remoteRecipients.isEmpty()) {
             Mail duplicate = null;
             try {
@@ -464,8 +463,6 @@ public class RecipientRewriteTableProcessor {
                 duplicate.setRecipients(ImmutableList.copyOf(remoteRecipients));
                 mailetContext.sendMail(duplicate);
                 LOGGER.info("Mail for {} forwarded to {}", recipient, remoteRecipients);
-            } catch (MessagingException ex) {
-                LOGGER.warn("Error forwarding mail to {}", remoteRecipients);
             } finally {
                 LifecycleUtil.dispose(duplicate);
             }
