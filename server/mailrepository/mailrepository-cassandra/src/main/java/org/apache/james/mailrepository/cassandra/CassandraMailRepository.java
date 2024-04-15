@@ -81,6 +81,8 @@ public class CassandraMailRepository implements MailRepository {
                     "mimeMessageId", Optional.ofNullable(mail.getMessage())
                         .map(Throwing.function(MimeMessage::getMessageID))
                         .orElse(""),
+                    "url", url.asString(),
+                    "error", Optional.ofNullable(mail.getErrorMessage()).orElse(""),
                     "sender", mail.getMaybeSender().asString(),
                     "recipients", StringUtils.join(mail.getRecipients()))))
                 .log("CassandraMailRepository stored mail.")))
