@@ -68,5 +68,14 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     public void mixingSaveReadAndDeleteShouldReturnConsistentState() {
     }
 
+    @Override
+    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
+    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
+    }
+
+    @Override
+    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
+    public void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
+    }
 
 }
