@@ -40,6 +40,7 @@ public class MemoryDropList implements DropList {
 
     @Override
     public Mono<Void> add(DropListEntry entry) {
+        Preconditions.checkArgument(entry != null);
         OwnerScope ownerScope = entry.getOwnerScope();
         Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
         selectedDropList.put(ownerScope, entry);

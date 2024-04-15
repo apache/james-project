@@ -19,9 +19,9 @@
 package org.apache.james.droplists.api;
 
 import static org.apache.james.droplists.api.OwnerScope.GLOBAL;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import jakarta.mail.internet.AddressException;
@@ -42,24 +42,72 @@ public interface DropListContract {
 
     @Test
     default void shouldAddEntry() throws AddressException {
-        DropListEntry dropListEntry = getDropListTestEntries().toList().getFirst();
+        DropListEntry dropListEntry = DropListEntry.builder()
+            .forAll()
+            .denyAddress(new MailAddress("denied@denied.com"))
+            .build();
 
         Mono<Void> result = dropList().add(dropListEntry);
 
-        assertThat(Objects.requireNonNull(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block()).size()).isEqualTo(1);
+        assertThat(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block().size()).isEqualTo(1);
         assertThat(result).isEqualTo(Mono.empty());
     }
 
     @Test
     default void shouldRemoveEntry() throws AddressException {
-        DropListEntry dropListEntry = getDropListTestEntries().toList().getFirst();
+        DropListEntry dropListEntry = DropListEntry.builder()
+            .forAll()
+            .denyAddress(new MailAddress("denied@denied.com"))
+            .build();
 
         dropList().add(dropListEntry);
 
         Mono<Void> result = dropList().remove(dropListEntry);
 
-        assertThat(Objects.requireNonNull(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block()).size()).isZero();
+        assertThat(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block().size()).isZero();
         assertThat(result).isEqualTo(Mono.empty());
+    }
+
+    @Test
+    default void shouldThrowWhenAddOnNullDropListEntry() {
+        assertThatThrownBy(() -> dropList().add(null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    default void shouldThrowWhenRemoveOnNullDropListEntry() {
+        assertThatThrownBy(() -> dropList().remove(null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    default void shouldThrowWhenListOnNullScope() {
+        assertThatThrownBy(() -> dropList().list(null, "owner"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    default void shouldThrowWhenListOnNullOwner() {
+        assertThatThrownBy(() -> dropList().list(GLOBAL, null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    default void shouldThrowWhenQueryOnNullScope() {
+        assertThatThrownBy(() -> dropList().query(null, "owner", new MailAddress("sender@example.com")))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    default void shouldThrowWhenQueryOnNullOwner() {
+        assertThatThrownBy(() -> dropList().query(GLOBAL, null, new MailAddress("sender@example.com")))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    default void shouldThrowWhenQueryOnNullSender() {
+        assertThatThrownBy(() -> dropList().query(GLOBAL, "owner", null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @ParameterizedTest(name = "{index} {0}")
@@ -69,7 +117,7 @@ public interface DropListContract {
 
         Flux<DropListEntry> result = dropList().list(dropListEntry.getOwnerScope(), dropListEntry.getOwner());
 
-        assertThat(Objects.requireNonNull(result.collectList().block()).size()).isEqualTo(1);
+        assertThat(result.collectList().block().size()).isEqualTo(1);
     }
 
 
