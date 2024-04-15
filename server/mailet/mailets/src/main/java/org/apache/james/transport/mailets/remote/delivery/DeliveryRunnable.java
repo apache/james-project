@@ -206,7 +206,7 @@ public class DeliveryRunnable implements Disposable {
         }
     }
 
-    private void handlePermanentFailure(Mail mail, ExecutionResult executionResult) {
+    private void handlePermanentFailure(Mail mail, ExecutionResult executionResult) throws MessagingException {
         mail.setAttribute(new Attribute(IS_DELIVERY_PERMANENT_ERROR, AttributeValue.of(true)));
         bouncer.bounce(mail, executionResult.getException().orElse(null));
     }
