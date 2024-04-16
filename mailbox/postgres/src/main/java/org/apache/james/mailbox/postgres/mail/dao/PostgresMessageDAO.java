@@ -46,9 +46,9 @@ import static org.apache.james.mailbox.postgres.mail.dao.PostgresMailboxMessageD
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;

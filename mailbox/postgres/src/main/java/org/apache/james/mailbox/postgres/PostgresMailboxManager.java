@@ -22,7 +22,7 @@ package org.apache.james.mailbox.postgres;
 import java.time.Clock;
 import java.util.EnumSet;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.events.EventBus;
 import org.apache.james.mailbox.MailboxSession;

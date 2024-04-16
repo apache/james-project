@@ -24,8 +24,8 @@ import static org.apache.james.domainlist.postgres.PostgresDomainModule.Postgres
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Domain;

@@ -22,7 +22,7 @@ package org.apache.james.vacation.postgres;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;

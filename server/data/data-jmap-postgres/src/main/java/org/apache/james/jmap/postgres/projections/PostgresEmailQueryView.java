@@ -21,7 +21,7 @@ package org.apache.james.jmap.postgres.projections;
 
 import java.time.ZonedDateTime;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.jmap.api.projections.EmailQueryView;
 import org.apache.james.mailbox.model.MailboxId;

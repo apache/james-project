@@ -23,7 +23,7 @@ import java.time.{Instant, LocalDateTime}
 import java.util.Optional
 
 import com.google.common.collect.ImmutableMap
-import javax.inject.Inject
+import jakarta.inject.Inject
 import org.apache.james.backends.postgres.PostgresCommons.{LOCAL_DATE_TIME_ZONED_DATE_TIME_FUNCTION, ZONED_DATE_TIME_TO_LOCAL_DATE_TIME, INSTANT_TO_LOCAL_DATE_TIME}
 import org.apache.james.backends.postgres.utils.PostgresExecutor
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer

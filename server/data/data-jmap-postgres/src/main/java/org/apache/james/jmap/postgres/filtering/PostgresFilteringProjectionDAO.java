@@ -26,7 +26,7 @@ import static org.apache.james.jmap.postgres.filtering.PostgresFilteringProjecti
 
 import java.util.List;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;
