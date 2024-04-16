@@ -21,7 +21,7 @@ package org.apache.james.mailbox.postgres.mail;
 
 import java.util.function.Function;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;

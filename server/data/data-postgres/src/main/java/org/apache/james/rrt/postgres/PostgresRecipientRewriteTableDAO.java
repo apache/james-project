@@ -25,7 +25,7 @@ import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.TARGET_ADDRESS;
 import static org.apache.james.rrt.postgres.PostgresRecipientRewriteTableModule.PostgresRecipientRewriteTableTable.USERNAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;

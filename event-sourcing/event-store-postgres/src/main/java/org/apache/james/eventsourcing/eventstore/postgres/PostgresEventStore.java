@@ -24,7 +24,7 @@ import static org.apache.james.backends.postgres.utils.PostgresUtils.UNIQUE_CONS
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.Event;

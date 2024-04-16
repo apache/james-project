@@ -32,8 +32,8 @@ import static org.apache.james.sieve.postgres.PostgresSieveModule.PostgresSieveS
 import java.time.OffsetDateTime;
 import java.util.function.Function;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.Username;

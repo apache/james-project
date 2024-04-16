@@ -28,8 +28,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;

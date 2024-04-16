@@ -24,7 +24,7 @@ import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEve
 import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.INSERTION_ID;
 import static org.apache.james.events.PostgresEventDeadLettersModule.PostgresEventDeadLettersTable.TABLE_NAME;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.jooq.Record;
