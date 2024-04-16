@@ -20,7 +20,6 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FiltersDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
@@ -33,7 +32,6 @@ import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.pushsubscription.PushDeleteUserDataTaskStep;
 import org.apache.james.jmap.api.upload.UploadRepository;
-import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.postgres.filtering.PostgresFilteringProjection;
 import org.apache.james.jmap.postgres.identity.PostgresCustomIdentityDAO;
 import org.apache.james.jmap.postgres.projections.PostgresEmailQueryView;
@@ -52,16 +50,13 @@ public class PostgresDataJmapModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(MemoryAccessTokenRepository.class).in(Scopes.SINGLETON);
-        bind(AccessTokenRepository.class).to(MemoryAccessTokenRepository.class);
-
         bind(UploadRepository.class).to(PostgresUploadRepository.class);
 
         bind(PostgresCustomIdentityDAO.class).in(Scopes.SINGLETON);
         bind(CustomIdentityDAO.class).to(PostgresCustomIdentityDAO.class);
 
         bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
-        bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);
+        bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class).asEagerSingleton();
         bind(PostgresFilteringProjection.class).in(Scopes.SINGLETON);
         bind(EventSourcingFilteringManagement.ReadProjection.class).to(PostgresFilteringProjection.class);
 
