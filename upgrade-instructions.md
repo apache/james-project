@@ -29,6 +29,17 @@ Change list:
  - [JMX authentication for Spring](#jmx-authentication-for-spring)
  - [Java 21](#java-21)
  - [javax -> jakarta](#javax---jakarta)
+ - [Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`](#make-all-queues-on-rabbitmq-quorum-queue-when-quorumqueuesenabletrue)
+
+### Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`
+
+Date: 16/04/2024
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-4027
+
+Now `quorum.queues.enable=true` enforces all the queues used by James to be quorum queue to achieve fully high availability.
+
+Some old classic queues (e.g. JMAP and mailbox eventbus work queues) would need to be deleted and let James re-create them as quorum queues.
 
 ### Java 21
 
