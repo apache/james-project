@@ -28,8 +28,8 @@ import static org.apache.james.jmap.postgres.projections.PostgresEmailQueryViewM
 
 import java.time.ZonedDateTime;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.model.MessageId;

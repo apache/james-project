@@ -19,11 +19,9 @@
 
 package org.apache.james.mailbox.postgres.search;
 
-
 import java.util.Optional;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.Flags;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;

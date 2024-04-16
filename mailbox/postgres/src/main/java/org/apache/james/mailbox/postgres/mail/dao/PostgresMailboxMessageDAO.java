@@ -55,9 +55,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import jakarta.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
