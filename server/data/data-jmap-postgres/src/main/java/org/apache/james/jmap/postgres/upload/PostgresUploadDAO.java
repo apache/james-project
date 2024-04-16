@@ -25,9 +25,9 @@ import static org.apache.james.jmap.postgres.upload.PostgresUploadModule.Postgre
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.postgres.PostgresCommons;

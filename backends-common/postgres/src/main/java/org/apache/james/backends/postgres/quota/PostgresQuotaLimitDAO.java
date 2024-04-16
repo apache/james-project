@@ -28,8 +28,8 @@ import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.Postg
 import static org.apache.james.backends.postgres.quota.PostgresQuotaModule.PostgresQuotaLimitTable.TABLE_NAME;
 import static org.apache.james.backends.postgres.utils.PostgresExecutor.DEFAULT_INJECT;
 
-import javax.inject.Inject;
-import javax.inject.Named;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.core.quota.QuotaComponent;
