@@ -49,7 +49,7 @@ public class CassandraEventDeadLettersDAO {
     private final PreparedStatement containEventsStatement;
 
     @Inject
-    CassandraEventDeadLettersDAO(CqlSession session, EventSerializer eventSerializer) {
+    public CassandraEventDeadLettersDAO(CqlSession session, EventSerializer eventSerializer) {
         this.executor = new CassandraAsyncExecutor(session);
         this.eventSerializer = eventSerializer;
         this.insertStatement = prepareInsertStatement(session);
