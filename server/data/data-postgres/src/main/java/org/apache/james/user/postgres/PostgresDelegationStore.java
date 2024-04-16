@@ -19,7 +19,7 @@
 
 package org.apache.james.user.postgres;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.DelegationStore;
