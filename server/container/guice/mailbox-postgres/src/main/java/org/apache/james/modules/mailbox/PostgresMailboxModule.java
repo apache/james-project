@@ -20,7 +20,7 @@ package org.apache.james.modules.mailbox;
 
 import static org.apache.james.modules.Names.MAILBOXMANAGER_NAME;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.apache.james.adapter.mailbox.ACLUsernameChangeTaskStep;
 import org.apache.james.adapter.mailbox.DelegationStoreAuthorizator;
