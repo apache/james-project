@@ -22,8 +22,7 @@ package org.apache.james.mailrepository.postgres;
 import java.util.Collection;
 import java.util.Iterator;
 
-import javax.inject.Inject;
-
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailKey;

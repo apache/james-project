@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.postgres.search;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.mailbox.MailboxSession;
