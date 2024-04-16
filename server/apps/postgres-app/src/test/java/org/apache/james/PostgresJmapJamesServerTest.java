@@ -22,7 +22,7 @@ package org.apache.james;
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
 import org.apache.james.backends.postgres.PostgresExtension;
-import org.apache.james.jmap.draft.JmapJamesServerContract;
+import org.apache.james.jmap.JmapJamesServerContract;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.vault.VaultConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
