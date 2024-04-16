@@ -28,7 +28,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.apache.james.backends.postgres.PostgresConfiguration;
 import org.apache.james.core.Domain;
