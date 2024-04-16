@@ -118,7 +118,7 @@
               Optional string, defaults to empty string</dd>
 
           <dt><strong>quorum.queues.enable</strong></dt>
-          <dd>Boolean. Whether to activate Quorum queue usage for use cases that benefits from it (work queue).
+          <dd>Boolean. Whether to activate Quorum queue usage for all queues.
               Quorum queues enables high availability.
               False (default value) results in the usage of classic queues.</dd>
 
