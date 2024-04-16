@@ -18,11 +18,15 @@
  ****************************************************************/
 package org.apache.james.droplists.api;
 
-import static org.apache.james.core.Domain.MAXIMUM_DOMAIN_LENGTH;
+import static org.apache.james.droplists.api.OwnerScope.DOMAIN;
 import static org.apache.james.droplists.api.OwnerScope.GLOBAL;
+import static org.apache.james.droplists.api.OwnerScope.USER;
 
 import java.util.Objects;
 import java.util.Optional;
+
+import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -34,53 +38,58 @@ public class DropListEntry {
     }
 
     public static class Builder {
-        private Optional<OwnerScope> ownerScope = Optional.empty();
-        private String owner;
+        private OwnerScope ownerScope;
+        private Optional<String> owner = Optional.empty();
         private DeniedEntityType deniedEntityType;
         private String deniedEntity;
 
-        public Builder ownerScope(OwnerScope ownerScope) {
-            this.ownerScope = Optional.ofNullable(ownerScope);
+        public Builder userOwner(MailAddress mailAddress) {
+            Preconditions.checkNotNull(mailAddress);
+            this.owner = Optional.of(mailAddress.toString());
+            this.ownerScope = USER;
             return this;
         }
 
-        public Builder owner(String owner) {
-            Preconditions.checkNotNull(owner);
-            this.owner = owner;
+        public Builder domainOwner(Domain domain) {
+            Preconditions.checkNotNull(domain);
+            this.owner = Optional.of(domain.asString());
+            this.ownerScope = DOMAIN;
             return this;
         }
 
-        public Builder deniedEntityType(DeniedEntityType deniedEntityType) {
-            Preconditions.checkNotNull(deniedEntityType);
-            this.deniedEntityType = deniedEntityType;
+        public Builder forAll() {
+            this.ownerScope = GLOBAL;
             return this;
         }
 
-        public Builder deniedEntity(String deniedEntity) {
-            Preconditions.checkNotNull(deniedEntity);
-            this.deniedEntity = deniedEntity;
+        public Builder denyDomain(Domain domain) {
+            Preconditions.checkNotNull(domain);
+            this.deniedEntity = domain.asString();
+            this.deniedEntityType = DeniedEntityType.DOMAIN;
+            return this;
+        }
+
+        public Builder denyAddress(MailAddress mailAddress) {
+            Preconditions.checkNotNull(mailAddress);
+            this.deniedEntity = mailAddress.toString();
+            this.deniedEntityType = DeniedEntityType.ADDRESS;
             return this;
         }
 
         public DropListEntry build() {
-            OwnerScope scope = ownerScope.orElse(GLOBAL);
-            Preconditions.checkArgument(owner != null && !owner.trim().isBlank(), "owner must not be null, empty, or blank");
-            Preconditions.checkArgument(owner.length() <= MAXIMUM_DOMAIN_LENGTH,
-                "owner length should not be longer than %s characters", MAXIMUM_DOMAIN_LENGTH);
             Preconditions.checkArgument(deniedEntityType != null, "`deniedEntityType` is mandatory");
+            Preconditions.checkArgument(ownerScope != null, "`ownerScope` is mandatory");
             Preconditions.checkArgument(deniedEntity != null && !deniedEntity.isBlank(), "`deniedEntity` must not be null, empty, or blank");
-            Preconditions.checkArgument(deniedEntity.length() <= MAXIMUM_DOMAIN_LENGTH,
-                "deniedEntity length should not be longer than %s characters", MAXIMUM_DOMAIN_LENGTH);
-            return new DropListEntry(scope, owner, deniedEntityType, deniedEntity);
+            return new DropListEntry(ownerScope, owner, deniedEntityType, deniedEntity);
         }
     }
 
     private final OwnerScope ownerScope;
-    private final String owner;
+    private final Optional<String> owner;
     private final DeniedEntityType deniedEntityType;
     private final String deniedEntity;
 
-    private DropListEntry(OwnerScope ownerScope, String owner, DeniedEntityType deniedEntityType, String deniedEntity) {
+    private DropListEntry(OwnerScope ownerScope, Optional<String> owner, DeniedEntityType deniedEntityType, String deniedEntity) {
         this.ownerScope = ownerScope;
         this.owner = owner;
         this.deniedEntityType = deniedEntityType;
@@ -92,7 +101,7 @@ public class DropListEntry {
     }
 
     public String getOwner() {
-        return owner;
+        return owner.orElse("");
     }
 
     public DeniedEntityType getDeniedEntityType() {
@@ -121,11 +130,11 @@ public class DropListEntry {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("ownerScope", ownerScope)
-            .add("owner", owner)
-            .add("deniedType", deniedEntityType)
-            .add("deniedEntity", deniedEntity)
-            .toString();
+        MoreObjects.ToStringHelper result = MoreObjects.toStringHelper(this)
+            .add("ownerScope", ownerScope);
+        owner.ifPresent(o -> result.add("owner", o));
+        result.add("deniedType", deniedEntityType)
+            .add("deniedEntity", deniedEntity);
+        return result.toString();
     }
 }
