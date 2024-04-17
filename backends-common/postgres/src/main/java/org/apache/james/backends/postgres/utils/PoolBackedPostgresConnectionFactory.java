@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.postgres.utils;
 
-import java.time.Duration;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
@@ -36,25 +35,26 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     private static final Logger LOGGER = LoggerFactory.getLogger(PoolBackedPostgresConnectionFactory.class);
     private static final Domain DEFAULT = Domain.of("default");
     private static final String DEFAULT_DOMAIN_ATTRIBUTE_VALUE = "";
-    private static final int INITIAL_SIZE = 10;
-    private static final int MAX_SIZE = 20;
-    private static final Duration MAX_IDLE_TIME = Duration.ofMillis(5000);
+    private static final int DEFAULT_INITIAL_SIZE = 10;
+    private static final int DEFAULT_MAX_SIZE = 20;
 
     private final boolean rowLevelSecurityEnabled;
     private final ConnectionPool pool;
 
-    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, Optional<Integer> maxSize, ConnectionFactory connectionFactory) {
+    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, Optional<Integer> maybeInitialSize, Optional<Integer> maybeMaxSize, ConnectionFactory connectionFactory) {
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
-        final ConnectionPoolConfiguration configuration = ConnectionPoolConfiguration.builder(connectionFactory)
-            .maxIdleTime(MAX_IDLE_TIME)
-            .initialSize(INITIAL_SIZE)
-            .maxSize(maxSize.orElse(MAX_SIZE))
+        int initialSize = maybeInitialSize.orElse(DEFAULT_INITIAL_SIZE);
+        int maxSize = maybeMaxSize.orElse(DEFAULT_MAX_SIZE);
+        ConnectionPoolConfiguration configuration = ConnectionPoolConfiguration.builder(connectionFactory)
+            .initialSize(initialSize)
+            .maxSize(maxSize)
             .build();
+        LOGGER.info("Creating new postgres ConnectionPool with initialSize {} and maxSize {}", initialSize, maxSize);
         pool = new ConnectionPool(configuration);
     }
 
     public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, ConnectionFactory connectionFactory) {
-        this(rowLevelSecurityEnabled, Optional.empty(), connectionFactory);
+        this(rowLevelSecurityEnabled, Optional.empty(), Optional.empty(), connectionFactory);
     }
 
     @Override
