@@ -48,7 +48,7 @@
       <source>
 &lt;tls socketTLS="false" startTLS="false"&gt;
   &lt;keystore&gt;file://conf/keystore&lt;/keystore&gt;
-  &lt;keystoreType&gt;PKSC12&lt;/keystoreType&gt;
+  &lt;keystoreType&gt;PKCS12&lt;/keystoreType&gt;
   &lt;secret&gt;yoursecret&lt;/secret&gt;
   &lt;provider&gt;org.bouncycastle.jce.provider.BouncyCastleProvider&lt;/provider&gt;
 &lt;/tls&gt;
@@ -188,10 +188,11 @@ openssl rsa -in private.key -out private.nopass.key
       
       <p><b>Creating your own Certificate Keystore</b></p>
         <p>(Adapted from the Tomcat 4.1 documentation)</p>
-        <p>James currently operates only on JKS and PKCS12 format keystores. This is Java's standard "Java KeyStore" format, and is the format created by the keytool command-line utility. This tool is included in the JDK.</p>
+        <p>James currently operates only on JKS and PKCS12 format keystores. PKCS12 is Java's default "Java KeyStore" format created by the keytool command-line utility (for Java 8+) when no "-storetype" option is provided. This tool is included in the JDK.</p>
         <p>To import an existing certificate into a JKS keystore, please read the documentation (in your JDK documentation package) about keytool.</p>
         <p>To create a new keystore from scratch, containing a single self-signed Certificate, execute the following from a terminal command line:</p>
         <p><code>keytool -genkey -alias james -keyalg RSA -keystore your_keystore_filename</code></p>
+        <p><strong>Note:</strong> This will create a keystore in PKCS12 format. To create a JKS format keystore add the option '-storetype JKS' to the command line.
         <p>(The RSA algorithm should be preferred as a secure algorithm, and this also ensures general compatibility with other servers and components.)</p>
         <p>As a suggested standard, create the keystore in the james/conf directory, with a name like james.keystore.</p>
         <p>After executing this command, you will first be prompted for the keystore password.</p>
