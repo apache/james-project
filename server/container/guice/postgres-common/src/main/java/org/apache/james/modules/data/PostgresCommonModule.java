@@ -75,15 +75,13 @@ public class PostgresCommonModule extends AbstractModule {
     @Provides
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactory(PostgresConfiguration postgresConfiguration,
-                                                                         ConnectionFactory connectionFactory,
-                                                                         @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT) JamesPostgresConnectionFactory jamesPostgresConnectionFactory) {
-        if (postgresConfiguration.rowLevelSecurityEnabled()) {
-            LOGGER.info("PostgreSQL row level security enabled");
-            LOGGER.info("Implementation for PostgreSQL connection factory: {}", PoolBackedPostgresConnectionFactory.class.getName());
-            return new PoolBackedPostgresConnectionFactory(true, connectionFactory);
-        }
+                                                                         ConnectionFactory connectionFactory) {
+        LOGGER.info("Is PostgreSQL row level security enabled? {}", postgresConfiguration.rowLevelSecurityEnabled());
         LOGGER.info("Implementation for PostgreSQL connection factory: {}", PoolBackedPostgresConnectionFactory.class.getName());
-        return new PoolBackedPostgresConnectionFactory(false, connectionFactory);
+        return new PoolBackedPostgresConnectionFactory(postgresConfiguration.rowLevelSecurityEnabled(),
+            postgresConfiguration.poolInitialSize(),
+            postgresConfiguration.poolMaxSize(),
+            connectionFactory);
     }
 
     @Provides
