@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConversionException;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.Nested;
@@ -622,6 +623,36 @@ class RabbitMQConfigurationTest {
             assertThat(RabbitMQConfiguration.ManagementCredentials.from(configuration))
                 .isEqualTo(credentialWithUserAndPassword);
         }
+    }
+
+    @Test
+    void hostsShouldDefaultToAmqpUriIfNotSpecified() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
+        String amqpUri = "amqp://james:james@rabbitmqhost1:5672";
+        configuration.addProperty("uri", amqpUri);
+        configuration.addProperty("management.uri", "http://james:james@rabbitmqhost:15672/api/");
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+
+        assertThat(RabbitMQConfiguration.from(configuration).rabbitMQHosts())
+            .containsOnly(Host.from("rabbitmqhost1", 5672));
+    }
+
+    @Test
+    void hostsShouldParseIfSpecified() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.setListDelimiterHandler(new DefaultListDelimiterHandler(','));
+        String amqpUri = "amqp://james:james@rabbitmqhost1:5672";
+        configuration.addProperty("uri", amqpUri);
+        configuration.addProperty("management.uri", "http://james:james@rabbitmqhost:15672/api/");
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+        configuration.addProperty("hosts", "rabbitmqhost1:5672,rabbitmqhost2:5672");
+
+        assertThat(RabbitMQConfiguration.from(configuration).rabbitMQHosts())
+            .containsExactlyInAnyOrder(Host.from("rabbitmqhost1", 5672),
+                Host.from("rabbitmqhost2", 5672));
     }
 
     @Nested
