@@ -77,7 +77,7 @@ class GroupRegistrationHandler {
     private final ListenerExecutor listenerExecutor;
     private final RabbitMQConfiguration configuration;
     private final GroupRegistration.WorkQueueName queueName;
-    private Scheduler scheduler;
+    private final Scheduler scheduler;
     private Optional<Disposable> consumer;
 
     GroupRegistrationHandler(NamingStrategy namingStrategy, EventSerializer eventSerializer, ReactorRabbitMQChannelPool channelPool, Sender sender, ReceiverProvider receiverProvider,
@@ -94,8 +94,8 @@ class GroupRegistrationHandler {
         this.configuration = configuration;
         this.groupRegistrations = new ConcurrentHashMap<>();
         this.queueName = namingStrategy.workQueue(GROUP);
+        this.scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
         this.consumer = Optional.empty();
-
     }
 
     GroupRegistration retrieveGroupRegistration(Group group) {
@@ -104,7 +104,6 @@ class GroupRegistrationHandler {
     }
 
     public void start() {
-        scheduler = Schedulers.newBoundedElastic(EventBus.EXECUTION_RATE, ReactorUtils.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "groups-handler");
         channelPool.createWorkQueue(
             QueueSpecification.queue(queueName.asString())
                 .durable(DURABLE)
