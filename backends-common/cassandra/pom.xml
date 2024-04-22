@@ -31,7 +31,7 @@
     <name>Apache James :: Backends Common :: Cassandra</name>
 
     <properties>
-        <cassandra.driver.version>4.17.0</cassandra.driver.version>
+        <cassandra.driver.version>4.18.0</cassandra.driver.version>
     </properties>
 
     <dependencies>
@@ -62,12 +62,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.datastax.oss</groupId>
+            <groupId>org.apache.cassandra</groupId>
             <artifactId>java-driver-core</artifactId>
             <version>${cassandra.driver.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.datastax.oss</groupId>
+            <groupId>org.apache.cassandra</groupId>
             <artifactId>java-driver-query-builder</artifactId>
             <version>${cassandra.driver.version}</version>
         </dependency>
