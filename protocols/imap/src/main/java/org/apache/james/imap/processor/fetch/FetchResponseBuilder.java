@@ -181,8 +181,13 @@ public final class FetchResponseBuilder {
             // Check if this fetch will cause the "SEEN" flag to be set on this
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
-            return addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags())
-                .then(Mono.fromCallable(this::build));
+            if (fetch.isSetSeen()) {
+                return manageSeenAndAddFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags())
+                    .then(Mono.fromCallable(this::build));
+            } else {
+                addFlags(fetch, selectedMailbox, resultUid, result.getFlags());
+                return Mono.fromCallable(this::build);
+            }
         });
     }
 
@@ -228,7 +233,7 @@ public final class FetchResponseBuilder {
         }
     }
 
-    private Mono<Void> addFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
+    private Mono<Void> manageSeenAndAddFlags(FetchData fetch, MessageManager mailbox, SelectedMailbox selected, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
         return ensureFlagResponse(fetch, mailbox, resultUid, mailboxSession, flags)
             .doOnNext(ensureFlagsResponse -> {
                 if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
@@ -239,6 +244,15 @@ public final class FetchResponseBuilder {
                 }
             })
             .then();
+    }
+
+    private void addFlags(FetchData fetch, SelectedMailbox selected, MessageUid resultUid, Flags flags) {
+        if (fetch.contains(Item.FLAGS)) {
+            if (selected.isRecent(resultUid)) {
+                flags.add(Flags.Flag.RECENT);
+            }
+            setFlags(flags);
+        }
     }
 
     private Mono<Boolean> ensureFlagResponse(FetchData fetch, MessageManager mailbox, MessageUid resultUid, MailboxSession mailboxSession, Flags flags) {
@@ -269,7 +283,7 @@ public final class FetchResponseBuilder {
             // Check if this fetch will cause the "SEEN" flag to be set on this
             // message. If so, update the flags, and ensure that a flags response is
             // included in the response.
-            return addFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags())
+            return manageSeenAndAddFlags(fetch, mailbox, selectedMailbox, resultUid, mailboxSession, result.getFlags())
                 .then(Mono.fromCallable(this::build));
         });
     }
