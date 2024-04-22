@@ -43,7 +43,6 @@ import org.apache.james.core.quota.QuotaType;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.querybuilder.delete.Delete;
 import com.datastax.oss.driver.api.querybuilder.insert.Insert;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
@@ -136,7 +135,11 @@ public class CassandraQuotaLimitDao {
             .setString(QUOTA_SCOPE, quotaKey.getQuotaScope().getValue())
             .setString(IDENTIFIER, quotaKey.getIdentifier())
             .setString(QUOTA_TYPE, quotaKey.getQuotaType().getValue()))
-            .map(this::convertRowToModel);
+            .map(row -> QuotaLimit.builder().quotaComponent(quotaKey.getQuotaComponent())
+                .quotaScope(quotaKey.getQuotaScope())
+                .identifier(quotaKey.getIdentifier())
+                .quotaType(quotaKey.getQuotaType())
+                .quotaLimit(row.get(0, Long.class)).build());
     }
 
     public Flux<QuotaLimit> getQuotaLimits(QuotaComponent quotaComponent, QuotaScope quotaScope, String identifier) {
@@ -144,7 +147,11 @@ public class CassandraQuotaLimitDao {
             .setString(QUOTA_COMPONENT, quotaComponent.getValue())
             .setString(QUOTA_SCOPE, quotaScope.getValue())
             .setString(IDENTIFIER, identifier))
-            .map(this::convertRowToModel);
+            .map(row -> QuotaLimit.builder().quotaComponent(quotaComponent)
+                .quotaScope(quotaScope)
+                .identifier(identifier)
+                .quotaType(QuotaType.of(row.get(QUOTA_TYPE, String.class)))
+                .quotaLimit(row.get(QUOTA_LIMIT, Long.class)).build());
     }
 
     public Mono<Void> setQuotaLimit(QuotaLimit quotaLimit) {
@@ -166,7 +173,7 @@ public class CassandraQuotaLimitDao {
 
     private Select getQuotaLimitStatement() {
         return selectFrom(TABLE_NAME)
-            .all()
+            .column(QUOTA_LIMIT)
             .where(column(IDENTIFIER).isEqualTo(bindMarker(IDENTIFIER)),
                 column(QUOTA_COMPONENT).isEqualTo(bindMarker(QUOTA_COMPONENT)),
                 column(QUOTA_TYPE).isEqualTo(bindMarker(QUOTA_TYPE)),
@@ -175,7 +182,7 @@ public class CassandraQuotaLimitDao {
 
     private Select getQuotaLimitsStatement() {
         return selectFrom(TABLE_NAME)
-            .all()
+            .columns(QUOTA_TYPE, QUOTA_LIMIT)
             .where(column(IDENTIFIER).isEqualTo(bindMarker(IDENTIFIER)),
                 column(QUOTA_COMPONENT).isEqualTo(bindMarker(QUOTA_COMPONENT)),
                 column(QUOTA_SCOPE).isEqualTo(bindMarker(QUOTA_SCOPE)));
@@ -197,13 +204,4 @@ public class CassandraQuotaLimitDao {
                 column(QUOTA_TYPE).isEqualTo(bindMarker(QUOTA_TYPE)),
                 column(QUOTA_SCOPE).isEqualTo(bindMarker(QUOTA_SCOPE)));
     }
-
-    private QuotaLimit convertRowToModel(Row row) {
-        return QuotaLimit.builder().quotaComponent(QuotaComponent.of(row.get(QUOTA_COMPONENT, String.class)))
-            .quotaScope(QuotaScope.of(row.get(QUOTA_SCOPE, String.class)))
-            .identifier(row.get(IDENTIFIER, String.class))
-            .quotaType(QuotaType.of(row.get(QUOTA_TYPE, String.class)))
-            .quotaLimit(row.get(QUOTA_LIMIT, Long.class)).build();
-    }
-
 }
