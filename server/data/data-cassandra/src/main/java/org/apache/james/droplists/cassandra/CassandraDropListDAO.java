@@ -24,10 +24,11 @@ import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom;
 import static com.datastax.oss.driver.api.querybuilder.relation.Relation.column;
 import static org.apache.james.droplists.api.DeniedEntityType.DOMAIN;
-import static org.apache.james.droplists.cassandra.tables.CassandraUserDropListTable.DENIED_ENTITY;
-import static org.apache.james.droplists.cassandra.tables.CassandraUserDropListTable.DENIED_ENTITY_TYPE;
-import static org.apache.james.droplists.cassandra.tables.CassandraUserDropListTable.OWNER;
-import static org.apache.james.droplists.cassandra.tables.CassandraUserDropListTable.TABLE_NAME;
+import static org.apache.james.droplists.cassandra.tables.CassandraDropListTable.DENIED_ENTITY;
+import static org.apache.james.droplists.cassandra.tables.CassandraDropListTable.DENIED_ENTITY_TYPE;
+import static org.apache.james.droplists.cassandra.tables.CassandraDropListTable.OWNER;
+import static org.apache.james.droplists.cassandra.tables.CassandraDropListTable.OWNER_SCOPE;
+import static org.apache.james.droplists.cassandra.tables.CassandraDropListTable.TABLE_NAME;
 
 import java.util.List;
 
@@ -39,6 +40,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.droplists.api.DropList;
 import org.apache.james.droplists.api.DropListEntry;
+import org.apache.james.droplists.api.OwnerScope;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -47,7 +49,7 @@ import com.datastax.oss.driver.api.core.cql.Row;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class CassandraUserDropListDAO {
+public class CassandraDropListDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement addDropListStatement;
@@ -56,10 +58,11 @@ public class CassandraUserDropListDAO {
     private final PreparedStatement queryDropListStatement;
 
     @Inject
-    public CassandraUserDropListDAO(CqlSession session) {
+    public CassandraDropListDAO(CqlSession session) {
         this.executor = new CassandraAsyncExecutor(session);
 
         addDropListStatement = session.prepare(insertInto(TABLE_NAME)
+            .value(OWNER_SCOPE, bindMarker(OWNER_SCOPE))
             .value(OWNER, bindMarker(OWNER))
             .value(DENIED_ENTITY, bindMarker(DENIED_ENTITY))
             .value(DENIED_ENTITY_TYPE, bindMarker(DENIED_ENTITY_TYPE))
@@ -67,20 +70,23 @@ public class CassandraUserDropListDAO {
             .build());
 
         removeDropListStatement = session.prepare(deleteFrom(TABLE_NAME)
-            .where(column(OWNER).isEqualTo(bindMarker(OWNER)),
+            .where(column(OWNER_SCOPE).isEqualTo(bindMarker(OWNER_SCOPE)),
+                column(OWNER).isEqualTo(bindMarker(OWNER)),
                 column(DENIED_ENTITY).isEqualTo(bindMarker(DENIED_ENTITY)))
             .ifExists()
             .build());
 
         getDropListStatement = session.prepare(selectFrom(TABLE_NAME)
             .all()
-            .whereColumn(OWNER).isEqualTo(bindMarker(OWNER))
+            .where(column(OWNER_SCOPE).isEqualTo(bindMarker(OWNER_SCOPE)),
+                column(OWNER).isEqualTo(bindMarker(OWNER)))
             .allowFiltering()
             .build());
 
         queryDropListStatement = session.prepare(selectFrom(TABLE_NAME)
             .all()
-            .where(column(OWNER).isEqualTo(bindMarker(OWNER)),
+            .where(column(OWNER_SCOPE).isEqualTo(bindMarker(OWNER_SCOPE)),
+                column(OWNER).isEqualTo(bindMarker(OWNER)),
                 column(DENIED_ENTITY).in(bindMarker(DENIED_ENTITY)))
             .build());
     }
@@ -88,39 +94,46 @@ public class CassandraUserDropListDAO {
     public Mono<Void> addDropList(DropListEntry dropListEntry) {
         return executor.executeVoid(
             addDropListStatement.bind()
+                .setString(OWNER_SCOPE, dropListEntry.getOwnerScope().name())
                 .setString(OWNER, dropListEntry.getOwner())
                 .setString(DENIED_ENTITY, dropListEntry.getDeniedEntity())
-                .setString(DENIED_ENTITY_TYPE, dropListEntry.getDeniedEntityType().toString()));
+                .setString(DENIED_ENTITY_TYPE, dropListEntry.getDeniedEntityType().name()));
     }
 
     public Mono<Void> removeDropList(DropListEntry dropListEntry) {
         return executor.executeVoid(
             removeDropListStatement.bind()
+                .setString(OWNER_SCOPE, dropListEntry.getOwnerScope().name())
                 .setString(OWNER, dropListEntry.getOwner())
                 .setString(DENIED_ENTITY, dropListEntry.getDeniedEntity()));
     }
 
-    public Mono<DropList.Status> queryDropList(String owner, MailAddress sender) {
+    public Mono<DropList.Status> queryDropList(OwnerScope ownerScope, String owner, MailAddress sender) {
         return executor.executeReturnExists(
                 queryDropListStatement.bind()
+                    .setString(OWNER_SCOPE, ownerScope.name())
                     .setString(OWNER, owner)
                     .setList(DENIED_ENTITY, List.of(sender.asString(), sender.getDomain().asString()), String.class))
             .map(isExist -> Boolean.TRUE.equals(isExist) ? DropList.Status.BLOCKED : DropList.Status.ALLOWED);
     }
 
-    public Flux<DropListEntry> getDropList(String owner) {
+    public Flux<DropListEntry> getDropList(OwnerScope ownerScope, String owner) {
         return executor.executeRows(getDropListStatement.bind()
+                .setString(OWNER_SCOPE, ownerScope.name())
                 .setString(OWNER, owner))
-            .map(CassandraUserDropListDAO::mapRowToDropListEntry);
+            .map(row -> mapRowToDropListEntry(ownerScope, row));
     }
 
-    private static DropListEntry mapRowToDropListEntry(Row row) {
+    private static DropListEntry mapRowToDropListEntry(OwnerScope ownerScope, Row row) {
         String deniedEntity = row.getString(DENIED_ENTITY);
         String deniedEntityType = row.getString(DENIED_ENTITY_TYPE);
         try {
-            MailAddress userOwner = new MailAddress(row.getString(OWNER));
-            DropListEntry.Builder builder = DropListEntry.builder()
-                .userOwner(userOwner);
+            DropListEntry.Builder builder = DropListEntry.builder();
+            switch (ownerScope) {
+                case USER -> builder.userOwner(new MailAddress(row.getString(OWNER)));
+                case DOMAIN -> builder.domainOwner(Domain.of(row.getString(OWNER)));
+                case GLOBAL -> builder.forAll();
+            }
             if (DOMAIN.name().equals(deniedEntityType)) {
                 builder.denyDomain(Domain.of(deniedEntity));
             } else {
@@ -128,7 +141,7 @@ public class CassandraUserDropListDAO {
             }
             return builder.build();
         } catch (AddressException e) {
-            throw new IllegalArgumentException(deniedEntity + " could not be parsed as a MailAddress", e);
+            throw new IllegalArgumentException("Entity could not be parsed as a MailAddress", e);
         }
     }
 }

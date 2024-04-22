@@ -20,9 +20,10 @@ package org.apache.james.droplists.cassandra.tables;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 
-public interface CassandraDomainDropListTable {
+public interface CassandraDropListTable {
 
-    String TABLE_NAME = "domain_droplist";
+    String TABLE_NAME = "droplist";
+    CqlIdentifier OWNER_SCOPE = CqlIdentifier.fromCql("owner_scope");
     CqlIdentifier OWNER = CqlIdentifier.fromCql("owner");
     CqlIdentifier DENIED_ENTITY_TYPE = CqlIdentifier.fromCql("denied_entity_type");
     CqlIdentifier DENIED_ENTITY = CqlIdentifier.fromCql("denied_entity");

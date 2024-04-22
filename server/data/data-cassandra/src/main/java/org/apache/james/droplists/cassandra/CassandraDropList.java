@@ -32,47 +32,30 @@ import reactor.core.publisher.Mono;
 
 public class CassandraDropList implements DropList {
 
-    private final CassandraGlobalDropListDAO globalDropListDAO;
-    private final CassandraDomainDropListDAO domainDropListDAO;
-    private final CassandraUserDropListDAO userDropListDAO;
+    private final CassandraDropListDAO dropListDAO;
 
     @Inject
-    public CassandraDropList(CassandraGlobalDropListDAO globalDropListDAO, CassandraDomainDropListDAO domainDropListDAO,
-                             CassandraUserDropListDAO userDropListDAO) {
-        this.globalDropListDAO = globalDropListDAO;
-        this.domainDropListDAO = domainDropListDAO;
-        this.userDropListDAO = userDropListDAO;
+    public CassandraDropList(CassandraDropListDAO dropListDAO) {
+        this.dropListDAO = dropListDAO;
     }
 
     @Override
     public Mono<Void> add(DropListEntry entry) {
         Preconditions.checkArgument(entry != null);
-        return switch (entry.getOwnerScope()) {
-            case GLOBAL -> globalDropListDAO.addDropList(entry);
-            case DOMAIN -> domainDropListDAO.addDropList(entry);
-            case USER -> userDropListDAO.addDropList(entry);
-        };
+        return dropListDAO.addDropList(entry);
     }
 
     @Override
     public Mono<Void> remove(DropListEntry entry) {
         Preconditions.checkArgument(entry != null);
-        return switch (entry.getOwnerScope()) {
-            case GLOBAL -> globalDropListDAO.removeDropList(entry);
-            case DOMAIN -> domainDropListDAO.removeDropList(entry);
-            case USER -> userDropListDAO.removeDropList(entry);
-        };
+        return dropListDAO.removeDropList(entry);
     }
 
     @Override
     public Flux<DropListEntry> list(OwnerScope ownerScope, String owner) {
         Preconditions.checkArgument(ownerScope != null);
         Preconditions.checkArgument(owner != null);
-        return switch (ownerScope) {
-            case GLOBAL -> globalDropListDAO.getDropList();
-            case DOMAIN -> domainDropListDAO.getDropList(owner);
-            case USER -> userDropListDAO.getDropList(owner);
-        };
+        return dropListDAO.getDropList(ownerScope, owner);
     }
 
     @Override
@@ -80,10 +63,6 @@ public class CassandraDropList implements DropList {
         Preconditions.checkArgument(ownerScope != null);
         Preconditions.checkArgument(owner != null);
         Preconditions.checkArgument(sender != null);
-        return switch (ownerScope) {
-            case GLOBAL -> globalDropListDAO.queryDropList(sender);
-            case DOMAIN -> domainDropListDAO.queryDropList(owner, sender);
-            case USER -> userDropListDAO.queryDropList(owner, sender);
-        };
+        return dropListDAO.queryDropList(ownerScope, owner, sender);
     }
 }

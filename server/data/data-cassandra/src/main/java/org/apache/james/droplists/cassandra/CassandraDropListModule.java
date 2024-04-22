@@ -19,29 +19,17 @@
 package org.apache.james.droplists.cassandra;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.droplists.cassandra.tables.CassandraDomainDropListTable;
-import org.apache.james.droplists.cassandra.tables.CassandraGlobalDropListTable;
-import org.apache.james.droplists.cassandra.tables.CassandraUserDropListTable;
+import org.apache.james.droplists.cassandra.tables.CassandraDropListTable;
 
 import com.datastax.oss.driver.api.core.type.DataTypes;
 
 public interface CassandraDropListModule {
-    CassandraModule MODULE = CassandraModule.table(CassandraGlobalDropListTable.TABLE_NAME)
-        .comment("Holds Global DropLists of this James server.")
+    CassandraModule MODULE = CassandraModule.table(CassandraDropListTable.TABLE_NAME)
+        .comment("Holds DropLists of this James server.")
         .statement(statement -> types -> statement
-            .withPartitionKey(CassandraGlobalDropListTable.DENIED_ENTITY, DataTypes.TEXT)
-            .withColumn(CassandraGlobalDropListTable.DENIED_ENTITY_TYPE, DataTypes.TEXT))
-        .table(CassandraDomainDropListTable.TABLE_NAME)
-        .comment("Holds Domain DropLists of this James server.")
-        .statement(statement -> types -> statement
-            .withPartitionKey(CassandraDomainDropListTable.OWNER, DataTypes.TEXT)
-            .withPartitionKey(CassandraDomainDropListTable.DENIED_ENTITY, DataTypes.TEXT)
-            .withColumn(CassandraDomainDropListTable.DENIED_ENTITY_TYPE, DataTypes.TEXT))
-        .table(CassandraUserDropListTable.TABLE_NAME)
-        .comment("Holds User DropLists of this James server.")
-        .statement(statement -> types -> statement
-            .withPartitionKey(CassandraUserDropListTable.OWNER, DataTypes.TEXT)
-            .withPartitionKey(CassandraUserDropListTable.DENIED_ENTITY, DataTypes.TEXT)
-            .withColumn(CassandraUserDropListTable.DENIED_ENTITY_TYPE, DataTypes.TEXT))
+            .withPartitionKey(CassandraDropListTable.OWNER_SCOPE, DataTypes.TEXT)
+            .withPartitionKey(CassandraDropListTable.OWNER, DataTypes.TEXT)
+            .withPartitionKey(CassandraDropListTable.DENIED_ENTITY, DataTypes.TEXT)
+            .withColumn(CassandraDropListTable.DENIED_ENTITY_TYPE, DataTypes.TEXT))
         .build();
 }

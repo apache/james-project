@@ -33,9 +33,7 @@ class CassandraDropListTest implements DropListContract {
 
     @BeforeEach
     public void setUp(CassandraCluster cassandra) throws Exception {
-        dropList = new CassandraDropList(new CassandraGlobalDropListDAO(cassandra.getConf()),
-            new CassandraDomainDropListDAO(cassandra.getConf()),
-            new CassandraUserDropListDAO(cassandra.getConf()));
+        dropList = new CassandraDropList(new CassandraDropListDAO(cassandra.getConf()));
     }
 
     @Override
