@@ -91,6 +91,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageIdDAO {
+
+    private FlagsExtractor.ForPreparedStatement metadataFlagsExtractor;
+
     private static class MemoizedSupplier<T> {
         private final AtomicReference<T> value = new AtomicReference<>();
 
@@ -151,6 +154,7 @@ public class CassandraMessageIdDAO {
         this.listStatement = prepareList(session);
         this.selectMetadataRange = prepareSelectMetadataRange(session);
         this.selectNotDeletedRange = prepareSelectNotDeletedRange(session);
+        this.metadataFlagsExtractor = new FlagsExtractor.ForPreparedStatement(selectMetadataRange);
     }
 
     private PreparedStatement prepareDelete(CqlSession session) {
@@ -457,14 +461,14 @@ public class CassandraMessageIdDAO {
                 .setLong(IMAP_UID_GTE, range.getUidFrom().asLong())
                 .setLong(IMAP_UID_LTE, range.getUidTo().asLong()))
             .map(row -> {
-                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.get(MESSAGE_ID, TypeCodecs.TIMEUUID));
+                CassandraMessageId messageId = CassandraMessageId.Factory.of(row.get(metadataFlagsExtractor.getMessageIdIndex(), TypeCodecs.TIMEUUID));
                 return ComposedMessageIdWithMetaData.builder()
-                    .modSeq(ModSeq.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(MOD_SEQ), protocolVersion)))
-                    .threadId(getThreadIdFromRow(row, messageId))
-                    .flags(FlagsExtractor.getFlags(row))
+                    .modSeq(ModSeq.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(metadataFlagsExtractor.getModseqIndex()), protocolVersion)))
+                    .threadId(getThreadId(messageId, row.get(metadataFlagsExtractor.getThreadIdIndex(), TypeCodecs.TIMEUUID)))
+                    .flags(metadataFlagsExtractor.getFlags(row))
                     .composedMessageId(new ComposedMessageId(mailboxId,
                         messageId,
-                        MessageUid.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(IMAP_UID), protocolVersion))))
+                        MessageUid.of(TypeCodecs.BIGINT.decodePrimitive(row.getBytesUnsafe(metadataFlagsExtractor.getUidIndex()), protocolVersion))))
                     .build();
             });
     }
@@ -587,6 +591,10 @@ public class CassandraMessageIdDAO {
 
     private ThreadId getThreadIdFromRow(Row row, MessageId messageId) {
         UUID threadIdUUID = row.get(THREAD_ID, TypeCodecs.TIMEUUID);
+        return getThreadId(messageId, threadIdUUID);
+    }
+
+    private static ThreadId getThreadId(MessageId messageId, UUID threadIdUUID) {
         if (threadIdUUID == null) {
             return ThreadId.fromBaseMessageId(messageId);
         }
