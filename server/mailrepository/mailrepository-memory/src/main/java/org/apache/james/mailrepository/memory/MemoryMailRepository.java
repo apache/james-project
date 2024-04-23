@@ -46,7 +46,7 @@ public class MemoryMailRepository implements MailRepository {
     @Override
     public MailKey store(Mail mail) throws MessagingException {
         MailKey mailKey = MailKey.forMail(mail);
-        mails.put(mailKey, cloneMail(mail));
+        mails.put(mailKey, mail);
 
         AuditTrail.entry()
             .protocol("mailrepository")
@@ -69,9 +69,7 @@ public class MemoryMailRepository implements MailRepository {
 
     @Override
     public Mail retrieve(MailKey key) {
-        return Optional.ofNullable(mails.get(key))
-            .map(this::cloneMail)
-            .orElse(null);
+        return mails.get(key);
     }
 
     @Override
@@ -89,14 +87,4 @@ public class MemoryMailRepository implements MailRepository {
         mails.clear();
     }
 
-    private Mail cloneMail(Mail mail) {
-        try {
-            Mail newMail = mail.duplicate();
-            newMail.setName(mail.getName());
-            newMail.setState(mail.getState());
-            return newMail;
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
