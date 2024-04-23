@@ -43,8 +43,7 @@ public class MemoryDropList implements DropList {
         Preconditions.checkArgument(entry != null);
         OwnerScope ownerScope = entry.getOwnerScope();
         Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
-        selectedDropList.put(ownerScope, entry);
-        return Mono.empty();
+        return Mono.fromRunnable(() -> selectedDropList.put(ownerScope, entry));
     }
 
     @Override
@@ -52,8 +51,7 @@ public class MemoryDropList implements DropList {
         Preconditions.checkArgument(entry != null);
         OwnerScope ownerScope = entry.getOwnerScope();
         Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
-        selectedDropList.remove(ownerScope, entry);
-        return Mono.empty();
+        return Mono.fromRunnable(() -> selectedDropList.remove(ownerScope, entry));
     }
 
     @Override

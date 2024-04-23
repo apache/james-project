@@ -40,32 +40,21 @@ public interface DropListContract {
 
     DropList dropList();
 
-    @Test
-    default void shouldAddEntry() throws AddressException {
-        DropListEntry dropListEntry = DropListEntry.builder()
-            .forAll()
-            .denyAddress(new MailAddress("denied@denied.com"))
-            .build();
+    @ParameterizedTest(name = "{index} {0}")
+    @MethodSource("provideParametersForGetEntryListTest")
+    default void shouldAddEntry(DropListEntry dropListEntry) throws AddressException {
+        dropList().add(dropListEntry).block();
 
-        Mono<Void> result = dropList().add(dropListEntry);
-
-        assertThat(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block().size()).isEqualTo(1);
-        assertThat(result).isEqualTo(Mono.empty());
+        assertThat(dropList().list(dropListEntry.getOwnerScope(), dropListEntry.getOwner()).collectList().block().size()).isEqualTo(1);
     }
 
-    @Test
-    default void shouldRemoveEntry() throws AddressException {
-        DropListEntry dropListEntry = DropListEntry.builder()
-            .forAll()
-            .denyAddress(new MailAddress("denied@denied.com"))
-            .build();
+    @ParameterizedTest(name = "{index} {0}")
+    @MethodSource("provideParametersForGetEntryListTest")
+    default void shouldRemoveEntry(DropListEntry dropListEntry) throws AddressException {
+        dropList().add(dropListEntry).block();
+        dropList().remove(dropListEntry).block();
 
-        dropList().add(dropListEntry);
-
-        Mono<Void> result = dropList().remove(dropListEntry);
-
-        assertThat(dropList().list(GLOBAL, dropListEntry.getOwner()).collectList().block().size()).isZero();
-        assertThat(result).isEqualTo(Mono.empty());
+        assertThat(dropList().list(dropListEntry.getOwnerScope(), dropListEntry.getOwner()).collectList().block().size()).isZero();
     }
 
     @Test
@@ -113,7 +102,7 @@ public interface DropListContract {
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("provideParametersForGetEntryListTest")
     default void shouldGetEntryListForSpecifiedScopeAndOwner(DropListEntry dropListEntry) {
-        dropList().add(dropListEntry);
+        dropList().add(dropListEntry).block();
 
         Flux<DropListEntry> result = dropList().list(dropListEntry.getOwnerScope(), dropListEntry.getOwner());
 
@@ -121,20 +110,20 @@ public interface DropListContract {
     }
 
 
-    @ParameterizedTest(name = "{index} {0}")
+    @ParameterizedTest(name = "{index} {0}, sender: {1}")
     @MethodSource("provideParametersForReturnAllowedTest")
     default void shouldReturnAllowed(DropListEntry dropListEntry, MailAddress senderMailAddress) {
-        dropList().add(dropListEntry);
+        dropList().add(dropListEntry).block();
 
         Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), dropListEntry.getOwner(), senderMailAddress);
 
         assertThat(result.block()).isEqualTo(DropList.Status.ALLOWED);
     }
 
-    @ParameterizedTest(name = "{index} {0}")
+    @ParameterizedTest(name = "{index} {0}, sender: {1}")
     @MethodSource("provideParametersForReturnBlockedTest")
     default void shouldReturnBlocked(DropListEntry dropListEntry, MailAddress senderMailAddress) {
-        dropList().add(dropListEntry);
+        dropList().add(dropListEntry).block();
 
         Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), dropListEntry.getOwner(), senderMailAddress);
 
