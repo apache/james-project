@@ -70,7 +70,7 @@ public class MemoryDropList implements DropList {
         Preconditions.checkArgument(sender != null);
         Multimap<OwnerScope, DropListEntry> selectedDropList = getDropListByScope(ownerScope);
         boolean isBlocked = selectedDropList.get(ownerScope).stream()
-            .anyMatch(entry -> isEntryMatchingOwner(owner, entry) && isEntryMatchingDeniedEntity(sender, entry));
+            .anyMatch(entry -> isEntryMatchingOwner(ownerScope, owner, entry) && isEntryMatchingDeniedEntity(sender, entry));
 
         return Mono.just(isBlocked ? Status.BLOCKED : Status.ALLOWED);
     }
@@ -83,8 +83,12 @@ public class MemoryDropList implements DropList {
         };
     }
 
-    private boolean isEntryMatchingOwner(String owner, DropListEntry entry) {
-        return entry.getOwner().equals(owner);
+    private boolean isEntryMatchingOwner(OwnerScope ownerScope, String owner, DropListEntry entry) {
+        if (ownerScope.equals(OwnerScope.GLOBAL)) {
+            return true;
+        } else {
+            return entry.getOwner().equals(owner);
+        }
     }
 
     private boolean isEntryMatchingDeniedEntity(MailAddress sender, DropListEntry entry) {
