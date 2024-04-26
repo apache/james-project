@@ -182,10 +182,6 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     @Override
     public void afterEach(ExtensionContext extensionContext) {
         resetSchema();
-
-        if (!rlsEnabled) {
-            dropAllConnections();
-        }
     }
 
     public void restartContainer() {
@@ -249,16 +245,6 @@ public class PostgresExtension implements GuiceModuleTestExtension {
 
         postgresExecutor.connection()
             .flatMapMany(connection -> connection.createStatement(String.format("DROP table if exists %s cascade;", tablesToDelete))
-                .execute())
-            .then()
-            .block();
-    }
-
-    private void dropAllConnections() {
-        postgresExecutor.connection()
-            .flatMapMany(connection -> connection.createStatement(String.format("SELECT pg_terminate_backend(pid) " +
-                    "FROM pg_stat_activity " +
-                    "WHERE datname = '%s' AND pid != pg_backend_pid();", selectedDatabase.dbName()))
                 .execute())
             .then()
             .block();
