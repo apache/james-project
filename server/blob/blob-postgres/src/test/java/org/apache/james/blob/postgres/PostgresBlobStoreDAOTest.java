@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     @RegisterExtension
-    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresBlobStorageModule.MODULE);
+    static PostgresExtension postgresExtension = PostgresExtension.withoutRowLevelSecurity(PostgresBlobStorageModule.MODULE, PostgresExtension.PoolSize.LARGE);
 
     private PostgresBlobStoreDAO blobStore;
 
@@ -47,35 +47,4 @@ class PostgresBlobStoreDAOTest implements BlobStoreDAOContract {
     @Disabled("Not supported")
     public void listBucketsShouldReturnBucketsWithNoBlob() {
     }
-
-    @Override
-    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
-    public void concurrentSaveByteSourceShouldReturnConsistentValues(String description, byte[] bytes) {
-    }
-
-    @Override
-    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
-    public void concurrentSaveInputStreamShouldReturnConsistentValues(String description, byte[] bytes) {
-    }
-
-    @Override
-    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
-    public void concurrentSaveBytesShouldReturnConsistentValues(String description, byte[] bytes) {
-    }
-
-    @Override
-    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
-    public void mixingSaveReadAndDeleteShouldReturnConsistentState() {
-    }
-
-    @Override
-    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
-    public void readShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
-    }
-
-    @Override
-    @Disabled("The test is not valid because the upload parallelism with big blobs takes time and the test does not waiting for the end of the upload")
-    public void readBytesShouldNotReadPartiallyWhenDeletingConcurrentlyBigBlob() {
-    }
-
 }
