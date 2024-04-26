@@ -18,6 +18,12 @@
  ****************************************************************/
 package org.apache.james.transport.matchers;
 
+import static org.apache.james.droplists.api.DropList.Status.ALLOWED;
+import static org.apache.james.droplists.api.OwnerScope.DOMAIN;
+import static org.apache.james.droplists.api.OwnerScope.GLOBAL;
+import static org.apache.james.droplists.api.OwnerScope.USER;
+import static reactor.function.TupleUtils.function;
+
 import java.util.Collection;
 
 import jakarta.inject.Inject;
@@ -25,11 +31,12 @@ import jakarta.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.droplists.api.DropList;
-import org.apache.james.droplists.api.OwnerScope;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * This matcher that checks if a mail sender is permitted based on their status in the DropList.
@@ -56,15 +63,17 @@ public class IsInDropList extends GenericMatcher {
             .collect(ImmutableList.toImmutableList());
     }
 
-    private boolean isRecipientAllowed(Mail mail, MailAddress recipient) {
+    private Boolean isRecipientAllowed(Mail mail, MailAddress recipient) {
         MailAddress sender = mail.getMaybeSender().get();
-        return isAllowed(OwnerScope.GLOBAL, recipient.asString(), sender) &&
-            isAllowed(OwnerScope.DOMAIN, recipient.getDomain().asString(), sender) &&
-            isAllowed(OwnerScope.USER, recipient.asString(), sender);
+        Mono<DropList.Status> globalStatusQuery = dropList.query(GLOBAL, recipient.asString(), sender);
+        Mono<DropList.Status> domainStatusQuery = dropList.query(DOMAIN, recipient.getDomain().asString(), sender);
+        Mono<DropList.Status> userStatusQuery = dropList.query(USER, recipient.asString(), sender);
+        return Mono.zip(globalStatusQuery, domainStatusQuery, userStatusQuery)
+            .map(function(IsInDropList::isAllowed))
+            .block();
     }
 
-    private boolean isAllowed(OwnerScope ownerScope, String owner, MailAddress sender) {
-        DropList.Status status = dropList.query(ownerScope, owner, sender).block();
-        return status == DropList.Status.ALLOWED;
+    private static boolean isAllowed(DropList.Status globalStatus, DropList.Status domainStatus, DropList.Status userStatus) {
+        return globalStatus == ALLOWED && domainStatus == ALLOWED && userStatus == ALLOWED;
     }
 }
