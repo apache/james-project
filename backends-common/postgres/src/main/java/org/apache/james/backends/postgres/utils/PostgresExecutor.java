@@ -107,11 +107,6 @@ public class PostgresExecutor {
         this.metricFactory = metricFactory;
     }
 
-    public Mono<DSLContext> dslContext() {
-        return jamesPostgresConnectionFactory.getConnection(domain)
-            .map(con -> DSL.using(con, PGSQL_DIALECT, SETTINGS));
-    }
-
     public Mono<DSLContext> dslContext(Connection connection) {
         return Mono.fromCallable(() -> DSL.using(connection, PGSQL_DIALECT, SETTINGS));
     }
@@ -209,13 +204,9 @@ public class PostgresExecutor {
         return jamesPostgresConnectionFactory;
     }
 
-    public Mono<Connection> connection() {
-        return jamesPostgresConnectionFactory.getConnection(domain);
-    }
-
     @VisibleForTesting
-    public Mono<Void> dispose() {
-        return jamesPostgresConnectionFactory.close();
+    public void dispose() {
+        jamesPostgresConnectionFactory.close().block();
     }
 
     private Predicate<Throwable> preparedStatementConflictException() {
