@@ -30,6 +30,7 @@ import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTableManager;
 import org.apache.james.backends.postgres.utils.JamesPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PostgresConnectionClosure;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresHealthCheck;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
@@ -60,7 +61,9 @@ public class PostgresCommonModule extends AbstractModule {
     @Override
     public void configure() {
         Multibinder.newSetBinder(binder(), PostgresModule.class);
+
         bind(PostgresExecutor.Factory.class).in(Scopes.SINGLETON);
+        bind(PostgresConnectionClosure.class).asEagerSingleton();
 
         Multibinder.newSetBinder(binder(), HealthCheck.class)
             .addBinding().to(PostgresHealthCheck.class);
