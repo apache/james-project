@@ -24,10 +24,12 @@ import static org.apache.james.backends.postgres.PostgresFixture.Database.ROW_LE
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.backends.postgres.utils.DomainImplPostgresConnectionFactory;
+import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFactory;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -42,9 +44,31 @@ import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class PostgresExtension implements GuiceModuleTestExtension {
+    public enum PoolSize {
+        SMALL(1, 2),
+        LARGE(10, 20);
+
+        private final int min;
+        private final int max;
+
+        PoolSize(int min, int max) {
+            this.min = min;
+            this.max = max;
+        }
+
+        public int getMin() {
+            return min;
+        }
+
+        public int getMax() {
+            return max;
+        }
+    }
+
     private static final boolean ROW_LEVEL_SECURITY_ENABLED = true;
 
     public static PostgresExtension withRowLevelSecurity(PostgresModule module) {
@@ -52,21 +76,28 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     public static PostgresExtension withoutRowLevelSecurity(PostgresModule module) {
-        return new PostgresExtension(module, !ROW_LEVEL_SECURITY_ENABLED);
+        return withoutRowLevelSecurity(module, PoolSize.SMALL);
+    }
+
+    public static PostgresExtension withoutRowLevelSecurity(PostgresModule module, PoolSize poolSize) {
+        return new PostgresExtension(module, !ROW_LEVEL_SECURITY_ENABLED, Optional.of(poolSize));
     }
 
     public static PostgresExtension empty() {
         return withoutRowLevelSecurity(PostgresModule.EMPTY_MODULE);
     }
 
+    public static final PoolSize DEFAULT_POOL_SIZE = PoolSize.SMALL;
     public static PostgreSQLContainer<?> PG_CONTAINER = DockerPostgresSingleton.SINGLETON;
     private final PostgresModule postgresModule;
     private final boolean rlsEnabled;
     private final PostgresFixture.Database selectedDatabase;
+    private PoolSize poolSize;
     private PostgresConfiguration postgresConfiguration;
     private PostgresExecutor postgresExecutor;
     private PostgresExecutor nonRLSPostgresExecutor;
     private PostgresqlConnectionFactory connectionFactory;
+    private Connection superConnection;
     private PostgresExecutor.Factory executorFactory;
     private PostgresTableManager postgresTableManager;
 
@@ -81,12 +112,17 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled) {
+        this(postgresModule, rlsEnabled, Optional.empty());
+    }
+
+    private PostgresExtension(PostgresModule postgresModule, boolean rlsEnabled, Optional<PoolSize> maybePoolSize) {
         this.postgresModule = postgresModule;
         this.rlsEnabled = rlsEnabled;
         if (rlsEnabled) {
             this.selectedDatabase = PostgresFixture.Database.ROW_LEVEL_SECURITY_DATABASE;
         } else {
             this.selectedDatabase = DEFAULT_DATABASE;
+            this.poolSize = maybePoolSize.orElse(DEFAULT_POOL_SIZE);
         }
     }
 
@@ -139,12 +175,16 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .password(postgresConfiguration.getCredential().getPassword())
             .build());
 
+        superConnection = connectionFactory.create().block();
+
         if (rlsEnabled) {
             executorFactory = new PostgresExecutor.Factory(new DomainImplPostgresConnectionFactory(connectionFactory), postgresConfiguration, new RecordingMetricFactory());
         } else {
-            executorFactory = new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(connectionFactory.create()
-                .cache()
-                .cast(Connection.class).block()),
+            executorFactory = new PostgresExecutor.Factory(
+                new PoolBackedPostgresConnectionFactory(false,
+                    Optional.of(poolSize.getMin()),
+                    Optional.of(poolSize.getMax()),
+                    connectionFactory),
                 postgresConfiguration,
                 new RecordingMetricFactory());
         }
@@ -162,7 +202,9 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             nonRLSPostgresExecutor = postgresExecutor;
         }
 
-        this.postgresTableManager = new PostgresTableManager(postgresExecutor, postgresModule, postgresConfiguration);
+        this.postgresTableManager = new PostgresTableManager(new PostgresExecutor.Factory(new SinglePostgresConnectionFactory(superConnection), postgresConfiguration, new RecordingMetricFactory()).create(),
+            postgresModule,
+            postgresConfiguration);
     }
 
     @Override
@@ -171,7 +213,9 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     private void disposePostgresSession() {
-        postgresExecutor.dispose().block();
+        postgresExecutor.dispose();
+        nonRLSPostgresExecutor.dispose();
+        superConnection.close();
     }
 
     @Override
@@ -205,7 +249,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     }
 
     public Mono<Connection> getConnection() {
-        return postgresExecutor.connection();
+        return Mono.just(superConnection);
     }
 
     public PostgresExecutor getPostgresExecutor() {
@@ -243,9 +287,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
             .map(tableName -> "\"" + tableName + "\"")
             .collect(Collectors.joining(", "));
 
-        postgresExecutor.connection()
-            .flatMapMany(connection -> connection.createStatement(String.format("DROP table if exists %s cascade;", tablesToDelete))
-                .execute())
+        Flux.from(superConnection.createStatement(String.format("DROP table if exists %s cascade;", tablesToDelete))
+            .execute())
             .then()
             .block();
     }
