@@ -44,10 +44,12 @@ public class DistributedEmailSetMethodTest extends DistributedBase implements Em
     @Override
     @Test
     @Disabled("Distributed event bus is asynchronous, we cannot expect the newState to be returned immediately after Email/set call")
-    public void newStateShouldBeUpToDate(GuiceJamesServer server) {}
+    public void newStateShouldBeUpToDate(GuiceJamesServer server) {
+    }
 
     @Override
     @Test
     @Disabled("Distributed event bus is asynchronous, we cannot expect the newState to be returned immediately after Email/set call")
-    public void oldStateShouldIncludeSetChanges(GuiceJamesServer server) {}
+    public void oldStateShouldIncludeSetChanges(GuiceJamesServer server) {
+    }
 }

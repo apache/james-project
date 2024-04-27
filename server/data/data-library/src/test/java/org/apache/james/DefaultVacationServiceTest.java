@@ -25,6 +25,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.ZonedDateTime;
+import java.util.Optional;
+
 import org.apache.james.core.MailAddress;
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.NotificationRegistry;
@@ -34,10 +37,8 @@ import org.apache.james.vacation.api.VacationPatch;
 import org.apache.james.vacation.api.VacationRepository;
 import org.junit.Before;
 import org.junit.Test;
-import reactor.core.publisher.Mono;
 
-import java.time.ZonedDateTime;
-import java.util.Optional;
+import reactor.core.publisher.Mono;
 
 public class DefaultVacationServiceTest {
 

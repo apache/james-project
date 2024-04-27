@@ -19,18 +19,18 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.apache.james.transport.mailets.SPF.RESULT_ATTRIBUTE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.mail.MessagingException;
-
-import static org.apache.james.transport.mailets.SPF.RESULT_ATTRIBUTE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
@@ -88,7 +88,7 @@ public class SPFTest {
                                 return l;
                             case "spf5.james.apache.org":
                                 // temperror
-                                 throw new TimeoutException("TIMEOUT");
+                                throw new TimeoutException("TIMEOUT");
                             default:
                                 throw new RuntimeException("Unknown record " + req.getHostname());
                         }

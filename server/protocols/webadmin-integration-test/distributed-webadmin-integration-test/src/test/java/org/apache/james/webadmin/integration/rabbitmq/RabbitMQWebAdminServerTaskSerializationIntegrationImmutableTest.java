@@ -70,10 +70,10 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .s3()
-                    .disableCache()
-                    .deduplication()
-                    .noCryptoConfig())
+                .s3()
+                .disableCache()
+                .deduplication()
+                .noCryptoConfig())
             .vaultConfiguration(VaultConfiguration.ENABLED_DEFAULT)
             .searchConfiguration(SearchConfiguration.openSearch())
             .build())
@@ -109,9 +109,9 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
             .body("type", is("full-reindexing"))
@@ -123,27 +123,27 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     @Test
     void clearMailQueueShouldCompleteWhenNoQueryParameters() {
         String firstMailQueue = with()
-                .basePath(MailQueueRoutes.BASE_URL)
+            .basePath(MailQueueRoutes.BASE_URL)
             .get()
             .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getString("[0]");
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getString("[0]");
 
         String taskId = with()
-                .basePath(MailQueueRoutes.BASE_URL)
+            .basePath(MailQueueRoutes.BASE_URL)
             .delete(firstMailQueue + "/mails")
-                .jsonPath()
-                .getString("taskId");
+            .jsonPath()
+            .getString("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
             .body("type", is("clear-mail-queue"))
@@ -158,15 +158,15 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
             with()
                 .basePath(DeletedMessagesVaultRoutes.ROOT_PATH)
                 .queryParam("scope", "expired")
-            .delete()
+                .delete()
                 .jsonPath()
                 .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("deleted-messages-blob-store-based-garbage-collection"))
@@ -177,27 +177,27 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     @Test
     void clearMailRepositoryShouldComplete() {
         String escapedRepositoryPath = with()
-                .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
+            .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
             .get()
             .then()
-                .statusCode(HttpStatus.OK_200)
-                .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getString("[0].path");
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .extract()
+            .body()
+            .jsonPath()
+            .getString("[0].path");
 
         String taskId = with()
-                .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
+            .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
             .delete(escapedRepositoryPath + "/mails")
-                .jsonPath()
-                .get("taskId");
+            .jsonPath()
+            .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("clear-mail-repository"))
@@ -210,16 +210,16 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     void cassandraMigrationShouldComplete() {
         SchemaVersion toVersion = CassandraSchemaVersionManager.MAX_VERSION;
         String taskId = with()
-                .body(String.valueOf(toVersion.getValue()))
+            .body(String.valueOf(toVersion.getValue()))
             .post("cassandra/version/upgrade")
-                .jsonPath()
-                .get("taskId");
+            .jsonPath()
+            .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("cassandra-migration"))
@@ -229,17 +229,17 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     @Test
     void cassandraMappingsSolveInconsistenciesShouldComplete() {
         String taskId = with()
-                .basePath(CassandraMappingsRoutes.ROOT_PATH)
-                .queryParam("action", "SolveInconsistencies")
+            .basePath(CassandraMappingsRoutes.ROOT_PATH)
+            .queryParam("action", "SolveInconsistencies")
             .post()
-                .jsonPath()
-                .get("taskId");
+            .jsonPath()
+            .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("cassandra-mappings-solve-inconsistencies"))
@@ -250,17 +250,17 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
     @Test
     void recomputeMailboxCountersShouldComplete() {
         String taskId = with()
-                .basePath("/mailboxes")
-                .queryParam("task", "RecomputeMailboxCounters")
+            .basePath("/mailboxes")
+            .queryParam("task", "RecomputeMailboxCounters")
             .post()
-                .jsonPath()
-                .get("taskId");
+            .jsonPath()
+            .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("recompute-mailbox-counters"))
@@ -272,15 +272,15 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
         String taskId = with()
             .basePath("/quota/users")
             .queryParam("task", "RecomputeCurrentQuotas")
-        .post()
+            .post()
             .jsonPath()
             .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("recompute-current-quotas"))
@@ -294,15 +294,15 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
             .basePath("/mailQueues/spool")
             .queryParam("action", "RepublishNotProcessedMails")
             .queryParam("olderThan", "2d")
-        .post()
+            .post()
             .jsonPath()
-        .get("taskId");
+            .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("republish-not-processed-mails"))
@@ -311,7 +311,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
 
 
     @Test
-    void tasksCleanupShouldComplete(){
+    void tasksCleanupShouldComplete() {
         String taskId = with()
             .basePath("/tasks")
             .queryParam("olderThan", "15day")
@@ -321,9 +321,9 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationImmutableTest {
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("tasks-cleanup"))

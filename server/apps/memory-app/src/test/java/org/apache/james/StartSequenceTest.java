@@ -28,8 +28,8 @@ import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -45,6 +45,7 @@ class StartSequenceTest {
             started = true;
         }
     }
+
     static class D implements Startable {
         public boolean started = false;
 
@@ -52,6 +53,7 @@ class StartSequenceTest {
             started = true;
         }
     }
+
     static class F implements Startable {
         public boolean started = false;
 

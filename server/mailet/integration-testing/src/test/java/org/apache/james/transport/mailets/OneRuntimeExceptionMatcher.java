@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class OneRuntimeExceptionMatcher extends GenericMatcher {
     private final AtomicInteger callCount = new AtomicInteger(0);

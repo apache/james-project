@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.rabbitmq;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.rabbitmq.host.RabbitMQEventBusHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.ObjectId;
-import org.apache.james.mpt.imapmailbox.suite.SelectedState;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class RabbitMQObjectIdeTest extends ObjectId {

@@ -19,17 +19,15 @@
 
 package org.apache.james.crowdsec;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URL;
 
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import static org.apache.james.crowdsec.CrowdsecExtension.CROWDSEC_PORT;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class CrowdsecServiceTest {
     @RegisterExtension
@@ -68,6 +66,7 @@ class CrowdsecServiceTest {
         var banDecisions = service.findBanDecisions(remoteAddress).block();
         assertThat(banDecisions).isEmpty();
     }
+
     @Test
     void givenIPNotBannedByCrowdsecDecisionIpRange() throws IOException, InterruptedException {
         banIP("--range", "192.182.39.2/24");

@@ -57,12 +57,12 @@ import io.restassured.specification.RequestSpecification;
 
 @Tag(Unstable.TAG)
 class RspamdHttpClientTest {
-    private final static String SPAM_MESSAGE_PATH = "mail/spam/spam8.eml";
-    private final static String HAM_MESSAGE_PATH = "mail/ham/ham1.eml";
-    private final static String VIRUS_MESSAGE_PATH = "mail/attachment/inlineVirusTextAttachment.eml";
-    private final static String NON_VIRUS_MESSAGE_PATH = "mail/attachment/inlineNonVirusTextAttachment.eml";
-    private final static Username BOB = Username.of("bob@domain.tld");
-    private final static Username ALICE = Username.of("alice@domain.tld");
+    private static final String SPAM_MESSAGE_PATH = "mail/spam/spam8.eml";
+    private static final String HAM_MESSAGE_PATH = "mail/ham/ham1.eml";
+    private static final String VIRUS_MESSAGE_PATH = "mail/attachment/inlineVirusTextAttachment.eml";
+    private static final String NON_VIRUS_MESSAGE_PATH = "mail/attachment/inlineNonVirusTextAttachment.eml";
+    private static final Username BOB = Username.of("bob@domain.tld");
+    private static final Username ALICE = Username.of("alice@domain.tld");
 
     @RegisterExtension
     static RspamdExtension rspamdExtension = new RspamdExtension();

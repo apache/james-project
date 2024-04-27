@@ -24,11 +24,11 @@ import java.time.Clock;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.jmap.api.upload.UploadRepository;
 import org.apache.james.jmap.api.upload.UploadRepositoryContract;
-import org.junit.jupiter.api.BeforeEach;
-import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.server.blob.deduplication.DeDuplicationBlobStore;
+import org.junit.jupiter.api.BeforeEach;
 
 public class InMemoryUploadRepositoryTest implements UploadRepositoryContract {
 

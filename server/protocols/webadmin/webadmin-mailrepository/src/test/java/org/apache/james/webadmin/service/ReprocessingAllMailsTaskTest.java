@@ -67,7 +67,7 @@ class ReprocessingAllMailsTaskTest {
         JsonSerializationVerifier.dtoModule(ReprocessingAllMailsTaskDTO.module(REPROCESSING_SERVICE))
             .testCase(taskWithTargetProcessor, SERIALIZED_TASK_WITH_TARGET_PROCESSOR)
             .testCase(taskWithoutTargetProcessor, SERIALIZED_TASK_WITHOUT_TARGET_PROCESSOR)
-            .testCase(taskWithLimit,"{\"type\":\"reprocessing-all\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\",\"consume\":true, \"limit\":10}" )
+            .testCase(taskWithLimit, "{\"type\":\"reprocessing-all\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\",\"consume\":true, \"limit\":10}")
             .verify();
     }
 

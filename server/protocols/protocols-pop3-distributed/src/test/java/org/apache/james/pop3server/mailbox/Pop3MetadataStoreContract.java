@@ -48,7 +48,7 @@ public interface Pop3MetadataStoreContract {
     default void statShouldReturnEmptyByDefault() {
         assertThat(
             Flux.from(testee()
-                .stat(generateMailboxId()))
+                    .stat(generateMailboxId()))
                 .collectList()
                 .block())
             .isEmpty();
@@ -62,7 +62,7 @@ public interface Pop3MetadataStoreContract {
 
         assertThat(
             Flux.from(testee()
-                .stat(mailboxId))
+                    .stat(mailboxId))
                 .collectList()
                 .block())
             .containsOnly(metadata);
@@ -78,7 +78,7 @@ public interface Pop3MetadataStoreContract {
 
         assertThat(
             Flux.from(testee()
-                .stat(mailboxId))
+                    .stat(mailboxId))
                 .collectList()
                 .block())
             .containsOnly(metadata1, metadata2);
@@ -96,7 +96,7 @@ public interface Pop3MetadataStoreContract {
 
         assertThat(
             Flux.from(testee()
-                .stat(mailboxId))
+                    .stat(mailboxId))
                 .collectList()
                 .block())
             .containsOnly(metadata1);
@@ -114,7 +114,7 @@ public interface Pop3MetadataStoreContract {
 
         assertThat(
             Flux.from(testee()
-                .stat(mailboxId))
+                    .stat(mailboxId))
                 .collectList()
                 .block())
             .isEmpty();
@@ -131,7 +131,7 @@ public interface Pop3MetadataStoreContract {
 
         assertThat(
             Flux.from(testee()
-                .stat(mailboxId))
+                    .stat(mailboxId))
                 .collectList()
                 .block())
             .containsOnly(metadata2);
@@ -145,7 +145,7 @@ public interface Pop3MetadataStoreContract {
 
     @Test
     default void removeShouldBeIdempotent() {
-        Pop3MetadataStore.StatMetadata metadata1= new Pop3MetadataStore.StatMetadata(generateMessageId(), SIZE_1);
+        Pop3MetadataStore.StatMetadata metadata1 = new Pop3MetadataStore.StatMetadata(generateMessageId(), SIZE_1);
         assertThatCode(() -> Mono.from(testee().remove(generateMailboxId(), metadata1.getMessageId())).block())
             .doesNotThrowAnyException();
     }
@@ -170,7 +170,7 @@ public interface Pop3MetadataStoreContract {
     default void listAllShouldReturnEmptyByDefault() {
         assertThat(
             Flux.from(testee()
-                .listAllEntries())
+                    .listAllEntries())
                 .collectList()
                 .block())
             .isEmpty();
@@ -219,17 +219,17 @@ public interface Pop3MetadataStoreContract {
     }
 
     @Test
-    default void retrieveShouldReturnEmptyByDefault(){
+    default void retrieveShouldReturnEmptyByDefault() {
         assertThat(
             Flux.from(testee()
-                .retrieve(generateMailboxId(), generateMessageId()))
+                    .retrieve(generateMailboxId(), generateMessageId()))
                 .collectList()
                 .block())
             .isEmpty();
     }
 
     @Test
-    default void retrieveShouldReturnData(){
+    default void retrieveShouldReturnData() {
         MailboxId mailboxId = generateMailboxId();
         MessageId messageId = generateMessageId();
         Mono.from(testee().add(mailboxId, new Pop3MetadataStore.StatMetadata(messageId, SIZE_1))).block();

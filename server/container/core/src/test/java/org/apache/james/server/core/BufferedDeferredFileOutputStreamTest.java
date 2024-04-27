@@ -54,16 +54,13 @@ public class BufferedDeferredFileOutputStreamTest {
      * is therefore confined to memory.
      */
     @Test
-    public void testBelowThreshold()
-    {
+    public void testBelowThreshold() {
         final BufferedDeferredFileOutputStream dfos =
             new BufferedDeferredFileOutputStream(testBytes.length + 42, null);
-        try
-        {
+        try {
             dfos.write(testBytes, 0, testBytes.length);
             dfos.close();
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
         assertTrue(dfos.isInMemory());
@@ -81,13 +78,11 @@ public class BufferedDeferredFileOutputStreamTest {
     @Test
     public void testAtThreshold() {
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length,  null);
-        try
-        {
+            new BufferedDeferredFileOutputStream(testBytes.length, null);
+        try {
             dfos.write(testBytes, 0, testBytes.length);
             dfos.close();
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
         assertTrue(dfos.isInMemory());
@@ -110,13 +105,11 @@ public class BufferedDeferredFileOutputStreamTest {
         testFile.delete();
 
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length - 5,  testFile);
-        try
-        {
+            new BufferedDeferredFileOutputStream(testBytes.length - 5, testFile);
+        try {
             dfos.write(testBytes, 0, testBytes.length);
             dfos.close();
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
         assertFalse(dfos.isInMemory());
@@ -141,18 +134,16 @@ public class BufferedDeferredFileOutputStreamTest {
         testFile.delete();
 
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length / 2,  testFile);
+            new BufferedDeferredFileOutputStream(testBytes.length / 2, testFile);
         final int chunkSize = testBytes.length / 3;
 
-        try
-        {
+        try {
             dfos.write(testBytes, 0, chunkSize);
             dfos.write(testBytes, chunkSize, chunkSize);
             dfos.write(testBytes, chunkSize * 2,
                 testBytes.length - chunkSize * 2);
             dfos.close();
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
         assertFalse(dfos.isInMemory());
@@ -169,15 +160,15 @@ public class BufferedDeferredFileOutputStreamTest {
      * Test whether writeTo() properly writes small content.
      */
     @Test
-    public void testWriteToSmall(){
+    public void testWriteToSmall() {
         final File testFile = new File("testWriteToMem.dat");
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         // Ensure that the test starts from a clean base.
         testFile.delete();
 
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length *2, testFile);
-        try{
+            new BufferedDeferredFileOutputStream(testBytes.length * 2, testFile);
+        try {
             dfos.write(testBytes);
 
             assertFalse(testFile.exists());
@@ -195,7 +186,7 @@ public class BufferedDeferredFileOutputStreamTest {
         } catch (final IOException ioe) {
             fail("Unexpected IOException");
         }
-        final byte[] copiedBytes  = baos.toByteArray();
+        final byte[] copiedBytes = baos.toByteArray();
         assertTrue(Arrays.equals(testBytes, copiedBytes));
 
         testFile.delete();
@@ -205,7 +196,7 @@ public class BufferedDeferredFileOutputStreamTest {
      * Test whether writeTo() properly writes large content.
      */
     @Test
-    public void testWriteToLarge(){
+    public void testWriteToLarge() {
         final File testFile = new File("testWriteToFile.dat");
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         // Ensure that the test starts from a clean base.
@@ -213,7 +204,7 @@ public class BufferedDeferredFileOutputStreamTest {
 
         final BufferedDeferredFileOutputStream dfos =
             new BufferedDeferredFileOutputStream(testBytes.length / 2, testFile);
-        try{
+        try {
             dfos.write(testBytes);
 
             assertTrue(testFile.exists());
@@ -231,7 +222,7 @@ public class BufferedDeferredFileOutputStreamTest {
         } catch (final IOException ioe) {
             fail("Unexpected IOException");
         }
-        final byte[] copiedBytes  = baos.toByteArray();
+        final byte[] copiedBytes = baos.toByteArray();
         assertTrue(Arrays.equals(testBytes, copiedBytes));
         verifyResultFile(testFile);
         testFile.delete();
@@ -246,14 +237,12 @@ public class BufferedDeferredFileOutputStreamTest {
         final String prefix = "commons-io-test";
         final String suffix = ".out";
         final BufferedDeferredFileOutputStream dfos =
-            new BufferedDeferredFileOutputStream(testBytes.length + 42,  prefix, suffix);
+            new BufferedDeferredFileOutputStream(testBytes.length + 42, prefix, suffix);
         assertNull("Check file is null-A", dfos.getFile());
-        try
-        {
+        try {
             dfos.write(testBytes, 0, testBytes.length);
             dfos.close();
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
         assertTrue(dfos.isInMemory());
@@ -271,12 +260,10 @@ public class BufferedDeferredFileOutputStreamTest {
         final BufferedDeferredFileOutputStream dfos =
             new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix);
         assertNull("Check file is null-A", dfos.getFile());
-        try
-        {
+        try {
             dfos.write(testBytes, 0, testBytes.length);
             dfos.close();
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
         assertFalse(dfos.isInMemory());
@@ -303,12 +290,10 @@ public class BufferedDeferredFileOutputStreamTest {
         final BufferedDeferredFileOutputStream dfos =
             new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix);
         assertNull("Check file is null-A", dfos.getFile());
-        try
-        {
+        try {
             dfos.write(testBytes, 0, testBytes.length);
             dfos.close();
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
         assertFalse(dfos.isInMemory());
@@ -326,6 +311,7 @@ public class BufferedDeferredFileOutputStreamTest {
 
     /**
      * Test specifying a temporary file and the threshold is reached.
+     *
      * @throws Exception
      */
     @Test
@@ -333,12 +319,10 @@ public class BufferedDeferredFileOutputStreamTest {
 
         final String prefix = null;
         final String suffix = ".out";
-        try
-        {
+        try {
             (new BufferedDeferredFileOutputStream(testBytes.length - 5, prefix, suffix)).close();
             fail("Expected IllegalArgumentException ");
-        }
-        catch (final IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             // expected
         }
     }
@@ -350,8 +334,7 @@ public class BufferedDeferredFileOutputStreamTest {
      * @param testFile The file containing the test output.
      */
     private void verifyResultFile(final File testFile) {
-        try
-        {
+        try {
             final FileInputStream fis = new FileInputStream(testFile);
             assertEquals(testBytes.length, fis.available());
 
@@ -361,18 +344,14 @@ public class BufferedDeferredFileOutputStreamTest {
             assertTrue(Arrays.equals(resultBytes, testBytes));
             assertEquals(-1, fis.read(resultBytes));
 
-            try
-            {
+            try {
                 fis.close();
-            }
-            catch (final IOException e) {
+            } catch (final IOException e) {
                 // Ignore an exception on close
             }
-        }
-        catch (final FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             fail("Unexpected FileNotFoundException");
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             fail("Unexpected IOException");
         }
     }

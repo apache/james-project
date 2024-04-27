@@ -19,8 +19,6 @@
 
 package org.apache.james.user.ldap;
 
-import static org.apache.james.user.ldap.DockerLdapSingleton.ADMIN_PASSWORD;
-import static org.apache.james.user.ldap.DockerLdapSingleton.DOMAIN;
 import static org.apache.james.user.ldap.ReadOnlyUsersLDAPRepositoryTest.ldapRepositoryConfiguration;
 import static org.apache.james.user.ldap.ReadOnlyUsersLDAPRepositoryTest.ldapRepositoryConfigurationWithVirtualHosting;
 import static org.assertj.core.api.Assertions.assertThat;

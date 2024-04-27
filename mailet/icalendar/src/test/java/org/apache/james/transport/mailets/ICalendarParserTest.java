@@ -38,7 +38,6 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import net.fortuna.ical4j.model.Calendar;
 

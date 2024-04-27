@@ -56,6 +56,7 @@ import java.util.stream.IntStream;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
 import jakarta.mail.FetchProfile;
 import jakarta.mail.Flags;
 import jakarta.mail.Folder;
@@ -113,7 +114,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
@@ -141,12 +141,13 @@ import reactor.core.scheduler.Schedulers;
 import reactor.netty.Connection;
 import reactor.netty.tcp.TcpClient;
 
+@SuppressWarnings("checkstyle:membername")
 class IMAPServerTest {
     private static final String _129K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(13107);
     private static final String _65K_MESSAGE = "header: value\r\n" + "012345678\r\n".repeat(6553);
     private static final Username USER = Username.of("user@domain.org");
     private static final Username USER2 = Username.of("bobo@domain.org");
-    private static final Username USER3= Username.of("user3@domain.org");
+    private static final Username USER3 = Username.of("user3@domain.org");
     private static final String USER_PASS = "pass";
     public static final String SMALL_MESSAGE = "header: value\r\n\r\nBODY";
     private InMemoryIntegrationResources memoryIntegrationResources;
@@ -187,6 +188,7 @@ class IMAPServerTest {
 
         return imapServer;
     }
+
     private IMAPServer createImapServer(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         authenticator = new FakeAuthenticator();
         authenticator.addUser(USER, USER_PASS);
@@ -287,8 +289,8 @@ class IMAPServerTest {
                 .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessage())
+                .select("INBOX")
+                .readFirstMessage())
                 .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[] {21}\r\nheader: value\r\n\r\nBODY)\r\n");
         }
 
@@ -299,8 +301,8 @@ class IMAPServerTest {
                 .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8.20>"))
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8.20>"))
                 .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
         }
 
@@ -311,8 +313,8 @@ class IMAPServerTest {
                 .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8.13>"))
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8.13>"))
                 .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
         }
 
@@ -323,8 +325,8 @@ class IMAPServerTest {
                 .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8.12>"))
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8.12>"))
                 .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {12}\r\nvalue\r\n\r\nBOD)\r\n");
         }
 
@@ -335,8 +337,8 @@ class IMAPServerTest {
                 .append("INBOX", SMALL_MESSAGE);
 
             assertThat(testIMAPClient
-                    .select("INBOX")
-                    .readFirstMessageInMailbox("BODY[]<8>"))
+                .select("INBOX")
+                .readFirstMessageInMailbox("BODY[]<8>"))
                 .contains("* 1 FETCH (FLAGS (\\Recent \\Seen) BODY[]<8> {13}\r\nvalue\r\n\r\nBODY)\r\n");
         }
     }
@@ -366,7 +368,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
+                .readFirstMessage())
                 .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
         }
 
@@ -398,7 +400,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
+                .readFirstMessage())
                 .contains("\r\n" + _65K_MESSAGE + ")\r\n");
         }
 
@@ -430,7 +432,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
+                .readFirstMessage())
                 .contains("\r\n" + _129K_MESSAGE + ")\r\n");
         }
     }
@@ -987,7 +989,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
+                .readFirstMessage())
                 .contains("\r\n" + SMALL_MESSAGE + ")\r\n");
         }
 
@@ -1000,7 +1002,7 @@ class IMAPServerTest {
                 .doesNotThrowAnyException();
 
             assertThat(testIMAPClient.select("INBOX")
-                    .readFirstMessage())
+                .readFirstMessage())
                 .contains("\r\n" + _65K_MESSAGE + ")\r\n");
         }
 
@@ -1671,9 +1673,9 @@ class IMAPServerTest {
 
             SearchTerm subjectTerm = new SubjectTerm("java培训");
             SearchTerm fromTerm = new FromStringTerm("采购");
-            SearchTerm recipientTerm = new RecipientStringTerm(Message.RecipientType.TO,"张三");
-            SearchTerm ccRecipientTerm = new RecipientStringTerm(Message.RecipientType.CC,"李四");
-            SearchTerm bccRecipientTerm = new RecipientStringTerm(Message.RecipientType.BCC,"王五");
+            SearchTerm recipientTerm = new RecipientStringTerm(Message.RecipientType.TO, "张三");
+            SearchTerm ccRecipientTerm = new RecipientStringTerm(Message.RecipientType.CC, "李四");
+            SearchTerm bccRecipientTerm = new RecipientStringTerm(Message.RecipientType.BCC, "王五");
             SearchTerm bodyTerm = new BodyTerm("天天向上");
             SearchTerm[] searchTerms = new SearchTerm[6];
             searchTerms[0] = subjectTerm;
@@ -1745,7 +1747,7 @@ class IMAPServerTest {
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(null, new TrustManager[] { new BlindTrustManager() }, null);
+            ctx.init(null, new TrustManager[]{new BlindTrustManager()}, null);
             clientConnection = ctx.getSocketFactory().createSocket();
             clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
             byte[] buffer = new byte[8193];
@@ -1893,7 +1895,7 @@ class IMAPServerTest {
             inbox = memoryIntegrationResources.getMailboxManager().getMailbox(MailboxPath.inbox(USER), mailboxSession);
 
             SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(null, new TrustManager[] { new BlindTrustManager() }, null);
+            ctx.init(null, new TrustManager[]{new BlindTrustManager()}, null);
             clientConnection = ctx.getSocketFactory().createSocket();
             clientConnection.connect(new InetSocketAddress(LOCALHOST_IP, port));
             byte[] buffer = new byte[8193];
@@ -2039,7 +2041,7 @@ class IMAPServerTest {
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
                 assertThat(readStringUntil(clientConnection, s -> s.contains("+ Idling")))
-                .isNotNull());
+                    .isNotNull());
         }
 
         @Test
@@ -2123,7 +2125,7 @@ class IMAPServerTest {
 
             Awaitility.await().atMost(Duration.ofSeconds(2)).untilAsserted(() ->
                 assertThat(readStringUntil(clientConnection, s -> s.contains("* 1 EXISTS")))
-                .isNotNull());
+                    .isNotNull());
         }
     }
 
@@ -2819,8 +2821,8 @@ class IMAPServerTest {
                 .getMailboxEntity().getUidValidity();
 
             inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
-                    MessageUid.of(25), MessageUid.of(26),
-                    MessageUid.of(32)), mailboxSession);
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);
@@ -2846,8 +2848,8 @@ class IMAPServerTest {
                 .getMailboxEntity().getUidValidity();
 
             inbox.delete(ImmutableList.of(MessageUid.of(10), MessageUid.of(11), MessageUid.of(12),
-                    MessageUid.of(25), MessageUid.of(26),
-                    MessageUid.of(32)), mailboxSession);
+                MessageUid.of(25), MessageUid.of(26),
+                MessageUid.of(32)), mailboxSession);
 
             clientConnection.write(ByteBuffer.wrap(String.format("a0 LOGIN %s %s\r\n", USER.asString(), USER_PASS).getBytes(StandardCharsets.UTF_8)));
             readBytes(clientConnection);

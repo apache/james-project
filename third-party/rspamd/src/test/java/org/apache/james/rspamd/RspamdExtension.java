@@ -124,7 +124,7 @@ public class RspamdExtension implements GuiceModuleTestExtension {
     }
 
     public URL rspamdURL() {
-        return Throwing.supplier(() -> new URI("http://"+
+        return Throwing.supplier(() -> new URI("http://" +
             rspamdContainer.getHost() + ":" +
             rspamdContainer.getMappedPort(RSPAMD_DEFAULT_PORT) +
             "/").toURL()).get();

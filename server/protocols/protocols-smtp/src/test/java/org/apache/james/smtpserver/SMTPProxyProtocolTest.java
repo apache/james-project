@@ -18,26 +18,14 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
-import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
-import static org.apache.james.smtpserver.SMTPServerTestSystem.BOB;
-import static org.apache.james.smtpserver.SMTPServerTestSystem.DATE;
-import static org.apache.james.smtpserver.SMTPServerTestSystem.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.chrono.ChronoZonedDateTime;
-import java.util.Base64;
 
-import org.apache.commons.net.smtp.SMTPClient;
-import org.apache.james.queue.api.ManageableMailQueue;
-import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

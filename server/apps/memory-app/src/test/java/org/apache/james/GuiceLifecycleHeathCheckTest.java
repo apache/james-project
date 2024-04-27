@@ -63,11 +63,11 @@ class GuiceLifecycleHeathCheckTest {
         WebAdminGuiceProbe webAdminGuiceProbe = server.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
-                .setContentType(ContentType.JSON)
-                .setAccept(ContentType.JSON)
-                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-                .setPort(webAdminGuiceProbe.getWebAdminPort().getValue())
-                .build();
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+            .setPort(webAdminGuiceProbe.getWebAdminPort().getValue())
+            .build();
     }
 
     @Nested
@@ -124,7 +124,9 @@ class GuiceLifecycleHeathCheckTest {
 
                 Mono.fromRunnable(server::stop)
                     .publishOn(Schedulers.boundedElastic())
-                    .subscribe(r -> {}, e -> {}, () -> sink.emitEmpty(FAIL_FAST));
+                    .subscribe(r -> {
+                    }, e -> {
+                    }, () -> sink.emitEmpty(FAIL_FAST));
 
                 when()
                     .get("/healthcheck")

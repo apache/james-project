@@ -39,8 +39,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.JmapRFCCommonRequests;
 import org.apache.james.jmap.JmapGuiceProbe;
+import org.apache.james.jmap.JmapRFCCommonRequests;
 import org.apache.james.mailbox.Role;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;

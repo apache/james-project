@@ -34,8 +34,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.json.DTOConverter;
-import org.apache.james.rrt.lib.Mapping;
-import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.api.UsernameChangeTaskStep;
@@ -57,7 +55,6 @@ import org.reactivestreams.Publisher;
 import com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import reactor.core.publisher.Mono;
 
 class UsernameChangeRoutesTest {
@@ -150,9 +147,9 @@ class UsernameChangeRoutesTest {
 
             given()
                 .basePath(TasksRoutes.BASE)
-            .when()
+                .when()
                 .get(taskId + "/await")
-            .then()
+                .then()
                 .body("type", is("UsernameChangeTask"))
                 .body("status", is("completed"))
                 .body("additionalInformation.type", is("UsernameChangeTask"))
@@ -169,9 +166,9 @@ class UsernameChangeRoutesTest {
         void shouldRejectUnknownDestinationUser() {
             given()
                 .queryParam("action", "rename")
-            .when()
+                .when()
                 .post("/users/" + OLD_USER.asString() + "/rename/unknown@domain.tld")
-            .then()
+                .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", Matchers.is(400))
                 .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
@@ -183,9 +180,9 @@ class UsernameChangeRoutesTest {
         void shouldRejectUnknownSourceUser() {
             given()
                 .queryParam("action", "rename")
-            .when()
+                .when()
                 .post("/users/unknown@domain.tld/rename/" + NEW_USER.asString())
-            .then()
+                .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", Matchers.is(400))
                 .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
@@ -198,9 +195,9 @@ class UsernameChangeRoutesTest {
             given()
                 .queryParam("action", "rename")
                 .queryParam("force")
-            .when()
+                .when()
                 .post("/users/unknown@domain.tld/rename/" + NEW_USER.asString())
-            .then()
+                .then()
                 .statusCode(HttpStatus.CREATED_201)
                 .body("taskId", Matchers.is(notNullValue()));
         }
@@ -216,9 +213,9 @@ class UsernameChangeRoutesTest {
 
             given()
                 .basePath(TasksRoutes.BASE)
-            .when()
+                .when()
                 .get(taskId + "/await")
-            .then()
+                .then()
                 .body("type", is("UsernameChangeTask"))
                 .body("status", is("completed"))
                 .body("additionalInformation.type", is("UsernameChangeTask"))
@@ -257,6 +254,7 @@ class UsernameChangeRoutesTest {
         }
 
         @Test
+        @SuppressWarnings("checkstyle:regexpsingleline")
         void shouldReportFailures() {
             String taskId = with()
                 .queryParam("action", "rename")
@@ -266,9 +264,9 @@ class UsernameChangeRoutesTest {
 
             given()
                 .basePath(TasksRoutes.BASE)
-            .when()
+                .when()
                 .get(taskId + "/await").prettyPeek()
-            .then()
+                .then()
                 .body("type", is("UsernameChangeTask"))
                 .body("status", is("failed"))
                 .body("additionalInformation.type", is("UsernameChangeTask"))
@@ -293,9 +291,9 @@ class UsernameChangeRoutesTest {
 
             given()
                 .basePath(TasksRoutes.BASE)
-            .when()
+                .when()
                 .get(taskId + "/await")
-            .then()
+                .then()
                 .body("type", is("UsernameChangeTask"))
                 .body("status", is("failed"))
                 .body("additionalInformation.type", is("UsernameChangeTask"))
@@ -314,9 +312,9 @@ class UsernameChangeRoutesTest {
             given()
                 .queryParam("action", "rename")
                 .queryParam("fromStep", "invalid")
-            .when()
+                .when()
                 .post("/users/" + OLD_USER.asString() + "/rename/" + NEW_USER.asString())
-            .then()
+                .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .body("statusCode", Matchers.is(400))
                 .body("type", Matchers.is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))

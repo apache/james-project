@@ -61,7 +61,9 @@ public interface TestTaskDTOModules {
     TaskDTOModule<FailsDeserializationTask, FailsDeserializationTaskDTO> FAILS_DESERIALIZATION_TASK_MODULE = DTOModule
         .forDomainObject(FailsDeserializationTask.class)
         .convertToDTO(FailsDeserializationTaskDTO.class)
-        .toDomainObjectConverter(dto -> {throw new RuntimeException("fail to deserialize"); })
+        .toDomainObjectConverter(dto -> {
+            throw new RuntimeException("fail to deserialize");
+        })
         .toDTOConverter((task, typeName) -> new FailsDeserializationTaskDTO(typeName))
         .typeName(FailsDeserializationTask.TASK_TYPE)
         .withFactory(TaskDTOModule::new);

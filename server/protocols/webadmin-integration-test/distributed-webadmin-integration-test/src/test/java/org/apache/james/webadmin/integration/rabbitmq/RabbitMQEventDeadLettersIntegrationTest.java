@@ -48,10 +48,10 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.SearchConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
 import org.apache.james.core.Username;
+import org.apache.james.events.DispatchingFailureGroup;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
-import org.apache.james.events.DispatchingFailureGroup;
 import org.apache.james.events.RetryBackoffConfiguration;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.junit.categories.Unstable;
@@ -88,6 +88,7 @@ import io.restassured.http.ContentType;
 
 @Tag(BasicFeature.TAG)
 @Tag(Unstable.TAG)
+@SuppressWarnings("checkstyle:regexpsingleline")
 class RabbitMQEventDeadLettersIntegrationTest {
     public static class RetryEventsListenerGroup extends Group {
     }
@@ -207,10 +208,10 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .s3()
-                    .disableCache()
-                    .deduplication()
-                    .noCryptoConfig())
+                .s3()
+                .disableCache()
+                .deduplication()
+                .noCryptoConfig())
             .searchConfiguration(SearchConfiguration.openSearch())
             .build())
         .extension(new DockerOpenSearchExtension())
@@ -271,7 +272,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .untilAsserted(() ->
                 when()
                     .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
-                .then()
+                    .then()
                     .body(".", hasSize(1)));
 
         return (String) with()
@@ -293,7 +294,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body(".", hasSize(1));
@@ -308,7 +309,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups")
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body(".", hasSize(0));
@@ -326,7 +327,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups")
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body(".", containsInAnyOrder(GROUP_ID));
@@ -346,7 +347,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body("MailboxAdded.mailboxId", is(mailboxId.serialize()))
@@ -369,7 +370,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body(".", hasSize(2));
@@ -392,7 +393,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
-        .then()
+            .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
 
@@ -410,15 +411,15 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
             .jsonPath()
             .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("additionalInformation.successfulRedeliveriesCount", is(1))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
@@ -440,7 +441,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
             .jsonPath()
             .get("taskId");
 
@@ -450,7 +451,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get("/events/deadLetter/groups/" + GROUP_ID + "/" + failedInsertionId)
-        .then()
+            .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
 
@@ -468,7 +469,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
             .jsonPath()
             .get("taskId");
 
@@ -493,15 +494,15 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .jsonPath()
             .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("additionalInformation.successfulRedeliveriesCount", is(2))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
@@ -521,7 +522,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .jsonPath()
             .get("taskId");
 
@@ -531,7 +532,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body(".", hasSize(0));
@@ -550,7 +551,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
             .jsonPath()
             .get("taskId");
 
@@ -574,15 +575,15 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH)
+            .post(EventDeadLettersRoutes.BASE_PATH)
             .jsonPath()
             .get("taskId");
 
         given()
             .basePath(TasksRoutes.BASE)
-        .when()
+            .when()
             .get(taskId + "/await")
-        .then()
+            .then()
             .body("status", is("completed"))
             .body("additionalInformation.successfulRedeliveriesCount", is(2))
             .body("additionalInformation.failedRedeliveriesCount", is(0));
@@ -601,7 +602,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH)
+            .post(EventDeadLettersRoutes.BASE_PATH)
             .jsonPath()
             .get("taskId");
 
@@ -611,7 +612,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body(".", hasSize(0));
@@ -630,7 +631,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH)
+            .post(EventDeadLettersRoutes.BASE_PATH)
             .jsonPath()
             .get("taskId");
 
@@ -656,7 +657,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + failedInsertionId)
             .jsonPath()
             .get("taskId");
 
@@ -668,7 +669,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID + "/" + newFailedInsertionId)
-        .then()
+            .then()
             .statusCode(HttpStatus.OK_200);
     }
 
@@ -696,7 +697,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
     private void waitForReDeliver(String groupId) {
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
-        .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + groupId)
+            .post(EventDeadLettersRoutes.BASE_PATH + "/groups/" + groupId)
             .jsonPath()
             .get("taskId");
         with()
@@ -709,7 +710,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
             given()
                 .basePath(EventDeadLettersRoutes.BASE_PATH + "/groups/" + DISPATCHING_FAILURE_GROUP_ID)
                 .get()
-            .then()
+                .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body(".", hasSize(1)));

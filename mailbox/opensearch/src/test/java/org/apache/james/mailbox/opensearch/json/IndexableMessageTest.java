@@ -287,10 +287,10 @@ class IndexableMessageTest {
                 .block();
 
         // Then
-        String NO_TEXTUAL_BODY = "The textual body is not present";
+        String noTextualBody = "The textual body is not present";
         assertThat(indexableMessage.getAttachments())
-            .extracting(input -> input.getTextualBody().orElse(NO_TEXTUAL_BODY))
-            .contains("first attachment content", NO_TEXTUAL_BODY, "third attachment content");
+            .extracting(input -> input.getTextualBody().orElse(noTextualBody))
+            .contains("first attachment content", noTextualBody, "third attachment content");
     }
 
     @Test

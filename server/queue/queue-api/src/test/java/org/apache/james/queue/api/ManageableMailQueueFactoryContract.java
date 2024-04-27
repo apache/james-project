@@ -19,12 +19,12 @@
 
 package org.apache.james.queue.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.mail.MessagingException;
 
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public interface ManageableMailQueueFactoryContract<T extends ManageableMailQueue> {
 

@@ -19,19 +19,19 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import jakarta.mail.MessagingException;
+
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import jakarta.mail.MessagingException;
-
-import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class IsFromMailingListTest {
 
@@ -43,8 +43,8 @@ class IsFromMailingListTest {
         automaticallySentMailDetector = mock(AutomaticallySentMailDetector.class);
         matcher = new IsFromMailingList(automaticallySentMailDetector);
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()
-                .matcherName("IsFromMailingList")
-                .build();
+            .matcherName("IsFromMailingList")
+            .build();
         matcher.init(matcherConfig);
     }
 

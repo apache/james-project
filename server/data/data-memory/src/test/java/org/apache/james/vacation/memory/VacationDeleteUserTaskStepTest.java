@@ -20,6 +20,7 @@
 package org.apache.james.vacation.memory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.core.Username;
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.Vacation;

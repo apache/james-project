@@ -20,6 +20,8 @@
 package org.apache.james.jmap.cassandra.filtering;
 
 import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConfiguration;
+import static org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT;
+import static org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_4;
@@ -31,8 +33,6 @@ import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO_2;
-import static org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules.FILTERING_INCREMENT;
-import static org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.JsonSerializationVerifier;

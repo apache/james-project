@@ -47,8 +47,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import reactor.core.scheduler.Schedulers;
-
 class CassandraMailboxDAOTest {
     private static final UidValidity UID_VALIDITY_1 = UidValidity.of(145);
     private static final UidValidity UID_VALIDITY_2 = UidValidity.of(147);

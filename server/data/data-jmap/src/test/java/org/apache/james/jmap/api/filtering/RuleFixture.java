@@ -20,10 +20,8 @@
 package org.apache.james.jmap.api.filtering;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.jmap.api.model.EmailAddress;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;

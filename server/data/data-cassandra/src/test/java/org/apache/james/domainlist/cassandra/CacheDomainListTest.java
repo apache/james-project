@@ -44,7 +44,7 @@ import reactor.core.scheduler.Schedulers;
 
 class CacheDomainListTest {
 
-    Domain DOMAIN_1 = Domain.of("domain1.tld");
+    Domain domain1 = Domain.of("domain1.tld");
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDomainListModule.MODULE);
@@ -64,12 +64,12 @@ class CacheDomainListTest {
 
     @Test
     void containsShouldBeCached(CassandraCluster cassandra) throws DomainListException {
-        domainList.addDomain(DOMAIN_1);
+        domainList.addDomain(domain1);
 
         StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         Flux.range(0, 10)
-            .doOnNext(Throwing.consumer(i -> domainList.containsDomain(DOMAIN_1)))
+            .doOnNext(Throwing.consumer(i -> domainList.containsDomain(domain1)))
             .blockLast();
 
         assertThat(statementRecorder.listExecutedStatements(
@@ -79,13 +79,13 @@ class CacheDomainListTest {
 
     @Test
     void cacheShouldBeRefreshedPeriodicallyUnderReadLoad(CassandraCluster cassandra) throws DomainListException {
-        domainList.addDomain(DOMAIN_1);
+        domainList.addDomain(domain1);
 
         StatementRecorder statementRecorder = cassandra.getConf().recordStatements();
 
         Flux.range(0, 6)
             .delayElements(Duration.ofMillis(500))
-            .flatMap(Throwing.function(i -> Mono.fromCallable(() ->domainList.containsDomain(DOMAIN_1)).subscribeOn(Schedulers.boundedElastic())))
+            .flatMap(Throwing.function(i -> Mono.fromCallable(() -> domainList.containsDomain(domain1)).subscribeOn(Schedulers.boundedElastic())))
             .subscribeOn(Schedulers.newSingle("test"))
             .blockLast();
 
@@ -96,33 +96,33 @@ class CacheDomainListTest {
 
     @Test
     void additionIsNotInstant() throws DomainListException {
-        domainList.containsDomain(DOMAIN_1);
+        domainList.containsDomain(domain1);
 
-        domainList.addDomain(DOMAIN_1);
+        domainList.addDomain(domain1);
 
-        assertThat(domainList.containsDomain(DOMAIN_1)).isEqualTo(false);
+        assertThat(domainList.containsDomain(domain1)).isEqualTo(false);
     }
 
     @Test
     void removalIsNotInstant() throws DomainListException {
-        domainList.addDomain(DOMAIN_1);
+        domainList.addDomain(domain1);
 
-        domainList.containsDomain(DOMAIN_1);
+        domainList.containsDomain(domain1);
 
-        domainList.removeDomain(DOMAIN_1);
+        domainList.removeDomain(domain1);
 
-        assertThat(domainList.containsDomain(DOMAIN_1)).isEqualTo(true);
+        assertThat(domainList.containsDomain(domain1)).isEqualTo(true);
     }
 
     @Test
     void listShouldRefreshNewEntriesInCache() throws DomainListException {
-        domainList.containsDomain(DOMAIN_1);
+        domainList.containsDomain(domain1);
 
-        domainList.addDomain(DOMAIN_1);
+        domainList.addDomain(domain1);
 
         domainList.getDomains();
 
-        assertThat(domainList.containsDomain(DOMAIN_1)).isEqualTo(true);
+        assertThat(domainList.containsDomain(domain1)).isEqualTo(true);
     }
 
     private DNSService getDNSServer(final String hostName) throws UnknownHostException {

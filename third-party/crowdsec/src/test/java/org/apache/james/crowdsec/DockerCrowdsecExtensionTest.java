@@ -39,37 +39,37 @@ class DockerCrowdsecExtensionTest {
 
     @Test
     void addDecisionWithAnIPTest() throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "add", "-i", "192.168.0.4");
-        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "list");
+        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "add", "-i", "192.168.0.4");
+        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "list");
         assertThat(result.getStdout().contains("Ip:192.168.0.4") && result.getStdout().contains("manual 'ban' from 'localhost'")).isTrue();
     }
 
     @Test
     void addDecisionWithAnIPRangeTest() throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "add", "-r", "192.168.0.0/16");
-        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "list");
+        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "add", "-r", "192.168.0.0/16");
+        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "list");
         assertThat(result.getStdout().contains("Range:192.168.0.0/16") && result.getStdout().contains("manual 'ban' from 'localhost'")).isTrue();
     }
 
     @Test
     void deleteDecisionWithAnIPTest() throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "add", "-i", "192.168.0.4");
-        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "list");
+        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "add", "-i", "192.168.0.4");
+        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "list");
         assertThat(result.getStdout().contains("Ip:192.168.0.4") && result.getStdout().contains("manual 'ban' from 'localhost'")).isTrue();
 
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "delete", "-i", "192.168.0.4");
-        result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "list");
+        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "delete", "-i", "192.168.0.4");
+        result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "list");
         assertThat(result.getStdout()).contains("No active decisions");
     }
 
     @Test
     void deleteDecisionWithAnIPRangeTest() throws IOException, InterruptedException {
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "add", "-r", "192.168.0.0/16");
-        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "list");
+        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "add", "-r", "192.168.0.0/16");
+        Container.ExecResult result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "list");
         assertThat(result.getStdout().contains("Range:192.168.0.0/16") && result.getStdout().contains("manual 'ban' from 'localhost'")).isTrue();
 
-        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "delete", "-r", "192.168.0.0/16");
-        result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli" , "decision", "list");
+        crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "delete", "-r", "192.168.0.0/16");
+        result = crowdsecExtension.getCrowdsecContainer().execInContainer("cscli", "decision", "list");
         assertThat(result.getStdout()).contains("No active decisions");
     }
 }

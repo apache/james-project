@@ -75,7 +75,7 @@ import scala.jdk.javaapi.OptionConverters;
 @ExtendWith(DockerPulsarExtension.class)
 public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricContract, ManageableMailQueueContract, DelayedMailQueueContract, DelayedManageableMailQueueContract {
 
-    int MAX_CONCURRENCY = 10;
+    int maxConcurrency = 10;
     PulsarMailQueue mailQueue;
 
     private HashBlobId.Factory blobIdFactory;
@@ -126,7 +126,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
 
     @Override
     public int getMailQueueMaxConcurrency() {
-        return MAX_CONCURRENCY;
+        return maxConcurrency;
     }
 
     @Override
@@ -140,7 +140,7 @@ public class PulsarMailQueueTest implements MailQueueContract, MailQueueMetricCo
         int enqueueBufferSize = 10;
         int requeueBufferSize = 10;
         return new PulsarMailQueue(
-                new PulsarMailQueueConfiguration(mailQueueName, pulsarConfiguration, MAX_CONCURRENCY, enqueueBufferSize, requeueBufferSize),
+                new PulsarMailQueueConfiguration(mailQueueName, pulsarConfiguration, maxConcurrency, enqueueBufferSize, requeueBufferSize),
                 pulsarClients,
                 blobIdFactory,
                 mimeMessageStore,

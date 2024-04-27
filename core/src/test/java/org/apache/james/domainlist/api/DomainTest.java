@@ -72,6 +72,7 @@ class DomainTest {
         assertThatThrownBy(() -> Domain.of(arg))
             .isInstanceOf(IllegalArgumentException.class);
     }
+
     @ParameterizedTest
     @ValueSource(strings = {
         "domain.tld",

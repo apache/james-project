@@ -61,7 +61,7 @@ public class PostgresExtension implements GuiceModuleTestExtension {
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         var dbName = UUID.randomUUID().toString();
-        container.execInContainer("psql",  "-U", container.getUsername(), "-c", "create database \"" + dbName + "\"" );
+        container.execInContainer("psql", "-U", container.getUsername(), "-c", "create database \"" + dbName + "\"");
         container.withDatabaseName(dbName);
         jpaConfiguration = JPAConfiguration.builder()
             .driverName(container.getDriverClassName())

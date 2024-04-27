@@ -22,13 +22,13 @@ package org.apache.james.vault.dto.query;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.apache.james.vault.search.FieldName;
 import org.apache.james.vault.search.Operator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 

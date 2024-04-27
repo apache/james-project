@@ -34,7 +34,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
@@ -51,13 +50,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableSet;
+
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
 class RabbitMQMailQueuesRoutesTest {
-    final static ZonedDateTime DATE = ZonedDateTime.parse("2015-10-30T14:12:00Z");
+    static final ZonedDateTime DATE = ZonedDateTime.parse("2015-10-30T14:12:00Z");
 
     WebAdminServer webAdminServer;
     MailQueueFactory mailQueueFactory;

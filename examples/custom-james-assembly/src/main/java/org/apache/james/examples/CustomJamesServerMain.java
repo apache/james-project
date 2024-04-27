@@ -75,7 +75,7 @@ public class CustomJamesServerMain implements JamesServerMain {
         JamesServerMain.main(GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CUSTOM_SERVER_AGGREGATE_MODULE)
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
-                                             .chooseModules(configuration.getUsersRepositoryImplementation()))
+                .chooseModules(configuration.getUsersRepositoryImplementation()))
         );
     }
 }

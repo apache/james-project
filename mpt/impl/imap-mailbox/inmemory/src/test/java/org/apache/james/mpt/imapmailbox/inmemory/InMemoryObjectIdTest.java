@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.ObjectId;
-import org.apache.james.mpt.imapmailbox.suite.SelectedState;
 import org.junit.jupiter.api.BeforeEach;
 
 public class InMemoryObjectIdTest extends ObjectId {

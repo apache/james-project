@@ -32,6 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
+@SuppressWarnings("checkstyle:methodname")
 class AlgorithmTest {
     @Test
     void shouldMatchBeanContract() {
@@ -42,7 +43,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseRawHash() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1").asString()).isEqualTo("SHA-1/plain");
             softly.assertThat(Algorithm.of("SHA-1").isLegacy()).isFalse();
@@ -52,7 +53,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseRawHashWithFallback() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1", "plain").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1", "plain").asString()).isEqualTo("SHA-1/plain");
             softly.assertThat(Algorithm.of("SHA-1", "plain").isLegacy()).isFalse();
@@ -62,7 +63,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseLegacy() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1/legacy").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1/legacy").asString()).isEqualTo("SHA-1/legacy");
             softly.assertThat(Algorithm.of("SHA-1/legacy").isLegacy()).isTrue();
@@ -72,7 +73,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseLegacyWithFallback() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1", "legacy").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1", "legacy").asString()).isEqualTo("SHA-1/legacy");
             softly.assertThat(Algorithm.of("SHA-1", "legacy").isLegacy()).isTrue();
@@ -82,7 +83,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseLegacyIgnoringFallback() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1/legacy", "plain").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1/legacy", "plain").asString()).isEqualTo("SHA-1/legacy");
             softly.assertThat(Algorithm.of("SHA-1/legacy", "plain").isLegacy()).isTrue();
@@ -92,7 +93,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseSalted() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1/salted").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1/salted").asString()).isEqualTo("SHA-1/salted");
             softly.assertThat(Algorithm.of("SHA-1/salted").isLegacy()).isFalse();
@@ -102,7 +103,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseSaltedWithFallback() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1", "salted").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1", "salted").asString()).isEqualTo("SHA-1/salted");
             softly.assertThat(Algorithm.of("SHA-1", "salted").isLegacy()).isFalse();
@@ -112,7 +113,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseSaltedIgnoringFallback() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1/salted", "plain").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1/salted", "plain").asString()).isEqualTo("SHA-1/salted");
             softly.assertThat(Algorithm.of("SHA-1/salted", "plain").isLegacy()).isFalse();
@@ -122,7 +123,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseLegacySalted() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted").asString()).isEqualTo("SHA-1/legacy_salted");
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted").isLegacy()).isTrue();
@@ -132,7 +133,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseLegacySaltedWithFallback() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1", "legacy_salted").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1", "legacy_salted").asString()).isEqualTo("SHA-1/legacy_salted");
             softly.assertThat(Algorithm.of("SHA-1", "legacy_salted").isLegacy()).isTrue();
@@ -142,7 +143,7 @@ class AlgorithmTest {
 
     @Test
     void ofShouldParseLegacySaltedIgnoringFallback() {
-        SoftAssertions.assertSoftly(softly-> {
+        SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").getName()).isEqualTo("SHA-1");
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").asString()).isEqualTo("SHA-1/legacy_salted");
             softly.assertThat(Algorithm.of("SHA-1/legacy_salted", "plain").isLegacy()).isTrue();

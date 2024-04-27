@@ -25,8 +25,6 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.awaitility.Durations.TEN_SECONDS;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -35,7 +33,6 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
-import org.apache.james.events.EventBusTestFixture;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
 import org.apache.james.mailbox.events.GenericGroup;
@@ -49,12 +46,9 @@ import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
-import org.apache.james.mailbox.store.event.EventFactory;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.Publisher;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 

@@ -35,7 +35,6 @@ import com.google.common.base.Stopwatch;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public interface DelayedMailQueueContract {
 

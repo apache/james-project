@@ -131,7 +131,7 @@ public class Linshare {
     @SuppressWarnings("resource")
     private GenericContainer<?> createDockerBackend() {
         return new GenericContainer<>(
-            new ImageFromDockerfile("linshare-backend-"+ UUID.randomUUID().toString())
+            new ImageFromDockerfile("linshare-backend-" + UUID.randomUUID().toString())
                 .withFileFromClasspath("conf/log4j.properties", "backend/conf/log4j.properties")
                 .withFileFromClasspath("conf/catalina.properties", "backend/conf/catalina.properties")
                 .withFileFromClasspath("conf/id_rsa", "backend/conf/id_rsa.pri")

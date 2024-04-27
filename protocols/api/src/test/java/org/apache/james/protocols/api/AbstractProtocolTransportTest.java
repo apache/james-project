@@ -41,12 +41,11 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Test-case for PROTOCOLS-62
- *
  */
 public class AbstractProtocolTransportTest {
 
     private static final String US_ASCII = "US-ASCII";
-    
+
     @Test
     void testWriteOrder() throws InterruptedException, UnsupportedEncodingException {
         final List<Response> messages = IntStream.range(0, 2000)
@@ -55,7 +54,7 @@ public class AbstractProtocolTransportTest {
 
         checkWrittenResponses(messages);
     }
-    
+
     private void checkWrittenResponses(List<Response> messages) throws InterruptedException, UnsupportedEncodingException {
         final List<byte[]> writtenMessages = new ArrayList<>();
 
@@ -68,22 +67,22 @@ public class AbstractProtocolTransportTest {
                 throw new UnsupportedOperationException();
             }
 
-            
+
             @Override
             public void popLineHandler() {
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             public boolean isTLSStarted() {
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             public boolean isStartTLSSupported() {
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             public Optional<SSLSession> getSSLSession() {
                 throw new UnsupportedOperationException();
@@ -95,34 +94,36 @@ public class AbstractProtocolTransportTest {
             }
 
             @Override
-            public boolean isProxyRequired() { throw new UnsupportedOperationException(); }
-            
+            public boolean isProxyRequired() {
+                throw new UnsupportedOperationException();
+            }
+
             @Override
             public InetSocketAddress getRemoteAddress() {
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             public InetSocketAddress getLocalAddress() {
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             public String getId() {
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             protected void writeToClient(InputStream in, ProtocolSession session, boolean startTLS) {
                 throw new UnsupportedOperationException();
             }
-            
+
             @Override
             protected void writeToClient(byte[] bytes, ProtocolSession session, boolean startTLS) {
                 writtenMessages.add(bytes);
                 latch.countDown();
             }
-            
+
             @Override
             protected void close() {
                 throw new UnsupportedOperationException();
@@ -130,38 +131,38 @@ public class AbstractProtocolTransportTest {
 
             @Override
             public void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session) {
-                throw new UnsupportedOperationException();                
+                throw new UnsupportedOperationException();
             }
         };
-        for (Response message: messages) {
+        for (Response message : messages) {
             transport.writeResponse(message, null);
         }
         latch.await();
-        
+
         assertThat(writtenMessages.size()).isEqualTo(messages.size());
-        
+
         for (int i = 0; i < messages.size(); i++) {
             Response response = messages.get(i);
             checkBytesEquals(response.getLines().get(0).toString().getBytes(US_ASCII), writtenMessages.get(i));
         }
     }
-    
+
     private void checkBytesEquals(byte[] expected, byte[] received) throws UnsupportedEncodingException {
-        
+
         assertThat(received.length - 2).describedAs("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'").isEqualTo(expected.length);
         for (int i = 0; i < expected.length; i++) {
             assertThat(received[i]).describedAs("'" + new String(expected, US_ASCII) + "'=>'" + new String(received, US_ASCII) + "'").isEqualTo(expected[i]);
         }
     }
-    
+
     private static final class TestResponse implements Response {
 
         private final String msg;
 
         public TestResponse() {
-            this.msg =  UUID.randomUUID().toString();
+            this.msg = UUID.randomUUID().toString();
         }
-        
+
         @Override
         public String getRetCode() {
             throw new UnsupportedOperationException();
@@ -169,7 +170,7 @@ public class AbstractProtocolTransportTest {
 
         @Override
         public List<CharSequence> getLines() {
-            return Arrays.asList((CharSequence)msg);
+            return Arrays.asList((CharSequence) msg);
         }
 
         @Override

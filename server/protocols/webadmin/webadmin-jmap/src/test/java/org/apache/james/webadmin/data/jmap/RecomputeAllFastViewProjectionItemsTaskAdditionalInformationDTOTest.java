@@ -23,6 +23,7 @@ import static org.apache.james.JsonSerializationVerifier.recursiveComparisonConf
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.util.ClassLoaderUtils;

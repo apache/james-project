@@ -19,15 +19,15 @@
 
 package org.apache.james.webadmin.service;
 
+import static org.mockito.Mockito.mock;
+
+import java.util.Optional;
+
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Optional;
-
-import static org.mockito.Mockito.mock;
 
 public class ExpireMailboxTaskSerializationTest {
     private ExpireMailboxService expireMailboxService;

@@ -31,8 +31,8 @@ import org.junit.jupiter.api.Test;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailboxChangeTest {
-    AccountId ACCOUNT_ID = AccountId.fromUsername(BOB);
-    ZonedDateTime DATE = ZonedDateTime.now();
+    AccountId accountId = AccountId.fromUsername(BOB);
+    ZonedDateTime date = ZonedDateTime.now();
 
     @Test
     void shouldMatchBeanContract() {
@@ -46,7 +46,7 @@ class MailboxChangeTest {
             MailboxChange.builder()
                 .accountId(null)
                 .state(State.of(UUID.randomUUID()))
-                .date(DATE.minusHours(2))
+                .date(date.minusHours(2))
                 .isCountChange(false))
             .isInstanceOf(NullPointerException.class);
     }
@@ -55,9 +55,9 @@ class MailboxChangeTest {
     void shouldThrowOnNullState() {
         assertThatThrownBy(() ->
             MailboxChange.builder()
-                .accountId(ACCOUNT_ID)
+                .accountId(accountId)
                 .state(null)
-                .date(DATE.minusHours(2))
+                .date(date.minusHours(2))
                 .isCountChange(false))
             .isInstanceOf(NullPointerException.class);
     }
@@ -66,7 +66,7 @@ class MailboxChangeTest {
     void shouldThrowOnNullDate() {
         assertThatThrownBy(() ->
             MailboxChange.builder()
-                .accountId(ACCOUNT_ID)
+                .accountId(accountId)
                 .state(State.of(UUID.randomUUID()))
                 .date(null)
                 .isCountChange(false))

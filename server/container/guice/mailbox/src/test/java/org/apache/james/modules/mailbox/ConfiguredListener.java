@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
+import jakarta.inject.Inject;
+
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.events.Event;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Group;
-
-import jakarta.inject.Inject;
 
 public class ConfiguredListener implements EventListener.GroupEventListener {
     static String value = null;

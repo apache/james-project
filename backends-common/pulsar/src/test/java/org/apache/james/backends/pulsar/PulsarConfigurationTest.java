@@ -19,14 +19,13 @@
 
 package org.apache.james.backends.pulsar;
 
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.james.backends.pulsar.Auth.NoAuth$;
-import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.org.apache.commons.lang3.NotImplementedException;
-import scala.NotImplementedError;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.junit.jupiter.api.Test;
+
+import scala.NotImplementedError;
 
 class PulsarConfigurationTest {
 

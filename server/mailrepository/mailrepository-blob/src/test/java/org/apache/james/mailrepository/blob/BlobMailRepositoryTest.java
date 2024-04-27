@@ -19,13 +19,7 @@
 
 package org.apache.james.mailrepository.blob;
 
-import jakarta.mail.internet.MimeMessage;
-
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.Store;
-import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.blob.memory.MemoryBlobStoreDAO;
 import org.apache.james.blob.memory.MemoryBlobStoreFactory;
@@ -35,9 +29,7 @@ import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.Protocol;
 import org.jetbrains.annotations.NotNull;
-import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 
 class BlobMailRepositoryTest implements MailRepositoryContract {
 

@@ -42,10 +42,10 @@ class MailboxPathTest {
         assertThatJson(DTO_JSON_SERIALIZE.mailboxPathWrites().writes(DTOs.MailboxPath$.MODULE$.fromJava(MAILBOX_PATH)).toString())
             .isEqualTo(
                 "{" +
-                "  \"namespace\":\"#private\"," +
-                "  \"user\":\"user\"," +
-                "  \"name\":\"mailboxName\"" +
-                "}");
+                    "  \"namespace\":\"#private\"," +
+                    "  \"user\":\"user\"," +
+                    "  \"name\":\"mailboxName\"" +
+                    "}");
     }
 
     @Test
@@ -54,10 +54,10 @@ class MailboxPathTest {
             new MailboxPath("", USER, MAILBOX_NAME))).toString())
             .isEqualTo(
                 "{" +
-                "  \"namespace\":\"#private\"," +
-                "  \"user\":\"user\"," +
-                "  \"name\":\"mailboxName\"" +
-                "}");
+                    "  \"namespace\":\"#private\"," +
+                    "  \"user\":\"user\"," +
+                    "  \"name\":\"mailboxName\"" +
+                    "}");
     }
 
     @Test
@@ -74,9 +74,9 @@ class MailboxPathTest {
     @Test
     void mailboxPathDeserializationShouldFailWhenNoNamespace() {
         assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
-            "  \"user\":\"user\"," +
-            "  \"name\":\"mailboxName\"" +
-            "}"))
+                "  \"user\":\"user\"," +
+                "  \"name\":\"mailboxName\"" +
+                "}"))
             .get().toJava())
             .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, MAILBOX_NAME));
     }
@@ -84,10 +84,10 @@ class MailboxPathTest {
     @Test
     void mailboxPathDeserializationShouldFailWhenNullNamespace() {
         assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
-            "  \"namespace\":null," +
-            "  \"user\":\"user\"," +
-            "  \"name\":\"mailboxName\"" +
-            "}"))
+                "  \"namespace\":null," +
+                "  \"user\":\"user\"," +
+                "  \"name\":\"mailboxName\"" +
+                "}"))
             .get().toJava())
             .isEqualTo(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, MAILBOX_NAME));
     }

@@ -27,7 +27,8 @@ import org.junit.jupiter.api.Test;
 
 class JPAMailboxMessageTest {
 
-    private static final byte[] EMPTY = new byte[] {};
+    private static final byte[] EMPTY = new byte[]{};
+
     /**
      * Even though there should never be a null body, it does happen. See JAMES-2384
      */

@@ -25,6 +25,8 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.net.ssl.SSLSession;
+
 import org.apache.james.core.Username;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProxyInformation;
@@ -32,8 +34,6 @@ import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
-
-import javax.net.ssl.SSLSession;
 
 /**
  * Abstract class to simplify the mocks

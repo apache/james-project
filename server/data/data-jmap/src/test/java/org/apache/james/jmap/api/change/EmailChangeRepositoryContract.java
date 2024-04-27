@@ -39,7 +39,9 @@ public interface EmailChangeRepositoryContract {
     ZonedDateTime DATE = ZonedDateTime.now();
 
     EmailChangeRepository emailChangeRepository();
+
     MessageId generateNewMessageId();
+
     State generateNewState();
 
     @Test

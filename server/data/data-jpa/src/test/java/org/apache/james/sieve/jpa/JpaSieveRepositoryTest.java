@@ -29,18 +29,18 @@ import org.junit.jupiter.api.BeforeEach;
 
 class JpaSieveRepositoryTest implements SieveRepositoryContract {
 
-    final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPASieveScript.class, JPASieveQuota.class);
+    final JpaTestCluster jpaTestCluster = JpaTestCluster.create(JPASieveScript.class, JPASieveQuota.class);
 
     SieveRepository sieveRepository;
 
     @BeforeEach
     void setUp() {
-        sieveRepository = new JPASieveRepository(JPA_TEST_CLUSTER.getEntityManagerFactory());
+        sieveRepository = new JPASieveRepository(jpaTestCluster.getEntityManagerFactory());
     }
 
     @AfterEach
     void tearDown() {
-        JPA_TEST_CLUSTER.clear("JAMES_SIEVE_SCRIPT", "JAMES_SIEVE_QUOTA");
+        jpaTestCluster.clear("JAMES_SIEVE_SCRIPT", "JAMES_SIEVE_QUOTA");
     }
 
     @Override

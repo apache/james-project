@@ -42,19 +42,20 @@ public class CassandraForwardSmtpTest implements ForwardSmtpTest {
     static void setUp() {
         Thread.currentThread().setContextClassLoader(CassandraForwardSmtpTest.class.getClassLoader());
     }
+
     @Order(1)
     @RegisterExtension
     static JamesServerExtension testExtension = TestingDistributedJamesServerBuilder.withSearchConfiguration(SearchConfiguration.openSearch())
-            .extension(new DockerOpenSearchExtension())
-            .extension(cassandraExtension)
-            .extension(new InMemoryDnsExtension())
-            .server(CassandraJamesServerMain::createServer)
-            .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
-                    .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())
-                            .username(DockerCassandra.CASSANDRA_TESTING_USER)
-                            .password(DockerCassandra.CASSANDRA_TESTING_PASSWORD)
-                            .build()))
-            .build();
+        .extension(new DockerOpenSearchExtension())
+        .extension(cassandraExtension)
+        .extension(new InMemoryDnsExtension())
+        .server(CassandraJamesServerMain::createServer)
+        .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
+            .toInstance(DockerCassandra.configurationBuilder(cassandraExtension.getCassandra().getHost())
+                .username(DockerCassandra.CASSANDRA_TESTING_USER)
+                .password(DockerCassandra.CASSANDRA_TESTING_PASSWORD)
+                .build()))
+        .build();
 
 
     @Order(2)

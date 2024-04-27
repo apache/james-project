@@ -21,7 +21,6 @@ package org.apache.james.mailets;
 
 import static org.apache.james.mailets.configuration.CommonProcessors.ERROR_REPOSITORY;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
@@ -30,22 +29,16 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import java.io.File;
 
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.modules.MailboxProbeImpl;
-import org.apache.james.modules.protocols.ImapGuiceProbe;
-import org.apache.james.modules.protocols.SieveProbeImpl;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.SPF;
 import org.apache.james.transport.mailets.ToRepository;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.transport.matchers.HasMailAttribute;
 import org.apache.james.transport.matchers.HasMailAttributeWithValue;
-import org.apache.james.transport.matchers.SizeGreaterThan;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;

@@ -20,8 +20,8 @@
 package org.apache.james.mailbox.cassandra.mail.eventsourcing.acl;
 
 import org.apache.james.JsonSerializationVerifier;
-import org.apache.james.event.acl.ACLUpdated;
 import org.apache.james.event.MailboxAggregateId;
+import org.apache.james.event.acl.ACLUpdated;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;

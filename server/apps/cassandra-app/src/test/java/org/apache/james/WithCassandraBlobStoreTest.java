@@ -28,7 +28,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import org.apache.james.backends.cassandra.StatementRecorder;
@@ -48,16 +47,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.Statement;
-import com.datastax.oss.protocol.internal.request.Batch;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 

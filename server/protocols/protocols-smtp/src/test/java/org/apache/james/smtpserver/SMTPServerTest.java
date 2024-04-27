@@ -67,7 +67,7 @@ public class SMTPServerTest {
     public static final String USER_LOCALHOST = "test_user_smtp@localhost";
     public static final String USER_LOCAL_DOMAIN = "test_user_smtp@example.local";
 
-    final static class AlterableDNSServer implements DNSService {
+    static final class AlterableDNSServer implements DNSService {
 
         private InetAddress localhostByName = null;
 

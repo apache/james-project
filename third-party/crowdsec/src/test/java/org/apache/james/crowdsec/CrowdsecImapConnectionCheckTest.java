@@ -19,13 +19,11 @@
 
 package org.apache.james.crowdsec;
 
-import static org.apache.james.crowdsec.CrowdsecExtension.CROWDSEC_PORT;
 import static org.apache.james.crowdsec.client.CrowdsecClientConfiguration.DEFAULT_API_KEY;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.URL;
 
 import org.apache.james.crowdsec.client.CrowdsecClientConfiguration;
 import org.junit.jupiter.api.Test;

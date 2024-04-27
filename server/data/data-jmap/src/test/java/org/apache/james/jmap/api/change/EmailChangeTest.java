@@ -31,8 +31,8 @@ import org.junit.jupiter.api.Test;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class EmailChangeTest {
-    AccountId ACCOUNT_ID = AccountId.fromUsername(BOB);
-    ZonedDateTime DATE = ZonedDateTime.now();
+    AccountId accountId = AccountId.fromUsername(BOB);
+    ZonedDateTime date = ZonedDateTime.now();
 
     @Test
     void shouldMatchBeanContract() {
@@ -46,7 +46,7 @@ class EmailChangeTest {
             EmailChange.builder()
                 .accountId(null)
                 .state(State.of(UUID.randomUUID()))
-                .date(DATE.minusHours(2))
+                .date(date.minusHours(2))
                 .isShared(false))
             .isInstanceOf(NullPointerException.class);
     }
@@ -55,9 +55,9 @@ class EmailChangeTest {
     void shouldThrowOnNullState() {
         assertThatThrownBy(() ->
             EmailChange.builder()
-                .accountId(ACCOUNT_ID)
+                .accountId(accountId)
                 .state(null)
-                .date(DATE.minusHours(2))
+                .date(date.minusHours(2))
                 .isShared(false))
             .isInstanceOf(NullPointerException.class);;
     }
@@ -66,7 +66,7 @@ class EmailChangeTest {
     void shouldThrowOnNullDate() {
         assertThatThrownBy(() ->
             EmailChange.builder()
-                .accountId(ACCOUNT_ID)
+                .accountId(accountId)
                 .state(State.of(UUID.randomUUID()))
                 .date(null)
                 .isShared(false))

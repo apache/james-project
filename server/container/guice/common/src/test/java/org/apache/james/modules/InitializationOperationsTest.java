@@ -27,7 +27,6 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitializationOperations;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -36,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 class InitializationOperationsTest {

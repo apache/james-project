@@ -21,11 +21,9 @@ package org.apache.james.jmap.api.filtering.impl;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
-import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStoreExtension;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FilteringManagementContract;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 public class InMemoryEventSourcingFilteringManagementTest implements FilteringManagementContract {
     private EventStore eventStore;

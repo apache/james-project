@@ -59,7 +59,7 @@ public class AbstractSelectionProcessorTest {
         testee.recomputeUidSet(asArray(knownSequences), asArray(knownUids), selectedMailbox, asArray(uidSet));
     }
 
-    public static <T> T[] asArray(T... items){
+    public static <T> T[] asArray(T... items) {
         return items;
     }
 
