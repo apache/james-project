@@ -31,7 +31,7 @@
     <name>Apache James :: Backends Common :: Cassandra</name>
 
     <properties>
-        <cassandra.driver.version>4.17.0</cassandra.driver.version>
+        <cassandra.driver.version>4.18.0</cassandra.driver.version>
     </properties>
 
     <dependencies>
@@ -60,16 +60,6 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>testing-base</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.oss</groupId>
-            <artifactId>java-driver-core</artifactId>
-            <version>${cassandra.driver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.datastax.oss</groupId>
-            <artifactId>java-driver-query-builder</artifactId>
-            <version>${cassandra.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -110,6 +100,16 @@
             <groupId>net.javacrumbs.json-unit</groupId>
             <artifactId>json-unit-assertj</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>java-driver-core</artifactId>
+            <version>${cassandra.driver.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cassandra</groupId>
+            <artifactId>java-driver-query-builder</artifactId>
+            <version>${cassandra.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
