@@ -120,10 +120,10 @@ public interface MessageStorer {
         }
 
         private Mono<List<MessageAttachmentMetadata>> storeAttachments(MessageId messageId, Content messageContent, Optional<Message> maybeMessage, MailboxSession session) {
-            return Mono.using(() -> extractAttachments(messageContent, maybeMessage),
+            return Mono.usingWhen(Mono.fromCallable(() -> extractAttachments(messageContent, maybeMessage)),
                 attachments -> attachmentMapperFactory.getAttachmentMapper(session)
                     .storeAttachmentsReactive(attachments.getAttachments(), messageId),
-                MessageParser.ParsingResult::dispose);
+                parsingResults -> Mono.fromRunnable(parsingResults::dispose).subscribeOn(Schedulers.boundedElastic()));
         }
 
         private MessageParser.ParsingResult extractAttachments(Content contentIn, Optional<Message> maybeMessage) {
