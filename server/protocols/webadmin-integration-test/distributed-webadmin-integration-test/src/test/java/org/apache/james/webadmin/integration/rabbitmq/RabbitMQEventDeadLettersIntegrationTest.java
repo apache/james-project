@@ -272,7 +272,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .untilAsserted(() ->
                 when()
                     .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
-                    .then()
+                .then()
                     .body(".", hasSize(1)));
 
         return (String) with()

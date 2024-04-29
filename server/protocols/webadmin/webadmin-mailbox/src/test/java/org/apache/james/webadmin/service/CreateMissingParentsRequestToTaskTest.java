@@ -196,7 +196,7 @@ class CreateMissingParentsRequestToTaskTest {
 
         given()
             .basePath(TasksRoutes.BASE)
-            .when()
+        .when()
             .get(taskId + "/await")
             .then()
             .body("status", is("completed"))
@@ -227,7 +227,7 @@ class CreateMissingParentsRequestToTaskTest {
 
         given()
             .basePath(TasksRoutes.BASE)
-            .when()
+        .when()
             .get(taskId + "/await")
             .then()
             .body("status", is("completed"))
@@ -261,7 +261,7 @@ class CreateMissingParentsRequestToTaskTest {
 
         given()
             .basePath(TasksRoutes.BASE)
-            .when()
+        .when()
             .get(taskId + "/await")
             .then()
             .body("status", is("failed"))

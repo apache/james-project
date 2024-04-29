@@ -130,7 +130,7 @@ class GuiceLifecycleHeathCheckTest {
 
                 when()
                     .get("/healthcheck")
-                    .then()
+                .then()
                     .statusCode(HttpStatus.SERVICE_UNAVAILABLE_503);
             } finally {
                 latch.countDown();

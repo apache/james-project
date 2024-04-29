@@ -59,7 +59,7 @@ class EmailChangeTest {
                 .state(null)
                 .date(date.minusHours(2))
                 .isShared(false))
-            .isInstanceOf(NullPointerException.class);;
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -70,6 +70,6 @@ class EmailChangeTest {
                 .state(State.of(UUID.randomUUID()))
                 .date(null)
                 .isShared(false))
-            .isInstanceOf(NullPointerException.class);;
+            .isInstanceOf(NullPointerException.class);
     }
 }

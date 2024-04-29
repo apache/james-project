@@ -257,9 +257,9 @@ class MessageRoutesExpireTest {
 
                 given()
                     .basePath(TasksRoutes.BASE)
-                    .when()
+                .when()
                     .get(taskId + "/await")
-                    .then()
+                .then()
                     .body("status", is("completed"))
                     .body("additionalInformation.messagesDeleted", is(1));
 
@@ -285,9 +285,9 @@ class MessageRoutesExpireTest {
 
                 given()
                     .basePath(TasksRoutes.BASE)
-                    .when()
+                .when()
                     .get(taskId + "/await")
-                    .then()
+                .then()
                     .body("status", is("completed"))
                     .body("additionalInformation.messagesDeleted", is(0));
 

@@ -68,7 +68,7 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
     }
 
     private Flux<MessageManager> searchMessageManagerByMailboxRole(Role aRole, Username username) {
-        MailboxSession session = mailboxManager.createSystemSession(username);;
+        MailboxSession session = mailboxManager.createSystemSession(username);
         MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
             .expression(new PrefixedWildcard(aRole.getDefaultMailbox()))
             .build();

@@ -44,7 +44,7 @@ class CassandraNotificationRegistryTest implements NotificationRegistryContract 
     @BeforeEach
     public void setUp(CassandraCluster cassandra) throws Exception {
         notificationRegistry = new CassandraNotificationRegistry(zonedDateTimeProvider, new CassandraNotificationRegistryDAO(cassandra.getConf()));
-        ;
+
         recipientId = RecipientId.fromMailAddress(new MailAddress("benwa@apache.org"));
     }
 
