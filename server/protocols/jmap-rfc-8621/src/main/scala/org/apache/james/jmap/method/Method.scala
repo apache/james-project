@@ -100,42 +100,60 @@ trait MethodRequiringAccountId[REQUEST <: WithAccountId] extends Method {
       translatedMailboxSession = sessionTranslator.delegateIfNeeded(mailboxSession, request.accountId)
     } yield {
       translatedMailboxSession.flatMapMany(translatedSession =>
-        SFlux(doProcess(capabilities, invocation, translatedSession, request))
+        SFlux(doProcess(capabilities, invocation, translatedSession, request)))
+    }
+
+    def logClientSideError(e: Exception): Unit =
+      MDCStructuredLogger.forLogger(Method.LOGGER)
+        .field("protocol", "JMAP")
+        .field("username", mailboxSession.getUser.asString())
+        .field("method", invocation.invocation.methodName.value.value)
+        .log(logger => logger.info("Client side error executing a JMAP method", e))
+
+    val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.error[InvocationWithContext](e), r => r))
+      .onErrorResume[InvocationWithContext] {
+        case e: AccountNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.AccountNotFound, invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: ForbiddenAccountManagementException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.Forbidden,
+            "Access to other accounts settings is forbidden",
+            invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: UnsupportedRequestParameterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
+            ErrorCode.InvalidArguments,
+            s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
+            invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: UnsupportedSortException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
+            ErrorCode.UnsupportedSort,
+            s"The sort ${e.unsupportedSort} is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise.",
+            invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: UnsupportedFilterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
+            ErrorCode.UnsupportedFilter,
+            s"The filter ${e.unsupportedFilter} is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search.",
+            invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: UnsupportedNestingException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
+            ErrorCode.UnsupportedFilter,
+            description = e.message,
+            invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: IllegalArgumentException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: MailboxNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: ChangeNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: RequestTooLargeException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.RequestTooLarge, e.description, invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: IdentityIdNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.description, invocation.invocation.methodCallId), invocation.processingContext))
+          .doOnNext(_ => logClientSideError(e))
+        case e: Throwable => SFlux.error[InvocationWithContext] (e)
           .doOnError(e => MDCStructuredLogger.forLogger(Method.LOGGER)
             .field("protocol", "JMAP")
             .field("username", mailboxSession.getUser.asString())
             .field("method", invocation.invocation.methodName.value.value)
-            .log(logger => logger.error("Failed executing a JMAP method", e))))
-    }
-
-    val result: SFlux[InvocationWithContext] = SFlux.fromPublisher(either.fold(e => SFlux.error[InvocationWithContext](e), r => r))
-      .onErrorResume[InvocationWithContext] {
-        case _: AccountNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.AccountNotFound, invocation.invocation.methodCallId), invocation.processingContext))
-        case _: ForbiddenAccountManagementException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.Forbidden,
-          "Access to other accounts settings is forbidden",
-          invocation.invocation.methodCallId), invocation.processingContext))
-        case e: UnsupportedRequestParameterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
-          ErrorCode.InvalidArguments,
-          s"The following parameter ${e.unsupportedParam} is syntactically valid, but is not supported by the server.",
-          invocation.invocation.methodCallId), invocation.processingContext))
-        case e: UnsupportedSortException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
-          ErrorCode.UnsupportedSort,
-          s"The sort ${e.unsupportedSort} is syntactically valid, but it includes a property the server does not support sorting on or a collation method it does not recognise.",
-          invocation.invocation.methodCallId), invocation.processingContext))
-        case e: UnsupportedFilterException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
-          ErrorCode.UnsupportedFilter,
-          s"The filter ${e.unsupportedFilter} is syntactically valid, but the server cannot process it. If the filter was the result of a user’s search input, the client SHOULD suggest that the user simplify their search.",
-          invocation.invocation.methodCallId), invocation.processingContext))
-        case e: UnsupportedNestingException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(
-          ErrorCode.UnsupportedFilter,
-          description = e.message,
-          invocation.invocation.methodCallId), invocation.processingContext))
-        case e: IllegalArgumentException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: MailboxNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: ChangeNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.CannotCalculateChanges, e.getMessage, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: RequestTooLargeException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.RequestTooLarge, e.description, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: IdentityIdNotFoundException => SFlux.just[InvocationWithContext] (InvocationWithContext(Invocation.error(ErrorCode.InvalidArguments, e.description, invocation.invocation.methodCallId), invocation.processingContext))
-        case e: Throwable => SFlux.error[InvocationWithContext] (e)
+            .log(logger => logger.error("Server side error executing a JMAP method", e)))
       }
 
     metricFactory.decoratePublisherWithTimerMetric(JMAP_RFC8621_PREFIX + methodName.value, result)
