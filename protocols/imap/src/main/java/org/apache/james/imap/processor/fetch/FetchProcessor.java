@@ -99,8 +99,8 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             AtomicBoolean mustRequestOne = new AtomicBoolean(true);
             responder.respond(fetchResponse);
             Runnable requestOne = () -> {
-                LOGGER.info("Resuming IMAP FETCH for user {}", imapSession.getUserName().asString());
                 if (mustRequestOne.getAndSet(false)) {
+                    LOGGER.info("Resuming IMAP FETCH for user {}", imapSession.getUserName().asString());
                     requestOne();
                 }
             };
