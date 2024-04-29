@@ -208,30 +208,33 @@ public class BasicChannelInboundHandler extends ChannelInboundHandlerAdapter imp
     }
 
     private void handleHAProxyMessage(ChannelHandlerContext ctx, HAProxyMessage haproxyMsg) throws Exception {
-        ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
-        if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
+        try {
+            ProtocolSession pSession = (ProtocolSession) ctx.channel().attr(SESSION_ATTRIBUTE_KEY).get();
+            if (haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP4) || haproxyMsg.proxiedProtocol().equals(HAProxyProxiedProtocol.TCP6)) {
 
-            ProxyInformation proxyInformation = new ProxyInformation(
-                new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()),
-                new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort()));
-            LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
+                ProxyInformation proxyInformation = new ProxyInformation(
+                    new InetSocketAddress(haproxyMsg.sourceAddress(), haproxyMsg.sourcePort()),
+                    new InetSocketAddress(haproxyMsg.destinationAddress(), haproxyMsg.destinationPort()));
+                LOGGER.info("Connection from {} runs through {} proxy", haproxyMsg.sourceAddress(), haproxyMsg.destinationAddress());
 
-            if (pSession != null) {
-                pSession.setProxyInformation(proxyInformation);
+                if (pSession != null) {
+                    pSession.setProxyInformation(proxyInformation);
 
-                // Refresh MDC info to account for proxying
-                MDCBuilder boundMDC = mdcContextFactory.onBound(protocol, ctx);
-                boundMDC.addToContext("proxy.source", proxyInformation.getSource().toString());
-                boundMDC.addToContext("proxy.destination", proxyInformation.getDestination().toString());
-                boundMDC.addToContext("proxy.ip", retrieveIp(ctx));
-                pSession.setAttachment(MDC_ATTRIBUTE_KEY, boundMDC, Connection);
+                    // Refresh MDC info to account for proxying
+                    MDCBuilder boundMDC = mdcContextFactory.onBound(protocol, ctx);
+                    boundMDC.addToContext("proxy.source", proxyInformation.getSource().toString());
+                    boundMDC.addToContext("proxy.destination", proxyInformation.getDestination().toString());
+                    boundMDC.addToContext("proxy.ip", retrieveIp(ctx));
+                    pSession.setAttachment(MDC_ATTRIBUTE_KEY, boundMDC, Connection);
+                }
+            } else {
+                throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
             }
-        } else {
-            throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
-        }
 
-        haproxyMsg.release();
-        super.channelReadComplete(ctx);
+            super.channelReadComplete(ctx);
+        } finally {
+            haproxyMsg.release();
+        }
     }
 
 
