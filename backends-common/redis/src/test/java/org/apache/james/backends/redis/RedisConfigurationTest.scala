@@ -21,6 +21,7 @@ package org.apache.james.backends.redis
 
 import io.lettuce.core.RedisURI
 import org.apache.commons.configuration2.PropertiesConfiguration
+import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -44,6 +45,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
 
   it should "parse multiple Redis URIs from config" in {
     val config = new PropertiesConfiguration()
+    config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
     config.addProperty("redisURL", "redis://localhost:6379,redis://localhost:6380")
     config.addProperty("cluster.enabled", true)
     config.addProperty("redis.ioThreads", 16)

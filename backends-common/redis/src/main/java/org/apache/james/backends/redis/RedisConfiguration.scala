@@ -26,20 +26,36 @@ import eu.timepit.refined.collection.NonEmpty
 import io.lettuce.core.RedisURI
 import org.apache.commons.configuration2.Configuration
 import org.apache.james.backends.redis.RedisUris.RedisUris
+import org.slf4j.{Logger, LoggerFactory}
 
 object RedisConfiguration {
   val CLUSTER_ENABLED_DEFAULT = false
 
-  def from(config: Configuration): RedisConfiguration =
-    from(config.getString("redisURL"),
+  val LOGGER: Logger = LoggerFactory.getLogger(classOf[RedisConfiguration])
+
+  def from(config: Configuration): RedisConfiguration = {
+    val configuration = from(config.getStringArray("redisURL"),
       config.getBoolean("cluster.enabled", CLUSTER_ENABLED_DEFAULT),
       Option(config.getInteger("redis.ioThreads", null)).map(Integer2int),
       Option(config.getInteger("redis.workerThreads", null)).map(Integer2int))
 
-  def from(redisUri: String, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int]): RedisConfiguration = {
-    Preconditions.checkArgument(redisUri != null && !redisUri.isBlank)
+    LOGGER.info("Redis was loaded with configuration: \n" +
+      "redisURL: {}\n" +
+      "isCluster: {}\n" +
+      "redis.ioThreads: {}\n" +
+      "redis.workerThreads: {}", configuration.redisURI.value.map(_.toString).mkString(";"),
+      configuration.isCluster, configuration.ioThreads, configuration.workerThreads)
+
+    configuration
+  }
+
+  def from(redisUri: String, isCluster: Boolean, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration =
+    from(Array(redisUri), isCluster, ioThreads, workerThreads)
+
+  def from(redisUris: Array[String], isCluster: Boolean, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration = {
+    Preconditions.checkArgument(redisUris != null && redisUris.length > 0)
     Preconditions.checkNotNull(isCluster)
-    RedisConfiguration(RedisUris.from(redisUri), isCluster, ioThreads, workerThreads)
+    RedisConfiguration(RedisUris.from(redisUris), isCluster, ioThreads, workerThreads)
   }
 
   def from(redisUri: String, isCluster: Boolean): RedisConfiguration = from(redisUri, isCluster, None, None)
@@ -62,6 +78,8 @@ object RedisUris {
     }
 
   def from(value: String): RedisUris = liftOrThrow(value.split(',').toList.map(RedisURI.create))
+
+  def from(value: Array[String]): RedisUris = liftOrThrow(value.toList.map(RedisURI.create))
 }
 
 case class RedisConfiguration(redisURI: RedisUris, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int])
