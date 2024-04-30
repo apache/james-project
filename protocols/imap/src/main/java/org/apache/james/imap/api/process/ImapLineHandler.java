@@ -19,7 +19,9 @@
 
 package org.apache.james.imap.api.process;
 
+import org.reactivestreams.Publisher;
+
 public interface ImapLineHandler {
 
-    void onLine(ImapSession session, byte[] data);
+    Publisher<Void> onLine(ImapSession session, byte[] data);
 }
