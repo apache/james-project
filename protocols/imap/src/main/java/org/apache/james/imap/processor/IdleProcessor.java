@@ -86,7 +86,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
         final AtomicBoolean idleActive = new AtomicBoolean(true);
 
-        session.pushLineHandler((session1, data) -> {
+        session.pushLineHandler((session1, data) -> Mono.fromRunnable(() -> {
             String line;
             if (data.length > 2) {
                 line = new String(data, 0, data.length - 2);
@@ -112,7 +112,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             }
             session1.popLineHandler();
             idleActive.set(false);
-        });
+        }));
 
         // Check if we should send heartbeats
         if (enableIdle) {

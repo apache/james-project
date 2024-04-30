@@ -25,6 +25,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import reactor.core.publisher.Mono;
 
 /**
  * {@link ChannelInboundHandlerAdapter} implementation which will delegate the
@@ -48,8 +49,9 @@ public class ImapLineHandlerAdapter extends ChannelInboundHandlerAdapter {
         ByteBuf buf = (ByteBuf) msg;
         byte[] data = new byte[buf.readableBytes()];
         buf.readBytes(data);
-        lineHandler.onLine(session, data);
-        ctx.channel().flush();
+        Mono.from(lineHandler.onLine(session, data))
+            .then(Mono.fromRunnable(() -> ctx.channel().flush()))
+            .subscribe();
     }
 
 }

@@ -46,6 +46,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.OIDCSASLParser;
 import org.apache.james.protocols.api.OidcSASLConfiguration;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,12 +96,12 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                     session.executeSafely(() -> {
                         responder.respond(new AuthenticateResponse());
                         responder.flush();
-                        session.pushLineHandler((requestSession, data) -> {
+                        session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> {
                             doPlainAuth(extractInitialClientResponse(data), requestSession, request, responder);
                             // remove the handler now
                             requestSession.popLineHandler();
                             responder.flush();
-                        });
+                        }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER).then());
                     });
                 }
             }
@@ -112,11 +113,11 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 session.executeSafely(() -> {
                     responder.respond(new AuthenticateResponse());
                     responder.flush();
-                    session.pushLineHandler((requestSession, data) -> {
+                    session.pushLineHandler((requestSession, data) -> Mono.fromRunnable(() -> {
                         doOAuth(extractInitialClientResponse(data), requestSession, request, responder);
                         requestSession.popLineHandler();
                         responder.flush();
-                    });
+                    }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER).then());
                 });
             }
         } else {
