@@ -42,7 +42,7 @@ public interface DropListContract {
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("provideParametersForGetEntryListTest")
-    default void shouldAddEntry(DropListEntry dropListEntry) throws AddressException {
+    default void shouldAddEntry(DropListEntry dropListEntry) {
         dropList().add(dropListEntry).block();
 
         assertThat(dropList().list(dropListEntry.getOwnerScope(), dropListEntry.getOwner()).collectList().block().size()).isEqualTo(1);
@@ -50,7 +50,7 @@ public interface DropListContract {
 
     @ParameterizedTest(name = "{index} {0}")
     @MethodSource("provideParametersForGetEntryListTest")
-    default void shouldRemoveEntry(DropListEntry dropListEntry) throws AddressException {
+    default void shouldRemoveEntry(DropListEntry dropListEntry) {
         dropList().add(dropListEntry).block();
         dropList().remove(dropListEntry).block();
 
@@ -110,22 +110,22 @@ public interface DropListContract {
     }
 
 
-    @ParameterizedTest(name = "{index} {0}, sender: {1}")
+    @ParameterizedTest(name = "{index} {0}, sender: {1}, recipient: {2}")
     @MethodSource("provideParametersForReturnAllowedTest")
-    default void shouldReturnAllowed(DropListEntry dropListEntry, MailAddress senderMailAddress) {
+    default void shouldReturnAllowed(DropListEntry dropListEntry, MailAddress senderMailAddress, String recipient) {
         dropList().add(dropListEntry).block();
 
-        Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), dropListEntry.getOwner(), senderMailAddress);
+        Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), recipient, senderMailAddress);
 
         assertThat(result.block()).isEqualTo(DropList.Status.ALLOWED);
     }
 
-    @ParameterizedTest(name = "{index} {0}, sender: {1}")
+    @ParameterizedTest(name = "{index} {0}, sender: {1}, recipient: {2}")
     @MethodSource("provideParametersForReturnBlockedTest")
-    default void shouldReturnBlocked(DropListEntry dropListEntry, MailAddress senderMailAddress) {
+    default void shouldReturnBlocked(DropListEntry dropListEntry, MailAddress senderMailAddress, String recipient) {
         dropList().add(dropListEntry).block();
 
-        Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), dropListEntry.getOwner(), senderMailAddress);
+        Mono<DropList.Status> result = dropList().query(dropListEntry.getOwnerScope(), recipient, senderMailAddress);
 
         assertThat(result.block()).isEqualTo(DropList.Status.BLOCKED);
     }
@@ -163,17 +163,26 @@ public interface DropListContract {
     }
 
     static Stream<Arguments> provideParametersForReturnAllowedTest() throws AddressException {
+        MailAddress recipientAddress = new MailAddress("owner@example.com");
         MailAddress allowedSenderAddress = new MailAddress("allowed@allowed.com");
-        return getDropListTestEntries().map(dropListEntry -> Arguments.of(dropListEntry, allowedSenderAddress));
+        return getDropListTestEntries().map(dropListEntry -> Arguments.of(dropListEntry, allowedSenderAddress, recipientAddress.asString()));
     }
 
     static Stream<Arguments> provideParametersForReturnBlockedTest() throws AddressException {
-
+        MailAddress recipientAddress = new MailAddress("owner@example.com");
         MailAddress deniedSenderAddress = new MailAddress("denied@denied.com");
         MailAddress deniedSenderDomain = new MailAddress("allowed@denied.com");
-        return getDropListTestEntries().map(dropListEntry ->
-            dropListEntry.getDeniedEntityType().equals(DeniedEntityType.DOMAIN) ?
-                Arguments.of(dropListEntry, deniedSenderDomain) :
-                Arguments.of(dropListEntry, deniedSenderAddress));
+        return getDropListTestEntries().map(dropListEntry -> {
+
+            if (dropListEntry.getOwnerScope().equals(OwnerScope.DOMAIN)) {
+                return dropListEntry.getDeniedEntityType().equals(DeniedEntityType.DOMAIN) ?
+                    Arguments.of(dropListEntry, deniedSenderDomain, recipientAddress.getDomain().asString()) :
+                    Arguments.of(dropListEntry, deniedSenderAddress, recipientAddress.getDomain().asString());
+            } else {
+                return dropListEntry.getDeniedEntityType().equals(DeniedEntityType.DOMAIN) ?
+                    Arguments.of(dropListEntry, deniedSenderDomain, recipientAddress.asString()) :
+                    Arguments.of(dropListEntry, deniedSenderAddress, recipientAddress.asString());
+            }
+        });
     }
 }
