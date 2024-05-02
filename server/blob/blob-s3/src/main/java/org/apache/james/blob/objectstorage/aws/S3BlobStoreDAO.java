@@ -40,6 +40,7 @@ import javax.net.ssl.X509TrustManager;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -143,6 +144,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
     private final S3BlobStoreConfiguration configuration;
 
     @Inject
+    @Singleton
     S3BlobStoreDAO(S3BlobStoreConfiguration configuration, BlobId.Factory blobIdFactory) {
         this.blobIdFactory = blobIdFactory;
         this.configuration = configuration;
