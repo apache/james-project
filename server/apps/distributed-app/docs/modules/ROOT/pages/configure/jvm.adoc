@@ -78,3 +78,18 @@ james.jmap.quota.draft.compatibility=true
 ----
 To enable the compatibility.
 
+== Enable S3 metrics
+
+James supports extracting some S3 client-level metrics e.g. number of connections being used, time to acquire an S3 connection, total time to finish a S3 request...
+
+The property `james.s3.metrics.enabled` allows to enable S3 metrics collection. Please pay attention that enable this
+would impact a bit on S3 performance.
+
+Optional. Boolean. Default to true.
+
+Ex in `jvm.properties`
+----
+james.s3.metrics.enabled=false
+----
+To disable the S3 metrics.
+

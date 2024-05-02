@@ -32,6 +32,8 @@ import java.util.stream.IntStream;
 import org.apache.james.blob.api.BlobStoreDAO;
 import org.apache.james.blob.api.BlobStoreDAOContract;
 import org.apache.james.blob.api.TestBlobId;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -63,7 +65,7 @@ public class S3BlobStoreDAOTest implements BlobStoreDAOContract {
                 .filter(UPLOAD_RETRY_EXCEPTION_PREDICATE)))
             .build();
 
-        testee = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory());
+        testee = new S3BlobStoreDAO(s3Configuration, new TestBlobId.Factory(), new RecordingMetricFactory(), new NoopGaugeRegistry());
     }
 
     @AfterEach
