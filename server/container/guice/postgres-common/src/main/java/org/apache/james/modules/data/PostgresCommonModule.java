@@ -33,7 +33,6 @@ import org.apache.james.backends.postgres.utils.PoolBackedPostgresConnectionFact
 import org.apache.james.backends.postgres.utils.PostgresConnectionClosure;
 import org.apache.james.backends.postgres.utils.PostgresExecutor;
 import org.apache.james.backends.postgres.utils.PostgresHealthCheck;
-import org.apache.james.backends.postgres.utils.SinglePostgresConnectionFactory;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
@@ -53,10 +52,10 @@ import com.google.inject.name.Named;
 import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.ConnectionFactory;
-import reactor.core.publisher.Mono;
 
 public class PostgresCommonModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger("POSTGRES");
+    private static final boolean DISABLED_ROW_LEVEL_SECURITY = false;
 
     @Override
     public void configure() {
@@ -79,8 +78,6 @@ public class PostgresCommonModule extends AbstractModule {
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactory(PostgresConfiguration postgresConfiguration,
                                                                          ConnectionFactory connectionFactory) {
-        LOGGER.info("Is PostgreSQL row level security enabled? {}", postgresConfiguration.rowLevelSecurityEnabled());
-        LOGGER.info("Implementation for PostgreSQL connection factory: {}", PoolBackedPostgresConnectionFactory.class.getName());
         return new PoolBackedPostgresConnectionFactory(postgresConfiguration.rowLevelSecurityEnabled(),
             postgresConfiguration.poolInitialSize(),
             postgresConfiguration.poolMaxSize(),
@@ -91,9 +88,15 @@ public class PostgresCommonModule extends AbstractModule {
     @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT)
     @Singleton
     JamesPostgresConnectionFactory provideJamesPostgresConnectionFactoryWithRLSBypass(PostgresConfiguration postgresConfiguration,
+                                                                                      JamesPostgresConnectionFactory jamesPostgresConnectionFactory,
                                                                                       @Named(JamesPostgresConnectionFactory.NON_RLS_INJECT) ConnectionFactory connectionFactory) {
-        LOGGER.info("Implementation for PostgresSQL connection factory: {}", SinglePostgresConnectionFactory.class.getName());
-        return new SinglePostgresConnectionFactory(Mono.from(connectionFactory.create()).block());
+        if (!postgresConfiguration.rowLevelSecurityEnabled()) {
+            return jamesPostgresConnectionFactory;
+        }
+        return new PoolBackedPostgresConnectionFactory(DISABLED_ROW_LEVEL_SECURITY,
+            postgresConfiguration.nonRLSPoolInitialSize(),
+            postgresConfiguration.nonRLSPoolMaxSize(),
+            connectionFactory);
     }
 
     @Provides
