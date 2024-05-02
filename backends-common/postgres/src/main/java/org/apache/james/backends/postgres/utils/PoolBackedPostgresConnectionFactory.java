@@ -41,10 +41,8 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     private final boolean rowLevelSecurityEnabled;
     private final ConnectionPool pool;
 
-    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, Optional<Integer> maybeInitialSize, Optional<Integer> maybeMaxSize, ConnectionFactory connectionFactory) {
+    public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, int initialSize, int maxSize, ConnectionFactory connectionFactory) {
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
-        int initialSize = maybeInitialSize.orElse(DEFAULT_INITIAL_SIZE);
-        int maxSize = maybeMaxSize.orElse(DEFAULT_MAX_SIZE);
         ConnectionPoolConfiguration configuration = ConnectionPoolConfiguration.builder(connectionFactory)
             .initialSize(initialSize)
             .maxSize(maxSize)
@@ -54,7 +52,7 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     }
 
     public PoolBackedPostgresConnectionFactory(boolean rowLevelSecurityEnabled, ConnectionFactory connectionFactory) {
-        this(rowLevelSecurityEnabled, Optional.empty(), Optional.empty(), connectionFactory);
+        this(rowLevelSecurityEnabled, DEFAULT_INITIAL_SIZE, DEFAULT_MAX_SIZE, connectionFactory);
     }
 
     @Override
