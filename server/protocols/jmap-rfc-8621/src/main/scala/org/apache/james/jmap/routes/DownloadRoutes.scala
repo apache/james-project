@@ -42,13 +42,14 @@ import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, MinimalEmailBodyPart}
+import org.apache.james.jmap.mail.{BlobId, MinimalEmailBodyPart}
 import org.apache.james.jmap.method.{AccountNotFoundException, ZoneIdProvider}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
 import org.apache.james.mailbox.model.ContentType.{MediaType, MimeType, SubType}
 import org.apache.james.mailbox.model._
 import org.apache.james.mailbox.{AttachmentIdFactory, AttachmentManager, MailboxSession, MessageIdManager}
+import org.apache.james.metrics.api.{Metric, MetricFactory}
 import org.apache.james.mime4j.codec.EncoderUtil
 import org.apache.james.mime4j.codec.EncoderUtil.Usage
 import org.apache.james.mime4j.dom.SingleBody
@@ -245,13 +246,15 @@ class BlobResolvers(blobResolvers: Set[BlobResolver]) {
 
 class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: Authenticator,
                                val blobResolvers: BlobResolvers,
-                               val sessionTranslator: SessionTranslator) extends JMAPRoutes {
+                               val sessionTranslator: SessionTranslator,
+                               val metricFactory: MetricFactory) extends JMAPRoutes {
 
   private val accountIdParam: String = "accountId"
   private val blobIdParam: String = "blobId"
   private val nameParam: String = "name"
   private val contentTypeParam: String = "type"
   private val downloadUri = s"/download/{$accountIdParam}/{$blobIdParam}"
+  private val pendingDownloadMetric: Metric = metricFactory.generate("jmap_pending_downloads")
 
   override def routes(): stream.Stream[JMAPRoute] = Stream.of(
     JMAPRoute.builder
@@ -293,7 +296,8 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
   private def get(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] =
     BlobId.of(request.param(blobIdParam))
       .fold(e => SMono.error(e),
-        blobResolvers.resolve(_, mailboxSession))
+        blobResolvers.resolve(_, mailboxSession)
+          .doOnSubscribe(_ => pendingDownloadMetric.increment()))
       .flatMap(blob => downloadBlob(
         optionalName = queryParam(request, nameParam),
         response = response,
@@ -302,6 +306,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
           .getOrElse(blob.contentType),
         blob = blob)
         .`then`())
+      .doOnSuccess(_ => pendingDownloadMetric.decrement())
 
   private def getIfOwner(request: HttpServerRequest, response: HttpServerResponse, mailboxSession: MailboxSession): SMono[Unit] =
     Id.validate(request.param(accountIdParam)) match {
