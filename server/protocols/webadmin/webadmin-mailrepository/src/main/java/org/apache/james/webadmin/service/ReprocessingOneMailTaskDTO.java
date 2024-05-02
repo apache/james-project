@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 import java.time.Clock;
 import java.util.Optional;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -30,6 +31,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.util.streams.Limit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fge.lambdas.Throwing;
 
 public class ReprocessingOneMailTaskDTO implements TaskDTO {
 
@@ -53,6 +55,7 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
                 domainObject.getConfiguration().getMailQueueName().asString(),
                 domainObject.getMailKey().asString(),
                 domainObject.getConfiguration().getTargetProcessor(),
+                domainObject.getConfiguration().getForRecipient().map(MailAddress::asString),
                 Optional.of(domainObject.getConfiguration().isConsume()));
         } catch (Exception e) {
             throw new ReprocessingOneMailTask.UrlEncodingFailureSerializationException(domainObject.getRepositoryPath());
@@ -64,6 +67,7 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
     private final String targetQueue;
     private final String mailKey;
     private final Optional<String> targetProcessor;
+    private final Optional<String> forRecipient;
     private final boolean consume;
 
     public ReprocessingOneMailTaskDTO(@JsonProperty("type") String type,
@@ -71,12 +75,14 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
                                       @JsonProperty("targetQueue") String targetQueue,
                                       @JsonProperty("mailKey") String mailKey,
                                       @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+                                      @JsonProperty("forRecipient") Optional<String> forRecipient,
                                       @JsonProperty("boolean") Optional<Boolean> consume) {
         this.type = type;
         this.repositoryPath = repositoryPath;
         this.mailKey = mailKey;
         this.targetQueue = targetQueue;
         this.targetProcessor = targetProcessor;
+        this.forRecipient = forRecipient;
         this.consume = consume.orElse(true);
     }
 
@@ -88,6 +94,7 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
                 MailQueueName.of(targetQueue),
                 targetProcessor,
                 NO_MAX_RETRIES,
+                forRecipient.map(Throwing.function(MailAddress::new)),
                 consume,
                 Limit.unlimited()),
             new MailKey(mailKey),
@@ -121,6 +128,10 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
 
     public boolean isConsume() {
         return consume;
+    }
+
+    public Optional<String> getForRecipient() {
+        return forRecipient;
     }
 
     public Optional<String> getTargetProcessor() {

@@ -20,6 +20,7 @@ package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.queue.api.MailQueueName;
@@ -28,6 +29,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.util.streams.Limit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fge.lambdas.Throwing;
 
 public class ReprocessingAllMailsTaskDTO implements TaskDTO {
 
@@ -50,6 +52,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                 domainObject.getConfiguration().getMailQueueName().asString(),
                 Optional.of(domainObject.getConfiguration().isConsume()),
                 domainObject.getConfiguration().getTargetProcessor(),
+                domainObject.getConfiguration().getForRecipient().map(MailAddress::asString),
                 domainObject.getConfiguration().getLimit().getLimit(),
                 domainObject.getConfiguration().getMaxRetries());
         } catch (Exception e) {
@@ -63,6 +66,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
     private final String targetQueue;
     private final boolean consume;
     private final Optional<String> targetProcessor;
+    private final Optional<String> forRecipient;
     private final Optional<Integer> limit;
     private final Optional<Integer> maxRetries;
 
@@ -72,6 +76,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                                        @JsonProperty("targetQueue") String targetQueue,
                                        @JsonProperty("consume") Optional<Boolean> consume,
                                        @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+                                       @JsonProperty("forRecipient") Optional<String> forRecipient,
                                        @JsonProperty("limit") Optional<Integer> limit,
                                        @JsonProperty("maxRetries") Optional<Integer> maxRetries) {
         this.type = type;
@@ -80,6 +85,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
         this.targetQueue = targetQueue;
         this.consume = consume.orElse(true);
         this.targetProcessor = targetProcessor;
+        this.forRecipient = forRecipient;
         this.limit = limit;
         this.maxRetries = maxRetries;
     }
@@ -94,6 +100,7 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
                     MailQueueName.of(targetQueue),
                     targetProcessor,
                     maxRetries,
+                    forRecipient.map(Throwing.function(MailAddress::new)),
                     consume,
                     Limit.from(limit)));
         } catch (Exception e) {
@@ -124,6 +131,10 @@ public class ReprocessingAllMailsTaskDTO implements TaskDTO {
 
     public boolean isConsume() {
         return consume;
+    }
+
+    public Optional<String> getForRecipient() {
+        return forRecipient;
     }
 
     public Optional<String> getTargetProcessor() {

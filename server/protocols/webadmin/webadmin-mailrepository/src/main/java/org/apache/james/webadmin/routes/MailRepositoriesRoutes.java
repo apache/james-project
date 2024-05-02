@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import com.github.fge.lambdas.Throwing;
 import javax.servlet.http.HttpServletResponse;
 
 import jakarta.inject.Inject;
@@ -33,6 +34,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.io.output.CountingOutputStream;
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -331,6 +333,7 @@ public class MailRepositoriesRoutes implements Routes {
         return new ReprocessingService.Configuration(parseTargetQueue(request),
             parseTargetProcessor(request),
             parseMaxRetries(request),
+            parseForRecipient(request),
             parseConsume(request).orElse(true),
             parseLimit(request));
     }
@@ -361,6 +364,11 @@ public class MailRepositoriesRoutes implements Routes {
 
     private Optional<String> parseTargetProcessor(Request request) {
         return Optional.ofNullable(request.queryParams("processor"));
+    }
+
+    private Optional<MailAddress> parseForRecipient(Request request) {
+        return Optional.ofNullable(request.queryParams("forRecipient"))
+            .map(Throwing.function(MailAddress::new));
     }
 
     private Optional<Boolean> parseConsume(Request request) {
