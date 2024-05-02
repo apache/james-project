@@ -54,7 +54,14 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HAProxyMessage) {
-            HAProxyMessage haproxyMsg = (HAProxyMessage) msg;
+            handleHAProxyMessage(ctx, (HAProxyMessage) msg);
+        } else {
+            super.channelRead(ctx, msg);
+        }
+    }
+
+    private void handleHAProxyMessage(ChannelHandlerContext ctx, HAProxyMessage haproxyMsg) throws Exception {
+        try {
 
             ChannelPipeline pipeline = ctx.pipeline();
             ImapSession imapSession = (ImapSession) pipeline.channel().attr(SESSION_ATTRIBUTE_KEY).get();
@@ -79,10 +86,9 @@ public class HAProxyMessageHandler extends ChannelInboundHandlerAdapter {
                 throw new IllegalArgumentException("Only TCP4/TCP6 are supported when using PROXY protocol.");
             }
 
-            haproxyMsg.release();
             super.channelReadComplete(ctx);
-        } else {
-            super.channelRead(ctx, msg);
+        } finally {
+            haproxyMsg.release();
         }
     }
 

@@ -35,7 +35,6 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  */
 @ChannelHandler.Sharable
 public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends ChannelInboundHandlerAdapter {
-
     private final LineHandler<S> handler;
     private final S session;
     
@@ -47,14 +46,17 @@ public class LineHandlerUpstreamHandler<S extends ProtocolSession> extends Chann
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf buf = (ByteBuf) msg;
-        byte[] bytes = new byte[buf.readableBytes()];
-        buf.getBytes(0, bytes);
-        Response response = handler.onLine(session, bytes);
-        if (response != null) {
-            // TODO: This kind of sucks but I was not able to come up with something more elegant here
-            ((ProtocolSessionImpl)session).getProtocolTransport().writeResponse(response, session);
+        try {
+            byte[] bytes = new byte[buf.readableBytes()];
+            buf.getBytes(0, bytes);
+            Response response = handler.onLine(session, bytes);
+            if (response != null) {
+                // TODO: This kind of sucks but I was not able to come up with something more elegant here
+                ((ProtocolSessionImpl) session).getProtocolTransport().writeResponse(response, session);
+            }
+        } finally {
+            buf.release();
         }
-        buf.release();
     }
 
 }
