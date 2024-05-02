@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import com.github.fge.lambdas.Throwing;
 import javax.servlet.http.HttpServletResponse;
 
 import jakarta.inject.Inject;
@@ -64,6 +63,7 @@ import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
