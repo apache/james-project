@@ -71,7 +71,8 @@ public class Main implements JamesServerMain {
         new S3BlobStoreModule(),
         new S3BucketModule(),
         binder -> {
-            binder.bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class);
+            binder.bind(BlobStoreDAO.class).to(S3BlobStoreDAO.class)
+                .in(Scopes.SINGLETON);
             binder.bind(BlobStore.class)
                 .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
                 .to(PassThroughBlobStore.class);
