@@ -21,34 +21,26 @@ package org.apache.james.smtpserver;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.james.smtpserver.SMTPServerTestSystem.BOB;
 import static org.apache.james.smtpserver.SMTPServerTestSystem.PASSWORD;
-import static org.apache.mailet.DsnParameters.Notify.DELAY;
-import static org.apache.mailet.DsnParameters.Notify.FAILURE;
-import static org.apache.mailet.DsnParameters.Notify.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
-import java.util.EnumSet;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPSClient;
-import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
-import org.apache.mailet.DsnParameters;
 import org.apache.mailet.Mail;
-import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 class SMTPSTest {
     private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {

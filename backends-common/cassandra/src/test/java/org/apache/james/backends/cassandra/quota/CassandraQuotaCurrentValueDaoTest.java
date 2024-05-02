@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraMutualizedQuotaModule;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao;
 import org.apache.james.backends.cassandra.components.CassandraQuotaCurrentValueDao.QuotaKey;
@@ -129,12 +128,12 @@ public class CassandraQuotaCurrentValueDaoTest {
         QuotaKey countQuotaKey = QuotaKey.of(QuotaComponent.MAILBOX, "james@abc.com", QuotaType.COUNT);
 
         QuotaCurrentValue expectedQuotaSize = QuotaCurrentValue.builder().quotaComponent(QUOTA_KEY.getQuotaComponent())
-            .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(100l).build();
+            .identifier(QUOTA_KEY.getIdentifier()).quotaType(QUOTA_KEY.getQuotaType()).currentValue(100L).build();
         QuotaCurrentValue expectedQuotaCount = QuotaCurrentValue.builder().quotaComponent(countQuotaKey.getQuotaComponent())
-            .identifier(countQuotaKey.getIdentifier()).quotaType(countQuotaKey.getQuotaType()).currentValue(56l).build();
+            .identifier(countQuotaKey.getIdentifier()).quotaType(countQuotaKey.getQuotaType()).currentValue(56L).build();
 
-        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100l).block();
-        cassandraQuotaCurrentValueDao.increase(countQuotaKey, 56l).block();
+        cassandraQuotaCurrentValueDao.increase(QUOTA_KEY, 100L).block();
+        cassandraQuotaCurrentValueDao.increase(countQuotaKey, 56L).block();
 
         List<QuotaCurrentValue> actual = cassandraQuotaCurrentValueDao.getQuotasByComponent(QUOTA_KEY.getQuotaComponent(), QUOTA_KEY.getIdentifier())
             .collectList()

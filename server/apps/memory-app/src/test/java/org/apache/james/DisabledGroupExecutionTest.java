@@ -30,8 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.events.Event;
-import org.apache.james.events.Group;
 import org.apache.james.events.EventListener;
+import org.apache.james.events.Group;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.TestJMAPServerModule;

@@ -74,8 +74,8 @@ class RabbitMQDisabledTasksTest {
 
         webAdminApi.basePath(TasksRoutes.BASE)
             .when()
-            .get(taskId)
-        .then()
-            .body("status", is("waiting"));
+                .get(taskId)
+            .then()
+                .body("status", is("waiting"));
     }
 }

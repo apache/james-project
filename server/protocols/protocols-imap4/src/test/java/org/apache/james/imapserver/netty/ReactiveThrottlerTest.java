@@ -31,11 +31,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.org.awaitility.Awaitility;
 
 import com.github.fge.lambdas.Throwing;
+
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -185,6 +186,7 @@ class ReactiveThrottlerTest {
         // And the task is not executed
         assertThat(executed.get()).isFalse();
     }
+
     @Test
     void throttleShouldRecoverFromABurst() throws Exception {
         // Given a throttler
@@ -292,9 +294,9 @@ class ReactiveThrottlerTest {
         ConcurrentLinkedDeque<Integer> concurrentTasksCountSnapshots = new ConcurrentLinkedDeque<>();
 
         Mono<Void> operation = Mono.fromRunnable(() -> {
-            int i = concurrentTasks.incrementAndGet();
-            concurrentTasksCountSnapshots.add(i);
-        }).then(Mono.delay(Duration.ofMillis(50)))
+                int i = concurrentTasks.incrementAndGet();
+                concurrentTasksCountSnapshots.add(i);
+            }).then(Mono.delay(Duration.ofMillis(50)))
             .then(Mono.fromRunnable(() -> {
                 int i = concurrentTasks.getAndDecrement();
                 concurrentTasksCountSnapshots.add(i);

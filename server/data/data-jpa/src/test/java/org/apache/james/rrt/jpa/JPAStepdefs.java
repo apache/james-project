@@ -26,6 +26,7 @@ import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.apache.james.user.jpa.JPAUsersRepository;
 
 import com.github.fge.lambdas.Throwing;
+
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 

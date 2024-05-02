@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Disabled;
 
 public class JPAMailRepositoryTest implements MailRepositoryContract {
 
-    final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMail.class);
+    final JpaTestCluster jpaTestCluster = JpaTestCluster.create(JPAMail.class);
 
     private JPAMailRepository mailRepository;
 
@@ -44,7 +44,7 @@ public class JPAMailRepositoryTest implements MailRepositoryContract {
 
     @AfterEach
     void tearDown() {
-        JPA_TEST_CLUSTER.clear("JAMES_MAIL_STORE");
+        jpaTestCluster.clear("JAMES_MAIL_STORE");
     }
 
     @Override
@@ -56,7 +56,7 @@ public class JPAMailRepositoryTest implements MailRepositoryContract {
     public JPAMailRepository retrieveRepository(MailRepositoryPath url) throws Exception {
         BaseHierarchicalConfiguration conf = new BaseHierarchicalConfiguration();
         conf.addProperty("[@destinationURL]", MailRepositoryUrl.fromPathAndProtocol(new Protocol("jpa"), url).asString());
-        JPAMailRepository mailRepository = new JPAMailRepository(JPA_TEST_CLUSTER.getEntityManagerFactory());
+        JPAMailRepository mailRepository = new JPAMailRepository(jpaTestCluster.getEntityManagerFactory());
         mailRepository.configure(conf);
         mailRepository.init();
         return mailRepository;

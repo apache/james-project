@@ -75,6 +75,7 @@ class OIDCSASLParserTest {
             "auth=" + BEARER_TOKEN, "", ""));
         assertThat(OIDCSASLParser.parse(input)).isPresent();
     }
+
     @Test
     void parseShouldReturnResponseWhenInputHasDanglingPart() {
         String input = buildOAuthBearerPlain(ImmutableList.of("n,user=" + USER,
@@ -116,6 +117,7 @@ class OIDCSASLParserTest {
             "auth=token2"));
         assertThat(OIDCSASLParser.parse(input)).isEmpty();
     }
+
     @ParameterizedTest
     @ValueSource(strings = {"namespace",
         "@#$$@%#$",

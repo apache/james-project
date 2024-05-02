@@ -40,8 +40,8 @@ import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.name.Names;
 
 public class JwtOptionTest {

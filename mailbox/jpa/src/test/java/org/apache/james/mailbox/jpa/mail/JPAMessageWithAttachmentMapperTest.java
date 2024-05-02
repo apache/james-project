@@ -19,6 +19,9 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -34,12 +37,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageAssert;
 import org.apache.james.mailbox.store.mail.model.MessageWithAttachmentMapperTest;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 class JPAMessageWithAttachmentMapperTest extends MessageWithAttachmentMapperTest {
 

@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.search;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -32,7 +31,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 
 public class PDFTextExtractor implements TextExtractor {
 

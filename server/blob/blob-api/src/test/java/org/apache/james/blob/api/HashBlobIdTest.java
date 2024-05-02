@@ -28,18 +28,18 @@ import java.util.stream.Stream;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 class HashBlobIdTest {
 
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @BeforeEach
-    void beforeEach(){
+    void beforeEach() {
         System.clearProperty("james.blob.id.hash.encoding");
     }
 
@@ -98,21 +98,21 @@ class HashBlobIdTest {
 
     static Stream<Arguments> encodingTypeAndExpectedHash() {
         return Stream.of(
-                Arguments.of("base16", "ED7002B439E9AC845F22357D822BAC1444730FBDB6016D3EC9432297B9EC9F73"),
-                Arguments.of("hex", "ED7002B439E9AC845F22357D822BAC1444730FBDB6016D3EC9432297B9EC9F73"),
-                Arguments.of("base32", "5VYAFNBZ5GWIIXZCGV6YEK5MCRCHGD55WYAW2PWJIMRJPOPMT5ZQ===="),
-                Arguments.of("base64", "7XACtDnprIRfIjV9giusFERzD722AW0+yUMil7nsn3M="),
-                Arguments.of("base64Url", "7XACtDnprIRfIjV9giusFERzD722AW0-yUMil7nsn3M="),
-                Arguments.of("base32", "5VYAFNBZ5GWIIXZCGV6YEK5MCRCHGD55WYAW2PWJIMRJPOPMT5ZQ===="),
-                Arguments.of("base32Hex", "TLO05D1PT6M88NP26LUO4ATC2H2763TTMO0MQFM98CH9FEFCJTPG===="));
+            Arguments.of("base16", "ED7002B439E9AC845F22357D822BAC1444730FBDB6016D3EC9432297B9EC9F73"),
+            Arguments.of("hex", "ED7002B439E9AC845F22357D822BAC1444730FBDB6016D3EC9432297B9EC9F73"),
+            Arguments.of("base32", "5VYAFNBZ5GWIIXZCGV6YEK5MCRCHGD55WYAW2PWJIMRJPOPMT5ZQ===="),
+            Arguments.of("base64", "7XACtDnprIRfIjV9giusFERzD722AW0+yUMil7nsn3M="),
+            Arguments.of("base64Url", "7XACtDnprIRfIjV9giusFERzD722AW0-yUMil7nsn3M="),
+            Arguments.of("base32", "5VYAFNBZ5GWIIXZCGV6YEK5MCRCHGD55WYAW2PWJIMRJPOPMT5ZQ===="),
+            Arguments.of("base32Hex", "TLO05D1PT6M88NP26LUO4ATC2H2763TTMO0MQFM98CH9FEFCJTPG===="));
     }
 
     @Test
     void newFactoryShouldFailWhenInvalidEncoding() {
         System.setProperty("james.blob.id.hash.encoding", "invalid");
         assertThatThrownBy(HashBlobId.Factory::new)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Unknown encoding type: invalid");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Unknown encoding type: invalid");
     }
 
     @Test

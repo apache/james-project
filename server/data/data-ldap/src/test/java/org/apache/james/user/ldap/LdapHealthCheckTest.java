@@ -31,6 +31,7 @@ class LdapHealthCheckTest {
 
     static LdapGenericContainer ldapContainer = DockerLdapSingleton.ldapContainer;
     private LdapHealthCheck ldapHealthCheck;
+
     @BeforeAll
     static void setUpAll() {
         ldapContainer.start();

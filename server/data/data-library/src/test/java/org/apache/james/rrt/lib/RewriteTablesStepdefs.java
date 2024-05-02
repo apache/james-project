@@ -31,6 +31,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;

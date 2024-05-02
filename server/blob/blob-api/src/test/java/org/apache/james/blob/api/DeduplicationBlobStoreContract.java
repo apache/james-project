@@ -41,6 +41,7 @@ public interface DeduplicationBlobStoreContract {
             Arguments.arguments(SIZE_BASED),
             Arguments.arguments(HIGH_PERFORMANCE));
     }
+
     String SHORT_STRING = "toto";
 
     BlobStore testee();

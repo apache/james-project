@@ -45,8 +45,8 @@ import org.junit.jupiter.api.Test;
 import com.unboundid.ldap.sdk.LDAPException;
 
 class ReadOnlyUsersLDAPRepositoryWithLDAPFailoverTest {
-    private final static LdapGenericContainer masterLdap = DockerLdapSingleton.ldapContainer;
-    private final static LdapGenericContainer slaveLdap = LdapGenericContainer.builder()
+    private static final LdapGenericContainer masterLdap = DockerLdapSingleton.ldapContainer;
+    private static final LdapGenericContainer slaveLdap = LdapGenericContainer.builder()
         .domain(DOMAIN)
         .password(ADMIN_PASSWORD)
         .build();

@@ -67,7 +67,7 @@ import scala.jdk.javaapi.CollectionConverters;
 
 public class TasksCleanupRoutesTest {
 
-    private final static TaskExecutionDetails TASK_EXECUTION_DETAILS = new TaskExecutionDetails(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"),
+    private static final TaskExecutionDetails TASK_EXECUTION_DETAILS = new TaskExecutionDetails(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"),
         TaskType.of("type"),
         TaskManager.Status.COMPLETED,
         ZonedDateTime.now().minus(20, ChronoUnit.DAYS),

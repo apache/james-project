@@ -56,6 +56,7 @@ class ReprocessingOneMailTaskTest {
     public static final boolean CONSUME = true;
     private static final Optional<Integer> NO_MAX_RETRIES = Optional.empty();
     private static final Optional<String> NO_PROCESSOR = Optional.empty();
+
     @Test
     void taskShouldBeSerializable() throws Exception {
         ReprocessingOneMailTask taskWithTargetProcessor = new ReprocessingOneMailTask(REPROCESSING_SERVICE, REPOSITORY_PATH, new ReprocessingService.Configuration(TARGET_QUEUE, TARGET_PROCESSOR, NO_MAX_RETRIES, CONSUME, Limit.unlimited()), MAIL_KEY, CLOCK);

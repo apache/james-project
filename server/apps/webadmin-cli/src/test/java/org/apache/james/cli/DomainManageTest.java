@@ -72,7 +72,7 @@ class DomainManageTest {
     void domainListCommandShouldWShowOnlyDefaultDomain() {
         int exitCode = executeFluent("domain", "list");
 
-        SoftAssertions.assertSoftly( softly -> {
+        SoftAssertions.assertSoftly(softly -> {
             assertThat(exitCode).isEqualTo(0);
             assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("localhost".toCharArray());
         });
@@ -84,7 +84,7 @@ class DomainManageTest {
 
         executeFluent("domain", "list");
 
-        SoftAssertions.assertSoftly( softly -> {
+        SoftAssertions.assertSoftly(softly -> {
             assertThat(exitCode).isEqualTo(0);
             assertThat(outputStreamCaptor.toString()).contains("linagora.com");
         });
@@ -101,7 +101,7 @@ class DomainManageTest {
         WebAdminCli.executeFluent(new PrintStream(outputStreamCaptor), new PrintStream(errorStreamCaptor),
             "--url", "http://127.0.0.1:" + port.getValue(), "domain", "list");
 
-        SoftAssertions.assertSoftly( softly -> {
+        SoftAssertions.assertSoftly(softly -> {
             assertThat(exitCode1).isEqualTo(1);
             assertThat(exitCode2).isEqualTo(1);
             assertThat(exitCode3).isEqualTo(1);
@@ -117,7 +117,7 @@ class DomainManageTest {
 
         executeFluent("domain", "list");
 
-        SoftAssertions.assertSoftly( softly -> {
+        SoftAssertions.assertSoftly(softly -> {
             assertThat(exitCode).isEqualTo(0);
             assertThat(outputStreamCaptor.toString().contains("linagora.com")).isFalse();
         });
@@ -134,7 +134,7 @@ class DomainManageTest {
     void domainExistCommandWithDefaultDomainShouldExist() {
         int exitCode = executeFluent("domain", "exist", "localhost");
 
-        SoftAssertions.assertSoftly( softly -> {
+        SoftAssertions.assertSoftly(softly -> {
             assertThat(exitCode).isEqualTo(0);
             assertThat(outputStreamCaptor.toString().trim()).isEqualTo("localhost exists");
         });
@@ -154,7 +154,7 @@ class DomainManageTest {
 
         int exitCode = executeFluent("domain", "exist", "linagora.com");
 
-        SoftAssertions.assertSoftly( softly -> {
+        SoftAssertions.assertSoftly(softly -> {
             assertThat(exitCode).isEqualTo(0);
             assertThat(outputStreamCaptor.toString().trim()).isEqualTo("linagora.com exists");
         });
@@ -172,7 +172,7 @@ class DomainManageTest {
         void listDomainAliasShouldReturnEmptyByDefault() {
             int exitCode = executeFluent("domain", "listAliases", "linagora.com");
 
-            SoftAssertions.assertSoftly( softly -> {
+            SoftAssertions.assertSoftly(softly -> {
                 assertThat(exitCode).isEqualTo(0);
                 assertThat(outputStreamCaptor.toString().trim()).hasSize(0);
             });
@@ -200,7 +200,7 @@ class DomainManageTest {
 
             int exitCode = executeFluent("domain", "listAliases", "linagora.com");
 
-            SoftAssertions.assertSoftly( softly -> {
+            SoftAssertions.assertSoftly(softly -> {
                 assertThat(exitCode).isEqualTo(0);
                 assertThat(outputStreamCaptor.toString().trim()).hasSize(0);
             });
@@ -212,7 +212,7 @@ class DomainManageTest {
 
             int exitCode = executeFluent("domain", "listAliases", "linagora.com");
 
-            SoftAssertions.assertSoftly( softly -> {
+            SoftAssertions.assertSoftly(softly -> {
                 assertThat(exitCode).isEqualTo(0);
                 assertThat(outputStreamCaptor.toString().trim()).contains("linagora-james.com");
             });
@@ -222,7 +222,7 @@ class DomainManageTest {
         void addAliasShouldRequireAManageDomain() {
             int exitCode = executeFluent("domain", "addAlias", "linagora.com", "unknown.com");
 
-            SoftAssertions.assertSoftly( softly -> {
+            SoftAssertions.assertSoftly(softly -> {
                 assertThat(exitCode).isEqualTo(1);
                 assertThat(errorStreamCaptor.toString().trim()).contains("{\"statusCode\":404,\"type\":\"InvalidArgument\",\"message\":\"The domain list does not contain: unknown.com\",\"details\":null}");
             });

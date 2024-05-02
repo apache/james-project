@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class FirstRecipientCountingExecutions extends GenericMatcher {
     private static final AtomicLong executionCount = new AtomicLong();

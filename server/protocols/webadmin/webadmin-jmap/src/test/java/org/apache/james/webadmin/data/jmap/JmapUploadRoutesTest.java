@@ -242,7 +242,7 @@ class JmapUploadRoutesTest {
 
         given()
             .basePath(TasksRoutes.BASE)
-            .when()
+        .when()
             .get(taskId + "/await");
 
         assertThat(cassandraUploadRepository.listUploads(USERNAME).collectList().block())

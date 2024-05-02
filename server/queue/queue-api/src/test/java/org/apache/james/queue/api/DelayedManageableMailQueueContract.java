@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(ExecutorExtension.class)
 public interface DelayedManageableMailQueueContract extends DelayedMailQueueContract, ManageableMailQueueContract {

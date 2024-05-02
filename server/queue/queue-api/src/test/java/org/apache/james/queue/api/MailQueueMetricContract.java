@@ -46,7 +46,6 @@ import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(MailQueueMetricExtension.class)
 public interface MailQueueMetricContract extends MailQueueContract {

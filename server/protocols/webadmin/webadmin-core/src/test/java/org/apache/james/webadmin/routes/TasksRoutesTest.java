@@ -417,7 +417,7 @@ class TasksRoutesTest {
         inProgressLatch.countDown();
         when()
             .get("/" + taskId.getValue() + "/await")
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body("status", is("canceled"))
             .body("cancelledFrom", is(HOSTNAME));

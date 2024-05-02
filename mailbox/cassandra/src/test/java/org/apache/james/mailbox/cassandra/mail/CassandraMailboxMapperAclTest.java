@@ -51,6 +51,7 @@ class CassandraMailboxMapperAclTest extends MailboxMapperACLTest {
         return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
             .getInstance(CassandraMailboxMapper.class);
     }
+
     @Test
     @Override
     @Tag(Unstable.TAG)

@@ -38,8 +38,9 @@ public interface NotificationRegistryContract {
     AccountId ACCOUNT_ID = AccountId.fromString("id");
 
     ZonedDateTimeProvider zonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
-    
+
     NotificationRegistry notificationRegistry();
+
     RecipientId recipientId();
 
     @Test

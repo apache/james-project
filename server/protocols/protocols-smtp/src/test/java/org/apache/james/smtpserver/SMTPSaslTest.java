@@ -65,7 +65,6 @@ class SMTPSaslTest {
     public static final String INVALID_TOKEN = OIDCSASLHelper.generateOauthBearer(USER.asString(), OidcTokenFixture.INVALID_TOKEN);
 
 
-
     private final SMTPServerTestSystem testSystem = new SMTPServerTestSystem();
     private ClientAndServer authServer;
 
@@ -412,6 +411,7 @@ class SMTPSaslTest {
         client.sendCommand("AQ==");
         assertThat(client.getReplyString()).contains("535 Authentication Failed");
     }
+
     @Test
     void oauthShouldImpersonateSuccessWhenDelegated() throws Exception {
         SMTPSClient client = initSMTPSClient();

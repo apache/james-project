@@ -137,7 +137,7 @@ class RegexMappingRoutesTest {
     @Test
     void addRegexMappingShouldReturnBadRequestWhenRegexIsInvalid() {
         with()
-            .post("james@domain.tld/targets/"+ URLEncoder.encode("O.*[]"))
+            .post("james@domain.tld/targets/" + URLEncoder.encode("O.*[]"))
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)

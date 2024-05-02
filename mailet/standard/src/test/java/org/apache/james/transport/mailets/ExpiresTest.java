@@ -19,6 +19,17 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.time.Clock;
+import java.time.ZonedDateTime;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.DateFormats;
@@ -27,25 +38,15 @@ import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import java.time.Clock;
-import java.time.ZonedDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class ExpiresTest {
 
-    private final ZonedDateTime NOW = ZonedDateTime.parse("2021-12-14T16:36:47Z");
+    private final ZonedDateTime now = ZonedDateTime.parse("2021-12-14T16:36:47Z");
     
     private Mailet mailet;
 
     @BeforeEach
     void setUp() {
-        Clock clock = Clock.fixed(NOW.toInstant(), NOW.getZone());
+        Clock clock = Clock.fixed(now.toInstant(), now.getZone());
         mailet = new Expires(clock);
     }
 
@@ -124,7 +125,7 @@ public class ExpiresTest {
         mailet.service(mail);
         
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(1)));
+            .containsExactly(asDateTime(now.plusHours(1)));
     }
 
     @Test
@@ -136,13 +137,13 @@ public class ExpiresTest {
         mailet.init(mailetConfig);
 
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader("Expires", asDateTime(NOW.plusHours(2)));
+        mimeMessage.addHeader("Expires", asDateTime(now.plusHours(2)));
         Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(2)));
+            .containsExactly(asDateTime(now.plusHours(2)));
     }
 
     @Test
@@ -154,13 +155,13 @@ public class ExpiresTest {
         mailet.init(mailetConfig);
 
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader("Expires", asDateTime(NOW.plusHours(1)));
+        mimeMessage.addHeader("Expires", asDateTime(now.plusHours(1)));
         Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(3)));
+            .containsExactly(asDateTime(now.plusHours(3)));
     }
 
     @Test
@@ -172,13 +173,13 @@ public class ExpiresTest {
         mailet.init(mailetConfig);
 
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader("Expires", asDateTime(NOW.plusHours(2)));
+        mimeMessage.addHeader("Expires", asDateTime(now.plusHours(2)));
         Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(2)));
+            .containsExactly(asDateTime(now.plusHours(2)));
     }
     
     @Test
@@ -190,13 +191,13 @@ public class ExpiresTest {
         mailet.init(mailetConfig);
 
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader("Expires", asDateTime(NOW.plusHours(5)));
+        mimeMessage.addHeader("Expires", asDateTime(now.plusHours(5)));
         Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(3)));
+            .containsExactly(asDateTime(now.plusHours(3)));
     }
 
     @Test
@@ -208,13 +209,13 @@ public class ExpiresTest {
         mailet.init(mailetConfig);
 
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader("Expires", asDateTime(NOW.plusHours(3)));
+        mimeMessage.addHeader("Expires", asDateTime(now.plusHours(3)));
         Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(3)));
+            .containsExactly(asDateTime(now.plusHours(3)));
     }
 
     @Test
@@ -227,13 +228,13 @@ public class ExpiresTest {
         mailet.init(mailetConfig);
 
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader("Expires", asDateTime(NOW.plusHours(3)));
+        mimeMessage.addHeader("Expires", asDateTime(now.plusHours(3)));
         Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(3)));
+            .containsExactly(asDateTime(now.plusHours(3)));
     }
 
     @Test
@@ -269,7 +270,7 @@ public class ExpiresTest {
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(3)));
+            .containsExactly(asDateTime(now.plusHours(3)));
     }
 
     @Test
@@ -283,13 +284,13 @@ public class ExpiresTest {
         mailet.init(mailetConfig);
 
         MimeMessage mimeMessage = MailUtil.createMimeMessage();
-        mimeMessage.addHeader("Expires", asDateTime(NOW.plusHours(5)));
+        mimeMessage.addHeader("Expires", asDateTime(now.plusHours(5)));
         Mail mail = MailUtil.createMockMail2Recipients(mimeMessage);
 
         mailet.service(mail);
 
         assertThat(mail.getMessage().getHeader("Expires"))
-            .containsExactly(asDateTime(NOW.plusHours(3)));
+            .containsExactly(asDateTime(now.plusHours(3)));
     }
 
     private static String asDateTime(ZonedDateTime when) {

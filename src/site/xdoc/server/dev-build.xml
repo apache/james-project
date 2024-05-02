@@ -144,9 +144,9 @@
                         blank line <br/>
                         import java.* <br/>
                         blank line <br/>
-                        import jakarta.* <br/>
-                        blank line <br/>
                         import javax.* <br/>
+                        blank line <br/>
+                        import jakarta.* <br/>
                         blank line <br/>
                         import org.* <br/>
                         blank line <br/>

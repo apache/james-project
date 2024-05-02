@@ -57,11 +57,12 @@ import com.google.common.collect.Iterators;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
 
-    default void awaitRemove() {}
+    default void awaitRemove() {
+
+    }
 
     ManageableMailQueue getManageableMailQueue();
 

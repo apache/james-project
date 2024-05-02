@@ -18,8 +18,10 @@
  **************************************************************/
 
 
-
 package org.apache.james.mailbox.jpa.mail;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 
 import java.nio.charset.StandardCharsets;
 
@@ -32,15 +34,11 @@ import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteSource;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.tuple;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteSource;
 
 class JPAAttachmentMapperTest extends AttachmentMapperTest {
 
@@ -66,9 +64,9 @@ class JPAAttachmentMapperTest extends AttachmentMapperTest {
     public void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
         //Given
         ContentType content1 = ContentType.of("content");
-        byte[] bytes1 = "payload" .getBytes(StandardCharsets.UTF_8);
+        byte[] bytes1 = "payload".getBytes(StandardCharsets.UTF_8);
         ContentType content2 = ContentType.of("content");
-        byte[] bytes2 = "payload" .getBytes(StandardCharsets.UTF_8);
+        byte[] bytes2 = "payload".getBytes(StandardCharsets.UTF_8);
 
         MessageId messageId1 = generateMessageId();
         AttachmentMetadata stored1 = attachmentMapper.storeAttachments(ImmutableList.of(ParsedAttachment.builder()

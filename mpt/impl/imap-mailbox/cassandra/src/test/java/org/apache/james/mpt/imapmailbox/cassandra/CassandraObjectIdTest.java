@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.cassandra;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemExtension;
 import org.apache.james.mpt.imapmailbox.suite.ObjectId;
-import org.apache.james.mpt.imapmailbox.suite.SelectedState;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraObjectIdTest extends ObjectId {

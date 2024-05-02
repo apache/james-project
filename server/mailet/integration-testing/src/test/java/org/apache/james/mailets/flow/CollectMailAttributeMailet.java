@@ -25,7 +25,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class CollectMailAttributeMailet extends GenericMailet {
     public static final String MY_ATTRIBUTE = "myAttribute";

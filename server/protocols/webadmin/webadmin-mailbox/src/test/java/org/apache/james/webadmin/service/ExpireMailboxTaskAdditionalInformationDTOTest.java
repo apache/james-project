@@ -19,13 +19,13 @@
 
 package org.apache.james.webadmin.service;
 
+import java.time.Instant;
+import java.util.Optional;
+
 import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
-
-import java.time.Instant;
-import java.util.Optional;
 
 public class ExpireMailboxTaskAdditionalInformationDTOTest {
     private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");

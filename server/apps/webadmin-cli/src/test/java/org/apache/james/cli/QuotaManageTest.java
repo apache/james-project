@@ -76,7 +76,7 @@ class QuotaManageTest {
             void getShouldReturnNoneByDefault() {
                 int exitCode = executeFluent("quota", "global", "count", "get");
 
-                SoftAssertions.assertSoftly( softly -> {
+                SoftAssertions.assertSoftly(softly -> {
                     assertThat(exitCode).isEqualTo(0);
                     assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("No global quota defined".toCharArray());
                 });
@@ -88,7 +88,7 @@ class QuotaManageTest {
 
                 int exitCode = executeFluent("quota", "global", "count", "get");
 
-                SoftAssertions.assertSoftly( softly -> {
+                SoftAssertions.assertSoftly(softly -> {
                     assertThat(exitCode).isEqualTo(0);
                     assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("128".toCharArray());
                 });
@@ -136,7 +136,7 @@ class QuotaManageTest {
             void getShouldReturnNoneByDefault() {
                 int exitCode = executeFluent("quota", "global", "size", "get");
 
-                SoftAssertions.assertSoftly( softly -> {
+                SoftAssertions.assertSoftly(softly -> {
                     assertThat(exitCode).isEqualTo(0);
                     assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("No global quota defined".toCharArray());
                 });
@@ -148,7 +148,7 @@ class QuotaManageTest {
 
                 int exitCode = executeFluent("quota", "global", "size", "get");
 
-                SoftAssertions.assertSoftly( softly -> {
+                SoftAssertions.assertSoftly(softly -> {
                     assertThat(exitCode).isEqualTo(0);
                     assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("128 bytes".toCharArray());
                 });
@@ -160,7 +160,7 @@ class QuotaManageTest {
 
                 int exitCode = executeFluent("quota", "global", "size", "get");
 
-                SoftAssertions.assertSoftly( softly -> {
+                SoftAssertions.assertSoftly(softly -> {
                     assertThat(exitCode).isEqualTo(0);
                     assertThat(outputStreamCaptor.toString().trim().toCharArray()).containsOnly("128 MB".toCharArray());
                 });

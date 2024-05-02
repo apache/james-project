@@ -35,7 +35,9 @@ public interface SieveCurrentUploadUsageCalculatorContract {
     Username USER_1 = Username.of("user1");
 
     SieveCurrentUploadUsageCalculator sieveCurrentUploadUsageCalculator();
+
     SieveRepository sieveRepository();
+
     long getSpaceUsage(Username username);
 
     @Test

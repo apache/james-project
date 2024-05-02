@@ -86,9 +86,9 @@ public class POP3ServerTest {
     protected MockProtocolHandlerLoader protocolHandlerChain;
     protected StoreMailboxManager mailboxManager;
     private final byte[] content = ("Return-path: return@test.com\r\n"
-            + "Content-Transfer-Encoding: plain\r\n"
-            + "Subject: test\r\n\r\n"
-            + "Body Text POP3ServerTest.setupTestMails\r\n").getBytes();
+        + "Content-Transfer-Encoding: plain\r\n"
+        + "Subject: test\r\n\r\n"
+        + "Body Text POP3ServerTest.setupTestMails\r\n").getBytes();
     private POP3Server pop3Server;
 
     @BeforeEach
@@ -117,7 +117,7 @@ public class POP3ServerTest {
     @Nested
     class StartTlsSanitizing {
         @Test
-        void connectionAreClosedWhenSTLSFollowedByACommand() throws Exception{
+        void connectionAreClosedWhenSTLSFollowedByACommand() throws Exception {
             finishSetUp(pop3Configuration);
 
             pop3Client = new POP3SClient();
@@ -131,7 +131,7 @@ public class POP3ServerTest {
         }
 
         @Test
-        void startTLSShouldFailWhenAuthenticated() throws Exception{
+        void startTLSShouldFailWhenAuthenticated() throws Exception {
             // Avoids session fixation attacks as described in https://www.usenix.org/system/files/sec21-poddebniak.pdf
             // section 6.2
             finishSetUp(pop3Configuration);
@@ -147,7 +147,7 @@ public class POP3ServerTest {
         }
 
         @Test
-        void connectionAreClosedWhenSTLSFollowedByText() throws Exception{
+        void connectionAreClosedWhenSTLSFollowedByText() throws Exception {
             finishSetUp(pop3Configuration);
 
             pop3Client = new POP3SClient();
@@ -225,15 +225,15 @@ public class POP3ServerTest {
     /*
      * public void testNotAsciiCharsInPassword() throws Exception {
      * finishSetUp(m_testConfiguration);
-     * 
+     *
      * m_pop3Protocol = new POP3Client();
      * m_pop3Protocol.connect("127.0.0.1",m_pop3ListenerPort);
-     * 
+     *
      * String pass = "bar" + (new String(new char[] { 200, 210 })) + "foo";
      * m_usersRepository.addUser("foo", pass); InMemorySpoolRepository
      * mockMailRepository = new InMemorySpoolRepository();
      * m_mailServer.setUserInbox("foo", mockMailRepository);
-     * 
+     *
      * m_pop3Protocol.login("foo", pass); assertEquals(1,
      * m_pop3Protocol.getState()); ContainerUtil.dispose(mockMailRepository); }
      */
@@ -343,7 +343,7 @@ public class POP3ServerTest {
 
         pop3Client.sendCommand("rset");
         assertThat(pop3Client.getState()).isEqualTo(1);
-        
+
     }
 
     @Test
@@ -575,8 +575,8 @@ public class POP3ServerTest {
 
         mailboxManager.getMailbox(mailboxPath, session).delete(
             Flux.from(mailboxManager.getMailbox(mailboxPath, session).listMessagesMetadata(MessageRange.all(), session))
-            .map(i -> i.getComposedMessageId().getUid())
-            .collectList().block(),
+                .map(i -> i.getComposedMessageId().getUid())
+                .collectList().block(),
             session);
 
         Reader r = pop3Client.retrieveMessageTop(entries[0].number, 0);
@@ -611,9 +611,9 @@ public class POP3ServerTest {
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
             mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.from(
-                Message.Builder.of()
-                    .setSubject("test")
-                    .setBody(String.valueOf(i), StandardCharsets.UTF_8)),
+                    Message.Builder.of()
+                        .setSubject("test")
+                        .setBody(String.valueOf(i), StandardCharsets.UTF_8)),
                 session);
         }
 
@@ -725,45 +725,45 @@ public class POP3ServerTest {
         pop3Protocol2.disconnect();
 
         mailboxManager.deleteMailbox(mailboxPath, session);
-        
+
     }
 
     /*
      * public void testTwoSimultaneousMails() throws Exception {
      * finishSetUp(m_testConfiguration);
-     * 
+     *
      * // make two user/repositories, open both
      * m_usersRepository.addUser("foo1", "bar1"); InMemorySpoolRepository
      * mailRep1 = new InMemorySpoolRepository(); setupTestMails(mailRep1);
      * m_mailServer.setUserInbox("foo1", mailRep1);
-     * 
+     *
      * m_usersRepository.addUser("foo2", "bar2"); InMemorySpoolRepository
      * mailRep2 = new InMemorySpoolRepository(); //do not setupTestMails, this
      * is done later m_mailServer.setUserInbox("foo2", mailRep2);
-     * 
+     *
      * POP3Client pop3Protocol2 = null; try { // open two connections
      * m_pop3Protocol = new POP3Client(); m_pop3Protocol.connect("127.0.0.1",
      * m_pop3ListenerPort); pop3Protocol2 = new POP3Client();
      * pop3Protocol2.connect("127.0.0.1", m_pop3ListenerPort);
-     * 
+     *
      * assertEquals("first connection taken", 0, m_pop3Protocol.getState());
      * assertEquals("second connection taken", 0, pop3Protocol2.getState());
-     * 
+     *
      * // open two accounts m_pop3Protocol.login("foo1", "bar1");
-     * 
+     *
      * pop3Protocol2.login("foo2", "bar2");
-     * 
+     *
      * POP3MessageInfo[] entries = m_pop3Protocol.listMessages();
      * assertEquals("foo1 has mails", 2, entries.length);
-     * 
+     *
      * entries = pop3Protocol2.listMessages(); assertEquals("foo2 has no mails",
      * 0, entries.length);
-     * 
+     *
      * } finally { // put both to rest, field var is handled by tearDown() if
      * (pop3Protocol2 != null) { pop3Protocol2.sendCommand("quit");
      * pop3Protocol2.disconnect(); } } }
      */
-    
+
     @Test
     void testIpStored() throws Exception {
 
@@ -810,44 +810,44 @@ public class POP3ServerTest {
         assertThat(replies.contains("USER")).describedAs("contains USER").isTrue();
         assertThat(replies.contains("UIDL")).describedAs("contains UIDL").isTrue();
         assertThat(replies.contains("TOP")).describedAs("contains TOP").isTrue();
-        
+
     }
 
     /*
      * See JAMES-649 The same happens when using RETR
-     * 
+     *
      * Comment to not broke the builds!
-     * 
+     *
      * public void testOOMTop() throws Exception {
      * finishSetUp(m_testConfiguration);
-     * 
+     *
      * int messageCount = 30000; m_pop3Protocol = new POP3Client();
      * m_pop3Protocol.connect("127.0.0.1",m_pop3ListenerPort);
-     * 
+     *
      * m_usersRepository.addUser("foo", "bar"); InMemorySpoolRepository
      * mockMailRepository = new InMemorySpoolRepository();
-     * 
+     *
      * Mail m = new MailImpl(); m.setMessage(Util.createMimeMessage("X-TEST",
      * "test")); for (int i = 1; i < messageCount+1; i++ ) { m.setName("test" +
      * i); mockMailRepository.store(m); }
-     * 
+     *
      * m_mailServer.setUserInbox("foo", mockMailRepository);
-     * 
+     *
      * // not authenticated POP3MessageInfo[] entries =
      * m_pop3Protocol.listMessages(); assertNull(entries);
-     * 
+     *
      * m_pop3Protocol.login("foo", "bar");
      * System.err.println(m_pop3Protocol.getState()); assertEquals(1,
      * m_pop3Protocol.getState());
-     * 
+     *
      * entries = m_pop3Protocol.listMessages(); assertEquals(1,
      * m_pop3Protocol.getState());
-     * 
+     *
      * assertNotNull(entries); assertEquals(entries.length, messageCount);
-     * 
+     *
      * for (int i = 1; i < messageCount+1; i++ ) { Reader r =
      * m_pop3Protocol.retrieveMessageTop(i, 100); assertNotNull(r); r.close(); }
-     * 
+     *
      * ContainerUtil.dispose(mockMailRepository); }
      */
     // See JAMES-1136
@@ -889,7 +889,7 @@ public class POP3ServerTest {
         bigMail = null;
 
         mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.builder()
-                .build(out.toByteArray()), session);
+            .build(out.toByteArray()), session);
         mailboxManager.startProcessingRequest(session);
 
         pop3Client.login("foo6", "bar6");

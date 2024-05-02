@@ -21,7 +21,6 @@ package org.apache.james.mailet.constructor;
 
 import jakarta.mail.MessagingException;
 
-import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;

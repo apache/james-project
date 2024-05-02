@@ -96,8 +96,10 @@ public class FeedHamToRspamdTaskTest {
     public static final Instant NOW = ZonedDateTime.now().toInstant();
 
     static ClientAndServer mockServer = null;
+
     static class TestRspamdHttpClient extends RspamdHttpClient {
         private final AtomicInteger hitCounter;
+
         public TestRspamdHttpClient(RspamdClientConfiguration configuration) {
             super(configuration);
             this.hitCounter = new AtomicInteger(0);
@@ -307,7 +309,7 @@ public class FeedHamToRspamdTaskTest {
         task = new FeedHamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, configuration);
 
         IntStream.range(0, 10)
-                .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
+            .forEach(Throwing.intConsumer(any -> appendHamMessage(BOB_INBOX_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
 
         Task.Result result = task.run();
 

@@ -30,7 +30,8 @@ import org.apache.james.mock.smtp.server.model.SMTPExtensions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 class ConfigurationClientTest {
     private ConfigurationClient testee;

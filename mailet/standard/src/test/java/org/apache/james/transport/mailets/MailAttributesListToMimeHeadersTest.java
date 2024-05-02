@@ -22,8 +22,6 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.ArrayList;
-
 import jakarta.mail.MessagingException;
 
 import org.apache.james.core.builder.MimeMessageBuilder;

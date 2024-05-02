@@ -48,7 +48,6 @@ import org.apache.james.events.Event;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventListener;
 import org.apache.james.events.Registration;
-import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.processor.base.SelectedMailboxImpl.ApplicableFlags;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;

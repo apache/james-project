@@ -39,19 +39,19 @@ class CassandraTableManagerConcurrentTest {
     private static final String TABLE_NAME = "tablename";
 
     public static final CassandraModule MODULE = CassandraModule.aggregateModules(
-            CassandraSchemaVersionModule.MODULE,
-            CassandraModule.table(TABLE_NAME)
-                .comment("Testing table")
-                .statement(statement -> types -> statement
-                        .withPartitionKey("id", DataTypes.TIMEUUID)
-                        .withClusteringColumn("clustering", DataTypes.BIGINT))
-                .build());
+        CassandraSchemaVersionModule.MODULE,
+        CassandraModule.table(TABLE_NAME)
+            .comment("Testing table")
+            .statement(statement -> types -> statement
+                .withPartitionKey("id", DataTypes.TIMEUUID)
+                .withClusteringColumn("clustering", DataTypes.BIGINT))
+            .build());
 
     @RegisterExtension
     static DockerCassandraExtension cassandraExtension = new DockerCassandraExtension();
 
     @Test
-    void initializeTableShouldCreateAllTheTables() throws Exception{
+    void initializeTableShouldCreateAllTheTables() throws Exception {
         Host cassandraHost = cassandraExtension.getDockerCassandra().getHost();
         ConcurrentOperation concurrentOperation = (a, b) -> CassandraCluster.create(MODULE, cassandraHost);
 

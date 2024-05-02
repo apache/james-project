@@ -105,6 +105,7 @@ class JmxSecurityServerIntegrationTest {
         assertThat(outputCapture.getContent()).contains("localhost");
     }
 
+    @SuppressWarnings("checkstyle:emptycatchblock")
     private void writeFile(String fileNamePath, String data) {
         File passwordFile = new File(fileNamePath);
         try (OutputStream outputStream = new FileOutputStream(passwordFile)) {

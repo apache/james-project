@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContract, PriorityMailQueueContract {
 

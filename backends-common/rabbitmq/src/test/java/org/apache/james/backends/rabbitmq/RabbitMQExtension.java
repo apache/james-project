@@ -40,7 +40,8 @@ import reactor.rabbitmq.Sender;
 
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
-    private static final Consumer<DockerRabbitMQ> DO_NOTHING = dockerRabbitMQ -> { };
+    private static final Consumer<DockerRabbitMQ> DO_NOTHING = dockerRabbitMQ -> {
+    };
 
     public enum DockerRestartPolicy {
         PER_TEST(DockerRabbitMQ::start, DockerRabbitMQ::start, DockerRabbitMQ::stop, DockerRabbitMQ::stop),
@@ -80,7 +81,8 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     }
 
     public enum IsolationPolicy {
-        WEAK(any -> {}),
+        WEAK(any -> {
+        }),
         STRONG(DockerRabbitMQ::reset);
 
         private final ThrowingConsumer<DockerRabbitMQ> isolationCall;
@@ -198,10 +200,10 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     public RabbitMQManagementAPI managementAPI() throws Exception {
         return RabbitMQManagementAPI.from(RabbitMQConfiguration.builder()
-                .amqpUri(rabbitMQ.amqpUri())
-                .managementUri(rabbitMQ.managementUri())
-                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
-                .build());
+            .amqpUri(rabbitMQ.amqpUri())
+            .managementUri(rabbitMQ.managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build());
     }
 
     private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {

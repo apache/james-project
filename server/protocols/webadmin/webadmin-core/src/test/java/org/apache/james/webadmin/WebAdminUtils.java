@@ -46,7 +46,7 @@ import reactor.util.retry.Retry;
 
 public class WebAdminUtils {
     public interface Startable {
-        WebAdminServer start() ;
+        WebAdminServer start();
     }
 
     private static class ConcurrentSafeWebAdminServerFactory {
@@ -88,10 +88,10 @@ public class WebAdminUtils {
 
     public static Startable createWebAdminServer(Routes... routes) {
         return new ConcurrentSafeWebAdminServerFactory(
-                WebAdminConfiguration.TEST_CONFIGURATION,
-                ImmutableList.copyOf(routes),
-                new NoAuthenticationFilter(),
-                new RecordingMetricFactory())
+            WebAdminConfiguration.TEST_CONFIGURATION,
+            ImmutableList.copyOf(routes),
+            new NoAuthenticationFilter(),
+            new RecordingMetricFactory())
             .createServer();
     }
 

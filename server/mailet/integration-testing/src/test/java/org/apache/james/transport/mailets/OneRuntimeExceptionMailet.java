@@ -25,7 +25,8 @@ import jakarta.mail.MessagingException;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class OneRuntimeExceptionMailet extends GenericMailet {
     private final AtomicInteger callCount = new AtomicInteger(0);

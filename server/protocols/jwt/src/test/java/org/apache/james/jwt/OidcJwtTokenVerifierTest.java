@@ -77,19 +77,19 @@ class OidcJwtTokenVerifierTest {
 
     @Test
     void verifyAndClaimShouldReturnClaimValueWhenValidTokenHasKid() {
-        Optional<String> email_address = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address");
+        Optional<String> emailAddress = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address");
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(email_address.isPresent()).isTrue();
-            softly.assertThat(email_address.get()).isEqualTo("user@domain.org");
+            softly.assertThat(emailAddress.isPresent()).isTrue();
+            softly.assertThat(emailAddress.get()).isEqualTo("user@domain.org");
         });
     }
 
     @Test
     void verifyAndClaimShouldReturnClaimValueWhenValidTokenHasNotKid() {
-        Optional<String> email_address = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_KID, getJwksURL(), "email_address");
+        Optional<String> emailAddress = OidcJwtTokenVerifier.verifySignatureAndExtractClaim(OidcTokenFixture.VALID_TOKEN_HAS_NOT_KID, getJwksURL(), "email_address");
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(email_address.isPresent()).isTrue();
-            softly.assertThat(email_address.get()).isEqualTo("user@domain.org");
+            softly.assertThat(emailAddress.isPresent()).isTrue();
+            softly.assertThat(emailAddress.get()).isEqualTo("user@domain.org");
         });
     }
 
@@ -238,8 +238,8 @@ class OidcJwtTokenVerifierTest {
             .when(HttpRequest.request().withPath(INTROSPECTION_PATH))
             .respond(HttpResponse.response().withStatusCode(201));
 
-        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address"
-                , new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
+        assertThatThrownBy(() -> Mono.from(OidcJwtTokenVerifier.verifyWithIntrospection(OidcTokenFixture.VALID_TOKEN, getJwksURL(), "email_address",
+                new IntrospectionEndpoint(getIntrospectionEndpoint(), Optional.empty())))
             .block())
             .isInstanceOf(TokenIntrospectionException.class)
             .hasMessageContaining("Error when introspecting token");

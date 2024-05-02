@@ -21,10 +21,10 @@ package org.apache.james.jmap.cassandra.filtering;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule$;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
-import org.apache.james.eventsourcing.eventstore.JsonEventSerializer;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.FilteringManagementContract;
 import org.apache.james.jmap.api.filtering.FilteringRuleSetDefineDTOModules;

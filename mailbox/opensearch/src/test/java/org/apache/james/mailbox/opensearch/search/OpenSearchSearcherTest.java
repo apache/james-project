@@ -77,6 +77,7 @@ import org.opensearch.client.opensearch.core.SearchRequest;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -183,10 +184,10 @@ class OpenSearchSearcherTest {
 
         String recipient = "user@example.com";
         return Mono.from(messageManager.appendMessageReactive(MessageManager.AppendCommand.from(
-            Message.Builder.of()
-                .setTo(recipient)
-                .setBody("Hello", StandardCharsets.UTF_8)),
-            session))
+                    Message.Builder.of()
+                        .setTo(recipient)
+                        .setBody("Hello", StandardCharsets.UTF_8)),
+                session))
             .map(MessageManager.AppendResult::getId);
     }
 

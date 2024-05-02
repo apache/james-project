@@ -90,10 +90,10 @@ class JPAConfigurationTest {
     @Test
     void buildShouldThrowWhenValidationQueryTimeoutSecIsZero() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .validationQueryTimeoutSec(0)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .validationQueryTimeoutSec(0)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("validationQueryTimeoutSec is required to be greater than 0");
     }
@@ -101,20 +101,21 @@ class JPAConfigurationTest {
     @Test
     void buildShouldThrowWhenMaxConnectionIsZero() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .maxConnections(0)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .maxConnections(0)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("maxConnections is required to be -1 (no limit) or  greater than 0");
     }
+
     @Test
     void buildShouldThrowWhenMaxConnectionIsLesThanMinusOne() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .maxConnections(-10)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .maxConnections(-10)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("maxConnections is required to be -1 (no limit) or  greater than 0");
     }
@@ -122,10 +123,10 @@ class JPAConfigurationTest {
     @Test
     void buildShouldBuildWhenMaxConnectionIsMinusOne() {
         JPAConfiguration configuration = JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .maxConnections(-1)
-                .build();
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .maxConnections(-1)
+            .build();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(configuration.getDriverName()).isEqualTo(DRIVER_NAME);
@@ -142,10 +143,10 @@ class JPAConfigurationTest {
     @Test
     void buildShouldThrowWhenValidationQueryTimeoutSecIsNegative() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .validationQueryTimeoutSec(-1)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .validationQueryTimeoutSec(-1)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("validationQueryTimeoutSec is required to be greater than 0");
     }
@@ -153,11 +154,11 @@ class JPAConfigurationTest {
     @Test
     void buildShouldThrowWhenPasswordIsNull() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .username(USER_NAME)
-                .password(null)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .username(USER_NAME)
+            .password(null)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("username and password for connecting to database can't be blank");
     }
@@ -165,11 +166,11 @@ class JPAConfigurationTest {
     @Test
     void buildShouldThrowWhenPasswordIsEmpty() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .username(USER_NAME)
-                .password(EMPTY_STRING)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .username(USER_NAME)
+            .password(EMPTY_STRING)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("username and password for connecting to database can't be blank");
     }
@@ -177,11 +178,11 @@ class JPAConfigurationTest {
     @Test
     void buildShouldThrowWhenUsernameIsNull() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .username(null)
-                .password(PASSWORD)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .username(null)
+            .password(PASSWORD)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("username and password for connecting to database can't be blank");
     }
@@ -189,11 +190,11 @@ class JPAConfigurationTest {
     @Test
     void buildShouldThrowWhenUsernameIsEmpty() {
         assertThatThrownBy(() -> JPAConfiguration.builder()
-                .driverName(DRIVER_NAME)
-                .driverURL(DRIVER_URL)
-                .username(EMPTY_STRING)
-                .password(PASSWORD)
-                .build())
+            .driverName(DRIVER_NAME)
+            .driverURL(DRIVER_URL)
+            .username(EMPTY_STRING)
+            .password(PASSWORD)
+            .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("username and password for connecting to database can't be blank");
     }

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
- package org.apache.james.rrt.memory;
+package org.apache.james.rrt.memory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;

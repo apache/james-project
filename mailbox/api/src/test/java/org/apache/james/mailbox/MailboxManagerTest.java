@@ -1009,7 +1009,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             assertThat(listener.getEvents())
                 .filteredOn(event -> event instanceof MessageMoveEvent)
-                .isEmpty();;
+                .isEmpty();
         }
 
         @Test

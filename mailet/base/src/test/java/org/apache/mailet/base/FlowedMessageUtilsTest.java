@@ -19,9 +19,9 @@
 
 package org.apache.mailet.base;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 public class FlowedMessageUtilsTest {
     private static final boolean DEL_SP_NO = false;
@@ -361,6 +361,7 @@ public class FlowedMessageUtilsTest {
     }
 
     @Test
+    @SuppressWarnings("checkstyle:avoidescapedunicodecharacters")
     void flowWithDelSpAndLongLineWithNonAsciiCharactersAndSurrogatePairAtSplitPoint() {
         String input = "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää\uD83C\uDF69ääääää";
 

@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets.delivery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -49,8 +48,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.reactivestreams.Publisher;
 
 import com.github.fge.lambdas.Throwing;
@@ -64,7 +61,7 @@ class MailDispatcherTest {
     private static final String VALUE_FOR_USER_2 = "value for user 2";
     private static final Header TEST_HEADER_USER1 = Header.builder().name(TEST_HEADER_NAME).value(VALUE_FOR_USER_1).build();
     private static final Header TEST_HEADER_USER2 = Header.builder().name(TEST_HEADER_NAME).value(VALUE_FOR_USER_2).build();
-    
+
     private FakeMailContext fakeMailContext;
     private MailStore mailStore;
 
@@ -393,7 +390,7 @@ class MailDispatcherTest {
             .sender(MailAddressFixture.OTHER_AT_JAMES)
             .recipients(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.ANY_AT_JAMES2)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .addHeader(TEST_HEADER_NAME, headerValue))
+                .addHeader(TEST_HEADER_NAME, headerValue))
             .state("state")
             .build();
         mail.addSpecificHeaderForRecipient(TEST_HEADER_USER1, MailAddressFixture.ANY_AT_JAMES);
@@ -483,7 +480,7 @@ class MailDispatcherTest {
             .state("state")
             .build();
 
-        assertThatThrownBy(()-> testee.dispatch(mail))
+        assertThatThrownBy(() -> testee.dispatch(mail))
             .isInstanceOf(Exception.class);
     }
 

@@ -18,20 +18,26 @@
  ****************************************************************/
 package org.apache.james.mailbox.extractor;
 
-import org.apache.james.mailbox.model.ContentType;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchException;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchException;
-import static org.mockito.Mockito.*;
+import org.apache.james.mailbox.model.ContentType;
+import org.junit.jupiter.api.Test;
 
 public interface TextExtractorContract {
 
     TextExtractor testee();
+
     ContentType supportedContentType();
 
     byte[] supportedContent();

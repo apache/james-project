@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 class AttachmentFileNameIsTest {
     @Test
     void shouldMatchWhenMultipartMixedAndRightFileName() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -55,7 +55,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldNotMatchWhenMultipartMixedAndWrongFileName() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -78,7 +78,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldMatchRecursively() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -106,7 +106,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldIgnoreMultipartAlternative() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -131,7 +131,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldMatchSingleBody() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -153,7 +153,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldSupportWildcardPrefix() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -175,7 +175,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void doNotSupportSuffix() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -197,7 +197,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void supportComaSeparatedValues() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -219,7 +219,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void supportSpaceSeparatedValues() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -241,7 +241,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void supportComaSpaceSeparatedValues() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -263,7 +263,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldNotMatchInNestedMessages() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -286,7 +286,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldMatchNestedMessages() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -310,7 +310,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldMatchInline() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -332,7 +332,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldMatchWhenFileNameIsOnContentDisposition() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -354,7 +354,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldBeCaseInsensitive() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -376,13 +376,12 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldSupportMultilineFilename() throws Exception {
-        /*
-        Content-Type: text/plain;
-	      name*0=fiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;
-	      name*1=iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiile;
-	      name*2=.txt; charset=us-ascii
-         */
-        Mail mail =  FakeMail.builder()
+        /*Content-Type: text/plain;
+        name*0=fiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii;
+        name*1=iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiile;
+        name*2=.txt; charset=us-ascii
+        */
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -403,7 +402,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldSupportTrimming() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -425,7 +424,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldSupportQEncoding() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -447,7 +446,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void conditionShouldSupportQEncoding() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -469,7 +468,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldLookupIntoZipEntryWhenRequested() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -492,7 +491,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void zipNestingIsNotSupported() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
@@ -515,7 +514,7 @@ class AttachmentFileNameIsTest {
 
     @Test
     void shouldLookupIntoZipEntryOnlyWhenRequested() throws Exception {
-        Mail mail =  FakeMail.builder()
+        Mail mail = FakeMail.builder()
             .name("mail")
             .recipient(ANY_AT_JAMES)
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()

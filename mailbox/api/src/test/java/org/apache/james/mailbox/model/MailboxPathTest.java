@@ -1,22 +1,21 @@
-/*
- *   Licensed to the Apache Software Foundation (ASF) under one
- *   or more contributor license agreements.  See the NOTICE file
- *   distributed with this work for additional information
- *   regarding copyright ownership.  The ASF licenses this file
- *   to you under the Apache License, Version 2.0 (the
- *   "License"); you may not use this file except in compliance
- *   with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *   Unless required by applicable law or agreed to in writing,
- *   software distributed under the License is distributed on an
- *   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *   KIND, either express or implied.  See the License for the
- *   specific language governing permissions and limitations
- *   under the License.
- *
- */
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
 
 package org.apache.james.mailbox.model;
 
@@ -296,6 +295,7 @@ class MailboxPathTest {
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
+
     @Test
     void hasEmptyNameInHierarchyShouldBeTrueIfPathWithABlankNameBetweenTwoNames() {
         assertThat(MailboxPath.forUser(USER, "a.   .b")
@@ -337,6 +337,7 @@ class MailboxPathTest {
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
+
     @Test
     void hasEmptyNameInHierarchyShouldBeTrueIfPathWithTrailingBlankNames() {
         assertThat(MailboxPath.forUser(USER, "a. .  ")
@@ -347,49 +348,49 @@ class MailboxPathTest {
     @Test
     void assertAcceptableShouldThrowOnDoubleSeparator() {
         assertThatThrownBy(() -> MailboxPath.forUser(USER, "a..b")
-                .assertAcceptable('.'))
+            .assertAcceptable('.'))
             .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
     }
 
     @Test
     void assertAcceptableShouldThrowWhenStartsWithSharp() {
         assertThatThrownBy(() -> MailboxPath.forUser(USER, "#ab")
-                .assertAcceptable('.'))
+            .assertAcceptable('.'))
             .isInstanceOf(MailboxNameException.class);
     }
 
     @Test
     void assertAcceptableShouldNotThrowWhenSharpInTheMiddle() {
         assertThatCode(() -> MailboxPath.forUser(USER, "mailbox #17")
-                .assertAcceptable('.'))
+            .assertAcceptable('.'))
             .doesNotThrowAnyException();
     }
 
     @Test
     void assertAcceptableShouldThrowOnPercent() {
         assertThatThrownBy(() -> MailboxPath.forUser(USER, "a%b")
-                .assertAcceptable('.'))
+            .assertAcceptable('.'))
             .isInstanceOf(MailboxNameException.class);
     }
 
     @Test
     void assertAcceptableShouldThrowOnWildcard() {
         assertThatThrownBy(() -> MailboxPath.forUser(USER, "a*b")
-                .assertAcceptable('.'))
+            .assertAcceptable('.'))
             .isInstanceOf(MailboxNameException.class);
     }
 
     @Test
     void assertAcceptableShouldThrowOnTooLongMailboxName() {
         assertThatThrownBy(() -> MailboxPath.forUser(USER, Strings.repeat("a", 201))
-                .assertAcceptable('.'))
+            .assertAcceptable('.'))
             .isInstanceOf(TooLongMailboxNameException.class);
     }
 
     @Test
     void assertAcceptableShouldNotThrowOnNotTooLongMailboxName() {
         assertThatCode(() -> MailboxPath.forUser(USER, Strings.repeat("a", 200))
-                .assertAcceptable('.'))
+            .assertAcceptable('.'))
             .doesNotThrowAnyException();
     }
 

@@ -25,7 +25,6 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.JmapGuiceProbe;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;

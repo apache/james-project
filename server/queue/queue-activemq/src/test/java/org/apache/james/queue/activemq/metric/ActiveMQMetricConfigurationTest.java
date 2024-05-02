@@ -18,9 +18,10 @@
  ****************************************************************/
 package org.apache.james.queue.activemq.metric;
 
-import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.time.Duration;
 
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.junit.jupiter.api.Test;

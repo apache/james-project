@@ -24,7 +24,6 @@ import static org.assertj.core.api.Fail.fail;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.james.imap.api.message.SectionType;

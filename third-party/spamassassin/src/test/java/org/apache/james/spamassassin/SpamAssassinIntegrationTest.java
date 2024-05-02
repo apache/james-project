@@ -87,9 +87,10 @@ class SpamAssassinIntegrationTest {
                 @Override
                 public void configure(Binder binder) {
                 }
+
                 @Provides
                 @Singleton
-                private SpamAssassinConfiguration provideSpamAssassinConfiguration(){
+                private SpamAssassinConfiguration provideSpamAssassinConfiguration() {
                     return new SpamAssassinConfiguration(Host.parseConfString("localhost", spamAssassinExtension.getSpamAssassin().getBindingPort()));
                 }
             })

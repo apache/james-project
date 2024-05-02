@@ -97,6 +97,7 @@ public class FeedSpamToRspamdTaskTest {
 
     static class TestRspamdHttpClient extends RspamdHttpClient {
         private final AtomicInteger hitCounter;
+
         public TestRspamdHttpClient(RspamdClientConfiguration configuration) {
             super(configuration);
             this.hitCounter = new AtomicInteger(0);
@@ -144,6 +145,7 @@ public class FeedSpamToRspamdTaskTest {
         mapperFactory = mailboxManager.getMapperFactory();
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, RunningOptions.DEFAULT, clock, rspamdConfiguration);
     }
+
     @AfterEach
     void afterEach() {
         if (mockServer != null) {
@@ -310,7 +312,7 @@ public class FeedSpamToRspamdTaskTest {
         task = new FeedSpamToRspamdTask(mailboxManager, usersRepository, messageIdManager, mapperFactory, client, runningOptions, clock, rspamdConfiguration);
 
         IntStream.range(0, 10)
-                .forEach(Throwing.intConsumer(any -> appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
+            .forEach(Throwing.intConsumer(any -> appendSpamMessage(BOB_SPAM_MAILBOX, Date.from(NOW.minusSeconds(ONE_DAY_IN_SECOND)))));
 
         Task.Result result = task.run();
 

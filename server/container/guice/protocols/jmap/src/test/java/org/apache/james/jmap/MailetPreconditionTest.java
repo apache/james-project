@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.jmap.JMAPModule;
 import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.modules.server.MailetContainerModule;
