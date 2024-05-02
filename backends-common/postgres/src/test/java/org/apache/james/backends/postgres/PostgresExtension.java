@@ -182,8 +182,8 @@ public class PostgresExtension implements GuiceModuleTestExtension {
         } else {
             executorFactory = new PostgresExecutor.Factory(
                 new PoolBackedPostgresConnectionFactory(false,
-                    Optional.of(poolSize.getMin()),
-                    Optional.of(poolSize.getMax()),
+                    poolSize.getMin(),
+                    poolSize.getMax(),
                     connectionFactory),
                 postgresConfiguration,
                 new RecordingMetricFactory());

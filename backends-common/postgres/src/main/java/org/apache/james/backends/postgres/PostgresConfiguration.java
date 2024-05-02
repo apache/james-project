@@ -46,7 +46,13 @@ public class PostgresConfiguration {
     public static final String NON_RLS_PASSWORD = "database.non-rls.password";
     public static final String RLS_ENABLED = "row.level.security.enabled";
     public static final String POOL_INITIAL_SIZE = "pool.initial.size";
+    public static final int POOL_INITIAL_SIZE_DEFAULT_VALUE = 10;
     public static final String POOL_MAX_SIZE = "pool.max.size";
+    public static final int POOL_MAX_SIZE_DEFAULT_VALUE = 15;
+    public static final String NON_RLS_POOL_INITIAL_SIZE = "non-rls.pool.initial.size";
+    public static final int NON_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE = 5;
+    public static final String NON_RLS_POOL_MAX_SIZE = "non-rls.pool.max.size";
+    public static final int NON_RLS_POOL_MAX_SIZE_DEFAULT_VALUE = 10;
     public static final String SSL_MODE = "ssl.mode";
     public static final String SSL_MODE_DEFAULT_VALUE = "allow";
     public static final String JOOQ_REACTIVE_TIMEOUT = "jooq.reactive.timeout";
@@ -83,6 +89,8 @@ public class PostgresConfiguration {
         private Optional<Boolean> rowLevelSecurityEnabled = Optional.empty();
         private Optional<Integer> poolInitialSize = Optional.empty();
         private Optional<Integer> poolMaxSize = Optional.empty();
+        private Optional<Integer> nonRLSPoolInitialSize = Optional.empty();
+        private Optional<Integer> nonRLSPoolMaxSize = Optional.empty();
         private Optional<String> sslMode = Optional.empty();
         private Optional<Duration> jooqReactiveTimeout = Optional.empty();
 
@@ -196,6 +204,26 @@ public class PostgresConfiguration {
             return this;
         }
 
+        public Builder nonRLSPoolInitialSize(Optional<Integer> nonRLSPoolInitialSize) {
+            this.nonRLSPoolInitialSize = nonRLSPoolInitialSize;
+            return this;
+        }
+
+        public Builder nonRLSPoolInitialSize(Integer nonRLSPoolInitialSize) {
+            this.nonRLSPoolInitialSize = Optional.of(nonRLSPoolInitialSize);
+            return this;
+        }
+
+        public Builder nonRLSPoolMaxSize(Optional<Integer> nonRLSPoolMaxSize) {
+            this.nonRLSPoolMaxSize = nonRLSPoolMaxSize;
+            return this;
+        }
+
+        public Builder nonRLSPoolMaxSize(Integer nonRLSPoolMaxSize) {
+            this.nonRLSPoolMaxSize = Optional.of(nonRLSPoolMaxSize);
+            return this;
+        }
+
         public Builder sslMode(Optional<String> sslMode) {
             this.sslMode = sslMode;
             return this;
@@ -227,8 +255,10 @@ public class PostgresConfiguration {
                 new Credential(username.get(), password.get()),
                 new Credential(nonRLSUser.orElse(username.get()), nonRLSPassword.orElse(password.get())),
                 rowLevelSecurityEnabled.orElse(false),
-                poolInitialSize,
-                poolMaxSize,
+                poolInitialSize.orElse(POOL_INITIAL_SIZE_DEFAULT_VALUE),
+                poolMaxSize.orElse(POOL_MAX_SIZE_DEFAULT_VALUE),
+                nonRLSPoolInitialSize.orElse(NON_RLS_POOL_INITIAL_SIZE_DEFAULT_VALUE),
+                nonRLSPoolMaxSize.orElse(NON_RLS_POOL_MAX_SIZE_DEFAULT_VALUE),
                 SSLMode.fromValue(sslMode.orElse(SSL_MODE_DEFAULT_VALUE)),
                 jooqReactiveTimeout.orElse(JOOQ_REACTIVE_TIMEOUT_DEFAULT_VALUE));
         }
@@ -251,6 +281,8 @@ public class PostgresConfiguration {
             .rowLevelSecurityEnabled(propertiesConfiguration.getBoolean(RLS_ENABLED, false))
             .poolInitialSize(Optional.ofNullable(propertiesConfiguration.getInteger(POOL_INITIAL_SIZE, null)))
             .poolMaxSize(Optional.ofNullable(propertiesConfiguration.getInteger(POOL_MAX_SIZE, null)))
+            .nonRLSPoolInitialSize(Optional.ofNullable(propertiesConfiguration.getInteger(NON_RLS_POOL_INITIAL_SIZE, null)))
+            .nonRLSPoolMaxSize(Optional.ofNullable(propertiesConfiguration.getInteger(NON_RLS_POOL_MAX_SIZE, null)))
             .sslMode(Optional.ofNullable(propertiesConfiguration.getString(SSL_MODE)))
             .jooqReactiveTimeout(Optional.ofNullable(propertiesConfiguration.getString(JOOQ_REACTIVE_TIMEOUT))
                 .map(value -> DurationParser.parse(value, ChronoUnit.SECONDS)))
@@ -264,14 +296,17 @@ public class PostgresConfiguration {
     private final Credential credential;
     private final Credential nonRLSCredential;
     private final boolean rowLevelSecurityEnabled;
-    private final Optional<Integer> poolInitialSize;
-    private final Optional<Integer> poolMaxSize;
+    private final Integer poolInitialSize;
+    private final Integer poolMaxSize;
+    private final Integer nonRLSPoolInitialSize;
+    private final Integer nonRLSPoolMaxSize;
     private final SSLMode sslMode;
     private final Duration jooqReactiveTimeout;
 
     private PostgresConfiguration(String host, int port, String databaseName, String databaseSchema,
                                   Credential credential, Credential nonRLSCredential, boolean rowLevelSecurityEnabled,
-                                  Optional<Integer> poolInitialSize, Optional<Integer> poolMaxSize,
+                                  Integer poolInitialSize, Integer poolMaxSize,
+                                  Integer nonRLSPoolInitialSize, Integer nonRLSPoolMaxSize,
                                   SSLMode sslMode, Duration jooqReactiveTimeout) {
         this.host = host;
         this.port = port;
@@ -282,6 +317,8 @@ public class PostgresConfiguration {
         this.rowLevelSecurityEnabled = rowLevelSecurityEnabled;
         this.poolInitialSize = poolInitialSize;
         this.poolMaxSize = poolMaxSize;
+        this.nonRLSPoolInitialSize = nonRLSPoolInitialSize;
+        this.nonRLSPoolMaxSize = nonRLSPoolMaxSize;
         this.sslMode = sslMode;
         this.jooqReactiveTimeout = jooqReactiveTimeout;
     }
@@ -314,12 +351,20 @@ public class PostgresConfiguration {
         return rowLevelSecurityEnabled;
     }
 
-    public Optional<Integer> poolInitialSize() {
+    public Integer poolInitialSize() {
         return poolInitialSize;
     }
 
-    public Optional<Integer> poolMaxSize() {
+    public Integer poolMaxSize() {
         return poolMaxSize;
+    }
+
+    public Integer nonRLSPoolInitialSize() {
+        return nonRLSPoolInitialSize;
+    }
+
+    public Integer nonRLSPoolMaxSize() {
+        return nonRLSPoolMaxSize;
     }
 
     public SSLMode getSslMode() {
