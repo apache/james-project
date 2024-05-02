@@ -49,6 +49,8 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
@@ -105,6 +107,9 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
         }
     };
 
+    private static final String S3_METRICS_ENABLED_PROPERTY_KEY = "james.s3.metrics.enabled";
+    private static final String S3_METRICS_ENABLED_DEFAULT_VALUE = "true";
+
     private static class FileBackedOutputStreamByteSource extends ByteSource {
         private final FileBackedOutputStream stream;
         private final long size;
@@ -145,7 +150,7 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
 
     @Inject
     @Singleton
-    S3BlobStoreDAO(S3BlobStoreConfiguration configuration, BlobId.Factory blobIdFactory) {
+    S3BlobStoreDAO(S3BlobStoreConfiguration configuration, BlobId.Factory blobIdFactory, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         this.blobIdFactory = blobIdFactory;
         this.configuration = configuration;
         AwsS3AuthConfiguration authConfiguration = this.configuration.getSpecificAuthConfiguration();
@@ -161,6 +166,12 @@ public class S3BlobStoreDAO implements BlobStoreDAO, Startable, Closeable {
             .endpointOverride(authConfiguration.getEndpoint())
             .region(configuration.getRegion().asAws())
             .serviceConfiguration(pathStyleAccess)
+            .overrideConfiguration(builder -> {
+                boolean s3MetricsEnabled = Boolean.parseBoolean(System.getProperty(S3_METRICS_ENABLED_PROPERTY_KEY, S3_METRICS_ENABLED_DEFAULT_VALUE));
+                if (s3MetricsEnabled) {
+                    builder.addMetricPublisher(new JamesS3MetricPublisher(metricFactory, gaugeRegistry));
+                }
+            })
             .build();
 
         bucketNameResolver = BucketNameResolver.builder()
