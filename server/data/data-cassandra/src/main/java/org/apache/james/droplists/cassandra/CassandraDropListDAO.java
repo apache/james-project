@@ -56,6 +56,7 @@ public class CassandraDropListDAO {
     private final PreparedStatement removeDropListStatement;
     private final PreparedStatement getDropListStatement;
     private final PreparedStatement queryDropListStatement;
+    private final PreparedStatement queryGlobalDropListStatement;
 
     @Inject
     public CassandraDropListDAO(CqlSession session) {
@@ -89,6 +90,13 @@ public class CassandraDropListDAO {
                 column(OWNER).isEqualTo(bindMarker(OWNER)),
                 column(DENIED_ENTITY).in(bindMarker(DENIED_ENTITY)))
             .build());
+
+        queryGlobalDropListStatement = session.prepare(selectFrom(TABLE_NAME)
+            .all()
+            .where(column(OWNER_SCOPE).isEqualTo(bindMarker(OWNER_SCOPE)),
+                column(DENIED_ENTITY).in(bindMarker(DENIED_ENTITY)))
+            .allowFiltering()
+            .build());
     }
 
     public Mono<Void> addDropList(DropListEntry dropListEntry) {
@@ -109,12 +117,20 @@ public class CassandraDropListDAO {
     }
 
     public Mono<DropList.Status> queryDropList(OwnerScope ownerScope, String owner, MailAddress sender) {
-        return executor.executeReturnExists(
-                queryDropListStatement.bind()
-                    .setString(OWNER_SCOPE, ownerScope.name())
-                    .setString(OWNER, owner)
-                    .setList(DENIED_ENTITY, List.of(sender.asString(), sender.getDomain().asString()), String.class))
-            .map(isExist -> Boolean.TRUE.equals(isExist) ? DropList.Status.BLOCKED : DropList.Status.ALLOWED);
+        if (ownerScope.equals(OwnerScope.GLOBAL)) {
+            return executor.executeReturnExists(
+                    queryGlobalDropListStatement.bind()
+                        .setString(OWNER_SCOPE, ownerScope.name())
+                        .setList(DENIED_ENTITY, List.of(sender.asString(), sender.getDomain().asString()), String.class))
+                .map(isExist -> Boolean.TRUE.equals(isExist) ? DropList.Status.BLOCKED : DropList.Status.ALLOWED);
+        } else {
+            return executor.executeReturnExists(
+                    queryDropListStatement.bind()
+                        .setString(OWNER_SCOPE, ownerScope.name())
+                        .setString(OWNER, owner)
+                        .setList(DENIED_ENTITY, List.of(sender.asString(), sender.getDomain().asString()), String.class))
+                .map(isExist -> Boolean.TRUE.equals(isExist) ? DropList.Status.BLOCKED : DropList.Status.ALLOWED);
+        }
     }
 
     public Flux<DropListEntry> getDropList(OwnerScope ownerScope, String owner) {
