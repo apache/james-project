@@ -54,7 +54,7 @@ class RedisHealthCheck @Inject()(redisConfiguration: RedisConfiguration) extends
       .onErrorResume(_ => SMono.just(Result.degraded(redisComponent, "Can not connect to Redis.")))
 }
 
-trait RedisHealthcheckPerform {
+sealed trait RedisHealthcheckPerform {
   def check(): SMono[Result]
 }
 
