@@ -99,7 +99,7 @@ class IdentityRepositoryTest {
   @Test
   def listShouldReturnCustomAndServerSetEntries(): Unit = {
     val customIdentity: Identity = SMono.fromPublisher(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
 
     assertThat(SFlux.fromPublisher(testee.list(BOB)).collectSeq().block().asJava)
       .containsExactlyInAnyOrder(IDENTITY1, customIdentity)
@@ -109,7 +109,7 @@ class IdentityRepositoryTest {
   def listShouldReturnCustomEntryWhenIdExistsInBothCustomAndServerSet(): Unit = {
     val customIdentity: Identity = SMono.fromPublisher(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
     val differentIdentityWithSameId: Identity = customIdentity.copy(name = IdentityName("different name"))
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(differentIdentityWithSameId))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(differentIdentityWithSameId))
 
     assertThat(SFlux.fromPublisher(testee.list(BOB)).collectSeq().block().asJava)
       .containsExactlyInAnyOrder(customIdentity.copy(mayDelete = MayDeleteIdentity(false)))
@@ -118,7 +118,7 @@ class IdentityRepositoryTest {
   @Test
   def listShouldNotReturnTheIdentityHasAliasNotExists(): Unit = {
     SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
-    when(identityFactory.listIdentities(BOB)).thenReturn(List())
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.empty)
     assertThat(SFlux(testee.list(BOB)).collectSeq().block().asJava)
       .isEmpty()
   }
@@ -127,7 +127,7 @@ class IdentityRepositoryTest {
   def listShouldWorkWhenMixCases(): Unit = {
     val customIdentity: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
     val customIdentityHasEmailNotExist: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST.copy(email = new MailAddress("bob2@domain.tld")))).block()
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
 
     assertThat(SFlux(testee.list(BOB)).collectSeq().block().asJava)
       .containsExactlyInAnyOrder(customIdentity, IDENTITY1)
@@ -136,7 +136,7 @@ class IdentityRepositoryTest {
 
   @Test
   def updateShouldFailWhenIdNotFoundInBothCustomAndServerSetDAO(): Unit = {
-    when(identityFactory.listIdentities(BOB)).thenReturn(List())
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.empty)
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.update(BOB, IdentityId.generate, UPDATE_REQUEST)).block())
       .isInstanceOf(classOf[IdentityNotFoundException])
@@ -144,7 +144,7 @@ class IdentityRepositoryTest {
 
   @Test
   def updateShouldSuccessWhenCustomNotFoundAndServerSetExists(): Unit = {
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
 
     assertThatCode(() => SMono.fromPublisher(testee.update(BOB, IDENTITY1.id, UPDATE_REQUEST)).block())
       .doesNotThrowAnyException()
@@ -152,7 +152,7 @@ class IdentityRepositoryTest {
 
   @Test
   def updateShouldSuccessWhenCustomExistsAndAliasExists(): Unit = {
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
     val customIdentity: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
 
@@ -162,7 +162,7 @@ class IdentityRepositoryTest {
 
   @Test
   def updateShouldModifiedEntry(): Unit = {
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
 
     val customIdentity: Identity = SMono(customIdentityDAO.save(BOB, CREATION_REQUEST)).block()
@@ -176,7 +176,7 @@ class IdentityRepositoryTest {
 
   @Test
   def updateShouldSuccessWhenMultiUpdateServerSetId(): Unit = {
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
     SMono(testee.update(BOB, IDENTITY1.id, UPDATE_REQUEST)).block()
 
@@ -196,7 +196,7 @@ class IdentityRepositoryTest {
 
   @Test
   def updateShouldSuccessWhenSecondPartialUpdateServerSetId(): Unit = {
-    when(identityFactory.listIdentities(BOB)).thenReturn(List(IDENTITY1))
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.just(IDENTITY1))
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(true))
 
     SMono(testee.update(BOB, IDENTITY1.id, UPDATE_REQUEST)).block()
@@ -223,7 +223,7 @@ class IdentityRepositoryTest {
     val identity: Identity = SMono.fromPublisher(testee.save(BOB, CREATION_REQUEST)).block()
 
     when(identityFactory.userCanSendFrom(BOB, BOB.asMailAddress())).thenReturn(SMono.just(false))
-    when(identityFactory.listIdentities(BOB)).thenReturn(List())
+    when(identityFactory.listIdentities(BOB)).thenReturn(SFlux.empty)
 
     assertThatThrownBy(() => SMono.fromPublisher(testee.update(BOB, identity.id, UPDATE_REQUEST)).block())
       .isInstanceOf(classOf[IdentityNotFoundException])

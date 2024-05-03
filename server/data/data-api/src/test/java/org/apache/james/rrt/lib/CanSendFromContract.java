@@ -29,6 +29,8 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Flux;
+
 public interface CanSendFromContract {
 
     Domain DOMAIN = Domain.of("example.com");
@@ -173,14 +175,14 @@ public interface CanSendFromContract {
 
     @Test
     default void allValidFromAddressesShouldContainOnlyUserAddressWhenUserHasNoAlias() throws Exception {
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .containsExactly(USER.asMailAddress());
     }
 
     @Test
     default void allValidFromAddressesShouldContainOnlyUserAddressWhenUserHasNoAliasAndAnotherUserHasOne() throws Exception {
         redirectUser(USER_ALIAS).to(OTHER_USER);
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .containsExactly(USER.asMailAddress());
     }
 
@@ -188,7 +190,7 @@ public interface CanSendFromContract {
     default void allValidFromAddressesShouldContainUserAddressAndAnAliasOfTheUser() throws Exception {
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress());
     }
 
@@ -198,7 +200,7 @@ public interface CanSendFromContract {
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress(), userAliasBis.asMailAddress());
     }
 
@@ -208,7 +210,7 @@ public interface CanSendFromContract {
 
         redirectDomain(OTHER_DOMAIN).to(DOMAIN).asAlias();
 
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), fromUser.asMailAddress());
     }
 
@@ -221,7 +223,7 @@ public interface CanSendFromContract {
 
         Username userAliasMainDomain = USER_ALIAS.withOtherDomain(DOMAIN);
         Username userOtherDomain = USER.withOtherDomain(OTHER_DOMAIN);
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userAliasMainDomain.asMailAddress(), userOtherDomain.asMailAddress());
     }
 
@@ -252,7 +254,7 @@ public interface CanSendFromContract {
         Username userAliasExcluded = Username.of("alias" + (recursionLevel - 1) + "@" + DOMAIN.asString());
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .doesNotContain(userAliasExcluded.asMailAddress());
     }
 
@@ -263,7 +265,7 @@ public interface CanSendFromContract {
         redirectUser(userAliasBis).to(userAlias);
         redirectUser(userAlias).to(USER);
 
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .contains(userAliasBis.asMailAddress());
     }
 
@@ -273,7 +275,7 @@ public interface CanSendFromContract {
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+        assertThat(Flux.from(canSendFrom().allValidFromAddressesForUser(USER)).toStream())
             .contains(userAliasBis.asMailAddress());
     }
 }

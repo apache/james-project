@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.api;
 
-import java.util.stream.Stream;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.reactivestreams.Publisher;
@@ -36,6 +34,6 @@ public interface CanSendFrom {
     /**
      * For a given user, return all the addresses he can use in the from clause of an email.
      */
-    Stream<MailAddress> allValidFromAddressesForUser(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException;
+    Publisher<MailAddress> allValidFromAddressesForUser(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException;
 
 }
