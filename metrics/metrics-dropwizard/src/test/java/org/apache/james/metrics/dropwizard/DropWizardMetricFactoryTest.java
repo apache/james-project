@@ -133,4 +133,22 @@ class DropWizardMetricFactoryTest implements MetricFactoryContract {
                  .isGreaterThan(duration.get(ChronoUnit.NANOS) * 6);
          });
     }
+
+    @Test
+    void recordElapsedTimeManuallyShouldWork() {
+        Duration duration = Duration.ofMillis(100);
+
+        testee.timer("manualRecordTimer").record(duration);
+        testee.timer("manualRecordTimer").record(duration.plusMillis(50));
+        testee.timer("manualRecordTimer").record(duration.plusMillis(90));
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(testee.timer("manualRecordTimer").getTimer().getCount())
+                .isEqualTo(3);
+
+            softly.assertThat(testee.timer("manualRecordTimer").getTimer().getSnapshot().get99thPercentile())
+                .isLessThan(duration.get(ChronoUnit.NANOS) * 2)
+                .isGreaterThan(duration.get(ChronoUnit.NANOS));
+        });
+    }
 }

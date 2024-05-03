@@ -96,4 +96,9 @@ public class DropWizardTimeMetric implements TimeMetric {
         return new DropWizardExecutionResult(name, Duration.ofNanos(context.stop()),
             () -> Duration.ofNanos(Math.round(timer.getSnapshot().get999thPercentile())));
     }
+
+    @Override
+    public void record(Duration duration) {
+        timer.update(duration);
+    }
 }
