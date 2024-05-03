@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 import java.time.Instant;
 import java.util.Optional;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.queue.api.MailQueueName;
@@ -29,6 +30,7 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.util.streams.Limit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fge.lambdas.Throwing;
 
 public class ReprocessingAllMailsTaskAdditionalInformationDTO implements AdditionalInformationDTO {
     public static AdditionalInformationDTOModule<ReprocessingAllMailsTask.AdditionalInformation, ReprocessingAllMailsTaskAdditionalInformationDTO> module() {
@@ -40,6 +42,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                     MailQueueName.of(dto.getTargetQueue()),
                     dto.getTargetProcessor(),
                     dto.getMaxRetries(),
+                    dto.forRecipient.map(Throwing.function(MailAddress::new)),
                     dto.isConsume(),
                     Limit.from(dto.getLimit())),
                 dto.initialCount,
@@ -50,6 +53,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 details.getRepositoryPath(),
                 details.getConfiguration().getMailQueueName().asString(),
                 details.getConfiguration().getTargetProcessor(),
+                details.getConfiguration().getForRecipient().map(MailAddress::asString),
                 Optional.of(details.getConfiguration().isConsume()),
                 details.getInitialCount(),
                 details.getRemainingCount(),
@@ -64,6 +68,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
     private final String repositoryPath;
     private final String targetQueue;
     private final Optional<String> targetProcessor;
+    private final Optional<String> forRecipient;
     private final boolean consume;
     private final long initialCount;
     private final long remainingCount;
@@ -76,6 +81,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
         @JsonProperty("repositoryPath") String repositoryPath,
         @JsonProperty("targetQueue") String targetQueue,
         @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+        @JsonProperty("forRecipient") Optional<String> forRecipient,
         @JsonProperty("consume") Optional<Boolean> consume,
         @JsonProperty("initialCount") long initialCount,
         @JsonProperty("remainingCount") long remainingCount,
@@ -86,6 +92,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.targetProcessor = targetProcessor;
+        this.forRecipient = forRecipient;
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
         this.timestamp = timestamp;
@@ -129,6 +136,10 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
 
     public Optional<String> getTargetProcessor() {
         return targetProcessor;
+    }
+
+    public Optional<String> getForRecipient() {
+        return forRecipient;
     }
 
     public Optional<Integer> getLimit() {

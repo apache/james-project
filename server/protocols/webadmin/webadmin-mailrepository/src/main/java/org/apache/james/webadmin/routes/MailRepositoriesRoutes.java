@@ -33,6 +33,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.commons.io.output.CountingOutputStream;
+import org.apache.james.core.MailAddress;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -62,6 +63,7 @@ import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -331,6 +333,7 @@ public class MailRepositoriesRoutes implements Routes {
         return new ReprocessingService.Configuration(parseTargetQueue(request),
             parseTargetProcessor(request),
             parseMaxRetries(request),
+            parseForRecipient(request),
             parseConsume(request).orElse(true),
             parseLimit(request));
     }
@@ -361,6 +364,11 @@ public class MailRepositoriesRoutes implements Routes {
 
     private Optional<String> parseTargetProcessor(Request request) {
         return Optional.ofNullable(request.queryParams("processor"));
+    }
+
+    private Optional<MailAddress> parseForRecipient(Request request) {
+        return Optional.ofNullable(request.queryParams("forRecipient"))
+            .map(Throwing.function(MailAddress::new));
     }
 
     private Optional<Boolean> parseConsume(Request request) {

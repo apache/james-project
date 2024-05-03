@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 import java.time.Instant;
 import java.util.Optional;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -30,6 +31,7 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.util.streams.Limit;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.fge.lambdas.Throwing;
 
 public class ReprocessingOneMailTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
@@ -44,6 +46,7 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
                     MailQueueName.of(dto.targetQueue),
                     dto.targetProcessor,
                     NO_MAX_RETRIES,
+                    dto.forRecipient.map(Throwing.function(MailAddress::new)),
                     dto.isConsume(),
                     Limit.unlimited()),
                 new MailKey(dto.mailKey),
@@ -55,6 +58,7 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
                 details.getMailKey(),
                 Optional.of(details.getConfiguration().isConsume()),
                 details.getConfiguration().getTargetProcessor(),
+                details.getConfiguration().getForRecipient().map(MailAddress::asString),
                 details.timestamp()))
             .typeName(ReprocessingOneMailTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
@@ -65,6 +69,7 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
     private final String targetQueue;
     private final String mailKey;
     private final Optional<String> targetProcessor;
+    private final Optional<String> forRecipient;
     private final boolean consume;
     private final Instant timestamp;
 
@@ -74,6 +79,7 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
                                                            @JsonProperty("mailKey") String mailKey,
                                                            @JsonProperty("consume") Optional<Boolean> consume,
                                                            @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+                                                           @JsonProperty("forRecipient") Optional<String> forRecipient,
                                                            @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.consume = consume.orElse(true);
@@ -81,6 +87,7 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
         this.targetQueue = targetQueue;
         this.mailKey = mailKey;
         this.targetProcessor = targetProcessor;
+        this.forRecipient = forRecipient;
         this.timestamp = timestamp;
     }
 
@@ -107,6 +114,10 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
 
     public Instant getTimestamp() {
         return timestamp;
+    }
+
+    public Optional<String> getForRecipient() {
+        return forRecipient;
     }
 
     public Optional<String> getTargetProcessor() {

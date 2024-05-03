@@ -1141,6 +1141,39 @@ class MailRepositoriesRoutesTest {
     }
 
     @Test
+    void reprocessingAllTaskShouldAllowFilteringByRecipient() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        String recipient1 = "recipient1@domain";
+        String recipient2 = "recipient2@domain";
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_1)
+            .recipient(recipient1)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(NAME_2)
+            .recipient(recipient2)
+            .mimeMessage(MimeMessageUtil.mimeMessageFromBytes(MESSAGE_BYTES))
+            .build());
+
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("forRecipient", recipient1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await");
+
+        assertThat(mailRepository.list())
+            .toIterable()
+            .containsOnly(new MailKey(NAME_2));
+    }
+
+    @Test
     void reprocessingAllTaskShouldIncludeDetails() throws Exception {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         String name1 = "name1";
