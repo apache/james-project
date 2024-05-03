@@ -21,9 +21,10 @@ package org.apache.james.transport.mailets
 
 import java.time.Duration
 import java.util
-import com.google.common.annotations.VisibleForTesting
-import com.google.common.collect.ImmutableList
 
+import com.google.common.annotations.VisibleForTesting
+import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableList
 import jakarta.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateExceeded, RateLimiter, RateLimiterFactory, RateLimitingKey, RateLimitingResult}
@@ -32,6 +33,8 @@ import org.apache.mailet.base.GenericMailet
 import org.apache.mailet.{Mail, ProcessingState}
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
+
+import scala.jdk.DurationConverters._
 
 case class PerSenderRateLimiter(rateLimiter: Option[RateLimiter], keyPrefix: Option[KeyPrefix], entityType: EntityType) {
   def rateLimit(sender: MailAddress, mail: Mail): Publisher[RateLimitingResult] = {
@@ -75,6 +78,7 @@ case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailA
  *    <li><b>size</b>: Size of emails allowed for a given sender during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
  *    <li><b>totalSize</b>: Size of emails allowed for a given sender during duration (each recipient of the email email count one time). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B. Note that
  *    totalSize is limited in increments of 2exp(31) - ~2 billions: sending a 10MB file to more than 205 recipients will be rejected if this parameter is enabled.</li>
+ *    <li><b>rateLimiterTimeout</b>: [Optional, default to None]. Specifies the timeout exception for rate limiter checking. Supported time unit: seconds (s)</li>
  *  </ul>
  *
  *  <p>For instance, to apply all the examples given above:</p>
@@ -88,6 +92,7 @@ case class SenderKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, mailA
  *     &lt;recipients&gt;20&lt;/recipients&gt;
  *     &lt;size&gt;100M&lt;/size&gt;
  *     &lt;totalSize&gt;200M&lt;/totalSize&gt;
+ *     &lt;rateLimiterTimeout&gt;10s&lt;/rateLimiterTimeout&gt;
  *     &lt;exceededProcessor&gt;tooMuchMails&lt;/exceededProcessor&gt;
  * &lt;/mailet&gt;
  *   </code></pre>
@@ -107,6 +112,7 @@ class PerSenderRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) exten
   private var totalSizeRateLimiter: PerSenderRateLimiter = _
   private var exceededProcessor: String = _
   private var keyPrefix: Option[KeyPrefix] = _
+  private var rateLimiterTimeout: Option[Duration] = _
 
   override def init(): Unit = {
     val duration: Duration = parseDuration()
@@ -114,6 +120,9 @@ class PerSenderRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) exten
 
     keyPrefix = Option(getInitParameter("keyPrefix")).map(KeyPrefix)
     exceededProcessor = getInitParameter("exceededProcessor", Mail.ERROR)
+    rateLimiterTimeout = getMailetConfig.getDuration("rateLimiterTimeout")
+    Preconditions.checkArgument(rateLimiterTimeout.isEmpty || rateLimiterTimeout.get.isPositive, "rateLimiterTimeout can not be negative".asInstanceOf[Object])
+
 
     def perSenderRateLimiter(entityType: EntityType): PerSenderRateLimiter = createRateLimiter(rateLimiterFactory, entityType, keyPrefix, duration, precision)
 
@@ -135,13 +144,16 @@ class PerSenderRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) exten
 
   private def applyRateLimiter(mail: Mail, sender: MailAddress): Unit = {
     val pivot: RateLimitingResult = AcceptableRate
-    val result = SFlux.merge(Seq(
+    val applyRateLimiterPublisher = SFlux.merge(Seq(
         countRateLimiter.rateLimit(sender, mail),
         recipientsRateLimiter.rateLimit(sender, mail),
         sizeRateLimiter.rateLimit(sender, mail),
         totalSizeRateLimiter.rateLimit(sender, mail)))
       .fold(pivot)((a, b) => a.merge(b))
-      .block()
+
+    val result =  rateLimiterTimeout
+      .map(timeout => applyRateLimiterPublisher.block(timeout.toScala))
+      .getOrElse(applyRateLimiterPublisher.block())
 
     if (result.equals(RateExceeded)) {
       mail.setState(exceededProcessor)
