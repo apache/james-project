@@ -57,7 +57,6 @@ import net.javacrumbs.jsonunit.core.Option;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scala.publisher.SMono;
-import scala.jdk.javaapi.CollectionConverters;
 
 class UserIdentitiesRoutesTest {
 
@@ -95,7 +94,7 @@ class UserIdentitiesRoutesTest {
     void listIdentitiesShouldReturnBothCustomAndServerSetIdentities() throws Exception {
         // identity: server set
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         IdentityCreationRequest creationRequest = IdentityCreationRequest.fromJava(
             BOB.asMailAddress(),
@@ -181,7 +180,7 @@ class UserIdentitiesRoutesTest {
     void listIdentitiesShouldSupportDefaultParam() throws Exception {
         // identity: server set
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         Integer highPriorityOrder = 1;
         Integer lowPriorityOrder = 2;
@@ -248,7 +247,7 @@ class UserIdentitiesRoutesTest {
     @Test
     void listIdentitiesShouldReturnBadRequestWhenInvalidDefaultParam() {
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         String response = given()
             .queryParam("default", "invalid")
@@ -272,7 +271,7 @@ class UserIdentitiesRoutesTest {
     @Test
     void listIdentitiesShouldReturnNotFoundWhenCanNotQueryDefaultIdentity() {
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.<Identity>of()).toList());
+            .thenReturn(Flux.empty());
 
         String response = given()
             .queryParam("default", "true")
@@ -318,7 +317,7 @@ class UserIdentitiesRoutesTest {
             "";
 
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         given()
             .body(creationRequest)
@@ -373,7 +372,7 @@ class UserIdentitiesRoutesTest {
             "";
 
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         given()
             .body(creationRequest)
@@ -416,7 +415,7 @@ class UserIdentitiesRoutesTest {
             "    }";
 
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         String response = given()
             .body(creationRequest)
@@ -438,7 +437,7 @@ class UserIdentitiesRoutesTest {
     @Test
     void createIdentityShouldFailWhenInvalidRequest() {
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         String response = given()
             .body("invalid")
@@ -468,7 +467,7 @@ class UserIdentitiesRoutesTest {
             "";
 
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         given()
             .body(creationRequest)
@@ -503,7 +502,7 @@ class UserIdentitiesRoutesTest {
     @Test
     void updateIdentityShouldWork() throws Exception {
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         IdentityCreationRequest creationRequest = IdentityCreationRequest.fromJava(
             BOB.asMailAddress(),
@@ -582,7 +581,7 @@ class UserIdentitiesRoutesTest {
     @Test
     void updateIdentityShouldFailWhenIdNotFound() {
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         String updateRequest = "" +
             "    {" +
@@ -628,7 +627,7 @@ class UserIdentitiesRoutesTest {
     @Test
     void updateIdentityShouldNotModifyAbsentPropertyInRequest() throws Exception {
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         IdentityCreationRequest creationRequest = IdentityCreationRequest.fromJava(
             BOB.asMailAddress(),
@@ -695,7 +694,7 @@ class UserIdentitiesRoutesTest {
     @Test
     void updateIdentityShouldNotAcceptChangeMayDeleteProperty() throws Exception {
         Mockito.when(identityFactory.listIdentities(BOB))
-            .thenReturn(CollectionConverters.asScala(List.of(IdentityRepositoryTest.IDENTITY1())).toList());
+            .thenReturn(Flux.just(IdentityRepositoryTest.IDENTITY1()));
 
         IdentityCreationRequest creationRequest = IdentityCreationRequest.fromJava(
             BOB.asMailAddress(),

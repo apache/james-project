@@ -22,9 +22,7 @@ import static org.apache.james.rrt.lib.Mapping.Type.Alias;
 import static org.apache.james.rrt.lib.Mapping.Type.DomainAlias;
 
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 
@@ -40,13 +38,14 @@ import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CanSendFromImpl implements CanSendFrom {
 
     @FunctionalInterface
     interface DomainFetcher {
-        List<Domain> fetch(Username user);
+        Flux<Domain> fetch(Domain user);
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CanSendFromImpl.class);
@@ -80,8 +79,8 @@ public class CanSendFromImpl implements CanSendFrom {
     }
 
     @Override
-    public Stream<MailAddress> allValidFromAddressesForUser(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
-        return aliasReverseResolver.listAddresses(user);
+    public Flux<MailAddress> allValidFromAddressesForUser(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
+        return Flux.from(aliasReverseResolver.listAddresses(user));
     }
 
     private boolean emailIsAnAliasOfTheConnectedUser(Username connectedUser, Username fromUser) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {

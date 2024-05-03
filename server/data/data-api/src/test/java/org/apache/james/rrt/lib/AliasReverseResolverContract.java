@@ -30,6 +30,8 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 
+import reactor.core.publisher.Flux;
+
 public interface AliasReverseResolverContract {
 
     Domain DOMAIN = Domain.of("example.com");
@@ -66,14 +68,14 @@ public interface AliasReverseResolverContract {
 
     @Test
     default void listAddressesShouldContainOnlyUserAddressWhenUserHasNoAlias() throws Exception {
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .containsExactly(USER.asMailAddress());
     }
 
     @Test
     default void listAddressesShouldContainOnlyUserAddressWhenUserHasNoAliasAndAnotherUserHasOne() throws Exception {
         redirectUser(USER_ALIAS).to(OTHER_USER);
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .containsExactly(USER.asMailAddress());
     }
 
@@ -81,7 +83,7 @@ public interface AliasReverseResolverContract {
     default void listAddressesShouldContainUserAddressAndAnAliasOfTheUser() throws Exception {
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress());
     }
 
@@ -91,7 +93,7 @@ public interface AliasReverseResolverContract {
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress(), userAliasBis.asMailAddress());
     }
 
@@ -101,7 +103,7 @@ public interface AliasReverseResolverContract {
 
         redirectDomain(OTHER_DOMAIN).to(DOMAIN);
 
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), fromUser.asMailAddress());
     }
 
@@ -114,7 +116,7 @@ public interface AliasReverseResolverContract {
 
         Username userAliasMainDomain = USER_ALIAS.withOtherDomain(DOMAIN);
         Username userOtherDomain = USER.withOtherDomain(OTHER_DOMAIN);
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userAliasMainDomain.asMailAddress(), userOtherDomain.asMailAddress());
     }
 
@@ -136,7 +138,7 @@ public interface AliasReverseResolverContract {
         Username userAliasExcluded = Username.of("alias" + (recursionLevel - 1) + "@" + DOMAIN.asString());
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .doesNotContain(userAliasExcluded.asMailAddress());
     }
 
@@ -147,7 +149,7 @@ public interface AliasReverseResolverContract {
         redirectUser(userAliasBis).to(userAlias);
         redirectUser(userAlias).to(USER);
 
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .contains(userAliasBis.asMailAddress());
     }
 
@@ -157,7 +159,7 @@ public interface AliasReverseResolverContract {
         redirectUser(userAliasBis).to(USER_ALIAS);
         redirectUser(USER_ALIAS).to(USER);
 
-        assertThat(aliasReverseResolver().listAddresses(USER))
+        assertThat(Flux.from(aliasReverseResolver().listAddresses(USER)).toStream())
             .contains(userAliasBis.asMailAddress());
     }
 }

@@ -31,6 +31,8 @@ import org.apache.james.rrt.lib.MappingsImpl;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
+
 /**
  * Interface which should be implemented of classes which map recipients.
  */
@@ -136,6 +138,14 @@ public interface RecipientRewriteTable {
             .entrySet().stream()
             .filter(entry -> entry.getValue().contains(mapping))
             .map(Map.Entry::getKey);
+    }
+
+    default Flux<MappingSource> listSourcesReactive(Mapping mapping) {
+        try {
+            return Flux.fromStream(listSources(mapping));
+        } catch (RecipientRewriteTableException e) {
+            return Flux.error(e);
+        }
     }
 
     default Stream<MappingSource> getSourcesForType(Mapping.Type type) throws RecipientRewriteTableException {

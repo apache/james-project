@@ -26,11 +26,9 @@ import org.apache.james.core.{MailAddress, Username}
 import org.apache.james.jmap.api.model.{EmailAddress, ForbiddenSendFromException, HtmlSignature, Identity, IdentityId, IdentityName, MayDeleteIdentity, TextSignature}
 import org.apache.james.rrt.api.CanSendFrom
 import org.apache.james.user.api.UsersRepository
-import org.apache.james.util.ReactorUtils
 import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
-import scala.jdk.StreamConverters._
 import scala.util.Try
 import scala.jdk.OptionConverters._
 import scala.jdk.CollectionConverters._
@@ -171,9 +169,8 @@ trait CustomIdentityDAO {
 }
 
 class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepository: UsersRepository) {
-  def listIdentities(username: Username): List[Identity] = canSendFrom.allValidFromAddressesForUser(username)
-    .toScala(LazyList).toList
-    .flatMap(address =>
+  def listIdentities(username: Username): Publisher[Identity] = SFlux(canSendFrom.allValidFromAddressesForUser(username))
+    .map(address =>
       from(address).map(id =>
         Identity(
           id = id,
@@ -185,13 +182,11 @@ class DefaultIdentitySupplier @Inject()(canSendFrom: CanSendFrom, usersRepositor
           htmlSignature = HtmlSignature.DEFAULT,
           mayDelete = MayDeleteIdentity(false),
           sortOrder = Identity.DEFAULT_SORTORDER)))
+    .flatMap(option => option.map(SMono.just).getOrElse(SMono.empty))
 
   def userCanSendFrom(username: Username, mailAddress: MailAddress): SMono[Boolean] =
     SMono.fromPublisher(canSendFrom.userCanSendFromReactive(username, usersRepository.getUsername(mailAddress)))
       .map(boolean2Boolean(_))
-
-  def isServerSetIdentity(username: Username, id: IdentityId): Boolean =
-    listIdentities(username).map(_.id).contains(id)
 
   private def from(address: MailAddress): Option[IdentityId] =
     Try(UUID.nameUUIDFromBytes(address.asString().getBytes(StandardCharsets.UTF_8)))
@@ -221,8 +216,8 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       .map(_.identity)
 
   private def listServerSetIdentity(user: Username): SMono[(Set[MailAddress], List[Identity])] =
-    SMono.fromCallable(() => identityFactory.listIdentities(user))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+    SFlux(identityFactory.listIdentities(user))
+      .collectSeq().map(s => s.toList)
       .map(list => (list.map(_.email).toSet, list))
 
   private def listCustomIdentity(user: Username, availableMailAddresses: Set[MailAddress]): SFlux[Identity] =
@@ -230,9 +225,9 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       .filter(identity => availableMailAddresses.contains(identity.email))
 
   def update(user: Username, identityId: IdentityId, identityUpdateRequest: IdentityUpdateRequest): Publisher[Unit] = {
-    val findServerSetIdentity: SMono[Option[Identity]] = SMono.fromCallable(() => identityFactory.listIdentities(user)
-      .find(identity => identity.id.equals(identityId)))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+    val findServerSetIdentity: SMono[Option[Identity]] = SFlux(identityFactory.listIdentities(user))
+      .collectSeq().map(s => s.toList)
+      .map(list => list.find(identity => identity.id.equals(identityId)))
     val findCustomIdentity: SMono[Option[Identity]] = SMono(customIdentityDao.findByIdentityId(user, identityId))
       .map(Some(_))
       .switchIfEmpty(SMono.just(None))
@@ -252,17 +247,20 @@ class IdentityRepository @Inject()(customIdentityDao: CustomIdentityDAO, identit
       .`then`()
   }
 
-  def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] =
-    SMono.just(ids)
-      .handle[Set[IdentityId]]{
-        case (ids, sink) => if (identityFactory.isServerSetIdentity(username, ids.head)) {
-          sink.error(IdentityForbiddenDeleteException(ids.head))
+  def delete(username: Username, ids: Set[IdentityId]): Publisher[Unit] = {
+    SFlux(identityFactory.listIdentities(username))
+      .map(_.id)
+      .collectSeq()
+      .flatMapMany(serverSetIdentities => SFlux.fromIterable(ids)
+        .handle[IdentityId] {
+        case (id, sink) => if (serverSetIdentities.contains(id)) {
+          sink.error(IdentityForbiddenDeleteException(id))
         } else {
-          sink.next(ids)
+          sink.next(id)
         }
-      }
-      .flatMap(ids => SMono.fromPublisher(customIdentityDao.delete(username, ids)))
-      .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+      }).collectSeq()
+      .flatMap(ids => SMono.fromPublisher(customIdentityDao.delete(username, ids.toSet)))
+  }
 }
 
 case class IdentityNotFoundException(id: IdentityId) extends RuntimeException(s"$id could not be found")

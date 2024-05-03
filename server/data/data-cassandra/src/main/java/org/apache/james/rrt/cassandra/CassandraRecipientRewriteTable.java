@@ -35,6 +35,8 @@ import org.apache.james.rrt.lib.MappingsImpl;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Flux;
+
 public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private final CassandraRecipientRewriteTableDAO cassandraRecipientRewriteTableDAO;
     private final CassandraMappingsSourcesDAO cassandraMappingsSourcesDAO;
@@ -90,5 +92,12 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
             "Not supported mapping of type %s", mapping.getType());
 
         return cassandraMappingsSourcesDAO.retrieveSources(mapping).toStream();
+    }
+
+    @Override
+    public Flux<MappingSource> listSourcesReactive(Mapping mapping) {
+        Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
+            "Not supported mapping of type %s", mapping.getType());
+        return cassandraMappingsSourcesDAO.retrieveSources(mapping);
     }
 }

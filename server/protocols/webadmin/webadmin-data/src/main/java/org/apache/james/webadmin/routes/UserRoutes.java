@@ -374,10 +374,10 @@ public class UserRoutes implements Routes {
                     .haltError();
             }
 
-            return canSendFrom
-                .allValidFromAddressesForUser(username)
+            return Flux.from(canSendFrom.allValidFromAddressesForUser(username))
                 .map(MailAddress::asString)
-                .collect(ImmutableList.toImmutableList());
+                .collect(ImmutableList.toImmutableList())
+                .block();
         } catch (RecipientRewriteTable.ErrorMappingException | RecipientRewriteTableException | UsersRepositoryException e) {
             String errorMessage = String.format("Error while listing allowed From headers for user '%s'", username);
             LOGGER.info(errorMessage, e);

@@ -19,11 +19,10 @@
 
 package org.apache.james.rrt.api;
 
-import java.util.stream.Stream;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.reactivestreams.Publisher;
 
 public interface AliasReverseResolver {
-    Stream<MailAddress> listAddresses(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException;
+    Publisher<MailAddress> listAddresses(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException;
 }
