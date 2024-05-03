@@ -66,4 +66,9 @@ public class RecordingTimeMetric implements TimeMetric {
         publishCallback.accept(elapsed);
         return new DefaultExecutionResult(elapsed);
     }
+
+    @Override
+    public void record(Duration duration) {
+        publishCallback.accept(duration);
+    }
 }

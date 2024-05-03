@@ -64,4 +64,9 @@ public class DefaultTimeMetric implements TimeMetric {
         return new DefaultExecutionResult(Duration.ofNanos(elapsed));
     }
 
+    @Override
+    public void record(Duration duration) {
+        DefaultMetricFactory.LOGGER.debug("Time spent in {}: {} ms.", name, duration.toMillis());
+    }
+
 }

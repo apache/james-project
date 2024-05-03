@@ -36,4 +36,6 @@ public interface TimeMetric {
 
     ExecutionResult stopAndPublish();
 
+    void record(Duration duration);
+
 }
