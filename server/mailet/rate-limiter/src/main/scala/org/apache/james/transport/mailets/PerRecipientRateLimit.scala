@@ -21,9 +21,10 @@ package org.apache.james.transport.mailets
 
 import java.time.Duration
 import java.util
-import com.google.common.annotations.VisibleForTesting
-import com.google.common.collect.ImmutableList
 
+import com.google.common.annotations.VisibleForTesting
+import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableList
 import jakarta.inject.Inject
 import org.apache.james.core.MailAddress
 import org.apache.james.lifecycle.api.LifecycleUtil
@@ -36,6 +37,7 @@ import org.reactivestreams.Publisher
 import reactor.core.scala.publisher.{SFlux, SMono}
 
 import scala.jdk.CollectionConverters._
+import scala.jdk.DurationConverters._
 import scala.util.Using
 
 case class PerRecipientRateLimiter(rateLimiter: RateLimiter, keyPrefix: Option[KeyPrefix], entityType: EntityType) {
@@ -71,6 +73,7 @@ case class RecipientKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, ma
  *    <li><b>duration</b>: Duration during which the rate limiting shall be applied. Compulsory, must be a valid duration of at least one second. Supported units includes s (second), m (minute), h (hour), d (day).</li>
  *    <li><b>count</b>: Count of emails allowed for a given sender during duration. Optional, if unspecified this rate limit is not applied.</li>
  *    <li><b>size</b>: Size of emails allowed for a given sender during duration (each email count one time, regardless of recipient count). Optional, if unspecified this rate limit is not applied. Supported units : B ( 2^0 ), K ( 2^10 ), M ( 2^20 ), G ( 2^30 ), defaults to B.</li>
+ *    <li><b>rateLimiterTimeout</b>: [Optional, default to None]. Specifies the timeout exception for rate limiter checking. Supported time unit: seconds (s)</li>
  *  </ul>
  *
  *  <p>For instance, to apply all the examples given above:</p>
@@ -81,6 +84,7 @@ case class RecipientKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, ma
  *     &lt;duration&gt;1h&lt;/duration&gt;
  *     &lt;count&gt;10&lt;/count&gt;
  *     &lt;size&gt;100M&lt;/size&gt;
+ *     &lt;rateLimiterTimeout&gt;10s&lt;/rateLimiterTimeout&gt;
  *     &lt;exceededProcessor&gt;tooMuchMails&lt;/exceededProcessor&gt;
  * &lt;/mailet&gt;
  *   </code></pre>
@@ -96,12 +100,15 @@ case class RecipientKey(keyPrefix: Option[KeyPrefix], entityType: EntityType, ma
 class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) extends GenericMailet {
   private var exceededProcessor: String = _
   private var rateLimiters: Seq[PerRecipientRateLimiter] = _
+  private var rateLimiterTimeout: Option[Duration] = _
 
   override def init(): Unit = {
     val duration: Duration = parseDuration()
     val precision: Option[Duration] = getMailetConfig.getDuration("precision")
     val keyPrefix: Option[KeyPrefix] = getMailetConfig.getOptionalString("keyPrefix").map(KeyPrefix)
     exceededProcessor = getMailetConfig.getOptionalString("exceededProcessor").getOrElse(Mail.ERROR)
+    rateLimiterTimeout = getMailetConfig.getDuration("rateLimiterTimeout")
+    Preconditions.checkArgument(rateLimiterTimeout.isEmpty || rateLimiterTimeout.get.isPositive, "rateLimiterTimeout can not be negative".asInstanceOf[Object])
 
     def perRecipientRateLimiter(entityType: EntityType): Option[PerRecipientRateLimiter] = createRateLimiter(entityType, duration, precision, rateLimiterFactory, keyPrefix)
 
@@ -140,13 +147,19 @@ class PerRecipientRateLimit @Inject()(rateLimiterFactory: RateLimiterFactory) ex
       .map(PerRecipientRateLimiter(_, keyPrefix, entityType))
 
 
-  private def applyRateLimiter(mail: Mail): Seq[(MailAddress, RateLimitingResult)] =
-    SFlux.fromIterable(mail.getRecipients.asScala)
+  private def applyRateLimiter(mail: Mail): Seq[(MailAddress, RateLimitingResult)] = {
+
+    val applyRateLimiterPublisher = SFlux.fromIterable(mail.getRecipients.asScala)
       .flatMap(recipient => SFlux.merge(rateLimiters.map(rateLimiter => rateLimiter.rateLimit(recipient, mail)))
         .fold[RateLimitingResult](AcceptableRate)((a, b) => a.merge(b))
         .map(rateLimitingResult => (recipient, rateLimitingResult)), DEFAULT_CONCURRENCY)
       .collectSeq()
-      .block()
+
+    rateLimiterTimeout
+      .map(timeout => applyRateLimiterPublisher.block(timeout.toScala))
+      .getOrElse(applyRateLimiterPublisher.block())
+
+  }
 
 
   override def requiredProcessingState(): util.Collection[ProcessingState] = ImmutableList.of(new ProcessingState(exceededProcessor))
