@@ -54,7 +54,7 @@ public class CanSendFromImplTest implements CanSendFromContract {
         recipientRewriteTable.setUserEntityValidator(UserEntityValidator.NOOP);
 
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
-        canSendFrom = new CanSendFromImpl(recipientRewriteTable, aliasReverseResolver);
+        canSendFrom = new CanSendFromImpl(aliasReverseResolver);
     }
 
     @Override

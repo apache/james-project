@@ -153,7 +153,7 @@ class LmtpServerTest {
         MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
         rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
-        CanSendFrom canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
+        CanSendFrom canSendFrom = new CanSendFromImpl(aliasReverseResolver);
         return MockProtocolHandlerLoader.builder()
             .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
             .put(binder -> binder.bind(RecipientRewriteTable.class).toInstance(rewriteTable))

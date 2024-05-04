@@ -127,7 +127,7 @@ class UserRoutesTest {
             this.recipientRewriteTable.setDomainList(domainList);
             this.recipientRewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
             this.aliasReverseResolver = new AliasReverseResolverImpl(recipientRewriteTable);
-            this.canSendFrom = new CanSendFromImpl(recipientRewriteTable, aliasReverseResolver);
+            this.canSendFrom = new CanSendFromImpl(aliasReverseResolver);
             UserEntityValidator validator = UserEntityValidator.aggregate(
                 new DefaultUserEntityValidator(this.usersRepository),
                 new RecipientRewriteTableUserEntityValidator(recipientRewriteTable));

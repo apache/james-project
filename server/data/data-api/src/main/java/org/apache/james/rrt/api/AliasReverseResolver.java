@@ -24,5 +24,5 @@ import org.apache.james.core.Username;
 import org.reactivestreams.Publisher;
 
 public interface AliasReverseResolver {
-    Publisher<MailAddress> listAddresses(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException;
+    Publisher<MailAddress> listAddresses(Username user);
 }
