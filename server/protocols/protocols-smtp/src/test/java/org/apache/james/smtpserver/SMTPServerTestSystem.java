@@ -156,7 +156,7 @@ class SMTPServerTestSystem {
         rewriteTable = new MemoryRecipientRewriteTable();
         rewriteTable.setConfiguration(RecipientRewriteTableConfiguration.DEFAULT_ENABLED);
         AliasReverseResolver aliasReverseResolver = new AliasReverseResolverImpl(rewriteTable);
-        CanSendFrom canSendFrom = new CanSendFromImpl(rewriteTable, aliasReverseResolver);
+        CanSendFrom canSendFrom = new CanSendFromImpl(aliasReverseResolver);
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory(), CLOCK);
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
