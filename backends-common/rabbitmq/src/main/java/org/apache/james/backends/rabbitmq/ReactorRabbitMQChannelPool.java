@@ -700,7 +700,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             .subscribeOn(Schedulers.boundedElastic()))
             .buildPool();
 
-        gaugeRegistry.register("rabbitmq.channels.aquired.size", () -> newPool.metrics().acquiredSize());
+        gaugeRegistry.register("rabbitmq.channels.acquired.size", () -> newPool.metrics().acquiredSize());
         gaugeRegistry.register("rabbitmq.channels.allocated.size", () -> newPool.metrics().allocatedSize());
         gaugeRegistry.register("rabbitmq.channels.idle.size", () -> newPool.metrics().idleSize());
         gaugeRegistry.register("rabbitmq.channels.pending.aquire.size", () -> newPool.metrics().pendingAcquireSize());
