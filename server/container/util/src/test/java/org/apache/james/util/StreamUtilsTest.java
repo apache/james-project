@@ -20,11 +20,8 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -113,72 +110,5 @@ class StreamUtilsTest {
         assertThat(StreamUtils.ofNullable(ImmutableList.of(1, 2).toArray())
             .collect(ImmutableList.toImmutableList()))
             .containsExactly(1, 2);
-    }
-
-    @Test
-    void unfoldShouldGenerateAFiniteStream() {
-        Stream<Integer> unfolded = StreamUtils.unfold(1, i -> {
-            if (i < 10) {
-                return Optional.of(i + 1);
-            } else {
-                return Optional.empty();
-            }
-        });
-
-        assertThat(unfolded.collect(ImmutableList.toImmutableList()))
-            .contains(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-    }
-
-    @Test
-    void unfoldShouldGenerateALazyInfiniteStream() {
-        AtomicInteger counter = new AtomicInteger(0);
-        Stream<Integer> unfolded = StreamUtils.unfold(1, i -> {
-            counter.incrementAndGet();
-            return Optional.of(i + 1);
-        });
-
-        assertThat(unfolded.limit(10).collect(ImmutableList.toImmutableList()))
-            .contains(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-
-        assertThat(counter.get())
-            .isEqualTo(10);
-    }
-
-    @Test
-    void unfoldShouldHaveAtLeastTheSeed() {
-        Stream<Integer> unfolded = StreamUtils.unfold(1, i -> Optional.empty());
-
-        assertThat(unfolded.collect(ImmutableList.toImmutableList()))
-            .contains(1);
-    }
-
-    @Test
-    void iterateWithANegativeLimitShouldThrow() {
-        assertThatCode(() -> StreamUtils.iterate(1, (long) -1, Stream::of))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void iterateWithZeroLimitShouldHaveOnlyTheSeed() {
-        Stream<Integer> generated = StreamUtils.iterate(1, (long) 0, Stream::of);
-
-        assertThat(generated.collect(ImmutableList.toImmutableList()))
-            .containsOnly(1);
-    }
-
-    @Test
-    void iterateWithEmptyGeneratorShouldHaveOnlyTheSeed() {
-        Stream<Integer> generated = StreamUtils.iterate(1, (long) 10, i -> Stream.of());
-
-        assertThat(generated.collect(ImmutableList.toImmutableList()))
-            .containsOnly(1);
-    }
-
-    @Test
-    void iterateWithGeneratorShouldHaveOnlyTheLimitedElements() {
-        Stream<Integer> generated = StreamUtils.iterate(1, (long) 5, i -> Stream.of(i + 1));
-
-        assertThat(generated.collect(ImmutableList.toImmutableList()))
-            .containsOnly(1, 2, 3, 4, 5, 6);
     }
 }
