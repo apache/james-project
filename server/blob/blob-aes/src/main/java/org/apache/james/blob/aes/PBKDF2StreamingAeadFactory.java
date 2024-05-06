@@ -35,7 +35,7 @@ public class PBKDF2StreamingAeadFactory {
     private static final String SECRET_KEY_FACTORY_ALGORITHM = "PBKDF2WithHmacSHA512";
     private static final String HKDF_ALGO = "HmacSha256";
     private static final int KEY_SIZE_IN_BYTES = 32;
-    private static final int SEGMENT_SIZE = 4096;
+    static final int SEGMENT_SIZE = 4096;
     private static final int OFFSET = 0;
     public static final byte[] EMPTY_ASSOCIATED_DATA = new byte[0];
 

@@ -112,9 +112,8 @@ public class AESBlobStoreDAO implements BlobStoreDAO {
         return Mono.from(underlying.readBytes(bucketName, blobId))
             .map(Throwing.function(bytes -> {
                 InputStream inputStream = decrypt(new ByteArrayInputStream(bytes));
-                int aesPadding = 128;
                 try (UnsynchronizedByteArrayOutputStream outputStream = UnsynchronizedByteArrayOutputStream.builder()
-                    .setBufferSize(bytes.length + aesPadding)
+                    .setBufferSize(bytes.length + PBKDF2StreamingAeadFactory.SEGMENT_SIZE)
                     .get()) {
                     IOUtils.copy(inputStream, outputStream);
                     return outputStream.toByteArray();
