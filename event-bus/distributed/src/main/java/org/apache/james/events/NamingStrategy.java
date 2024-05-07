@@ -51,4 +51,8 @@ public class NamingStrategy {
     public GroupRegistration.WorkQueueName workQueue(Group group) {
         return new GroupRegistration.WorkQueueName(prefix, group);
     }
+
+    public String getPrefix() {
+        return prefix;
+    }
 }
