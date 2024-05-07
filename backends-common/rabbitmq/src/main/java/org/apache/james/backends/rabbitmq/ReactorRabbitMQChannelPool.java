@@ -33,6 +33,7 @@ import java.util.function.BiConsumer;
 import jakarta.annotation.PreDestroy;
 
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -671,7 +672,8 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     private final MetricFactory metricFactory;
     private Sender sender;
 
-    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, Configuration configuration, MetricFactory metricFactory) {
+    public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, Configuration configuration, MetricFactory metricFactory,
+                                      GaugeRegistry gaugeRegistry) {
         this.connectionMono = connectionMono;
         this.configuration = configuration;
         this.metricFactory = metricFactory;
@@ -697,6 +699,11 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
             .then()
             .subscribeOn(Schedulers.boundedElastic()))
             .buildPool();
+
+        gaugeRegistry.register("rabbitmq.channels.acquired.size", () -> newPool.metrics().acquiredSize());
+        gaugeRegistry.register("rabbitmq.channels.allocated.size", () -> newPool.metrics().allocatedSize());
+        gaugeRegistry.register("rabbitmq.channels.idle.size", () -> newPool.metrics().idleSize());
+        gaugeRegistry.register("rabbitmq.channels.pending.aquire.size", () -> newPool.metrics().pendingAcquireSize());
     }
 
     private Mono<? extends Channel> openChannel(Connection connection) {

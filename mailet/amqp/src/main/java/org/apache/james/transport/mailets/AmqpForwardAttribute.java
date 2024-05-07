@@ -36,6 +36,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -138,7 +139,7 @@ public class AmqpForwardAttribute extends GenericMailet {
                 .initialDelay(Duration.ofMillis(5)));
             reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool.getResilientConnection(),
                 ReactorRabbitMQChannelPool.Configuration.DEFAULT,
-                metricFactory);
+                metricFactory, new NoopGaugeRegistry());
             reactorRabbitMQChannelPool.start();
             sender = reactorRabbitMQChannelPool.getSender();
             sender.declareExchange(ExchangeSpecification.exchange(exchange));

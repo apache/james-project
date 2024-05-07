@@ -32,6 +32,7 @@ import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -94,11 +95,12 @@ public class RabbitMQModule extends AbstractModule {
     @Singleton
     ReactorRabbitMQChannelPool provideReactorRabbitMQChannelPool(SimpleConnectionPool simpleConnectionPool,
                                                                  ReactorRabbitMQChannelPool.Configuration configuration,
-                                                                 MetricFactory metricFactory) {
+                                                                 MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         ReactorRabbitMQChannelPool channelPool = new ReactorRabbitMQChannelPool(
             simpleConnectionPool.getResilientConnection(),
             configuration,
-            metricFactory);
+            metricFactory,
+            gaugeRegistry);
         channelPool.start();
         return channelPool;
     }
