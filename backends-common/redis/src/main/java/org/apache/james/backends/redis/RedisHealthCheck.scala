@@ -21,19 +21,22 @@ package org.apache.james.backends.redis
 
 import java.time.Duration
 
+import io.lettuce.core.RedisClient
+import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.cluster.RedisClusterClient
-import io.lettuce.core.codec.StringCodec
-import io.lettuce.core.{RedisClient, RedisURI}
+import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands
+import jakarta.annotation.PreDestroy
 import jakarta.inject.Inject
 import org.apache.commons.lang3.StringUtils
 import org.apache.james.backends.redis.RedisHealthCheck.redisComponent
 import org.apache.james.core.healthcheck.{ComponentName, HealthCheck, Result}
 import org.reactivestreams.Publisher
-import reactor.core.scala.publisher.{SFlux, SMono}
+import reactor.core.publisher.Mono
+import reactor.core.scala.publisher.SMono
+import reactor.core.scheduler.Schedulers
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.jdk.CollectionConverters._
-import scala.jdk.FutureConverters._
+import scala.jdk.DurationConverters._
 
 object RedisHealthCheck {
   val redisComponent: ComponentName = new ComponentName("Redis")
@@ -52,46 +55,71 @@ class RedisHealthCheck @Inject()(redisConfiguration: RedisConfiguration) extends
   override def check(): Publisher[Result] =
     healthcheckPerform.check()
       .onErrorResume(_ => SMono.just(Result.degraded(redisComponent, "Can not connect to Redis.")))
+
+  @PreDestroy
+  def close(): Unit = healthcheckPerform.close()
 }
 
 sealed trait RedisHealthcheckPerform {
   def check(): SMono[Result]
+
+  def close(): Unit
 }
 
 class RedisClusterHealthCheckPerform(val redisConfiguration: RedisConfiguration,
                                      val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
 
   private val CLUSTER_STATUS_OK: String = "ok"
+  private val redisClusterClient: RedisClusterClient = RedisClusterClient.create(
+    redisConfiguration.redisURI.value
+      .map(rURI => {
+        rURI.setTimeout(healthcheckTimeout)
+        rURI
+      }).asJava)
+
+  private val redisCommand: RedisAdvancedClusterReactiveCommands[String, String] = {
+    redisClusterClient.getPartitions
+    redisClusterClient.connect().reactive()
+  }
 
   override def check(): SMono[Result] =
-    SFlux.fromIterable(redisConfiguration.redisURI.value)
-      .doOnNext(redisUri => redisUri.setTimeout(healthcheckTimeout))
-      .collectSeq()
-      .map(redisUris => RedisClusterClient.create(redisUris.asJava))
-      .flatMap(getClusterInfo)
+    SMono(redisCommand.clusterInfo())
+      .timeout(healthcheckTimeout.toScala)
+      .map(clusterInfo => StringUtils.substringBetween(clusterInfo, "cluster_state:", "\n").trim)
       .map {
         case CLUSTER_STATUS_OK => Result.healthy(redisComponent)
         case unExpectedState => Result.degraded(redisComponent, "Redis cluster state: " + unExpectedState)
       }
 
-  private def getClusterInfo(redisClusterClient: RedisClusterClient): SMono[String] =
-    SMono.fromCallable(() => redisClusterClient.getPartitions)
-      .flatMap(_ => SMono.fromFuture(redisClusterClient.connectAsync(StringCodec.UTF8).asScala)
-        .flatMap(con => SMono.fromPublisher(con.reactive().clusterInfo())))
-      .map(clusterInfo => StringUtils.substringBetween(clusterInfo, "cluster_state:", "\n").trim)
-      .doOnTerminate(() => redisClusterClient.shutdownAsync())
-
+  override def close(): Unit = Mono.fromCompletionStage(redisClusterClient.shutdownAsync())
+    .subscribeOn(Schedulers.boundedElastic())
+    .subscribe()
 }
 
 class RedisStandaloneHealthCheckPerform(val redisConfiguration: RedisConfiguration,
                                         val healthcheckTimeout: Duration) extends RedisHealthcheckPerform {
 
+  private val PING_SUCCESS_RESPONSE = "PONG"
+
+  private val redisClient: RedisClient = RedisClient.create(
+    redisConfiguration.redisURI.value
+      .map(rURI => {
+        rURI.setTimeout(healthcheckTimeout)
+        rURI
+      }).last)
+
+  private val redisCommand: RedisReactiveCommands[String, String] = redisClient.connect().reactive()
+
   override def check(): SMono[Result] =
-    SMono.just(redisConfiguration.redisURI.value.last)
-      .doOnNext(redisUri => redisUri.setTimeout(healthcheckTimeout))
-      .map(redisUri => (RedisClient.create(redisUri), redisUri))
-      .flatMap {
-        case (redisClient: RedisClient, redisUri: RedisURI) => SMono.fromFuture(redisClient.connectAsync(StringCodec.UTF8, redisUri).asScala)
-          .doOnTerminate(() => redisClient.shutdownAsync())
-      }.`then`(SMono.just(Result.healthy(redisComponent)))
+    SMono(redisCommand.ping())
+      .timeout(healthcheckTimeout.toScala)
+      .filter(_ == PING_SUCCESS_RESPONSE)
+      .map(_ => Result.healthy(redisComponent))
+      .switchIfEmpty(SMono.just(Result.degraded(redisComponent, "Can not PING to Redis.")))
+
+  override def close(): Unit =
+    Mono.fromCompletionStage(redisClient.shutdownAsync())
+      .subscribeOn(Schedulers.boundedElastic())
+      .subscribe()
+
 }
