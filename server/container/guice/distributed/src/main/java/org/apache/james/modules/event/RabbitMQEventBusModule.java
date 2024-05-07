@@ -20,6 +20,7 @@
 package org.apache.james.modules.event;
 
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.event.json.MailboxEventSerializer;
 import org.apache.james.events.EventBus;
 import org.apache.james.events.EventBusId;
@@ -27,6 +28,7 @@ import org.apache.james.events.EventBusReconnectionHandler;
 import org.apache.james.events.EventSerializer;
 import org.apache.james.events.KeyReconnectionHandler;
 import org.apache.james.events.NamingStrategy;
+import org.apache.james.events.RabbitEventBusConsumerHealthCheck;
 import org.apache.james.events.RabbitMQEventBus;
 import org.apache.james.events.RegistrationKey;
 import org.apache.james.events.RetryBackoffConfiguration;
@@ -59,6 +61,12 @@ public class RabbitMQEventBusModule extends AbstractModule {
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(KeyReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(EventBusReconnectionHandler.class);
+    }
+
+    @ProvidesIntoSet
+    HealthCheck healthCheck(RabbitMQEventBus eventBus, NamingStrategy namingStrategy,
+                            SimpleConnectionPool connectionPool) {
+        return new RabbitEventBusConsumerHealthCheck(eventBus, namingStrategy, connectionPool);
     }
 
     @ProvidesIntoSet

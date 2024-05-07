@@ -36,6 +36,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
+import org.apache.james.queue.rabbitmq.RabbitMQMailQueueConsumerHealthCheck;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.utils.InitializationOperation;
@@ -65,6 +66,8 @@ public class RabbitMQModule extends AbstractModule {
         bind(SimpleConnectionPool.class).in(Scopes.SINGLETON);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQHealthCheck.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQMailQueueConsumerHealthCheck.class);
 
         Multibinder<SimpleConnectionPool.ReconnectionHandler> reconnectionHandlerMultibinder = Multibinder.newSetBinder(binder(), SimpleConnectionPool.ReconnectionHandler.class);
         reconnectionHandlerMultibinder.addBinding().to(SpoolerReconnectionHandler.class);

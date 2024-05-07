@@ -26,6 +26,7 @@ import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
 import static org.apache.james.events.GroupRegistration.DEFAULT_RETRY_COUNT;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -194,5 +195,9 @@ class GroupRegistrationHandler {
             eventDeadLetters,
             () -> groupRegistrations.remove(group),
             listenerExecutor, configuration);
+    }
+
+    Collection<Group> registeredGroups() {
+        return groupRegistrations.keySet();
     }
 }
