@@ -35,10 +35,13 @@ import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.util.ReactorUtils;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.type.codec.TypeCodecs;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraDomainList extends AbstractDomainList {
     private final CassandraAsyncExecutor executor;
@@ -85,6 +88,14 @@ public class CassandraDomainList extends AbstractDomainList {
                 .set(DOMAIN, domain.asString(), TypeCodecs.TEXT))
             .block()
             .isPresent();
+    }
+
+    @Override
+    public Mono<Boolean> containsDomainReactive(Domain domain) {
+        return executor.executeSingleRowOptional(readStatement.bind()
+            .set(DOMAIN, domain.asString(), TypeCodecs.TEXT))
+            .handle(ReactorUtils.publishIfPresent())
+            .hasElement();
     }
 
     @Override

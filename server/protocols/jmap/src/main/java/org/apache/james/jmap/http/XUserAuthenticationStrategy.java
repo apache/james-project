@@ -28,8 +28,6 @@ import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.ReactorUtils;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -62,14 +60,9 @@ public class XUserAuthenticationStrategy implements AuthenticationStrategy {
     }
 
     private Mono<MailboxSession> createMailboxSession(Username username) {
-        return Mono.fromCallable(() -> {
-            try {
-                usersRepository.assertValid(username);
-            } catch (UsersRepositoryException e) {
-                throw new UnauthorizedException("Invalid username", e);
-            }
-            return mailboxManager.authenticate(username).withoutDelegation();
-        }).subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+        return usersRepository.assertValidReactive(username)
+            .onErrorMap(e -> new UnauthorizedException("Invalid username", e))
+            .then(Mono.fromCallable(() -> mailboxManager.authenticate(username).withoutDelegation()));
     }
 
     @Override

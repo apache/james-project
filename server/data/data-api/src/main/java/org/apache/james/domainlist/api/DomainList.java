@@ -21,6 +21,7 @@ package org.apache.james.domainlist.api;
 import java.util.List;
 
 import org.apache.james.core.Domain;
+import org.reactivestreams.Publisher;
 
 /**
  * This interface should be implemented by services which offer domains for
@@ -42,6 +43,8 @@ public interface DomainList {
      * @return true if the given domain exists in the service
      */
     boolean containsDomain(Domain domain) throws DomainListException;
+
+    Publisher<Boolean> containsDomainReactive(Domain domain);
 
     /**
      * Add domain to the service
