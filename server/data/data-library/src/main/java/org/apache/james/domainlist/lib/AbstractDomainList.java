@@ -333,6 +333,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     protected abstract List<Domain> getDomainListInternal() throws DomainListException;
 
     protected abstract boolean containsDomainInternal(Domain domain) throws DomainListException;
+
     protected Mono<Boolean> containsDomainInternalReactive(Domain domain) {
         return Mono.fromCallable(() -> containsDomainInternal(domain))
             .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
