@@ -21,6 +21,7 @@ package org.apache.james.jmap.rfc8621.memory;
 
 import static org.apache.james.data.UsersRepositoryModuleChooser.Implementation.DEFAULT;
 
+import org.apache.james.ClockExtension;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesConfiguration;
@@ -40,6 +41,7 @@ public class MemoryPushSubscriptionSetMethodTest implements PushSubscriptionSetM
             .configurationFromClasspath()
             .usersRepository(DEFAULT)
             .build())
+        .extension(new ClockExtension())
         .server(configuration -> MemoryJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule(), new PushSubscriptionProbeModule())
             .overrideWith(binder -> binder.bind(PushClientConfiguration.class).toInstance(PushClientConfiguration.UNSAFE_DEFAULT())))

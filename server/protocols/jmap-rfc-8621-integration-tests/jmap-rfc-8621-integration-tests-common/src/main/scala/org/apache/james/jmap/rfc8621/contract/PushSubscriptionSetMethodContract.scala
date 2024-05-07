@@ -47,7 +47,7 @@ import org.apache.james.jmap.core.UTCDate
 import org.apache.james.jmap.http.UserCredential
 import org.apache.james.jmap.rfc8621.contract.Fixture.{ACCEPT_RFC8621_VERSION_HEADER, BOB, BOB_PASSWORD, DOMAIN, authScheme, baseRequestSpecBuilder}
 import org.apache.james.jmap.rfc8621.contract.PushSubscriptionSetMethodContract.TIME_FORMATTER
-import org.apache.james.utils.{DataProbeImpl, GuiceProbe}
+import org.apache.james.utils.{DataProbeImpl, GuiceProbe, UpdatableTickingClock}
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.{BeforeEach, Test}
@@ -684,6 +684,49 @@ trait PushSubscriptionSetMethodContract {
            |        ]
            |    ]
            |}""".stripMargin)
+  }
+
+  @Test
+  def getShouldNotReturnExpiredSubscriptionAndTriggerTheDeletion(server: GuiceJamesServer, clock: UpdatableTickingClock): Unit = {
+    val probe = server.getProbe(classOf[PushSubscriptionProbe])
+    val pushSubscription1 = probe
+      .createPushSubscription(username = BOB,
+        url = PushSubscriptionServerURL(new URI("https://example.com/push/?device=X8980fc&client=12c6d086").toURL()),
+        deviceId = DeviceClientId("12c6d086"),
+        types = Seq(MailboxTypeName))
+    probe.validatePushSubscription(BOB, pushSubscription1.id)
+
+    clock.setInstant(ZonedDateTime.now().plusDays(100).toInstant)
+
+    assertThatJson(`given`
+      .body("""{
+              |    "using": ["urn:ietf:params:jmap:core"],
+              |    "methodCalls": [ [ "PushSubscription/get", { }, "c1" ] ]
+              |}""".stripMargin)
+      .when
+        .post
+      .`then`
+        .statusCode(SC_OK)
+        .contentType(JSON)
+        .extract
+        .body
+        .asString)
+        .isEqualTo(
+          s"""{
+             |    "sessionState": "${SESSION_STATE.value}",
+             |    "methodResponses": [
+             |        [
+             |            "PushSubscription/get",
+             |            {
+             |                "list": []
+             |            },
+             |            "c1"
+             |        ]
+             |    ]
+             |}""".stripMargin)
+
+    assertThat(probe.retrievePushSubscription(BOB, pushSubscription1.id))
+      .isNull()
   }
 
   @Test
