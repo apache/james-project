@@ -24,8 +24,11 @@ import java.util.List;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.reactivestreams.Publisher;
 
 import com.google.common.collect.ImmutableList;
+
+import reactor.core.publisher.Mono;
 
 /**
  * Simplest implementation for ManageableDomainList
@@ -37,6 +40,11 @@ public class SimpleDomainList implements DomainList {
     @Override
     public boolean containsDomain(Domain domain) {
         return domains.contains(domain);
+    }
+
+    @Override
+    public Publisher<Boolean> containsDomainReactive(Domain domain) {
+        return Mono.fromCallable(() -> containsDomain(domain));
     }
 
     @Override

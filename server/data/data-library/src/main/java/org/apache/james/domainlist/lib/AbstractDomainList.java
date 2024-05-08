@@ -24,6 +24,7 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
@@ -36,19 +37,21 @@ import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.benmanes.caffeine.cache.AsyncCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+
+import reactor.core.publisher.Mono;
 
 /**
  * All implementations of the DomainList interface should extends this abstract
@@ -68,7 +71,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     private final DNSService dns;
     private final EnvDetector envDetector;
-    private LoadingCache<Domain, Boolean> cache;
+    private AsyncCache<Domain, Boolean> cache;
     private DomainListConfiguration configuration;
     private Domain defaultDomain;
 
@@ -91,14 +94,9 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
         this.configuration = domainListConfiguration;
 
-        this.cache = CacheBuilder.newBuilder()
+        cache = Caffeine.newBuilder()
             .expireAfterWrite(configuration.getCacheExpiracy())
-            .build(new CacheLoader<>() {
-                @Override
-                public Boolean load(Domain key) throws DomainListException {
-                    return containsDomainInternal(key) || detectedDomainsContains(key);
-                }
-            });
+            .buildAsync();
 
         configureDefaultDomain(domainListConfiguration.getDefaultDomain());
 
@@ -171,24 +169,46 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     public boolean containsDomain(Domain domain) throws DomainListException {
         if (configuration.isCacheEnabled()) {
             try {
-                return cache.get(domain);
+                return cache.get(domain, (key, executor) -> innerContains(domain).toFuture()).get();
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof DomainListException) {
                     throw (DomainListException) e.getCause();
                 }
                 throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
             }
         } else {
-            boolean internalAnswer = containsDomainInternal(domain);
-            return internalAnswer || detectedDomainsContains(domain);
+            return innerContains(domain).block();
         }
     }
 
-    private boolean detectedDomainsContains(Domain domain) throws DomainListException {
-        if (configuration.isAutoDetect() || configuration.isAutoDetectIp()) {
-            return getDomains().contains(domain);
+    @Override
+    public Mono<Boolean> containsDomainReactive(Domain domain) {
+        if (configuration.isCacheEnabled()) {
+            return Mono.fromFuture(cache.get(domain, (key, executor) -> innerContains(domain).toFuture()));
+        } else {
+            return innerContains(domain);
         }
-        return false;
+    }
+
+    private Mono<Boolean> innerContains(Domain domain) {
+        return containsDomainInternalReactive(domain)
+            .flatMap(containsInternal -> {
+                if (containsInternal) {
+                    return Mono.just(true);
+                }
+                return detectedDomainsContains(domain);
+            });
+    }
+
+    private Mono<Boolean> detectedDomainsContains(Domain domain) {
+        if (configuration.isAutoDetect() || configuration.isAutoDetectIp()) {
+            return Mono.fromCallable(() -> getDomains().contains(domain))
+                .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+        }
+        return Mono.just(false);
     }
 
     @Override
@@ -200,7 +220,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
         if (configuration.isCacheEnabled()) {
             domainsWithType.get(DomainType.Internal)
-                .forEach(domain -> cache.put(domain, true));
+                .forEach(domain -> cache.put(domain, CompletableFuture.completedFuture(true)));
         }
 
         if (LOGGER.isDebugEnabled()) {
@@ -313,6 +333,11 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     protected abstract List<Domain> getDomainListInternal() throws DomainListException;
 
     protected abstract boolean containsDomainInternal(Domain domain) throws DomainListException;
+
+    protected Mono<Boolean> containsDomainInternalReactive(Domain domain) {
+        return Mono.fromCallable(() -> containsDomainInternal(domain))
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER);
+    }
 
     protected abstract void doRemoveDomain(Domain domain) throws DomainListException;
 

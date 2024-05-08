@@ -28,8 +28,11 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.UsersRepositoryImpl;
+
+import reactor.core.publisher.Mono;
 
 /**
  * <p>
@@ -218,6 +221,20 @@ public class ReadOnlyUsersLDAPRepository extends UsersRepositoryImpl<ReadOnlyLDA
         boolean localPartAsLoginUsernameSupported = ldapConfiguration.getResolveLocalPartAttribute().isPresent();
         if (!localPartAsLoginUsernameSupported) {
             assertDomainPartValid(username);
+        }
+    }
+
+    @Override
+    public Mono<Void> assertValidReactive(Username username) {
+        try {
+            assertLocalPartValid(username);
+            boolean localPartAsLoginUsernameSupported = ldapConfiguration.getResolveLocalPartAttribute().isPresent();
+            if (!localPartAsLoginUsernameSupported) {
+                return assertDomainPartValidReactive(username);
+            }
+            return Mono.empty();
+        } catch (InvalidUsernameException e) {
+            return Mono.error(e);
         }
     }
 }

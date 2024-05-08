@@ -26,9 +26,13 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
+import org.apache.james.util.ReactorUtils;
 import org.reactivestreams.Publisher;
 
+import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Interface for a repository of users. A repository represents a logical
@@ -173,6 +177,12 @@ public interface UsersRepository {
         if (username.getDomainPart().isPresent() != supportVirtualHosting()) {
             throw new UsersRepositoryException(username.asString() + " username candidate do not match the virtualHosting strategy");
         }
+    }
+
+    default Mono<Void> assertValidReactive(Username username) {
+        return Mono.fromRunnable(Throwing.runnable(() -> assertValid(username)).sneakyThrow())
+            .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
+            .then();
     }
 
     default Publisher<Username> listUsersOfADomainReactive(Domain domain) {

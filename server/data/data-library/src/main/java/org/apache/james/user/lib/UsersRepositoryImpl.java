@@ -45,7 +45,10 @@ import org.apache.james.util.DurationParser;
 import org.reactivestreams.Publisher;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.CharMatcher;
+
+import reactor.core.publisher.Mono;
 
 public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository, Configurable {
     public static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(UsersRepositoryImpl.class);
@@ -90,6 +93,12 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
         assertLocalPartValid(username);
     }
 
+    @Override
+    public Mono<Void> assertValidReactive(Username username) {
+        return assertDomainPartValidReactive(username)
+            .then(Mono.fromRunnable(Throwing.runnable(() -> assertLocalPartValid(username)).sneakyThrow()));
+    }
+
     protected void assertDomainPartValid(Username username) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
             // need a @ in the username
@@ -109,6 +118,33 @@ public class UsersRepositoryImpl<T extends UsersDAO> implements UsersRepository,
             // @ only allowed when virtualhosting is supported
             if (username.hasDomainPart()) {
                 throw new InvalidUsernameException("Given Username contains a @domainpart but virtualhosting support is disabled");
+            }
+        }
+    }
+
+    protected Mono<Void> assertDomainPartValidReactive(Username username) {
+        if (supportVirtualHosting()) {
+            // need a @ in the username
+            if (!username.hasDomainPart()) {
+                return Mono.error(new InvalidUsernameException("Given Username needs to contain a @domainpart"));
+            } else {
+                Domain domain = username.getDomainPart().get();
+                return Mono.from(domainList.containsDomainReactive(domain))
+                    .onErrorMap(DomainListException.class, e -> new UsersRepositoryException("Unable to query DomainList", e))
+                    .handle((result, sink) -> {
+                        if (!result) {
+                            sink.error(new InvalidUsernameException("Domain does not exist in DomainList"));
+                        } else {
+                            sink.complete();
+                        }
+                    });
+            }
+        } else {
+            // @ only allowed when virtualhosting is supported
+            if (username.hasDomainPart()) {
+                return Mono.error(new InvalidUsernameException("Given Username contains a @domainpart but virtualhosting support is disabled"));
+            } else {
+                return Mono.empty();
             }
         }
     }
