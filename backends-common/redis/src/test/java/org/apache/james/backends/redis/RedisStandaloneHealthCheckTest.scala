@@ -27,7 +27,7 @@ import org.junit.jupiter.api.{AfterEach, BeforeEach, Test}
 import reactor.core.scala.publisher.SMono
 
 @ExtendWith(Array(classOf[RedisExtension]))
-class RedisHealthCheckTest {
+class RedisStandaloneHealthCheckTest {
 
   var redisHealthCheck: RedisHealthCheck = _
 
