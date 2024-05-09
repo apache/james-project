@@ -33,6 +33,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+import jakarta.inject.Singleton;
+
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.util.Runnables;
@@ -48,7 +50,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 
-import jakarta.inject.Singleton;
 import scala.Function2;
 import scala.jdk.javaapi.OptionConverters;
 
