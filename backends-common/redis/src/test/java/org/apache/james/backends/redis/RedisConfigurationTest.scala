@@ -30,7 +30,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
   "RedisConfiguration" should "parse Redis URI from config" in {
     val config = new PropertiesConfiguration()
     config.addProperty("redisURL", "redis://localhost:6379")
-    config.addProperty("cluster.enabled", true)
+    config.addProperty("redis.topology", "master-replica")
     config.addProperty("redis.ioThreads", 16)
     config.addProperty("redis.workerThreads", 32)
 
@@ -38,7 +38,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
 
     redisConfig.redisURI.value should have length 1
     redisConfig.redisURI.value should contain theSameElementsAs List(RedisURI.create("redis://localhost:6379"))
-    redisConfig.isCluster shouldEqual true
+    redisConfig.redisTopology shouldEqual MasterReplica
     redisConfig.ioThreads shouldEqual Some(16)
     redisConfig.workerThreads shouldEqual Some(32)
   }
@@ -47,7 +47,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
     val config = new PropertiesConfiguration()
     config.setListDelimiterHandler(new DefaultListDelimiterHandler(','))
     config.addProperty("redisURL", "redis://localhost:6379,redis://localhost:6380")
-    config.addProperty("cluster.enabled", true)
+    config.addProperty("redis.topology", "cluster")
     config.addProperty("redis.ioThreads", 16)
     config.addProperty("redis.workerThreads", 32)
 
@@ -55,7 +55,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
 
     redisConfig.redisURI.value should have length 2
     redisConfig.redisURI.value should contain theSameElementsAs List(RedisURI.create("redis://localhost:6379"), RedisURI.create("redis://localhost:6380"))
-    redisConfig.isCluster shouldEqual true
+    redisConfig.redisTopology shouldEqual Cluster
     redisConfig.ioThreads shouldEqual Some(16)
     redisConfig.workerThreads shouldEqual Some(32)
   }
@@ -68,7 +68,7 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
 
     redisConfig.redisURI.value should have length 1
     redisConfig.redisURI.value should contain theSameElementsAs List(RedisURI.create("redis://localhost:6379"))
-    redisConfig.isCluster shouldEqual false
+    redisConfig.redisTopology shouldEqual Standalone
     redisConfig.ioThreads shouldEqual None
     redisConfig.workerThreads shouldEqual None
   }

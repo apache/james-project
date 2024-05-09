@@ -20,6 +20,7 @@
 package org.apache.james.rate.limiter.redis
 
 import java.time.Duration
+
 import com.google.inject.multibindings.Multibinder
 import com.google.inject.{AbstractModule, Provides, Scopes}
 import es.moki.ratelimitj.core.limiter.request.{AbstractRequestRateLimiterFactory, ReactiveRequestRateLimiter, RequestLimitRule}
@@ -27,8 +28,7 @@ import es.moki.ratelimitj.redis.request.{RedisClusterRateLimiterFactory, RedisSl
 import io.lettuce.core.RedisClient
 import io.lettuce.core.cluster.RedisClusterClient
 import io.lettuce.core.resource.ClientResources
-import org.apache.james.backends.redis.{RedisConfiguration, RedisHealthCheck}
-
+import org.apache.james.backends.redis.{Cluster, MasterReplica, RedisConfiguration, RedisHealthCheck, RedisTopology, Standalone}
 import jakarta.inject.Inject
 import org.apache.james.core.healthcheck.HealthCheck
 import org.apache.james.rate.limiter.api.Increment.Increment
@@ -58,17 +58,22 @@ class RedisRateLimiterModule() extends AbstractModule {
 }
 
 class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisConfiguration) extends RateLimiterFactory {
-  val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] =
-    if (redisConfiguration.isCluster) {
-      val resourceBuilder = ClientResources.builder()
-        .threadFactoryProvider(poolName => NamedThreadFactory.withName(s"redis-driver-$poolName"))
-      redisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
-      redisConfiguration.workerThreads.foreach(value =>resourceBuilder.computationThreadPoolSize(value))
-      new RedisClusterRateLimiterFactory(RedisClusterClient.create(resourceBuilder.build(),
-        redisConfiguration.redisURI.value.asJava))
-    } else {
-      new RedisSingleInstanceRateLimitjFactory(RedisClient.create(redisConfiguration.redisURI.value.last))
+  val rateLimitjFactory: AbstractRequestRateLimiterFactory[RedisSlidingWindowRequestRateLimiter] = {
+    redisConfiguration.redisTopology match {
+      case Cluster =>
+        val resourceBuilder = ClientResources.builder()
+          .threadFactoryProvider(poolName => NamedThreadFactory.withName(s"redis-driver-$poolName"))
+        redisConfiguration.ioThreads.foreach(value => resourceBuilder.ioThreadPoolSize(value))
+        redisConfiguration.workerThreads.foreach(value =>resourceBuilder.computationThreadPoolSize(value))
+        new RedisClusterRateLimiterFactory(RedisClusterClient.create(resourceBuilder.build(),
+          redisConfiguration.redisURI.value.asJava))
+      case MasterReplica =>
+        new RedisMasterReplicaRateLimiterFactory(RedisClient.create(redisConfiguration.redisURI.value.last), redisConfiguration.redisURI.value.asJava)
+      case Standalone =>
+        new RedisSingleInstanceRateLimitjFactory(RedisClient.create(redisConfiguration.redisURI.value.last))
+      case _ => throw new NotImplementedError()
     }
+  }
 
   override def withSpecification(rules: Rules, precision: Option[Duration]): RateLimiter =
     RedisRateLimiter(rateLimitjFactory.getInstanceReactive(rules.rules

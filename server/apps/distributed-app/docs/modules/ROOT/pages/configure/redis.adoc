@@ -15,8 +15,8 @@ to get some examples and hints.
 | redisURL
 | the Redis URI pointing to Redis server. Compulsory.
 
-| cluster.enabled
-| Whether we should attempt connections to Redis as a cluster.Defaults to false.
+| redis.topology
+| Redis server topology. Defaults to standalone. Possible values: standalone, cluster, master-replica
 
 | redis.ioThreads
 | IO threads to be using for the underlying Netty networking resources. If unspecified driver defaults applies.

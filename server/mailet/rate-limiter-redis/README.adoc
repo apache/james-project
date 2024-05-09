@@ -20,7 +20,7 @@ guice.extension.module=org.apache.james.rate.limiter.redis.RedisRateLimiterModul
 
 ----
 redisURL=redis://redis:6379
-cluster.enabled=false
+redis.topology=standalone
 ----
 
 - 5. Use the rate limiting mailets within `mailetcontainer.xml`
