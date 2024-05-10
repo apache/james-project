@@ -20,3 +20,4 @@ services:
       - $PWD/extensions.properties:/root/conf/extensions.properties
       - $PWD/redis.properties:/root/conf/redis.properties
       - $PWD/mailetcontainer.xml:/root/conf/mailetcontainer.xml
+      - $PWD/healthcheck.properties:/root/conf/healthcheck.properties
