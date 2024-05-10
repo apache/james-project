@@ -54,7 +54,7 @@ public class RedisExtension implements GuiceModuleTestExtension {
             @Provides
             @Singleton
             public  RedisConfiguration provideConfig() {
-                return RedisConfiguration.from(dockerRedis().redisURI().toString(), false);
+                return RedisConfiguration.from(dockerRedis().redisURI().toString(), Standalone$.MODULE$);
             }
         };
     }

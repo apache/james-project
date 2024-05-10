@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import jakarta.inject.Singleton;
 
@@ -42,7 +41,6 @@ import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -52,9 +50,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 
+import scala.Function2;
 import scala.jdk.javaapi.OptionConverters;
 
-public class RedisClusterExtension implements GuiceModuleTestExtension {
+public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
 
     public static class RedisClusterContainer extends ArrayList<GenericContainer> {
         public RedisClusterContainer(Collection<? extends GenericContainer> c) {
@@ -66,51 +65,50 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
                     .map(redisURIFunction())
                     .map(URI::toString)
                     .toArray(String[]::new),
-                Cluster$.MODULE$,
+                MasterReplica$.MODULE$,
                 OptionConverters.toScala(Optional.empty()),
                 OptionConverters.toScala(Optional.empty()));
         }
 
         public void pauseOne() {
-            GenericContainer firstNode = this.get(0);
-            firstNode.getDockerClient().pauseContainerCmd(firstNode.getContainerId()).exec();
+            GenericContainer container = this.get(0);
+            container.getDockerClient().pauseContainerCmd(container.getContainerId()).exec();
         }
 
         public void unPauseOne() {
-            GenericContainer firstNode = this.get(0);
-            if (TRUE.equals(firstNode.getDockerClient().inspectContainerCmd(firstNode.getContainerId())
+            GenericContainer container = this.get(0);
+            if (TRUE.equals(container.getDockerClient().inspectContainerCmd(container.getContainerId())
                 .exec()
                 .getState()
                 .getPaused())) {
-                firstNode.getDockerClient().unpauseContainerCmd(firstNode.getContainerId()).exec();
+                container.getDockerClient().unpauseContainerCmd(container.getContainerId()).exec();
             }
         }
     }
 
-    public static final Function<String, GenericContainer> redisContainerSupplier = alias ->
+    public static final Function2<String, Boolean, GenericContainer> redisContainerSupplier = (alias, isSlave) ->
         new GenericContainer<>(DEFAULT_IMAGE_NAME)
             .withExposedPorts(DEFAULT_PORT)
             .withCreateContainerCmdModifier(createContainerCmd -> createContainerCmd.withName("james-" + alias + "-test-" + UUID.randomUUID()))
-            .withCommand("redis-server", "/usr/local/etc/redis/redis.conf")
+            .withCommand(Optional.of(isSlave).filter(aBoolean -> aBoolean)
+                .map(aBoolean -> "redis-server --appendonly yes --port 6379 --slaveof redis1 6379")
+                .orElse("redis-server --appendonly yes --port 6379"))
             .withNetworkAliases(alias)
-            .withClasspathResourceMapping("redis_cluster.conf",
-                "/usr/local/etc/redis/redis.conf",
-                BindMode.READ_WRITE)
             .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1)
                 .withStartupTimeout(Duration.ofMinutes(2)));
 
-    static final GenericContainer redis1 = redisContainerSupplier.apply("redis1");
-    static final GenericContainer redis2 = redisContainerSupplier.apply("redis2");
-    static final GenericContainer redis3 = redisContainerSupplier.apply("redis3").dependsOn(redis1, redis2);
+    static final GenericContainer redis1 = redisContainerSupplier.apply("redis1", false);
+    static final GenericContainer redis2 = redisContainerSupplier.apply("redis2", true);
+    static final GenericContainer redis3 = redisContainerSupplier.apply("redis3", true);
 
     private RedisClusterContainer redisClusterContainer;
     private final Network network;
 
-    public RedisClusterExtension() {
+    public RedisMasterReplicaExtension() {
         this(Network.newNetwork());
     }
 
-    public RedisClusterExtension(Network network) {
+    public RedisMasterReplicaExtension(Network network) {
         this.network = network;
         redis1.withNetwork(network);
         redis2.withNetwork(network);
@@ -119,22 +117,10 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws IOException, InterruptedException {
+        redis1.start();
+        redis2.start();
         redis3.start();
-        initialRedisCluster();
         redisClusterContainer = new RedisClusterContainer(List.of(redis1, redis2, redis3));
-    }
-
-    private static void initialRedisCluster() throws IOException, InterruptedException {
-        String executeResult = redis3.execInContainer("sh",
-            "-c",
-            "echo 'yes' | redis-cli --cluster create " +
-                "redis1:6379 " +
-                "redis2:6379 " +
-                "redis3:6379 " +
-                "--cluster-replicas 0").getStdout();
-        if (!Pattern.compile("\\[OK\\] All \\d+ slots covered\\.").matcher(executeResult).find()) {
-            throw new RuntimeException("Error when initial redis-cluster. " + executeResult);
-        }
     }
 
     @Override

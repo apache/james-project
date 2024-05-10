@@ -31,6 +31,18 @@ Change list:
  - [javax -> jakarta](#javax---jakarta)
  - [Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`](#make-all-queues-on-rabbitmq-quorum-queue-when-quorumqueuesenabletrue)
 
+### Change cluster.enabled in redis.properties to redis.topology
+
+Date: 05/09/2024
+
+Concerned products: Distributed James, Cassandra James
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3693
+
+Now James supports more than two topologies (previously there were just cluster and standalone).
+
+Use `redis.topology` property instead.
+
 ### Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`
 
 Date: 16/04/2024

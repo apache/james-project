@@ -29,36 +29,42 @@ import org.apache.james.backends.redis.RedisUris.RedisUris
 import org.slf4j.{Logger, LoggerFactory}
 
 object RedisConfiguration {
-  val CLUSTER_ENABLED_DEFAULT = false
+  val STANDALONE_TOPOLOGY = "standalone"
+  val CLUSTER_TOPOLOGY = "cluster"
+  val MASTER_REPLICA_TOPOLOGY = "master-replica"
 
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[RedisConfiguration])
 
   def from(config: Configuration): RedisConfiguration = {
     val configuration = from(config.getStringArray("redisURL"),
-      config.getBoolean("cluster.enabled", CLUSTER_ENABLED_DEFAULT),
+      config.getString("redis.topology", STANDALONE_TOPOLOGY) match {
+        case STANDALONE_TOPOLOGY => Standalone
+        case CLUSTER_TOPOLOGY => Cluster
+        case MASTER_REPLICA_TOPOLOGY => MasterReplica
+        case _ => throw new NotImplementedError()
+      },
       Option(config.getInteger("redis.ioThreads", null)).map(Integer2int),
       Option(config.getInteger("redis.workerThreads", null)).map(Integer2int))
 
     LOGGER.info("Redis was loaded with configuration: \n" +
       "redisURL: {}\n" +
-      "isCluster: {}\n" +
+      "redisTopology: {}\n" +
       "redis.ioThreads: {}\n" +
       "redis.workerThreads: {}", configuration.redisURI.value.map(_.toString).mkString(";"),
-      configuration.isCluster, configuration.ioThreads, configuration.workerThreads)
+      configuration.redisTopology, configuration.ioThreads, configuration.workerThreads)
 
     configuration
   }
 
-  def from(redisUri: String, isCluster: Boolean, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration =
-    from(Array(redisUri), isCluster, ioThreads, workerThreads)
+  def from(redisUri: String, redisTopology: RedisTopology, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration =
+    from(Array(redisUri), redisTopology, ioThreads, workerThreads)
 
-  def from(redisUris: Array[String], isCluster: Boolean, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration = {
+  def from(redisUris: Array[String], redisTopology: RedisTopology, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration = {
     Preconditions.checkArgument(redisUris != null && redisUris.length > 0)
-    Preconditions.checkNotNull(isCluster)
-    RedisConfiguration(RedisUris.from(redisUris), isCluster, ioThreads, workerThreads)
+    RedisConfiguration(RedisUris.from(redisUris), redisTopology, ioThreads, workerThreads)
   }
 
-  def from(redisUri: String, isCluster: Boolean): RedisConfiguration = from(redisUri, isCluster, None, None)
+  def from(redisUri: String, redisTopology: RedisTopology): RedisConfiguration = from(redisUri, redisTopology, None, None)
 }
 
 object RedisUris {
@@ -82,4 +88,12 @@ object RedisUris {
   def from(value: Array[String]): RedisUris = liftOrThrow(value.toList.map(RedisURI.create))
 }
 
-case class RedisConfiguration(redisURI: RedisUris, isCluster: Boolean, ioThreads: Option[Int], workerThreads:Option[Int])
+sealed trait RedisTopology
+
+case object Standalone extends RedisTopology
+
+case object Cluster extends RedisTopology
+
+case object MasterReplica extends RedisTopology
+
+case class RedisConfiguration(redisURI: RedisUris, redisTopology: RedisTopology, ioThreads: Option[Int], workerThreads:Option[Int])
