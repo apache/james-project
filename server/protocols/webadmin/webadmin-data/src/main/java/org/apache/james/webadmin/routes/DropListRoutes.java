@@ -43,8 +43,6 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.collect.ImmutableSet;
 
-import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -86,15 +84,18 @@ public class DropListRoutes implements Routes {
         OwnerScope ownerScope = checkValidOwnerScope(request.params(OWNER_SCOPE));
         String owner = Optional.ofNullable(request.params(OWNER)).orElse("");
         Optional<DeniedEntityType> deniedEntityType = checkValidDeniedEntityType(request.queryParams(DENIED_ENTITY_TYPE));
-        Flux<DropListEntry> dropListEntries = dropList.list(ownerScope, owner);
         if (deniedEntityType.isPresent()) {
-            dropListEntries = dropListEntries
-                .filter(deniedEntry -> deniedEntry.getDeniedEntityType().equals(deniedEntityType.get()));
+            return dropList.list(ownerScope, owner)
+                .filter(deniedEntry -> deniedEntry.getDeniedEntityType().equals(deniedEntityType.get()))
+                .map(DropListEntry::getDeniedEntity)
+                .collect(ImmutableSet.toImmutableSet())
+                .block();
+        } else {
+            return dropList.list(ownerScope, owner)
+                .map(DropListEntry::getDeniedEntity)
+                .collect(ImmutableSet.toImmutableSet())
+                .block();
         }
-        return dropListEntries
-            .map(DropListEntry::getDeniedEntity)
-            .collect(ImmutableSet.toImmutableSet())
-            .block();
     }
 
     public String addDropListEntry(Request request, Response response) {
@@ -102,9 +103,7 @@ public class DropListRoutes implements Routes {
         String owner = Optional.ofNullable(request.params(OWNER)).orElse("");
         String deniedEntity = request.params(DENIED_ENTITY);
         DropListEntry dropListEntry = getDropListEntry(ownerScope, owner, deniedEntity);
-        dropList.add(dropListEntry)
-            .subscribeOn(Schedulers.boundedElastic())
-            .subscribe();
+        dropList.add(dropListEntry).block();
         return Responses.returnNoContent(response);
     }
 
@@ -116,8 +115,7 @@ public class DropListRoutes implements Routes {
             .filter(dropListEntry -> dropListEntry.getDeniedEntity().equals(deniedEntity))
             .collectList()
             .doOnNext(this::deleteDropListEntry)
-            .subscribeOn(Schedulers.boundedElastic())
-            .subscribe();
+            .block();
         return Responses.returnNoContent(response);
     }
 
@@ -125,9 +123,9 @@ public class DropListRoutes implements Routes {
         OwnerScope ownerScope = checkValidOwnerScope(request.params(OWNER_SCOPE));
         String owner = Optional.ofNullable(request.params(OWNER)).orElse("");
         String deniedEntity = request.params(DENIED_ENTITY);
-        boolean entryExists = Boolean.TRUE.equals(dropList.list(ownerScope, owner)
+        boolean entryExists = dropList.list(ownerScope, owner)
             .any(dropListEntry -> dropListEntry.getDeniedEntity().equals(deniedEntity))
-            .block());
+            .block();
         if (entryExists) {
             response.status(HttpStatus.NO_CONTENT_204);
         } else {
@@ -210,8 +208,6 @@ public class DropListRoutes implements Routes {
     }
 
     private void deleteDropListEntry(List<DropListEntry> dropListEntries) {
-        dropListEntries.forEach(dropListEntry -> dropList.remove(dropListEntry)
-            .subscribeOn(Schedulers.boundedElastic())
-            .subscribe());
+        dropListEntries.forEach(dropListEntry -> dropList.remove(dropListEntry).block());
     }
 }
