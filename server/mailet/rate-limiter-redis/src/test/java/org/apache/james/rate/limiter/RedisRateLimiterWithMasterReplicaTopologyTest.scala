@@ -28,8 +28,8 @@ import org.apache.james.rate.limiter.RedisRateLimiterWithMasterReplicaTopologyTe
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.api.{BeforeEach, Test}
 import reactor.core.scala.publisher.SMono
 
 object RedisRateLimiterWithMasterReplicaTopologyTest {
@@ -39,16 +39,9 @@ object RedisRateLimiterWithMasterReplicaTopologyTest {
 
 @ExtendWith(Array(classOf[RedisMasterReplicaExtension]))
 class RedisRateLimiterWithMasterReplicaTopologyTest {
-  var rateLimiterFactory: RedisRateLimiterFactory = _
-
-  @BeforeEach
-  def setup(redisClusterContainer: RedisMasterReplicaContainer): Unit = {
-    rateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.getRedisConfiguration)
-  }
-
   @Test
-  def test(redisClusterContainer: RedisMasterReplicaContainer): Unit = {
-    val rateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.getRedisConfiguration)
+  def rateLimitShouldWorkNormally(redisClusterContainer: RedisMasterReplicaContainer): Unit = {
+    val rateLimiterFactory: RedisRateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.getRedisConfiguration)
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 4)).block()
     assertThat(actual).isEqualTo(AcceptableRate)
