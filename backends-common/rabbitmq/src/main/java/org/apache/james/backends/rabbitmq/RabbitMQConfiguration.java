@@ -817,6 +817,8 @@ public class RabbitMQConfiguration {
         if (useQuorumQueues) {
             builder.quorumQueue().replicationFactor(quorumQueueReplicationFactor);
             quorumQueueDeliveryLimit.ifPresent(builder::deliveryLimit);
+        } else {
+            builder.classicQueueVersion(2);
         }
         return builder;
     }
