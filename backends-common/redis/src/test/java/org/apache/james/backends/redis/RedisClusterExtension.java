@@ -61,12 +61,11 @@ public class RedisClusterExtension implements GuiceModuleTestExtension {
             super(c);
         }
 
-        public RedisConfiguration getRedisConfiguration() {
-            return RedisConfiguration.from(this.stream()
+        public ClusterRedisConfiguration getRedisConfiguration() {
+            return ClusterRedisConfiguration.from(this.stream()
                     .map(redisURIFunction())
                     .map(URI::toString)
                     .toArray(String[]::new),
-                Cluster$.MODULE$,
                 OptionConverters.toScala(Optional.empty()),
                 OptionConverters.toScala(Optional.empty()));
         }

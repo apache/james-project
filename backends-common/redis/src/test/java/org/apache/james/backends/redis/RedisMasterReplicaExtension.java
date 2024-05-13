@@ -50,22 +50,23 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 
+import io.lettuce.core.ReadFrom;
 import scala.Function2;
 import scala.jdk.javaapi.OptionConverters;
 
 public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
 
-    public static class RedisClusterContainer extends ArrayList<GenericContainer> {
-        public RedisClusterContainer(Collection<? extends GenericContainer> c) {
+    public static class RedisMasterReplicaContainer extends ArrayList<GenericContainer> {
+        public RedisMasterReplicaContainer(Collection<? extends GenericContainer> c) {
             super(c);
         }
 
-        public RedisConfiguration getRedisConfiguration() {
-            return RedisConfiguration.from(this.stream()
+        public MasterReplicaRedisConfiguration getRedisConfiguration() {
+            return MasterReplicaRedisConfiguration.from(this.stream()
                     .map(redisURIFunction())
                     .map(URI::toString)
                     .toArray(String[]::new),
-                MasterReplica$.MODULE$,
+                ReadFrom.MASTER,
                 OptionConverters.toScala(Optional.empty()),
                 OptionConverters.toScala(Optional.empty()));
         }
@@ -101,7 +102,7 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
     static final GenericContainer redis2 = redisContainerSupplier.apply("redis2", true);
     static final GenericContainer redis3 = redisContainerSupplier.apply("redis3", true);
 
-    private RedisClusterContainer redisClusterContainer;
+    private RedisMasterReplicaContainer redisMasterReplicaContainer;
     private final Network network;
 
     public RedisMasterReplicaExtension() {
@@ -120,7 +121,7 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
         redis1.start();
         redis2.start();
         redis3.start();
-        redisClusterContainer = new RedisClusterContainer(List.of(redis1, redis2, redis3));
+        redisMasterReplicaContainer = new RedisMasterReplicaContainer(List.of(redis1, redis2, redis3));
     }
 
     @Override
@@ -134,7 +135,7 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        redisClusterContainer.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "flushall")));
+        redisMasterReplicaContainer.forEach(Throwing.consumer(container -> container.execInContainer("redis-cli", "flushall")));
     }
 
     @Override
@@ -143,19 +144,19 @@ public class RedisMasterReplicaExtension implements GuiceModuleTestExtension {
             @Provides
             @Singleton
             public RedisConfiguration provideRedisConfiguration() {
-                return redisClusterContainer.getRedisConfiguration();
+                return redisMasterReplicaContainer.getRedisConfiguration();
             }
         };
     }
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return parameterContext.getParameter().getType() == RedisClusterContainer.class;
+        return parameterContext.getParameter().getType() == RedisMasterReplicaContainer.class;
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return new RedisClusterContainer(List.of(redis1, redis2, redis3));
+        return new RedisMasterReplicaContainer(List.of(redis1, redis2, redis3));
     }
 
     private static Function<GenericContainer, URI> redisURIFunction() {

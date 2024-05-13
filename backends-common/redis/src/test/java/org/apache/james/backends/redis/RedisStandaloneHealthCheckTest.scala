@@ -33,7 +33,7 @@ class RedisStandaloneHealthCheckTest {
 
   @BeforeEach
   def setup(redis: DockerRedis): Unit = {
-    val redisConfiguration: RedisConfiguration = RedisConfiguration.from(redis.redisURI().toString, Standalone)
+    val redisConfiguration: StandaloneRedisConfiguration = StandaloneRedisConfiguration.from(redis.redisURI().toString)
 
     redisHealthCheck = new RedisHealthCheck(redisConfiguration)
   }

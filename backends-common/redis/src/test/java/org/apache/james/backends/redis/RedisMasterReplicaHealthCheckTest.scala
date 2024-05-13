@@ -20,8 +20,7 @@
 package org.apache.james.backends.redis
 
 import java.util.concurrent.TimeUnit
-
-import org.apache.james.backends.redis.RedisMasterReplicaExtension.RedisClusterContainer
+import org.apache.james.backends.redis.RedisMasterReplicaExtension.RedisMasterReplicaContainer
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility
 import org.junit.jupiter.api.extension.ExtendWith
@@ -33,12 +32,12 @@ class RedisMasterReplicaHealthCheckTest {
   var redisHealthCheck: RedisHealthCheck = _
 
   @BeforeEach
-  def setup(redis: RedisClusterContainer): Unit = {
+  def setup(redis: RedisMasterReplicaContainer): Unit = {
     redisHealthCheck = new RedisHealthCheck(redis.getRedisConfiguration)
   }
 
   @AfterEach
-  def afterEach(redis: RedisClusterContainer): Unit = {
+  def afterEach(redis: RedisMasterReplicaContainer): Unit = {
     redis.unPauseOne();
   }
 
@@ -50,7 +49,7 @@ class RedisMasterReplicaHealthCheckTest {
   }
 
   @Test
-  def checkShouldReturnDegradedWhenRedisIsDown(redis: RedisClusterContainer): Unit = {
+  def checkShouldReturnDegradedWhenRedisIsDown(redis: RedisMasterReplicaContainer): Unit = {
     redis.pauseOne()
 
     Awaitility.await()
@@ -60,7 +59,7 @@ class RedisMasterReplicaHealthCheckTest {
   }
 
   @Test
-  def checkShouldReturnHealthyWhenRedisIsRecovered(redis: RedisClusterContainer): Unit = {
+  def checkShouldReturnHealthyWhenRedisIsRecovered(redis: RedisMasterReplicaContainer): Unit = {
     redis.pauseOne()
     redis.unPauseOne()
 
