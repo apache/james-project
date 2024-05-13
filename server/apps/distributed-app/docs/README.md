@@ -59,3 +59,19 @@ antora antora-playbook-local.yml
 ```
 
 Open `build/site/index.html` in your browser.
+
+## Building with Dockerfile
+
+Build the Docker image:
+
+```
+docker build --build-arg JAMES_CHECKOUT=master -f Dockerfile -t james-site-antora .
+```
+
+Then run the Docker image:
+
+```
+docker run -p 80:80 james-site-antora
+```
+
+Go to `http://localhost` in your browser.
