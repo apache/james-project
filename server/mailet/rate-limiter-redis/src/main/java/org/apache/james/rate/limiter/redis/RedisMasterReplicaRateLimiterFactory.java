@@ -27,6 +27,7 @@ import es.moki.ratelimitj.core.limiter.request.ReactiveRequestRateLimiter;
 import es.moki.ratelimitj.core.limiter.request.RequestLimitRule;
 import es.moki.ratelimitj.core.limiter.request.RequestRateLimiter;
 import es.moki.ratelimitj.redis.request.RedisSlidingWindowRequestRateLimiter;
+import io.lettuce.core.ReadFrom;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.codec.StringCodec;
@@ -36,11 +37,17 @@ import io.lettuce.core.masterreplica.StatefulRedisMasterReplicaConnection;
 public class RedisMasterReplicaRateLimiterFactory extends AbstractRequestRateLimiterFactory<RedisSlidingWindowRequestRateLimiter> {
     private final RedisClient client;
     private final List<RedisURI> redisURIs;
+    private final ReadFrom readFrom;
     private StatefulRedisMasterReplicaConnection<String, String> connection;
 
-    public RedisMasterReplicaRateLimiterFactory(RedisClient client, List<RedisURI> redisURIs) {
+    public RedisMasterReplicaRateLimiterFactory(RedisClient client, List<RedisURI> redisURIs, ReadFrom readFrom) {
         this.client = client;
         this.redisURIs = redisURIs;
+        this.readFrom = readFrom;
+    }
+
+    public RedisMasterReplicaRateLimiterFactory(RedisClient client, List<RedisURI> redisURIs) {
+        this(client, redisURIs, ReadFrom.MASTER);
     }
 
     @Override
@@ -66,6 +73,7 @@ public class RedisMasterReplicaRateLimiterFactory extends AbstractRequestRateLim
     private StatefulRedisMasterReplicaConnection<String, String> getConnection() {
         if (this.connection == null) {
             this.connection = MasterReplica.connect(this.client, StringCodec.UTF8, redisURIs);
+            this.connection.setReadFrom(readFrom);
         }
 
         return this.connection;
