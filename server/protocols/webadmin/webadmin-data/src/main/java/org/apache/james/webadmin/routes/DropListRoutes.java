@@ -34,6 +34,7 @@ import org.apache.james.droplists.api.DeniedEntityType;
 import org.apache.james.droplists.api.DropList;
 import org.apache.james.droplists.api.DropListEntry;
 import org.apache.james.droplists.api.OwnerScope;
+import org.apache.james.util.ReactorUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -43,6 +44,7 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.collect.ImmutableSet;
 
+import reactor.core.publisher.Flux;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -208,6 +210,9 @@ public class DropListRoutes implements Routes {
     }
 
     private void deleteDropListEntry(List<DropListEntry> dropListEntries) {
-        dropListEntries.forEach(dropListEntry -> dropList.remove(dropListEntry).block());
+        Flux.fromIterable(dropListEntries)
+            .flatMap(dropList::remove, ReactorUtils.DEFAULT_CONCURRENCY)
+            .then()
+            .block();
     }
 }
