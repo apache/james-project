@@ -31,11 +31,12 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
     val config = new PropertiesConfiguration()
     config.addProperty("redisURL", "redis://localhost:6379")
     config.addProperty("redis.topology", "master-replica")
+    config.addProperty("redis.readFrom", "any")
     config.addProperty("redis.ioThreads", 16)
     config.addProperty("redis.workerThreads", 32)
 
     val redisConfig = RedisConfiguration.from(config)
-    redisConfig shouldEqual MasterReplicaRedisConfiguration.from(Array("redis://localhost:6379"), ReadFrom.MASTER, Some(16), Some(32))
+    redisConfig shouldEqual MasterReplicaRedisConfiguration.from(Array("redis://localhost:6379"), ReadFrom.ANY, Some(16), Some(32))
   }
 
   it should "parse multiple Redis URIs from config" in {
@@ -61,6 +62,27 @@ class RedisConfigurationTest extends AnyFlatSpec with Matchers {
   it should "throw exception for invalid Redis URI" in {
     val config = new PropertiesConfiguration()
     config.addProperty("redisURL", "invalid://localhost:6379")
+
+    intercept[IllegalArgumentException] {
+      RedisConfiguration.from(config)
+    }
+  }
+
+  it should "throw exception for invalid Redis topology" in {
+    val config = new PropertiesConfiguration()
+    config.addProperty("redisURL", "redis://localhost:6379")
+    config.addProperty("redis.topology", "invalid")
+
+    intercept[IllegalArgumentException] {
+      RedisConfiguration.from(config)
+    }
+  }
+
+  it should "throw exception for invalid Redis readFrom" in {
+    val config = new PropertiesConfiguration()
+    config.addProperty("redisURL", "redis://localhost:6379")
+    config.addProperty("redis.topology", "master-replica")
+    config.addProperty("redis.readFrom", "invalid")
 
     intercept[IllegalArgumentException] {
       RedisConfiguration.from(config)

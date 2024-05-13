@@ -45,7 +45,7 @@ object RedisConfiguration {
       case STANDALONE_TOPOLOGY => StandaloneRedisConfiguration.from(config)
       case CLUSTER_TOPOLOGY => ClusterRedisConfiguration.from(config)
       case MASTER_REPLICA_TOPOLOGY => MasterReplicaRedisConfiguration.from(config)
-      case _ => throw new NotImplementedError()
+      case _ => throw new IllegalArgumentException("Invalid topology")
     }
 
     LOGGER.info(s"Configured Redis with: ${redisConfiguration.asString}")
