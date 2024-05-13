@@ -64,7 +64,8 @@ class RedisRateLimiterFactory @Inject()(redisConfiguration: RedisConfiguration) 
 
     case masterReplicaRedisConfiguration: MasterReplicaRedisConfiguration => new RedisMasterReplicaRateLimiterFactory(
       RedisClient.create(masterReplicaRedisConfiguration.redisURI.value.last),
-      masterReplicaRedisConfiguration.redisURI.value.asJava)
+      masterReplicaRedisConfiguration.redisURI.value.asJava,
+      masterReplicaRedisConfiguration.readFrom)
 
     case _ => throw new NotImplementedError()
   }
