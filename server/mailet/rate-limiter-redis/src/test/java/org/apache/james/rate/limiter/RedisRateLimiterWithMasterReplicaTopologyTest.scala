@@ -23,6 +23,7 @@ import java.time.Duration
 
 import eu.timepit.refined.auto._
 import org.apache.james.backends.redis.RedisMasterReplicaExtension
+import org.apache.james.backends.redis.RedisMasterReplicaExtension.RedisMasterReplicaContainer
 import org.apache.james.rate.limiter.RedisRateLimiterWithMasterReplicaTopologyTest.{RULES, SLIDING_WIDOW_PRECISION}
 import org.apache.james.rate.limiter.api.{AcceptableRate, RateLimitingKey, RateLimitingResult, Rule, Rules}
 import org.apache.james.rate.limiter.redis.RedisRateLimiterFactory
@@ -41,12 +42,12 @@ class RedisRateLimiterWithMasterReplicaTopologyTest {
   var rateLimiterFactory: RedisRateLimiterFactory = _
 
   @BeforeEach
-  def setup(redisClusterContainer: RedisMasterReplicaExtension.RedisClusterContainer): Unit = {
+  def setup(redisClusterContainer: RedisMasterReplicaContainer): Unit = {
     rateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.getRedisConfiguration)
   }
 
   @Test
-  def test(redisClusterContainer: RedisMasterReplicaExtension.RedisClusterContainer): Unit = {
+  def test(redisClusterContainer: RedisMasterReplicaContainer): Unit = {
     val rateLimiterFactory = new RedisRateLimiterFactory(redisClusterContainer.getRedisConfiguration)
     val rateLimiter = rateLimiterFactory.withSpecification(RULES, SLIDING_WIDOW_PRECISION)
     val actual: RateLimitingResult = SMono(rateLimiter.rateLimit(TestKey("key1"), 4)).block()

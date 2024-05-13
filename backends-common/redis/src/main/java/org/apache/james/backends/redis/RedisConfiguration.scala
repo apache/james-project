@@ -19,12 +19,13 @@
 
 package org.apache.james.backends.redis
 
-import com.google.common.base.Preconditions
+import com.google.common.base.{MoreObjects, Preconditions}
 import eu.timepit.refined
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.collection.NonEmpty
-import io.lettuce.core.RedisURI
+import io.lettuce.core.{ReadFrom, RedisURI}
 import org.apache.commons.configuration2.Configuration
+import org.apache.james.backends.redis.RedisConfiguration.{CLUSTER_TOPOLOGY, MASTER_REPLICA_TOPOLOGY, STANDALONE_TOPOLOGY}
 import org.apache.james.backends.redis.RedisUris.RedisUris
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -35,36 +36,21 @@ object RedisConfiguration {
 
   val LOGGER: Logger = LoggerFactory.getLogger(classOf[RedisConfiguration])
 
+  def redisIoThreadsFrom(config: Configuration): Option[Int] = Option(config.getInteger("redis.ioThreads", null)).map(Integer2int)
+
+  def redisWorkerThreadsFrom(config: Configuration): Option[Int] = Option(config.getInteger("redis.workerThreads", null)).map(Integer2int)
+
   def from(config: Configuration): RedisConfiguration = {
-    val configuration = from(config.getStringArray("redisURL"),
-      config.getString("redis.topology", STANDALONE_TOPOLOGY) match {
-        case STANDALONE_TOPOLOGY => Standalone
-        case CLUSTER_TOPOLOGY => Cluster
-        case MASTER_REPLICA_TOPOLOGY => MasterReplica
-        case _ => throw new NotImplementedError()
-      },
-      Option(config.getInteger("redis.ioThreads", null)).map(Integer2int),
-      Option(config.getInteger("redis.workerThreads", null)).map(Integer2int))
+    val redisConfiguration: RedisConfiguration = config.getString("redis.topology", STANDALONE_TOPOLOGY) match {
+      case STANDALONE_TOPOLOGY => StandaloneRedisConfiguration.from(config)
+      case CLUSTER_TOPOLOGY => ClusterRedisConfiguration.from(config)
+      case MASTER_REPLICA_TOPOLOGY => MasterReplicaRedisConfiguration.from(config)
+      case _ => throw new NotImplementedError()
+    }
 
-    LOGGER.info("Redis was loaded with configuration: \n" +
-      "redisURL: {}\n" +
-      "redisTopology: {}\n" +
-      "redis.ioThreads: {}\n" +
-      "redis.workerThreads: {}", configuration.redisURI.value.map(_.toString).mkString(";"),
-      configuration.redisTopology, configuration.ioThreads, configuration.workerThreads)
-
-    configuration
+    LOGGER.info(s"Configured Redis with: ${redisConfiguration.asString}")
+    redisConfiguration
   }
-
-  def from(redisUri: String, redisTopology: RedisTopology, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration =
-    from(Array(redisUri), redisTopology, ioThreads, workerThreads)
-
-  def from(redisUris: Array[String], redisTopology: RedisTopology, ioThreads: Option[Int], workerThreads: Option[Int]): RedisConfiguration = {
-    Preconditions.checkArgument(redisUris != null && redisUris.length > 0)
-    RedisConfiguration(RedisUris.from(redisUris), redisTopology, ioThreads, workerThreads)
-  }
-
-  def from(redisUri: String, redisTopology: RedisTopology): RedisConfiguration = from(redisUri, redisTopology, None, None)
 }
 
 object RedisUris {
@@ -88,12 +74,81 @@ object RedisUris {
   def from(value: Array[String]): RedisUris = liftOrThrow(value.toList.map(RedisURI.create))
 }
 
-sealed trait RedisTopology
+trait RedisConfiguration {
+  def ioThreads: Option[Int]
 
-case object Standalone extends RedisTopology
+  def workerThreads: Option[Int]
 
-case object Cluster extends RedisTopology
+  def asString: String
+}
 
-case object MasterReplica extends RedisTopology
+object StandaloneRedisConfiguration {
+  def from(config: Configuration): StandaloneRedisConfiguration = from(
+    config.getString("redisURL"),
+    RedisConfiguration.redisIoThreadsFrom(config),
+    RedisConfiguration.redisWorkerThreadsFrom(config))
 
-case class RedisConfiguration(redisURI: RedisUris, redisTopology: RedisTopology, ioThreads: Option[Int], workerThreads:Option[Int])
+  def from(redisUri: String): StandaloneRedisConfiguration = from(redisUri, None, None)
+
+  def from(redisUri: String, ioThreads: Option[Int] = None, workerThreads: Option[Int] = None): StandaloneRedisConfiguration =
+    StandaloneRedisConfiguration(RedisURI.create(redisUri), ioThreads, workerThreads)
+}
+
+case class StandaloneRedisConfiguration(redisURI: RedisURI, ioThreads: Option[Int], workerThreads: Option[Int]) extends RedisConfiguration {
+  override def asString: String = MoreObjects.toStringHelper(this)
+    .add("topology", STANDALONE_TOPOLOGY)
+    .add("redisURI", redisURI.toString)
+    .add("redis.ioThreads", ioThreads)
+    .add("redis.workerThreads", workerThreads)
+    .toString
+}
+
+object MasterReplicaRedisConfiguration {
+  def from(config: Configuration): MasterReplicaRedisConfiguration =
+    from(config.getStringArray("redisURL"),
+      Option(config.getString("redis.readFrom", null)).map(ReadFrom.valueOf).getOrElse(ReadFrom.MASTER),
+      RedisConfiguration.redisIoThreadsFrom(config),
+      RedisConfiguration.redisWorkerThreadsFrom(config))
+
+  def from(redisUris: Array[String],
+           readFrom: ReadFrom,
+           ioThreads: Option[Int] = None,
+           workerThreads: Option[Int] = None): MasterReplicaRedisConfiguration = {
+    Preconditions.checkArgument(redisUris != null && redisUris.length > 0)
+    MasterReplicaRedisConfiguration(RedisUris.from(redisUris),
+      readFrom,
+      ioThreads, workerThreads)
+  }
+}
+
+case class MasterReplicaRedisConfiguration(redisURI: RedisUris, readFrom: ReadFrom, ioThreads: Option[Int], workerThreads: Option[Int]) extends RedisConfiguration {
+  override def asString: String = MoreObjects.toStringHelper(this)
+    .add("topology", MASTER_REPLICA_TOPOLOGY)
+    .add("redisURI", redisURI.value.map(_.toString).mkString(";"))
+    .add("redis.ioThreads", ioThreads)
+    .add("redis.workerThreads", workerThreads)
+    .toString
+}
+
+object ClusterRedisConfiguration {
+  def from(config: Configuration): ClusterRedisConfiguration =
+    from(config.getStringArray("redisURL"),
+      RedisConfiguration.redisIoThreadsFrom(config),
+      RedisConfiguration.redisWorkerThreadsFrom(config))
+
+  def from(redisUris: Array[String],
+           ioThreads: Option[Int] = None,
+           workerThreads: Option[Int] = None): ClusterRedisConfiguration = {
+    Preconditions.checkArgument(redisUris != null && redisUris.length > 0)
+    ClusterRedisConfiguration(RedisUris.from(redisUris), ioThreads, workerThreads)
+  }
+}
+
+case class ClusterRedisConfiguration(redisURI: RedisUris, ioThreads: Option[Int], workerThreads: Option[Int]) extends RedisConfiguration {
+  override def asString: String = MoreObjects.toStringHelper(this)
+    .add("topology", CLUSTER_TOPOLOGY)
+    .add("redisURI", redisURI.value.map(_.toString).mkString(";"))
+    .add("redis.ioThreads", ioThreads)
+    .add("redis.workerThreads", workerThreads)
+    .toString
+}
