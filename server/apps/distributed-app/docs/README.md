@@ -62,6 +62,8 @@ Open `build/site/index.html` in your browser.
 
 ## Building with Dockerfile
 
+To build the document from apache-james repository, you can use the Dockerfile provided in this folder.
+
 Build the Docker image:
 
 ```
