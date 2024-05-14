@@ -41,7 +41,7 @@ It is recommended by RabbitMQ to upgrade the classic queues to version 2 for bet
 Existing version 1 classic queues would need to be deleted and let James re-create them as version 2.
 
 Notice that to use classic queues version 2, you need at least RabbitMQ 3.10.0. If you want to stick with the older RabbitMQ 
-versions and avoid this breaking change, you could set the JVM property `james.rabbitmq.stick.to.classic.queues.version.1` to `true` (defaults to `false`).
+versions and avoid this breaking change, you could set the JVM property `fallback.classic.queues.v1` to `true` (defaults to `false`).
 
 ### Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`
 
