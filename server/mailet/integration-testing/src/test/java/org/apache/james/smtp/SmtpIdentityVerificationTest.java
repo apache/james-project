@@ -40,6 +40,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.google.common.collect.ImmutableList;
+
 class SmtpIdentityVerificationTest {
     private static final String ATTACKER_PASSWORD = "secret";
 
@@ -108,6 +110,72 @@ class SmtpIdentityVerificationTest {
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .authenticate(USER, PASSWORD).sendMessage(USER, USER);
+    }
+
+    @Test
+    void spoofingAttemptsShouldBeRejectedInFromField(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: victim@spoofed.info\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+    }
+
+    @Test
+    void spoofingInternalAddressAttemptsShouldBeRejectedInFromField(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        String message = """
+            FROM: victim@james.org\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .authenticate(USER, PASSWORD)
+                .sendMessageWithHeaders(USER, ImmutableList.of(USER), message))
+            .isInstanceOf(SMTPSendingException.class)
+            .hasMessageContaining("503 5.7.1 Incorrect Authentication for Specified Email Address");
+    }
+
+    @Test
+    void aliasShouldBeSupportedInFromField(@TempDir File temporaryFolder) throws Exception {
+        createJamesServer(temporaryFolder, SmtpConfiguration.builder()
+            .requireAuthentication()
+            .verifyIdentity());
+
+        jamesServer.getProbe(DataProbeImpl.class)
+            .addUserAliasMapping("alias", DEFAULT_DOMAIN, USER);
+
+        String message = """
+            FROM: alias@james.org\r
+            subject: test\r
+            \r
+            content\r
+            .\r
+            """;
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(USER, PASSWORD)
+            .sendMessageWithHeaders(USER, ImmutableList.of(USER), message);
     }
 
     @Test
