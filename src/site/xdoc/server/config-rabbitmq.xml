@@ -148,6 +148,10 @@
           <dt><strong>event.bus.notification.durability.enabled</strong></dt>
           <dd>Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.</dd>
 
+          <dt><strong>event.bus.propagate.dispatch.error</strong></dt>
+          <dd>Whether to propagate errors back to the callers when eventbus fails to dispatch group events to RabbitMQ (then store the failed events in the event dead letters).
+              Optional boolean, defaults to true.</dd>
+
           <dt><strong>vhost</strong></dt>
           <dd>Optional string.
               This parameter is only a workaround to support invalid URIs containing character like '_'.

@@ -311,6 +311,7 @@ public class RabbitMQConfiguration {
     private static final String QUEUE_DELIVERY_LIMIT = "quorum.queues.delivery.limit";
     private static final String EVENT_BUS_NOTIFICATION_DURABILITY_ENABLED = "event.bus.notification.durability.enabled";
     private static final String EVENT_BUS_PUBLISH_CONFIRM_ENABLED = "event.bus.publish.confirm.enabled";
+    private static final String EVENT_BUS_PROPAGATE_DISPATCH_ERROR = "event.bus.propagate.dispatch.error";
     private static final String TASK_QUEUE_CONSUMER_TIMEOUT = "task.queue.consumer.timeout";
     private static final String VHOST = "vhost";
 
@@ -411,6 +412,7 @@ public class RabbitMQConfiguration {
         private Optional<Long> queueTTL;
         private Optional<Boolean> eventBusPublishConfirmEnabled;
         private Optional<Boolean> eventBusNotificationDurabilityEnabled;
+        private Optional<Boolean> eventBusPropagateDispatchError;
         private Optional<String> vhost;
         private Optional<Duration> taskQueueConsumerTimeout;
 
@@ -437,6 +439,7 @@ public class RabbitMQConfiguration {
             this.eventBusNotificationDurabilityEnabled = Optional.empty();
             this.vhost = Optional.empty();
             this.taskQueueConsumerTimeout = Optional.empty();
+            this.eventBusPropagateDispatchError = Optional.empty();
         }
 
         public Builder maxRetries(int maxRetries) {
@@ -524,6 +527,11 @@ public class RabbitMQConfiguration {
             return this;
         }
 
+        public Builder eventBusPropagateDispatchError(Boolean eventBusPropagateDispatchError) {
+            this.eventBusPropagateDispatchError = Optional.ofNullable(eventBusPropagateDispatchError);
+            return this;
+        }
+
         public Builder useSslManagement(Boolean useSslForManagement) {
             this.useSslManagement = Optional.of(useSslForManagement);
             return this;
@@ -580,7 +588,8 @@ public class RabbitMQConfiguration {
                     eventBusPublishConfirmEnabled.orElse(true),
                     eventBusNotificationDurabilityEnabled.orElse(true),
                     vhost,
-                    taskQueueConsumerTimeout.orElse(DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT));
+                    taskQueueConsumerTimeout.orElse(DEFAULT_TASK_QUEUE_CONSUMER_TIMEOUT),
+                    eventBusPropagateDispatchError.orElse(true));
         }
 
         private List<Host> hostsDefaultingToUri() {
@@ -655,6 +664,7 @@ public class RabbitMQConfiguration {
             .queueTTL(queueTTL)
             .eventBusNotificationDurabilityEnabled(configuration.getBoolean(EVENT_BUS_NOTIFICATION_DURABILITY_ENABLED, null))
             .eventBusPublishConfirmEnabled(configuration.getBoolean(EVENT_BUS_PUBLISH_CONFIRM_ENABLED, null))
+            .eventBusPropagateDispatchError(configuration.getBoolean(EVENT_BUS_PROPAGATE_DISPATCH_ERROR, null))
             .vhost(vhost)
             .taskQueueConsumerTimeout(taskQueueConsumerTimeout)
             .build();
@@ -730,13 +740,14 @@ public class RabbitMQConfiguration {
     private final boolean eventBusNotificationDurabilityEnabled;
     private final Optional<String> vhost;
     private final Duration taskQueueConsumerTimeout;
+    private final boolean eventBusPropagateDispatchError;
 
     private RabbitMQConfiguration(URI uri, URI managementUri, ManagementCredentials managementCredentials, int maxRetries, int minDelayInMs,
                                   int connectionTimeoutInMs, int channelRpcTimeoutInMs, int handshakeTimeoutInMs, int shutdownTimeoutInMs,
                                   int networkRecoveryIntervalInMs, Boolean useSsl, Boolean useSslManagement, SSLConfiguration sslConfiguration,
                                   boolean useQuorumQueues, Optional<Integer> quorumQueueDeliveryLimit, int quorumQueueReplicationFactor, List<Host> hosts, Optional<Long> queueTTL,
                                   boolean eventBusPublishConfirmEnabled, boolean eventBusNotificationDurabilityEnabled,
-                                  Optional<String> vhost, Duration taskQueueConsumerTimeout) {
+                                  Optional<String> vhost, Duration taskQueueConsumerTimeout, boolean eventBusPropagateDispatchError) {
         this.uri = uri;
         this.managementUri = managementUri;
         this.managementCredentials = managementCredentials;
@@ -759,6 +770,7 @@ public class RabbitMQConfiguration {
         this.eventBusNotificationDurabilityEnabled = eventBusNotificationDurabilityEnabled;
         this.vhost = vhost;
         this.taskQueueConsumerTimeout = taskQueueConsumerTimeout;
+        this.eventBusPropagateDispatchError = eventBusPropagateDispatchError;
     }
 
     public URI getUri() {
@@ -871,6 +883,10 @@ public class RabbitMQConfiguration {
         return quorumQueueDeliveryLimit;
     }
 
+    public boolean eventBusPropagateDispatchError() {
+        return eventBusPropagateDispatchError;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof RabbitMQConfiguration) {
@@ -897,7 +913,8 @@ public class RabbitMQConfiguration {
                 && Objects.equals(this.eventBusPublishConfirmEnabled, that.eventBusPublishConfirmEnabled)
                 && Objects.equals(this.eventBusNotificationDurabilityEnabled, that.eventBusNotificationDurabilityEnabled)
                 && Objects.equals(this.vhost, that.vhost)
-                && Objects.equals(this.taskQueueConsumerTimeout, that.taskQueueConsumerTimeout);
+                && Objects.equals(this.taskQueueConsumerTimeout, that.taskQueueConsumerTimeout)
+                && Objects.equals(this.eventBusPropagateDispatchError, that.eventBusPropagateDispatchError);
         }
         return false;
     }
@@ -906,6 +923,6 @@ public class RabbitMQConfiguration {
     public final int hashCode() {
         return Objects.hash(uri, managementUri, maxRetries, minDelayInMs, connectionTimeoutInMs, quorumQueueReplicationFactor, quorumQueueDeliveryLimit, useQuorumQueues, hosts,
             channelRpcTimeoutInMs, handshakeTimeoutInMs, shutdownTimeoutInMs, networkRecoveryIntervalInMs, managementCredentials, useSsl, useSslManagement,
-            sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, vhost, taskQueueConsumerTimeout);
+            sslConfiguration, queueTTL, eventBusPublishConfirmEnabled, eventBusNotificationDurabilityEnabled, vhost, taskQueueConsumerTimeout, eventBusPropagateDispatchError);
     }
 }

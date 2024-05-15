@@ -572,6 +572,32 @@ class RabbitMQConfigurationTest {
             .isEqualTo(Optional.of("vhosttest"));
     }
 
+    @Test
+    void eventBusPropagateDispatchErrorShouldBeTrueByDefault() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("uri", "amqp://james:james@rabbitmqhost:5672");
+        configuration.addProperty("management.uri", "http://james:james@rabbitmqhost:15672/api/");
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+
+        assertThat(RabbitMQConfiguration.from(configuration).eventBusPropagateDispatchError())
+            .isTrue();
+    }
+
+    @Test
+    void eventBusPropagateDispatchErrorShouldBeDisabledWhenConfiguredFalse() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("uri", "amqp://james:james@rabbitmqhost:5672");
+        configuration.addProperty("management.uri", "http://james:james@rabbitmqhost:15672/api/");
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
+
+        configuration.addProperty("event.bus.propagate.dispatch.error", "false");
+
+        assertThat(RabbitMQConfiguration.from(configuration).eventBusPropagateDispatchError())
+            .isFalse();
+    }
+
     @Nested
     class ManagementCredentialsTest {
         @Test

@@ -24,11 +24,14 @@ import static org.apache.james.events.EventBusTestFixture.GROUP_A;
 import static org.apache.james.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.events.EventBusTestFixture.RETRY_BACKOFF_CONFIGURATION;
 import static org.apache.james.events.EventBusTestFixture.newListener;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 
 import java.util.NoSuchElementException;
 
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.RabbitMQFixture;
 import org.apache.james.events.EventBusTestFixture.TestEventSerializer;
@@ -44,18 +47,18 @@ class NetworkErrorTest {
         .isolationPolicy(RabbitMQExtension.IsolationPolicy.WEAK);
 
     private RabbitMQEventBus eventBus;
+    private EventDeadLetters eventDeadLetters;
 
     @BeforeEach
     void setUp() throws Exception {
-        MemoryEventDeadLetters memoryEventDeadLetters = new MemoryEventDeadLetters();
-
+        eventDeadLetters = new MemoryEventDeadLetters();
 
         EventSerializer eventSerializer = new TestEventSerializer();
         RoutingKeyConverter routingKeyConverter = RoutingKeyConverter.forFactories(new EventBusTestFixture.TestRegistrationKeyFactory());
 
         eventBus = new RabbitMQEventBus(new NamingStrategy(new EventBusName("test")), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
             eventSerializer, RETRY_BACKOFF_CONFIGURATION, routingKeyConverter,
-            memoryEventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
+            eventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
             EventBusId.random(), rabbitMQExtension.getRabbitMQ().getConfiguration());
 
         eventBus.start();
@@ -63,6 +66,7 @@ class NetworkErrorTest {
 
     @AfterEach
     void tearDown() {
+        rabbitMQExtension.getRabbitMQ().unpause();
         eventBus.stop();
     }
 
@@ -74,7 +78,7 @@ class NetworkErrorTest {
         rabbitMQExtension.getRabbitMQ().pause();
 
         assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
-            .getCause()
+            .cause()
             .isInstanceOf(NoSuchElementException.class)
             .hasMessageContaining("Timeout waiting for idle object");
 
@@ -85,4 +89,37 @@ class NetworkErrorTest {
             .untilAsserted(() -> verify(listener).event(EVENT));
     }
 
+    @Test
+    void dispatchGroupEventsDuringRabbitMQOutageShouldThrowErrorByDefault() {
+        eventBus.register(newListener(), GROUP_A);
+
+        rabbitMQExtension.getRabbitMQ().pause();
+
+        assertThatThrownBy(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
+            .cause()
+            .isInstanceOf(NoSuchElementException.class)
+            .hasMessageContaining("Timeout waiting for idle object");
+        assertThat(eventDeadLetters.containEvents().block()).isTrue();
+    }
+
+    @Test
+    void dispatchGroupEventsDuringRabbitMQOutageShouldNotThrowErrorWhenDisablePropagateDispatchError() throws Exception {
+        RabbitMQConfiguration disablePropagateDispatchError = rabbitMQExtension.getRabbitMQ().getConfigurationBuilder()
+            .eventBusPropagateDispatchError(false)
+            .build();
+        eventBus = new RabbitMQEventBus(new NamingStrategy(new EventBusName("test")), rabbitMQExtension.getSender(), rabbitMQExtension.getReceiverProvider(),
+            new TestEventSerializer(), RETRY_BACKOFF_CONFIGURATION, RoutingKeyConverter.forFactories(new EventBusTestFixture.TestRegistrationKeyFactory()),
+            eventDeadLetters, new RecordingMetricFactory(), rabbitMQExtension.getRabbitChannelPool(),
+            EventBusId.random(), disablePropagateDispatchError);
+        eventBus.start();
+
+        assertThat(eventDeadLetters.containEvents().block()).isFalse();
+        eventBus.register(newListener(), GROUP_A);
+
+        rabbitMQExtension.getRabbitMQ().pause();
+
+        assertThatCode(() -> eventBus.dispatch(EVENT, NO_KEYS).block())
+            .doesNotThrowAnyException();
+        assertThat(eventDeadLetters.containEvents().block()).isTrue();
+    }
 }
