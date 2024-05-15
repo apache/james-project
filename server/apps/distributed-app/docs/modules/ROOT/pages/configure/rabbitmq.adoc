@@ -108,6 +108,10 @@ A coma separated list of hosts, example: hosts=ip1:5672,ip2:5672
 | event.bus.notification.durability.enabled
 | Whether or not the queue backing notifications should be durable. Optional boolean, defaults to true.
 
+| event.bus.propagate.dispatch.error
+| Whether to propagate errors back to the callers when eventbus fails to dispatch group events to RabbitMQ (then store the failed events in the event dead letters).
+Optional boolean, defaults to true.
+
 | vhost
 | Optional string. This parameter is only a workaround to support invalid URIs containing character like '_'.
 You still need to specify the vhost in the uri parameter.
