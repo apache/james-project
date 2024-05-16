@@ -601,6 +601,7 @@ public class RabbitMQConfiguration {
 
     private static final String URI_PROPERTY_NAME = "uri";
     private static final String MANAGEMENT_URI_PROPERTY_NAME = "management.uri";
+    private static final boolean FALLBACK_CLASSIC_QUEUES_VERSION_1 = Boolean.parseBoolean(System.getProperty("fallback.classic.queues.v1", "false"));
 
     public static RequireAmqpUri builder() {
         return amqpUri -> managementUri -> managementCredentials -> new Builder(amqpUri, managementUri, managementCredentials);
@@ -817,8 +818,16 @@ public class RabbitMQConfiguration {
         if (useQuorumQueues) {
             builder.quorumQueue().replicationFactor(quorumQueueReplicationFactor);
             quorumQueueDeliveryLimit.ifPresent(builder::deliveryLimit);
+        } else {
+            applyClassicQueueArguments(builder);
         }
         return builder;
+    }
+
+    private void applyClassicQueueArguments(QueueArguments.Builder builder) {
+        if (!FALLBACK_CLASSIC_QUEUES_VERSION_1) {
+            builder.classicQueueVersion(2);
+        }
     }
 
     public boolean isQuorumQueuesUsed() {

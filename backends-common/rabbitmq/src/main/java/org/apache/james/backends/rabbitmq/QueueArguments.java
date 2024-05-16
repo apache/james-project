@@ -70,6 +70,11 @@ public class QueueArguments {
             return this;
         }
 
+        public Builder classicQueueVersion(int version) {
+            arguments.put("x-queue-version", version);
+            return this;
+        }
+
         public Builder put(String key, Object value) {
             arguments.put(key, value);
             return this;

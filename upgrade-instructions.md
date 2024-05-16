@@ -30,6 +30,18 @@ Change list:
  - [Java 21](#java-21)
  - [javax -> jakarta](#javax---jakarta)
  - [Make all queues on RabbitMQ quorum queue when `quorum.queues.enable=true`](#make-all-queues-on-rabbitmq-quorum-queue-when-quorumqueuesenabletrue)
+ - [Migrate RabbitMQ classic queues to version 2](#migrate-rabbitmq-classic-queues-to-version-2)
+
+### Migrate RabbitMQ classic queues to version 2
+
+Date: 14/05/2024
+
+It is recommended by RabbitMQ to upgrade the classic queues to version 2 for better performance: https://www.rabbitmq.com/blog/2023/05/17/rabbitmq-3.12-performance-improvements#classic-queues-massively-improved-classic-queues-v2-cqv2.
+
+Existing version 1 classic queues would need to be deleted and let James re-create them as version 2.
+
+Notice that to use classic queues version 2, you need at least RabbitMQ 3.10.0. If you want to stick with the older RabbitMQ 
+versions and avoid this breaking change, you could set the JVM property `fallback.classic.queues.v1` to `true` (defaults to `false`).
 
 ### Change cluster.enabled in redis.properties to redis.topology
 
