@@ -860,6 +860,7 @@ trait MDNSendMethodContract {
         .build(buildOriginalMessage("2")))
       .getMessageId
 
+    val serializedRandomId = randomMessageId.serialize()
     val request: String =
       s"""{
          |  "using": [
@@ -891,7 +892,7 @@ trait MDNSendMethodContract {
          |            }
          |          },
          |          "k1548": {
-         |            "forEmailId": "${randomMessageId.serialize()}",
+         |            "forEmailId": "$serializedRandomId",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
@@ -957,7 +958,7 @@ trait MDNSendMethodContract {
                    |                    },
                    |                    "k1548": {
                    |                        "type": "notFound",
-                   |                        "description": "The reference \\"forEmailId\\" cannot be found."
+                   |                        "description": "The reference \\"forEmailId\\" $serializedRandomId cannot be found for user andre@domain.tld."
                    |                    }
                    |                }
                    |            },
@@ -1177,6 +1178,7 @@ trait MDNSendMethodContract {
     val mailboxProbe: MailboxProbeImpl = server.getProbe(classOf[MailboxProbeImpl])
     mailboxProbe.createMailbox(path)
 
+    val randomMessageId1 = randomMessageId
     val request: String =
       s"""{
          |  "using": [
@@ -1192,7 +1194,7 @@ trait MDNSendMethodContract {
          |        "identityId": "$IDENTITY_ID",
          |        "send": {
          |          "k1546": {
-         |            "forEmailId": "${randomMessageId.serialize()}",
+         |            "forEmailId": "${randomMessageId1.serialize()}",
          |            "disposition": {
          |              "actionMode": "manual-action",
          |              "sendingMode": "mdn-sent-manually",
@@ -1225,10 +1227,10 @@ trait MDNSendMethodContract {
 
     assertThatJson(response)
       .inPath("methodResponses[0][1].notSent")
-      .isEqualTo("""{
+      .isEqualTo(s"""{
                    |    "k1546": {
                    |        "type": "notFound",
-                   |        "description": "The reference \"forEmailId\" cannot be found."
+                   |        "description": "The reference \\\"forEmailId\\\" ${randomMessageId1.serialize()} cannot be found for user bob@domain.tld."
                    |    }
                    |}""".stripMargin)
   }
