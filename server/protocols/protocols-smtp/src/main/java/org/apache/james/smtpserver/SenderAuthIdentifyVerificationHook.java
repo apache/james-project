@@ -101,7 +101,6 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
-        System.out.println("mess");
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
         if (nSession.verifyIdentity()) {
             try {
