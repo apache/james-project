@@ -93,3 +93,13 @@ james.s3.metrics.enabled=false
 ----
 To disable the S3 metrics.
 
+== Reactor Stream Prefetch
+
+Prefetch to use in Reactor to stream convertions (S3 => InputStream). Default to 1.
+Higher values will tend to block less often at the price of higher memory consumptions.
+
+Ex in `jvm.properties`
+----
+# james.reactor.inputstream.prefetch=4
+----
+
