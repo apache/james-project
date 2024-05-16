@@ -57,6 +57,9 @@ public class ReactorUtils {
     public static final int DEFAULT_BOUNDED_ELASTIC_QUEUESIZE = Optional.ofNullable(System.getProperty("james.schedulers.defaultBoundedElasticQueueSize"))
         .map(Integer::parseInt)
         .orElse(100000);
+    public static final int DEFAULT_INPUT_STREAM_PREFETCH = Optional.ofNullable(System.getProperty("james.reactor.inputstream.prefetch"))
+        .map(Integer::parseInt)
+        .orElse(1);
     private static final int TTL_SECONDS = 60;
     private static final boolean DAEMON = true;
     public static final Scheduler BLOCKING_CALL_WRAPPER = Schedulers.newBoundedElastic(DEFAULT_BOUNDED_ELASTIC_SIZE, DEFAULT_BOUNDED_ELASTIC_QUEUESIZE,
@@ -105,7 +108,7 @@ public class ReactorUtils {
     }
 
     public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {
-        return new StreamInputStream(byteArrays.toStream(1));
+        return new StreamInputStream(byteArrays.toStream(DEFAULT_INPUT_STREAM_PREFETCH));
     }
 
     public static Flux<ByteBuffer> toChunks(InputStream inputStream, int bufferSize) {
