@@ -33,8 +33,6 @@ import reactor.core.publisher.Mono;
 
 public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnectionFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(PoolBackedPostgresConnectionFactory.class);
-    private static final Domain DEFAULT = Domain.of("default");
-    private static final String DEFAULT_DOMAIN_ATTRIBUTE_VALUE = "";
     private static final int DEFAULT_INITIAL_SIZE = 10;
     private static final int DEFAULT_MAX_SIZE = 20;
 
@@ -56,9 +54,10 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     }
 
     @Override
-    public Mono<Connection> getConnection(Optional<Domain> domain) {
+    public Mono<Connection> getConnection(Optional<Domain> maybeDomain) {
         if (rowLevelSecurityEnabled) {
-            return pool.create().flatMap(connection -> setDomainAttributeForConnection(domain.orElse(DEFAULT), connection));
+            return pool.create().flatMap(connection -> maybeDomain.map(domain -> setDomainAttributeForConnection(domain, connection))
+                .orElse(Mono.just(connection)));
         } else {
             return pool.create();
         }
@@ -75,17 +74,9 @@ public class PoolBackedPostgresConnectionFactory implements JamesPostgresConnect
     }
 
     private Mono<Connection> setDomainAttributeForConnection(Domain domain, Connection connection) {
-        return Mono.from(connection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + getDomainAttributeValue(domain) + "'") // It should be set value via Bind, but it doesn't work
+        return Mono.from(connection.createStatement("SET " + DOMAIN_ATTRIBUTE + " TO '" + domain.asString() + "'") // It should be set value via Bind, but it doesn't work
                 .execute())
             .doOnError(e -> LOGGER.error("Error while setting domain attribute for domain {}", domain, e))
             .then(Mono.just(connection));
-    }
-
-    private String getDomainAttributeValue(Domain domain) {
-        if (DEFAULT.equals(domain)) {
-            return DEFAULT_DOMAIN_ATTRIBUTE_VALUE;
-        } else {
-            return domain.asString();
-        }
     }
 }
