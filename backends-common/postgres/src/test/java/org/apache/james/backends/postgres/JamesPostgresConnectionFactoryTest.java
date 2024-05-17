@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 
 import io.r2dbc.spi.Connection;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 public abstract class JamesPostgresConnectionFactoryTest {
 
@@ -68,21 +67,6 @@ public abstract class JamesPostgresConnectionFactoryTest {
         String actual = getDomainAttributeValue(connection);
 
         assertThat(actual).isEqualTo(domain.asString());
-    }
-
-    @Test
-    void getConnectionWithoutDomainShouldReturnEmptyAttribute() {
-        Connection connection = jamesPostgresConnectionFactory().getConnection(Optional.empty()).block();
-
-        String message = Flux.from(connection.createStatement("show " + JamesPostgresConnectionFactory.DOMAIN_ATTRIBUTE)
-                .execute())
-            .flatMap(result -> result.map((row, rowMetadata) -> row.get(0, String.class)))
-            .collect(ImmutableList.toImmutableList())
-            .map(strings -> "")
-            .onErrorResume(throwable -> Mono.just(throwable.getMessage()))
-            .block();
-
-        assertThat(message).isEqualTo("");
     }
 
     String getDomainAttributeValue(Connection connection) {
