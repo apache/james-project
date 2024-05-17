@@ -18,7 +18,13 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import java.util.stream.Stream;
+
 import jakarta.inject.Inject;
+import jakarta.mail.Address;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -32,13 +38,15 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.StreamUtils;
+import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Handler which check if the authenticated user is incorrect
  */
-public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdentifyVerificationHook {
+public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdentifyVerificationHook implements JamesMessageHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(SenderAuthIdentifyVerificationHook.class);
 
     private final DomainList domains;
@@ -89,5 +97,55 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
             LOGGER.info("{} is not allowed to send a mail using {} identity", connectedUser.asString(), sender.asString());
         }
         return allowed;
+    }
+
+    @Override
+    public HookResult onMessage(SMTPSession session, Mail mail) {
+        ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
+        if (nSession.verifyIdentity()) {
+            try {
+                return StreamUtils.ofNullable(mail.getMessage().getFrom())
+                    .distinct()
+                    .flatMap(address -> doCheckMessage(session, address))
+                    .findFirst()
+                    .orElse(HookResult.DECLINED);
+            } catch (MessagingException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            return HookResult.DECLINED;
+        }
+    }
+
+    private Stream<HookResult> doCheckMessage(SMTPSession session, Address from) {
+        if (fromDoesNotMatchAuthUser(session, from)) {
+            return Stream.of(INVALID_AUTH);
+        } else {
+            return Stream.empty();
+        }
+    }
+
+    private boolean fromDoesNotMatchAuthUser(SMTPSession session, Address from) {
+        if (from instanceof InternetAddress internetAddress) {
+            try {
+                MailAddress mailAddress = new MailAddress(internetAddress.getAddress());
+                return session.getUsername() != null &&
+                    (!fromMatchSessionUser(mailAddress, session) || !belongsToLocalDomain(mailAddress));
+            } catch (AddressException e) {
+                // Never happens as valid InternetAddress are valid MailAddress
+                throw new RuntimeException(e);
+            }
+        }
+        return false;
+    }
+
+    private boolean fromMatchSessionUser(MailAddress from, SMTPSession session) {
+        Username authUser = session.getUsername();
+        Username sender = getUser(from);
+        return isSenderAllowed(authUser, sender);
+    }
+    
+    private boolean belongsToLocalDomain(MailAddress from) {
+        return isLocalDomain(from.getDomain());
     }
 }

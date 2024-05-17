@@ -36,7 +36,7 @@ import com.google.common.base.Preconditions;
  * Handler which check if the authenticated user is the same as the one used as MAIL FROM
  */
 public abstract class AbstractSenderAuthIdentifyVerificationHook implements MailHook, RcptHook {
-    private static final HookResult INVALID_AUTH = HookResult.builder()
+    protected static final HookResult INVALID_AUTH = HookResult.builder()
         .hookReturnCode(HookReturnCode.deny())
         .smtpReturnCode(SMTPRetCode.BAD_SEQUENCE)
         .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
