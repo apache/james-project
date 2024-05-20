@@ -37,7 +37,6 @@
         <module name="event-sourcing-event-store-api" />
         <module name="blob-s3-guice" />
         <module name="james-server-guice-jmap" />
-        <module name="crowdsec" />
         <module name="james-server-cassandra-app" />
         <module name="blob-export-api" />
         <module name="blob-export-guice" />
@@ -74,7 +73,6 @@
         <module name="rabbitmq-webadmin-integration-test" />
         <module name="james-server-core" />
         <module name="custom-smtp-command" />
-        <module name="helpers" />
         <module name="apache-james-mailbox-quota-search-scanning" />
         <module name="apache-james-mailbox-tika" />
         <module name="james-server-guice-mailbox" />
@@ -257,13 +255,6 @@
         <module name="apache-mailet-crypto" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="james-server-jmap-draft" target="21" />
-      <module name="james-server-jmap-draft-integration-testing" target="21" />
-      <module name="jmap-draft-integration-testing" target="1.7" />
-      <module name="memory-jmap-draft-integration-testing" target="21" />
-      <module name="rabbitmq-jmap-draft-integration-testing" target="21" />
-    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -413,8 +404,6 @@
       <module name="james-server-guice-webadmin-rabbitmq-mailqueue" options="-parameters" />
       <module name="james-server-helpers" options="-parameters" />
       <module name="james-server-jmap" options="-parameters" />
-      <module name="james-server-jmap-draft" options="-parameters" />
-      <module name="james-server-jmap-draft-integration-testing" options="-parameters" />
       <module name="james-server-jmap-rfc-8621" options="-parameters" />
       <module name="james-server-jpa-app" options="-parameters" />
       <module name="james-server-jpa-common-guice" options="-parameters" />
@@ -482,7 +471,6 @@
       <module name="mailrepository-blob" options="-parameters" />
       <module name="mailrepository-cassandra" options="-parameters" />
       <module name="mailrepository-loaders" options="-parameters" />
-      <module name="memory-jmap-draft-integration-testing" options="-parameters" />
       <module name="memory-jmap-rfc-8621-integration-tests" options="-parameters" />
       <module name="memory-webadmin-integration-test" options="-parameters" />
       <module name="metrics-api" options="-parameters" />
@@ -504,7 +492,6 @@
       <module name="queue-rabbitmq-guice" options="-parameters" />
       <module name="quota-mailing-cassandra" options="-parameters" />
       <module name="quota-mailing-memory" options="-parameters" />
-      <module name="rabbitmq-jmap-draft-integration-testing" options="-parameters" />
       <module name="rabbitmq-webadmin-integration-test" options="-parameters" />
       <module name="scaling-pulsar-smtp" options="-parameters" />
       <module name="testing-base" options="-parameters" />

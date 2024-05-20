@@ -429,16 +429,6 @@
     <file url="file://$PROJECT_DIR$/server/mailrepository/mailrepository-memory/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/protocols/fetchmail/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/protocols/fetchmail/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/jmap-draft-integration-testing-common/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/jmap-draft-integration-testing-common/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/memory-jmap-draft-integration-testing/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/memory-jmap-draft-integration-testing/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/rabbitmq-jmap-draft-integration-testing/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/rabbitmq-jmap-draft-integration-testing/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft-integration-testing/src/main/resources" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/server/protocols/jmap-draft/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/protocols/jmap-rfc-8621-integration-tests/distributed-jmap-rfc-8621-integration-tests/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/protocols/jmap-rfc-8621-integration-tests/distributed-jmap-rfc-8621-integration-tests/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/server/protocols/jmap-rfc-8621-integration-tests/jmap-rfc-8621-integration-tests-common/src/main/java" charset="UTF-8" />
