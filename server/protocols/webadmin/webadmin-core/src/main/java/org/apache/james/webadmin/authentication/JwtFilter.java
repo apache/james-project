@@ -29,6 +29,13 @@ import jakarta.inject.Named;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+
 import spark.Request;
 import spark.Response;
 
@@ -54,8 +61,44 @@ public class JwtFilter implements AuthenticationFilter {
             checkHeaderPresent(bearer);
             String login = retrieveUser(bearer);
             checkIsAdmin(bearer);
+            checkIfNotAdmin(bearer);
 
             request.attribute(LOGIN, login);
+        }
+    }
+
+    private void checkIfNotAdmin(Optional<String> bearer) throws JsonProcessingException {
+        String token = bearer.get();
+        DecodedJWT jwt = JWT.decode(token);
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(jwt.getPayload()));
+        System.out.println("Decoded Payload: " + payload);
+
+        // Parse payload JSON
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode payloadNode = mapper.readTree(payload);
+
+        // Extract and print fields with null checks
+        JsonNode subNode = payloadNode.get("sub");
+        JsonNode adminNode = payloadNode.get("admin");
+        JsonNode expNode = payloadNode.get("exp");
+
+        String sub = subNode != null ? subNode.asText() : "N/A";
+        boolean admin = adminNode != null && adminNode.asBoolean();
+        long exp = expNode != null ? expNode.asLong() : -1;
+
+        System.out.println("Sub: " + sub);
+        System.out.println("Admin: " + admin);
+        System.out.println("Exp: " + exp);
+
+        // Extract and print permissions with null check
+        JsonNode permissions = payloadNode.get("permission");
+        if (permissions != null && permissions.isArray()) {
+            for (JsonNode permissionNode : permissions) {
+                permissionNode.fields().forEachRemaining(entry ->
+                        System.out.println("Permission: " + entry.getKey() + " = " + entry.getValue().asText()));
+            }
+        } else {
+            System.out.println("Permissions: None");
         }
     }
 
