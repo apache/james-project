@@ -84,7 +84,6 @@ public class JwtFilter implements AuthenticationFilter {
             halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Subject is not agent");
         }
         String pathValue = getProcessPath(request.pathInfo());
-        System.out.println(pathValue);
         JsonNode permissionsNode = payloadNode.get("permissions");
         boolean hasGetPermission = false;
         if (permissionsNode != null && permissionsNode.isArray()) {
@@ -124,5 +123,4 @@ public class JwtFilter implements AuthenticationFilter {
             halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.");
         }
     }
-
 }
