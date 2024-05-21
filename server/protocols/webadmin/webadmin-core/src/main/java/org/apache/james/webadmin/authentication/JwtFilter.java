@@ -58,48 +58,54 @@ public class JwtFilter implements AuthenticationFilter {
                 .filter(value -> value.startsWith(AUTHORIZATION_HEADER_PREFIX))
                 .map(value -> value.substring(AUTHORIZATION_HEADER_PREFIX.length()));
 
-            checkHeaderPresent(bearer);
-            String login = retrieveUser(bearer);
-            checkIsAdmin(bearer);
-            checkIfNotAdmin(bearer);
+            System.out.println("halaaaaaaaa     " + request.pathInfo() + "      " + request.requestMethod());
 
+            checkHeaderPresent(bearer);
+            String login = retrieveUser(bearer); // subject field can't be null
+            checkIsAdmin(bearer); // admin field should be true
+            checkIfNotAdmin(bearer,request);
             request.attribute(LOGIN, login);
         }
     }
 
-    private void checkIfNotAdmin(Optional<String> bearer) throws JsonProcessingException {
+    private void checkIfNotAdmin(Optional<String> bearer, Request request) throws JsonProcessingException {
         String token = bearer.get();
         DecodedJWT jwt = JWT.decode(token);
         String payload = new String(java.util.Base64.getUrlDecoder().decode(jwt.getPayload()));
-        System.out.println("Decoded Payload: " + payload);
-
         // Parse payload JSON
         ObjectMapper mapper = new ObjectMapper();
         JsonNode payloadNode = mapper.readTree(payload);
 
-        // Extract and print fields with null checks
         JsonNode subNode = payloadNode.get("sub");
-        JsonNode adminNode = payloadNode.get("admin");
-        JsonNode expNode = payloadNode.get("exp");
-
         String sub = subNode != null ? subNode.asText() : "N/A";
-        boolean admin = adminNode != null && adminNode.asBoolean();
-        long exp = expNode != null ? expNode.asLong() : -1;
-
-        System.out.println("Sub: " + sub);
-        System.out.println("Admin: " + admin);
-        System.out.println("Exp: " + exp);
-
-        // Extract and print permissions with null check
-        JsonNode permissions = payloadNode.get("permission");
-        if (permissions != null && permissions.isArray()) {
-            for (JsonNode permissionNode : permissions) {
-                permissionNode.fields().forEachRemaining(entry ->
-                        System.out.println("Permission: " + entry.getKey() + " = " + entry.getValue().asText()));
-            }
-        } else {
-            System.out.println("Permissions: None");
+        if (sub == "admin") {
+            return;
+        } else if (!sub.equals("agent")) {
+            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Subject is not agent");
         }
+        String pathValue = getProcessPath(request.pathInfo());
+        System.out.println(pathValue);
+        JsonNode permissionsNode = payloadNode.get("permissions");
+        boolean hasGetPermission = false;
+        if (permissionsNode != null && permissionsNode.isArray()) {
+            for (JsonNode permissionNode : permissionsNode) {
+                JsonNode valueNode = permissionNode.get(pathValue);
+
+                if (valueNode != null && request.requestMethod().equals(valueNode.asText())) {
+                    hasGetPermission = true;
+                    break;
+                }
+            }
+        }
+        if (!hasGetPermission) {
+            halt(HttpStatus.UNAUTHORIZED_401, "Non authorized user.Do not have permission.");
+        }
+    }
+
+    private String getProcessPath(String path) {
+        String first15Chars = path.substring(0, 15);
+        String result = first15Chars.replace('/', '.');
+        return "perm" + result;
     }
 
     private void checkHeaderPresent(Optional<String> bearer) {
