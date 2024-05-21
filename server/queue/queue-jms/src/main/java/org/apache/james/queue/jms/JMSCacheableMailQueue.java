@@ -253,14 +253,27 @@ public class JMSCacheableMailQueue implements ManageableMailQueue, JMSSupport, M
                 closeConsumer(consumer);
                 closeSession(session);
             }
-
         } catch (Exception e) {
             rollback(session);
             closeConsumer(consumer);
             closeSession(session);
+            if (isInterrupt(e)) {
+                Thread.currentThread().interrupt();
+                return Mono.empty();
+            }
             return Mono.error(new MailQueueException("Unable to dequeue next message", e));
         }
         return Mono.empty();
+    }
+
+    private static boolean isInterrupt(Throwable e) {
+        if (e instanceof InterruptedException) {
+            return true;
+        }
+        if (e == null) {
+            return false;
+        }
+        return isInterrupt(e.getCause());
     }
 
     @Override
