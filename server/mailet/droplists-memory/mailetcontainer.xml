@@ -37,9 +37,6 @@
     <processors>
         <processor state="root" enableJmx="true">
             <mailet match="All" class="PostmasterAlias"/>
-            <mailet match="org.apache.james.transport.matchers.IsInDropList" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
             <mailet match="RelayLimit=30" class="ToRepository">
                 <repositoryPath>memory://var/mail/relay-limit-exceeded/</repositoryPath>
             </mailet>
