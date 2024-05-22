@@ -28,6 +28,8 @@ import org.apache.james.jmap.api.model.UploadMetaData;
 import org.apache.james.mailbox.model.ContentType;
 import org.reactivestreams.Publisher;
 
+import reactor.core.publisher.Flux;
+
 public interface UploadRepository {
     Publisher<UploadMetaData> upload(InputStream data, ContentType contentType, Username user);
 
@@ -36,5 +38,11 @@ public interface UploadRepository {
     Publisher<Boolean> delete(UploadId id, Username user);
 
     Publisher<UploadMetaData> listUploads(Username user);
+
+    default Publisher<UploadMetaData> getUploadMetadata(Username user, UploadId uploadId) {
+        return Flux.from(listUploads(user))
+            .filter(uploadMetaData -> uploadMetaData.uploadId().equals(uploadId))
+            .singleOrEmpty();
+    }
 }
 

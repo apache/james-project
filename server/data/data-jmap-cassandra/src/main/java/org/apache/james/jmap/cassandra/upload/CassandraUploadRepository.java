@@ -91,6 +91,12 @@ public class CassandraUploadRepository implements UploadRepository {
             .map(UploadDAO.UploadRepresentation::toUploadMetaData);
     }
 
+    @Override
+    public Mono<UploadMetaData> getUploadMetadata(Username user, UploadId uploadId) {
+        return uploadDAO.retrieve(user, uploadId)
+            .map(UploadDAO.UploadRepresentation::toUploadMetaData);
+    }
+
     public Mono<Void> purge() {
         Instant sevenDaysAgo = clock.instant().minus(EXPIRE_DURATION);
         return Flux.from(uploadDAO.all())

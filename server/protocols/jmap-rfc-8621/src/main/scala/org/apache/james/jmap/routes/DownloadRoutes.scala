@@ -34,15 +34,15 @@ import jakarta.inject.{Inject, Named}
 import org.apache.commons.io.output.UnsynchronizedByteArrayOutputStream
 import org.apache.james.jmap.HttpConstants.JSON_CONTENT_TYPE
 import org.apache.james.jmap.api.model.Size.{Size, sanitizeSize}
-import org.apache.james.jmap.api.model.{Upload, UploadId, UploadNotFoundException}
-import org.apache.james.jmap.api.upload.UploadService
+import org.apache.james.jmap.api.model.{Upload, UploadId, UploadMetaData, UploadNotFoundException}
+import org.apache.james.jmap.api.upload.{UploadRepository, UploadService}
 import org.apache.james.jmap.core.Id.Id
 import org.apache.james.jmap.core.{AccountId, Id, ProblemDetails, SessionTranslator}
 import org.apache.james.jmap.exceptions.UnauthorizedException
 import org.apache.james.jmap.http.Authenticator
 import org.apache.james.jmap.http.rfc8621.InjectionKeys
 import org.apache.james.jmap.json.ResponseSerializer
-import org.apache.james.jmap.mail.{BlobId, EmailBodyPart, MinimalEmailBodyPart}
+import org.apache.james.jmap.mail.{BlobId, MinimalEmailBodyPart}
 import org.apache.james.jmap.method.{AccountNotFoundException, ZoneIdProvider}
 import org.apache.james.jmap.routes.DownloadRoutes.{BUFFER_SIZE, LOGGER}
 import org.apache.james.jmap.{Endpoint, JMAPRoute, JMAPRoutes}
@@ -152,25 +152,32 @@ class MessageBlobResolver @Inject()(val messageIdFactory: MessageId.Factory,
   }
 }
 
-class UploadResolver @Inject()(val uploadService: UploadService) extends BlobResolver {
+class UploadResolver @Inject()(val uploadService: UploadService,
+                               val uploadRepository: UploadRepository) extends BlobResolver {
   private val prefix = "uploads-"
 
-  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult = {
-    if (!blobId.value.value.startsWith(prefix)) {
-      NonApplicable
-    } else {
-      val uploadIdAsString = blobId.value.value.substring(prefix.length)
-      Try(UploadId.from(uploadIdAsString)) match {
-        case Failure(_) => NonApplicable
-        case Success(uploadId) => Applicable(
-          SMono(uploadService.retrieve(uploadId, mailboxSession.getUser))
-            .map(upload => UploadedBlob(blobId, upload))
-            .onErrorResume {
-              case _: UploadNotFoundException => SMono.error(BlobNotFoundException(blobId))
-            })
-      }
+  override def resolve(blobId: BlobId, mailboxSession: MailboxSession): BlobResolutionResult =
+    uploadIdFromBlobId(blobId) match {
+      case Failure(_) => NonApplicable
+      case Success(uploadId) => Applicable(
+        SMono(uploadService.retrieve(uploadId, mailboxSession.getUser))
+          .map(upload => UploadedBlob(blobId, upload))
+          .onErrorResume {
+            case _: UploadNotFoundException => SMono.error(BlobNotFoundException(blobId))
+          })
     }
-  }
+
+  def uploadIdFromBlobId(blobId: BlobId): Try[UploadId] =
+    if (blobId.value.value.startsWith(prefix)) {
+      Try(UploadId.from(blobId.value.value.substring(prefix.length)))
+    } else {
+      Failure(new IllegalArgumentException("BlobId is not an upload"))
+    }
+
+  def getUploadMetadata(session: MailboxSession, blobId: BlobId): SMono[UploadMetaData] =
+    uploadIdFromBlobId(blobId)
+      .fold(e => SMono.error(e), uploadId => SMono.fromPublisher(uploadRepository.getUploadMetadata(session.getUser, uploadId))
+        .switchIfEmpty(SMono.error(BlobNotFoundException(blobId))))
 }
 
 class AttachmentBlobResolver @Inject()(val attachmentManager: AttachmentManager, val attachmentIdFactory: AttachmentIdFactory) extends BlobResolver {

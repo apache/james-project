@@ -201,4 +201,40 @@
      assertThat(SMono.fromPublisher(testee.delete(uploadIdOfAlice, Username.of("Bob"))).block()).isFalse
    }
 
+   @Test
+   def getMetadataShouldReturnEmptyWhenUploadIdDoesNotExist(): Unit = {
+     assertThat(SMono.fromPublisher(testee.getUploadMetadata(USER, randomUploadId())).block())
+       .isNull()
+   }
+
+   @Test
+   def getMetadataShouldReturnUploadMetadataWhenUploadIdExists(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     assertThat(SMono.fromPublisher(testee.getUploadMetadata(USER, uploadId)).block())
+       .isNotNull
+   }
+
+   @Test
+   def getMetadataShouldReturnUploadMetadataWithSameData(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     val uploadMetaData: UploadMetaData = SMono.fromPublisher(testee.getUploadMetadata(USER, uploadId)).block()
+
+     assertThat(uploadMetaData.uploadId)
+       .isEqualTo(uploadId)
+     assertThat(uploadMetaData.contentType)
+       .isEqualTo(CONTENT_TYPE)
+     assertThat(uploadMetaData.size)
+       .isEqualTo(sanitizeSize(DATA_STRING.length))
+   }
+
+   @Test
+   def getMetadataShouldReturnNullWhenUserIsNotOwnerOfUpload(): Unit = {
+     val uploadId: UploadId = SMono.fromPublisher(testee.upload(data(), CONTENT_TYPE, USER)).block().uploadId
+
+     assertThat(SMono.fromPublisher(testee.getUploadMetadata(Username.of("Alice"), uploadId)).block())
+       .isNull()
+   }
+
  }
