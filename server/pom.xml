@@ -78,6 +78,8 @@
         <module>dns-service/dnsservice-test</module>
 
         <module>mailet/dkim</module>
+        <module>mailet/droplists-cassandra</module>
+        <module>mailet/droplists-memory</module>
         <module>mailet/integration-testing</module>
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-impl</module>

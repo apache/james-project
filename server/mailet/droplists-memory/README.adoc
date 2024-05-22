@@ -1,0 +1,22 @@
+= DropLists for Apache James
+
+This package provides the memory implementation for DropLists.
+
+== Running DropLists with the memory implementation
+
+- 1. Compile this project.
+- 2. Place the generated "jar with dependencies" in James `extensions-jars` folder.
+- 3. Configure James to use the memory implementation for DropLists by putting the following content within
+`extension.properties`:
+
+----
+guice.extension.module=org.apache.james.droplists.memory.MemoryDropListsModule
+----
+
+- 4. Use the `IsInDropList` matcher within `mailetcontainer.xml`
+
+- 5. Add the routes in `additionalRoutes` into `webadmin.properties`
+
+----
+extensions.routes=org.apache.james.webadmin.routes.DropListRoutes
+----
