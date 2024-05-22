@@ -77,4 +77,14 @@ class IMAPIntegrationTest {
             .contains("OK GETACL completed.");
     }
 
+    @Test
+    void listStatusAppendLimitShouldSucceed(GuiceJamesServer guiceJamesServer) throws Exception {
+        TestIMAPClient testIMAPClient = new TestIMAPClient();
+        testIMAPClient.connect(LOCALHOST_IP, guiceJamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(BOB.asString(), BOB_PASSWORD);
+
+        assertThat(testIMAPClient.sendCommand("LIST \"\" % RETURN (STATUS (APPENDLIMIT))"))
+            .contains("OK LIST completed.");
+    }
+
 }
