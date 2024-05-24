@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.postgres.mail;
 
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.util.ReactorUtils.DEFAULT_CONCURRENCY;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -290,7 +291,7 @@ public class PostgresMessageMapper implements MessageMapper {
                                             FlagsUpdateCalculator flagsUpdateCalculator) {
         return modSeqProvider.nextModSeqReactive(mailbox.getMailboxId())
             .flatMapMany(newModSeq -> Flux.fromIterable(listMessagesMetaData)
-                .flatMap(messageMetaData -> updateFlags(messageMetaData, flagsUpdateCalculator, newModSeq)));
+                .flatMapSequential(messageMetaData -> updateFlags(messageMetaData, flagsUpdateCalculator, newModSeq), DEFAULT_CONCURRENCY));
     }
 
     private Mono<UpdatedFlags> updateFlags(ComposedMessageIdWithMetaData currentMetaData,
