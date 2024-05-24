@@ -60,6 +60,7 @@ import org.apache.james.mailbox.store.mail.model.MapperProvider.Capabilities;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.james.util.streams.Iterators;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.junit.Assume;
 import org.junit.jupiter.api.BeforeEach;
@@ -848,6 +849,51 @@ public abstract class MessageMapperTest {
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE), MessageRange.all()))
             .toIterable()
             .hasSize(5);
+    }
+
+    @Test
+    void updateFlagsOnRangeShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
+        saveMessages();
+
+        Iterator<UpdatedFlags> it = messageMapper.updateFlags(benwaInboxMailbox,
+            new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE),
+            MessageRange.range(message1.getUid(), message3.getUid()));
+        List<MessageUid> updatedFlagsUids = Iterators.toStream(it)
+            .map(UpdatedFlags::getUid)
+            .collect(ImmutableList.toImmutableList());
+
+        assertThat(updatedFlagsUids)
+            .containsExactly(message1.getUid(), message2.getUid(), message3.getUid());
+    }
+
+    @Test
+    void updateFlagsWithRangeFromShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
+        saveMessages();
+
+        Iterator<UpdatedFlags> it = messageMapper.updateFlags(benwaInboxMailbox,
+            new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE),
+            MessageRange.from(message3.getUid()));
+        List<MessageUid> updatedFlagsUids = Iterators.toStream(it)
+            .map(UpdatedFlags::getUid)
+            .collect(ImmutableList.toImmutableList());
+
+        assertThat(updatedFlagsUids)
+            .containsExactly(message3.getUid(), message4.getUid(), message5.getUid());
+    }
+
+    @Test
+    void updateFlagsWithRangeAllRangeShouldReturnUpdatedFlagsWithUidOrderAsc() throws MailboxException {
+        saveMessages();
+
+        Iterator<UpdatedFlags> it = messageMapper.updateFlags(benwaInboxMailbox,
+            new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REPLACE),
+            MessageRange.all());
+        List<MessageUid> updatedFlagsUids = Iterators.toStream(it)
+            .map(UpdatedFlags::getUid)
+            .collect(ImmutableList.toImmutableList());
+
+        assertThat(updatedFlagsUids)
+            .containsExactly(message1.getUid(), message2.getUid(), message3.getUid(), message4.getUid(), message5.getUid());
     }
 
     @Test
