@@ -651,7 +651,7 @@ public class FetchMail implements Runnable, Configurable {
         try {
             newAccounts = new HashMap<>(getLocalUsers().countUsers() * getParsedDynamicAccountParameters().size());
         } catch (UsersRepositoryException e) {
-            throw new ConfigurationException("Unable to acces UsersRepository", e);
+            throw new ConfigurationException("Unable to access UsersRepository", e);
         }
         Map<DynamicAccountKey, DynamicAccount> oldAccounts = getDynamicAccountsBasic();
         if (null == oldAccounts) {
