@@ -148,7 +148,7 @@ public abstract class AbstractFileRepository implements Configurable {
         try {
             baseDirectory = fileSystem.getFileWithinBaseDir(destination);
         } catch (IOException e) {
-            throw new ConfigurationException("Unable to acces destination " + destination, e);
+            throw new ConfigurationException("Unable to access destination " + destination, e);
         }
 
     }
