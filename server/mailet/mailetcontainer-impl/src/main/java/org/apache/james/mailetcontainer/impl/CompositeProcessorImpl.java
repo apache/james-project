@@ -47,7 +47,7 @@ public class CompositeProcessorImpl extends AbstractStateCompositeProcessor {
     private final MailetLoader mailetLoader;
 
     @Inject
-    CompositeProcessorImpl(MetricFactory metricFactory, MailetContext mailetContext, MatcherLoader matcherLoader, MailetLoader mailetLoader) {
+    public CompositeProcessorImpl(MetricFactory metricFactory, MailetContext mailetContext, MatcherLoader matcherLoader, MailetLoader mailetLoader) {
         this.metricFactory = metricFactory;
         this.mailetContext = mailetContext;
         this.matcherLoader = matcherLoader;
