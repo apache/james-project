@@ -34,7 +34,7 @@
       <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/apps/spring-app/src/main/resources/mailrepositorystore.xml">mailrepositorystore.xml</a> in GIT to get some examples and hints.</p>
 
       <p>Mail Repository Stores are distinguished by where they store data.  There are several types of
-        storage: File, Database, Cassandra, DBFile, and MBox.</p>
+        storage: File, Database, Cassandra and DBFile.</p>
         
     </subsection>
         
