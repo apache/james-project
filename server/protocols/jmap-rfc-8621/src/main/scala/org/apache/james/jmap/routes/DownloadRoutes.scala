@@ -284,7 +284,7 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
             ProblemDetails(status = NOT_FOUND, detail = "The resource could not be found"),
             NOT_FOUND)
         case e =>
-          LOGGER.error("Unexpected error upon downloads", e)
+          LOGGER.error("Unexpected error upon download {}", request.uri(), e)
           respondDetails(response,
             ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
             INTERNAL_SERVER_ERROR)

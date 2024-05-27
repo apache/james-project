@@ -103,7 +103,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
               ProblemDetails(status = FORBIDDEN, detail = "Upload to other accounts is forbidden"),
               FORBIDDEN)
           case e =>
-            LOGGER.error("Unexpected error upon uploads", e)
+            LOGGER.error("Unexpected error upon upload {}", request.uri(), e)
             respondDetails(response,
               ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
               INTERNAL_SERVER_ERROR)
