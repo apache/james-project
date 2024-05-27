@@ -41,6 +41,7 @@ import org.apache.james.modules.blobstore.BlobStoreModulesChooser;
 import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDelegationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
+import org.apache.james.modules.data.CassandraDropListsModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraRecipientRewriteTableModule;
 import org.apache.james.modules.data.CassandraSieveQuotaLegacyModule;
@@ -75,6 +76,7 @@ import org.apache.james.modules.queue.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
+import org.apache.james.modules.server.DropListsRoutesModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.JmapTasksModule;
@@ -209,7 +211,8 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
             .combineWith(chooseDeletedMessageVault(configuration.getVaultConfiguration()))
             .combineWith(chooseQuotaModule(configuration))
-            .overrideWith(chooseJmapModules(configuration));
+            .overrideWith(chooseJmapModules(configuration))
+            .overrideWith(chooseDropListsModule(configuration));
     }
 
     private static Module chooseMailQueue(CassandraRabbitMQJamesConfiguration configuration) {
@@ -258,4 +261,14 @@ public class CassandraRabbitMQJamesServerMain implements JamesServerMain {
             return Modules.combine(new CassandraMailboxQuotaModule(), new CassandraSieveQuotaModule());
         }
     }
+
+    private static Module chooseDropListsModule(CassandraRabbitMQJamesConfiguration configuration) {
+        if (configuration.isDropListsEnabled()) {
+            return Modules.combine(new CassandraDropListsModule(), new DropListsRoutesModule());
+        }
+        return binder -> {
+
+        };
+    }
+
 }

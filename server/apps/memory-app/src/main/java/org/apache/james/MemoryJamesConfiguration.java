@@ -41,12 +41,14 @@ public class MemoryJamesConfiguration implements Configuration {
         private Optional<ConfigurationPath> configurationPath;
         private Optional<UsersRepositoryModuleChooser.Implementation> usersRepositoryImplementation;
         private Optional<Boolean> jmapEnabled;
+        private Optional<Boolean> dropListsEnabled;
 
         private Builder() {
             rootDirectory = Optional.empty();
             configurationPath = Optional.empty();
             usersRepositoryImplementation = Optional.empty();
             jmapEnabled = Optional.empty();
+            dropListsEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -87,6 +89,11 @@ public class MemoryJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableDropLists() {
+            this.dropListsEnabled = Optional.of(true);
+            return this;
+        }
+
         public MemoryJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -112,10 +119,22 @@ public class MemoryJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean dropListsEnabled = this.dropListsEnabled.orElseGet(() -> {
+                PropertiesProvider propertiesProvider = new PropertiesProvider(fileSystem, configurationPath);
+                try {
+                    return propertiesProvider.getConfiguration("droplists").getBoolean("enabled", false);
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+
             return new MemoryJamesConfiguration(
                 configurationPath,
                 directories,
-                usersRepositoryChoice, jmapEnabled);
+                usersRepositoryChoice, jmapEnabled, dropListsEnabled);
         }
     }
 
@@ -127,12 +146,16 @@ public class MemoryJamesConfiguration implements Configuration {
     private final JamesDirectoriesProvider directories;
     private final UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation;
     private final boolean jmapEnabled;
+    private final boolean dropListsEnabled;
 
-    public MemoryJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories, UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, boolean jmapEnabled) {
+    public MemoryJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
+                                    UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation,
+                                    boolean jmapEnabled, boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.usersRepositoryImplementation = usersRepositoryImplementation;
         this.jmapEnabled = jmapEnabled;
+        this.dropListsEnabled = dropListsEnabled;
     }
 
     @Override
@@ -151,5 +174,9 @@ public class MemoryJamesConfiguration implements Configuration {
 
     public boolean isJmapEnabled() {
         return jmapEnabled;
+    }
+
+    public boolean isDropListsEnabled() {
+        return dropListsEnabled;
     }
 }

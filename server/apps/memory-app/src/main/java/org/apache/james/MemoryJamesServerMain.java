@@ -34,6 +34,7 @@ import org.apache.james.modules.RunArgumentsModule;
 import org.apache.james.modules.data.MemoryDataJmapModule;
 import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.data.MemoryDelegationStoreModule;
+import org.apache.james.modules.data.MemoryDropListsModule;
 import org.apache.james.modules.data.MemoryUsersRepositoryModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
@@ -49,6 +50,7 @@ import org.apache.james.modules.queue.memory.MemoryMailQueueModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
+import org.apache.james.modules.server.DropListsRoutesModule;
 import org.apache.james.modules.server.InconsistencyQuotasSolvingRoutesModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.JmapTasksModule;
@@ -174,12 +176,22 @@ public class MemoryJamesServerMain implements JamesServerMain {
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .combineWith(new UsersRepositoryModuleChooser(new MemoryUsersRepositoryModule())
                 .chooseModules(configuration.getUsersRepositoryImplementation()))
-            .combineWith(chooseJmapModule(configuration));
+            .combineWith(chooseJmapModule(configuration))
+            .combineWith(chooseDropListsModule(configuration));
     }
 
     private static Module chooseJmapModule(MemoryJamesConfiguration configuration) {
         if (configuration.isJmapEnabled()) {
             return new JMAPListenerModule();
+        }
+        return binder -> {
+
+        };
+    }
+
+    private static Module chooseDropListsModule(MemoryJamesConfiguration configuration) {
+        if (configuration.isDropListsEnabled()) {
+            return Modules.combine(new MemoryDropListsModule(), new DropListsRoutesModule());
         }
         return binder -> {
 
