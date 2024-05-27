@@ -35,13 +35,13 @@
         <constructor-arg index="0" ref="mailboxmanager"/>
         <constructor-arg index="1" ref="event-bus"/>
         <constructor-arg index="2" ref="subscriptionManager"/>
-        <!-- The mailboxTyper -->
-        <constructor-arg index="3" value="#{null}"/>
+        <constructor-arg index="3" ref="mailboxTyper"/>
         <constructor-arg index="4" ref="quotaManager"/>
         <constructor-arg index="5" ref="quotaRootResolver"/>
         <constructor-arg index="6" ref="timeMetricFactory"/>
     </bean>
 
+    <bean id="mailboxTyper" class="org.apache.james.imap.api.process.DefaultMailboxTyper"/>
     <bean id="imapDecoderFactory" class="org.apache.james.imap.main.DefaultImapDecoderFactory"/>
     <bean id="imapDecoder" factory-bean="imapDecoderFactory" factory-method="buildImapDecoder"/>
 
