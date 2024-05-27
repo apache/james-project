@@ -101,7 +101,28 @@ public class EhloCmdHandler extends AbstractHookableCmdHandler<HeloHook> impleme
         return InetAddresses.isUriInetAddress(hostname)
             // Guava tries parsing IPv6 if and only if wrapped by []
             || InetAddresses.isUriInetAddress("[" + hostname + "]")
-            || InternetDomainName.isValid(hostname);
+            || InternetDomainName.isValid(hostname)
+            || emClientCompatibility(hostname);
+    }
+
+    // CF JAMES-4040
+    private boolean emClientCompatibility(String hostname) {
+        int separator = hostname.lastIndexOf(':');
+        if (separator == -1 || separator == hostname.length() -1) {
+            return false;
+        }
+        String ipv4 = hostname.substring(separator + 1);
+        String ipv6 = removeEmIPV6Prefix(hostname.substring(0, separator));
+
+        return InetAddresses.isInetAddress(ipv4)
+            && InetAddresses.isInetAddress(ipv6);
+    }
+
+    private static String removeEmIPV6Prefix(String ipv6) {
+        if (ipv6.startsWith("IPv6:")) {
+            ipv6 = ipv6.substring(5);
+        }
+        return ipv6;
     }
 
     private String unquote(String argument) {
