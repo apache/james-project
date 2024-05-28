@@ -1,0 +1,71 @@
+Return-Path: <SRS0=7v5G=NB=avocat.fr=comptetest15.linagora@ik2.com>
+org.apache.james.rspamd.flag: NO
+org.apache.james.rspamd.status: No, actions=no action score=-1.20399 requiredScore=15.0
+Delivered-To: btellier@linagora.com
+Received: from 172.17.0.1 (EHLO incoming.linagora.com) ([172.17.0.1])
+          by incoming.linagora.com (JAMES SMTP Server ) with ESMTP ID 6dffcf4c
+          for <btellier@linagora.com>;
+          Thu, 30 May 2024 13:14:36 +0000 (UTC)
+Received: from obm3-ui.linagora.dc1 (arathi.linagora.com [54.36.8.82])
+	by incoming.linagora.com (Postfix) with ESMTP id 760D11400C0
+	for <btellier@linagora.com>; Thu, 30 May 2024 13:14:36 +0000 (UTC)
+Received: from s602f.ik2.com (s602f.ik2.com [66.37.25.73])
+	by obm3-ui.linagora.dc1 (Postfix) with ESMTP id EF3C21D5C6
+	for <btellier@linagora.com>; Thu, 30 May 2024 15:14:29 +0200 (CEST)
+Received: from s602e.ik2.com
+	by s602f.ik2.com with esmtps (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+	(envelope-from <comptetest15.linagora@avocat.fr>)
+	id 1sCfc1-0002uc-JM
+	for btellier@linagora.com; Thu, 30 May 2024 13:14:34 +0000
+Received: from 185.60.149.69 by s602e.ik2.com (IK2 SMTP Server); Thu, 30 May 2024 13:14:33 +0000
+Received: from outgoing.avocat.fr (unknown [100.96.73.31])
+	by outgoing.avocat.fr (Postfix) with ESMTP id 2FA1440BB5
+	for <btellier@linagora.com>; Thu, 30 May 2024 15:14:31 +0200 (CEST)
+DKIM-Signature: a=rsa-sha256; b=yKWUdoSJWU22yD2pYralgzwT7HtfiVaYM2Z/UFpeTbGCCrUFH0MfiZV6xpUrj7yjvXKetoP8fBFaz0CCmMCwyQmuDPA7LDZtaspCKrnnpJ4jbXd1EETNTOnkPGHTtwmDXOiGfLQwYtVTnt8ZjFs0aqWQ7x0hf/J7B1yrrQHXzow=; s=s2; d=avocat.fr; v=1; bh=J/vybCAsPL7Fd5sQielJMVcFwAfk7/HdExYRnLVmMls=; h=from : reply-to : subject : date : to : cc : resent-date : resent-from : resent-sender : resent-to : resent-cc : in-reply-to : references : list-id : list-help : list-unsubscribe : list-subscribe : list-post : list-owner : list-archive;
+MIME-Version: 1.0
+Subject: Test DKIM
+X-LINAGORA-Copy-Delivery-Done: 1
+From: "Compte Test 15 (Linagora)" <comptetest15.linagora@avocat.fr>
+To: btellier@linagora.com
+Reply-To: comptetest15.linagora@avocat.fr
+Date: Thu, 30 May 2024 13:14:29 +0000
+Message-ID: <Mime4j.10cd.83efd28a96e1b4a9.18fc9a33dcd@avocat.fr>
+User-Agent: Team-Mail/0.11.3 Mozilla/5.0 (X11; Linux x86_64)
+ AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36
+Disposition-Notification-To: comptetest15.linagora@avocat.fr
+Content-Type: multipart/alternative;
+ boundary="-=Part.10ce.b972756a9ae65a4e.18fc9a33dcd.74debedca650c627=-"
+X-SF-RX-Return-Path: <comptetest15.linagora@avocat.fr>
+X-SF-Originating-IP: 185.60.149.69
+X-SF-WhiteListedReason: Whitelisted EmailTO
+X-SF-Score:
+X-SF-SRS: Sender address rewritten from <comptetest15.linagora@avocat.fr> to <SRS0=7v5G=NB=avocat.fr=comptetest15.linagora@ik2.com>
+X-SF-Domain: qgwlxqsyyb
+
+---=Part.10ce.b972756a9ae65a4e.18fc9a33dcd.74debedca650c627=-
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+ALTERED body
+
+--=C2=A0
+
+
+
+
+
+
+
+---=Part.10ce.b972756a9ae65a4e.18fc9a33dcd.74debedca650c627=-
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<div style=3D"line-height: 100%;">ALTERED body<br style=3D"line-height: 1=
+00%;"><br style=3D"line-height: 100%;"></div><div class=3D"tmail-signature"=
+ style=3D"display: block; line-height: 100%;"><span class=3D"tmail_signatur=
+e_prefix" style=3D"line-height: 100%;">--&nbsp;</span><br style=3D"line-hei=
+ght: 100%;">
+<p style=3D"line-height: 100%;"><br style=3D"line-height: 100%=
+;"></p>
+<br style=3D"line-height: 100%;"></div>
+---=Part.10ce.b972756a9ae65a4e.18fc9a33dcd.74debedca650c627=---

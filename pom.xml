@@ -1727,6 +1727,11 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-protocols-smtp-dkim</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-queue-activemq</artifactId>
                 <version>${project.version}</version>
             </dependency>
