@@ -52,7 +52,6 @@ By omitting these files, sane default values are used.
 ** xref:configure/recipientrewritetable.adoc[*recipientrewritetable.xml*] enables advanced configuration for the Recipient Rewrite Table component link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/recipientrewritetable.xml[example]
 *** xref:configure/matchers.adoc[This page] allows choosing the indexing technology.
 ** xref:configure/usersrepository.adoc[*usersrepository.xml*] allows configuration of user storage link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/usersrepository.xml[example]
-** xref:configure/droplists.adoc[This page] allows configuring drop lists.
 
 == For extensions
 
@@ -67,6 +66,7 @@ By omitting these files, no extra behaviour is added.
 ** xref:configure/collecting-contacts.adoc[This page] documents contact collection
 ** xref:configure/collecting-events.adoc[This page] documents event collection
 ** xref:configure/dsn.adoc[this page] specified how to support SMTP Delivery Submission Notification (link:https://tools.ietf.org/html/rfc3461[RFC-3461])
+** xref:configure/droplists.adoc[This page] allows configuring drop lists.
 
 == System properties
 

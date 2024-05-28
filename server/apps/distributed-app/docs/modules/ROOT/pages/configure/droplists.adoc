@@ -12,7 +12,7 @@ To disable it, adjust the `droplists.properties` file and remove the `IsInDropLi
 | Property name | explanation
 
 | enabled
-| true/false. Governs whether DropLists should be enabled
+| Boolean. Governs whether DropLists should be enabled. Defaults to `false`.
 |===
 
 == Enabling Matcher
@@ -24,3 +24,9 @@ Plug the `IsInDropList` matcher within `mailetcontainer.xml` :
     <processor>transport</processor>
 </mailet>
 ....
+
+== DropList management
+
+DropList management, including adding and deleting entries, is performed through the WebAdmin REST API.
+
+See xref:operate/webadmin.adoc#_administrating_droplists[WebAdmin DropLists].
