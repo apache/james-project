@@ -66,6 +66,7 @@ By omitting these files, no extra behaviour is added.
 ** xref:configure/collecting-contacts.adoc[This page] documents contact collection
 ** xref:configure/collecting-events.adoc[This page] documents event collection
 ** xref:configure/dsn.adoc[this page] specified how to support SMTP Delivery Submission Notification (link:https://tools.ietf.org/html/rfc3461[RFC-3461])
+** xref:configure/droplists.adoc[This page] allows configuring drop lists.
 
 == System properties
 
