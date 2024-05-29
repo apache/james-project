@@ -1,0 +1,32 @@
+= Distributed James Server &mdash; DropLists
+:navtitle: DropLists
+
+The DropList, also known as the mail blacklist, is a collection of
+domains and email addresses that are denied from sending emails within the system.
+It is disabled by default.
+To enable it, modify the `droplists.properties` file and include the `IsInDropList` matcher in the `mailetcontainer.xml`.
+To disable it, adjust the `droplists.properties` file and remove the `IsInDropList` matcher from the `mailetcontainer.xml`.
+
+.droplists.properties content
+|===
+| Property name | explanation
+
+| enabled
+| Boolean. Governs whether DropLists should be enabled. Defaults to `false`.
+|===
+
+== Enabling Matcher
+
+Plug the `IsInDropList` matcher within `mailetcontainer.xml` :
+
+....
+<mailet match="org.apache.james.transport.matchers.IsInDropList" class="ToProcessor">
+    <processor>transport</processor>
+</mailet>
+....
+
+== DropList management
+
+DropList management, including adding and deleting entries, is performed through the WebAdmin REST API.
+
+See xref:operate/webadmin.adoc#_administrating_droplists[WebAdmin DropLists].

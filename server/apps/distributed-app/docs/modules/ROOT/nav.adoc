@@ -34,6 +34,7 @@
 **** xref:configure/batchsizes.adoc[batchsizes.properties]
 **** xref:configure/dns.adoc[dnsservice.xml]
 **** xref:configure/domainlist.adoc[domainlist.xml]
+**** xref:configure/droplists.adoc[DropLists]
 **** xref:configure/healthcheck.adoc[healthcheck.properties]
 **** xref:configure/mailetcontainer.adoc[mailetcontainer.xml]
 **** xref:configure/mailets.adoc[Packaged Mailets]

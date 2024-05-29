@@ -52,6 +52,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         private Optional<VaultConfiguration> vaultConfiguration;
         private Optional<Boolean> jmapEnabled;
         private Optional<Boolean> quotaCompatibilityMode;
+        private Optional<Boolean> dropListsEnabled;
 
         private Builder() {
             searchConfiguration = Optional.empty();
@@ -64,6 +65,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             vaultConfiguration = Optional.empty();
             jmapEnabled = Optional.empty();
             quotaCompatibilityMode = Optional.empty();
+            dropListsEnabled = Optional.empty();
         }
 
         public Builder workingDirectory(String path) {
@@ -134,6 +136,11 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
             return this;
         }
 
+        public Builder enableDropLists() {
+            this.dropListsEnabled = Optional.of(true);
+            return this;
+        }
+
         public CassandraRabbitMQJamesConfiguration build() {
             ConfigurationPath configurationPath = this.configurationPath.orElse(new ConfigurationPath(FileSystem.FILE_PROTOCOL_AND_CONF));
             JamesServerResourceLoader directories = new JamesServerResourceLoader(rootDirectory
@@ -190,6 +197,16 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 }
             });
 
+            boolean dropListsEnabled = this.dropListsEnabled.orElseGet(() -> {
+                try {
+                    return propertiesProvider.getConfiguration("droplists").getBoolean("enabled", false);
+                } catch (FileNotFoundException e) {
+                    return false;
+                } catch (ConfigurationException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
             return new CassandraRabbitMQJamesConfiguration(
                 configurationPath,
                 directories,
@@ -199,7 +216,8 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
                 mailQueueChoice,
                 mailQueueViewChoice, vaultConfiguration,
                 jmapEnabled,
-                quotaCompatibilityMode);
+                quotaCompatibilityMode,
+                dropListsEnabled);
         }
     }
 
@@ -217,12 +235,13 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
     private final VaultConfiguration vaultConfiguration;
     private final boolean jmapEnabled;
     private final boolean quotaCompatibilityMode;
+    private final boolean dropListsEnabled;
 
     public CassandraRabbitMQJamesConfiguration(ConfigurationPath configurationPath, JamesDirectoriesProvider directories,
                                                BlobStoreConfiguration blobStoreConfiguration, SearchConfiguration searchConfiguration,
                                                UsersRepositoryModuleChooser.Implementation usersRepositoryImplementation, MailQueueChoice mailQueueChoice,
                                                MailQueueViewChoice mailQueueViewChoice, VaultConfiguration vaultConfiguration,
-                                               boolean jmapEnabled, boolean quotaCompatibilityMode) {
+                                               boolean jmapEnabled, boolean quotaCompatibilityMode, boolean dropListsEnabled) {
         this.configurationPath = configurationPath;
         this.directories = directories;
         this.blobStoreConfiguration = blobStoreConfiguration;
@@ -233,6 +252,7 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
         this.vaultConfiguration = vaultConfiguration;
         this.jmapEnabled = jmapEnabled;
         this.quotaCompatibilityMode = quotaCompatibilityMode;
+        this.dropListsEnabled = dropListsEnabled;
     }
 
     public MailQueueViewChoice getMailQueueViewChoice() {
@@ -275,5 +295,9 @@ public class CassandraRabbitMQJamesConfiguration implements Configuration {
 
     public boolean isQuotaCompatibilityMode() {
         return quotaCompatibilityMode;
+    }
+
+    public boolean isDropListsEnabled() {
+        return dropListsEnabled;
     }
 }
