@@ -721,31 +721,31 @@ public class StoreMessageManager implements MessageManager {
     /**
      * Copy the {@link MessageRange} to the {@link StoreMessageManager}
      */
-    public Mono<List<MessageRange>> copyTo(MessageRange set, StoreMessageManager toMailbox, MailboxSession session) {
+    public Flux<MessageRange> copyTo(MessageRange set, StoreMessageManager toMailbox, MailboxSession session) {
         if (!toMailbox.isWriteable(session)) {
-            return Mono.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+            return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
-        return Mono.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
+        return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
             copy(set, toMailbox, session)
-                .map(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
+                .flatMapIterable(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
             MailboxPathLocker.LockType.Write));
     }
 
     /**
      * Move the {@link MessageRange} to the {@link StoreMessageManager}
      */
-    public Mono<List<MessageRange>> moveTo(MessageRange set, StoreMessageManager toMailbox, MailboxSession session) {
+    public Flux<MessageRange> moveTo(MessageRange set, StoreMessageManager toMailbox, MailboxSession session) {
         if (!isWriteable(session)) {
-            return Mono.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+            return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
         if (!toMailbox.isWriteable(session)) {
-            return Mono.error(new ReadOnlyException(toMailbox.getMailboxPath()));
+            return Flux.error(new ReadOnlyException(toMailbox.getMailboxPath()));
         }
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
-        return Mono.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
+        return Flux.from(locker.executeReactiveWithLockReactive(toMailbox.getMailboxPath(),
             move(set, toMailbox, session)
-                .map(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
+                .flatMapIterable(map -> MessageRange.toRanges(new ArrayList<>(map.keySet()))),
             MailboxPathLocker.LockType.Write));
     }
 
@@ -866,20 +866,22 @@ public class StoreMessageManager implements MessageManager {
     }
 
 
-    private Mono<SortedMap<MessageUid, MessageMetaData>> copy(MessageRange set, StoreMessageManager to, MailboxSession session) {
+    private Flux<SortedMap<MessageUid, MessageMetaData>> copy(MessageRange set, StoreMessageManager to, MailboxSession session) {
         return retrieveOriginalRows(set, session)
-            .collectList()
-            .flatMap(originalRows -> to.copy(originalRows, session).collectList().flatMap(copyResult -> {
-                SortedMap<MessageUid, MessageMetaData> copiedUids = collectMetadata(copyResult.iterator());
+            .window(batchSizes.getCopyBatchSize().orElse(Integer.MAX_VALUE))
+            .concatMap(window -> window
+                .collectList()
+                .flatMap(originalRows -> to.copy(originalRows, session).collectList().flatMap(copyResult -> {
+                    SortedMap<MessageUid, MessageMetaData> copiedUids = collectMetadata(copyResult.iterator());
 
-                ImmutableList<MessageId> messageIds = originalRows.stream()
-                    .map(org.apache.james.mailbox.store.mail.model.Message::getMessageId)
-                    .collect(ImmutableList.toImmutableList());
+                    ImmutableList<MessageId> messageIds = originalRows.stream()
+                        .map(org.apache.james.mailbox.store.mail.model.Message::getMessageId)
+                        .collect(ImmutableList.toImmutableList());
 
-                MessageMoves messageMoves = MessageMoves.builder()
-                    .previousMailboxIds(getMailboxEntity().getMailboxId())
-                    .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
-                    .build();
+                    MessageMoves messageMoves = MessageMoves.builder()
+                        .previousMailboxIds(getMailboxEntity().getMailboxId())
+                        .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
+                        .build();
 
                 return Flux.concat(
                     eventBus.dispatch(EventFactory.added()
@@ -898,23 +900,25 @@ public class StoreMessageManager implements MessageManager {
                         messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet())))
                     .then()
                     .thenReturn(copiedUids);
-            }));
+            })));
     }
 
-    private Mono<SortedMap<MessageUid, MessageMetaData>> move(MessageRange set, StoreMessageManager to, MailboxSession session) {
+    private Flux<SortedMap<MessageUid, MessageMetaData>> move(MessageRange set, StoreMessageManager to, MailboxSession session) {
         return retrieveOriginalRows(set, session)
-            .collectList()
-            .flatMap(originalRows -> to.move(originalRows, session).flatMap(moveResult -> {
-                SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages().iterator());
+            .window(batchSizes.getCopyBatchSize().orElse(Integer.MAX_VALUE))
+            .concatMap(window -> window
+                .collectList()
+                .flatMap(originalRows -> to.move(originalRows, session).flatMap(moveResult -> {
+                    SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages().iterator());
 
-                ImmutableList<MessageId> messageIds = originalRows.stream()
-                    .map(org.apache.james.mailbox.store.mail.model.Message::getMessageId)
-                    .collect(ImmutableList.toImmutableList());
+                    ImmutableList<MessageId> messageIds = originalRows.stream()
+                        .map(org.apache.james.mailbox.store.mail.model.Message::getMessageId)
+                        .collect(ImmutableList.toImmutableList());
 
-                MessageMoves messageMoves = MessageMoves.builder()
-                    .previousMailboxIds(getMailboxEntity().getMailboxId())
-                    .targetMailboxIds(to.getMailboxEntity().getMailboxId())
-                    .build();
+                    MessageMoves messageMoves = MessageMoves.builder()
+                        .previousMailboxIds(getMailboxEntity().getMailboxId())
+                        .targetMailboxIds(to.getMailboxEntity().getMailboxId())
+                        .build();
 
                 return Flux.concat(
                     eventBus.dispatch(EventFactory.added()
@@ -940,7 +944,7 @@ public class StoreMessageManager implements MessageManager {
                         messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(ImmutableSet.toImmutableSet())))
                     .then()
                     .thenReturn(moveUids);
-            }));
+            })));
     }
 
     private Flux<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) {
