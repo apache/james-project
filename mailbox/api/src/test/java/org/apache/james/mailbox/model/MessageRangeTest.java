@@ -151,11 +151,4 @@ class MessageRangeTest {
         boolean actual = range.includes(MessageUid.of(7));
         assertThat(actual).isFalse();
     }
-
-    @Test
-    void toto() {
-        MessageRange range = new MessageRange(MessageRange.Type.RANGE, MessageUid.of(0), MessageUid.MAX_VALUE);
-
-        range.split(3);
-    }
 }
