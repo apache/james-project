@@ -25,7 +25,6 @@ import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
-import org.apache.james.smtpserver.netty.SMTPServer.SMTPHandlerConfigurationDataImpl;
 
 /**
  * {@link SMTPSession} implementation for use with Netty

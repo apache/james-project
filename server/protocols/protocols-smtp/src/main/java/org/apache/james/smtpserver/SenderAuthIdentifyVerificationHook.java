@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import java.util.stream.Stream;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
 import jakarta.mail.Address;
@@ -70,7 +70,7 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
         if (nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.STRICT) {
             return super.doCheck(session, sender);
-        } if (nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.RELAXED) {
+        } else if (nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.RELAXED) {
             return doCheckRelaxed(session, sender);
         } else {
             return HookResult.DECLINED;
