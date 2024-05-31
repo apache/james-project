@@ -226,34 +226,6 @@ public class MessageRange implements Iterable<MessageUid> {
         }
         
     }
-    
-    
-    /**
-     * Tries to split the given {@link MessageRange} to a {@link List} of {@link MessageRange}'s which 
-     * select only a max amount of items. This only work for {@link MessageRange}'s with {@link Type} of 
-     * {@link Type#RANGE}.
-     */
-    public List<MessageRange> split(int maxItems) {
-        List<MessageRange> ranges = new ArrayList<>();
-        if (getType() == Type.RANGE) {
-            long from = getUidFrom().asLong();
-            long to = getUidTo().asLong();
-            long realTo = to;
-            while (from <= realTo) {
-                to = Math.min(from + maxItems - 1, realTo);
-                if (from == to) {
-                    ranges.add(MessageUid.of(from).toRange());
-                } else {
-                    ranges.add(MessageRange.range(MessageUid.of(from), MessageUid.of(to)));
-                }
-                
-                from = to + 1;
-            }
-        } else {
-            ranges.add(this);
-        }
-        return ranges;
-    }
 
     @Override
     public int hashCode() {

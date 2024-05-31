@@ -56,31 +56,6 @@ class MessageRangeTest {
         List<MessageRange> ranges = MessageRange.toRanges(Arrays.asList(MessageUid.of(1L), MessageUid.of(2L)));
         assertThat(ranges).containsExactly(MessageRange.range(MessageUid.of(1), MessageUid.of(2)));
     }
-    
-    @Test
-    void splitASingletonRangeShouldReturnASingleRange() {
-        MessageRange one = MessageUid.of(1).toRange();
-        List<MessageRange> ranges = one.split(2);
-        assertThat(ranges).containsExactly(MessageUid.of(1).toRange());
-    }
-
-    @Test
-    void splitUnboundedRangeShouldReturnTheSameRange() {
-        MessageRange from = MessageRange.from(MessageUid.of(1));
-        List<MessageRange> ranges = from.split(2);
-        assertThat(ranges).containsExactly(MessageRange.from(MessageUid.of(1)));
-    }
-    
-    @Test
-    void splitTenElementsRangeShouldReturn4Ranges() {
-        MessageRange range = MessageRange.range(MessageUid.of(1),MessageUid.of(10));
-        List<MessageRange> ranges = range.split(3);
-        assertThat(ranges).containsExactly(
-                MessageRange.range(MessageUid.of(1), MessageUid.of(3)), 
-                MessageRange.range(MessageUid.of(4), MessageUid.of(6)), 
-                MessageRange.range(MessageUid.of(7), MessageUid.of(9)), 
-                MessageUid.of(10).toRange());
-    }
 
     @Test
     void includeShouldBeTrueWhenAfterFrom() {
