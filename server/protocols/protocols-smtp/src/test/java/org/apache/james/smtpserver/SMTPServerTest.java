@@ -1407,6 +1407,22 @@ public class SMTPServerTest {
             .isNotNull();
     }
 
+
+    // CF JAMES-4040
+    @Test
+    public void shouldBeCompatibleWithEMClient() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = testSystem.getBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", "[IPv6:::ffff:172.16.149.220]");
+        assertThat(smtpProtocol.getReplyString()).contains("250");
+    }
+
     @Test
     public void testAuthSendMailFromDomainAlias() throws Exception {
         smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
