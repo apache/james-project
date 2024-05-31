@@ -98,6 +98,11 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
         }
         
         @Override
+        public SenderVerificationMode verifyIdentity() {
+            return SenderVerificationMode.DISABLED;
+        }
+
+        @Override
         public String getHelloName() {
             return LMTPServer.this.getHelloName();
         }

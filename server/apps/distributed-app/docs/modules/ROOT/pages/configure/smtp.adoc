@@ -141,13 +141,26 @@ See also the RemoteAddrNotInNetwork matcher in the transport processor.
 You would generally use one OR the other approach.
 
 | verifyIdentity
-| This is an optional tag with a boolean body.  This option can only be used
-if SMTP authentication is required.  If the parameter is set to true then the sender address for the submitted message
-will be verified against the authenticated subject. Verify sender addresses, ensuring that
-the sender address matches the user who has authenticated.
-It will verify that the sender address matches the address of the user or one of its alias (from user or domain aliases).
-This prevents a user of your mail server from acting as someone else
-If unspecified, default value is true.
+| This is an optional tag. This options governs MAIL FROM verifications, and prevents spoofing of the MAIL FROM
+envelop field.
+
+The following values are supported:
+
+ - `strict`: use of a local domain in MAIL FROM requires the SMTP client to be authenticated with a matching user or one
+ of its aliases. It will verify that the sender address matches the address of the user or one of its alias (from user or domain aliases).
+ This prevents a user of your mail server from acting as someone else
+ - `disabled`: no check is performed and third party are free to send emails as local users. Note that relaying emails will
+ need third party to be authenticated thus preventing open relays.
+ - `relaxed`: Based on a simple heuristic to determine if the SMTP client is a MUA or a MX (use of a valid domain in EHLO),
+ we do act as `strict` for MUAs thus prompting them early for the need of authentication, but accept use of local MAIL FROM for
+ MX. Authentication can then be delayed to later, eg after DATA transaction with the DKIMHook which might allow email looping through
+ third party domains via mail redirection, effectively enforcing that the mail originates from our servers. See
+ link:https://issues.apache.org/jira/browse/JAMES-4032[JAMES-4032] for detailed explanation.
+
+Backward compatibility is provided and thus the following values are supported:
+
+ - `true`: act as `strict`
+ - `false`: act as `disabled`
 
 | maxmessagesize
 | This is an optional tag with a non-negative integer body.  It specifies the maximum

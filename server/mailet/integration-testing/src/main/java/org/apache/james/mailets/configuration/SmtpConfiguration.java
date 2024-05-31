@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.protocols.smtp.SMTPConfiguration;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
@@ -54,7 +55,7 @@ public class SmtpConfiguration implements SerializableAsXml {
 
         private Optional<Boolean> authRequired;
         private Optional<String> maxMessageSize;
-        private Optional<Boolean> verifyIndentity;
+        private Optional<SMTPConfiguration.SenderVerificationMode> verifyIndentity;
         private Optional<Boolean> bracketEnforcement;
         private Optional<String> authorizedAddresses;
         private ImmutableList.Builder<HookConfigurationEntry> addittionalHooks;
@@ -95,12 +96,17 @@ public class SmtpConfiguration implements SerializableAsXml {
         }
 
         public Builder verifyIdentity() {
-            this.verifyIndentity = Optional.of(true);
+            this.verifyIndentity = Optional.of(SMTPConfiguration.SenderVerificationMode.STRICT);
             return this;
         }
 
         public Builder doNotVerifyIdentity() {
-            this.verifyIndentity = Optional.of(false);
+            this.verifyIndentity = Optional.of(SMTPConfiguration.SenderVerificationMode.DISABLED);
+            return this;
+        }
+
+        public Builder relaxedIdentityVerification() {
+            this.verifyIndentity = Optional.of(SMTPConfiguration.SenderVerificationMode.RELAXED);
             return this;
         }
 
@@ -113,7 +119,7 @@ public class SmtpConfiguration implements SerializableAsXml {
             return new SmtpConfiguration(authorizedAddresses,
                 authRequired.orElse(!AUTH_REQUIRED),
                 bracketEnforcement.orElse(true),
-                verifyIndentity.orElse(false),
+                verifyIndentity.orElse(SMTPConfiguration.SenderVerificationMode.DISABLED),
                 maxMessageSize.orElse(DEFAULT_DISABLED),
                 addittionalHooks.build());
         }
@@ -126,12 +132,12 @@ public class SmtpConfiguration implements SerializableAsXml {
     private final Optional<String> authorizedAddresses;
     private final boolean authRequired;
     private final boolean bracketEnforcement;
-    private final boolean verifyIndentity;
+    private final SMTPConfiguration.SenderVerificationMode verifyIndentity;
     private final String maxMessageSize;
     private final ImmutableList<HookConfigurationEntry> addittionalHooks;
 
     private SmtpConfiguration(Optional<String> authorizedAddresses, boolean authRequired, boolean bracketEnforcement,
-                              boolean verifyIndentity, String maxMessageSize, ImmutableList<HookConfigurationEntry> addittionalHooks) {
+                              SMTPConfiguration.SenderVerificationMode verifyIndentity, String maxMessageSize, ImmutableList<HookConfigurationEntry> addittionalHooks) {
         this.authorizedAddresses = authorizedAddresses;
         this.authRequired = authRequired;
         this.bracketEnforcement = bracketEnforcement;
@@ -146,7 +152,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         scopes.put("hasAuthorizedAddresses", authorizedAddresses.isPresent());
         authorizedAddresses.ifPresent(value -> scopes.put("authorizedAddresses", value));
         scopes.put("authRequired", authRequired);
-        scopes.put("verifyIdentity", verifyIndentity);
+        scopes.put("verifyIdentity", verifyIndentity.toString());
         scopes.put("maxmessagesize", maxMessageSize);
         scopes.put("bracketEnforcement", bracketEnforcement);
         scopes.put("hooks", addittionalHooks);

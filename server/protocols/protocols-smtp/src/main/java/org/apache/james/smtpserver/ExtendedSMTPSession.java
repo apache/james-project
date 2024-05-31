@@ -40,8 +40,8 @@ public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSes
         this.smtpConfiguration = smtpConfiguration;
     }
 
-    public boolean verifyIdentity() {
-        return !(smtpConfiguration instanceof SMTPHandlerConfigurationDataImpl) || ((SMTPHandlerConfigurationDataImpl) smtpConfiguration).verifyIdentity();
+    public SMTPConfiguration.SenderVerificationMode verifyIdentity() {
+        return smtpConfiguration.verifyIdentity();
     }
 
     @Override
