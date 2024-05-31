@@ -29,6 +29,7 @@ import org.apache.james.backends.postgres.PostgresIndex;
 import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.backends.postgres.PostgresTable;
 import org.jooq.Field;
+import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.impl.DSL;
@@ -46,6 +47,8 @@ public interface PostgresEmailChangeModule {
         Field<UUID[]> UPDATED = DSL.field("updated", SQLDataType.UUID.getArrayDataType().notNull());
         Field<UUID[]> DESTROYED = DSL.field("destroyed", SQLDataType.UUID.getArrayDataType().notNull());
 
+        Name PRIMARY_KEY_CONSTRAINT_NAME = DSL.name("email_change_primary_key");
+
         PostgresTable TABLE = PostgresTable.name(TABLE_NAME.getName())
             .createTableStep(((dsl, tableName) -> dsl.createTableIfNotExists(tableName)
                 .column(ACCOUNT_ID)
@@ -55,7 +58,7 @@ public interface PostgresEmailChangeModule {
                 .column(CREATED)
                 .column(UPDATED)
                 .column(DESTROYED)
-                .constraint(DSL.primaryKey(ACCOUNT_ID, STATE))))
+                .constraint(DSL.constraint(PRIMARY_KEY_CONSTRAINT_NAME).primaryKey(ACCOUNT_ID, STATE))))
             .supportsRowLevelSecurity()
             .build();
 

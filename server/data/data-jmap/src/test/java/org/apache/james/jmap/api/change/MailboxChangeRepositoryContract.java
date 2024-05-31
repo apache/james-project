@@ -59,6 +59,20 @@ public interface MailboxChangeRepositoryContract {
     }
 
     @Test
+    default void saveShouldBeIdempotent() {
+        MailboxChangeRepository repository = mailboxChangeRepository();
+        State state = stateFactory().generate();
+
+        MailboxId id1 = generateNewMailboxId();
+        MailboxChange change = MailboxChange.builder().accountId(ACCOUNT_ID).state(state).date(DATE).isCountChange(false).created(ImmutableList.of(id1)).build();
+
+        repository.save(change).block();
+
+        assertThatCode(() -> repository.save(change).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
     default void getLatestStateShouldReturnInitialWhenEmpty() {
         MailboxChangeRepository repository = mailboxChangeRepository();
 

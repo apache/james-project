@@ -25,6 +25,7 @@ import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.
 import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.DESTROYED;
 import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.IS_COUNT_CHANGE;
 import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.IS_SHARED;
+import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.PRIMARY_KEY_CONSTRAINT_NAME;
 import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.STATE;
 import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.TABLE_NAME;
 import static org.apache.james.jmap.postgres.change.PostgresMailboxChangeModule.PostgresMailboxChangeTable.UPDATED;
@@ -57,6 +58,14 @@ public class PostgresMailboxChangeDAO {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
             .set(ACCOUNT_ID, change.getAccountId().getIdentifier())
             .set(STATE, change.getState().getValue())
+            .set(IS_SHARED, change.isShared())
+            .set(IS_COUNT_CHANGE, change.isCountChange())
+            .set(CREATED, toUUIDArray(change.getCreated()))
+            .set(UPDATED, toUUIDArray(change.getUpdated()))
+            .set(DESTROYED, toUUIDArray(change.getDestroyed()))
+            .set(DATE, change.getDate().toOffsetDateTime())
+            .onConflictOnConstraint(PRIMARY_KEY_CONSTRAINT_NAME)
+            .doUpdate()
             .set(IS_SHARED, change.isShared())
             .set(IS_COUNT_CHANGE, change.isCountChange())
             .set(CREATED, toUUIDArray(change.getCreated()))

@@ -39,7 +39,9 @@ public interface EmailChangeRepositoryContract {
     ZonedDateTime DATE = ZonedDateTime.now();
 
     EmailChangeRepository emailChangeRepository();
+
     MessageId generateNewMessageId();
+
     State generateNewState();
 
     @Test
@@ -53,6 +55,24 @@ public interface EmailChangeRepositoryContract {
             .isShared(false)
             .created(generateNewMessageId())
             .build();
+
+        assertThatCode(() -> repository.save(change).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    default void saveChangeShouldBeIdempotent() {
+        EmailChangeRepository repository = emailChangeRepository();
+
+        EmailChange change = EmailChange.builder()
+            .accountId(ACCOUNT_ID)
+            .state(generateNewState())
+            .date(DATE)
+            .isShared(false)
+            .created(generateNewMessageId())
+            .build();
+
+        repository.save(change).block();
 
         assertThatCode(() -> repository.save(change).block())
             .doesNotThrowAnyException();

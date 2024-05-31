@@ -24,6 +24,7 @@ import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.Po
 import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.DATE;
 import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.DESTROYED;
 import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.IS_SHARED;
+import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.PRIMARY_KEY_CONSTRAINT_NAME;
 import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.STATE;
 import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.TABLE_NAME;
 import static org.apache.james.jmap.postgres.change.PostgresEmailChangeModule.PostgresEmailChangeTable.UPDATED;
@@ -56,6 +57,13 @@ public class PostgresEmailChangeDAO {
         return postgresExecutor.executeVoid(dslContext -> Mono.from(dslContext.insertInto(TABLE_NAME)
             .set(ACCOUNT_ID, change.getAccountId().getIdentifier())
             .set(STATE, change.getState().getValue())
+            .set(IS_SHARED, change.isShared())
+            .set(CREATED, convertToUUIDArray(change.getCreated()))
+            .set(UPDATED, convertToUUIDArray(change.getUpdated()))
+            .set(DESTROYED, convertToUUIDArray(change.getDestroyed()))
+            .set(DATE, change.getDate().toOffsetDateTime())
+            .onConflictOnConstraint(PRIMARY_KEY_CONSTRAINT_NAME)
+            .doUpdate()
             .set(IS_SHARED, change.isShared())
             .set(CREATED, convertToUUIDArray(change.getCreated()))
             .set(UPDATED, convertToUUIDArray(change.getUpdated()))
