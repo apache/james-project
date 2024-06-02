@@ -31,7 +31,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
@@ -40,18 +39,16 @@ import jakarta.persistence.Table;
 @Table(name = "JAMES_MAIL_STORE", indexes = {
    @Index(name = "REPOSITORY_NAME_MESSAGE_NAME_INDEX", columnList = "REPOSITORY_NAME, MESSAGE_NAME")
 })
-@NamedQueries({
-    @NamedQuery(name = "listMailMessages",
-        query = "SELECT mail.messageName FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName"),
-    @NamedQuery(name = "countMailMessages",
-        query = "SELECT COUNT(mail) FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName"),
-    @NamedQuery(name = "deleteMailMessages",
-        query = "DELETE FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName AND mail.messageName IN (:messageNames)"),
-    @NamedQuery(name = "deleteAllMailMessages",
-        query = "DELETE FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName"),
-    @NamedQuery(name = "findMailMessage",
-        query = "SELECT mail FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName AND mail.messageName = :messageName")
-})
+@NamedQuery(name = "listMailMessages",
+    query = "SELECT mail.messageName FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName")
+@NamedQuery(name = "countMailMessages",
+    query = "SELECT COUNT(mail) FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName")
+@NamedQuery(name = "deleteMailMessages",
+    query = "DELETE FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName AND mail.messageName IN (:messageNames)")
+@NamedQuery(name = "deleteAllMailMessages",
+    query = "DELETE FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName")
+@NamedQuery(name = "findMailMessage",
+    query = "SELECT mail FROM JamesMailStore mail WHERE mail.repositoryName = :repositoryName AND mail.messageName = :messageName")
 public class JPAMail {
 
     static class JPAMailId implements Serializable {

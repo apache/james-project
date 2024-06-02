@@ -24,7 +24,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
@@ -32,11 +31,10 @@ import com.google.common.base.Objects;
 
 @Entity(name = "MailboxAnnotation")
 @Table(name = "JAMES_MAILBOX_ANNOTATION")
-@NamedQueries({
-    @NamedQuery(name = "retrieveAllAnnotations", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
-    @NamedQuery(name = "retrieveByKey", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key = :keyParam"),
-    @NamedQuery(name = "countAnnotationsInMailbox", query = "SELECT COUNT(annotation) FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam"),
-    @NamedQuery(name = "retrieveByKeyLike", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key LIKE :keyParam")})
+@NamedQuery(name = "retrieveAllAnnotations", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam")
+@NamedQuery(name = "retrieveByKey", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key = :keyParam")
+@NamedQuery(name = "countAnnotationsInMailbox", query = "SELECT COUNT(annotation) FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam")
+@NamedQuery(name = "retrieveByKeyLike", query = "SELECT annotation FROM MailboxAnnotation annotation WHERE annotation.mailboxId = :idParam AND annotation.key LIKE :keyParam")
 @IdClass(JPAMailboxAnnotationId.class)
 public class JPAMailboxAnnotation {
 

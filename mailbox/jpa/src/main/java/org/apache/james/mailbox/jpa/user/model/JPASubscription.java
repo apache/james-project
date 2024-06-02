@@ -25,7 +25,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -45,14 +44,12 @@ import org.apache.james.mailbox.store.user.model.Subscription;
                         "USER_NAME", 
                         "MAILBOX_NAME"})
 )
-@NamedQueries({
-    @NamedQuery(name = JPASubscription.FIND_MAILBOX_SUBSCRIPTION_FOR_USER,
-        query = "SELECT subscription FROM Subscription subscription WHERE subscription.username = :userParam AND subscription.mailbox = :mailboxParam"),          
-    @NamedQuery(name = JPASubscription.FIND_SUBSCRIPTIONS_FOR_USER,
-        query = "SELECT subscription FROM Subscription subscription WHERE subscription.username = :userParam"),
-    @NamedQuery(name = JPASubscription.DELETE_SUBSCRIPTION,
-        query = "DELETE subscription FROM Subscription subscription WHERE subscription.username = :userParam AND subscription.mailbox = :mailboxParam")
-})
+@NamedQuery(name = JPASubscription.FIND_MAILBOX_SUBSCRIPTION_FOR_USER,
+    query = "SELECT subscription FROM Subscription subscription WHERE subscription.username = :userParam AND subscription.mailbox = :mailboxParam")
+@NamedQuery(name = JPASubscription.FIND_SUBSCRIPTIONS_FOR_USER,
+    query = "SELECT subscription FROM Subscription subscription WHERE subscription.username = :userParam")
+@NamedQuery(name = JPASubscription.DELETE_SUBSCRIPTION,
+    query = "DELETE subscription FROM Subscription subscription WHERE subscription.username = :userParam AND subscription.mailbox = :mailboxParam")
 public class JPASubscription {
     public static final String DELETE_SUBSCRIPTION = "deleteSubscription";
     public static final String FIND_SUBSCRIPTIONS_FOR_USER = "findSubscriptionsForUser";
