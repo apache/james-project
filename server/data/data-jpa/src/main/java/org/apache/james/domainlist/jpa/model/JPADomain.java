@@ -21,7 +21,6 @@ package org.apache.james.domainlist.jpa.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
@@ -32,11 +31,10 @@ import org.apache.james.core.Domain;
  */
 @Entity(name = "JamesDomain")
 @Table(name = "JAMES_DOMAIN")
-@NamedQueries({ 
-    @NamedQuery(name = "findDomainByName", query = "SELECT domain FROM JamesDomain domain WHERE domain.name=:name"), 
-    @NamedQuery(name = "containsDomain", query = "SELECT COUNT(domain) FROM JamesDomain domain WHERE domain.name=:name"),
-    @NamedQuery(name = "listDomainNames", query = "SELECT domain.name FROM JamesDomain domain"), 
-    @NamedQuery(name = "deleteDomainByName", query = "DELETE FROM JamesDomain domain WHERE domain.name=:name") })
+@NamedQuery(name = "findDomainByName", query = "SELECT domain FROM JamesDomain domain WHERE domain.name=:name")
+@NamedQuery(name = "containsDomain", query = "SELECT COUNT(domain) FROM JamesDomain domain WHERE domain.name=:name")
+@NamedQuery(name = "listDomainNames", query = "SELECT domain.name FROM JamesDomain domain")
+@NamedQuery(name = "deleteDomainByName", query = "DELETE FROM JamesDomain domain WHERE domain.name=:name")
 public class JPADomain {
 
     /**

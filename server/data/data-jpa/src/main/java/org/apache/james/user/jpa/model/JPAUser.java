@@ -27,7 +27,6 @@ import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -42,12 +41,11 @@ import com.google.common.hash.Hashing;
 
 @Entity(name = "JamesUser")
 @Table(name = "JAMES_USER")
-@NamedQueries({ 
-    @NamedQuery(name = "findUserByName", query = "SELECT user FROM JamesUser user WHERE user.name=:name"),
-    @NamedQuery(name = "deleteUserByName", query = "DELETE FROM JamesUser user WHERE user.name=:name"),
-    @NamedQuery(name = "containsUser", query = "SELECT COUNT(user) FROM JamesUser user WHERE user.name=:name"), 
-    @NamedQuery(name = "countUsers", query = "SELECT COUNT(user) FROM JamesUser user"), 
-    @NamedQuery(name = "listUserNames", query = "SELECT user.name FROM JamesUser user") })
+@NamedQuery(name = "findUserByName", query = "SELECT user FROM JamesUser user WHERE user.name=:name")
+@NamedQuery(name = "deleteUserByName", query = "DELETE FROM JamesUser user WHERE user.name=:name")
+@NamedQuery(name = "containsUser", query = "SELECT COUNT(user) FROM JamesUser user WHERE user.name=:name")
+@NamedQuery(name = "countUsers", query = "SELECT COUNT(user) FROM JamesUser user")
+@NamedQuery(name = "listUserNames", query = "SELECT user.name FROM JamesUser user")
 public class JPAUser implements User {
 
     /**

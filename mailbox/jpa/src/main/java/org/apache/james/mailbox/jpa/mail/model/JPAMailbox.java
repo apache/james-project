@@ -25,7 +25,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
@@ -39,28 +38,26 @@ import com.google.common.annotations.VisibleForTesting;
 
 @Entity(name = "Mailbox")
 @Table(name = "JAMES_MAILBOX")
-@NamedQueries({
-    @NamedQuery(name = "findMailboxById",
-        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
-    @NamedQuery(name = "findMailboxByName",
-        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name = "findMailboxByNameWithUser",
-        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name = "findMailboxWithNameLikeWithUser",
-        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name = "findMailboxWithNameLike",
-        query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name = "countMailboxesWithNameLikeWithUser",
-        query = "SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name = "countMailboxesWithNameLike",
-        query = "SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name = "listMailboxes",
-        query = "SELECT mailbox FROM Mailbox mailbox"),
-    @NamedQuery(name = "findHighestModSeq",
-        query = "SELECT mailbox.highestModSeq FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam"),
-    @NamedQuery(name = "findLastUid",
-        query = "SELECT mailbox.lastUid FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
-})
+@NamedQuery(name = "findMailboxById",
+    query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
+@NamedQuery(name = "findMailboxByName",
+    query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam")
+@NamedQuery(name = "findMailboxByNameWithUser",
+    query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam")
+@NamedQuery(name = "findMailboxWithNameLikeWithUser",
+    query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam")
+@NamedQuery(name = "findMailboxWithNameLike",
+    query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam")
+@NamedQuery(name = "countMailboxesWithNameLikeWithUser",
+    query = "SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam")
+@NamedQuery(name = "countMailboxesWithNameLike",
+    query = "SELECT COUNT(mailbox) FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam")
+@NamedQuery(name = "listMailboxes",
+    query = "SELECT mailbox FROM Mailbox mailbox")
+@NamedQuery(name = "findHighestModSeq",
+    query = "SELECT mailbox.highestModSeq FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
+@NamedQuery(name = "findLastUid",
+    query = "SELECT mailbox.lastUid FROM Mailbox mailbox WHERE mailbox.mailboxId = :idParam")
 public class JPAMailbox {
     
     private static final String TAB = " ";
