@@ -100,7 +100,7 @@ public class SmtpConfigurationTest {
                 .build()
                 .serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
-                is("false")));
+                is("DISABLED")));
     }
 
     @Test
@@ -129,7 +129,7 @@ public class SmtpConfigurationTest {
                 .build()
                 .serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
-                is("true")));
+                is("STRICT")));
     }
 
     @Test
@@ -178,6 +178,6 @@ public class SmtpConfigurationTest {
     public void verifyIdentityShouldBeDisabledByDefault() throws IOException {
         assertThat(SmtpConfiguration.DEFAULT.serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
-                is("false")));
+                is("DISABLED")));
     }
 }
