@@ -33,8 +33,6 @@ import org.opensearch.client.opensearch._types.analysis.Analyzer;
 import org.opensearch.client.opensearch._types.analysis.CustomAnalyzer;
 import org.opensearch.client.opensearch._types.analysis.CustomNormalizer;
 import org.opensearch.client.opensearch._types.analysis.Normalizer;
-import org.opensearch.client.opensearch._types.analysis.SnowballLanguage;
-import org.opensearch.client.opensearch._types.analysis.SnowballTokenFilter;
 import org.opensearch.client.opensearch._types.analysis.Tokenizer;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
@@ -281,12 +279,6 @@ public class IndexCreationFactory {
         private CustomNormalizer generateNormalizer() {
             return new CustomNormalizer.Builder()
                 .filter("lowercase", "asciifolding")
-                .build();
-        }
-
-        private SnowballTokenFilter generateFilter() {
-            return new SnowballTokenFilter.Builder()
-                .language(SnowballLanguage.English)
                 .build();
         }
 
