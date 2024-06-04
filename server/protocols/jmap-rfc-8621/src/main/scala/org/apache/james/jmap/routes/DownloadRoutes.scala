@@ -271,23 +271,15 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .flatMap(mailboxSession => getIfOwner(request, response, mailboxSession))
       .onErrorResume {
         case _: ForbiddenException | _: AccountNotFoundException =>
-          respondDetails(response,
-            ProblemDetails(status = FORBIDDEN, detail = "You cannot download in others accounts"),
-            FORBIDDEN)
+          respondDetails(response, ProblemDetails(status = FORBIDDEN, detail = "You cannot download in others accounts"))
         case e: UnauthorizedException =>
           LOGGER.warn("Unauthorized", e)
-          respondDetails(e.addHeaders(response),
-            ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
-            UNAUTHORIZED)
+          respondDetails(e.addHeaders(response), ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage))
         case _: BlobNotFoundException =>
-          respondDetails(response,
-            ProblemDetails(status = NOT_FOUND, detail = "The resource could not be found"),
-            NOT_FOUND)
+          respondDetails(response, ProblemDetails(status = NOT_FOUND, detail = "The resource could not be found"))
         case e =>
           LOGGER.error("Unexpected error upon download {}", request.uri(), e)
-          respondDetails(response,
-            ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
-            INTERNAL_SERVER_ERROR)
+          respondDetails(response, ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage))
       }
       .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
       .asJava()
@@ -369,12 +361,12 @@ class DownloadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator:
       .flatMap(_.asScala)
       .headOption
 
-  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Unit] =
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Unit] =
     SMono.fromCallable(() => ResponseSerializer.serialize(details))
       .map(Json.stringify)
       .map(_.getBytes(StandardCharsets.UTF_8))
       .flatMap(bytes =>
-        SMono.fromPublisher(httpServerResponse.status(statusCode)
+        SMono.fromPublisher(httpServerResponse.status(details.status)
           .header(CONTENT_TYPE, JSON_CONTENT_TYPE)
           .header(CONTENT_LENGTH, Integer.toString(bytes.length))
           .sendByteArray(SMono.just(bytes))
