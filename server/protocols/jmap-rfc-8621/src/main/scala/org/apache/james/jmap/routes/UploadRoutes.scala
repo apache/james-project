@@ -91,22 +91,14 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
         .onErrorResume {
           case e: UnauthorizedException =>
             LOGGER.warn("Unauthorized", e)
-            respondDetails(e.addHeaders(response),
-              ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
-              UNAUTHORIZED)
+            respondDetails(e.addHeaders(response), ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage))
           case _: TooBigUploadException =>
-            respondDetails(response,
-              ProblemDetails(status = BAD_REQUEST, detail = "Attempt to upload exceed max size"),
-              BAD_REQUEST)
+            respondDetails(response, ProblemDetails(status = BAD_REQUEST, detail = "Attempt to upload exceed max size"))
           case _: ForbiddenException | _: AccountNotFoundException =>
-            respondDetails(response,
-              ProblemDetails(status = FORBIDDEN, detail = "Upload to other accounts is forbidden"),
-              FORBIDDEN)
+            respondDetails(response, ProblemDetails(status = FORBIDDEN, detail = "Upload to other accounts is forbidden"))
           case e =>
             LOGGER.error("Unexpected error upon upload {}", request.uri(), e)
-            respondDetails(response,
-              ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
-              INTERNAL_SERVER_ERROR)
+            respondDetails(response, ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage))
         }
         .asJava()
         .subscribeOn(ReactorUtils.BLOCKING_CALL_WRAPPER)
@@ -168,7 +160,7 @@ class UploadRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: A
 
   private def asBlobId(uploadId: UploadId): BlobId = BlobId.of(s"uploads-${uploadId.asString()}" ).get
 
-  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): SMono[Void] =
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): SMono[Void] =
     SMono.fromCallable(() => ResponseSerializer.serialize(details).toString)
       .map(_.getBytes(StandardCharsets.UTF_8))
       .flatMap(bytes =>

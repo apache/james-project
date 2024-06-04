@@ -108,22 +108,20 @@ class SessionRoutes @Inject()(@Named(InjectionKeys.RFC_8621) val authenticator: 
         .sendByteArray(SMono.just(bytes))
         .`then`()))
 
-  def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =
+  private def errorHandling(throwable: Throwable, response: HttpServerResponse): Mono[Void] =
     throwable match {
       case e: UnauthorizedException =>
         LOGGER.warn("Unauthorized", e)
         respondDetails(e.addHeaders(response),
-          ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage),
-          UNAUTHORIZED)
+          ProblemDetails(status = UNAUTHORIZED, detail = e.getMessage))
       case e =>
         LOGGER.error("Unexpected error upon requesting session", e)
         respondDetails(response,
-          ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage),
-          INTERNAL_SERVER_ERROR)
+          ProblemDetails(status = INTERNAL_SERVER_ERROR, detail = e.getMessage))
     }
 
 
-  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails, statusCode: HttpResponseStatus = BAD_REQUEST): Mono[Void] =
+  private def respondDetails(httpServerResponse: HttpServerResponse, details: ProblemDetails): Mono[Void] =
     SMono.fromCallable(() => ResponseSerializer.serialize(details).toString)
       .map(_.getBytes(StandardCharsets.UTF_8))
       .flatMap(bytes =>
