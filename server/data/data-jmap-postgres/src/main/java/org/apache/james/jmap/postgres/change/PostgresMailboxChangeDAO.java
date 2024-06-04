@@ -65,13 +65,7 @@ public class PostgresMailboxChangeDAO {
             .set(DESTROYED, toUUIDArray(change.getDestroyed()))
             .set(DATE, change.getDate().toOffsetDateTime())
             .onConflictOnConstraint(PRIMARY_KEY_CONSTRAINT_NAME)
-            .doUpdate()
-            .set(IS_SHARED, change.isShared())
-            .set(IS_COUNT_CHANGE, change.isCountChange())
-            .set(CREATED, toUUIDArray(change.getCreated()))
-            .set(UPDATED, toUUIDArray(change.getUpdated()))
-            .set(DESTROYED, toUUIDArray(change.getDestroyed()))
-            .set(DATE, change.getDate().toOffsetDateTime())));
+            .doNothing()));
     }
 
     public Flux<MailboxChange> getAllChanges(AccountId accountId) {

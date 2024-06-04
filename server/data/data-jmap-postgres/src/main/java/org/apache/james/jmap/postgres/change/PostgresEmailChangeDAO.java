@@ -63,12 +63,7 @@ public class PostgresEmailChangeDAO {
             .set(DESTROYED, convertToUUIDArray(change.getDestroyed()))
             .set(DATE, change.getDate().toOffsetDateTime())
             .onConflictOnConstraint(PRIMARY_KEY_CONSTRAINT_NAME)
-            .doUpdate()
-            .set(IS_SHARED, change.isShared())
-            .set(CREATED, convertToUUIDArray(change.getCreated()))
-            .set(UPDATED, convertToUUIDArray(change.getUpdated()))
-            .set(DESTROYED, convertToUUIDArray(change.getDestroyed()))
-            .set(DATE, change.getDate().toOffsetDateTime())));
+            .doNothing()));
     }
 
     public Flux<EmailChange> getAllChanges(AccountId accountId) {
