@@ -16,7 +16,7 @@
     }],
     "bcc": [],
     "htmlBody": null,
-    "textBody": "Main test message...\n",
+    "textBody": "Main test message...\r\n",
     "cc": [],
     "date": "2015-06-07T00:00:00+0200",
     "saveDate": null,
