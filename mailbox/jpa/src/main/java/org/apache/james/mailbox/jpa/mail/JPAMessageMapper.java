@@ -42,10 +42,8 @@ import org.apache.james.mailbox.jpa.mail.MessageUtils.MessageChangedFlags;
 import org.apache.james.mailbox.jpa.mail.model.JPAAttachment;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessageWithAttachmentStorage;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
@@ -363,11 +361,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
         MailboxMessage copy;
         JPAMailbox currentMailbox = JPAMailbox.from(mailbox);
 
-        if (original instanceof JPAStreamingMailboxMessage) {
-            copy = new JPAStreamingMailboxMessage(currentMailbox, uid, modSeq, original);
-        } else if (original instanceof JPAEncryptedMailboxMessage) {
-            copy = new JPAEncryptedMailboxMessage(currentMailbox, uid, modSeq, original);
-        } else if (original instanceof JPAMailboxMessageWithAttachmentStorage) {
+        if (original instanceof JPAMailboxMessageWithAttachmentStorage) {
             copy = new JPAMailboxMessageWithAttachmentStorage(currentMailbox, uid, modSeq, original);
         } else {
             copy = new JPAMailboxMessage(currentMailbox, uid, modSeq, original);
