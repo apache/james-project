@@ -29,7 +29,12 @@ public class LMTPConfigurationImpl extends LMTPConfiguration {
     public LMTPConfigurationImpl() {
         super("JAMES Protocols LMTP Server");
     }
-    
+
+    @Override
+    public SenderVerificationMode verifyIdentity() {
+        return SenderVerificationMode.DISABLED;
+    }
+
     @Override
     public long getMaxMessageSize() {
         return maxMessageSize;

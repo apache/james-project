@@ -27,14 +27,42 @@ import java.io.IOException;
 
 import javax.xml.transform.Source;
 
+import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.w3c.dom.Node;
 import org.xmlunit.builder.Input;
 import org.xmlunit.xpath.JAXPXPathEngine;
 import org.xmlunit.xpath.XPathEngine;
 
 public class SmtpConfigurationTest {
+    @Nested
+    class SenderVerificationModeTest {
+        @ParameterizedTest
+        @ValueSource(strings = {"strict", "STRICT", "  strict", "strict ", "sTrIcT", "true", " true", "TrUe"})
+        void parseStrict(String value) {
+            Assertions.assertThat(SMTPConfiguration.SenderVerificationMode.parse(value))
+                .isEqualTo(SMTPConfiguration.SenderVerificationMode.STRICT);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"disabled", "DISABLED", "  disabled", "DiSaBleD", "false", " false", "FalSe"})
+        void parseDisabled(String value) {
+            Assertions.assertThat(SMTPConfiguration.SenderVerificationMode.parse(value))
+                .isEqualTo(SMTPConfiguration.SenderVerificationMode.DISABLED);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"relaxed", "RELAXED", "  relaxed", "ReLaXeD"})
+        void parseRelaxed(String value) {
+            Assertions.assertThat(SMTPConfiguration.SenderVerificationMode.parse(value))
+                .isEqualTo(SMTPConfiguration.SenderVerificationMode.RELAXED);
+        }
+    }
+
     @Test
     public void authenticationCanBeRequired() throws IOException {
         assertThat(SmtpConfiguration.builder()
@@ -72,7 +100,7 @@ public class SmtpConfigurationTest {
                 .build()
                 .serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
-                is("false")));
+                is("DISABLED")));
     }
 
     @Test
@@ -101,7 +129,7 @@ public class SmtpConfigurationTest {
                 .build()
                 .serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
-                is("true")));
+                is("STRICT")));
     }
 
     @Test
@@ -150,6 +178,6 @@ public class SmtpConfigurationTest {
     public void verifyIdentityShouldBeDisabledByDefault() throws IOException {
         assertThat(SmtpConfiguration.DEFAULT.serializeAsXml(),
             hasXPath("/smtpservers/smtpserver/verifyIdentity/text()",
-                is("false")));
+                is("DISABLED")));
     }
 }

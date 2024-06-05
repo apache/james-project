@@ -37,7 +37,12 @@ public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements 
     public SMTPConfigurationImpl() {
         super("JAMES SMTP Protocols Server");
     }
-    
+
+    @Override
+    public SenderVerificationMode verifyIdentity() {
+        return SenderVerificationMode.STRICT;
+    }
+
     @Override
     public long getMaxMessageSize() {
         return maxMessageSize;

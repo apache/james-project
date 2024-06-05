@@ -21,6 +21,7 @@
 
 package org.apache.james.protocols.smtp;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,6 +37,21 @@ import com.google.common.collect.ImmutableSet;
  *
  */
 public interface SMTPConfiguration extends ProtocolConfiguration {
+    enum SenderVerificationMode {
+        STRICT,
+        RELAXED,
+        DISABLED;
+
+        // TODO unit tests
+        public static SenderVerificationMode parse(String value) {
+            return switch (value.toLowerCase(Locale.US).trim()) {
+                case "true", "strict" -> STRICT;
+                case "false", "disabled" -> DISABLED;
+                case "relaxed" -> RELAXED;
+                default -> throw new RuntimeException("SenderVerificationMode: unsupported value '" + value + "'");
+            };
+        }
+    }
 
     /**
      * Returns the service wide maximum message size in bytes.
@@ -60,6 +76,8 @@ public interface SMTPConfiguration extends ProtocolConfiguration {
      * @return whether SMTP authentication is on
      */
     boolean isAuthAnnounced(String remoteIP, boolean tlsStarted);
+
+    SenderVerificationMode verifyIdentity();
     
     /**
      * Returns whether the remote server needs to send a HELO/EHLO

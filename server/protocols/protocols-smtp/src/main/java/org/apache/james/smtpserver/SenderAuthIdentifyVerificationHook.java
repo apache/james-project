@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import jakarta.inject.Inject;
@@ -32,6 +33,8 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.protocols.api.ProtocolSession;
+import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -42,6 +45,8 @@ import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.net.InternetDomainName;
 
 /**
  * Handler which check if the authenticated user is incorrect
@@ -63,11 +68,35 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
     @Override
     public HookResult doCheck(SMTPSession session, MaybeSender sender) {
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
-        if (nSession.verifyIdentity()) {
+        if (nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.STRICT) {
             return super.doCheck(session, sender);
+        } else if (nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.RELAXED) {
+            return doCheckRelaxed(session, sender);
         } else {
             return HookResult.DECLINED;
         }
+    }
+
+    private HookResult doCheckRelaxed(SMTPSession session, MaybeSender sender) {
+        if (senderDoesNotMatchAuthUser(session, sender)) {
+            return INVALID_AUTH;
+        } else if (unauthenticatedSenderIsLocalUser(session, sender)) {
+            if (mxHeuristic(session)) {
+                return HookResult.DECLINED;
+            } else {
+                return AUTH_REQUIRED;
+            }
+        } else {
+            return HookResult.DECLINED;
+        }
+    }
+
+    private boolean mxHeuristic(SMTPSession session) {
+        Optional<String> helo = session.getAttachment(SMTPSession.CURRENT_HELO_NAME, ProtocolSession.State.Connection);
+
+        return helo.filter(InternetDomainName::isValid)
+            .map(name -> name.contains("."))
+            .orElse(false);
     }
 
     @Override
@@ -102,7 +131,9 @@ public class SenderAuthIdentifyVerificationHook extends AbstractSenderAuthIdenti
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         ExtendedSMTPSession nSession = (ExtendedSMTPSession) session;
-        if (nSession.verifyIdentity()) {
+        boolean shouldCheck = nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.STRICT ||
+            (nSession.verifyIdentity() == SMTPConfiguration.SenderVerificationMode.RELAXED && session.getUsername() != null);
+        if (shouldCheck) {
             try {
                 return StreamUtils.ofNullable(mail.getMessage().getFrom())
                     .distinct()

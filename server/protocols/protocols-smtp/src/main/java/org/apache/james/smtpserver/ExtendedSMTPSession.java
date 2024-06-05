@@ -25,7 +25,6 @@ import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.server.core.MimeMessageInputStreamSource;
-import org.apache.james.smtpserver.netty.SMTPServer.SMTPHandlerConfigurationDataImpl;
 
 /**
  * {@link SMTPSession} implementation for use with Netty
@@ -40,8 +39,8 @@ public class ExtendedSMTPSession extends org.apache.james.protocols.smtp.SMTPSes
         this.smtpConfiguration = smtpConfiguration;
     }
 
-    public boolean verifyIdentity() {
-        return !(smtpConfiguration instanceof SMTPHandlerConfigurationDataImpl) || ((SMTPHandlerConfigurationDataImpl) smtpConfiguration).verifyIdentity();
+    public SMTPConfiguration.SenderVerificationMode verifyIdentity() {
+        return smtpConfiguration.verifyIdentity();
     }
 
     @Override
