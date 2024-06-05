@@ -43,17 +43,17 @@ public class JmapRFCCommonRequests {
         return getMailboxId(userCredential, Role.OUTBOX);
     }
 
-    public static String getSentId(UserCredential userCredential) {
-        return getMailboxId(userCredential, Role.SENT);
-    }
-
     public static String getDraftId(UserCredential userCredential) {
         return getMailboxId(userCredential, Role.DRAFTS);
     }
 
     public static String getMailboxId(UserCredential userCredential, Role role) {
+        return getMailboxId(userCredential, role.serialize());
+    }
+
+    public static String getMailboxId(UserCredential userCredential, String role) {
         return getAllMailboxesIds(userCredential).stream()
-            .filter(mailbox -> mailbox.get("role").equals(role.serialize()))
+            .filter(mailbox -> mailbox.get("role").equals(role))
             .map(mailbox -> mailbox.get("id"))
             .findFirst().orElseThrow();
     }

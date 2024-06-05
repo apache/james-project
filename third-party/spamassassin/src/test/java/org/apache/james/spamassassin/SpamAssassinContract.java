@@ -222,7 +222,7 @@ public interface SpamAssassinContract {
         String aliceInboxId = JmapRFCCommonRequests.getMailboxId(aliceCredential, Role.INBOX);
         List<String> msgIds = JmapRFCCommonRequests.listMessageIdsInMailbox(aliceCredential, aliceInboxId);
 
-        String aliceSpamMailboxId = JmapRFCCommonRequests.getMailboxId(aliceCredential, Role.SPAM);
+        String aliceSpamMailboxId = JmapRFCCommonRequests.getMailboxId(aliceCredential, "junk");
 
         Consumer<String> moveMessageToSpamMailbox = messageId -> given()
             .auth().basic(aliceCredential.username().asString(), aliceCredential.password())
@@ -329,7 +329,7 @@ public interface SpamAssassinContract {
 
         // Alice is moving this message to Spam -> learning in SpamAssassin
         List<String> messageIds = JmapRFCCommonRequests.listMessageIdsInMailbox(aliceCredential, JmapRFCCommonRequests.getMailboxId(aliceCredential, Role.INBOX));
-        moveMessagesToNewMailbox(messageIds, getMailboxId(aliceCredential, Role.SPAM), aliceCredential);
+        moveMessagesToNewMailbox(messageIds, getMailboxId(aliceCredential, "junk"), aliceCredential);
         
         calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceCredential, getSpamId(aliceCredential), 1));
 
@@ -576,7 +576,7 @@ public interface SpamAssassinContract {
     }
 
     default String getSpamId(UserCredential userCredential) {
-        return JmapRFCCommonRequests.getMailboxId(userCredential,Role.SPAM);
+        return JmapRFCCommonRequests.getMailboxId(userCredential, "junk");
     }
 
     default String getTrashId(UserCredential userCredential) {

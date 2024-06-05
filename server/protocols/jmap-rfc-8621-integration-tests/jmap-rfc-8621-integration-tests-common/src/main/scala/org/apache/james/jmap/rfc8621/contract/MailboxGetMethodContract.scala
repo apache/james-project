@@ -1069,6 +1069,36 @@ trait MailboxGetMethodContract {
   }
 
   @Test
+  def getMailboxesShouldReturnCorrectMailboxRoleForJunk(server: GuiceJamesServer): Unit = {
+    val mailboxId: String = server.getProbe(classOf[MailboxProbeImpl])
+      .createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.SPAM))
+      .serialize
+
+    `given`
+      .header(ACCEPT.toString, ACCEPT_RFC8621_VERSION_HEADER)
+      .body(s"""{
+               |  "using": [
+               |    "urn:ietf:params:jmap:core",
+               |    "urn:ietf:params:jmap:mail",
+               |    "urn:apache:james:params:jmap:mail:shares"],
+               |  "methodCalls": [[
+               |      "Mailbox/get",
+               |      {
+               |        "accountId": "29883977c13473ae7cb7678ef767cbfbaffc8a44a6e463d971d23a65c1dc4af6",
+               |        "ids": ["${mailboxId}"]
+               |      },
+               |      "c1"]]
+               |}""".stripMargin)
+    .when
+      .post
+    .`then`
+      .statusCode(SC_OK)
+      .body(s"$ARGUMENTS.list", hasSize(1))
+      .body(s"$FIRST_MAILBOX.name", equalTo(DefaultMailboxes.SPAM))
+      .body(s"$FIRST_MAILBOX.role", equalTo("junk"))
+  }
+
+  @Test
   @Tag(CategoryTags.BASIC_FEATURE)
   def getMailboxesShouldReturnUpdatedQuotasForInboxWhenMailReceived(server: GuiceJamesServer): Unit = {
     val message: Message = Message.Builder
