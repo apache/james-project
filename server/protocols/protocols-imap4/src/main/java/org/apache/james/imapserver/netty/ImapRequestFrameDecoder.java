@@ -70,6 +70,9 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
     private static final boolean RETRY = true;
     private static final String SINK = "SINK";
     private static final String SUBSCRIPTION = "SUBSCRIPTION";
+    public static final int UNAUTHENTICATE_LITERAL_MAX_SIZE = Optional.ofNullable(System.getProperty("james.imap.unauthenticated.literal.max.size"))
+        .map(Integer::parseInt)
+        .orElse(8192);
 
     private final ImapDecoder decoder;
     private final int inMemorySizeLimit;
@@ -83,6 +86,17 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
         this.inMemorySizeLimit = inMemorySizeLimit;
         this.literalSizeLimit = literalSizeLimit;
         this.maxFrameLength = maxFrameLength;
+    }
+
+    private int literalSizeLimit(ImapSession session) {
+        if (session == null) {
+            return UNAUTHENTICATE_LITERAL_MAX_SIZE;
+        }
+        if (session.getState() == ImapSessionState.NON_AUTHENTICATED
+            || session.getState() == ImapSessionState.LOGOUT) {
+            return UNAUTHENTICATE_LITERAL_MAX_SIZE;
+        }
+        return literalSizeLimit;
     }
 
     @Override
@@ -137,7 +151,11 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 // should not consume the line
                 // See JAMES-1199
                 if (readerAndSize.getRight() == -1) {
-                    readerAndSize.getLeft().consumeLine();
+                    try {
+                        readerAndSize.getLeft().consumeLine();
+                    } catch (DecodingException | NettyImapRequestLineReader.NotEnoughDataException e) {
+                        // Silent
+                    }
                 }
 
                 enableFraming(ctx);
@@ -183,6 +201,11 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 // check if we have a inMemorySize limit and if so if the
                 // expected size will fit into it
                 if (inMemorySizeLimit > 0 && inMemorySizeLimit < size) {
+                    ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+                    int literalSizeLimit = literalSizeLimit(session);
+                    if (literalSizeLimit > 0 && size > literalSizeLimit) {
+                        throw new IOException("Attempt to write a too big chunk into a file. " + size + " and limit " + literalSizeLimit);
+                    }
 
                     // ok seems like it will not fit in the memory limit so we
                     // need to store it in a temporary file
@@ -195,11 +218,12 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
                 }
 
             } else {
-
-                reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, literalSizeLimit);
+                ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+                reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, readerIndex, literalSizeLimit(session), maxFrameLength);
             }
         } else {
-            reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, literalSizeLimit);
+            ImapSession session = ctx.channel().attr(IMAP_SESSION_ATTRIBUTE_KEY).get();
+            reader = new NettyImapRequestLineReader(ctx.channel(), in, retry, readerIndex, literalSizeLimit(session), maxFrameLength);
         }
         return Pair.of(reader, size);
     }
@@ -217,7 +241,7 @@ public class ImapRequestFrameDecoder extends ByteToMessageDecoder implements Net
 
             FileChunkConsumer fileChunkConsumer = new FileChunkConsumer(size,
                 (file, written) -> {
-                    ImapRequestLineReader reader = new NettyStreamImapRequestLineReader(ctx.channel(), file, RETRY);
+                    ImapRequestLineReader reader = new NettyStreamImapRequestLineReader(ctx.channel(), file, RETRY, maxFrameLength);
 
                     try {
                         parseImapMessage(ctx, null, attachment, Pair.of(reader, size), readerIndex)

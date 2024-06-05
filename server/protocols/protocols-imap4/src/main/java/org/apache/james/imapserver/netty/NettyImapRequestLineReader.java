@@ -21,6 +21,7 @@ package org.apache.james.imapserver.netty;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -41,15 +42,23 @@ import io.netty.channel.Channel;
  * of this implementation
  */
 public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineReader {
+    public static final int MAXIMUM_LITERAL_COUNT = Optional.ofNullable(System.getProperty("james.imap.literal.count.max"))
+        .map(Integer::parseInt)
+        .orElse(64);
+    private final int initialReaderIndex;
 
     private final ByteBuf buffer;
     private int read = 0;
+    private int literalCount = 0;
     private final int maxLiteralSize;
+    private final int maxFrameLength;
 
-    public NettyImapRequestLineReader(Channel channel, ByteBuf buffer, boolean retry, int maxLiteralSize) {
+    public NettyImapRequestLineReader(Channel channel, ByteBuf buffer, boolean retry, int initialReaderIndex, int maxLiteralSize, int maxFrameLength) {
         super(channel, retry);
         this.buffer = buffer;
+        this.initialReaderIndex = initialReaderIndex;
         this.maxLiteralSize  = maxLiteralSize;
+        this.maxFrameLength = maxFrameLength;
     }
     
 
@@ -62,12 +71,15 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
      * char
      */
     @Override
-    public char nextChar() {
+    public char nextChar() throws DecodingException {
         if (!nextSeen) {
             if (buffer.isReadable()) {
                 nextChar = (char) buffer.readByte();
                 read++;
                 nextSeen = true;
+                if (read > maxFrameLength) {
+                    throw new DecodingException(HumanReadableText.FAILED, "Line length exceeded.");
+                }
             } else {
                 throw new NotEnoughDataException();
             }
@@ -86,9 +98,13 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
         if (extraCRLF) {
             crlf = 2;
         }
-        
-        if (maxLiteralSize > 0 && size > maxLiteralSize) {
-            throw new DecodingException(HumanReadableText.FAILED, "Specified literal is greater then the allowed size");
+        int readSoFar = buffer.readerIndex() - initialReaderIndex;
+        if (literalCount > MAXIMUM_LITERAL_COUNT) {
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Too many literals. " + MAXIMUM_LITERAL_COUNT + " allowed but got " + literalCount);
+        }
+        literalCount++;
+        if (maxLiteralSize > 0 && (readSoFar + size) > maxLiteralSize) {
+            throw new DecodingException(HumanReadableText.FAILED_LITERAL_SIZE_EXCEEDED, "Specified literals total size is greater then the allowed size. " + (readSoFar + size) + " instead of " + maxLiteralSize + " limit.");
         }
         // Check if we have enough data
         if (size + crlf > buffer.readableBytes()) {
