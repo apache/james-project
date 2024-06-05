@@ -55,7 +55,7 @@ public interface PostgresEmailChangeModule {
                 .column(CREATED)
                 .column(UPDATED)
                 .column(DESTROYED)
-                .constraint(DSL.primaryKey(ACCOUNT_ID, STATE))))
+                .constraint(DSL.primaryKey(ACCOUNT_ID, STATE, IS_SHARED))))
             .supportsRowLevelSecurity()
             .build();
 
