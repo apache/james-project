@@ -109,7 +109,7 @@ public class VacationMailet extends GenericMailet {
                 .toArray(InternetAddress[]::new);
 
             if (replyTo.length > 0) {
-                LOGGER.info("Recovering from badly formatted Reply-To. Originaal value {}, deduced value {}",
+                LOGGER.info("Recovering from badly formatted Reply-To. Original value {}, deduced value {}",
                     ImmutableList.copyOf(mail.getMessage().getHeader("Reply-To")), ImmutableList.copyOf(replyTo), e);
                 mail.getMessage().setReplyTo(replyTo);
                 return replyTo;
