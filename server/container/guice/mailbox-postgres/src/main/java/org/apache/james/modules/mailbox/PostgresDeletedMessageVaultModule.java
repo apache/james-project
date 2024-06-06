@@ -23,9 +23,9 @@ import org.apache.james.backends.postgres.PostgresModule;
 import org.apache.james.mailbox.postgres.DeleteMessageListener;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
-import org.apache.james.vault.metadata.DeletedMessageVaultDeletionCallback;
 import org.apache.james.vault.metadata.PostgresDeletedMessageMetadataModule;
 import org.apache.james.vault.metadata.PostgresDeletedMessageMetadataVault;
+import org.apache.james.vault.metadata.PostgresDeletedMessageVaultDeletionCallback;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -45,6 +45,6 @@ public class PostgresDeletedMessageVaultModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), DeleteMessageListener.DeletionCallback.class)
             .addBinding()
-            .to(DeletedMessageVaultDeletionCallback.class);
+            .to(PostgresDeletedMessageVaultDeletionCallback.class);
     }
 }
