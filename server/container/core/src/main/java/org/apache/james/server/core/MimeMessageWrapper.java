@@ -57,6 +57,7 @@ import com.google.common.io.CountingInputStream;
  * This class is not thread safe.
  */
 public class MimeMessageWrapper extends MimeMessage implements Disposable {
+    private static final String MIME_VERSION_HEADER = "MIME-Version";
 
     /**
      * System property which tells JAMES if it should copy a message in memory
@@ -523,6 +524,12 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
     @Override
     public void setHeader(String name, String value) throws MessagingException {
         checkModifyHeaders();
+        if (name.equalsIgnoreCase(MIME_VERSION_HEADER)
+            && getHeader(MIME_VERSION_HEADER) != null
+            && value.equals("1.0")
+            && getHeader(MIME_VERSION_HEADER)[0].startsWith("1.0")) {
+            return;
+        }
         super.setHeader(name, value);
     }
 
