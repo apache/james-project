@@ -43,7 +43,8 @@ class ImapRequestFrameDecoderTest {
         testee = new ImapRequestFrameDecoder(
             mock(ImapDecoder.class),
             12,
-            18);
+            18,
+            8192);
     }
 
     @Test

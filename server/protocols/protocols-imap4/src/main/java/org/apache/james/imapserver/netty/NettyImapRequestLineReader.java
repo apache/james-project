@@ -44,11 +44,13 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
     private final ChannelBuffer buffer;
     private int read = 0;
     private final int maxLiteralSize;
+    private final int maxFrameLength;
 
-    public NettyImapRequestLineReader(Channel channel, ChannelBuffer buffer, boolean retry, int maxLiteralSize) {
+    public NettyImapRequestLineReader(Channel channel, ChannelBuffer buffer, boolean retry, int maxLiteralSize, int maxFrameLength) {
         super(channel, retry);
         this.buffer = buffer;
         this.maxLiteralSize  = maxLiteralSize;
+        this.maxFrameLength = maxFrameLength;
     }
     
 
@@ -68,6 +70,9 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
             if (buffer.readable()) {
                 next = buffer.readByte();
                 read++;
+                if (read > maxFrameLength) {
+                    throw new DecodingException(HumanReadableText.FAILED, "Line length exceeded.");
+                }
             } else {
                 throw new NotEnoughDataException();
             }
