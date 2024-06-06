@@ -55,15 +55,15 @@ import com.google.common.collect.ImmutableSet;
 
 import reactor.core.publisher.Mono;
 
-public class DeletedMessageVaultDeletionCallback implements DeleteMessageListener.DeletionCallback {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessageVaultDeletionCallback.class);
+public class PostgresDeletedMessageVaultDeletionCallback implements DeleteMessageListener.DeletionCallback {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresDeletedMessageVaultDeletionCallback.class);
 
     private final DeletedMessageVault deletedMessageVault;
     private final BlobStore blobStore;
     private final Clock clock;
 
     @Inject
-    public DeletedMessageVaultDeletionCallback(DeletedMessageVault deletedMessageVault, BlobStore blobStore, Clock clock) {
+    public PostgresDeletedMessageVaultDeletionCallback(DeletedMessageVault deletedMessageVault, BlobStore blobStore, Clock clock) {
         this.deletedMessageVault = deletedMessageVault;
         this.blobStore = blobStore;
         this.clock = clock;
