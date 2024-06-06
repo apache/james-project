@@ -53,7 +53,6 @@ public class VacationReplyTest {
     private MailAddress originalSender;
     private MailAddress originalRecipient;
     private FakeMail mail;
-    private MimeMessage generatedBody;
 
     @Before
     public void setUp() throws Exception {
@@ -71,7 +70,6 @@ public class VacationReplyTest {
         when(htmlTextExtractor.toPlainText(any())).thenReturn("HTML");
 
         mimeMessageBodyGenerator = spy(new MimeMessageBodyGenerator(htmlTextExtractor));
-        generatedBody = MimeMessageUtil.defaultMimeMessage();
     }
 
     @Test

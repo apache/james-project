@@ -20,16 +20,22 @@
 package org.apache.james.transport.mailets;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
 
 import jakarta.inject.Inject;
+import jakarta.mail.Address;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.transport.util.MimeMessageBodyGenerator;
+import org.apache.james.util.StreamUtils;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.vacation.api.AccountId;
 import org.apache.james.vacation.api.RecipientId;
@@ -40,6 +46,9 @@ import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -69,7 +78,7 @@ public class VacationMailet extends GenericMailet {
             if (!mail.hasSender()) {
                 return;
             }
-            boolean hasReplyToHeaderField = Optional.ofNullable(mail.getMessage().getReplyTo())
+            boolean hasReplyToHeaderField = Optional.ofNullable(getReplyTo(mail))
                 .map(replyToFields -> replyToFields.length > 0)
                 .orElse(false);
             if (!automaticallySentMailDetector.isAutomaticallySent(mail) && hasReplyToHeaderField && !isNoReplySender(mail)) {
@@ -83,6 +92,30 @@ public class VacationMailet extends GenericMailet {
             }
         } catch (Exception e) {
             LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
+        }
+    }
+
+    private static Address[] getReplyTo(Mail mail) throws MessagingException {
+        try {
+            return mail.getMessage().getReplyTo();
+        } catch (AddressException e) {
+            InternetAddress[] replyTo = StreamUtils.ofNullable(mail.getMessage().getHeader("Reply-To"))
+                .map(LenientAddressParser.DEFAULT::parseAddressList)
+                .flatMap(Collection::stream)
+                .filter(Mailbox.class::isInstance)
+                .map(Mailbox.class::cast)
+                .map(Mailbox::getAddress)
+                .map(Throwing.function(InternetAddress::new))
+                .toArray(InternetAddress[]::new);
+
+            if (replyTo.length > 0) {
+                LOGGER.info("Recovering from badly formatted Reply-To. Original value {}, deduced value {}",
+                    ImmutableList.copyOf(mail.getMessage().getHeader("Reply-To")), ImmutableList.copyOf(replyTo), e);
+                mail.getMessage().setReplyTo(replyTo);
+                return replyTo;
+            } else {
+                throw e;
+            }
         }
     }
 
