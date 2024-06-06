@@ -3303,7 +3303,7 @@ trait EmailGetMethodContract {
          |        "type": "text/plain"
          |      },
          |      {
-         |        "size": 2093,
+         |        "size": 2094,
          |        "partId": "3",
          |        "blobId": "${messageId.serialize()}_3",
          |        "type": "message/rfc822"
@@ -4699,7 +4699,7 @@ trait EmailGetMethodContract {
          |                        ],
          |                        "bodyValues": {
          |                            "2": {
-         |                                "value": "Main test message...\\n",
+         |                                "value": "Main test message...\\r\\n",
          |                                "isEncodingProblem": false,
          |                                "isTruncated": false
          |                            }
@@ -4820,7 +4820,7 @@ trait EmailGetMethodContract {
          |						}
          |					],
          |					"subject": "My subject",
-         |					"size": 970
+         |					"size": 1011
          |				}]
          |			},
          |			"c1"
@@ -4963,7 +4963,7 @@ trait EmailGetMethodContract {
          |						}
          |					],
          |					"subject": "My subject",
-         |					"size": 970
+         |					"size": 1011
          |				}]
          |			},
          |			"c1"
