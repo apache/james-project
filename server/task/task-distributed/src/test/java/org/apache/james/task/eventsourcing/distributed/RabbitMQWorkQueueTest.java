@@ -84,7 +84,7 @@ class RabbitMQWorkQueueTest {
         assertThat(managementAPI.queueDetails("/", "taskManagerWorkQueue")
             .getArguments()
             .get("x-consumer-timeout"))
-            .isEqualTo("86400000");
+            .isEqualTo("95040000");
     }
 
     @Test

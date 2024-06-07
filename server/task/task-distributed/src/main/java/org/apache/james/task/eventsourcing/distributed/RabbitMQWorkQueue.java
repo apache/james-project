@@ -123,12 +123,13 @@ public class RabbitMQWorkQueue implements WorkQueue {
         Mono<AMQP.Exchange.DeclareOk> declareExchange = sender
             .declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
+        long consumerTimeout = Math.round(rabbitMQConfiguration.getTaskQueueConsumerTimeout().toMillis() * 1.1f);
         Mono<AMQP.Queue.DeclareOk> declareQueue = sender
             .declare(QueueSpecification.queue(QUEUE_NAME)
                 .durable(evaluateDurable(DURABLE, rabbitMQConfiguration.isQuorumQueuesUsed()))
                 .arguments(rabbitMQConfiguration.workQueueArgumentsBuilder()
                     .singleActiveConsumer()
-                    .consumerTimeout(rabbitMQConfiguration.getTaskQueueConsumerTimeout().toMillis())
+                    .consumerTimeout(consumerTimeout)
                     .build()))
             .retryWhen(Retry.backoff(NUM_RETRIES, FIRST_BACKOFF));
         Mono<AMQP.Queue.BindOk> bindQueueToExchange = sender
@@ -187,6 +188,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     private Mono<Task.Result> executeOnWorker(TaskId taskId, Task task) {
         return worker.executeTask(new TaskWithId(taskId, task))
+            .timeout(rabbitMQConfiguration.getTaskQueueConsumerTimeout())
             .onErrorResume(error -> {
                 String errorMessage = String.format("Unable to run submitted Task %s", taskId.asString());
                 LOGGER.warn(errorMessage, error);
