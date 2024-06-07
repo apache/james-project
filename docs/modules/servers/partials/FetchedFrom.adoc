@@ -1,0 +1,10 @@
+=== FetchedFrom
+
+Matches mail with a header set by Fetchpop X-fetched-from
+
+fetchpop sets X-fetched-by to the "name" of the fetchpop fetch task.
+
+This is used to match all mail fetched from a specific pop account.
+
+Once the condition is met the header is stripped from the message to prevent looping if
+the mail is re-inserted into the spool.

@@ -1,0 +1,4 @@
+=== VacationMailet
+
+This mailet uses https://jmap.io/spec-mail.html#vacation-response[JMAP VacationResponse] and
+sends back a vacation notice to the sender if needed.

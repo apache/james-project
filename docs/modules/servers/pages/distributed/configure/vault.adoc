@@ -1,0 +1,32 @@
+= Distributed James Server &mdash; deletedMessageVault.properties
+:navtitle: deletedMessageVault.properties
+
+Deleted Messages Vault is the component in charge of retaining messages before they are going to be deleted.
+Messages stored in the Deleted Messages Vault could be deleted after exceeding their retentionPeriod (explained below).
+It also supports to restore or export messages matching with defined criteria in
+xref:distributed/operate/webadmin.adoc#_deleted_messages_vault[WebAdmin deleted messages vault document] by using
+xref:distributed/operate/webadmin.adoc#_deleted_messages_vault[WebAdmin endpoints].
+
+== Deleted Messages Vault Configuration
+
+Once the vault is active, James will start moving deleted messages to it asynchronously.
+
+The Deleted Messages Vault also stores and manages deleted messages into a BlobStore. The BlobStore can be either
+based on an object storage or on Cassandra. For configuring the BlobStore the vault will use, you can look at
+xref:distributed/configure/blobstore.adoc[*blobstore.properties*] BlobStore Configuration section.
+
+== deletedMessageVault.properties
+
+Consult this link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/deletedMessageVault.properties[example]
+to get some examples and hints.
+
+.deletedMessageVault.properties content
+|===
+| Property name | explanation
+
+| retentionPeriod
+| Deleted messages stored in the Deleted Messages Vault are expired after this period (default: 1 year). It can be expressed in *y* years, *d* days, *h* hours, ...
+
+| restoreLocation
+| Messages restored from the Deleted Messages Vault are placed in a mailbox with this name (default: ``Restored-Messages``). The mailbox will be created if it does not exist yet.
+|===

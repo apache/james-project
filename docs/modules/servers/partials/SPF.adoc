@@ -1,0 +1,18 @@
+=== SPF
+
+Check the ip, sender, helo against SPF. Add the following attributes to the
+mail object:
+
+....
+ org.apache.james.transport.mailets.spf.explanation
+ org.apache.james.transport.mailets.spf.result
+....
+
+Sample configuration:
+
+....
+<mailet match="All" class="SPF">
+  <addHeader>true</addHeader>
+  <debug>false</debug>
+</mailet>
+....

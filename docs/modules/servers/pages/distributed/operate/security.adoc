@@ -1,0 +1,249 @@
+= Security checklist
+:navtitle: Security checklist
+
+This document aims as summarizing threats, security best practices as well as recommendations.
+
+== Threats
+
+Operating an email server exposes you to the following threats:
+
+ - Spammers might attempt to use your servers to send their spam messages on their behalf. We speak of
+*open relay*. In addition to the resources consumed being an open relay will affect the trust other mail
+installations have in you, and thus will cause legitimate traffic to be rejected.
+ - Emails mostly consist of private data, which shall only be accessed by their legitimate user. Failure
+to do so might result in *information disclosure*.
+ - *Email forgery*. An attacker might craft an email on the behalf of legitimate users.
+ - Email protocols allow user to authenticate and thus can be used as *oracles* to guess user passwords.
+ - *Spam*. Non legitimate traffic can be a real burden to your users.
+ - *Phishing*: Crafted emails that tricks the user into doing unintended actions.
+ - *Viruses*: An attacker sends an attachment that contains an exploit that could run if a user opens it.
+ - *Denial of service*: A small request may result in a very large response and require considerable work on the server...
+ - *Denial of service*: A malicious JMAP client may use the JMAP push subscription to attempt to flood a third party
+server with requests, creating a denial-of-service attack and masking the attacker’s true identity.
+ - *Dictionary Harvest Attacks*: An attacker can rely on SMTP command reply code to know if a user exists or not. This
+ can be used to obtain the list of local users and later use those address as targets for other attacks.
+
+== Best practices
+
+The following sections ranks best practices.
+
+=== Best practices: Must
+
+ - 1. Configure James in order not to be an xref:distributed/configure/smtp.adoc#_about_open_relays[open relay]. This should be the
+case with the default configuration.
+
+Be sure in xref:distributed/configure/smtp.adoc[smtpserver.xml] to activate the following options: `verifyIdentity`.
+
+We then recommend to manually test your installation in order to ensure that:
+
+    - Unauthenticated SMTP users cannot send mails to external email addresses (they are not relayed)
+    - Unauthenticated SMTP users can send mails to internal email addresses
+    - Unauthenticated SMTP users cannot use local addresses in their mail from, and send emails both locally and to distant targets.
+
+ - 2. Avoid *STARTTLS* usage and favor SSL. Upgrade from a non encrypted channel into an encrypted channel is an opportunity
+for additional vulnerabilities. This is easily prevented by requiring SSL connection upfront. link:https://nostarttls.secvuln.info/[Read more...]
+
+Please note that STARTTLS is still beneficial in the context of email relaying, which happens on SMTP port 25 unencrypted,
+and enable opportunistic encryption upgrades that would not overwise be possible. We recommend keeping STARTTLS activated
+for SMTP port 25.
+
+ - 3. Use SSL for xref:distributed/configure/mailets.adoc#_remotedelivery[remote delivery] whenever you are using a gateway relaying SMTP server.
+
+ - 4. Rely on an external identity service, dedicated to user credential storage. James supports xref:distributed/configure/usersrepository.adoc#_configuring_a_ldap[LDAP]. If you are
+forced to store users in James be sure to choose `PBKDF2` as a hashing algorithm. Also, delays on authentication failures
+are supported via the `verifyFailureDelay` property. Note that IMAP / SMTP connections are closed after 3 authentication
+failures.
+
+ - 5. Ensure that xref:distributed/configure/webadmin.adoc[WebAdmin] is not exposed unencrypted to the outer world. Doing so trivially
+exposes yourself. You can either disable it, activate JWT security, or restrict it to listen only on localhost.
+
+ - 6. Set up `HTTPS` for http based protocols, namely *JMAP* and *WebAdmin*. We recommend the use of a reverse proxy like Nginx.
+
+ - 7. Set up link:https://james.apache.org/howTo/spf.html[SPF] and link:https://james.apache.org/howTo/dkim.html[DKIM]
+for your outgoing emails to be trusted.
+
+ - 8. Prevent access to JMX. This can be achieved through a strict firewalling policy
+(link:https://nickbloor.co.uk/2017/10/22/analysis-of-cve-2017-12628/[blocking port 9999 is not enough])
+or xref:distributed/configure/jmx.adoc[disabling JMX]. JMX is needed to use the existing CLI application but webadmin do offer similar
+features. Set the `jmx.remote.x.mlet.allow.getMBeansFromURL` to `false` to disable JMX remote code execution feature.
+
+ - 9. If JMAP is enabled, be sure that JMAP PUSH cannot be used for server side request forgery. This can be
+xref:distributed/configure/jmap.adoc[configured] using the `push.prevent.server.side.request.forgery=true` property,
+forbidding push to private addresses.
+
+=== Best practice: Should
+
+ - 1. Avoid advertising login/authenticate capabilities in clear channels. This might prevent some clients to attempt login
+on clear channels, and can be configured for both xref:distributed/configure/smtp.adoc[SMTP] and xref:distributed/configure/imap.adoc[IMAP]
+using `auth.plainAuthEnabled=false`.
+
+ - 2. Verify link:https://james.apache.org/howTo/spf.html[SPF] and xref:distributed/configure/mailets.adoc#_dkimverify[DKIM] for your incoming emails.
+
+ - 3. Set up reasonable xref:distributed/operate/webadmin.adoc#_administrating_quotas[storage quota] for your users.
+
+ - 4. We recommend setting up anti-spam and anti-virus solutions. James comes with some xref:distributed/configure/spam.adoc[Rspamd and SpamAssassin]
+integration, and some xref:distributed/configure/mailets.adoc#_clamavscan[ClamAV] tooling exists.
+Rspamd supports anti-phishing modules.
+Filtering with third party systems upstream is also possible.
+
+ - 5. In order to limit your attack surface, disable protocols you or your users do not use. This includes the JMAP protocol,
+POP3, ManagedSieve, etc... Be conservative on what you expose.
+
+ - 6. If operating behind a load-balancer, set up the link:https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt[PROXY protocol] for
+TCP based protocols (IMAP and SMTP `proxyRequired` option)
+
+=== Best practice: Could
+
+ - 1. Set up link:https://openid.net/connect/[OIDC] for IMAP, SMTP and JMAP. Disable login/plain/basic authentication.
+
+ - 2. You can configure xref:distributed/configure/ssl.adoc#_client_authentication_via_certificates[Client authentication via certificates].
+
+ - 3. You can xref:distributed/configure/mailets.adoc#_smimesign[sign], xref:distributed/configure/mailets.adoc#_smimechecksignature[verify]
+and xref:distributed/configure/mailets.adoc#_smimedecrypt[decrypt] your email traffic using link:https://datatracker.ietf.org/doc/html/rfc5751[SMIME].
+
+== Known vulnerabilities
+
+Several vulnerabilities have had been reported for previous releases of Apache James server.
+
+Be sure not to run those! We highly recommend running the latest release, which we put great effort in not to use
+outdated dependencies.
+
+=== Reporting vulnerabilities
+
+We follow the standard procedures within the ASF regarding link:https://apache.org/security/committers.html#vulnerability-handling[vulnerability handling]
+
+=== CVE-2024-21742: Mime4J DOM header injection
+
+Apache JAMES MIME4J prior to version 0.8.10 allow attackers able to specify the value of a header field to craft other header fields.
+
+*Severity*: Moderate
+
+*Mitigation*: Release 0.8.10 rejects the use of LF inside a header field thus preventing the issue.
+
+Upgrading to Apache James MIME4J 0.8.10 is thus advised.
+
+=== CVE-2023-51747: SMTP smuggling in Apache James
+
+Apache James distribution prior to release 3.7.5 and release 3.8.1 is subject to SMTP smuggling, when used in combination
+of antother vulnerable server and can result in SPF bypass, leading to email forgery.
+
+*Severity*: High
+
+*Mitigation*: Release 3.7.5 and 3.8.1 interpret strictly the CRLF delimiter and thus prevent the issue.
+
+Upgrading to Apache James 3.7.5 or 3.8.1 is thus advised.
+
+=== CVE-2023-51518: Privilege escalation via JMX pre-authentication deserialisation
+
+Apache James distribution prior to release 3.7.5 and 3.8.1 allow privilege escalation via JMX pre-authentication deserialisation.
+An attacker would need to identify a deserialization glitch before triggering an exploit.
+
+*Severity*: Moderate
+
+*Mitigation*:We recommend turning off JMX whenever possible.
+
+Release 3.7.5 and 3.8.1 disable deserialization on unauthencited channels.
+
+Upgrading to Apache James 3.7.5 on 3.8.1 is thus advised.
+
+
+=== CVE-2023-26269: Privilege escalation through unauthenticated JMX
+
+Apache James distribution prior to release 3.7.4 allows privilege escalation through the use of JMX.
+
+*Severity*: Moderate
+
+*Mitigation*: We recommend turning on authentication on. If the CLI is unused we recommend turning JMX off.
+
+Release 3.7.4 set up implicitly JMX authentication for Guice based products and addresses the underlying JMX exploits.
+
+Upgrading to Apache James 3.7.4 is thus advised.
+
+=== CVE-2022-45935: Temporary File Information Disclosure in Apache JAMES
+
+Apache James distribution prior to release 3.7.3 is vulnerable to a temporary File Information Disclosure.
+
+*Severity*: Moderate
+
+*Mitigation*: We recommend to upgrade to Apache James 3.7.3 or higher, which fixes this vulnerability.
+
+
+=== CVE-2021-44228: STARTTLS command injection in Apache JAMES
+
+Apache James distribution prior to release 3.7.1 is vulnerable to a buffering attack relying on the use of the STARTTLS command.
+
+Fix of CVE-2021-38542, which solved similar problem from Apache James 3.6.1, is subject to a parser differential and do not take into account concurrent requests.
+
+*Severity*: Moderate
+
+*Mitigation*: We recommend to upgrade to Apache James 3.7.1 or higher, which fixes this vulnerability.
+
+=== CVE-2021-38542: Apache James vulnerable to STARTTLS command injection (IMAP and POP3)
+
+Apache James prior to release 3.6.1 is vulnerable to a buffering attack relying on the use of the STARTTLS
+command. This can result in Man-in -the-middle command injection attacks, leading potentially to leakage
+of sensible information.
+
+*Severity*: Moderate
+
+This issue is being tracked as link:https://issues.apache.org/jira/browse/JAMES-1862[JAMES-1862]
+
+*Mitigation*: We recommend upgrading to Apache James 3.6.1, which fixes this vulnerability.
+
+Furthermore, we recommend, if possible to dis-activate STARTTLS and rely solely on explicit TLS for mail protocols, including SMTP, IMAP and POP3.
+
+Read more link:https://nostarttls.secvuln.info/[about STARTTLS security here].
+
+=== CVE-2021-40110: Apache James IMAP vulnerable to a ReDoS
+
+Using Jazzer fuzzer, we identified that an IMAP user can craft IMAP LIST commands to orchestrate a Denial
+Of Service using a vulnerable Regular expression. This affected Apache James prior to 3.6.1
+
+*Severity*: Moderate
+
+This issue is being tracked as link:https://issues.apache.org/jira/browse/JAMES-3635[JAMES-3635]
+
+*Mitigation*: We recommend upgrading to Apache James 3.6.1, which enforce the use of RE2J regular
+expression engine to execute regex in linear time without back-tracking.
+
+=== CVE-2021-40111: Apache James IMAP parsing Denial Of Service
+
+While fuzzing with Jazzer the IMAP parsing stack we discover that crafted APPEND and STATUS IMAP command
+could be used to trigger infinite loops resulting in expensive CPU computations and OutOfMemory exceptions.
+This can be used for a Denial Of Service attack. The IMAP user needs to be authenticated to exploit this
+vulnerability. This affected Apache James prior to version 3.6.1.
+
+*Severity*: Moderate
+
+This issue is being tracked as link:https://issues.apache.org/jira/browse/JAMES-3634[JAMES-3634]
+
+*Mitigation*: We recommend upgrading to Apache James 3.6.1, which fixes this vulnerability.
+
+=== CVE-2021-40525: Apache James: Sieve file storage vulnerable to path traversal attacks
+
+Apache James ManagedSieve implementation alongside with the file storage for sieve scripts is vulnerable
+to path traversal, allowing reading and writing any file.
+
+*Severity*: Moderate
+
+This issue is being tracked as link:https://issues.apache.org/jira/browse/JAMES-3646[JAMES-3646]
+
+*Mitigation*:This vulnerability had been patched in Apache James 3.6.1 and higher. We recommend the upgrade.
+
+This could also be mitigated by ensuring manageSieve is disabled, which is the case by default.
+
+Distributed and Cassandra based products are also not impacted.
+
+=== CVE-2017-12628 Privilege escalation using JMX
+
+The Apache James Server prior version 3.0.1 is vulnerable to Java deserialization issues.
+One can use this for privilege escalation.
+This issue can be mitigated by:
+
+ - Upgrading to James 3.0.1 onward
+ - Using a recent JRE (Exploit could not be reproduced on OpenJdk 8 u141)
+ - Exposing JMX socket only to localhost (default behaviour)
+ - Possibly running James in a container
+ - Disabling JMX all-together (Guice only)
+
+Read more link:http://james.apache.org//james/update/2017/10/20/james-3.0.1.html[here].

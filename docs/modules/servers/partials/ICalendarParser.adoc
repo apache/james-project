@@ -1,0 +1,17 @@
+=== ICalendarParser
+
+This mailet can be combined with the Strip attachment mailet.
+
+The ICS body part byte array is arranged as map then this mailet should look for ICS and parse it
+with Ical4J then store it as a mail attribute
+
+Configuration: The mailet contains 2 mandatory attributes
+
+....
+  <mailet match="All" class="ICalendarParser" >
+    <sourceAttribute>source.attribute.name</sourceAttribute>
+    <!-- The attribute which contains output value of StripAttachment mailet -- >
+    <destAttribute>dest.attribute.name</destAttribute>
+    <!-- The attribute store the map of Calendar -- >
+  </mailet >
+....

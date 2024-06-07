@@ -1,0 +1,11 @@
+=== IsX509CertificateSubject
+
+Checks if the subject of a X509Certificate contains the supplied string. The
+certificate is read from the specified mail attribute.
+
+If the specified attribute contains more than one certificate the matcher matches if at
+least one of the certificates contains the given string.
+
+Configuration string:
+
+* mailAttribute;string

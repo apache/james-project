@@ -1,0 +1,92 @@
+= Sieve
+:navtitle: Sieve
+
+James servers are able to evaluate and execute Sieve scripts.
+
+Sieve is an extensible mail filtering language. It's limited
+expressiveness (no loops or variables, no tests with side
+effects) allows user created scripts to be run safely on email
+servers. Sieve is targeted at the final delivery phase (where
+an incoming email is transferred to a user's mailbox).
+
+The following Sieve capabilities are supported by Apache James:
+
+  - link:https://www.ietf.org/rfc/rfc2234.txt[RFC 2234 ABNF]
+  - link:https://www.ietf.org/rfc/rfc2244.txt[RFC 2244 ACAP]
+  - link:https://www.ietf.org/rfc/rfc2298.txt[RFC 2298 MDN]
+  - link:https://tools.ietf.org/html/rfc5228[RFC 5228 Sieve]
+  - link:https://tools.ietf.org/html/rfc4790[RFC 4790 IAPCR]
+  - link:https://tools.ietf.org/html/rfc5173[RFC 5173 Body Extension]
+  - link:https://datatracker.ietf.org/doc/html/rfc5230[RFC 5230 Vacations]
+
+To be correctly executed, please note that the *Sieve* mailet is required to be positioned prior the
+*LocalDelivery* mailet.
+
+== Managing Sieve scripts
+
+A user willing to manage his Sieve scripts on the server can do so via several means:
+
+He can ask an admin to upload his script via the xref:distributed/operate/cli.adoc[CLI]
+
+As James supports ManageSieve (link:https://datatracker.ietf.org/doc/html/rfc5804[RFC-5804]) a user
+can thus use compatible software to manage his Sieve scripts.</p>
+
+== ManageSieve protocol
+
+*WARNING*: ManageSieve protocol should be considered experimental.
+
+Consult link:https://github.com/apache/james-project/blob/master/server/apps/distributed-app/sample-configuration/managesieveserver.xml[managesieveserver.xml]
+in GIT to get some examples and hints.
+
+The  service is controlled by a configuration block in the managesieveserver.xml.
+The managesieveserver tag defines the boundaries of the configuration block.  It encloses
+all the relevant configuration for the ManageSieve server.  The behavior of the ManageSieve service is
+controlled by the attributes and children of this tag.
+
+This tag has an optional boolean attribute - *enabled* - that defines whether the service is active or not.
+The value defaults to "false" if
+not present.
+
+The standard children of the managesieveserver tag are:
+
+.managesieveserver.xml content
+|===
+| Property name | explanation
+
+| bind
+| Configure this to bind to a specific inetaddress. This is an optional integer value.  This value is the port on which this ManageSieve server is configured to listen. If the tag or value is absent then the service
+will bind to all network interfaces for the machine If the tag or value is omitted, the value will default to the standard ManageSieve port (port 4190 is the well-known/IANA registered port for ManageSieve.)
+
+| tls
+| Set to true to support STARTTLS or SSL for the Socket.
+To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:
+`keytool -genkey -alias james -keyalg RSA -storetype PKCS12 -keystore /path/to/james/conf/keystore`.
+Please note that each ManageSieve server exposed on different port can specify its own keystore, independently from any other
+TLS based protocols.
+
+| connectionBacklog
+| Number of connection backlog of the server (maximum number of queued connection requests)
+
+| connectiontimeout
+| Connection timeout in seconds
+
+| connectionLimit
+| Set the maximum simultaneous incoming connections for this service
+
+| connectionLimitPerIP
+| Set the maximum simultaneous incoming connections per IP for this service
+
+| bossWorkerCount
+| Set the maximum count of boss threads. Boss threads are responsible for accepting incoming ManageSieve connections
+and initializing associated resources. Optional integer, by default, boss threads are not used and this responsibility is being dealt with
+by IO threads.
+
+| ioWorkerCount
+| Set the maximum count of IO threads. IO threads are responsible for receiving incoming ManageSieve messages and framing them
+(split line by line). IO threads also take care of compression and SSL encryption. Their tasks are short-lived and non-blocking.
+Optional integer, defaults to 2 times the count of CPUs.
+
+| maxExecutorCount
+| Set the maximum count of worker threads. Worker threads takes care of potentially blocking tasks like executing ManageSieve commands.
+Optional integer, defaults to 16.
+|===

@@ -1,0 +1,6 @@
+=== XOriginatingIpInNetwork
+
+Checks the first X_ORIGINATING_IP IP address against a comma-delimited list
+of IP addresses, domain names or sub-nets.
+
+See AbstractNetworkMatcher for details on how to specify entries.

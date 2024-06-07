@@ -1,0 +1,3 @@
+=== RecipientToLowerCase
+
+GenericMailet which convert all Recipients to lowercase.

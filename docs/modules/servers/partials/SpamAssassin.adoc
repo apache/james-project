@@ -1,0 +1,23 @@
+=== SpamAssassin
+
+Sends the message through daemonized SpamAssassin (spamd), visit
+http://spamassassin.apache.org[spamassassin.apache.org] for info
+on configuration. The header X-Spam-Status is added to every message, this
+contains the score and the threshold score for spam (usually 5.0). If the
+message exceeds the threshold, the header X-Spam-Flag will be added with the
+value of YES. The default host for spamd is localhost and the default port is
+783.
+
+....
+ org.apache.james.spamassassin.status - Holds the status
+ org.apache.james.spamassassin.flag   - Holds the flag
+....
+
+Sample Configuration:
+
+....
+<mailet notmatch="SenderHostIsLocal" class="SpamAssassin">
+  <spamdHost>localhost</spamdHost>
+  <spamdPort>783</spamdPort>
+</mailet>
+....

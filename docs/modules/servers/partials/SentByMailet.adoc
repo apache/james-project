@@ -1,0 +1,9 @@
+=== SentByMailet
+
+This matcher matches email sent automatically by mailets.
+
+....
+<mailet match="SentByMailetAny" class="<any-class>"/>
+....
+
+This matcher allows you, for instance, to enable/disable routing automatically generated emails out of your server.

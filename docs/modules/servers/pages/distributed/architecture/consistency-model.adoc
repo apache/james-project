@@ -1,0 +1,128 @@
+= Distributed James Server &mdash; Consistency Model
+:navtitle: Consistency Model
+
+This page presents the consistency model used by the Distributed Server and
+points to the tools built around it.
+
+== Data Replication
+
+The Distributed Server relies on different storage technologies, all having their own
+consistency models.
+
+These data stores replicate data in order to enforce some level of availability. We call
+this process replication. By consistency, we mean the ability for all replica to hold the
+same data. By availability, we mean the ability for a replica to answer a request.
+
+In distributed systems, link:https://en.wikipedia.org/wiki/CAP_theorem[according to the CAP theorem],
+as we will necessarily encounter network partitions, then trade-offs need to be made between
+consistency and availability.
+
+This section details this trade-off for data stores used by the Distributed Server.
+
+=== Cassandra consistency model
+
+link:https://cassandra.apache.org/[Cassandra] is an
+link:https://en.wikipedia.org/wiki/Eventual_consistency[eventually consistent] data store.
+This means that replica can hold diverging data, but are guaranteed to converge over time.
+
+Several mechanisms are built in Cassandra to enforce this convergence, and need to be
+leveraged by *Distributed Server Administrator*. Namely
+link:https://docs.datastax.com/en/dse/5.1/dse-admin/datastax_enterprise/tools/nodetool/toolsRepair.html[nodetool repair],
+link:https://cassandra.apache.org/doc/latest/operating/hints.html[Hinted hand-off] and
+link:https://cassandra.apache.org/doc/latest/operating/read_repair.html[Read repair].
+
+The Distributed Server tries to mitigate inconsistencies by relying on
+link:https://docs.datastax.com/en/archived/cassandra/3.0/cassandra/dml/dmlConfigConsistency.html[QUORUM] read and write levels.
+This means that a majority of replica are needed for read and write operations to be performed.
+
+Critical business operations, like UID allocation, rely on strong consistency mechanisms brought by
+link:https://www.datastax.com/blog/2013/07/lightweight-transactions-cassandra-20[lightweight transaction].
+
+==== About multi data-center setups
+
+As strong consistency is required for some operation, especially regarding IMAP monotic UID and MODSEQ generation,
+and as lightweight transactions are slow across data centers, running James with a
+link:https://docs.datastax.com/en/ddac/doc/datastax_enterprise/production/DDACmultiDCperWorkloadType.html[multi data-center]
+Cassandra setup is discouraged.
+
+However, xref:distributed/configure/cassandra.adoc[this page] enables setting alternative read level,
+which could be acceptable regarding limited requirements. `LOCAL_QUORUM` coupled with `LOCAL_SERIAL`
+is likely the only scalable setup. Some options were added to turn off SERIAL consistency usage for message
+and mailbox management. However, the use of Lightweight Transaction cannot be disabled for UIDs and ModSeqs.
+
+Running the Distributed Server IMAP server in a multi datacenter setup will likely result either in data loss,
+or very slow operations - as we rely on monotic UID generation, without strong consistency, UIDs could be allocated
+several times.
+
+We did wire a multi-DC friendly distributed, POP3 only server that leverages acceptable performance while staying
+consistent. This is achieved by having a reduced feature set - supporting only the POP3 server and using messageIds as
+identifiers (generated without synchronisation using TimeUUIDs). You can find this application
+link:https://github.com/apache/james-project/tree/master/server/apps/distributed-pop3-app[on GitHub]. In the future,
+JMAP support could be added, but requires followup developments as some components critically depends on UIDs
+(for instance the search).
+
+=== OpenSearch consistency model
+
+OpenSearch relies on link:https://www.elastic.co/blog/a-new-era-for-cluster-coordination-in-elasticsearch[strong consistency]
+with home grown algorithm.
+
+The 6.x release line, that the distributed server is using is known to be slow to recover from failures.
+
+Be aware that data is asynchronously indexed in OpenSearch, changes will be eventually visible.
+
+=== RabbitMQ consistency model
+
+The Distributed Server relies out of the box on a single RabbitMQ server, thus consistency concerns
+are not (yet) applicable. Availability concerns are applicable.
+
+== Denormalization
+
+In Cassandra, data needs to be structured to match the read patterns. To support several conflicting
+read patterns, the data needs to be duplicated into different structures. This process is called
+denormalization.
+
+While data can be consistent at the table level, some inconsistencies can sneak in at the applicative
+level across denormalization tables.
+
+We write to a "table of truth" first, then duplicate the data to denormalization tables.
+
+The Distributed server offers several mechanisms to mitigate these inconsistencies:
+
+ - Writes to denormalization tables are retried.
+ - Some xref:distributed/operate/guide.adoc#_solving_cassandra_inconsistencies[SolveInconsistencies tasks] are exposed and are able to heal a given denormalization table.
+They reset the "deduplication tables" content to the "table of truth" content.
+ - link:https://github.com/apache/james-project/blob/master/src/adr/0042-applicative-read-repairs.md[Read repairs],
+when implemented for a given denormalization, enables auto-healing. When an inconsistency is detected, They reset the
+"deduplication tables" entry to the "table of truth" entry.
+
+== Consistency across data stores
+
+The Distributed Server leverages several data stores:
+
+ - Cassandra is used for metadata storage
+ - OpenSearch for search
+ - Object Storage for large object storage
+
+Thus the Distributed Server also offers mechanisms to enforce consistency across data stores.
+
+=== Write path organisation
+
+The primary data stores are composed of Cassandra for metadata and Object storage for binary data.
+
+To ensure the data referenced in Cassandra is pointing to a valid object in the object store, we write
+the object store payload first, then write the corresponding metadata in Cassandra.
+
+Such a procedure avoids metadata pointing to unexisting blobs, however might lead to some unreferenced
+blobs.
+
+=== Cassandra <=> OpenSearch
+
+After being written to the primary stores (namely Cassandra & Object Storage), email content is
+asynchronously indexed into OpenSearch.
+
+This process, called the EventBus, which retries temporary errors, and stores transient errors for
+later admin-triggered retries is described further xref:distributed/operate/guide.adoc#_mailbox_event_bus[here].
+His role is to spread load and limit inconsistencies.
+
+Furthermore, some xref:distributed/operate/guide.adoc#_usual_troubleshooting_procedures[re-indexing tasks]
+enables to re-synchronise OpenSearch content with the primary data stores

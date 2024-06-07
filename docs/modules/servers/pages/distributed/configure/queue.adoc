@@ -1,0 +1,19 @@
+= Distributed James Server &mdash; queue.properties
+:navtitle: queue.properties
+
+This configuration helps you configure mail queue you want to select.
+
+== Queue Configuration
+
+.queue.properties content
+|===
+| Property name | explanation
+
+| mail.queue.choice
+| Mail queue can be implemented by many type of message brokers: Pulsar, RabbitMQ,... This property will choose which mail queue you want, defaulting to RABBITMQ
+|===
+
+`mail.queue.choice` supports the following options:
+
+* You can specify the `RABBITMQ` if you want to choose RabbitMQ mail queue
+* You can specify the `PULSAR` if you want to choose Pulsar mail queue

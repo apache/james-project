@@ -1,0 +1,9 @@
+=== IsRemoteDeliveryPermanentError
+
+Checks if the mail has a temporary remote delivery failure attribute set to false (meaning it's a temporary error)
+
+Example:
+
+....
+<mailet match="IsRemoteDeliveryTemporaryError" class="<any-class>"/>
+....

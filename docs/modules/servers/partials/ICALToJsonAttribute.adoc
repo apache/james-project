@@ -1,0 +1,26 @@
+=== ICALToJsonAttribute
+
+ICALToJsonAttribute takes a map of ICAL4J objects attached as attribute, and
+output the map of corresponding json bytes as an other attribute, with unique String keys.
+
+The JSON contains the following fields :
+
+* *ical* : the raw ical string, in UTF-8
+* *sender* : the sender of the mail (compulsory, mail without sender will be discarded)
+* *recipient* : the recipient of the mail. If the mail have several recipients, each recipient will have its own JSON.
+* *uid* : the UID of the ical (optional)
+* *sequence* : the sequence of the ical (optional)
+* *dtstamp* : the date stamp of the ical (optional)
+* *method* : the method of the ical (optional)
+* *recurrence-id* : the recurrence-id of the ical (optional)
+
+Example are included in test call ICalToJsonAttributeTest.
+
+Configuration example :
+
+....
+<mailet match=??? class=ICALToJsonAttribute>
+    <sourceAttribute>icalendars</sourceAttribute>
+    <destinationAttribute>icalendarJson</destinationAttribute>
+</mailet>
+....

@@ -1,0 +1,14 @@
+=== AmqpForwardAttribute
+
+This mailet forwards the attributes values to a AMPQ.
+
+It takes 4 parameters:
+
+* attribute (mandatory): content to be forwarded, expected to be a Map<String, byte[]>
+where the byte[] content is issued from a MimeBodyPart.
+It is typically generated from the StripAttachment mailet.
+* uri (mandatory): AMQP URI defining the server where to send the attachment.
+* exchange (mandatory): name of the AMQP exchange.
+* routing_key (optional, default to empty string): name of the routing key on this exchange.
+
+This mailet will sent the data attached to the mail as an attribute holding a map.

@@ -1,0 +1,227 @@
+=== Redirect
+
+A mailet providing configurable redirection services.
+
+Can produce listserver, forward and notify behaviour, with the original
+message intact, attached, appended or left out altogether.
+
+It differs from Resend because (i) some defaults are different,
+notably for the following parameters: *<recipients>*,
+*<to>*, *<reversePath>* and *<inline>*; (ii)
+because it allows the use of the *<static>* parameter;.
+
+Use <code>Resend</code> if you need full control, <code>Redirect</code> if
+the more automatic behaviour of some parameters is appropriate.
+
+This built in functionality is controlled by the configuration as laid out
+below. In the table please note that the parameters controlling message
+headers accept the <b>"unaltered"</b> value, whose meaning is to
+keep the associated header unchanged and, unless stated differently,
+corresponds to the assumed default if the parameter is missing.
+
+The configuration parameters are:
+
+
+.Redirect parameters
+|===
+| Property name | explanation
+
+| recipients
+| A comma delimited list of addresses for recipients of this message; it will
+use the "to" list if not specified, and "unaltered" if
+none of the lists is specified.
+
+These addresses will only appear in the To: header if no "to" list
+is supplied.
+
+Such addresses can contain "full names", like *Mr. John D. Smith
+<john.smith@xyz.com>*.
+
+The list can include constants "sender", "from",
+"replyTo", "postmaster", "reversePath",
+"recipients", "to", "null" and
+"unaltered"; "replyTo" uses the ReplyTo header if
+available, otherwise the From header if available, otherwise the Sender
+header if available, otherwise the return-path; "from" is made
+equivalent to "sender", and "to" is made equivalent to
+"recipients"; "null" is ignored.
+
+| to
+| A comma delimited list of addresses to appear in the To: header; the email
+will be delivered to any of these addresses if it is also in the recipients
+list.
+
+The recipients list will be used if this list is not supplied; if none of the
+lists is specified it will be "unaltered".
+
+Such addresses can contain "full names", like *Mr. John D. Smith
+<john.smith@xyz.com>*.
+
+The list can include constants "sender", "from",
+"replyTo", "postmaster", "reversePath",
+"recipients", "to", "null" and
+"unaltered"; "from" uses the From header if available,
+otherwise the Sender header if available, otherwise the return-path;
+"replyTo" uses the ReplyTo header if available, otherwise the From
+header if available, otherwise the Sender header if available, otherwise the
+return-path; "recipients" is made equivalent to "to"; if
+"null" is specified alone it will remove this header.
+
+| sender
+|  single email address to appear in the From: and Return-Path: headers and
+become the sender.
+
+It can include constants "sender", "postmaster" and
+"unaltered"; "sender" is equivalent to
+"unaltered".
+
+Default: "unaltered".
+
+| message
+|A text message to insert into the body of the email.
+
+Default: no message is inserted.
+
+|inline
+|
+One of the following items:
+
+* unaltered &nbsp;&nbsp;&nbsp;&nbsp;The original message is the new
+message, for forwarding/aliasing
+* heads&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The
+headers of the original message are appended to the message
+* body&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The
+body of the original is appended to the new message
+*
+all&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp
+;&nbsp;&nbsp;&nbsp;Both headers and body are appended
+* none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Neither body nor headers are appended
+</ul>
+Default: "body".
+
+|attachment
+|One of the following items:
+
+* heads&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The headers of the original are
+attached as text
+* body&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The body of the original is
+attached as text
+* all&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Both
+headers and body are attached as a single text file
+* none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Nothing is attached
+* message &nbsp;The original message is attached as type message/rfc822,
+this means that it can, in many cases, be opened, resent, fw'd, replied to
+etc by email client software.
+
+Default: "none".
+
+|passThrough
+|true or false, if true the original message continues in the mailet processor
+after this mailet is finished. False causes the original to be stopped.
+
+Default: false.
+
+|fakeDomainCheck
+|true or false, if true will check if the sender domain is valid.
+
+Default: true.
+
+|attachError
+|true or false, if true any error message available to the mailet is appended
+to the message body (except in the case of inline == unaltered).
+
+Default: false.
+
+|replyTo
+|A single email address to appear in the Reply-To: header.
+
+It can include constants "sender", "postmaster"
+"null" and "unaltered"; if "null" is specified
+it will remove this header.
+
+Default: "unaltered".
+
+|reversePath
+|A single email address to appear in the Return-Path: header.
+
+It can include constants "sender", "postmaster" and
+"null"; if "null" is specified then it will set it to <>,
+meaning "null return path".
+
+Notice: the "unaltered" value is *not allowed*.
+
+Default: the value of the *<sender>* parameter, if set, otherwise
+remains unaltered.
+
+|subject
+|An optional string to use as the subject.
+
+Default: keep the original message subject.
+
+|prefix
+|An optional subject prefix prepended to the original message subject, or to a
+new subject specified with the *<subject>* parameter.
+
+For example: *[Undeliverable mail]*.
+
+Default: ".
+
+|isReply
+|true or false, if true the IN_REPLY_TO header will be set to the id of the
+current message.
+
+Default: false.
+
+|debug
+|true or false. If this is true it tells the mailet to write some debugging
+information to the mailet log.
+
+Default: false.
+
+|static
+|true or false. If this is true it tells the mailet that it can reuse all the
+initial parameters (to, from, etc) without re-calculating their values. This
+will boost performance where a redirect task doesn't contain any dynamic
+values. If this is false, it tells the mailet to recalculate the values for
+each e-mail processed.
+
+Default: false.
+|===
+
+Example:
+
+....
+ <mailet match="RecipientIs=test@localhost" class="Redirect">
+   <recipients>x@localhost, y@localhost, z@localhost</recipients>
+   <to>list@localhost</to>
+   <sender>owner@localhost</sender>
+   <message>sent on from James</message>
+   <inline>unaltered</inline>
+   <passThrough>FALSE</passThrough>
+   <replyTo>postmaster</replyTo>
+   <prefix xml:space="preserve">[test mailing] </prefix>
+   <!-- note the xml:space="preserve" to preserve whitespace -->
+   <static>TRUE</static>
+</mailet>
+....
+
+and:
+
+....
+ <mailet match="All" class="Redirect">
+   <recipients>x@localhost</recipients>
+   <sender>postmaster</sender>
+   <message xml:space="preserve">Message marked as spam:</message>
+   <inline>heads</inline>
+   <attachment>message</attachment>
+   <passThrough>FALSE</passThrough>
+   <attachError>TRUE</attachError>
+   <replyTo>postmaster</replyTo>
+   <prefix>[spam notification]</prefix>
+   <static>TRUE</static>
+ </mailet>
+....
+
+*replyto* can be used instead of *replyTo*; such name is kept for
+backward compatibility.

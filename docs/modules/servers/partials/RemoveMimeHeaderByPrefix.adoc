@@ -1,0 +1,11 @@
+=== RemoveMimeHeader
+
+This mailet removes all of the headers starting with a given prefix in the message (global) and per recipient (specific).
+
+Sample configuration:
+
+....
+<mailet match="All" class="RemoveMimeHeaderByPrefix">
+  <name>X-APPLICATIVE-HEADER-</name>
+</mailet>
+....

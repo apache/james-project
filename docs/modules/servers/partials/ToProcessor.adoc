@@ -1,0 +1,13 @@
+=== ToProcessor
+
+This mailet redirects the mail to the named processor
+
+Sample configuration:
+
+....
+<mailet match="All" class="ToProcessor">
+  <processor>spam</processor>
+  <notice>Notice attached to the message (optional)</notice>
+</mailet>
+....
+

@@ -1,0 +1,20 @@
+=== StripAttachment
+
+Remove attachments from a Message. Supports simple removal, storing to file,
+or storing to mail attributes.
+
+Configuration:
+
+....
+<mailet match=&quot;All&quot; class=&quot;StripAttachment&quot; >
+  <pattern >.*\.xls </pattern>  <!-- The regular expression that must be matched -- >
+  <!-- notpattern >.*\.xls </notpattern-->  <!-- The regular expression that must be matched -- >
+  <mimeType>text/calendar</mimeType>  <!-- The matching mimeType -- >
+  <directory >c:\temp\james_attach </directory>   <!-- The directory to save to -- >
+  <remove >all </remove>   <!-- either &quot;no&quot;, &quot;matched&quot;, &quot;all&quot; -- >
+  <!-- attribute>my.attribute.name</attribute -->
+</mailet >
+....
+
+At least one of pattern, notpattern and mimeType is required.
+

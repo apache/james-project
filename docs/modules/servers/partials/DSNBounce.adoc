@@ -1,0 +1,28 @@
+=== DSNBounce
+
+Generates a Delivery Status Notification (DSN) Note that this is different
+than a mail-client's reply, which would use the Reply-To or From header.
+
+Bounced messages are attached in their entirety (headers and content) and the
+resulting MIME part type is "message/rfc822".
+
+The reverse-path and the Return-Path header of the response is set to "null"
+("<>"), meaning that no reply should be sent.
+
+A sender of the notification message can optionally be specified. If one is
+not specified, the postmaster's address will be used.
+
+Supports the <code>passThrough</code> init parameter (true if missing).
+
+Sample configuration:
+
+....
+<mailet match="All" class="DSNBounce">
+  <sender>*an address or postmaster or sender or unaltered, default=postmaster*</sender>
+  <prefix>*optional subject prefix prepended to the original message*</prefix>
+  <attachment>*message, heads or none, default=message*</attachment>
+  <messageString>*the message sent in the bounce, the first occurrence of the pattern [machine] is replaced with the name of the executing machine, default=Hi. This is the James mail server at [machine] ... *</messageString>
+  <passThrough>*true or false, default=true*</passThrough>
+  <debug>*true or false, default=false*</debug>
+</mailet>
+....

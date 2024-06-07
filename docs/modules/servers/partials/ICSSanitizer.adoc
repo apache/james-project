@@ -1,0 +1,11 @@
+=== ICSSanitizer
+
+Some senders embed 'text/calendar' content as part of Mime bodypart headers with an empty body.
+
+This mailet duplicate the 'text/calendar' content to the Mime body part.
+
+Example configuration:
+
+....
+<mailet match="All" class="ICSSanitizer"/>
+....

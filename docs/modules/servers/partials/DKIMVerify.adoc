@@ -1,0 +1,14 @@
+=== DKIMVerify
+
+This mailet verify a message using the DKIM protocol
+
+Sample configuration:
+
+....
+<mailet match="All" class="DKIMVerify">
+</mailet>
+....
+
+By default the mailet assume that Javamail will use LF instead of CRLF
+so it will verify the hash using converted newlines. If you don't want this
+behaviour then set forceCRLF attribute to false.

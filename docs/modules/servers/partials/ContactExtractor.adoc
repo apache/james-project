@@ -1,0 +1,21 @@
+=== ContactExtractor
+
+Collects the sender and the recipients of a message and store them as JSON in a
+specified message attribute.
+
+Here is the JSON format:
+
+....
+{
+  "userEmail" : "sender@james.org",
+  "emails" : [ "to@james.org", "cc@james.org" ]
+}
+....
+
+Sample configuration:
+
+....
+<mailet match="All" class="ContactExtractor">
+  <attribute>ExtractedContacts</attribute>
+</mailet>
+....

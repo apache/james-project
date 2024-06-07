@@ -1,0 +1,12 @@
+=== MailAttributesListToMimeHeaders
+
+Convert attributes of type Collection<String> to headers
+
+Sample configuration:
+
+....
+<mailet match="All" class="MailAttributesToMimeHeaders">
+  <simplemapping>org.apache.james.attribute1;headerName1</simplemapping>
+  <simplemapping>org.apache.james.attribute2;headerName2</simplemapping>
+</mailet>
+....

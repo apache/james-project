@@ -1,0 +1,9 @@
+=== TooManyRecipients
+
+This matcher matches emails that have too many recipients.
+
+The example below will reject any email with more than 5 recipients
+
+....
+<mailet match="TooManyRecipients=5" class="<any-class&gt;">
+....

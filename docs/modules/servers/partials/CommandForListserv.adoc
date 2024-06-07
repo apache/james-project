@@ -1,0 +1,5 @@
+=== CommandForListserv
+
+Returns positive if the recipient is a command for a listserv.  For example,
+if my listserv is james@list.working-dogs.com, this matcher will return true
+for james-on@list.working-dogs.com and james-off@list.working-dogs.com.

@@ -1,0 +1,30 @@
+=== HasMailAttributeWithValue
+
+This Matcher determines if the mail contains the attribute specified in
+the condition and if the value answered when the method toString() is
+invoked on the attribute is equal to the String value specified in the
+condition. If both tests are true, all recipients are returned, else null.
+
+Notes:
+
+The current matcher implementation expects a single String value to match
+on. This matcher requires two values, the attribute name and attribute
+value. This requires some implicit rules to govern how the single value
+supplied to the matcher is parsed into two values.
+
+* In the match condition, the split between the attribute name and the
+attribute value is made at the first comma. Attribute names that include
+a comma will parse incorrectly and therefore are not supported by this
+matcher.
+* Leading and trailing spaces are removed from both the attribute name and
+attribute value specified in the condition and the tested attribute value in
+the mail prior to matching. Therefore, "abc" , " abc", "abc " and " abc "
+are considered equivalent.
+* To test for an empty string, do not specify an attribute value after the
+comma.
+
+Sample configuration:
+
+....
+<mailet match="HasMailAttributeWithValue=name, value" class="<any-class>">
+....

@@ -1,0 +1,14 @@
+=== RecoverAttachment
+
+This mailet takes an attachment stored in an attribute and attach it back to
+the message
+
+This may be used to place back attachment stripped by StripAttachment and
+stored in the attribute
+*org.apache.james.mailet.standard.mailets.StripAttachment.saved*
+
+....
+  <mailet match="All" class="RecoverAttachment" >
+    <attribute>my.attribute.name</attribute>
+  </mailet >
+....
