@@ -80,8 +80,8 @@ public class JwtFilter implements AuthenticationFilter {
         JsonNode payloadNode = mapper.readTree(payload);
 
         JsonNode typeNode = payloadNode.get("type");
-        String sub = typeNode != null ? typeNode.asText() : "N/A";
-        if (sub.equals("admin")) {
+        String type = typeNode != null ? typeNode.asText() : "N/A";
+        if (type.equals("admin")) {
             return true;
         }
         return false;
