@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
@@ -47,20 +48,36 @@ import com.google.common.annotations.VisibleForTesting;
  * {@link FrameDecoder} which will decode via and {@link ImapDecoder} instance
  */
 public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConstants {
+    public static final int UNAUTHENTICATE_LITERAL_MAX_SIZE = Optional.ofNullable(System.getProperty("james.imap.unauthenticated.literal.max.size"))
+        .map(Integer::parseInt)
+        .orElse(8192);
 
     private final ImapDecoder decoder;
     private final int inMemorySizeLimit;
     private final int literalSizeLimit;
+    private final int maxFrameLength;
     @VisibleForTesting
     static final String NEEDED_DATA = "NEEDED_DATA";
     private static final String STORED_DATA = "STORED_DATA";
     private static final String WRITTEN_DATA = "WRITTEN_DATA";
     private static final String OUTPUT_STREAM = "OUTPUT_STREAM";
 
-    public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit) {
+    public ImapRequestFrameDecoder(ImapDecoder decoder, int inMemorySizeLimit, int literalSizeLimit, int maxFrameLength) {
         this.decoder = decoder;
         this.inMemorySizeLimit = inMemorySizeLimit;
         this.literalSizeLimit = literalSizeLimit;
+        this.maxFrameLength = maxFrameLength;
+    }
+
+    private int literalSizeLimit(ImapSession session) {
+        if (session == null) {
+            return UNAUTHENTICATE_LITERAL_MAX_SIZE;
+        }
+        if (session.getState() == ImapSessionState.NON_AUTHENTICATED
+            || session.getState() == ImapSessionState.LOGOUT) {
+            return UNAUTHENTICATE_LITERAL_MAX_SIZE;
+        }
+        return literalSizeLimit;
     }
 
     @Override
@@ -79,6 +96,7 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
         // check if we failed before and if we already know how much data we
         // need to sucess next run
         Map<String, Object> attachment = (Map<String, Object>) ctx.getAttachment();
+        ImapSession session = (ImapSession) attributes.get(channel);
         int size = -1;
         if (attachment.containsKey(NEEDED_DATA)) {
             retry = true;
@@ -146,13 +164,11 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
 
             } else {
 
-                reader = new NettyImapRequestLineReader(channel, buffer, retry, literalSizeLimit);
+                reader = new NettyImapRequestLineReader(channel, buffer, retry, literalSizeLimit(session), maxFrameLength);
             }
         } else {
-            reader = new NettyImapRequestLineReader(channel, buffer, retry, literalSizeLimit);
+            reader = new NettyImapRequestLineReader(channel, buffer, retry, literalSizeLimit(session), maxFrameLength);
         }
-
-        ImapSession session = (ImapSession) attributes.get(channel);
 
         // check if the session was removed before to prevent a harmless NPE. See JAMES-1312
         // Also check if the session was logged out if so there is not need to try to decode it. See JAMES-1341

@@ -251,7 +251,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
                     pipeline.addLast(EXECUTION_HANDLER, ehandler);
 
                 }
-                pipeline.addLast(REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit, literalSizeLimit));
+                pipeline.addLast(REQUEST_DECODER, new ImapRequestFrameDecoder(decoder, inMemorySizeLimit, literalSizeLimit, maxLineLength));
 
                 pipeline.addLast(CORE_HANDLER, createCoreHandler());
                 return pipeline;
